@@ -6,13 +6,18 @@
  *     @apollo/client
  *   - Removes gql imports from graphql-tag and replaces them
  *     with an import from @apollo/client
+ *   - Removes Observable import from apollo-link and moves
+ *     it to @apollo/client
  *
  * Author: Dmitry Minkovsky <dminkovsky@gmail.com>
  */
+
 export default function transformer(file, api) {
     const j = api.jscodeshift;
 
     const source = j(file.source);
+
+    // Replace `@apollo/react-hooks` with `@apollo/client`
 
     source
         .find(j.ImportDeclaration)
@@ -22,56 +27,50 @@ export default function transformer(file, api) {
                 '@apollo/react-hooks',
         )
         .find(j.Literal)
-        .replaceWith(path => {
-            return {...path.value, value: '@apollo/client'};
-        });
+        .replaceWith(path => ({
+            ...path.value,
+            value: '@apollo/client',
+        }));
 
-    const gqls = source
-        .find(j.ImportDeclaration)
-        .filter(path => {
-            return path.value.source.value === 'graphql-tag';
-        });
+    // Move import specifiers from `gql` and `apollo-link`
+    // modules to `@apollo/client`:
 
-    if (gqls.size()) {
-        gqls.remove();
-        const clientImports = source
-            .find(j.ImportDeclaration)
-            .filter(
-                path =>
-                    path.value.source.value === '@apollo/client',
-            );
-        if (clientImports.size()) {
-            clientImports.replaceWith(p => {
-                return {
+    moveSpecifiersToApolloClient('graphql-tag', ['gql']);
+    moveSpecifiersToApolloClient('apollo-link', ['Observable']);
+
+    return source.toSource();
+
+    function moveSpecifiersToApolloClient(
+        moduleName,
+        specifiers,
+    ) {
+        const moduleImport = getImport(moduleName);
+        moduleImport.remove();
+        if (moduleImport.size()) {
+            const clientImports = source
+                .find(j.ImportDeclaration)
+                .filter(
+                    path =>
+                        path.value.source.value ===
+                        '@apollo/client',
+                );
+            if (clientImports.size()) {
+                clientImports.replaceWith(p => ({
                     ...p.value,
                     specifiers: [
-                        {
-                            type: 'ImportSpecifier',
-                            imported: {
-                                type: 'Identifier',
-                                name: 'gql',
-                            },
-                        },
+                        ...specifiers.map(importSpecifier),
                         ...p.value.specifiers,
                     ],
-                };
-            });
-        } else {
-            source.find(j.Program).replaceWith(p => {
-                return {
+                }));
+            } else {
+                source.find(j.Program).replaceWith(p => ({
                     ...p.value,
                     body: [
                         {
                             type: 'ImportDeclaration',
-                            specifiers: [
-                                {
-                                    type: 'ImportSpecifier',
-                                    imported: {
-                                        type: 'Identifier',
-                                        name: 'gql',
-                                    },
-                                },
-                            ],
+                            specifiers: specifiers.map(
+                                importSpecifier,
+                            ),
                             source: {
                                 type: 'Literal',
                                 value: '@apollo/client',
@@ -79,10 +78,26 @@ export default function transformer(file, api) {
                         },
                         ...p.value.body,
                     ],
-                };
-            });
+                }));
+            }
         }
     }
 
-    return source.toSource();
+    function getImport(moduleName) {
+        return source
+            .find(j.ImportDeclaration)
+            .filter(
+                path => path.value.source.value === moduleName,
+            );
+    }
+}
+
+function importSpecifier(name) {
+    return {
+        type: 'ImportSpecifier',
+        imported: {
+            type: 'Identifier',
+            name,
+        },
+    };
 }

@@ -26,9 +26,6 @@ module.exports = {
             '/v2.4/api/apollo-client/',
           ],
         },
-        typescriptApiBox: {
-          data: require('./docs.json')
-        },
         sidebarCategories: {
           null: ['index', 'why-apollo', 'get-started'],
           'Fetching data': [

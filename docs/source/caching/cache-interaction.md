@@ -669,14 +669,14 @@ client.writeQuery({
 
 Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
 
-### Cache redirects with `cacheRedirects`
+### Cache redirects using field policy `read` functions
 
-*WARNING*: `cacheRedirects` is removed in Apollo Client v3. New documentation that outlines how to replace `cacheRedirects` with the [new cache policies API](./cache-field-behavior) is coming soon.
+> ⚠️ **Note:** Apollo Client >= 3.0 no longer supports the `ApolloClient` `cacheRedirects` constructor option. Equivalent `cacheRedirects` functionality can now be handled with field policy `read` functions, and is explained below.
 
-In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
+In some cases, a query requests data that already exists in the cache under a different reference. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 
 ```graphql
-query ListView {
+query Books {
   books {
     id
     title
@@ -688,7 +688,7 @@ query ListView {
 When a specific book is selected, the detail view displays an individual item using this query:
 
 ```graphql
-query DetailView {
+query Book($id: ID!) {
   book(id: $id) {
     id
     title
@@ -697,58 +697,32 @@ query DetailView {
 }
 ```
 
-> Note: The data returned by the list query has to include all the data the specific query needs. If the specific book query fetches a field that the list query doesn't return Apollo Client cannot return the data from the cache.
-
-We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
+We know that the data is most likely already in the client cache, but because it was requested with a different query, Apollo Client doesn't know that. To tell Apollo Client where to look for the existing `book` data, we can define a field policy `read` function for the `book` field:
 
 ```js
-import { InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-const cache = new InMemoryCache({
-  cacheRedirects: {
-    Query: {
-      book: (_, args, { getCacheKey }) =>
-        getCacheKey({ __typename: 'Book', id: args.id })
-    },
-  },
+const client = new ApolloClient({
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          book(_, { args, toReference }) {
+            return toReference({
+              __typename: 'Book',
+              id: args.id,
+            });
+          }
+        }
+      }
+    }
+  }
 });
 ```
 
-> Note: This'll also work with custom `dataIdFromObject` methods as long as you use the same one.
+Now whenever a query is run that includes a `book` field, the `read` function above will be executed, and return a reference that points to the book entity that was already created in the cache when the `Books` list view query ran. Apollo Client will use the reference returned by the `read` function to look up the item in its cache. `toReference` is a helper utility that is passed into `read` functions as part of the second parameter options object, and is used to generate an entity reference based on its `__typename` and `id`.
 
-Apollo Client will use the ID returned by the custom resolver to look up the item in its cache. `getCacheKey` is passed inside the third argument to the resolver to generate the key of the object based on its `__typename` and `id`.
-
-To figure out what you should put in the `__typename` property run one of the queries in GraphiQL and get the `__typename` field:
-
-```graphql
-query ListView {
-  books {
-    __typename
-  }
-}
-
-# or
-
-query DetailView {
-  book(id: $id) {
-    __typename
-  }
-}
-```
-
-The value that's returned (the name of your type) is what you need to put into the `__typename` property.
-
-It is also possible to return a list of IDs:
-
-```js
-cacheRedirects: {
-  Query: {
-    books: (_, args, { getCacheKey }) =>
-      args.ids.map(id =>
-        getCacheKey({ __typename: 'Book', id: id }))
-  }
-}
-```
+> ⚠️ **Note:** For the above to work properly, the data returned by the list query has to include all of the data the specific detail query needs. If the specific detail query fetches a field that the list query doesn't return, Apollo Client will consider the cache hit to be incomplete, and will attempt to fetch the full data set over the network (if network requests are enabled).
 
 ### Resetting the store
 

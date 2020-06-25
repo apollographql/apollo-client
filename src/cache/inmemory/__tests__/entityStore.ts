@@ -1084,7 +1084,6 @@ describe('EntityStore', () => {
       },
     })).toEqual({
       complete: false,
-      optimistic: false,
       result: {
         authorOfBook: tedWithoutHobby,
       },
@@ -1687,7 +1686,6 @@ describe('EntityStore', () => {
     })).toEqual({
       complete: false,
       missing,
-      optimistic: true,
       result: {
         book: {
           __typename: "Book",
@@ -1719,7 +1717,6 @@ describe('EntityStore', () => {
     })).toEqual({
       complete: false,
       missing,
-      optimistic: false,
       result: {
         book: {
           __typename: "Book",
@@ -1736,7 +1733,6 @@ describe('EntityStore', () => {
       returnPartialData: true,
     })).toEqual({
       complete: true,
-      optimistic: false,
       result: {
         book: {
           __typename: "Book",
@@ -1937,7 +1933,6 @@ describe('EntityStore', () => {
 
     expect(cuckoosCallingDiffResult).toEqual({
       complete: false,
-      optimistic: false,
       result: {
         book: {
           __typename: "Book",

@@ -1460,7 +1460,6 @@ describe("InMemoryCache#broadcastWatches", function () {
         },
       },
       complete: true,
-      optimistic: false,
     }];
 
     expect(receivedCallbackResults).toEqual([
@@ -1482,7 +1481,6 @@ describe("InMemoryCache#broadcastWatches", function () {
         },
       },
       complete: true,
-      optimistic: false,
     }];
 
     expect(receivedCallbackResults).toEqual([
@@ -1504,7 +1502,6 @@ describe("InMemoryCache#broadcastWatches", function () {
         },
       },
       complete: true,
-      optimistic: false,
     }];
 
     const received4 = [id4, 1, {
@@ -1514,7 +1511,6 @@ describe("InMemoryCache#broadcastWatches", function () {
         },
       },
       complete: true,
-      optimistic: false,
     }];
 
     expect(receivedCallbackResults).toEqual([
@@ -1535,7 +1531,6 @@ describe("InMemoryCache#broadcastWatches", function () {
         },
       },
       complete: true,
-      optimistic: false,
     }];
 
     expect(receivedCallbackResults).toEqual([
@@ -2113,12 +2108,10 @@ describe("InMemoryCache#modify", () => {
     function makeResult(
       __typename: string,
       value: number,
-      complete = true,
-      optimistic = false,
+      complete: boolean = true,
     ) {
       return {
         complete,
-        optimistic,
         result: {
           [__typename.toLowerCase()]: {
             __typename,

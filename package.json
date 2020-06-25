@@ -102,7 +102,7 @@
     "rxjs": "6.5.3",
     "ts-jest": "26.1.0",
     "tsc-watch": "3.0.1",
-    "typescript": "3.9.3"
+    "typescript": "3.9.5"
   },
   "publishConfig": {
     "access": "public"

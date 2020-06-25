@@ -1033,7 +1033,6 @@ describe('reading from the store', () => {
 
     expect(diffChickens()).toEqual({
       complete: true,
-      optimistic: false,
       result: {
         chickens: [
           { __typename: "Chicken", id: 1, inCoop: true },
@@ -1052,7 +1051,6 @@ describe('reading from the store', () => {
 
     expect(diffChickens()).toEqual({
       complete: false,
-      optimistic: false,
       missing: [
         expect.anything(),
         expect.anything(),
@@ -1075,7 +1073,6 @@ describe('reading from the store', () => {
 
     expect(diffDucks()).toEqual({
       complete: true,
-      optimistic: false,
       result: {
         ducks: [
           { __typename: "Duck", id: 1, quacking: true },
@@ -1097,7 +1094,6 @@ describe('reading from the store', () => {
     // diff, and without altering the positions of later elements.
     expect(diffDucks()).toEqual({
       complete: true,
-      optimistic: false,
       result: {
         ducks: [
           { __typename: "Duck", id: 1, quacking: true },
@@ -1116,7 +1112,6 @@ describe('reading from the store', () => {
 
     expect(diffOxen()).toEqual({
       complete: true,
-      optimistic: false,
       result: {
         oxen: [
           { __typename: "Ox", id: 1, gee: true, haw: false },
@@ -1134,7 +1129,6 @@ describe('reading from the store', () => {
 
     expect(diffOxen()).toEqual({
       complete: true,
-      optimistic: false,
       result: {
         oxen: [
           { __typename: "Ox", id: 2, gee: false, haw: true },
@@ -1244,7 +1238,6 @@ describe('reading from the store', () => {
         },
       },
       complete: true,
-      optimistic: false,
     };
 
     // We already have one diff because of the immediate:true above.
@@ -1268,7 +1261,6 @@ describe('reading from the store', () => {
         },
       },
       complete: true,
-      optimistic: false,
     };
 
     expect(diffs).toEqual([
@@ -1296,7 +1288,6 @@ describe('reading from the store', () => {
         },
       },
       complete: true,
-      optimistic: false,
     };
 
     expect(diffs).toEqual([
@@ -1338,7 +1329,6 @@ describe('reading from the store', () => {
 
     const diffWithChildrenOfZeus = {
       complete: true,
-      optimistic: false,
       result: {
         ...diffWithoutDevouredSons.result,
         ruler: {
@@ -1375,7 +1365,6 @@ describe('reading from the store', () => {
 
     const diffWithZeusAsRuler = {
       complete: true,
-      optimistic: false,
       result: {
         ruler: {
           __typename: "Deity",
@@ -1554,7 +1543,6 @@ describe('reading from the store', () => {
 
     const diffWithApolloAsRuler = {
       complete: true,
-      optimistic: false,
       result: apolloRulerResult,
     };
 

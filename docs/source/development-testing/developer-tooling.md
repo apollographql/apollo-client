@@ -3,15 +3,16 @@ title: Developer tools
 description: Improve your developer experience with these these services and extensions
 ---
 
-## Apollo Graph Manager
+## Apollo Studio
 
-[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) is a cloud service that helps you manage, validate, and secure your organization's data graph.
+[Apollo Studio](https://www.apollographql.com/docs/platform/graph-manager-overview/) (formerly Graph Manager) is a cloud app that provides a single, consolidated place for you to collaborate on the evolution of your graph.
 
 It provides the following features to all Apollo users for free:
 
-* A GraphQL schema registry that tracks changes and variants
-* A schema explorer that makes it easy to inspect your schema's queries, mutations, and other object definitions
-* Team collaboration via organizations
+- A query window that connects to all your environments and provides erganomic ways to author and manage queries.
+- A GraphQL schema registry that tracks the evolution of your graph across your environments.
+- Key insights into which parts of your schema are being actively used, and by whom.
+- Team collaboration via organizations
 
 Advanced features are available with a subscription to an Apollo Team or Enterprise plan.
 

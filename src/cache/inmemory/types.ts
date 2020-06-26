@@ -96,18 +96,9 @@ export type ApolloReducerConfig = {
   addTypename?: boolean;
 };
 
-export type CacheResolver = (
-  rootValue: any,
-  args: { [argName: string]: any },
-  context: any,
-) => any;
-
-export type CacheResolverMap = {
-  [typeName: string]: {
-    [fieldName: string]: CacheResolver;
-  };
-};
-
-// backwards compat
-export type CustomResolver = CacheResolver;
-export type CustomResolverMap = CacheResolverMap;
+export interface ReadMergeModifyContext {
+  store: NormalizedCache;
+  variables?: Record<string, any>;
+  // A JSON.stringify-serialized version of context.variables.
+  varString?: string;
+}

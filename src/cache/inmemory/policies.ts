@@ -275,6 +275,11 @@ export class Policies {
       ? getTypenameFromResult(object, selectionSet, fragmentMap)
       : object.__typename;
 
+    if (typename) {
+      const rootId = this.rootIdsByTypename[typename];
+      if ("string" === typeof rootId) return [rootId];
+    }
+
     const context: KeyFieldsContext = {
       typename,
       selectionSet,

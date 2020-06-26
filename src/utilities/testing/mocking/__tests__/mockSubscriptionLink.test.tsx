@@ -1,14 +1,12 @@
+import React from 'react';
 import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { MockSubscriptionLink } from '../mockSubscriptionLink';
 import { ApolloClient } from '../../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { requireReactLazily } from '../../../../react/react';
 import { ApolloProvider } from '../../../../react/context/ApolloProvider';
 import { useSubscription } from '../../../../react/hooks/useSubscription';
-
-const React = requireReactLazily();
 
 describe('mockSubscriptionLink', () => {
   it('should work with multiple subscribers to the same mock websocket', () => {

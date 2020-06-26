@@ -1011,12 +1011,6 @@ export class QueryManager<TStore> {
         ];
       }
 
-      if (diff.optimistic) {
-        return returnPartialData ? [
-          resultsFromCache(diff, queryInfo.markReady()),
-        ] : [];
-      }
-
       if (returnPartialData) {
         return [
           resultsFromCache(diff),

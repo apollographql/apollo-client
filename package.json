@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.0.0-rc.8",
+  "version": "3.0.0-rc.9",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -86,7 +86,7 @@
     "bundlesize": "0.18.0",
     "cross-fetch": "3.0.4",
     "fetch-mock": "7.7.3",
-    "graphql": "15.0.0",
+    "graphql": "15.1.0",
     "jest": "26.0.1",
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",
@@ -102,7 +102,7 @@
     "rxjs": "6.5.3",
     "ts-jest": "26.1.0",
     "tsc-watch": "3.0.1",
-    "typescript": "3.9.3"
+    "typescript": "3.9.5"
   },
   "publishConfig": {
     "access": "public"

@@ -75,6 +75,9 @@ module.exports = {
             'api/core/ApolloClient',
             'api/core/ObservableQuery'
           ],
+          'API - Cache': [
+            'api/cache/InMemoryCache'
+          ],
           'API - React': [
             'api/react/hooks',
             'api/react/testing',

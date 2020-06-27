@@ -172,6 +172,23 @@ function prepareTesting() {
   };
 }
 
+function prepareReactSSR() {
+  const ssrDistDir = `${distDir}/react/ssr`;
+  return {
+    input: `${ssrDistDir}/index.js`,
+    external,
+    output: {
+      file: `${ssrDistDir}/ssr.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
+    ],
+  };
+}
+
 function rollup() {
   return [
     prepareESM(packageJson.module, distDir),
@@ -179,6 +196,7 @@ function rollup() {
     prepareCJSMinified(packageJson.main),
     prepareUtilities(),
     prepareTesting(),
+    prepareReactSSR(),
   ];
 }
 

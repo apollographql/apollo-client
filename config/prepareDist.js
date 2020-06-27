@@ -53,11 +53,16 @@ fs.copyFileSync(`${srcDir}/README.md`,  `${destDir}/README.md`);
 fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);
 
 
-/* @apollo/client/core, @apollo/client/cache, @apollo/client/utilities */
+/*
+ * @apollo/client/core
+ * @apollo/client/cache
+ * @apollo/client/utilities
+ * @apollo/client/react/ssr
+ */
 
-function buildPackageJson(bundleName) {
+function buildPackageJson(bundleName, entryPoint) {
   return JSON.stringify({
-    name: `@apollo/client/${bundleName}`,
+    name: `@apollo/client/${entryPoint || bundleName}`,
     main: `${bundleName}.cjs.js`,
     module: 'index.js',
     types: 'index.d.ts',
@@ -91,13 +96,14 @@ function writeCjsIndex(bundleName, exportNames, includeNames = true) {
   ].join('\n'));
 }
 
-// Create `core`, `cache` and `utilities` bundle package.json files, storing
-// them in their associated dist directory. This helps provide a way for the
-// Apollo Client core to be used without React (via `@apollo/client/core`),
-// and AC's cache and utilities to be used by themselves
-// (`@apollo/client/cache` and `@apollo/client/utilities`), via the
-// `core.cjs.js`, `cache.cjs.js` and `utilities.cjs.js` CommonJS entry point
-// files that only include the exports needed for each bundle.
+// Create `core`, `cache`, `utilities` and `ssr` bundle package.json files,
+// storing them in their associated dist directory. This helps provide a way
+// for the Apollo Client core to be used without React
+// (via `@apollo/client/core`), as well as AC's cache, utilities and SSR to be
+// used by themselves (`@apollo/client/cache`, `@apollo/client/utilities`,
+// `@apollo/client/react/ssr`), via the `core.cjs.js`, `cache.cjs.js`,
+// `utilities.cjs.js` and `ssr.cjs.js` CommonJS entry point files that only
+// include the exports needed for each bundle.
 
 fs.writeFileSync(`${distRoot}/core/package.json`, buildPackageJson('core'));
 writeCjsIndex('core', loadExportNames('react'), false);
@@ -108,4 +114,9 @@ writeCjsIndex('cache', loadExportNames('cache'));
 fs.writeFileSync(
   `${distRoot}/utilities/package.json`,
   buildPackageJson('utilities')
+);
+
+fs.writeFileSync(
+  `${distRoot}/react/ssr/package.json`,
+  buildPackageJson('ssr', 'react/ssr')
 );

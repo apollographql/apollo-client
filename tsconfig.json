@@ -15,7 +15,7 @@
     "module": "es2015",
     "esModuleInterop": true,
     "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable", "dom"],
+    "lib": ["es2015", "esnext.asynciterable", "dom", "es2020.promise"],
     "jsx": "react"
   },
   "include": ["src/**/*.ts"],

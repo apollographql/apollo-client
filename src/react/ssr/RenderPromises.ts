@@ -80,7 +80,7 @@ export class RenderPromises {
       promises.push(promise);
     });
     this.queryPromises.clear();
-    return Promise.all(promises);
+    return Promise.allSettled(promises);
   }
 
   private lookupQueryInfo<TData, TVariables>(

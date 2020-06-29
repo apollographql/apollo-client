@@ -173,10 +173,10 @@ This style of link also composes well for customization using a function:
 import { ApolloLink } from '@apollo/client';
 
 const reportErrors = (errorCallback) => new ApolloLink((operation, forward) => {
-  const observer = forward(operation);
+  const observable = forward(operation);
   // errors will be sent to the errorCallback
-  observer.subscribe({ error: errorCallback })
-  return observer;
+  observable.subscribe({ error: errorCallback })
+  return observable;
 });
 
 const link = reportErrors(console.error);
@@ -195,10 +195,10 @@ class ReportErrorLink extends ApolloLink {
     this.errorCallback = errorCallback;
   }
   request(operation, forward) {
-    const observer = forward(operation);
+    const observable = forward(operation);
     // errors will be sent to the errorCallback
-    observer.subscribe({ error: this.errorCallback })
-    return observer;
+    observable.subscribe({ error: this.errorCallback })
+    return observable;
   }
 }
 

@@ -171,6 +171,9 @@
   ```
   [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
 
+- React SSR features (previously accessed via `@apollo/react-ssr`) can now be accessed from the separate Apollo Client entry point of `@apollo/client/react/ssr`. These features are not included in the default `@apollo/client` bundle.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6499](https://github.com/apollographql/apollo-client/pull/6499)
+
 ### General
 
 - **[BREAKING]** Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>

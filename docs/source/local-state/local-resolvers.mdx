@@ -1,9 +1,11 @@
 ---
-title: Local resolvers (DEPRECATED)
+title: Local resolvers (deprecated)
 description: Manage local data with GraphQL like resolvers
 ---
 
-> ⚠️ **DEPRECATION WARNING:** Local resolvers are still supported in Apollo Client 3, but they have been deprecated. We recommend using [field policies](./managing-state-with-field-policies) instead. Local resolver support will be removed in a future major Apollo Client release. Refer to [Local resolver deprecation](./local-state-management#local-resolver-deprecation) for more details.
+> ⚠️ **DEPRECATION WARNING:** Local resolvers are still available in Apollo Client 3, but they are deprecated. We recommend using [field policies](./managing-state-with-field-policies) instead. Local resolver support will be removed in a future major Apollo Client release.
+>
+> See the [deprecation notice](#deprecation-notice) for details.
 
 We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our client application.
 
@@ -1077,3 +1079,11 @@ cache.writeQuery({
 | `readQuery({ query, variables })` | Read data from the cache for the specified query. |
 | `writeFragment({ id, fragment, fragmentName, variables, data })` | Similar to `writeQuery` (writes data to the cache) but uses the specified fragment to validate that the shape of the data you’re writing to the cache is the same as the shape of the data required by the fragment. |
 | `readFragment({ id, fragment, fragmentName, variables })` | Read data from the cache for the specified fragment. |
+
+## Deprecation notice
+
+The idea of using client side resolvers to manage local state was first introduced into the Apollo Client ecosystem through the [`apollo-link-state`](https://github.com/apollographql/apollo-link-state) project. The Apollo Client team is always looking for ways to improve local state handling, so we decided to bring local resolver and `@client` support into the Apollo Client core directly, in version 2.5. While managing state with local resolvers works well, the functionality offered by `apollo-link-state`, and then from Apollo Client directly, was originally designed with certain imposed limitations due to its distance from the Apollo Client cache. Apollo Link's don't have direct access to the cache, which means `apollo-link-state` had to implement an approach that couldn't feed or hook into the cache as seamlessly as we would have liked. The local resolver support merged into the Apollo Client core in version 2.5 was essentially a mirror of the Link approach, with a few adjustments to tie into the cache a little more closely. This means Apollo Client's local resolver approach is still a bit limited when it comes to being able to work with the cache more closely, and ultimately providing a better developer experience.
+
+To help address limitations in the local resolver API, we have designed and implemented a new approach for managing local state in Apollo Client 3.0, that works as a direct extension of the cache. Field policies and reactive variables not only help provide a better developer experience from an API use and functionality point of view, but they also improve performance and provide a more reliable foundation for local state management. Re-thinking local state handling with the Apollo Client cache in mind has helped reduce a large number of local state bugs caused by local resolvers being a few too many layers removed from the cache internals.
+
+The [managing state with field policies](./managing-state-with-field-policies) section goes into more detail around what Apollo Client 3's new local state management capabilities look like. We highly recommend reviewing and considering the use of these new API's as a replacement for local resolvers. Local resolvers are still supported in Apollo Client 3, but should be considered deprecated. Local resolver functionality will be removed in a future major version of Apollo Client.

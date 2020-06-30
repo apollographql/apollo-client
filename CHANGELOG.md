@@ -115,14 +115,18 @@
 
 - `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
   ```ts
-  const v = cache.makeVar(123)
+  import { makeVar } from "@apollo/client"
+  const v = makeVar(123)
   console.log(v()) // 123
   console.log(v(v() + 1)) // 124
   console.log(v()) // 124
   v("asdf") // TS type error
   ```
   These variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
+  [@benjamn](https://github.com/benjamn) in
+  [#5799](https://github.com/apollographql/apollo-client/pull/5799),
+  [#5976](https://github.com/apollographql/apollo-client/pull/5976), and
+  [#6512](https://github.com/apollographql/apollo-client/pull/6512)
 
 - Various cache read and write performance optimizations, cutting read and write times by more than 50% in larger benchmarks. <br/>
   [@benjamn](https://github.com/benjamn) in [#5948](https://github.com/apollographql/apollo-client/pull/5948)
@@ -166,6 +170,9 @@
   import { ApolloClient, ApolloProvider, useQuery } from '@apollo/client';
   ```
   [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
+
+- React SSR features (previously accessed via `@apollo/react-ssr`) can now be accessed from the separate Apollo Client entry point of `@apollo/client/react/ssr`. These features are not included in the default `@apollo/client` bundle.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6499](https://github.com/apollographql/apollo-client/pull/6499)
 
 ### General
 

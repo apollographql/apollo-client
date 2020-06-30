@@ -32,6 +32,7 @@ import {
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
 } from './helpers';
+import { cacheSlot } from './reactiveVars';
 import { InMemoryCache } from './inMemoryCache';
 import {
   SafeReadonly,
@@ -525,20 +526,25 @@ export class Policies {
     const read = policy && policy.read;
 
     if (read) {
-      const storage = this.storageTrie.lookup(
-        isReference(objectOrReference)
-          ? objectOrReference.__ref
-          : objectOrReference,
-        storeFieldName,
-      );
-
-      return read(existing, makeFieldFunctionOptions(
+      const readOptions = makeFieldFunctionOptions(
         this,
         objectOrReference,
         options,
         context,
-        storage,
-      )) as SafeReadonly<V>;
+        this.storageTrie.lookup(
+          isReference(objectOrReference)
+            ? objectOrReference.__ref
+            : objectOrReference,
+          storeFieldName,
+        ),
+      );
+
+      // Call read(existing, readOptions) with cacheSlot holding this.cache.
+      return cacheSlot.withValue(
+        this.cache,
+        read,
+        [existing, readOptions],
+      ) as SafeReadonly<V>;
     }
 
     return existing;

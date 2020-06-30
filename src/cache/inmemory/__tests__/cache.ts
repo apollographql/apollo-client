@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference, Reference } from '../../../core';
+import { makeReference, Reference, makeVar } from '../../../core';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 disableFragmentWarnings();
@@ -2393,8 +2393,9 @@ describe("InMemoryCache#modify", () => {
   });
 });
 
-describe("cache.makeVar", () => {
+describe("ReactiveVar and makeVar", () => {
   function makeCacheAndVar(resultCaching: boolean) {
+    const nameVar = makeVar("Ben");
     const cache: InMemoryCache = new InMemoryCache({
       resultCaching,
       typePolicies: {
@@ -2407,8 +2408,6 @@ describe("cache.makeVar", () => {
         },
       },
     });
-
-    const nameVar = cache.makeVar("Ben");
 
     const query = gql`
       query {

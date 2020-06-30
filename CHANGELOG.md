@@ -115,14 +115,18 @@
 
 - `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
   ```ts
-  const v = cache.makeVar(123)
+  import { makeVar } from "@apollo/client"
+  const v = makeVar(123)
   console.log(v()) // 123
   console.log(v(v() + 1)) // 124
   console.log(v()) // 124
   v("asdf") // TS type error
   ```
   These variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
+  [@benjamn](https://github.com/benjamn) in
+  [#5799](https://github.com/apollographql/apollo-client/pull/5799),
+  [#5976](https://github.com/apollographql/apollo-client/pull/5976), and
+  [#6512](https://github.com/apollographql/apollo-client/pull/6512)
 
 - Various cache read and write performance optimizations, cutting read and write times by more than 50% in larger benchmarks. <br/>
   [@benjamn](https://github.com/benjamn) in [#5948](https://github.com/apollographql/apollo-client/pull/5948)

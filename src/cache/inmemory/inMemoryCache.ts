@@ -15,6 +15,7 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
+import { makeVar } from './reactiveVars';
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
@@ -52,6 +53,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // possibleTypes by calling cache.policies.addTypePolicies or
   // cache.policies.addPossibletypes.
   public readonly policies: Policies;
+
+  public readonly makeVar = makeVar;
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
@@ -374,26 +377,4 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       optimistic: c.optimistic,
     }));
   }
-
-  private varDep = dep<ReactiveVar<any>>();
-
-  public makeVar<T>(value: T): ReactiveVar<T> {
-    const cache = this;
-    return function rv(newValue) {
-      if (arguments.length > 0) {
-        if (value !== newValue) {
-          value = newValue!;
-          cache.varDep.dirty(rv);
-          // In order to perform several ReactiveVar updates without
-          // broadcasting each time, use cache.performTransaction.
-          cache.broadcastWatches();
-        }
-      } else {
-        cache.varDep(rv);
-      }
-      return value;
-    };
-  }
 }
-
-export type ReactiveVar<T> = (newValue?: T) => T;

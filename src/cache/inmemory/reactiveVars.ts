@@ -1,6 +1,7 @@
 import { Slot } from "@wry/context";
 import { dep } from "optimism";
 import { InMemoryCache } from "./inMemoryCache";
+import { ApolloCache } from '../../core';
 
 export type ReactiveVar<T> = (newValue?: T) => T;
 
@@ -8,10 +9,10 @@ const varDep = dep<ReactiveVar<any>>();
 
 // Contextual Slot that acquires its value when custom read functions are
 // called in Policies#readField.
-export const cacheSlot = new Slot<InMemoryCache>();
+export const cacheSlot = new Slot<ApolloCache<any>>();
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
-  const caches = new Set<InMemoryCache>();
+  const caches = new Set<ApolloCache<any>>();
 
   return function rv(newValue) {
     if (arguments.length > 0) {
@@ -23,9 +24,9 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
         caches.forEach(broadcast);
       }
     } else {
-      // When reading from the variable, obtain the current InMemoryCache
-      // from context via cacheSlot. This isn't entirely foolproof, but
-      // it's the same system that powers varDep.
+      // When reading from the variable, obtain the current cache from
+      // context via cacheSlot. This isn't entirely foolproof, but it's
+      // the same system that powers varDep.
       const cache = cacheSlot.getValue();
       if (cache) caches.add(cache);
       varDep(rv);
@@ -35,12 +36,14 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
   };
 }
 
-type Broadcastable = InMemoryCache & {
+type Broadcastable = ApolloCache<any> & {
   // This method is protected in InMemoryCache, which we are ignoring, but
   // we still want some semblance of type safety when we call it.
   broadcastWatches: InMemoryCache["broadcastWatches"];
 };
 
 function broadcast(cache: Broadcastable) {
-  cache.broadcastWatches();
+  if (cache.broadcastWatches) {
+    cache.broadcastWatches();
+  }
 }

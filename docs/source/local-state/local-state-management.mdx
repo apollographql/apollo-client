@@ -19,7 +19,7 @@ sequenceDiagram
     participant GraphQL Server;
 
     Apollo Client->>Cache: Queries local and remote fields;
-    Note over Cache: Populates local fields;
+    Note over Cache: Calculates local fields;
     Cache->>GraphQL Server: Queries remote fields;
     Note over GraphQL Server: Resolves remote fields;
     GraphQL Server->>Cache: Returns remote fields;
@@ -27,7 +27,8 @@ sequenceDiagram
     Cache->>Apollo Client: Returns ALL fields;
     Note over Apollo Client: Time passes…;
     Apollo Client->>Cache: Executes same query;
-    Note over Cache: Populates ALL fields (now cached);
+    Note over Cache: Calculates local fields;
+    Note over Cache: Fetches remote fields (now cached);
     Cache->>Apollo Client: Returns ALL fields;
 ```
 

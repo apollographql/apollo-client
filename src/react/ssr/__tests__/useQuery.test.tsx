@@ -7,8 +7,8 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useQuery } from '../../hooks/useQuery';
-import { renderToStringWithData } from '../renderToStringWithData';
 import { render, wait } from '@testing-library/react';
+import { renderToStringWithData } from '..';
 
 describe('useQuery Hook SSR', () => {
   const CAR_QUERY: DocumentNode = gql`

@@ -1,36 +1,68 @@
 ---
-title: Local state management
-description: Interact with your local data in Apollo Client
+title: Managing local state
+sidebar_title: Overview
+description: Interacting with local data in Apollo Client
 ---
 
-We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store.
+At its core, Apollo Client is a **state management** library that happens to use GraphQL to interact with a remote server. Naturally, some application state doesn't _require_ a remote server because it's entirely local.
 
-Apollo Client provides built-in local state handling capabilities that allow you to access local data by just querying it with GraphQL. You can even request local and server data within the same query. All of Apollo Client's local state management features are driven by its caching system, which serves as its foundation. [Interacting with cached data](../caching/cache-interaction/) covers how to directly read from and write into the cache, along with other cache API features. It's a good idea to read over this section before continuing with the local state docs.
+Apollo Client enables you to manage local state alongside remotely fetched state, meaning you can interact with _all_ of your application's state with a single API.
 
-The Apollo Client cache API can be seamlessly integrated into client side applications, to streamline, simplify and enhance client side data graph management. To accomplish this, Apollo Client currently supports two approaches for managing local state.
+## How it works
 
-**1. Field policies and reactive variables**
+You can store local state in the same [normalized, in-memory cache](../caching/cache-configuration/) as the results of your remote GraphQL operations. You can query the cache for local data just like you query for remote data, as described in [Interacting with cached data](../caching/cache-interaction/). You can even fetch both types of data in a single query:
+
+```mermaid
+sequenceDiagram
+    participant Apollo Client;
+    participant Cache;
+    participant GraphQL Server;
+
+    Apollo Client->>Cache: Queries local and remote fields;
+    Note over Cache: Populates local fields;
+    Cache->>GraphQL Server: Queries remote fields;
+    Note over GraphQL Server: Resolves remote fields;
+    GraphQL Server->>Cache: Returns remote fields;
+    Note over Cache: Caches remote fields;
+    Cache->>Apollo Client: Returns ALL fields;
+    Note over Apollo Client: Time passes…;
+    Apollo Client->>Cache: Executes same query;
+    Note over Cache: Populates ALL fields (now cached);
+    Cache->>Apollo Client: Returns ALL fields;
+```
+
+Apollo Client 3 introduces two complementary mechanisms for managing local state: [field policies](#field-policies) and [reactive variables](#reactive-variables).
+
+> The [local resolver API](./local-resolvers/) from previous versions of Apollo Client is also available but is [deprecated](./local-resolvers/#deprecation-notice).
+
+## Field policies
 
 > Available in Apollo Client >= 3.0
 
-Field policies provide a way to customize the reading and writing of individual cache fields. They can be used to modify data on its way into or out of the cache, as well as create virtual client side only `@client` fields. Virtual fields can be integrated into GraphQL queries that are called against the cache, and can perform any unit of work you would like them to (they are driven by simple functions).
+**Field policies** enable you to define what happens when you query a particular field, _including fields that aren't defined in your GraphQL server's schema_. In addition to specifying these local-only fields (with the `@client` directive), you can use field policies to transform _any_ field's value on its way into or out of your cache.
 
-Reactive variables are functions that allow you to store local state outside of the cache. Field policies can use them to combine local state with queries read from the cache, but they can also be referenced and updated directly anywhere in your application. Changes made to reactive variables are internally broadcast within Apollo Client, allowing watched queries that use reactive variables to be automatically updated with the newly changed data.
+A single GraphQL query can include both schema fields and local-only fields. In the field policy for each local-only field, you specify a function that defines how that field's value is populated.
 
-Field policies and reactive variables can be combined in powerful ways to drive an effective client side state management system. Refer to the [reactive variables](./reactive-variables) and [managing state with field policies](./managing-state-with-field-policies) sections for more details and local state specific examples.
+[Get started with field policies](./managing-state-with-field-policies/)
 
-**2. Local resolvers**
+## Reactive variables
+
+> Available in Apollo Client >= 3.0
+
+**Reactive variables** enable you to read and write local data anywhere in your application, without needing to use a GraphQL operation to do so. The [field policy](#field-policies) of a local-only field can use a reactive variable to store the field's current value.
+
+Reactive values _aren't_ stored in the Apollo Client cache, so they don't need to conform to the strict structure of a cached type. You can store anything you want in them.
+
+Whenever the value of a reactive variable changes, Apollo Client broadcasts that change. Every active query with a field that depends on that variable's value automatically updates (hence "reactive").
+
+[Get started with reactive variables](./reactive-variables)
+
+## Local resolvers (deprecated)
 
 > Available in Apollo Client >= 2.5
 
-Apollo Client supports the use of client side only resolvers, that can be used to fulfil and execute local queries and mutations. Similar to how server side GraphQL resolvers are functions than can be executed to fulfil the fields of a GraphQL query, local resolvers can be used to do the same thing for client side only `@client` fields included in GraphQL queries.
+In earlier versions of Apollo Client, you define **local resolvers** to populate and modify local-only fields. These resolvers are similar in structure and purpose to the [resolvers that your GraphQL server defines](https://www.apollographql.com/docs/apollo-server/data/resolvers/).
 
-Refer to [Local resolvers](./local-resolvers) for a detailed explanation of how client side resolvers can be used to manage local state.
+This functionality is still available in Apollo Client 3, but it is deprecated.
 
-## Local resolver deprecation
-
-The idea of using client side resolvers to manage local state was first introduced into the Apollo Client ecosystem through the [`apollo-link-state`](https://github.com/apollographql/apollo-link-state) project. The Apollo Client team is always looking for ways to improve local state handling, so we decided to bring local resolver and `@client` support into the Apollo Client core directly, in version 2.5. While managing state with local resolvers works well, the functionality offered by `apollo-link-state`, and then from Apollo Client directly, was originally designed with certain imposed limitations due to its distance from the Apollo Client cache. Apollo Link's don't have direct access to the cache, which means `apollo-link-state` had to implement an approach that couldn't feed or hook into the cache as seamlessly as we would have liked. The local resolver support merged into the Apollo Client core in version 2.5 was essentially a mirror of the Link approach, with a few adjustments to tie into the cache a little more closely. This means Apollo Client's local resolver approach is still a bit limited when it comes to being able to work with the cache more closely, and ultimately providing a better developer experience.
-
-To help address limitations in the local resolver API, we have designed and implemented a new approach for managing local state in Apollo Client 3.0, that works as a direct extension of the cache. Field policies and reactive variables not only help provide a better developer experience from an API use and functionality point of view, but they also improve performance and provide a more reliable foundation for local state management. Re-thinking local state handling with the Apollo Client cache in mind has helped reduce a large number of local state bugs caused by local resolvers being a few too many layers removed from the cache internals.
-
-The [managing state with field policies](./managing-state-with-field-policies) section goes into more detail around what Apollo Client 3's new local state management capabilities look like. We highly recommend reviewing and considering the use of these new API's as a replacement for local resolvers. Local resolvers are still supported in Apollo Client 3, but should be considered deprecated. Local resolver functionality will be removed in a future major version of Apollo Client.
+[Learn more about local resolvers](./local-resolvers)

@@ -16,6 +16,7 @@ const external = [
   'graphql/language/visitor',
   'graphql-tag',
   'fast-json-stable-stringify',
+  '@wry/context',
   '@wry/equality',
   'react',
   'zen-observable'

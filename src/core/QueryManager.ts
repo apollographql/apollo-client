@@ -700,14 +700,15 @@ export class QueryManager<TStore> {
         variables,
         operationName: getOperationName(serverQuery) || void 0,
         context: this.prepareContext({
-          ...context,
-          forceFetch: !deduplication
+          forceFetch: !deduplication,
+          ...context
         }),
       };
 
       context = operation.context;
 
-      if (deduplication) {
+      // Bypass deduplication logic if forceFetch is specified
+      if (deduplication && !context.forceFetch) {
         const byVariables = inFlightLinkObservables.get(serverQuery) || new Map();
         inFlightLinkObservables.set(serverQuery, byVariables);
 

@@ -1348,8 +1348,8 @@ describe('client', () => {
       },
     };
 
-    // we have two responses for identical queries, but only the first should be requested.
-    // the second one should never make it through to the network interface.
+    // we have two responses for identical queries, and both should be requested.
+    // the second one should make it through to the network interface.
     const link = mockSingleLink({
       request: { query: queryDoc },
       result: { data },
@@ -1374,6 +1374,50 @@ describe('client', () => {
       expect(stripSymbols(result2.data)).toEqual(data2);
     }).then(resolve, reject);
   });
+
+  itAsync('does not deduplicate queries if query context.forceFetch is set to true', (resolve, reject) => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, and both should be requested.
+    // the second one should make it through to the network interface.
+    const link = mockSingleLink({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    }, {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    }).setOnError(reject);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const q1 = client.query({ query: queryDoc, context: { forceFetch: true } });
+    const q2 = client.query({ query: queryDoc, context: { forceFetch: true } });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      expect(stripSymbols(result1.data)).toEqual(data);
+      expect(stripSymbols(result2.data)).toEqual(data2);
+    }).then(resolve, reject);
+  })
 
   itAsync('deduplicates queries by default', (resolve, reject) => {
     const queryDoc = gql`

@@ -13,7 +13,7 @@
     "react-dom": "16.12.0"
   },
   "devDependencies": {
-    "typedoc": "0.17.8",
+    "typedoc": "0.15.8",
     "typescript": "3.9.5"
   }
 }

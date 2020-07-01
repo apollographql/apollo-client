@@ -1,27 +1,75 @@
 ---
-title: Managing state with field policies
+title: Managing local state with field policies
+sidebar_title: Field policies
 description: Control and reactively respond to local state changes
 ---
 
-Field policies provide a way to manage data on its way into or out of the cache for specific fields in your GraphQL operations. They are explained in more detail in [Customizing the behavior of cached fields](../caching/cache-field-behavior/), but it's important to note that they can also be used help drive fields that don't actually exist in your cache. Field policies can be used to create virtual client side only fields that you can customize to perform any task, or return any data you would like, when called as part of your full GraphQL operation. They can be used to read and write from the cache or be combined with other state API's like Apollo Client reactive variables. Virtual fields are triggered anytime you call a GraphQL operation in Apollo Client, letting you blend fully custom local behavior with your remote queries, getting the results back in a combined response.
+import { ExpansionPanel } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
-The following sections dive into more detail around reading and writing local state using field policies and the Apollo Client cache.
+**Field policies** define custom logic for how individual GraphQL fields are written to and fetched from your Apollo Client cache. To manage local state with field policies, you can define policies for fields that aren't in your back-end schema. You can then include these local-only fields alongside schema-backed fields in your GraphQL queries.
 
-## Handling `@client` fields with field policies
+> Field policies are primarily documented in [Customizing the behavior of cached fields](../caching/cache-field-behavior/). This article specifically describes how to use them to manage local state.
 
-Apollo Client [field policies](../caching/cache-field-behavior) can be used to locally compute GraphQL query fields that use a `@client` directive. This means that instead of sending your full GraphQL query to a remote GraphQL endpoint, which then runs resolver functions against your query to populate and return a result set, Apollo Client can run locally defined `read` functions to compute the value of `@client` fields. Let's look at an example:
+## Querying a local-only field
+
+Let's say we're building an e-commerce website. Most of a product's details are stored on our back-end server, but we might want to define an `isInCart` boolean field that's local to a particular client.
+
+### Use the `@client` directive
+
+To fetch a particular product's details _including_ its local cart status, we can write a query like this one:
+
+```js{6}
+const GET_PRODUCT_DETAILS = gql`
+  query ProductDetails($productId: ID!) {
+    product(id: $productId) {
+      name
+      price
+      isInCart @client
+    }
+  }
+`;
+```
+
+The `@client` directive above tells Apollo Client that the `isInCart` field is always calculated locally. To prevent errors, Apollo Client strips `isInCart` from this query before sending it to our server to fetch values for `name` and `price`. The final query result is returned only after all local _and_ remote fields are populated.
+
+> **Note:** If you apply the `@client` directive to a field with subfields, the directive is automatically applied to all subfields.
+> 
+> <ExpansionPanel title="See example">
+> 
+> ```js{6-9}
+> const GET_PRODUCT_DETAILS = gql`
+  query ProductDetails($productId: ID!) {
+    product(id: $productId) {
+      name
+      price
+      purchaseStatus @client {
+        isInCart
+        isOnWishlist
+      }
+    }
+  }
+`;
+> ```
+>
+> </ExpansionPanel>
+
+Now we need to define a field policy that describes _how_ the `isInCart` field is calculated locally.
+
+### Define a field policy
+
+You define your application's field policies in a map that you provide to the constructor of Apollo Client's `InMemoryCache`. Each field policy is a child of a particular _type_ policy (much like the corresponding field is a child of a particular type).
+
+Here's a sample `InMemoryCache` constructor that defines a field policy for `Product.isInCart`:
 
 ```js
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
-
 const cache = new InMemoryCache({
-  typePolicies: {
-    Launch: {
-      fields: {
-        isInCart: {
-          read(_, { variables }) {
+  typePolicies: { // Type policy map
+    Product: {
+      fields: { // Field policy map for the Product type
+        isInCart: { // Field policy for the isInCart field
+          read(_, { variables }) { // The read function for the isInCart field
             return localStorage.getItem('CART').includes(
-              variables.launchId
+              variables.productId
             );
           }
         }
@@ -29,52 +77,22 @@ const cache = new InMemoryCache({
     }
   }
 });
-
-const client = new ApolloClient({
-  uri: 'http://localhost:4000/graphql',
-  cache,
-});
-
-const GET_LAUNCH_DETAILS = gql`
-  query LaunchDetails($launchId: ID!) {
-    launch(id: $launchId) {
-      isInCart @client
-      site
-      rocket {
-        type
-      }
-    }
-  }
-`;
-
-// ... run the query using client.query, a useQuery hook, etc.
 ```
 
-Here when the `GET_LAUNCH_DETAILS` query is executed, Apollo Client looks for a field policy `read` function that is associated with the `isInCart` field. It finds one as we've defined a `read` function for the `isInCart` field in the `InMemoryCache` constructor. This `read` function is run, then the result is calculated and merged in with the rest of the query result (if a `read` function can't be found, Apollo Client will check the cache for a matching field - see [Local data query flow](./querying-and-updating#local-data-query-flow) for more details).
+The field policy above defines a [`read` function](../caching/cache-field-behavior/#the-read-function) for the `isInCart` field. Whenever you query a field that has a `read` function, the cache calls that function to calculate the field's value. In this case, the `read` function returns whether the queried product's ID is in the `CART` array in `localStorage`.
 
-In the above example we defined and associated a `isInCart` `read` function with the `Launch` GraphQL object type. Let's look at the `isInCart` `read` function more closely:
+> By default, if you don't define a `read` function for a local-only field, the cache checks whether the field exists in its cached version of the corresponding type. For details, see [Local data query flow](./querying-and-updating#local-data-query-flow).
 
-```js
-Launch: {
-  fields: {
-    isInCart: {
-      read(_, { variables }) {
-        return localStorage.getItem('CART').includes(
-          variables.launchId
-        );
-      }
-    }
-  }
-}
-```
+You can use `read` functions to perform any sort of logic you want, including:
 
-The first parameter of the `isInCart` `read` function gives us access to a previously stored `isInCart` field value from the cache, if one exists. Since we don't need to look at the cache in this example, we've named this parameter `_`. The second parameter is an object that gives us access to several read function properties and helper functions, which are explained in the [`FieldPolicy` API reference](../caching/cache-field-behavior/#fieldpolicy-api-reference). In our case we're only interested in using the `launchId` variable passed into the query, so we'll pull this out of the `variables` property. Using the `launchId` we check to see if our `localStorage` based cart array contains the specified launch, returning `true` / `false` accordingly. The returned boolean is then incorporated back into the result of running the original query, making it look like the value of `isInCart` came back alongside the rest of the server returned data.
-
-Just like resolvers on the server, field policies are extremely flexible. They can be used to perform any kind of local computation you want, before returning a result for the specified field. You can manually query (or write to) the cache in different ways, call other helper utilities or libraries to prepare/validate/clean data, track statistics, call into other data stores to prepare a result, and so much more.
+* Manually executing other cache operations
+* Calling helper utilities or libraries to prepare, validate, or sanitize data
+* Fetching data from a separate store
+* Registering usage metrics
 
 ## Using reactive variables to track `@client` state
 
-[Handling `@client` fields with field policies](#handling-client-fields-with-field-policies) outlines how field policies can be used to calculate query fields that use the `@client` directive. While this functionality is quite useful by itself, it can be paired with Apollo Client [reactive variables](./reactive-variables) to help make the processing and running of GraphQL queries more dynamic and reactive, to updates in other parts of your application.
+You can pair field policies with Apollo Client [reactive variables](./reactive-variables) to help make the processing and running of GraphQL queries more dynamic and reactive, to updates in other parts of your application.
 
 To understand how reactive variables and field policies can work together, let's say we're building an ecommerce web application. As part of this system we're tracking items in a client side shopping cart, where the shopping cart is a simple list of product ID's. To list the items in the shopping cart, we're using the following query and `Cart` component:
 
@@ -180,95 +198,6 @@ If we wanted to store and manage our cart in the cache, to add a new product to 
 
 The above example really only scratches the surface of what reactive variables combined with field policies can accomplish. Reactive variables introduce a new exciting way of handling state in Apollo Client, and we can't wait to see what you build with them!
 
-## Integrating `@client` into remote queries
-
-While Apollo Client’s local state handling features can be used to work with local state exclusively, most Apollo based applications are built to work with remote data sources. To address this, Apollo Client supports mixing `@client` fields (calculated by field policies) with remote queries, as well as using `@client` based fields as arguments to remote queries, in the same request.
-
-The `@client` directive can be used on any GraphQL selection set or field, to identify that the result of that field should be calculated locally with the help of a field policy:
-
-```js
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
-
-const MEMBER_DETAILS = gql`
-  query Member {
-    member {
-      name
-      role
-      isLoggedIn @client
-    }
-  }
-`;
-
-const client = new ApolloClient({
-  uri: 'http://localhost:4000/graphql',
-  cache: new InMemoryCache({
-    typePolicies: {
-      Member: {
-        fields: {
-          isLoggedIn: {
-            read() {
-              return someInternalLoginVerificationFunction();
-            }
-          }
-        }
-      }
-    }
-  })
-});
-
-// ... run the query using client.query, a useQuery hook, etc.
-```
-
-When the above `MEMBER_DETAILS` query is fired by Apollo Client (assuming we're talking to a network based GraphQL API), the `@client` `isLoggedIn` field is first stripped from the document, and the remaining query is sent over the network to the GraphQL API. After the query has been handled by the remote resolvers and the result is passed back to Apollo Client from the API, the `@client` parts of the original query are then run against any defined cache field policies, their results are merged with the network results, and the final resulting data is returned as the response to the original operation. So in the above example, `isLoggedIn` is stripped before the rest of the query is sent and handled by the network API, then when the results come back `isLoggedIn` is calculated by running the `isLoggedIn` field policy `read` function. Local and network results are merged together, and the final response is made available to the application.
-
-The `@client` directive can be used with entire selection sets as well:
-
-```js
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
-
-const MEMBER_DETAILS = gql`
-  query Member {
-    member {
-      name
-      role
-      session @client {
-        isLoggedIn
-        connectionCount
-        errors
-      }
-    }
-  }
-`;
-
-const client = new ApolloClient({
-  uri: 'http://localhost:4000/graphql',
-  cache: new InMemoryCache({
-    typePolicies: {
-      Member: {
-        fields: {
-          session: {
-            read() {
-              return {
-                isLoggedIn: someInternalLoginVerificationFunction(),
-                connectionCount: calculateOpenConnections(),
-                errors: sessionError(),
-                __typename: 'Session',
-              };
-            }
-          }
-        }
-      }
-    }
-  })
-});
-```
-
-Apollo Client supports the merging of local `@client` results and remote results for Queries, Mutations and Subscriptions.
-
-## Handling async operations with field policies
-
-TODO
-
 ## Handling `@client` fields with the cache
 
 As outlined in [Handling `@client` fields with field policies](#handling-client-fields-with-field-policies), `@client` fields can be resolved with the help of field policy functions. However, it's important to note that field policies are not always required when using the `@client` directive. Fields marked with `@client` can still be resolved locally, by pulling matching values out of the cache directly. For example:
@@ -322,124 +251,33 @@ In the above example, we first prepare the cache using `cache.writeQuery` to sto
 
 Pulling `@client` field values directly out of the cache isn't quite as flexible as using field policy functions, since they can perform extra computations before returning a result. Depending on your application's needs however, loading `@client` fields directly from the cache might be a simpler option. Apollo Client doesn't restrict combining both approaches, so feel free to mix and match. If the need arises, you can pull some `@client` values directly from the cache, and calculate others others using field policies, all in the same query.
 
-## Using `@client` fields as variables
+## Using local-only fields as GraphQL variables
 
-Apollo Client provides a way to use an `@client` field result as a variable for a selection set or field, in the same operation. So instead of running an `@client` based query first, getting the local result, then running a second query using the loaded local result as a variable, everything can be handled in one request. This is achieved by combining the `@client` directive with the `@export(as: "variableName")` directive:
+If your GraphQL query uses variables, the local-only fields of that query can provide the _values_ of those variables.
+
+To do so, you apply the `@export(as: "variableName")` directive, like so:
 
 ```js
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
-
 const query = gql`
   query CurrentAuthorPostCount($authorId: Int!) {
     currentAuthorId @client @export(as: "authorId")
     postCount(authorId: $authorId)
   }
 `;
-
-const client = new ApolloClient({
-  uri: 'http://localhost:4000/graphql',
-  cache: new InMemoryCache(),
-});
-
-cache.writeQuery({
-  query: gql`query GetCurrentAuthorId { currentAuthorId }`,
-  data: {
-    currentAuthorId: 12345,
-  },
-});
-
-// ... run the query using client.query, useQuery hook, etc.
 ```
 
-In the example above, `currentAuthorId` is first loaded from the cache, then passed into the subsequent  `postCount` field as the `authorId` variable (specified by the `@export(as: "authorId")` directive). The `@export` directive can also be used on specific fields within a selection set, like:
+In the query above, the result of the local-only field `currentAuthorId` is used as the value of the `$authorId` variable that's passed to `postCount`. 
 
-```js
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+You can even do this if `postCount` is _also_ a local-only field (i.e., if it's also marked as `@client`).
 
-const query = gql`
-  query CurrentAuthorPostCount($authorId: Int!) {
-    currentAuthor @client {
-      name
-      authorId @export(as: "authorId")
-    }
-    postCount(authorId: $authorId)
-  }
-`;
+### Considerations for using `@export`
 
-const client = new ApolloClient({
-  uri: 'http://localhost:4000/graphql',
-  cache: new InMemoryCache(),
-});
+* To use the `@export` directive, a field **must also** use the `@client` directive. In other words, only local-only fields can be used as variable values. 
 
-cache.writeQuery({
-  query: gql`
-    query GetCurrentAuthor {
-      currentAuthor {
-        name
-        authorId
-      }
-    }
-  `,
-  data: {
-    currentAuthor: {
-      __typename: 'Author',
-      name: 'John Smith',
-      authorId: 12345,
-    },
-  },
-});
+* If multiple fields in an operation use the `@export` directive to assign their value to the _same_ variable, the field listed _last_ takes precedence. When this happens in development mode, Apollo Client logs a warning message.
 
-// ... run the query using client.query, useQuery hook, etc.
-```
+* At first glance, the `@export` directive appears to violate the [GraphQL specification's requirement](https://graphql.github.io/graphql-spec/draft/#sec-Normal-and-Serial-Execution) that the execution order of an operation must not affect its result:
 
-Here the `authorId` variable is set from the `authorId` field loaded from the cache stored `currentAuthor`. `@export` variable use isn't limited to remote queries; it can also be used to define variables for other `@client` fields or selection sets:
+    > …the resolution of fields other than top‐level mutation fields must always be side effect‐free and idempotent, the execution order must not affect the result, and hence the server has the freedom to execute the field entries in whatever order it deems optimal.
 
-```js
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
-
-const query = gql`
-  query CurrentAuthorPostCount($authorId: Int!) {
-    currentAuthorId @client @export(as: "authorId")
-    postCount(authorId: $authorId) @client
-  }
-`;
-
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        postCount: {
-          read(_, { variables }) {
-            return variables.authorId === 12345 ? 100 : 0;
-          }
-        }
-      }
-    }
-  }
-});
-
-const client = new ApolloClient({ cache });
-
-cache.writeQuery({
-  query: gql`{ currentAuthorId }`,
-  data: {
-    currentAuthorId: 12345,
-  },
-});
-
-// ... run the query using client.query, useQuery hook, etc.
-```
-
-So here the `currentAuthorId` is loaded from the cache, then passed into the `postCount` local resolver as `authorId`.
-
-**A few important notes about `@export` use:**
-
-1. Apollo Client currently only supports using the `@export` directive to store variables for local data. `@export` must be used with `@client`.
-
-2. `@client @export` use might appear to go against the GraphQL specification, given that the execution order of an operation looks like it could affect the result. From the [Normal and Serial Execution](https://graphql.github.io/graphql-spec/draft/#sec-Normal-and-Serial-Execution) section of the GraphQL spec:
-
-  > ... the resolution of fields other than top‐level mutation fields must always be side effect‐free and idempotent, the execution order must not affect the result, and hence the server has the freedom to execute the field entries in whatever order it deems optimal.
-
-  Apollo Client currently only supports the use of the `@export` directive when mixed with the `@client` directive. It prepares `@export` variables by first running through an operation that has `@client @export` directives, extracting the specified `@export` variables, then attempting to resolve the value of those variables from the local cache or with field policies. Once a map of variable names to local values is built up, that map is then used to populate the variables passed in when running the server based GraphQL query. The execution order of the server based GraphQL query is not impacted by `@export` use; the variables are prepped and organized before the server query runs, so the specification is being followed.
-
-3. If you define multiple `@export` variables that use the same name, in a single operation, the value of the last `@export` variable will be used as the variable value moving forward. When this happens Apollo Client will log a warning message (dev only).
+    However, all variable values are populated _before_ an operation is sent to a remote server. Only local-only fields can use the `@export` directive, and those fields are stripped from operations before they're transmitted. The remote server can therefore resolve operation fields in any order without side effects.

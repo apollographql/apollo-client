@@ -62,15 +62,18 @@ describe('QueryManager', () => {
     link,
     config = {},
     clientAwareness = {},
+    queryDeduplication = false,
   }: {
     link: ApolloLink;
     config?: Partial<InMemoryCacheConfig>;
     clientAwareness?: { [key: string]: string };
+    queryDeduplication?: boolean;
   }) => {
     return new QueryManager({
       link,
       cache: new InMemoryCache({ addTypename: false, ...config }),
       clientAwareness,
+      queryDeduplication,
     });
   };
 
@@ -5041,7 +5044,7 @@ describe('QueryManager', () => {
   });
 
   describe('queryDeduplication', () => {
-    it('should be true when context is true, default is false and agrument not provided', () => {
+    it('should be true when context is true, default is false and argument not provided', () => {
       const query = gql`
         query {
           author {
@@ -5056,11 +5059,11 @@ describe('QueryManager', () => {
         }),
       });
 
-      queryManager.getObservableFromLink(query, { queryDeduplication: true })
+      queryManager.query({ query, context: { queryDeduplication: true } })
 
-      expect(queryManager.inFlightLinkObservables.size).toBe(1)
+      expect(queryManager['inFlightLinkObservables'].size).toBe(1)
     });
-    it('should be false when context is false, default is true and agrument not provided', () => {
+    it('should allow overriding global queryDeduplication: true to false', () => {
       const query = gql`
         query {
           author {
@@ -5073,12 +5076,12 @@ describe('QueryManager', () => {
           request: { query },
           result: { author: { firstName: 'John' } },
         }),
+        queryDeduplication: true,
       });
-      queryManager.queryDeduplication = true
 
-      queryManager.getObservableFromLink(query, { queryDeduplication: false })
+      queryManager.query({ query, context: { queryDeduplication: false } })
 
-      expect(queryManager.inFlightLinkObservables.size).toBe(0)
+      expect(queryManager['inFlightLinkObservables'].size).toBe(0)
     });
   })
 });

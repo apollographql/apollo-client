@@ -6,6 +6,9 @@
 
 ### `ApolloClient`
 
+- The query manager now respects the [forceFetch](https://www.apollographql.com/docs/link/links/dedup/#context) option, disabling the deduplication logic when provided. <br/>
+  [@Kujawadl](httpsp://github.com/Kujawadl) in [#6519](https://github.com/apollographql/apollo-client/pull/6519)
+
 - **[BREAKING]** `ApolloClient` is now only available as a named export. The default `ApolloClient` export has been removed. <br/>
   [@hwillson](https://github.com/hwillson) in [#5425](https://github.com/apollographql/apollo-client/pull/5425)
 

@@ -10,7 +10,7 @@ export {
   FetchMoreOptions,
   UpdateQueryOptions,
   ApolloCurrentQueryResult,
-} from '../core/ObservableQuery';
+} from './ObservableQuery';
 export {
   QueryBaseOptions,
   QueryOptions,
@@ -23,13 +23,13 @@ export {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   MutationUpdaterFn,
-} from '../core/watchQueryOptions';
-export { NetworkStatus } from '../core/networkStatus';
-export * from '../core/types';
+} from './watchQueryOptions';
+export { NetworkStatus } from './networkStatus';
+export * from './types';
 export {
   Resolver,
   FragmentMatcher as LocalStateFragmentMatcher,
-} from '../core/LocalState';
+} from './LocalState';
 export { isApolloError, ApolloError } from '../errors/ApolloError';
 
 /* Cache */

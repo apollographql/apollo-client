@@ -58,7 +58,9 @@ To accomplish this, you can define `read` and `merge` functions as part of any f
 
 If you define a `read` function for a field, the cache calls that function whenever your client queries for the field. In the query response, the field is populated with the `read` function's return value, _instead of the field's cached value_.
 
-The `read` function takes the field's cached value as a parameter, so you can use it to help determine the function's return value.
+The first parameter of a `read` function provides the field's currently cached value, if one exists. You can use this to help determine the function's return value.
+
+The second parameter is an object that provides access to several properties and helper functions, which are explained in the [`FieldPolicy` API reference](#fieldpolicy-api-reference).
 
 The following `read` function assigns a default value of `UNKNOWN NAME` to the `name` field of a `Person` type, if the actual value is not available in the cache. In all other cases, the cached value is returned.
 
@@ -78,7 +80,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-If a field accepts arguments, its associated `read` function is passed the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
+If a field accepts arguments, the second parameter includes the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
 
 ```ts
 const cache = new InMemoryCache({

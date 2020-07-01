@@ -1,15 +1,14 @@
+import React from 'react';
 import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../ApolloClient';
 import { getApolloContext } from './ApolloContext';
-import { requireReactLazily } from '../react';
 
 export interface ApolloConsumerProps {
   children: (client: ApolloClient<object>) => React.ReactChild | null;
 }
 
 export const ApolloConsumer: React.FC<ApolloConsumerProps> = props => {
-  const React = requireReactLazily();
   const ApolloContext = getApolloContext();
   return (
     <ApolloContext.Consumer>

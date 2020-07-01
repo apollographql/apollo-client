@@ -12,11 +12,18 @@ import { DeepMerger } from '../../utilities/common/mergeDeep';
 import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
 import { canUseWeakMap } from '../../utilities/common/canUse';
 import { NormalizedCache, NormalizedCacheObject } from './types';
-import { fieldNameFromStoreName } from './helpers';
+import { hasOwn, fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';
-import  { Modifier, Modifiers, SafeReadonly } from '../core/types/common';
-
-const hasOwn = Object.prototype.hasOwnProperty;
+import { Cache } from '../core/types/Cache';
+import {
+  SafeReadonly,
+  Modifier,
+  Modifiers,
+  ReadFieldFunction,
+  ReadFieldOptions,
+  ToReferenceFunction,
+  CanReadFunction,
+} from '../core/types/common';
 
 const DELETE: any = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
@@ -65,7 +72,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject {
+  protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined {
     // The has method (above) calls lookup with dependOnExistence = true, so
     // that it can later be invalidated when we add or remove a StoreObject for
     // this dataId. Any consumer who cares about the contents of the StoreObject
@@ -111,7 +118,7 @@ export abstract class EntityStore implements NormalizedCache {
 
   public modify(
     dataId: string,
-    modifiers: Modifier<any> | Modifiers,
+    fields: Modifier<any> | Modifiers,
   ): boolean {
     const storeObject = this.lookup(dataId);
 
@@ -120,18 +127,24 @@ export abstract class EntityStore implements NormalizedCache {
       let needToMerge = false;
       let allDeleted = true;
 
-      const readField = <V = StoreValue>(
-        fieldName: string,
-        objOrRef?: StoreObject | Reference,
-      ) => this.getFieldValue<V>(objOrRef || makeReference(dataId), fieldName);
+      const readField: ReadFieldFunction = <V = StoreValue>(
+        fieldNameOrOptions: string | ReadFieldOptions,
+        from?: StoreObject | Reference,
+      ) => this.policies.readField<V>(
+        typeof fieldNameOrOptions === "string" ? {
+          fieldName: fieldNameOrOptions,
+          from: from || makeReference(dataId),
+        } : fieldNameOrOptions,
+        { store: this },
+      );
 
       Object.keys(storeObject).forEach(storeFieldName => {
         const fieldName = fieldNameFromStoreName(storeFieldName);
         let fieldValue = storeObject[storeFieldName];
         if (fieldValue === void 0) return;
-        const modify: Modifier<StoreValue> = typeof modifiers === "function"
-          ? modifiers
-          : modifiers[fieldName];
+        const modify: Modifier<StoreValue> = typeof fields === "function"
+          ? fields
+          : fields[storeFieldName] || fields[fieldName];
         if (modify) {
           let newValue = modify === delModifier ? DELETE :
             modify(maybeDeepFreeze(fieldValue), {
@@ -140,6 +153,7 @@ export abstract class EntityStore implements NormalizedCache {
               storeFieldName,
               isReference,
               toReference: this.toReference,
+              canRead: this.canRead,
               readField,
             });
           if (newValue === DELETE) newValue = void 0;
@@ -176,20 +190,43 @@ export abstract class EntityStore implements NormalizedCache {
   // If called with only one argument, removes the entire entity
   // identified by dataId. If called with a fieldName as well, removes all
   // fields of that entity whose names match fieldName according to the
-  // fieldNameFromStoreName helper function.
-  public delete(dataId: string, fieldName?: string) {
-    return this.modify(dataId, fieldName ? {
-      [fieldName]: delModifier,
-    } : delModifier);
+  // fieldNameFromStoreName helper function. If called with a fieldName
+  // and variables, removes all fields of that entity whose names match fieldName
+  // and whose arguments when cached exactly match the variables passed.
+  public delete(
+    dataId: string,
+    fieldName?: string,
+    args?: Record<string, any>,
+  ) {
+    const storeObject = this.lookup(dataId);
+    if (storeObject) {
+      const typename = this.getFieldValue<string>(storeObject, "__typename");
+      const storeFieldName = fieldName && args
+        ? this.policies.getStoreFieldName({ typename, fieldName, args })
+        : fieldName;
+      return this.modify(dataId, storeFieldName ? {
+        [storeFieldName]: delModifier,
+      } : delModifier);
+    }
+    return false;
   }
 
-  public evict(dataId: string, fieldName?: string): boolean {
+  public evict(options: Cache.EvictOptions): boolean {
     let evicted = false;
-    if (hasOwn.call(this.data, dataId)) {
-      evicted = this.delete(dataId, fieldName);
-    }
-    if (this instanceof Layer) {
-      evicted = this.parent.evict(dataId, fieldName) || evicted;
+    if (options.id) {
+      if (hasOwn.call(this.data, options.id)) {
+        evicted = this.delete(options.id, options.fieldName, options.args);
+      }
+      if (this instanceof Layer) {
+        evicted = this.parent.evict(options) || evicted;
+      }
+      // Always invalidate the field to trigger rereading of watched
+      // queries, even if no cache data was modified by the eviction,
+      // because queries may depend on computed fields with custom read
+      // functions, whose values are not stored in the EntityStore.
+      if (options.fieldName || evicted) {
+        this.group.dirty(options.id, options.fieldName || "__exists");
+      }
     }
     return evicted;
   }
@@ -206,7 +243,7 @@ export abstract class EntityStore implements NormalizedCache {
     });
     if (newData) {
       Object.keys(newData).forEach(dataId => {
-        this.merge(dataId, newData[dataId]);
+        this.merge(dataId, newData[dataId] as StoreObject);
       });
     }
   }
@@ -284,7 +321,7 @@ export abstract class EntityStore implements NormalizedCache {
         if (isReference(obj)) {
           found[obj.__ref] = true;
         } else if (canTraverse(obj)) {
-          Object.values(obj)
+          Object.values(obj!)
             // No need to add primitive values to the workSet, since they cannot
             // contain reference objects.
             .filter(canTraverse)
@@ -311,23 +348,42 @@ export abstract class EntityStore implements NormalizedCache {
       : objectOrReference && objectOrReference[storeFieldName]
   ) as SafeReadonly<T>;
 
-  // Bound function that converts an object with a __typename and primary
-  // key fields to a Reference object. Pass true for mergeIntoStore if you
-  // would also like this object to be persisted into the store.
-  public toReference = (
-    object: StoreObject,
-    mergeIntoStore?: boolean,
-  ) => {
-    const id = this.policies.identify(object);
-    const ref = id && makeReference(id);
-    if (ref && mergeIntoStore) {
-      this.merge(id, object);
-    }
-    return ref;
-  }
-}
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  public canRead: CanReadFunction = objOrRef => {
+    return isReference(objOrRef)
+      ? this.has(objOrRef.__ref)
+      : typeof objOrRef === "object";
+  };
 
-export type ToReferenceFunction = EntityStore["toReference"];
+  // Bound function that converts an id or an object with a __typename and
+  // primary key fields to a Reference object. If called with a Reference object,
+  // that same Reference object is returned. Pass true for mergeIntoStore to persist
+  // an object into the store.
+  public toReference: ToReferenceFunction = (
+    objOrIdOrRef,
+    mergeIntoStore,
+  ) => {
+    if (typeof objOrIdOrRef === "string") {
+      return makeReference(objOrIdOrRef);
+    }
+
+    if (isReference(objOrIdOrRef)) {
+      return objOrIdOrRef;
+    }
+
+    const [id] = this.policies.identify(objOrIdOrRef);
+
+    if (id) {
+      const ref = makeReference(id);
+      if (mergeIntoStore) {
+        this.merge(id, objOrIdOrRef);
+      }
+      return ref;
+    }
+  };
+}
 
 export type FieldValueGetter = EntityStore["getFieldValue"];
 
@@ -383,7 +439,7 @@ export namespace EntityStore {
     // single distinct CacheGroup object. Since this shared object must
     // outlast the Layer instances themselves, it needs to be created and
     // owned by the Root instance.
-    private sharedLayerGroup: CacheGroup = null;
+    private sharedLayerGroup: CacheGroup;
 
     constructor({
       policies,
@@ -407,7 +463,7 @@ export namespace EntityStore {
       return new Layer(layerId, this, replay, this.sharedLayerGroup);
     }
 
-    public removeLayer(layerId: string): Root {
+    public removeLayer(): Root {
       // Never remove the root layer.
       return this;
     }
@@ -480,7 +536,7 @@ class Layer extends EntityStore {
 function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
-  property: string | number,
+  property: string,
 ): StoreValue {
   const existingValue = existingObject[property];
   const incomingValue = incomingObject[property];
@@ -495,14 +551,4 @@ function storeObjectReconciler(
 export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
   return !!(store instanceof EntityStore && store.group.caching);
-}
-
-export function defaultNormalizedCacheFactory(
-  seed?: NormalizedCacheObject,
-): NormalizedCache {
-  return new EntityStore.Root({
-    policies: new Policies,
-    resultCaching: true,
-    seed,
-  });
 }

@@ -491,13 +491,13 @@ type FieldPolicy<
 type KeySpecifier = (string | KeySpecifier)[];
 
 type KeyArgsFunction = (
-  field: FieldNode,
+  args: Record<string, any> | null,
   context: {
     typename: string;
-    variables: Record<string, any>;
-    policies: Policies;
+    fieldName: string;
+    field: FieldNode | null;
   },
-) => string | null | void;
+) => string | KeySpecifier | null | void;
 
 type FieldReadFunction<TExisting, TReadResult = TExisting> = (
   existing: Readonly<TExisting> | undefined,
@@ -512,6 +512,8 @@ type FieldMergeFunction<TExisting, TIncoming = TExisting> = (
 
 // These options are common to both read and merge functions:
 interface FieldFunctionOptions {
+  cache: InMemoryCache;
+
   // The final argument values passed to the field, after applying variables.
   // If no arguments were provided, this property will be null.
   args: Record<string, any> | null;
@@ -531,14 +533,20 @@ interface FieldFunctionOptions {
   // this field. Possibly undefined, if no variables were provided.
   variables?: Record<string, any>;
 
-  // Utilities for handling { __ref: string } references.
+  // Easily detect { __ref: string } reference objects.
   isReference(obj: any): obj is Reference;
+
   // Returns a Reference object if obj can be identified, which requires,
   // at minimum, a __typename and any necessary key fields. If true is
   // passed for the optional mergeIntoStore argument, the object's fields
   // will also be persisted into the cache, which can be useful to ensure
-  // the Reference actually refers to data stored in the cache.
-  toReference(obj: StoreObject, mergeIntoStore?: boolean): Reference;
+  // the Reference actually refers to data stored in the cache. If you
+  // pass an ID string, toReference will make a Reference out of it. If
+  // you pass a Reference, toReference will return it as-is.
+  toReference(
+    objOrIdOrRef: StoreObject | string | Reference,
+    mergeIntoStore?: boolean,
+  ): Reference | undefined;
 
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
@@ -554,21 +562,22 @@ interface FieldFunctionOptions {
     foreignObjOrRef?: StoreObject | Reference,
   ): T;
 
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  canRead(value: StoreValue): boolean;
+
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
   storage: Record<string, any>;
 
-  // Call this function to invalidate any cached queries that previously
-  // consumed this field. If you use options.storage to cache the result
-  // of an expensive read function, updating options.storage and then
-  // calling options.invalidate() can be a good way to deliver the new
-  // result asynchronously.
-  invalidate(): void;
-
-  // In rare advanced use cases, a read or merge function may wish to
-  // consult the current Policies object, for example to call
-  // getStoreFieldName manually.
-  policies: Policies;
+  // Instead of just merging objects with { ...existing, ...incoming }, this
+  // helper function can be used to merge objects in a way that respects any
+  // custom merge functions defined for their fields.
+  mergeObjects<T extends StoreObject | Reference>(
+    existing: T,
+    incoming: T,
+  ): T | undefined;
 }
 ```

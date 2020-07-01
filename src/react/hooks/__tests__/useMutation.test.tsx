@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
@@ -8,10 +9,6 @@ import { ApolloClient } from '../../../ApolloClient';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../context/ApolloProvider';
 import { useMutation } from '../useMutation';
-import { requireReactLazily } from '../../react';
-
-const React = requireReactLazily();
-const { useEffect } = React;
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -337,7 +334,7 @@ describe('useMutation Hook', () => {
             expect(data!.createTodo.description).toEqual(
               CREATE_TODO_RESULT.createTodo.description
             );
-            expect(errors[0].message).toEqual(
+            expect(errors![0].message).toEqual(
               expect.stringContaining(CREATE_TODO_ERROR)
             );
           }

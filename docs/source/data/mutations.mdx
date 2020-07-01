@@ -298,7 +298,9 @@ The following sample illustrates defining an update function in a call to `useMu
 ```jsx
 const GET_TODOS = gql`
   query GetTodos {
-    todos
+    todos {
+      id
+    }
   }
 `;
 

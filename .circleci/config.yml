@@ -47,7 +47,7 @@ jobs:
             - ~/.npm
       - run:
           name: Jest suite with coverage
-          command: npm run test:ci && npm run coverage:upload
+          command: npm run test:ci
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:

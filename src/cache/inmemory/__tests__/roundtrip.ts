@@ -2,11 +2,11 @@ import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
 import { withError } from './diffAgainstStore';
-import { withWarning } from './writeToStore';
 import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
-import { Policies } from '../policies';
+import { InMemoryCache } from '../inMemoryCache';
+import { writeQueryToStore } from './helpers';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
@@ -21,16 +21,17 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
 }
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const policies = new Policies({
+  const cache = new InMemoryCache({
     possibleTypes: {
       Character: ["Jedi", "Droid"],
     },
   });
 
-  const reader = new StoreReader({ policies });
-  const writer = new StoreWriter({ policies });
+  const reader = new StoreReader({ cache });
+  const writer = new StoreWriter(cache);
 
-  const store = writer.writeQueryToStore({
+  const store = writeQueryToStore({
+    writer,
     result,
     query,
     variables,
@@ -68,7 +69,8 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
 
   // Now make sure subtrees of the result are identical even after we write
   // an additional bogus field to the store.
-  writer.writeQueryToStore({
+  writeQueryToStore({
+    writer,
     store,
     result: { oyez: 1234 },
     query: gql`
@@ -311,7 +313,7 @@ describe('roundtrip', () => {
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
     it('should throw an error on two of the same inline fragment types', () => {
-      return withWarning(() => expect(() => {
+      expect(() => {
         storeRoundtrip(
           gql`
             query {
@@ -337,7 +339,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Can\'t find field rank on object/));
+      }).toThrowError(/Missing field 'rank' /);
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
@@ -451,7 +453,7 @@ describe('roundtrip', () => {
     });
 
     it('should throw on error on two of the same spread fragment types', () => {
-      withWarning(() => expect(() => {
+      expect(() => {
         storeRoundtrip(
           gql`
             fragment jediSide on Jedi {
@@ -481,7 +483,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Can\'t find field rank on object/));
+      }).toThrowError(/Missing field 'rank' /);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

@@ -1,5 +1,4 @@
 import {
-  ExecutionResult,
   DocumentNode,
   OperationDefinitionNode,
   SelectionSetNode,
@@ -33,6 +32,8 @@ import {
 } from '../utilities/graphql/storeUtils';
 import { ApolloClient } from '../ApolloClient';
 import { Resolvers, OperationVariables } from './types';
+import { FetchResult } from '../link/core/types';
+import { cacheSlot } from '../cache/inmemory/reactiveVars';
 
 export type Resolver = (
   rootValue?: any,
@@ -128,11 +129,11 @@ export class LocalState<TCacheShape> {
     onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
-    remoteResult: ExecutionResult<TData>;
+    remoteResult: FetchResult<TData>;
     context?: Record<string, any>;
     variables?: Record<string, any>;
     onlyRunForcedResolvers?: boolean;
-  }): Promise<ExecutionResult<TData>> {
+  }): Promise<FetchResult<TData>> {
     if (document) {
       return this.resolveDocument(
         document,
@@ -372,12 +373,16 @@ export class LocalState<TCacheShape> {
       if (resolverMap) {
         const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
         if (resolve) {
-          resultPromise = Promise.resolve(resolve(
-            rootValue,
-            argumentsObjectFromField(field, variables),
-            execContext.context,
-            { field, fragmentMap: execContext.fragmentMap },
-          ));
+          resultPromise = Promise.resolve(
+            // In case the resolve function accesses reactive variables,
+            // set cacheSlot to the current cache instance.
+            cacheSlot.withValue(this.cache, resolve, [
+              rootValue,
+              argumentsObjectFromField(field, variables),
+              execContext.context,
+              { field, fragmentMap: execContext.fragmentMap },
+            ])
+          );
         }
       }
     }

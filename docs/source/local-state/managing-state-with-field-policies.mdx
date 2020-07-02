@@ -1,12 +1,12 @@
 ---
 title: Local-only fields
 sidebar_title: Local-only fields
-description: Fetch both local and remote data in a single query
+description: Fetch both local and remote data with the same GraphQL query
 ---
 
 import { ExpansionPanel } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
-Your Apollo Client queries can include **local-only fields** that _aren't_ defined in your GraphQL server's schema. The values for these fields are calculated locally using any logic you want. A single query can include both local-only fields _and_ fields that are fetched from your GraphQL server.
+Your Apollo Client queries can include **local-only fields** that _aren't_ defined in your GraphQL server's schema. The values for these fields are calculated locally using any logic you want, such as reading data from `localStorage`. A single query can include both local-only fields _and_ fields that are fetched from your GraphQL server.
 
 ## Use the `@client` directive
 
@@ -26,7 +26,7 @@ const GET_PRODUCT_DETAILS = gql`
 `;
 ```
 
-The `@client` directive tells Apollo Client that `isInCart` is a local-only field. To prevent errors, Apollo Client strips this field from the query before sending it to our server to fetch `name` and `price`. The final query result is returned only after all local _and_ remote fields are populated.
+The `@client` directive tells Apollo Client that `isInCart` is a local-only field. Because `isInCart` is local-only, Apollo Client omits it from the query it sends to our server to fetch `name` and `price`. The final query result is returned only after all local _and_ remote fields are populated.
 
 > **Note:** If you apply the `@client` directive to a field with subfields, the directive is automatically applied to all subfields.
 > 
@@ -88,25 +88,29 @@ You can use `read` functions to perform any sort of logic you want, including:
 * Fetching data from a separate store
 * Logging usage metrics
 
-> If you query a local-only field that _doesn't_ define a `read` function, Apollo Client performs a default cache lookup for the field. See [Storing local data in the cache](#storing-local-data-in-the-cache) for details.
+> If you query a local-only field that _doesn't_ define a `read` function, Apollo Client performs a default cache lookup for the field. See [Storing local state in the cache](#storing-local-state-in-the-cache) for details.
 
 ## Storing local state
 
 [As covered above](#define-a-field-policy), you can use Apollo Client to query local state, regardless of how you _store_ that state. Apollo Client provides a couple of helpful mechanisms for storing local state:
 
-* [Reactive variables](#storing-local-data-in-reactive-variables) (recommended) 
-* [The Apollo Client cache itself](#storing-local-data-in-the-cache)
+* [Reactive variables](#storing-local-state-in-reactive-variables)
+* [The Apollo Client cache itself](#storing-local-state-in-the-cache)
 
 ### Storing local state in reactive variables
 
-You can access Apollo Client [reactive variables](./reactive-variables) anywhere in your application, and they integrate powerfully with [field policies](#define-a-field-policy). If a field's `read` function relies on the value of a reactive variable, and that variable's value _changes_, **every active query that includes the field automatically updates**.
+Apollo Client [reactive variables](./reactive-variables) are great for representing local state:
+
+* You can read and modify reactive variables from anywhere in your application, without needing to use a GraphQL operation to do so.
+* Unlike the Apollo Client cache, reactive variables don't enforce data normalization, meaning you can store data in any format you want.
+* If a field's value depends on the value of a reactive variable, and that variable's value _changes_, **every active query that includes the field automatically refreshes**.
 
 #### Example
 
 Returning to our e-commerce application, let's say we want to fetch a list of the item IDs in a user's cart, and this list is stored locally. The query to do that looks like this:
 
-```js
-const GET_CART_ITEMS = gql`
+```js:title=Cart.js
+export const GET_CART_ITEMS = gql`
   query GetCartItems {
     cartItems @client
   }
@@ -115,16 +119,16 @@ const GET_CART_ITEMS = gql`
 
 Let's initialize a reactive variable to store our local list of cart items, like so:
 
-```js
-const cartItemsVar = makeVar([]);
+```js:title=cache.js
+export const cartItemsVar = makeVar([]);
 ```
 
-This initializes a reactive variable with an empty array as its value. We can get this variable's current value by calling `cartItemsVar()`, and we can set a _new_ value by calling `cartItemsVar(newValue)`.
+This initializes a reactive variable that contains an empty array. We can get this variable's current value by calling `cartItemsVar()`, and we can set a _new_ value by calling `cartItemsVar(newValue)`.
 
-Next, let's define the `read` function for the `cartItems` field. As always, we pass this function to the constructor of `InMemoryCache`: 
+Next, let's define the field policy for `cartItems`. As always, we pass this to the constructor of `InMemoryCache`: 
 
-```js{6-8}
-const cache = new InMemoryCache({
+```js{5-9}:title=cache.js
+export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
@@ -139,11 +143,33 @@ const cache = new InMemoryCache({
 });
 ```
 
-Now the value of our reactive variable is returned whenever we query `cartItems`.
+This `read` function returns the value of our reactive variable whenever `cartItems` is queried.
 
-To list the items in the shopping cart, we're using the following query and `Cart` component:
+Now, let's create a button component that enables the user to add a product to their cart:
 
-```jsx
+```jsx{8}:title=AddToCartButton.js
+import { cartItemsVar } from './cache';
+// ... other imports
+
+export function AddToCartButton({ productId }) {
+  const cartItems = cartItemsVar();
+  return (
+    <div class="add-to-cart-button">
+      <Button onClick={() => cartItemsVar([...cartItems, productId])}>
+        Add to Cart
+      </Button>
+    </div>
+  );
+}
+```
+
+On click, this button updates the value of `cartItemsVar` to append the button's associated `productId`. When this happens, Apollo Client notifies every active query that includes the `cartItems` field.
+
+Here's a `Cart` component that uses the `GET_CART_ITEMS` query and therefore refreshes automatically whenever the value of `cartItemsVar` changes:
+
+<ExpansionPanel title="Expand example">
+
+```jsx:title=Cart.js
 export const GET_CART_ITEMS = gql`
   query GetCartItems {
     cartItems @client
@@ -164,7 +190,7 @@ export function Cart() {
       ) : (
         <Fragment>
           {data && data.cartItems.map(productId => (
-            <CartItem key={productId} launchId={productId} />
+            <CartItem key={productId} />
           ))}
         </Fragment>
       )}
@@ -173,37 +199,14 @@ export function Cart() {
 }
 ```
 
-As mentioned in the [reactive variables](./reactive-variables) section of these docs, reactive variables give us a simple way to track client side state, while having changes to that state tracked using Apollo Client's dependency tracking mechanism. 
-
-Now that we've wired a reactive variable up to help display our cart contents, let's take a look at how we can add a new product to our cart:
-
-```jsx
-import { cartItemsVar } from './cache';
-// ... other imports
-
-export function AddToCartButton({ productId }) {
-  const cartItems = cartItemsVar();
-  return (
-    <div class="add-to-cart-button">
-      <Button onClick={() => cartItemsVar([...cartItems, productId])}>
-        Add to Cart
-      </Button>
-    </div>
-  );
-}
-```
-
-When a customer clicks on our add to cart button, we combine the newly selected `productId` with the existing contents of our reactive variable cart, setting the new combination as the value of `cartItemsVar`. When this happens, Apollo Client notifies any query that has been wired up to use `cartItemsVar` in a field policy, of the changes. Since we're using `cartItems @client` in our `GET_CART_ITEMS` query above, this means our `useQuery` based `Cart` component will automatically re-render to show the updated cart.
-
-If we wanted to store and manage our cart in the cache, to add a new product to the cart we would either fire a local mutation using something like `useMutation`, or manipulate the cache directly using something like `cache.writeQuery` / `cache.writeFragment`. Given the basic needs of our shopping cart however, leveraging reactive variables to manage cart data in a simple array, but still be able to participate in Apollo Client's change notification workflow, leads to less boilerplate and more flexibility. Apollo Client's cache is primarily optimized for storing normalized graph based data, which means the format of the data stored in the cache is restricted. While this can be adjusted by [disabling normalization](../caching/cache-configuration/#disabling-normalization), reactive variables have no restrictions when it comes to storing data. The are simple state containers, and can hold anything ranging from JSON to functions and more.
-
-The above example really only scratches the surface of what reactive variables combined with field policies can accomplish. Reactive variables introduce a new exciting way of handling state in Apollo Client, and we can't wait to see what you build with them!
+</ExpansionPanel>
 
 ### Storing local state in the cache
 
-TODO: Storing and managing our shopping cart in the Apollo Client cache would help address our requirement of re-rendering the `Cart` component when there are changes. `useQuery` watches for query changes in the cache, then automatically re-runs when it finds them. This means that we could follow a pattern of updating the shopping cart in the cache when a user makes changes to it, using `cache.writeQuery`, and reading from the cache in our `cartItems` field policy `read` function above, using `cache.readQuery`. While this would work, using `cache.writeQuery` / `cache.readQuery` introduces a fair amount of boilerplate to interact with the cache stored shopping cart.
+Storing local state directly in the Apollo Client cache provides some advantages, but usually requires more code than [using reactive variables](#storing-local-state-in-reactive-variables):
 
-If you store local state as fields in the Apollo Client cache, you don't _have_ to [define `read` functions](#define-a-field-policy) for those fields. This is because if you query a field that doesn't define a `read` function, Apollo Client defaults to fetching that field's value directly from the cache.
+* You don't _have_ to [define `read` functions](#define-a-field-policy) for local-only fields that are present in the cache. If you query a field that doesn't define a `read` function, by default Apollo Client attempts to fetch that field's value directly from the cache.
+* When you modify a cached field with [`writeQuery` or `writeFragment`](../caching/cache-interaction#writequery-and-writefragment), **every active query that includes the field automatically refreshes**.
 
 #### Example
 
@@ -298,7 +301,7 @@ If your GraphQL query uses variables, the local-only fields of that query can pr
 
 To do so, you apply the `@export(as: "variableName")` directive, like so:
 
-```js
+```js{3}
 const GET_CURRENT_AUTHOR_POST_COUNT = gql`
   query CurrentAuthorPostCount($authorId: Int!) {
     currentAuthorId @client @export(as: "authorId")

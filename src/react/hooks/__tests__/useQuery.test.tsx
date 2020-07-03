@@ -1721,6 +1721,63 @@ describe('useQuery Hook', () => {
         expect(onCompletedCount).toBe(1);
       }).then(resolve, reject);
     });
+
+    itAsync('should not repeatedly call onCompleted if it alters state', (resolve, reject) => {
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const mocks = [
+        {
+          request: { query, variables: { first: 1 } },
+          result: { data: data1 },
+        },
+      ];
+
+      let renderCount = 0;
+      function Component() {
+        const [onCompletedCallCount, setOnCompletedCallCount] = useState(0);
+        const { loading, data } = useQuery(query, {
+          variables: { first: 1 },
+          onCompleted() {
+            setOnCompletedCallCount(onCompletedCallCount + 1);
+          }
+        });
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeTruthy();
+            break;
+          case 1:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(onCompletedCallCount).toBe(1);
+            break;
+          default:
+        }
+        renderCount += 1;
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks} addTypename={false}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
   });
 
   describe('Optimistic data', () => {

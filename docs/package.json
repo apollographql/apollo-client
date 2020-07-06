@@ -14,6 +14,6 @@
   },
   "devDependencies": {
     "typedoc": "0.15.8",
-    "typescript": "3.9.5"
+    "typescript": "3.9.6"
   }
 }

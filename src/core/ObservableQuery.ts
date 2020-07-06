@@ -1,7 +1,6 @@
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
-import { tryFunctionOrLogError } from '../utilities/common/errorHandling';
 import { cloneDeep } from '../utilities/common/cloneDeep';
 import { getOperationDefinition } from '../utilities/graphql/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -476,11 +475,9 @@ once, rather than every time you call fetchMore.`);
   ): void {
     const { queryManager } = this;
     const previousResult = this.getCurrentQueryResult(false).data;
-    const newResult = tryFunctionOrLogError(
-      () => mapFn(previousResult!, {
-        variables: (this as any).variables,
-      }),
-    );
+    const newResult = mapFn(previousResult!, {
+      variables: (this as any).variables,
+    });
 
     if (newResult) {
       queryManager.cache.writeQuery({

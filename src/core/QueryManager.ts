@@ -17,7 +17,6 @@ import {
 } from '../utilities/graphql/directives';
 import {
   graphQLResultHasError,
-  tryFunctionOrLogError,
 } from '../utilities/common/errorHandling';
 import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
 import { canUseWeakMap } from '../utilities/common/canUse';
@@ -199,14 +198,18 @@ export class QueryManager<TStore> {
         : optimisticResponse;
 
       this.cache.recordOptimisticTransaction(cache => {
-        markMutationResult({
-          mutationId: mutationId,
-          result: { data: optimistic },
-          document: mutation,
-          variables: variables,
-          queryUpdatersById: generateUpdateQueriesInfo(),
-          update: updateWithProxyFn,
-        }, cache);
+        try {
+          markMutationResult({
+            mutationId: mutationId,
+            result: { data: optimistic },
+            document: mutation,
+            variables: variables,
+            queryUpdatersById: generateUpdateQueriesInfo(),
+            update: updateWithProxyFn,
+          }, cache);
+        } catch (error) {
+          invariant.error(error);
+        }
       }, mutationId);
     }
 
@@ -1111,7 +1114,7 @@ function markMutationResult<TStore, TData>(
             document,
             variables,
           },
-        }= queryUpdatersById[id];
+        } = queryUpdatersById[id];
 
         // Read the current query result from the store.
         const { result: currentQueryResult, complete } = cache.diff<TData>({
@@ -1123,13 +1126,11 @@ function markMutationResult<TStore, TData>(
 
         if (complete && currentQueryResult) {
           // Run our reducer using the current query result and the mutation result.
-          const nextQueryResult = tryFunctionOrLogError(
-            () => updater(currentQueryResult, {
-              mutationResult: mutation.result,
-              queryName: getOperationName(document!) || undefined,
-              queryVariables: variables!,
-            }),
-          );
+          const nextQueryResult = updater(currentQueryResult, {
+            mutationResult: mutation.result,
+            queryName: getOperationName(document!) || undefined,
+            queryVariables: variables!,
+          });
 
           // Write the modified result back into the store if we got a new result.
           if (nextQueryResult) {
@@ -1152,7 +1153,7 @@ function markMutationResult<TStore, TData>(
       // write action.
       const { update } = mutation;
       if (update) {
-        tryFunctionOrLogError(() => update(c, mutation.result));
+        update(c, mutation.result);
       }
     });
   }

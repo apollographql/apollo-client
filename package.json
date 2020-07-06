@@ -88,7 +88,7 @@
     "fetch-mock": "7.7.3",
     "graphql": "15.3.0",
     "jest": "26.1.0",
-    "jest-junit": "8.0.0",
+    "jest-junit": "11.0.1",
     "lodash": "4.17.15",
     "prop-types": "15.7.2",
     "react": "^16.13.1",

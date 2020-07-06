@@ -4,7 +4,7 @@ import './fixPolyfills';
 import { DocumentNode } from 'graphql';
 import { dep, wrap } from 'optimism';
 
-import { ApolloCache, Transaction } from '../core/cache';
+import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { addTypenameToDocument } from '../../utilities/graphql/transform';
 import { StoreObject, Reference, isReference }  from '../../utilities/graphql/storeUtils';
@@ -257,10 +257,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public performTransaction(
     transaction: (cache: InMemoryCache) => any,
-    // This parameter is not part of the performTransaction signature inherited
-    // from the ApolloCache abstract class, but it's useful because it saves us
-    // from duplicating this implementation in recordOptimisticTransaction.
-    optimisticId?: string,
+    optimisticId?: string | null,
   ) {
     const perform = (layer?: EntityStore) => {
       const { data, optimisticData } = this;
@@ -282,21 +279,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // When removeOptimistic(id) is called for that id, all matching layers
       // will be removed, and the remaining layers will be reapplied.
       this.optimisticData = this.optimisticData.addLayer(optimisticId, perform);
+    } else if (optimisticId === null) {
+      // Ensure both this.data and this.optimisticData refer to the root
+      // (non-optimistic) layer of the cache during the transaction. Note
+      // that this.data could be a Layer if we are currently executing an
+      // optimistic transaction function, but otherwise will always be an
+      // EntityStore.Root instance.
+      perform(this.data);
     } else {
-      // If we don't have an optimisticId, perform the transaction anyway. Note
-      // that this.optimisticData.addLayer calls perform, too.
+      // Otherwise, leave this.data and this.optimisticData unchanged and
+      // run the transaction with broadcast batching.
       perform();
     }
 
     // This broadcast does nothing if this.txCount > 0.
     this.broadcastWatches();
-  }
-
-  public recordOptimisticTransaction(
-    transaction: Transaction<NormalizedCacheObject>,
-    id: string,
-  ) {
-    return this.performTransaction(transaction, id);
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {

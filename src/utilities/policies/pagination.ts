@@ -47,8 +47,8 @@ type TInternalRelay<TNode> = Readonly<{
   pageInfo: Readonly<{
     hasPreviousPage: boolean;
     hasNextPage: boolean;
-    startCursor?: string;
-    endCursor?: string;
+    startCursor: string;
+    endCursor: string;
   }>;
 }>;
 
@@ -71,8 +71,8 @@ export function relayStylePagination<TNode = Reference>(
         edges,
         pageInfo: {
           ...existing.pageInfo,
-          startCursor: edges[0]?.cursor,
-          endCursor: edges[edges.length - 1]?.cursor,
+          startCursor: cursorFromEdge(edges, 0),
+          endCursor: cursorFromEdge(edges, -1),
         },
       };
     },
@@ -110,8 +110,8 @@ export function relayStylePagination<TNode = Reference>(
       const pageInfo = {
         ...incoming.pageInfo,
         ...existing.pageInfo,
-        startCursor: edges[0]?.cursor,
-        endCursor: edges[edges.length - 1]?.cursor,
+        startCursor: cursorFromEdge(edges, 0),
+        endCursor: cursorFromEdge(edges, -1),
       };
 
       const updatePageInfo = (name: keyof TInternalRelay<TNode>["pageInfo"]) => {
@@ -139,8 +139,19 @@ function makeEmptyData() {
     pageInfo: {
       hasPreviousPage: false,
       hasNextPage: true,
+      startCursor: "",
+      endCursor: "",
     },
   };
+}
+
+function cursorFromEdge<TNode>(
+  edges: TInternalRelay<TNode>["edges"],
+  index: number,
+): string {
+  if (index < 0) index += edges.length;
+  const edge = edges[index];
+  return edge && edge.cursor || "";
 }
 
 function updateCursor<TNode>(

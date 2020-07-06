@@ -12,8 +12,12 @@ export {
 export {
   InMemoryCache,
   InMemoryCacheConfig,
-  ReactiveVar,
 } from './inmemory/inMemoryCache';
+
+export {
+  ReactiveVar,
+  makeVar,
+} from './inmemory/reactiveVars';
 
 export {
   defaultDataIdFromObject,

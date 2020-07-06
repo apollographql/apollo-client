@@ -61,6 +61,16 @@ import { MockedProvider } from '@apollo/client/testing';
 
 As part of migrating, we recommend removing all `@apollo/react-testing` dependencies.
 
+### @apollo/react-ssr
+
+React Apollo’s SSR utilities (like `getDataFromTree`, `getMarkupFromTree`, and `renderToStringWithData`) are included in the `@apollo/client` package. Access them via `@apollo/client/react/ssr`:
+
+```js
+import { renderToStringWithData } from '@apollo/client/react/ssr';
+```
+
+As part of migrating, we recommend removing all `@apollo/react-ssr` dependencies.
+
 ### react-apollo
 
 `react-apollo` v3 is an umbrella package that re-exports the following packages:
@@ -72,11 +82,10 @@ As part of migrating, we recommend removing all `@apollo/react-testing` dependen
 - `@apollo/react-ssr`
 - `@apollo/react-testing`
 
-Because `@apollo/client` includes functionality from `@apollo/react-common`, `@apollo/react-hooks` and `@apollo/react-testing`, we've released a v4 version of `react-apollo` that includes only the following:
+Because `@apollo/client` includes functionality from `@apollo/react-common`, `@apollo/react-hooks`, `@apollo/react-ssr` and `@apollo/react-testing`, we've released a v4 version of `react-apollo` that includes only the following:
 
 - `@apollo/react-components`
 - `@apollo/react-hoc`
-- `@apollo/react-ssr`
 
 This version re-exports the remainder of React functionality directly from `@apollo/client`, so if you upgrade to `react-apollo` v4 you should still have access to everything you had in v3. That being said, we recommend removing all `react-apollo` dependencies and directly installing whichever `@apollo/react-*` packages you need.
 

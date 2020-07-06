@@ -12,7 +12,7 @@ import { ApolloClient } from '..';
 import subscribeAndCount from '../utilities/testing/subscribeAndCount';
 import { itAsync } from '../utilities/testing/itAsync';
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { ObservableQuery, PossibleTypesMap } from '../core';
+import { ObservableQuery, PossibleTypesMap, makeVar } from '../core';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -2815,6 +2815,8 @@ describe('@connection', () => {
   });
 
   itAsync('should broadcast changes for reactive variables', async (resolve, reject) => {
+    const aVar = makeVar(123);
+    const bVar = makeVar("asdf");
     const cache: InMemoryCache = new InMemoryCache({
       typePolicies: {
         Query: {
@@ -2829,9 +2831,6 @@ describe('@connection', () => {
         },
       },
     });
-
-    const aVar = cache.makeVar(123);
-    const bVar = cache.makeVar("asdf");
 
     const client = new ApolloClient({ cache });
 

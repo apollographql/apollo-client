@@ -5,12 +5,13 @@ import gql from 'graphql-tag';
 
 import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
 import { MutationQueryReducersMap } from '../core/types';
-import { ObservableSubscription as Subscription } from '../utilities/observables/Observable';
+import { Observable, ObservableSubscription as Subscription } from '../utilities/observables/Observable';
 import { ApolloClient } from '../';
 import { addTypenameToDocument } from '../utilities/graphql/transform';
-import { makeReference } from '../core';
+import { makeReference, ApolloLink, ApolloCache } from '../core';
 import { stripSymbols } from '../utilities/testing/stripSymbols';
 import { itAsync } from '../utilities/testing/itAsync';
+import { Cache } from '../cache/core/types/Cache';
 import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
 import { QueryManager } from '../core/QueryManager';
 
@@ -1835,6 +1836,292 @@ describe('optimistic mutation results', () => {
       ]);
 
       resolve();
+    });
+
+    itAsync("final update ignores optimistic data", (resolve, reject) => {
+      const cache = new InMemoryCache;
+      const client = new ApolloClient({
+        cache,
+        link: new ApolloLink(operation => new Observable(observer => {
+          observer.next({
+            data: operation.variables.item,
+          });
+          observer.complete();
+        })),
+      });
+
+      const query = gql`query { items { text }}`;
+
+      let itemCount = 0;
+      function makeItem(source: string) {
+        return {
+          __typename: "Item",
+          text: `${source} ${++itemCount}`,
+        };
+      }
+
+      type Item = ReturnType<typeof makeItem>;
+      type Data = { items: Item[]; };
+
+      function append(cache: ApolloCache<any>, item: Item) {
+        const data = cache.readQuery<Data>({ query });
+        cache.writeQuery({
+          query,
+          data: {
+            ...data,
+            items: [...(data && data.items || []), item],
+          },
+        });
+        return item;
+      }
+      const cancelFns: (() => any)[] = [];
+      const optimisticDiffs: Cache.DiffResult<Data>[] = [];
+      const realisticDiffs: Cache.DiffResult<Data>[] = [];
+
+      cancelFns.push(cache.watch({
+        query,
+        optimistic: true,
+        callback(diff) {
+          optimisticDiffs.push(diff);
+        },
+      }));
+
+      cancelFns.push(cache.watch({
+        query,
+        optimistic: false,
+        callback(diff) {
+          realisticDiffs.push(diff);
+        },
+      }));
+
+      const manualItem1 = makeItem("manual");
+      const manualItem2 = makeItem("manual");
+      const manualItems = [
+        manualItem1,
+        manualItem2,
+      ];
+
+      expect(optimisticDiffs).toEqual([]);
+      expect(realisticDiffs).toEqual([]);
+
+      // So that we can have more control over the optimistic data in the
+      // cache, we add two items manually using the underlying cache API.
+      cache.recordOptimisticTransaction(cache => {
+        append(cache, manualItem1);
+        append(cache, manualItem2);
+      }, "manual");
+
+      expect(cache.extract(false)).toEqual({});
+      expect(cache.extract(true)).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          items: manualItems,
+        },
+      });
+
+      expect(optimisticDiffs).toEqual([
+        {
+          complete: true,
+          result: {
+            items: manualItems,
+          },
+        },
+      ]);
+
+      expect(realisticDiffs).toEqual([
+        {
+          complete: false,
+          missing: [expect.anything()],
+          result: {},
+        },
+      ]);
+
+      const mutation = gql`
+        mutation AddItem($item: Item!) {
+          addItem(item: $item) {
+            text
+          }
+        }
+      `;
+
+      let updateCount = 0;
+      const optimisticItem = makeItem("optimistic");
+      const mutationItem = makeItem("mutation");
+
+      return client.mutate({
+        mutation,
+        optimisticResponse: optimisticItem,
+        update(cache, mutationResult) {
+          ++updateCount;
+          if (updateCount === 1) {
+            expect(mutationResult).toEqual({
+              data: optimisticItem,
+            });
+
+            append(cache, optimisticItem);
+
+            const expected = {
+              ROOT_QUERY: {
+                __typename: "Query",
+                items: [
+                  manualItem1,
+                  manualItem2,
+                  optimisticItem,
+                ],
+              },
+              ROOT_MUTATION: {
+                __typename: "Mutation",
+              },
+            };
+
+            // Since we're in an optimistic update function, reading
+            // non-optimistically still returns optimistic data.
+            expect(cache.extract(false)).toEqual(expected);
+            expect(cache.extract(true)).toEqual(expected);
+
+          } else if (updateCount === 2) {
+            expect(mutationResult).toEqual({
+              data: mutationItem,
+            });
+
+            append(cache, mutationItem);
+
+            const expected = {
+              ROOT_QUERY: {
+                __typename: "Query",
+                items: [
+                  mutationItem,
+                ],
+              },
+              ROOT_MUTATION: {
+                __typename: "Mutation",
+              },
+            };
+
+            // Since we're in the final (non-optimistic) update function,
+            // optimistic data is invisible, even if we try to read
+            // optimistically.
+            expect(cache.extract(false)).toEqual(expected);
+            expect(cache.extract(true)).toEqual(expected);
+
+          } else {
+            throw new Error("too many updates");
+          }
+        },
+        variables: {
+          item: mutationItem,
+        },
+      }).then(result => {
+        expect(result).toEqual({ data: mutationItem });
+
+        // Only the final update function ever touched non-optimistic
+        // cache data.
+        expect(cache.extract(false)).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            items: [
+              mutationItem,
+            ],
+          },
+          ROOT_MUTATION: {
+            __typename: "Mutation",
+          },
+        });
+
+        // Now that the mutation is finished, reading optimistically from
+        // the cache should return the manually added items again.
+        expect(cache.extract(true)).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            items: [
+              // If we wanted to keep optimistic data as up-to-date as
+              // possible, we could rerun all optimistic transactions
+              // after writing to the root (non-optimistic) layer of the
+              // cache, which would result in mutationItem appearing in
+              // this list along with manualItem1 and manualItem2
+              // (presumably in that order). However, rerunning those
+              // optimistic transactions would trigger additional
+              // broadcasts for optimistic query watches, with
+              // intermediate results that (re)combine optimistic and
+              // non-optimistic data. Since rerendering the UI tends to be
+              // expensive, we should prioritize broadcasting states that
+              // matter most, and in this case that means broadcasting the
+              // initial optimistic state (for perceived performance),
+              // followed by the final, authoritative, non-optimistic
+              // state. Other intermediate states are a distraction, as
+              // they will probably soon be superseded by another (more
+              // authoritative) update. This particular state is visible
+              // only because we haven't rolled back this manual Layer
+              // just yet (see cache.removeOptimistic below).
+              manualItem1,
+              manualItem2,
+            ],
+          },
+          ROOT_MUTATION: {
+            __typename: "Mutation",
+          },
+        });
+
+        cache.removeOptimistic("manual");
+
+        // After removing the manual optimistic layer, only the
+        // non-optimistic data remains.
+        expect(cache.extract(true)).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            items: [
+              mutationItem,
+            ],
+          },
+          ROOT_MUTATION: {
+            __typename: "Mutation",
+          },
+        });
+
+      }).then(() => {
+        cancelFns.forEach(cancel => cancel());
+
+        expect(optimisticDiffs).toEqual([
+          {
+            complete: true,
+            result: {
+              items: manualItems,
+            },
+          },
+          {
+            complete: true,
+            result: {
+              items: [...manualItems, optimisticItem],
+            },
+          },
+          {
+            complete: true,
+            result: {
+              items: manualItems,
+            },
+          },
+          {
+            complete: true,
+            result: {
+              items: [mutationItem],
+            },
+          },
+        ]);
+
+        expect(realisticDiffs).toEqual([
+          {
+            complete: false,
+            missing: [expect.anything()],
+            result: {},
+          },
+          {
+            complete: true,
+            result: {
+              items: [mutationItem],
+            },
+          },
+        ]);
+      }).then(resolve, reject);
     });
   });
 });

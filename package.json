@@ -84,7 +84,7 @@
     "@types/react": "^16.9.32",
     "@types/react-dom": "^16.9.6",
     "bundlesize": "0.18.0",
-    "cross-fetch": "3.0.4",
+    "cross-fetch": "3.0.5",
     "fetch-mock": "7.7.3",
     "graphql": "15.3.0",
     "jest": "26.1.0",

@@ -722,44 +722,31 @@ describe('optimistic mutation results', () => {
     `;
 
     itAsync(
-      'should read the optimistic response of a mutation when making an ' +
-        'ApolloClient.readQuery() call, if the `optimistic` param is set to ' +
-        'true',
+      'client.readQuery should read the optimistic response of a mutation ' +
+        'only when update function is called optimistically',
       (resolve, reject) => {
         return setup(reject, {
           request: { query: todoListMutation },
           result: todoListMutationResult,
         }).then(client => {
+          let updateCount = 0;
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
             update: (proxy: any, mResult: any) => {
-              const data = proxy.readQuery({ query: todoListQuery }, true);
-              expect(data.todoList.todos[0].text).toEqual(
-                todoListOptimisticResponse.createTodo.todos[0].text,
-              );
-            },
-          });
-        }).then(resolve, reject);
-      },
-    );
-
-    itAsync(
-      'should not read the optimistic response of a mutation when making ' +
-        'an ApolloClient.readQuery() call, if the `optimistic` param is set ' +
-        'to false',
-      (resolve, reject) => {
-        return setup(reject, {
-          request: { query: todoListMutation },
-          result: todoListMutationResult,
-        }).then(client => {
-          return client.mutate({
-            mutation: todoListMutation,
-            optimisticResponse: todoListOptimisticResponse,
-            update: (proxy: any, mResult: any) => {
-              const incomingText = mResult.data.createTodo.todos[0].text;
-              const data = proxy.readQuery({ query: todoListQuery }, false);
-              expect(data.todoList.todos[0].text).toEqual(incomingText);
+              ++updateCount;
+              const data = proxy.readQuery({ query: todoListQuery });
+              const readText = data.todoList.todos[0].text;
+              if (updateCount === 1) {
+                const optimisticText =
+                  todoListOptimisticResponse.createTodo.todos[0].text;
+                expect(readText).toEqual(optimisticText);
+              } else if (updateCount === 2) {
+                const incomingText = mResult.data.createTodo.todos[0].text;
+                expect(readText).toEqual(incomingText);
+              } else {
+                fail("too many update calls");
+              }
             },
           });
         }).then(resolve, reject);
@@ -786,20 +773,30 @@ describe('optimistic mutation results', () => {
           request: { query: todoListMutation },
           result: todoListMutationResult,
         }).then(client => {
+          let updateCount = 0;
           return client.mutate({
             mutation: todoListMutation,
             optimisticResponse: todoListOptimisticResponse,
             update: (proxy: any, mResult: any) => {
-              const data: any = proxy.readFragment(
-                {
-                  id: 'TodoList5',
-                  fragment: todoListFragment,
-                },
-                true,
-              );
-              expect(data.todos[0].text).toEqual(
-                todoListOptimisticResponse.createTodo.todos[0].text,
-              );
+              ++updateCount;
+              const data: any = proxy.readFragment({
+                id: 'TodoList5',
+                fragment: todoListFragment,
+              }, true);
+              if (updateCount === 1) {
+                expect(data.todos[0].text).toEqual(
+                  todoListOptimisticResponse.createTodo.todos[0].text,
+                );
+              } else if (updateCount === 2) {
+                expect(data.todos[0].text).toEqual(
+                  mResult.data.createTodo.todos[0].text,
+                );
+                expect(data.todos[0].text).toEqual(
+                  todoListMutationResult.data.createTodo.todos[0].text,
+                );
+              } else {
+                fail("too many update calls");
+              }
             },
           });
         }).then(resolve, reject);

@@ -86,7 +86,7 @@
     "bundlesize": "0.18.0",
     "cross-fetch": "3.0.4",
     "fetch-mock": "7.7.3",
-    "graphql": "15.1.0",
+    "graphql": "15.3.0",
     "jest": "26.1.0",
     "jest-junit": "8.0.0",
     "lodash": "4.17.15",

@@ -78,6 +78,7 @@ export interface SingleExecutionResult<
   TContext = Record<string, any>,
   TExtensions = Record<string, any>
 > extends ExecutionResult<TData, TExtensions> {
+  // data might be undefined if errorPolicy was set to 'ignore'
   data?: Data<TData>;
   context?: TContext;
 }

@@ -41,7 +41,7 @@ You can remove any normalized object from the cache using the `evict` method:
 cache.evict({ id: 'my-object-id' })
 ```
 
-To remove a specific field from a normalized entity instead of the entire entity, you can provide a `fieldName` property:
+You can also remove a _single field_ from a cached object by providing the name of the field to remove:
 
 ```js
 cache.evict({ id: 'my-object-id', fieldName: 'yearOfFounding' });
@@ -59,9 +59,9 @@ You can customize behavior for dangling references by defining a custom [`read` 
 * Set the field's value to `null`
 * Return a particular default value 
 
-Every `read` function is passed a `canRead` helper function that enables it to detect when its field currently contains a dangling reference.
+Every `read` function is passed a `canRead` function that helps it detect when its field currently contains a dangling reference.
 
-The following code defines two `read` functions (one for `Query.ruler` and one for `Deity.offspring`) that use `canRead`:
+The following code defines two `read` functions (one for `Query.ruler` and one for `Deity.offspring`) that both use `canRead`:
 
 ```js
 new InMemoryCache({

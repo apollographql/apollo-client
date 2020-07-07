@@ -6,54 +6,15 @@ description: Fetch both local and remote data with the same GraphQL query
 
 import { ExpansionPanel } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
-Your Apollo Client queries can include **local-only fields** that _aren't_ defined in your GraphQL server's schema. The values for these fields are calculated locally using any logic you want, such as reading data from `localStorage`. A single query can include both local-only fields _and_ fields that are fetched from your GraphQL server.
+Your Apollo Client queries can include **local-only fields** that _aren't_ defined in your GraphQL server's schema. The values for these fields are calculated locally using any logic you want, such as reading data from `localStorage`.
 
-## Use the `@client` directive
+A single query can include both local-only fields _and_ fields that are fetched from your GraphQL server.
 
-Let's say we're building an e-commerce application. Most of a product's details are stored on our back-end server, but we want to define an `isInCart` boolean field that's local to the client.
+## Defining
 
-We can fetch a particular product's details (_including_ its local cart status) with a query like this one:
+Let's say we're building an e-commerce application. Most of a product's details are stored on our back-end server, but we want to define an `isInCart` boolean field that's local to the client. First, we'll create a **field policy** for `isInCart`.
 
-```js{6}
-const GET_PRODUCT_DETAILS = gql`
-  query ProductDetails($productId: ID!) {
-    product(id: $productId) {
-      name
-      price
-      isInCart @client
-    }
-  }
-`;
-```
-
-The `@client` directive tells Apollo Client that `isInCart` is a local-only field. Because `isInCart` is local-only, Apollo Client omits it from the query it sends to our server to fetch `name` and `price`. The final query result is returned only after all local _and_ remote fields are populated.
-
-> **Note:** If you apply the `@client` directive to a field with subfields, the directive is automatically applied to all subfields.
-> 
-> <ExpansionPanel title="See example">
-> 
-> ```js{6-9}
-> const GET_PRODUCT_DETAILS = gql`
-  query ProductDetails($productId: ID!) {
-    product(id: $productId) {
-      name
-      price
-      purchaseStatus @client {
-        isInCart
-        isOnWishlist
-      }
-    }
-  }
-`;
-> ```
->
-> </ExpansionPanel>
-
-Next, we need to define exactly _how_ the `isInCart` field is calculated locally. To do that, we'll [define a field policy](#define-a-field-policy) for it.
-
-## Define a field policy
-
-A **field policy** specifies custom logic for how a single GraphQL field is fetched from and written to your Apollo Client cache. You can define field policies for both local-only fields and remotely fetched fields.
+A field policy specifies custom logic for how a single GraphQL field is fetched from and written to your Apollo Client cache. You can define field policies for both local-only fields and remotely fetched fields.
 
 > Field policies are primarily documented in [Customizing the behavior of cached fields](../caching/cache-field-behavior/). This article specifically describes how to use them with local-only fields.
 
@@ -90,9 +51,48 @@ You can use `read` functions to perform any sort of logic you want, including:
 
 > If you query a local-only field that _doesn't_ define a `read` function, Apollo Client performs a default cache lookup for the field. See [Storing local state in the cache](#storing-local-state-in-the-cache) for details.
 
-## Storing local state
+## Querying
 
-[As covered above](#define-a-field-policy), you can use Apollo Client to query local state, regardless of how you _store_ that state. Apollo Client provides a couple of helpful mechanisms for storing local state:
+Now that we've defined a field policy for `isInCart`, we can include the field in a query that _also_ queries our back-end server, like so:
+
+```js{6}
+const GET_PRODUCT_DETAILS = gql`
+  query ProductDetails($productId: ID!) {
+    product(id: $productId) {
+      name
+      price
+      isInCart @client
+    }
+  }
+`;
+```
+
+That's it! The `@client` directive tells Apollo Client that `isInCart` is a local-only field. Because `isInCart` is local-only, Apollo Client omits it from the query it sends to our server to fetch `name` and `price`. The final query result is returned only after all local _and_ remote fields are populated.
+
+> **Note:** If you apply the `@client` directive to a field with subfields, the directive is automatically applied to all subfields.
+>
+> <ExpansionPanel title="See example">
+>
+> ```js{6-9}
+> const GET_PRODUCT_DETAILS = gql`
+  query ProductDetails($productId: ID!) {
+    product(id: $productId) {
+      name
+      price
+      purchaseStatus @client {
+        isInCart
+        isOnWishlist
+      }
+    }
+  }
+`;
+> ```
+>
+> </ExpansionPanel>
+
+## Storing
+
+[As covered above](#define-a-field-policy), you can use Apollo Client to query local state, regardless of how you _store_ that state. Apollo Client provides a couple of helpful mechanisms for representing local state:
 
 * [Reactive variables](#storing-local-state-in-reactive-variables)
 * [The Apollo Client cache itself](#storing-local-state-in-the-cache)

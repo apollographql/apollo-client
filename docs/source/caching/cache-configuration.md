@@ -1,36 +1,37 @@
 ---
 title: Configuring the cache
+sidebar_title: Configuration
 ---
 
 Apollo Client stores the results of its GraphQL queries in a normalized, in-memory cache. This enables your client to respond to future queries for the same data without sending unnecessary network requests.
 
->This article describes cache setup and configuration. To learn how to interact with cached data, see [Interacting with cached data](./cache-interaction).
+This article describes cache setup and configuration. To learn how to interact with cached data, see [Interacting with cached data](./cache-interaction).
 
 ## Installation
 
-As of Apollo Client 3.0, the `InMemoryCache` class is provided by the `@apollo/client` package. You no longer need to install a separate package after running `npm install @apollo/client`.
+As of Apollo Client 3.0, the `InMemoryCache` class is provided by the `@apollo/client` package. No additional libraries are required.
 
-## Initializing the cache
+## Initialization
 
-Create an `InMemoryCache` object and provide it to the `ApolloClient` constructor like so:
+Create an `InMemoryCache` object and provide it to the `ApolloClient` constructor, like so:
 
 ```ts
-import { InMemoryCache, HttpLink, ApolloClient } from '@apollo/client';
+import { InMemoryCache, ApolloClient } from '@apollo/client';
 
 const client = new ApolloClient({
-  link: new HttpLink(),
+  // ...other arguments...
   cache: new InMemoryCache(options)
 });
 ```
 
-The `InMemoryCache` constructor accepts a variety of named `options`, described below.
+The `InMemoryCache` constructor accepts a variety of [configuration options](#configuration-options).
 
-## Configuring the cache
+## Configuration options
 
 Although the cache's default behavior is suitable for a wide variety of applications, you can configure its behavior to better suit your particular use case. In particular, you can:
 
 * Specify custom primary key fields
-* Customize the storage and retrieval of field values
+* Customize the storage and retrieval of individual fields
 * Customize the interpretation of field arguments
 * Define supertype-subtype relationships for fragment matching
 * Define patterns for pagination
@@ -40,11 +41,11 @@ To customize cache behavior, provide an `options` object to the `InMemoryCache` 
 
 | Name | Type | Description |
 | ------- | ----- | --------- |
-| `addTypename`  | boolean | If `true`, the cache automatically adds `__typename` fields to all outgoing queries, removing the need to add them manually. (default: `true`) |
-| `resultCaching` | boolean | If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This makes it easier to detect changes to a query's result. (default: `true`) |
-| `possibleTypes` | `{ [supertype: string]: string[] }` | Include this object to define polymorphic relationships between your schema's types. Doing so enables you to look up cached data by interface or by union. The key for each entry is the `__typename` of an interface or union, and the value is an array of the `__typename`s of the types that either belong to the corresponding union or implement the corresponding interface. |
-| `typePolicies` | `{ [typename: string]: TypePolicy }` | Include this object to customize the cache's behavior on a type-by-type basis. The key for each entry is a type's `__typename`. For details, see [The `TypePolicy` type](#the-typepolicy-type). |
-| `dataIdFromObject` **(deprecated)** | function | A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store. Deprecated in favor of the `keyFields` option of the `TypePolicy` object. |
+| `addTypename`  | boolean | <p>If `true`, the cache automatically adds `__typename` fields to all outgoing queries, removing the need to add them manually.</p><p>Default: `true`</p> |
+| `resultCaching` | boolean | <p>If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This makes it easier to detect changes to a query's result.</p><p>Default: `true`</p> |
+| `possibleTypes` | `{ [supertype: string]: string[] }` | <p>Include this object to define polymorphic relationships between your schema's types. Doing so enables you to look up cached data by interface or by union.</p><p>The key for each entry is the `__typename` of an interface or union, and the value is an array of the `__typename`s of the types that either belong to the corresponding union or implement the corresponding interface.</p> |
+| `typePolicies` | `{ [typename: string]: TypePolicy }` | <p>Include this object to customize the cache's behavior on a type-by-type basis.</p><p>The key for each entry is a type's `__typename`. For details, see [`TypePolicy` fields](#typepolicy-fields).</p> |
+| `dataIdFromObject` **(deprecated)** | function | <p>A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store.</p><p>Deprecated in favor of the `keyFields` option of the `TypePolicy` object.</p> |
 
 ## Data normalization
 
@@ -68,7 +69,7 @@ For example, an object with a `__typename` of `Task` and an `id` of `14` is assi
 
 #### Customizing identifier generation by type
 
-If one of your types defines its primary key with a field _besides_ `id` or `_id`, you can customize how the `InMemoryCache` generates unique identifiers for that type. To do so, you define `TypePolicy` for the type. You specify all of your cache's `typePolicies` in [the `options` object you provide to the `InMemoryCache` constructor](#configuring-the-cache).
+If one of your types defines its primary key with a field _besides_ `id` or `_id`, you can customize how the `InMemoryCache` generates unique identifiers for that type. To do so, you define `TypePolicy` for the type. You specify all of your cache's `typePolicies` in [the `options` object you provide to the `InMemoryCache` constructor](#configuration-options).
 
 Include a `keyFields` field in relevant `TypePolicy` objects, like so:
 
@@ -139,7 +140,7 @@ To disable normalization for a type, define a `TypePolicy` for the type (as show
 
 Objects that are not normalized are instead embedded within their _parent_ object in the cache. You can't access these objects directly, but you can access them via their parent.
 
-## The `TypePolicy` type
+## `TypePolicy` fields
 
 To customize how the cache interacts with specific types in your schema, you can provide an object mapping `__typename` strings to `TypePolicy` objects when you create a new `InMemoryCache` object.
 

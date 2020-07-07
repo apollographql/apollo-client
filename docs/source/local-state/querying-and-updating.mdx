@@ -89,7 +89,7 @@ Let's look at both of these steps more closely.
 There are two main ways to perform local state mutations. The first way is to write new data into the cache using `client.writeQuery` or `client.writeFragment` (which are helper functions that ultimately call `cache.writeQuery` or `cache.writeFragment` - using either set of functions is fine, as they are equivalent). The second is to leverage `cache.modify` to update existing data in the cache. Both of these approaches are explained in the following sections:
 
 - [`writeQuery` and `writeFragment`](../caching/cache-interaction/#writequery-and-writefragment)
-- [Modifying fields](../caching/cache-interaction/#modifying-fields)
+- [`cache.modify`](../caching/cache-interaction/#cachemodify
 
 Let's look at a quick example that demonstrates how `client.writeQuery` can be used to update the cache from a React component.
 

@@ -1,18 +1,24 @@
 ---
 title: Customizing the behavior of cached fields
+sidebar_title: Customizing field behavior
 ---
 
-You can customize how individual fields in the Apollo Client cache are read and written. To do so, you define a `FieldPolicy` object for a given field. You nest a `FieldPolicy` object within whatever [`TypePolicy` object](./cache-configuration/#the-typepolicy-type)  corresponds to the type that contains the field.
+You can customize how a particular field in your Apollo Client cache is read and written. To do so, you define a **field policy** for the field. A type policy can include:
 
-The following example defines a `FieldPolicy` for the `name` field of a `Person` type. The `FieldPolicy` includes a [`read` function](#the-read-function), which modifies what the cache returns whenever the field is queried:
+* A [`read` function](#the-read-function) that specifies what happens when the field's cached value is read
+* A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
+* An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
-```ts
+You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whatever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the type that contains the field. The following example defines a field policy for the `name` field of a `Person` type: 
+
+```ts{5-10}
 const cache = new InMemoryCache({
   typePolicies: {
     Person: {
       fields: {
         name: {
           read(name) {
+            // Return the cached name, transformed to upper case
             return name.toUpperCase();
           }
         }
@@ -22,39 +28,9 @@ const cache = new InMemoryCache({
 });
 ```
 
-The use cases for `FieldPolicy` objects are described below.
+The field policy above defines a [`read` function](#the-read-function) that specifies what the cache returns whenever `Person.name` is queried.
 
-## Reducing cache duplicates by specifying key arguments
-
-If a field accepts arguments, you can specify an array of `keyArgs` in the field's `FieldPolicy`. This array indicates which arguments are **key arguments** that are used to calculate the field's value. Specifying this array can help reduce the amount of duplicate data in your cache.
-
-Let's say your schema's `Query` type includes a `monthForNumber` field that returns the details of a `Month` type, given a provided `number` argument (January for `1` and so on). The `number` argument is a key argument for this field, because it is used when calculating the field's result:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        monthForNumber: {
-          keyArgs: ["number"],
-        },
-      },
-    },
-  },
-});
-```
-
-An example of a _non-key_ argument is an access token, which is used to authorize a query but _not_ to calculate its result. If `monthForNumber` accepts an `accessToken` argument, the value of that argument does _not_ affect the details of the returned `Month` type.
-
-By default, the cache stores a separate value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different queries with the `monthForNumber` field, passing the _same_ `number` argument but _different_ `accessToken` arguments, the second query response will overwrite the first, because both invocations have the same key arguments.
-
-## Customizing field reads and writes
-
-You can customize the cache's behavior when you read or write a particular field. For example, you might want the cache to return a particular default value for a field when that field isn't present in the cache.
-
-To accomplish this, you can define `read` and `merge` functions as part of any field's `FieldPolicy`. These functions are called whenever the associated field is queried (`read`) or updated (`merge`) in the cache.
-
-### The `read` function
+## The `read` function
 
 If you define a `read` function for a field, the cache calls that function whenever your client queries for the field. In the query response, the field is populated with the `read` function's return value, _instead of the field's cached value_.
 
@@ -128,11 +104,11 @@ Other use cases for a `read` function include:
 
 For a full list of the options provided to the `read` function, see the [API reference](#fieldpolicy-api-reference). You will almost never need to use all of these options, but each one has an important role when reading fields from the cache.
 
-### The `merge` function
+## The `merge` function
 
 If you define a `merge` function for a field, the cache calls that function whenever the field is about to be written with an incoming value (such as from your GraphQL server). When the write occurs, the field's new value is set to the `merge` function's return value, _instead of the original incoming value_.
 
-#### Merging arrays
+### Merging arrays
 
 A common use case for a `merge` function is to define how to write to a field that holds an array. By default, the field's existing array is _completely replaced_ by the incoming array. Often, it's preferable to _concatenate_ the two arrays instead, like so:
 
@@ -156,7 +132,7 @@ Note that `existing` is undefined the very first time this function is called fo
 
 > Your `merge` function **cannot** push the `incoming` array directly onto the `existing` array. It must instead return a new array to prevent potential errors. In development mode, Apollo Client prevents unintended modification of the `existing` data with `Object.freeze`.
 
-#### Merging non-normalized objects
+### Merging non-normalized objects
 
 Another common use case for custom field `merge` functions is to combine nested objects that do not have IDs, but are known (by you, the application developer) to represent the same logical object, assuming the parent object is the same.
 
@@ -259,7 +235,7 @@ Because this `Book.author` field policy has no `Book`- or `Author`-specific logi
 
 In summary, the `Book.author` policy above allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
 
-#### Merging arrays of non-normalized objects
+### Merging arrays of non-normalized objects
 
 Once you're comfortable with the ideas and recommendations from the previous section, consider what happens when a `Book` can have multiple authors:
 
@@ -472,6 +448,33 @@ const cache = new InMemoryCache({
   },
 });
 ```
+
+## Specifying key arguments
+
+If a field accepts arguments, you can specify an array of `keyArgs` in the field's `FieldPolicy`. This array indicates which arguments are **key arguments** that are used to calculate the field's value. Specifying this array can help reduce the amount of duplicate data in your cache.
+
+### Example
+
+Let's say your schema's `Query` type includes a `monthForNumber` field. This field returns the details of particular month, given a provided `number` argument (January for `1` and so on). The `number` argument is a key argument for this field, because it is used when calculating the field's result:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        monthForNumber: {
+          keyArgs: ["number"],
+        },
+      },
+    },
+  },
+});
+```
+
+An example of a _non-key_ argument is an access token, which is used to authorize a query but _not_ to calculate its result. If `monthForNumber` also accepts an `accessToken` argument, the value of that argument does _not_ affect which month's details are returned.
+
+By default, the cache stores a separate value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different queries with the `monthForNumber` field, passing the _same_ `number` argument but _different_ `accessToken` arguments, the second query response will overwrite the first, because both invocations use the exact same value for all key arguments.
+
 
 ## `FieldPolicy` API reference
 

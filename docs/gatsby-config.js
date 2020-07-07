@@ -38,8 +38,10 @@ module.exports = {
           ],
           Caching: [
             'caching/cache-configuration',
+            'caching/cache-interaction',
+            'caching/garbage-collection',
             'caching/cache-field-behavior',
-            'caching/cache-interaction'
+            'caching/advanced-topics'
           ],
           'Local State': [
             'local-state/local-state-management',

@@ -36,15 +36,15 @@ Apollo Client 3 introduces two complementary mechanisms for managing local state
 
 > The [local resolver API](./local-resolvers/) from previous versions of Apollo Client is also available but is [deprecated](./local-resolvers/#deprecation-notice).
 
-## Field policies
+## Field policies and local-only fields
 
 > Available in Apollo Client >= 3.0
 
-**Field policies** enable you to define what happens when you query a particular field, _including fields that aren't defined in your GraphQL server's schema_. In addition to specifying these local-only fields (with the `@client` directive), you can use field policies to transform _any_ field's value on its way into or out of your cache.
+**Field policies** enable you to define what happens when you query a particular field, _including fields that aren't defined in your GraphQL server's schema_. In addition to specifying these **local-only fields** (with the `@client` directive), you can use field policies to transform _any_ field's value on its way into or out of your cache.
 
-A single GraphQL query can include both schema fields and local-only fields. In the field policy for each local-only field, you specify a function that defines how that field's value is populated.
+A single GraphQL query can include both local-only fields and remotely fetched fields. In the field policy for each local-only field, you specify a function that defines how that field's value is populated.
 
-[Get started with field policies](./managing-state-with-field-policies/)
+[Get started with local-only fields](./managing-state-with-field-policies/)
 
 ## Reactive variables
 

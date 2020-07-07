@@ -190,7 +190,7 @@ function LatestComment({ postID }) {
 
 Whenever a query returns a result in Apollo Client, that result includes a `subscribeToMore` function. You can use this function to execute a followup subscription that pushes updates to the query's original result.
 
-> The `subscribeToMore` function is similar in structure to the [`fetchMore`](../caching/cache-interaction/#incremental-loading-fetchmore) function that's commonly used for handling pagination. The primary difference is that `fetchMore` executes a followup _query_, whereas `subscribeToMore` executes a subscription.
+> The `subscribeToMore` function is similar in structure to the [`fetchMore`](../caching/advanced-topics/#incremental-loading-fetchmore) function that's commonly used for handling pagination. The primary difference is that `fetchMore` executes a followup _query_, whereas `subscribeToMore` executes a subscription.
 
 As an example, let's start with a standard query that fetches all of the existing comments for a given blog post:
 

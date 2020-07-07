@@ -163,7 +163,7 @@ If `object` is a `StoreObject`, `identify` will return its string based ID (e.g.
 
 Takes an entity ID and an object mapping field names to modifier functions. For the specified entity, each field modifier function is called with the current value or references of the field, and should return a new value for the field to be written into the cache.
 
-For usage instructions, refer to [Interacting with cached data: Modifying fields](../../caching/cache-interaction/#modifying-fields).
+For usage instructions, see [`cache.modify`](../../caching/cache-interaction/#cachemodify).
 
 ### Method
 
@@ -218,7 +218,7 @@ The first parameter of a modifier function is the current value of the field bei
 
 Request the garbage collection of unreachable normalized entities.
 
-For usage instructions, refer to [Interacting with cached data: gc](../../caching/cache-interaction/#gc).
+For usage instructions, see [`cache.gc`](../../caching/garbage-collection/#cachegc).
 
 ### Method
 
@@ -238,7 +238,7 @@ Returns an array of ID strings that were removed from the cache, if any.
 
 Remove whole objects from the cache by passing `options.id`, or specific fields by passing `options.field` and/or `options.args`. If no `options.args` are provided, all fields matching `options.field` (even those with arguments) will be removed.
 
-For usage instructions, refer to [Interacting with cached data: evict](../../caching/cache-interaction/#evict).
+For usage instructions, see [`cache.evict](../../caching/garbage-collection/#cacheevict).
 
 ### Method
 

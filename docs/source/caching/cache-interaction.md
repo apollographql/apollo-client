@@ -1,34 +1,29 @@
 ---
-title: Interacting with cached data
+title: Reading and writing data to the cache
+sidebar_title: Reading and writing
 ---
 
-The `ApolloClient` object provides the following methods for interacting
-with cached data:
+Apollo Client provides the following methods for reading and writing data to
+the cache:
 
-* [`readQuery`](#readquery) and [`readFragment`](#readfragment)
+* [`readQuery`](#readquery) and [`readFragment`](#readfragment) 
 * [`writeQuery` and `writeFragment`](#writequery-and-writefragment)
-* Methods for [garbage collection and cache eviction](#garbage-collection-and-cache-eviction)
-
+* [`cache.modify`](#cachemodify) (a method of `InMemoryCache`)
 
 These methods are described in detail below.
-
-> **Important:** You should call these methods on your app's `ApolloClient` object, _not_
-> directly on the cache. By doing so, the `ApolloClient` object broadcasts
-> cache changes to your entire app, which enables automatic UI updates. If you
-> call these methods directly on the cache instead, changes are _not_ broadcast.
 
 All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
 
 ## `readQuery`
 
-The `readQuery` method enables you to run GraphQL queries directly on your
+The `readQuery` method enables you to run a GraphQL query directly on your
 cache.
 
-If your cache contains all of the data necessary to fulfill a specified query,
-`readQuery` returns a data object in the shape of your query, just like a GraphQL
+* If your cache contains all of the data necessary to fulfill a specified query,
+`readQuery` returns a data object in the shape of that query, just like a GraphQL
 server does.
 
-If your cache _doesn't_ contain all of the data necessary to fulfill a specified
+* If your cache _doesn't_ contain all of the data necessary to fulfill a specified
 query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote
 server.
 
@@ -74,48 +69,14 @@ const { todo } = client.readQuery({
 ## `readFragment`
 
 The `readFragment` method enables you to read data from _any_ normalized cache
-object that was stored as part of _any_ query result. Unlike `readQuery`, calls to
+object that was stored as part of _any_ query result. Unlike with `readQuery`, calls to
 `readFragment` do not need to conform to the structure of one of your data graph's supported queries.
 
-Here's an example:
-
-```js
-const optimistic = true; // defaults to false, set to true if readFragment should re-run on optimic responses
-const todo = client.readFragment({
-  id: ..., // `id` is any id that could be returned by `dataIdFromObject`.
-  fragment: gql`
-    fragment MyTodo on Todo {
-      id
-      text
-      completed
-    }
-  `,
-}, optimistic);
-```
-
-The first argument, `id`, is the [unique identifier](cache-configuration/#generating-unique-identifiers)
-that was assigned to the object you want to read from the cache. This should match
-the value that your `dataIdFromObject` function assigned to the object when it was
-stored.
-
-For example, let's say you initialize `ApolloClient` like so:
-
-```js
-const client = new ApolloClient({
-  ...,
-  cache: new InMemoryCache({
-    ...,
-    dataIdFromObject: object => object.id,
-  }),
-});
-```
-
-If a previously executed query cached a `Todo` object with an `id` of `5`, you can
-read that object from your cache with the following `readFragment` call:
+Here's an example that fetches a particular item from a to-do list:
 
 ```js
 const todo = client.readFragment({
-  id: '5',
+  id: '5', // The value of the to-do item's unique identifier
   fragment: gql`
     fragment MyTodo on Todo {
       id
@@ -126,8 +87,13 @@ const todo = client.readFragment({
 });
 ```
 
-In the example above, if a `Todo` object with an `id` of `5` is _not_ in the cache,
-`readFragment` returns `null`. If the `Todo` object _is_ in the cache but it's
+The first argument, `id`, is the value of the unique identifier for the object you want to read from the cache. By default, this is the value of the object's `id` field, but you can [customize this behavior](./cache-configuration/#generating-unique-identifiers).
+
+In the example above: 
+
+* If a `Todo` object with an `id` of `5` is _not_ in the cache,
+`readFragment` returns `null`.
+* If the `Todo` object _is_ in the cache but it's
 missing either a `text` or `completed` field, `readFragment` throws an error.
 
 ## `writeQuery` and `writeFragment`
@@ -160,13 +126,15 @@ client.writeFragment({
 });
 ```
 
-All subscribers to the Apollo Client cache see this change and update your
+All subscribers to the Apollo Client cache (including all active queries) see this change and update your
 application's UI accordingly.
 
-As another example, you can combine `readQuery` and `writeQuery` to add a new `Todo`
-item to your cached to-do list:
+## Combining reads and writes
+
+You can combine `readQuery` and `writeQuery` to add a new `Todo` item to your cached to-do list. Remember, this addition is _not_ sent to your remote server.
 
 ```js
+// Query that fetches all existing to-do items
 const query = gql`
   query MyTodoAppQuery {
     todos {
@@ -180,6 +148,7 @@ const query = gql`
 // Get the current to-do list
 const data = client.readQuery({ query });
 
+// Create a new to-do item
 const myNewTodo = {
   id: '6',
   text: 'Start using Apollo Client.',
@@ -196,60 +165,7 @@ client.writeQuery({
 });
 ```
 
-## Identify cached entities
-
-The Apollo Client cache API supports [customizing the identifier](./cache-configuration/#customizing-identifier-generation-by-type) used to represent a cached entity, through the use of a `TypePolicy` `keyFields` property. If you're using `keyFields` to help generate a unique identifier, you probably don't want application code re-implementing that logic to compute IDs for use with other parts of the cache API, like [`cache.readFragment`](./cache-interaction/#readfragment) and [`cache.evict`](./cache-interaction/#evict). To help avoid duplicating effort, and manual string manipulation to generate an ID, the `cache.identify` method can help.
-
-`cache.identify` takes a result object and computes its ID based on the `__typename` and primary key fields. For example:
-
-```js
-const cache = new InMemoryCache({
-  typePolicies: {
-    Book: {
-      keyFields: ['isbn'],
-    },
-  },
-});
-
-...
-
-// This data was pulled out of the cache at some point.
-const cuckoosCallingBook = {
-  __typename: 'Book',
-  isbn: '031648637X',
-  title: "The Cuckoo's Calling",
-  author: {
-    __typename: 'Author',
-    name: 'Robert Galbraith',
-  },
-};
-
-const bookAuthorFragment = gql`
-  fragment BookAuthor on Book {
-    author {
-      name
-    }
-  }
-`;
-
-const fragmentResult = cache.readFragment({
-  id: cache.identify(cuckoosCallingBook),
-  fragment: bookAuthorFragment,
-});
-
-// `fragmentResult` is now:
-// {
-//   __typename: "Book",
-//   author: {
-//     __typename: "Author",
-//     name: "Robert Galbraith",
-//   },
-// }
-```
-
-`cache.readFragment` requires an `id` to know which normalized cache object it should be querying against. Instead of building that ID manually by concatenating the `Book` typename string with the `isbn` `031648637X` string, `cache.identify` is used to analyze the data, and build the `id` string automatically. We might not be saving much in this example by using `cache.identify` versus building the `id` manually, but as your type `keyFields` logic gets more complex, or the need to identify a specific entity in the cache becomes more frequent, `cache.identify` helps avoid mistakes and identification logic duplication.
-
-## Modifying fields
+## `cache.modify`
 
 The [`cache.writeQuery`](#writequery-and-writefragment) and [`cache.writeFragment`](#writequery-and-writefragment) methods do a great job of adding data to the cache, but their use can be problematic when trying to remove specific data from a field in the cache. The typical cycle of reading data, modifying it, and writing it back into the cache does not always simply replace the old data, as it may trigger custom [`merge` functions](./cache-field-behavior/#the-merge-function) which attempt to combine incoming data with existing data, leading to confusion.
 
@@ -373,460 +289,55 @@ cache.modify({
 
 The cache utility object that's passed into modifier functions as their second parameter contains several useful utilities, like `fieldName`, `canRead` and `isReference` (TODO: explain these in the cache API reference section and link to them). It also contains a `DELETE` sentinel object, which we're using above, that can be returned to delete a field from the entity object. When the `comments` modifier function above runs, it will remove all comments from the cache for the identified `Thread` object.
 
-## Garbage collection and cache eviction
+## Identify cached entities
 
-Apollo Client 3 enables you to selectively remove cached data that is no longer useful. The default garbage collection strategy of the `gc` method is suitable for most applications, but the `evict` method provides more fine-grained control for applications that require it.
+The Apollo Client cache API supports [customizing the identifier](./cache-configuration/#customizing-identifier-generation-by-type) used to represent a cached entity, through the use of a `TypePolicy` `keyFields` property. If you're using `keyFields` to help generate a unique identifier, you probably don't want application code re-implementing that logic to compute IDs for use with other parts of the cache API, like [`cache.readFragment`](./cache-interaction/#readfragment) and [`cache.evict`](./garbage-collection/#cacheevict). To help avoid duplicating effort, and manual string manipulation to generate an ID, the `cache.identify` method can help.
 
-> You call these methods directly on the `InMemoryCache` object, not on the `ApolloClient` object.
-
-### `gc`
-
-The `gc` method removes all objects from the normalized cache that are not **reachable**:
+`cache.identify` takes a result object and computes its ID based on the `__typename` and primary key fields. For example:
 
 ```js
-cache.gc();
-```
-
- To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
-
-#### Configuring garbage collection
-
-You can use the `retain` method to prevent an object (and its children) from being garbage collected, even if the object isn't reachable:
-
-```js
-cache.retain('my-object-id');
-```
-
-If you later want a `retain`ed object to be garbage collected, use the `release` method:
-
-```js
-cache.release('my-object-id');
-```
-
-If the object is unreachable, it will be garbage collected during next call to `gc`.
-
-### `evict`
-
-You can remove any normalized object from the cache using the `evict` method:
-
-```js
-cache.evict({ id: 'my-object-id' })
-```
-
-If you would like to remove a specific field from a normalized entity instead of the entire entity itself, you can pass in a `fieldName` property:
-
-```js
-cache.evict({ id: 'my-object-id', fieldName: 'yearOfFounding' });
-```
-
-Evicting an object can often make other cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
-
-#### Dangling references
-
-When an object is `evict`ed from the cache, it is possible for dangling references to that object to be left in the cache. By default, Apollo Client leaves dangling references untouched. It may actually be unwise/destructive to remove dangling references from the cache, as the evicted data could always be written back into the cache at some later time, restoring the validity of the references. Since eviction is not necessarily final, dangling references represent useful information that Apollo Client preserves by default after eviction.
-
-If dangling references are a problem for your application however, we recommend filtering/handling them on-demand. Apollo Client supports postponing the management of dangling references until the next time the affected fields are read from the cache, by defining a custom [`read` function](./cache-field-behavior/#the-read-function) that performs any necessary cleanup, in whatever way makes sense for the logic of the particular field. For example, you might have a list of references that should be filtered to exclude the dangling items, or you might want the dangling references to be nullified in place without filtering, or you might have a single reference that should default to something else if it becomes invalid. All of these options are matters of application-level logic, so the cache cannot choose the right default reference cleanup strategy in all cases. Instead, Apollo Client provides a `canRead` helper function to `read` functions that can be used to detect dangling references, allowing you to handle them accordingly. For example:
-
-```js
-new InMemoryCache({
+const cache = new InMemoryCache({
   typePolicies: {
-    Query: {
-      fields: {
-        ruler(existingRuler, { canRead, toReference }) {
-          // If the throne is empty, promote Apollo!
-          return canRead(existingRuler) ? existingRuler : toReference({
-            __typename: "Deity",
-            name: "Apollo",
-          });
-        },
-      },
-    },
-
-    Deity: {
-      keyFields: ["name"],
-      fields: {
-        offspring(existingOffspring: Reference[], { canRead }) {
-          // Filter out any dangling references left over from removing
-          // offspring, supplying a default empty array if there are no
-          // offspring left.
-          return existingOffspring
-            ? existingOffspring.filter(canRead)
-            : [];
-        },
-      },
+    Book: {
+      keyFields: ['isbn'],
     },
   },
-})
-```
+});
 
-The `ruler` field policy above returns a default `ruler` if the previous `ruler` has been deposed, whereas the `offspring` field policy ensures we're getting back a list of alive and well offspring only.
+...
 
-The desire to filter dangling references from arrays (the `offspring` example above) is common enough that Apollo Client handles this automatically by default, freeing developers from having to worry about manually removing references from lists after evicting entities from the cache. Instead, those dangling references will simply (appear to) disappear from cache results, which is almost always the desired behavior. Fields whose values hold single (non-list) dangling references (the `ruler` example above) cannot be easily filtered in the same way, which is where writing a custom `read` function for the field comes in handy.
+// This data was pulled out of the cache at some point.
+const cuckoosCallingBook = {
+  __typename: 'Book',
+  isbn: '031648637X',
+  title: "The Cuckoo's Calling",
+  author: {
+    __typename: 'Author',
+    name: 'Robert Galbraith',
+  },
+};
 
-In case automatic list filtering is not desired, a custom `read` function can be used to override filtering, since `read` functions run before this filtering happens. The presence of the `offspring` `read` function in the example above means automatic list filtering will not be called.
-
-## Recipes
-
-Here are some common situations where you would need to access the cache directly. If you're manipulating the cache in an interesting way and would like your example to be featured, please send in a pull request!
-
-### Bypassing the cache
-
-Sometimes it makes sense to not use the cache for a specific operation. This can be done using the `no-cache` `fetchPolicy`. The `no-cache` policy does not write to the cache with the response. This may be useful for sensitive data like passwords that you don’t want to keep in the cache.
-
-### Updating after a mutation
-
-In some cases, just using `dataIdFromObject` is not enough for your application UI to update correctly. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that to which you can't assign an object identifier, Apollo Client cannot update existing queries for you. Read on to learn about the other tools at your disposal.
-
-`refetchQueries` is the simplest way of updating the cache. With `refetchQueries` you can specify one or more queries that you want to run after a mutation is completed in order to refetch the parts of the store that may have been affected by the mutation:
-
-```javascript
-mutate({
-  //... insert comment mutation
-  refetchQueries: [{
-    query: gql`
-      query UpdateCache($repoName: String!) {
-        entry(repoFullName: $repoName) {
-          id
-          comments {
-            postedBy {
-              login
-              html_url
-            }
-            createdAt
-            content
-          }
-        }
-      }
-    `,
-    variables: { repoName: 'apollographql/apollo-client' },
-  }],
-})
-```
-
-Please note that if you call `refetchQueries` with an array of strings, then Apollo Client will look for any previously called queries that have the same names as the provided strings. It will then refetch those queries with their current variables.
-
-A very common way of using `refetchQueries` is to import queries defined for other components to make sure that those components will be updated:
-
-```javascript
-import RepoCommentsQuery from '../queries/RepoCommentsQuery';
-
-mutate({
-  //... insert comment mutation
-  refetchQueries: [{
-    query: RepoCommentsQuery,
-    variables: { repoFullName: 'apollographql/apollo-client' },
-  }],
-})
-```
-
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react/hooks/#usemutation).
-
-```jsx
-import CommentAppQuery from '../queries/CommentAppQuery';
-
-const SUBMIT_COMMENT_MUTATION = gql`
-  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
-    submitComment(
-      repoFullName: $repoFullName
-      commentContent: $commentContent
-    ) {
-      postedBy {
-        login
-        html_url
-      }
-      createdAt
-      content
+const bookAuthorFragment = gql`
+  fragment BookAuthor on Book {
+    author {
+      name
     }
   }
 `;
 
-const CommentsPageWithMutations = () => (
-  <Mutation mutation={SUBMIT_COMMENT_MUTATION}>
-    {mutate => {
-      <AddComment
-        submit={({ repoFullName, commentContent }) =>
-          mutate({
-            variables: { repoFullName, commentContent },
-            update: (store, { data: { submitComment } }) => {
-              // Read the data from our cache for this query.
-              const data = store.readQuery({ query: CommentAppQuery });
-              // Add our comment from the mutation to the end.
-              const comments = [...data.comments, submitComment];
-              // Write our data back to the cache.
-              store.writeQuery({ query: CommentAppQuery, { comments }  });
-            }
-          })
-        }
-      />;
-    }}
-  </Mutation>
-);
-```
-
-### Incremental loading: `fetchMore`
-
-`fetchMore` can be used to update the result of a query based on the data returned by another query. Most often, it is used to handle infinite-scroll pagination or other situations where you are loading more data when you already have some.
-
-In our GitHunt example, we have a paginated feed that displays a list of GitHub repositories. When we hit the "Load More" button, we don't want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.
-
-Let's see how to do that with the `fetchMore` method on a query:
-
-```javascript
-const FEED_QUERY = gql`
-  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-    currentUser {
-      login
-    }
-    feed(type: $type, offset: $offset, limit: $limit) {
-      id
-      # ...
-    }
-  }
-`;
-
-const FeedWithData = ({ match }) => (
-  <Query
-    query={FEED_QUERY}
-    variables={{
-      type: match.params.type.toUpperCase() || "TOP",
-      offset: 0,
-      limit: 10
-    }}
-    fetchPolicy="cache-and-network"
-  >
-    {({ data, fetchMore }) => (
-      <Feed
-        entries={data.feed || []}
-        onLoadMore={() =>
-          fetchMore({
-            variables: {
-              offset: data.feed.length
-            },
-            updateQuery: (prev, { fetchMoreResult }) => {
-              if (!fetchMoreResult) return prev;
-              return Object.assign({}, prev, {
-                feed: [...prev.feed, ...fetchMoreResult.feed]
-              });
-            }
-          })
-        }
-      />
-    )}
-  </Query>
-);
-```
-
-
-The `fetchMore` method takes a map of `variables` to be sent with the new query. Here, we're setting the offset to `feed.length` so that we fetch items that aren't already displayed on the feed. This variable map is merged with the one that's been specified for the query associated with the component. This means that other variables, e.g. the `limit` variable, will have the same value as they do within the component query.
-
-It can also take a `query` named argument, which can be a GraphQL document containing a query that will be fetched in order to fetch more information; we refer to this as the `fetchMore` query. By default, the `fetchMore` query is the query associated with the container, in this case the `FEED_QUERY`.
-
-When we call `fetchMore`, Apollo Client will fire the `fetchMore` query and use the logic in the `updateQuery` option to incorporate that into the original result. The named argument `updateQuery` should be a function that takes the previous result of the query associated with your component (i.e. `FEED_QUERY` in this case) and the information returned by the `fetchMore` query and return a combination of the two.
-
-Here, the `fetchMore` query is the same as the query associated with the component. Our `updateQuery` takes the new feed items returned and just appends them onto the feed items that we'd asked for previously. With this, the UI will update and the feed will contain the next page of items!
-
-Although `fetchMore` is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a way to fetch items that have been updated after a certain time. Then, you don't have to refetch the whole todo list to get updates: you can just incorporate the newly added items with `fetchMore`, as long as your `updateQuery` function correctly merges the new results.
-
-### The `@connection` directive
-
-Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Since these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don’t care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
-
-To solve this Apollo Client 1.6 introduced the `@connection` directive to specify a custom store key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
-
-To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
-
-```js
-const query = gql`
-  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-    feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed", filter: ["type"]) {
-      ...FeedEntry
-    }
-  }
-`
-```
-
-With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values. In this example, we also use the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key, which results in multiple store values that accumulate queries from each type of feed.
-
-Now that we have a stable store key, we can easily use `writeQuery` to perform a store update, in this case clearing out the feed.
-
-```js
-client.writeQuery({
-  query: gql`
-    query Feed($type: FeedType!) {
-      feed(type: $type) @connection(key: "feed", filter: ["type"]) {
-        id
-      }
-    }
-  `,
-  variables: {
-    type: "top",
-  },
-  data: {
-    feed: [],
-  },
-});
-```
-
-Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
-
-### Cache redirects using field policy `read` functions
-
-> ⚠️ **Note:** Apollo Client >= 3.0 no longer supports the `ApolloClient` `cacheRedirects` constructor option. Equivalent `cacheRedirects` functionality can now be handled with field policy `read` functions, and is explained below.
-
-In some cases, a query requests data that already exists in the cache under a different reference. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
-
-```graphql
-query Books {
-  books {
-    id
-    title
-    abstract
-  }
-}
-```
-
-When a specific book is selected, the detail view displays an individual item using this query:
-
-```graphql
-query Book($id: ID!) {
-  book(id: $id) {
-    id
-    title
-    abstract
-  }
-}
-```
-
-We know that the data is most likely already in the client cache, but because it was requested with a different query, Apollo Client doesn't know that. To tell Apollo Client where to look for the existing `book` data, we can define a field policy `read` function for the `book` field:
-
-```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-
-const client = new ApolloClient({
-  cache: new InMemoryCache({
-    typePolicies: {
-      Query: {
-        fields: {
-          book(_, { args, toReference }) {
-            return toReference({
-              __typename: 'Book',
-              id: args.id,
-            });
-          }
-        }
-      }
-    }
-  }
-});
-```
-
-Now whenever a query is run that includes a `book` field, the `read` function above will be executed, and return a reference that points to the book entity that was already created in the cache when the `Books` list view query ran. Apollo Client will use the reference returned by the `read` function to look up the item in its cache. `toReference` is a helper utility that is passed into `read` functions as part of the second parameter options object, and is used to generate an entity reference based on its `__typename` and `id`.
-
-> ⚠️ **Note:** For the above to work properly, the data returned by the list query has to include all of the data the specific detail query needs. If the specific detail query fetches a field that the list query doesn't return, Apollo Client will consider the cache hit to be incomplete, and will attempt to fetch the full data set over the network (if network requests are enabled).
-
-### Resetting the store
-
-Sometimes, you may want to reset the store entirely, such as [when a user logs out](../networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
-
-```js
-export default withApollo(graphql(PROFILE_QUERY, {
-  props: ({ data: { loading, currentUser }, ownProps: { client }}) => ({
-    loading,
-    currentUser,
-    resetOnLogout: async () => client.resetStore(),
-  }),
-})(Profile));
-```
-
-To register a callback function to be executed after the store has been reset, call `client.onResetStore` and pass in your callback. If you would like to register multiple callbacks, simply call `client.onResetStore` again. All of your callbacks will be pushed into an array and executed concurrently.
-
-In this example, we're using `client.onResetStore` to write default values to the cache. This is useful when using Apollo Client's [local state management](../local-state/local-state-management/) features and calling `client.resetStore` anywhere in your application.
-
-```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-import { withClientState } from 'apollo-link-state';
-
-import { resolvers, defaults } from './resolvers';
-
-const cache = new InMemoryCache();
-const stateLink = withClientState({ cache, resolvers, defaults });
-
-const client = new ApolloClient({
-  cache,
-  link: stateLink,
+const fragmentResult = cache.readFragment({
+  id: cache.identify(cuckoosCallingBook),
+  fragment: bookAuthorFragment,
 });
 
-client.onResetStore(stateLink.writeDefaults);
+// `fragmentResult` is now:
+// {
+//   __typename: "Book",
+//   author: {
+//     __typename: "Author",
+//     name: "Robert Galbraith",
+//   },
+// }
 ```
 
-You can also call `client.onResetStore` from your React components. This can be useful if you would like to force your UI to rerender after the store has been reset.
-
-If you would like to unsubscribe your callbacks from resetStore, use the return value of `client.onResetStore` for your unsubscribe function.
-
-```js
-import { withApollo } from "@apollo/react-hoc";
-
-export class Foo extends Component {
-  constructor(props) {
-    super(props);
-    this.unsubscribe = props.client.onResetStore(
-      () => this.setState({ reset: false })
-    );
-    this.state = { reset: false };
-  }
-  componentDidUnmount() {
-    this.unsubscribe();
-  }
-  render() {
-    return this.state.reset ? <div /> : <span />
-  }
-}
-
-export default withApollo(Foo);
-```
-
-If you want to clear the store but don't want to refetch active queries, use
-`client.clearStore()` instead of `client.resetStore()`.
-
-### Server side rendering
-
-First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache. (The `.replace()` is necessary to prevent script injection attacks)
-
-```js
-`<script>
-  window.__APOLLO_STATE__=${JSON.stringify(cache.extract()).replace(/</g, '\\u003c')}
-</script>`
-```
-
-On the client, you can rehydrate the cache using the initial data passed from the server:
-
-```js
-cache: new Cache().restore(window.__APOLLO_STATE__)
-```
-
-If you would like to learn more about server side rendering, please check out our more in depth guide [here](../performance/server-side-rendering/).
-
-### Cache persistence
-
-If you would like to persist and rehydrate your Apollo Cache from a storage provider like `AsyncStorage` or `localStorage`, you can use [`apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist). `apollo-cache-persist` works with all Apollo caches, including `InMemoryCache` & `Hermes`, and a variety of different [storage providers](https://github.com/apollographql/apollo-cache-persist#storage-providers).
-
-To get started, simply pass your Apollo Cache and a storage provider to `persistCache`. By default, the contents of your Apollo Cache will be immediately restored asynchronously, and persisted upon every write to the cache with a short configurable debounce interval.
-
-> Note: The `persistCache` method is async and returns a `Promise`.
-
-```js
-import { AsyncStorage } from 'react-native';
-import { InMemoryCache } from '@apollo/cache';
-import { persistCache } from 'apollo-cache-persist';
-
-const cache = new InMemoryCache();
-
-persistCache({
-  cache,
-  storage: AsyncStorage,
-}).then(() => {
-  // Continue setting up Apollo as usual.
-})
-```
-
-For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).
+`cache.readFragment` requires an `id` to know which normalized cache object it should be querying against. Instead of building that ID manually by concatenating the `Book` typename string with the `isbn` `031648637X` string, `cache.identify` is used to analyze the data, and build the `id` string automatically. We might not be saving much in this example by using `cache.identify` versus building the `id` manually, but as your type `keyFields` logic gets more complex, or the need to identify a specific entity in the cache becomes more frequent, `cache.identify` helps avoid mistakes and identification logic duplication.

@@ -53,7 +53,9 @@ The `InMemoryCache` **normalizes** query response objects before it saves them t
 
 1. The cache [generates a unique ID](#generating-unique-identifiers) for every identifiable object included in the response.
 2. The cache stores the objects by ID in a flat lookup table.
-3. Whenever an incoming object is stored with the same ID as an _existing_ object, the fields of those objects are _merged_. If the incoming object and the existing object share any fields, the incoming object _overwrites_ the cached values for those fields. Fields that appear _only_ in the existing object _or_ the incoming object are preserved.
+3. Whenever an incoming object is stored with the same ID as an _existing_ object, the fields of those objects are _merged_.
+    * If the incoming object and the existing object share any fields, the incoming object _overwrites_ the cached values for those fields.
+    * Fields that appear in _only_ the existing object or _only_ the incoming object are preserved.
 
 Normalization constructs a partial copy of your data graph on your client, in a format that's optimized for reading and updating the graph as your application changes state.
 
@@ -109,6 +111,12 @@ Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
 An object's primary key fields are always listed in the same order to ensure uniqueness.
 
 Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias).
+
+#### Calculating an object's identifier
+
+If you define a custom identifier that uses multiple fields, it can be challenging to calculate and provide that identifier to methods that require it (such as `cache.readFragment`).
+
+To help with this, you can use the `cache.identify` method to calculate the identifier for any normalized object you fetch from your cache. See [Obtaining an object's custom ID](./cache-interaction/#obtaining-an-objects-custom-id).
 
 #### Customizing identifier generation globally
 

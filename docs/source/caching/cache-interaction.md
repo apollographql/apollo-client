@@ -131,7 +131,7 @@ application's UI accordingly.
 
 ## Combining reads and writes
 
-You can combine `readQuery` and `writeQuery` to add a new `Todo` item to your cached to-do list. Remember, this addition is _not_ sent to your remote server.
+Combine `readQuery` and `writeQuery` to fetch currently cached data and make selective modifications to it. The example below creates a new `Todo` item and adds it your cached to-do list. Remember, this addition is _not_ sent to your remote server.
 
 ```js
 // Query that fetches all existing to-do items
@@ -156,7 +156,7 @@ const myNewTodo = {
   __typename: 'Todo',
 };
 
-// Write back to the to-do list and include the new item
+// Write back to the to-do list, appending the new item
 client.writeQuery({
   query,
   data: {
@@ -167,9 +167,11 @@ client.writeQuery({
 
 ## `cache.modify`
 
-The [`cache.writeQuery`](#writequery-and-writefragment) and [`cache.writeFragment`](#writequery-and-writefragment) methods do a great job of adding data to the cache, but their use can be problematic when trying to remove specific data from a field in the cache. The typical cycle of reading data, modifying it, and writing it back into the cache does not always simply replace the old data, as it may trigger custom [`merge` functions](./cache-field-behavior/#the-merge-function) which attempt to combine incoming data with existing data, leading to confusion.
+The `modify` method of `InMemoryCache` enables you to modify the values of individual cached fields or even delete fields entirely. Unlike `writeQuery` and `writeFragment`, `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are definitely overwritten with exactly the values you specify.
 
-For cases where you want to apply a specific transformation to an existing field value in the cache, the `cache.modify` function can be helpful. `cache.modify` takes an entity ID and an object mapping field names to modifier functions. For the specified entity, each field modifier function is called with the current value or references of the field, and should return a new value for the field, without modifying the existing value (which is frozen in development).
+The `modify` method takes the ID of an entity to modify, along with a collection of **modifier functions** to execute. A modifier function applies to a single field. It takes its associated field's current cached value as a parameter and returns whatever value should replace it.
+
+> If you don't provide a modifier function for a particular field, that field's value remains unchanged.
 
 For example, here's how you might remove a specific `Comment` from a paginated `Thread.comments` array:
 
@@ -289,55 +291,46 @@ cache.modify({
 
 The cache utility object that's passed into modifier functions as their second parameter contains several useful utilities, like `fieldName`, `canRead` and `isReference` (TODO: explain these in the cache API reference section and link to them). It also contains a `DELETE` sentinel object, which we're using above, that can be returned to delete a field from the entity object. When the `comments` modifier function above runs, it will remove all comments from the cache for the identified `Thread` object.
 
-## Identify cached entities
+## Obtaining an object's custom ID
 
-The Apollo Client cache API supports [customizing the identifier](./cache-configuration/#customizing-identifier-generation-by-type) used to represent a cached entity, through the use of a `TypePolicy` `keyFields` property. If you're using `keyFields` to help generate a unique identifier, you probably don't want application code re-implementing that logic to compute IDs for use with other parts of the cache API, like [`cache.readFragment`](./cache-interaction/#readfragment) and [`cache.evict`](./garbage-collection/#cacheevict). To help avoid duplicating effort, and manual string manipulation to generate an ID, the `cache.identify` method can help.
+If a type in your cache uses a [custom identifier](./cache-configuration/#customizing-identifier-generation-by-type), you can use the `cache.identify` method to obtain the identifier for an object of that type. This method takes an object and computes its ID based on both its `__typename` and its custom identifier field(s). This means you don't have to keep track of which fields make up each type's identifier.
 
-`cache.identify` takes a result object and computes its ID based on the `__typename` and primary key fields. For example:
+### Example
 
-```js
-const cache = new InMemoryCache({
-  typePolicies: {
-    Book: {
-      keyFields: ['isbn'],
-    },
-  },
-});
+Let's say we have a JavaScript representation of a cached GraphQL object, like this:
 
-...
-
-// This data was pulled out of the cache at some point.
-const cuckoosCallingBook = {
+```js{3}
+const invisibleManBook = {
   __typename: 'Book',
-  isbn: '031648637X',
-  title: "The Cuckoo's Calling",
+  isbn: '9780679601395', // This type's custom identifier
+  title: 'Invisible Man',
   author: {
     __typename: 'Author',
-    name: 'Robert Galbraith',
+    name: 'Ralph Ellison',
   },
 };
+```
 
-const bookAuthorFragment = gql`
-  fragment BookAuthor on Book {
-    author {
-      name
-    }
+If we want to interact with this object in our cache with methods like [`writeFragment`](#writequery-and-writefragment) or [`cache.modify`](#cachemodify), we need the object's identifier. Our `Book` type's identifier appears to be custom, because the `id` field isn't present.
+
+Instead of needing to look up that our `Book` type uses the `isbn` field as its identifier, we can use the `cache.identify` method, like so:
+
+```js{8}
+const bookYearFragment = gql`
+  fragment BookYear on Book {
+    publicationYear
   }
 `;
 
-const fragmentResult = cache.readFragment({
-  id: cache.identify(cuckoosCallingBook),
-  fragment: bookAuthorFragment,
+const fragmentResult = cache.writeFragment({
+  id: cache.identify(invisibleManBook),
+  fragment: bookYearFragment,
+  data: {
+    publicationYear: '1952'
+  }
 });
-
-// `fragmentResult` is now:
-// {
-//   __typename: "Book",
-//   author: {
-//     __typename: "Author",
-//     name: "Robert Galbraith",
-//   },
-// }
 ```
 
-`cache.readFragment` requires an `id` to know which normalized cache object it should be querying against. Instead of building that ID manually by concatenating the `Book` typename string with the `isbn` `031648637X` string, `cache.identify` is used to analyze the data, and build the `id` string automatically. We might not be saving much in this example by using `cache.identify` versus building the `id` manually, but as your type `keyFields` logic gets more complex, or the need to identify a specific entity in the cache becomes more frequent, `cache.identify` helps avoid mistakes and identification logic duplication.
+The cache knows that the `Book` type uses the `isbn` field for its identifier, so `cache.identify` can correctly populate the `id` field above.
+
+This example is straightforward because our custom identifier uses a single field (`isbn`). But custom identifiers can consist of _multiple_ fields (such as both `isbn` _and_ `title`). This makes it much more challenging and repetitive to specify an object's custom ID _without_ using `cache.identify`.

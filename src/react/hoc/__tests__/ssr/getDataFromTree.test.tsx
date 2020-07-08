@@ -36,7 +36,6 @@ describe('SSR', () => {
       const link = mockSingleLink({
         request: { query },
         result: { data: data1 },
-        delay: 50
       });
       const apolloClient = new ApolloClient({
         link,
@@ -88,7 +87,6 @@ describe('SSR', () => {
       const link = mockSingleLink({
         request: { query },
         result: { data: { currentUser: { firstName: 'James' } } },
-        delay: 50
       });
       const apolloClient = new ApolloClient({
         link,
@@ -176,7 +174,6 @@ describe('SSR', () => {
       const link = mockSingleLink({
         request: { query },
         result: { data: { currentUser: { firstName: 'James' } } },
-        delay: 50
       });
       const apolloClient = new ApolloClient({
         link,
@@ -239,11 +236,10 @@ describe('SSR', () => {
       const variables = { id: '1234' };
       const userData = { user: { firstName: 'James' } };
       const link = mockSingleLink(
-        { request: { query: idQuery }, result: { data: idData }, delay: 50 },
+        { request: { query: idQuery }, result: { data: idData } },
         {
           request: { query: userQuery, variables },
           result: { data: userData },
-          delay: 50
         }
       );
       const apolloClient = new ApolloClient({
@@ -304,7 +300,7 @@ describe('SSR', () => {
       });
     });
 
-    it('should return the first of multiple errors thrown by nested wrapped components', () => {
+    it.skip('should return the first of multiple errors thrown by nested wrapped components', () => {
       const lastNameQuery = gql`
         {
           currentUser {
@@ -325,19 +321,26 @@ describe('SSR', () => {
         }
       `;
 
-      const userData = {
-        currentUser: { lastName: 'Tester', firstName: 'James' }
-      };
       const link = mockSingleLink(
         {
           request: { query: lastNameQuery },
-          result: { data: userData },
-          delay: 50
+          result: {
+            data: {
+              currentUser: {
+                lastName: 'Tester'
+              },
+            }
+          },
         },
         {
           request: { query: firstNameQuery },
-          result: { data: userData },
-          delay: 50
+          result: {
+            data: {
+              currentUser: {
+                firstName: 'James'
+              },
+            }
+          },
         }
       );
       const apolloClient = new ApolloClient({
@@ -451,7 +454,6 @@ describe('SSR', () => {
       const link = mockSingleLink({
         request: { query },
         result: { data: { currentUser: { firstName: 'James' } } },
-        delay: 50
       });
       const apolloClient = new ApolloClient({
         link,
@@ -747,7 +749,6 @@ describe('SSR', () => {
       const link = mockSingleLink({
         request: { query, variables },
         result: { data: resultData },
-        delay: 50
       });
 
       const cache = new Cache({ addTypename: false });
@@ -810,7 +811,6 @@ describe('SSR', () => {
       const link = mockSingleLink({
         request: { query, variables },
         result: { data: resultData },
-        delay: 50
       });
 
       const cache = new Cache({ addTypename: false });
@@ -868,11 +868,10 @@ describe('SSR', () => {
       const mutationData = { logRoutes: { id: 'foo' } };
 
       const link = mockSingleLink(
-        { request: { query }, result: { data: data1 }, delay: 5 },
+        { request: { query }, result: { data: data1 } },
         {
           request: { query: mutation },
           result: { data: mutationData },
-          delay: 5
         }
       );
       const apolloClient = new ApolloClient({

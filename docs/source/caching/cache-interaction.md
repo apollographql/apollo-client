@@ -190,7 +190,7 @@ cache.modify({
 });
 ```
 
-In the above example we first use [`cache.identify`](#identify-cached-entities) to specify the `Thread` object in the cache we want to modify. Next we specify that the `comments` field of the `Thread` object, which points to an array of comments, should be adjusted such that any comment in the array with an `id` that matches `idToRemove` is filtered before the `comments` array is returned and written back into the cache.
+In the above example we first use [`cache.identify`](#obtaining-an-objects-custom-id) to specify the `Thread` object in the cache we want to modify. Next we specify that the `comments` field of the `Thread` object, which points to an array of comments, should be adjusted such that any comment in the array with an `id` that matches `idToRemove` is filtered before the `comments` array is returned and written back into the cache.
 
 Modifier functions (`comments` in the above) receive either the current value of the associated field in the cache (if modifying a single entity), or an array of references pointing to the field's current values in the cache (if modifying a list of entities), as the first parameter. In the example above `existingCommentRefs` is an array of comment references that the `comments` field points to in the cache, before the modifier function runs.
 

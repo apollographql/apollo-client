@@ -39,7 +39,7 @@ export abstract class EntityStore implements NormalizedCache {
   public abstract addLayer(
     layerId: string,
     replay: (layer: EntityStore) => any,
-  ): EntityStore;
+  ): Layer;
 
   public abstract removeLayer(layerId: string): EntityStore;
 
@@ -458,7 +458,7 @@ export namespace EntityStore {
     public addLayer(
       layerId: string,
       replay: (layer: EntityStore) => any,
-    ): EntityStore {
+    ): Layer {
       // The replay function will be called in the Layer constructor.
       return new Layer(layerId, this, replay, this.sharedLayerGroup);
     }
@@ -486,7 +486,7 @@ class Layer extends EntityStore {
   public addLayer(
     layerId: string,
     replay: (layer: EntityStore) => any,
-  ): EntityStore {
+  ): Layer {
     return new Layer(layerId, this, replay, this.group);
   }
 

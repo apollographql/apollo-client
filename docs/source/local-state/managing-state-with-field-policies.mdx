@@ -12,7 +12,7 @@ A single query can include both local-only fields _and_ fields that are fetched 
 
 ## Defining
 
-Let's say we're building an e-commerce application. Most of a product's details are stored on our back-end server, but we want to define an `isInCart` boolean field that's local to the client. First, we'll create a **field policy** for `isInCart`.
+Let's say we're building an e-commerce application. Most of a product's details are stored on our back-end server, but we want to define an `isInCart` boolean field that's local to the client. First, we create a **field policy** for `isInCart`.
 
 A field policy specifies custom logic for how a single GraphQL field is fetched from and written to your Apollo Client cache. You can define field policies for both local-only fields and remotely fetched fields.
 
@@ -92,7 +92,7 @@ That's it! The `@client` directive tells Apollo Client that `isInCart` is a loca
 
 ## Storing
 
-[As covered above](#define-a-field-policy), you can use Apollo Client to query local state, regardless of how you _store_ that state. Apollo Client provides a couple of helpful mechanisms for representing local state:
+You can use Apollo Client to query local state, regardless of how you _store_ that state. Apollo Client provides a couple of optional but helpful mechanisms for representing local state:
 
 * [Reactive variables](#storing-local-state-in-reactive-variables)
 * [The Apollo Client cache itself](#storing-local-state-in-the-cache)
@@ -294,6 +294,16 @@ ReactDOM.render(
 </ExpansionPanel>
 
 Note that even if you _do_ store local data as fields in the Apollo Client cache, you can (and probably should!) still define `read` functions for those fields. A `read` function can execute helpful custom logic, such as returning a default value if a field isn't present in the cache.
+
+## Modifying
+
+The way you modify the value of a local-only field depends on how you [store that field](#storing):
+
+* **If you're using a [reactive variable](#storing-local-state-in-reactive-variables)**, all you need to do is set the reactive variable's new value. Apollo Client automatically detects this change and triggers a refresh of every active operation that includes an affected field.
+
+* **If you're [using the cache directly](#storing-local-state-in-the-cache)**, call one of `writeQuery`, `writeFragment`, or `cache.modify` ([all documented here](../caching/cache-interaction/)) to modify cached fields. Like reactive variables, all of these methods trigger a refresh of every affected active operation.
+
+* **If you're using another storage method**, such as `localStorage`, set the field's new value in whatever method you're using. Then, you can force a refresh of every affected operation by calling [`cache.evict`](../caching/garbage-collection/#cacheevict). In your call, provide both the `id` of your field's containing object and the name of the local-only field.
 
 ## Using local-only fields as GraphQL variables
 

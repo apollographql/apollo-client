@@ -143,8 +143,8 @@ describe('[queries] polling', () => {
           // XXX this does throw because of no pollInterval
           // expect(data.startPolling).not.toThrow();
           setTimeout(() => {
+            data!.stopPolling();
             done = true;
-            resolve();
           });
         }
         render() {

@@ -39,17 +39,14 @@ As part of migrating, we recommend removing all `@apollo/react-hooks` dependenci
 
 ### @apollo/react-hoc and @apollo/react-components
 
-These two packages are not included in the `@apollo/client` library. To use them with Apollo Client 3.0, update to their 4.x versions:
-
-```
-npm install @apollo/react-hoc@beta
-npm install @apollo/react-components@beta
-```
+React Apollo HOC and component functionality is now included in the `@apollo/client` package:
 
 ```js
-import { Query, Mutation, Subscription } from '@apollo/react-components';
-import { graphql } from '@apollo/react-hoc';
+import { Query, Mutation, Subscription } from '@apollo/client/react/components';
+import { graphql } from '@apollo/client/react/hoc';
 ```
+
+As part of migrating, we recommend removing all `@apollo/react-hoc` and `@apollo/react-components` dependencies.
 
 ### @apollo/react-testing
 
@@ -82,12 +79,13 @@ As part of migrating, we recommend removing all `@apollo/react-ssr` dependencies
 - `@apollo/react-ssr`
 - `@apollo/react-testing`
 
-Because `@apollo/client` includes functionality from `@apollo/react-common`, `@apollo/react-hooks`, `@apollo/react-ssr` and `@apollo/react-testing`, we've released a v4 version of `react-apollo` that includes only the following:
+The `react-apollo` package has been deprecated, and the functionality offered by each of the above packages can now be accessed from `@apollo/client` directly:
 
-- `@apollo/react-components`
-- `@apollo/react-hoc`
-
-This version re-exports the remainder of React functionality directly from `@apollo/client`, so if you upgrade to `react-apollo` v4 you should still have access to everything you had in v3. That being said, we recommend removing all `react-apollo` dependencies and directly installing whichever `@apollo/react-*` packages you need.
+- `@apollo/react-hooks` -> now available directly from `@apollo/client`
+- `@apollo/react-components` -> now available from `@apollo/client/react/components`
+- `@apollo/react-hoc` -> now available from `@apollo/client/react/hoc`
+- `@apollo/react-ssr` -> now available from `@apollo/client/react/ssr`
+- `@apollo/react-testing` -> now available from `@apollo/client/testing`
 
 ### apollo-boost
 

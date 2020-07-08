@@ -10,12 +10,12 @@
     "react-scripts": "3.4.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "npx react-scripts start",
     "start:prod": "npm run build && npx serve -s build",
-    "build": "react-scripts build && npm run gzip",
+    "build": "npx react-scripts build && npm run gzip",
     "gzip": "gzip -k build/static/js/*.chunk.js",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "npx react-scripts test",
+    "eject": "npx react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"

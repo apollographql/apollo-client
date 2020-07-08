@@ -47,7 +47,7 @@ You can also remove a _single field_ from a cached object by providing the name 
 cache.evict({ id: 'my-object-id', fieldName: 'yearOfFounding' });
 ```
 
-Evicting an object often makes _other_ cached objects unreachable. Because of this, you should call the `gc` method after `evict`ing one or more objects from the cache.
+Evicting an object often makes _other_ cached objects unreachable. Because of this, you should call [`cache.gc`](#cachegc) after `evict`ing one or more objects from the cache.
 
 ## Dangling references
 

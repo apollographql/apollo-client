@@ -32,7 +32,7 @@ sequenceDiagram
     Cache->>Apollo Client: Returns ALL fields;
 ```
 
-Apollo Client 3 introduces two complementary mechanisms for managing local state: [field policies](#field-policies) and [reactive variables](#reactive-variables).
+Apollo Client 3 introduces two complementary mechanisms for managing local state: [field policies](#field-policies-and-local-only-fields) and [reactive variables](#reactive-variables).
 
 > The [local resolver API](./local-resolvers/) from previous versions of Apollo Client is also available but is [deprecated](./local-resolvers/#deprecation-notice).
 
@@ -50,7 +50,7 @@ A single GraphQL query can include both local-only fields and remotely fetched f
 
 > Available in Apollo Client >= 3.0
 
-**Reactive variables** enable you to read and write local data anywhere in your application, without needing to use a GraphQL operation to do so. The [field policy](#field-policies) of a local-only field can use a reactive variable to store the field's current value.
+**Reactive variables** enable you to read and write local data anywhere in your application, without needing to use a GraphQL operation to do so. The [field policy](#field-policies-and-local-only-fields) of a local-only field can use a reactive variable to store the field's current value.
 
 Reactive values _aren't_ stored in the Apollo Client cache, so they don't need to conform to the strict structure of a cached type. You can store anything you want in them.
 

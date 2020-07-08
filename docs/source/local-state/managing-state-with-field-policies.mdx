@@ -205,7 +205,7 @@ export function Cart() {
 
 Storing local state directly in the Apollo Client cache provides some advantages, but usually requires more code than [using reactive variables](#storing-local-state-in-reactive-variables):
 
-* You don't _have_ to [define `read` functions](#define-a-field-policy) for local-only fields that are present in the cache. If you query a field that doesn't define a `read` function, by default Apollo Client attempts to fetch that field's value directly from the cache.
+* You don't _have_ to [define a field policy](#defining) for local-only fields that are present in the cache. If you query a field that doesn't define a `read` function, by default Apollo Client attempts to fetch that field's value directly from the cache.
 * When you modify a cached field with [`writeQuery` or `writeFragment`](../caching/cache-interaction#writequery-and-writefragment), **every active query that includes the field automatically refreshes**.
 
 #### Example

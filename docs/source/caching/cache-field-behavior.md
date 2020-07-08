@@ -94,7 +94,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-> Note that to query for a field that is only defined locally, your query should [include the `@client` directive](../local-state/querying-and-updating#querying-local-state) on that field so that Apollo Client doesn't include it in requests to your GraphQL server.
+> Note that to query for a field that is only defined locally, your query should [include the `@client` directive](../local-state/managing-state-with-field-policies#querying) on that field so that Apollo Client doesn't include it in requests to your GraphQL server.
 
 Other use cases for a `read` function include:
 

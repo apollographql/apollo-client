@@ -133,19 +133,12 @@ describe('[queries] polling', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    let done = false;
     const Container = graphql(query, { options: { pollInterval: 10 } })(
       class extends React.Component<ChildProps> {
         componentDidUpdate() {
           const { data } = this.props;
           expect(data!.startPolling).toBeTruthy();
           expect(data!.startPolling instanceof Function).toBeTruthy();
-          // XXX this does throw because of no pollInterval
-          // expect(data.startPolling).not.toThrow();
-          setTimeout(() => {
-            data!.stopPolling();
-            done = true;
-          });
         }
         render() {
           return null;
@@ -159,6 +152,6 @@ describe('[queries] polling', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    return wait().then(resolve, reject);
   });
 });

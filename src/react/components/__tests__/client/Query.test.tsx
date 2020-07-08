@@ -327,25 +327,27 @@ describe('Query component', () => {
               return null;
             }
             if (count === 0) {
-              result
-                .fetchMore({
-                  variables: { first: 1 },
-                  updateQuery: (prev: any, { fetchMoreResult }: any) =>
-                    fetchMoreResult
-                      ? {
-                          allPeople: {
-                            people: [
-                              ...prev.allPeople.people,
-                              ...fetchMoreResult.allPeople.people,
-                            ],
-                          },
-                        }
-                      : prev,
-                })
-                .then((result2: any) => {
-                  expect(stripSymbols(result2.data)).toEqual(data2);
-                })
-                .catch(reject);
+              setTimeout(() => {
+                result
+                  .fetchMore({
+                    variables: { first: 1 },
+                    updateQuery: (prev: any, { fetchMoreResult }: any) =>
+                      fetchMoreResult
+                        ? {
+                            allPeople: {
+                              people: [
+                                ...prev.allPeople.people,
+                                ...fetchMoreResult.allPeople.people,
+                              ],
+                            },
+                          }
+                        : prev,
+                  })
+                  .then((result2: any) => {
+                    expect(stripSymbols(result2.data)).toEqual(data2);
+                  })
+                  .catch(reject);
+              });
             } else if (count === 1) {
               try {
                 expect(stripSymbols(result.data)).toEqual({

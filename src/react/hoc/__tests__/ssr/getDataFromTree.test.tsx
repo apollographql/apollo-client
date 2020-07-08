@@ -980,12 +980,10 @@ describe('SSR', () => {
         {
           request: { query },
           result: { data: { currentUser: { firstName: 'James' } } },
-          delay: 5
         },
         {
           request: { query: mutation },
           result: { data: { logRoutes: { id: 'foo' } } },
-          delay: 5
         }
       );
       const apolloClient = new ApolloClient({

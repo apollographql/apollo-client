@@ -1273,10 +1273,23 @@ describe('Query component', () => {
           return (
             <AllPeopleQuery query={query} variables={variables}>
               {(result: any) => {
-                if (result.loading && count === 2) {
-                  expect(stripSymbols(result.data)).toEqual(data1);
+                if (count === 0) {
+                  expect(result.loading).toBe(true);
+                  expect(result.data).toBeUndefined();
+                  expect(result.networkStatus).toBe(NetworkStatus.loading);
+                } else if (count === 1) {
+                  expect(result.loading).toBe(false);
+                  expect(result.data).toEqual(data1);
+                  expect(result.networkStatus).toBe(NetworkStatus.ready);
+                } else if (count === 2) {
+                  expect(result.loading).toBe(true);
+                  expect(result.data).toBeUndefined();
+                  expect(result.networkStatus).toBe(NetworkStatus.setVariables);
+                } else if (count === 3) {
+                  expect(result.loading).toBe(false);
+                  expect(result.data).toEqual(data2);
+                  expect(result.networkStatus).toBe(NetworkStatus.ready);
                 }
-
                 count++;
                 return null;
               }}

@@ -38,14 +38,15 @@ module.exports = {
           ],
           Caching: [
             'caching/cache-configuration',
+            'caching/cache-interaction',
+            'caching/garbage-collection',
             'caching/cache-field-behavior',
-            'caching/cache-interaction'
+            'caching/advanced-topics'
           ],
           'Local State': [
             'local-state/local-state-management',
-            'local-state/querying-and-updating',
-            'local-state/reactive-variables',
             'local-state/managing-state-with-field-policies',
+            'local-state/reactive-variables',
             'local-state/client-side-schema',
             'local-state/local-resolvers'
           ],

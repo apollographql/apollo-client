@@ -6,17 +6,13 @@ description: Fetch data with the useQuery hook
 import QueryOptions from '../../shared/query-options.mdx';
 import QueryResult from '../../shared/query-result.mdx';
 
-> This article was recently updated to reflect Apollo Client's support
-> for React Hooks. To perform queries with Apollo Client's render-prop API instead,
-> see the previous version of this article.
-
-Fetching data in a simple, predictable way is one of the core features of Apollo Client. This article demonstrates how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
+This article shows how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
 
 ## Prerequisites
 
-This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend that you [read this guide](http://graphql.org/learn/queries/) and [practice running queries in GraphiQL](../development-testing/developer-tooling/#features). Apollo Client queries are standard GraphQL, so any query that runs in GraphiQL will also run when provided to `useQuery`.
+This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend [this guide](http://graphql.org/learn/queries/). You can also build example queries against Apollo's [full-stack tutorial server](https://apollo-fullstack-tutorial.herokuapp.com/).
 
-This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](../get-started/) if you need help with either of those steps.
+This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. For more information, see the [getting started guide](../get-started/).
 
 > To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/queries-example-app-start-nvp9z) and [sample GraphQL server](https://codesandbox.io/s/queries-example-app-server-71z1g) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
 
@@ -174,8 +170,8 @@ We've already seen that the `useQuery` hook exposes our query's current loading 
 
 Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component doesn't re-render until the new data arrives. What if we want to indicate to the user that we're refetching the photo?
 
-Luckily, the `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
-of this information, we need to set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
+The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
+of this information, we set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
 
 ```jsx:title=index.js
 import { NetworkStatus } from '@apollo/client';
@@ -245,7 +241,7 @@ function DelayedQuery() {
 
 > To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
 
-## useQuery API
+## `useQuery` API
 
 Supported options and result fields for the `useQuery` hook are listed below.
 

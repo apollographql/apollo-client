@@ -67,7 +67,7 @@
     "@types/zen-observable": "^0.8.0",
     "@wry/equality": "^0.1.9",
     "fast-json-stable-stringify": "^2.0.0",
-    "graphql-tag": "^2.10.2",
+    "graphql-tag": "^2.10.4",
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.12.1",
     "prop-types": "^15.7.2",

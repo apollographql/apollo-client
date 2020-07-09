@@ -65,6 +65,7 @@
   },
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
+    "@wry/context": "^0.5.2",
     "@wry/equality": "^0.1.9",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-tag": "^2.10.4",

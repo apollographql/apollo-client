@@ -3,7 +3,7 @@ title: Customizing the behavior of cached fields
 sidebar_title: Customizing field behavior
 ---
 
-You can customize how a particular field in your Apollo Client cache is read and written. To do so, you define a **field policy** for the field. A type policy can include:
+You can customize how a particular field in your Apollo Client cache is read and written. To do so, you define a **field policy** for the field. A field policy can include:
 
 * A [`read` function](#the-read-function) that specifies what happens when the field's cached value is read
 * A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written

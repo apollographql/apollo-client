@@ -1176,6 +1176,7 @@ describe('ObservableQuery', () => {
               },
               loading: true,
               networkStatus: NetworkStatus.loading,
+              partial: true,
             });
           } else if (handleCount === 2) {
             expect(result).toEqual({
@@ -1597,6 +1598,7 @@ describe('ObservableQuery', () => {
               data: dataOne,
               loading: true,
               networkStatus: 1,
+              partial: true,
             });
 
           } else if (handleCount === 2) {

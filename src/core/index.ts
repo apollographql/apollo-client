@@ -9,7 +9,6 @@ export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
-  ApolloCurrentQueryResult,
 } from './ObservableQuery';
 export {
   QueryBaseOptions,

@@ -2128,6 +2128,7 @@ describe('QueryManager', () => {
             data: {},
             loading: true,
             networkStatus: NetworkStatus.loading,
+            partial: true,
           });
         },
         result => {
@@ -2202,6 +2203,7 @@ describe('QueryManager', () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           data: {},
+          partial: true,
         });
       } else if (count === 2) {
         expect(result).toEqual({
@@ -2220,6 +2222,7 @@ describe('QueryManager', () => {
           data: {
             info: {},
           },
+          partial: true,
         });
       } else if (count === 4) {
         expect(result).toEqual({
@@ -2243,6 +2246,7 @@ describe('QueryManager', () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           data: {},
+          partial: true,
         });
       } else if (count === 2) {
         expect(result).toEqual({

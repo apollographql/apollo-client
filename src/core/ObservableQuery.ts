@@ -23,11 +23,6 @@ import {
 import { QueryStoreValue } from './QueryInfo';
 import { Reobserver } from './Reobserver';
 
-export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
-  error?: ApolloError;
-  partial?: boolean;
-};
-
 export interface FetchMoreOptions<
   TData = any,
   TVariables = OperationVariables
@@ -134,7 +129,7 @@ export class ObservableQuery<
     });
   }
 
-  public getCurrentResult(): ApolloCurrentQueryResult<TData> {
+  public getCurrentResult(): ApolloQueryResult<TData> {
     const {
       lastResult,
       lastError,
@@ -151,8 +146,8 @@ export class ObservableQuery<
       isNetworkFetchPolicy ? NetworkStatus.loading :
       NetworkStatus.ready;
 
-    const result: ApolloCurrentQueryResult<TData> = {
-      data: !lastError && lastResult && lastResult.data || void 0,
+    const result: ApolloQueryResult<TData> = {
+      ...(lastError ? null : lastResult),
       error: lastError,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,

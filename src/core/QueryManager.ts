@@ -975,6 +975,7 @@ export class QueryManager<TStore> {
         data,
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
+        ...(diff.complete ? null : { partial: true }),
       } as ApolloQueryResult<TData>);
 
       if (this.transform(query).hasForcedResolvers) {

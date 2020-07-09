@@ -7,7 +7,6 @@ import { ApolloClient } from '../../../../ApolloClient';
 import { ApolloProvider } from '../../../context/ApolloProvider';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
 import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 import { itAsync } from '../../../../utilities/testing/itAsync';
@@ -185,15 +184,16 @@ describe('[queries] loading', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           const { data } = this.props;
           // variables changed, new query is loading, but old data is still there
-          if (count === 1 && data!.loading) {
-            expect(data!.networkStatus).toBe(2);
-            expect(stripSymbols(data!.allPeople)).toEqual(data1.allPeople);
-          }
-          // query with new variables is loaded
-          if (count === 1 && !data!.loading && prevProps.data!.loading) {
-            expect(data!.networkStatus).toBe(7);
-            expect(stripSymbols(data!.allPeople)).toEqual(data2.allPeople);
-            done = true;
+          if (count === 1) {
+            if (data!.loading) {
+              expect(data!.networkStatus).toBe(2);
+              expect(data!.allPeople).toBeUndefined();
+            } else {
+              expect(prevProps.data!.loading).toBe(true);
+              expect(data!.networkStatus).toBe(7);
+              expect(data!.allPeople).toEqual(data2.allPeople);
+              done = true;
+            }
           }
         }
         render() {
@@ -268,12 +268,12 @@ describe('[queries] loading', () => {
             case 1:
               expect(data!.loading).toBeTruthy();
               expect(data!.networkStatus).toBe(4);
-              expect(stripSymbols(data!.allPeople)).toEqual(data!.allPeople);
+              expect(data!.allPeople).toEqual(data!.allPeople);
               break;
             case 2:
               expect(data!.loading).toBeFalsy();
               expect(data!.networkStatus).toBe(7);
-              expect(stripSymbols(data!.allPeople)).toEqual(data2.allPeople);
+              expect(data!.allPeople).toEqual(data2.allPeople);
               break;
             default:
               reject(new Error('Too many props updates'));

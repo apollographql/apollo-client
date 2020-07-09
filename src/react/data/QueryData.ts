@@ -350,8 +350,8 @@ export class QueryData<TData, TVariables> extends OperationData {
     } else if (this.currentObservable) {
       // Fetch the current result (if any) from the store.
       const currentResult = this.currentObservable.getCurrentResult();
-      const { loading, partial, networkStatus, errors } = currentResult;
-      let { error, data } = currentResult;
+      const { data, loading, partial, networkStatus, errors } = currentResult;
+      let { error } = currentResult;
 
       // Until a set naming convention for networkError and graphQLErrors is
       // decided upon, we map errors (graphQLErrors) to the error options.
@@ -361,6 +361,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
       result = {
         ...result,
+        data,
         loading,
         networkStatus,
         error,
@@ -368,15 +369,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       };
 
       if (loading) {
-        const previousData =
-          this.previousData.result && this.previousData.result.data;
-        result.data =
-          previousData && data
-            ? {
-                ...previousData,
-                ...data
-              }
-            : previousData || data;
+        // Fall through without modifying result...
       } else if (error) {
         Object.assign(result, {
           data: (this.currentObservable.getLastResult() || ({} as any))
@@ -406,8 +399,6 @@ export class QueryData<TData, TVariables> extends OperationData {
           result.refetch();
           return result;
         }
-
-        result.data = data;
       }
     }
 

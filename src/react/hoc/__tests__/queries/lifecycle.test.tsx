@@ -7,7 +7,6 @@ import { ApolloClient } from '../../../../ApolloClient';
 import { ApolloProvider } from '../../../context/ApolloProvider';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
 import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
 import { Query as QueryComponent } from '../../../components/Query';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
@@ -56,12 +55,14 @@ describe('[queries] lifecycle', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           const { data } = this.props;
           // loading is true, but data still there
-          if (count === 1 && data!.loading) {
-            expect(stripSymbols(data!.allPeople)).toEqual(data1.allPeople);
-          }
-          if (count === 1 && !data!.loading && prevProps.data!.loading) {
-            expect(stripSymbols(data!.allPeople)).toEqual(data2.allPeople);
-            done = true;
+          if (count === 1) {
+            if (data!.loading) {
+              expect(data!.allPeople).toBeUndefined();
+            } else {
+              expect(prevProps.data!.loading).toBe(true);
+              expect(data!.allPeople).toEqual(data2.allPeople);
+              done = true;
+            }
           }
         }
         render() {
@@ -197,12 +198,14 @@ describe('[queries] lifecycle', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           const { data } = this.props;
           // loading is true, but data still there
-          if (count === 1 && data!.loading) {
-            expect(stripSymbols(data!.allPeople)).toEqual(data1.allPeople);
-          }
-          if (count === 1 && !data!.loading && prevProps.data!.loading) {
-            expect(stripSymbols(data!.allPeople)).toEqual(data2.allPeople);
-            done = true;
+          if (count === 1) {
+            if (data!.loading) {
+              expect(data!.allPeople).toBeUndefined();
+            } else {
+              expect(prevProps.data!.loading).toBe(true);
+              expect(data!.allPeople).toEqual(data2.allPeople);
+              done = true;
+            }
           }
         }
         render() {
@@ -272,12 +275,14 @@ describe('[queries] lifecycle', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           const { data } = this.props;
           // loading is true, but data still there
-          if (count === 1 && data!.loading) {
-            expect(stripSymbols(data!.allPeople)).toEqual(data1.allPeople);
-          }
-          if (count === 1 && !data!.loading && prevProps.data!.loading) {
-            expect(stripSymbols(data!.allPeople)).toEqual(data2.allPeople);
-            done = true;
+          if (count === 1) {
+            if (data!.loading) {
+              expect(data!.allPeople).toBeUndefined();
+            } else {
+              expect(prevProps.data!.loading).toBe(true);
+              expect(data!.allPeople).toEqual(data2.allPeople);
+              done = true;
+            }
           }
         }
         render() {
@@ -352,21 +357,21 @@ describe('[queries] lifecycle', () => {
             if (count === 1) {
               expect(props.foo).toEqual(42);
               expect(props.data!.loading).toEqual(false);
-              expect(stripSymbols(props.data!.allPeople)).toEqual(
+              expect(props.data!.allPeople).toEqual(
                 data1.allPeople
               );
               props.changeState();
             } else if (count === 2) {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
-              expect(stripSymbols(props.data!.allPeople)).toEqual(
+              expect(props.data!.allPeople).toEqual(
                 data1.allPeople
               );
               props.data!.refetch();
             } else if (count === 3) {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
-              expect(stripSymbols(props.data!.allPeople)).toEqual(
+              expect(props.data!.allPeople).toEqual(
                 data2.allPeople
               );
             }

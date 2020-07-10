@@ -108,7 +108,8 @@
     "rxjs": "6.6.0",
     "ts-jest": "26.1.1",
     "tsc-watch": "3.0.1",
-    "typescript": "3.9.6"
+    "typescript": "3.9.6",
+    "wait-for-observables": "^1.0.3"
   },
   "publishConfig": {
     "access": "public"

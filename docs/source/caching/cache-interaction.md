@@ -249,7 +249,7 @@ mutate({
 })
 ```
 
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](/api/react-hooks/#usemutation).
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react-hooks/#usemutation).
 
 ```jsx
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -480,7 +480,7 @@ cacheRedirects: {
 
 ### Resetting the store
 
-Sometimes, you may want to reset the store entirely, such as [when a user logs out](/networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
+Sometimes, you may want to reset the store entirely, such as [when a user logs out](../networking/authentication/#reset-store-on-logout). To accomplish this, use `client.resetStore` to clear out your Apollo cache. Since `client.resetStore` also refetches any of your active queries for you, it is asynchronous.
 
 ```js
 export default withApollo(graphql(PROFILE_QUERY, {
@@ -559,7 +559,7 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check out our more in depth guide [here](/performance/server-side-rendering/).
+If you would like to learn more about server side rendering, please check out our more in depth guide [here](../performance/server-side-rendering/).
 
 ### Cache persistence
 

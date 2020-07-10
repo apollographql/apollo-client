@@ -133,4 +133,4 @@ mutation {
 }
 ```
 
-If the `id` field on both results matches up, then the `score` field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use [fragments](/data/fragments/) to share fields between the query and the mutation that affects it.
+If the `id` field on both results matches up, then the `score` field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use [fragments](../data/fragments/) to share fields between the query and the mutation that affects it.

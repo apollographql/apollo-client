@@ -3,8 +3,7 @@ title: Reading and writing data to the cache
 sidebar_title: Reading and writing
 ---
 
-Apollo Client provides the following methods for reading and writing data to
-the cache:
+Apollo Client provides the following methods for reading and writing data to the cache:
 
 * [`readQuery`](#readquery) and [`readFragment`](#readfragment) 
 * [`writeQuery` and `writeFragment`](#writequery-and-writefragment)
@@ -16,16 +15,11 @@ All code samples below assume that you have initialized an instance of  `ApolloC
 
 ## `readQuery`
 
-The `readQuery` method enables you to run a GraphQL query directly on your
-cache.
+The `readQuery` method enables you to run a GraphQL query directly on your cache.
 
-* If your cache contains all of the data necessary to fulfill a specified query,
-`readQuery` returns a data object in the shape of that query, just like a GraphQL
-server does.
+* If your cache contains all of the data necessary to fulfill a specified query, `readQuery` returns a data object in the shape of that query, just like a GraphQL server does.
 
-* If your cache _doesn't_ contain all of the data necessary to fulfill a specified
-query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote
-server.
+* If your cache _doesn't_ contain all of the data necessary to fulfill a specified query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote server.
 
 Pass `readQuery` a GraphQL query string like so:
 
@@ -62,15 +56,11 @@ const { todo } = client.readQuery({
 });
 ```
 
-> **Do not modify the return value of `readQuery`.** The same object might be
-> returned to multiple components. To update data in the cache, instead create a
-> replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
+> **Do not modify the return value of `readQuery`.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
 
 ## `readFragment`
 
-The `readFragment` method enables you to read data from _any_ normalized cache
-object that was stored as part of _any_ query result. Unlike with `readQuery`, calls to
-`readFragment` do not need to conform to the structure of one of your data graph's supported queries.
+The `readFragment` method enables you to read data from _any_ normalized cache object that was stored as part of _any_ query result. Unlike with `readQuery`, calls to `readFragment` do not need to conform to the structure of one of your data graph's supported queries.
 
 Here's an example that fetches a particular item from a to-do list:
 
@@ -98,19 +88,13 @@ missing either a `text` or `completed` field, `readFragment` throws an error.
 
 ## `writeQuery` and `writeFragment`
 
-In addition to reading arbitrary data from the Apollo Client cache, you can
-_write_ arbitrary data to the cache with the `writeQuery` and `writeFragment`
-methods.
+In addition to reading arbitrary data from the Apollo Client cache, you can _write_ arbitrary data to the cache with the `writeQuery` and `writeFragment` methods.
 
-> **Any changes you make to cached data with `writeQuery` and `writeFragment` are
-> not pushed to your GraphQL server.** If you reload your environment, these
-> changes will disappear.
+> **Any changes you make to cached data with `writeQuery` and `writeFragment` are  not pushed to your GraphQL server.** If you reload your environment, these changes will disappear.
 
-These methods have the same signature as their `read` counterparts, except they
-require an additional `data` variable.
+These methods have the same signature as their `read` counterparts, except they require an additional `data` variable.
 
-For example, the following call to `writeFragment` _locally_ updates the `completed`
-flag for a `Todo` object with an `id` of `5`:
+For example, the following call to `writeFragment` _locally_ updates the `completed` flag for a `Todo` object with an `id` of `5`:
 
 ```js
 client.writeFragment({
@@ -126,8 +110,7 @@ client.writeFragment({
 });
 ```
 
-All subscribers to the Apollo Client cache (including all active queries) see this change and update your
-application's UI accordingly.
+All subscribers to the Apollo Client cache (including all active queries) see this change and update your application's UI accordingly.
 
 ## Combining reads and writes
 

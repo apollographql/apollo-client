@@ -1,5 +1,5 @@
 ---
-title: Basic HTTP Networking
+title: Basic HTTP networking
 description: Communicate with a GraphQL server over HTTP
 ---
 

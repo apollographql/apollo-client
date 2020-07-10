@@ -92,6 +92,7 @@
     "cross-fetch": "3.0.5",
     "fetch-mock": "7.7.3",
     "graphql": "15.3.0",
+    "graphql-tools": "^6.0.12",
     "jest": "26.1.0",
     "jest-junit": "11.0.1",
     "lodash": "4.17.15",

@@ -209,6 +209,9 @@
 - Support passing a `context` object through the link execution chain when using subscriptions.  <br/>
   [@sgtpepper43](https://github.com/sgtpepper43) in [#4925](https://github.com/apollographql/apollo-client/pull/4925)
 
+- `MockSubscriptionLink` now supports multiple subscriptions.  <br/>
+  [@dfrankland](https://github.com/dfrankland) in [#6081](https://github.com/apollographql/apollo-client/pull/6081)
+
 ### Bug Fixes
 
 - `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>

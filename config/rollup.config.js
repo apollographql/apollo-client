@@ -16,9 +16,12 @@ const external = [
   'graphql/language/visitor',
   'graphql-tag',
   'fast-json-stable-stringify',
+  '@wry/context',
   '@wry/equality',
   'react',
-  'zen-observable'
+  'zen-observable',
+  'prop-types',
+  'hoist-non-react-statics'
 ];
 
 function prepareESM(input, outputDir) {
@@ -171,6 +174,57 @@ function prepareTesting() {
   };
 }
 
+function prepareReactSSR() {
+  const ssrDistDir = `${distDir}/react/ssr`;
+  return {
+    input: `${ssrDistDir}/index.js`,
+    external,
+    output: {
+      file: `${ssrDistDir}/ssr.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
+    ],
+  };
+}
+
+function prepareReactComponents() {
+  const componentsDistDir = `${distDir}/react/components`;
+  return {
+    input: `${componentsDistDir}/index.js`,
+    external,
+    output: {
+      file: `${componentsDistDir}/components.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
+    ],
+  };
+}
+
+function prepareReactHoc() {
+  const hocDistDir = `${distDir}/react/hoc`;
+  return {
+    input: `${hocDistDir}/index.js`,
+    external,
+    output: {
+      file: `${hocDistDir}/hoc.cjs.js`,
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named',
+    },
+    plugins: [
+      nodeResolve(),
+    ],
+  };
+}
+
 function rollup() {
   return [
     prepareESM(packageJson.module, distDir),
@@ -178,6 +232,9 @@ function rollup() {
     prepareCJSMinified(packageJson.main),
     prepareUtilities(),
     prepareTesting(),
+    prepareReactSSR(),
+    prepareReactComponents(),
+    prepareReactHoc(),
   ];
 }
 

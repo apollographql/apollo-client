@@ -1,6 +1,7 @@
 import gql from "graphql-tag";
 
-import { InMemoryCache, ReactiveVar } from "../inMemoryCache";
+import { InMemoryCache } from "../inMemoryCache";
+import { ReactiveVar, makeVar } from "../reactiveVars";
 import { Reference, StoreObject, ApolloClient, NetworkStatus } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
@@ -959,7 +960,7 @@ describe("type policies", function () {
               result: {
                 read(_, { storage }) {
                   if (!storage!.jobName) {
-                    storage!.jobName = cache.makeVar(undefined);
+                    storage!.jobName = makeVar(undefined);
                   }
                   return storage!.jobName();
                 },
@@ -967,7 +968,7 @@ describe("type policies", function () {
                   if (storage!.jobName) {
                     storage!.jobName(incoming);
                   } else {
-                    storage!.jobName = cache.makeVar(incoming);
+                    storage!.jobName = makeVar(incoming);
                   }
                 },
               },
@@ -1417,6 +1418,16 @@ describe("type policies", function () {
     });
 
     it("readField helper function calls custom read functions", function () {
+      // Rather than writing ownTime data into the cache, we maintain it
+      // externally in this object:
+      const ownTimes: Record<string, ReactiveVar<number>> = {
+        "parent task": makeVar(2),
+        "child task 1": makeVar(3),
+        "child task 2": makeVar(4),
+        "grandchild task": makeVar(5),
+        "independent task": makeVar(11),
+      };
+
       const cache = new InMemoryCache({
         typePolicies: {
           Agenda: {
@@ -1493,16 +1504,6 @@ describe("type policies", function () {
           },
         },
       });
-
-      // Rather than writing ownTime data into the cache, we maintain it
-      // externally in this object:
-      const ownTimes: Record<string, ReactiveVar<number>> = {
-        "parent task": cache.makeVar(2),
-        "child task 1": cache.makeVar(3),
-        "child task 2": cache.makeVar(4),
-        "grandchild task": cache.makeVar(5),
-        "independent task": cache.makeVar(11),
-      };
 
       cache.writeQuery({
         query: gql`

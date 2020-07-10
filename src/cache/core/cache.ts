@@ -53,12 +53,22 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public abstract performTransaction(
     transaction: Transaction<TSerialized>,
+    // Although subclasses may implement recordOptimisticTransaction
+    // however they choose, the default implementation simply calls
+    // performTransaction with a string as the second argument, allowing
+    // performTransaction to handle both optimistic and non-optimistic
+    // (broadcast-batching) transactions. Passing null for optimisticId is
+    // also allowed, and indicates that performTransaction should apply
+    // the transaction non-optimistically (ignoring optimistic data).
+    optimisticId?: string | null,
   ): void;
 
-  public abstract recordOptimisticTransaction(
+  public recordOptimisticTransaction(
     transaction: Transaction<TSerialized>,
-    id: string,
-  ): void;
+    optimisticId: string,
+  ) {
+    this.performTransaction(transaction, optimisticId);
+  }
 
   // Optional API
 

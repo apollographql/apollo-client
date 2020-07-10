@@ -140,6 +140,7 @@ export type SubscribeToMoreOptions<
   variables?: TSubscriptionVariables;
   updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
+  context?: Record<string, any>;
 };
 
 export interface SubscriptionOptions<TVariables = OperationVariables> {
@@ -159,6 +160,11 @@ export interface SubscriptionOptions<TVariables = OperationVariables> {
    * Specifies the {@link FetchPolicy} to be used for this subscription.
    */
   fetchPolicy?: FetchPolicy;
+
+  /**
+   * Context object to be passed through the link execution chain.
+   */
+  context?: Record<string, any>;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;

@@ -1721,6 +1721,63 @@ describe('useQuery Hook', () => {
         expect(onCompletedCount).toBe(1);
       }).then(resolve, reject);
     });
+
+    itAsync('should not repeatedly call onCompleted if it alters state', (resolve, reject) => {
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const mocks = [
+        {
+          request: { query, variables: { first: 1 } },
+          result: { data: data1 },
+        },
+      ];
+
+      let renderCount = 0;
+      function Component() {
+        const [onCompletedCallCount, setOnCompletedCallCount] = useState(0);
+        const { loading, data } = useQuery(query, {
+          variables: { first: 1 },
+          onCompleted() {
+            setOnCompletedCallCount(onCompletedCallCount + 1);
+          }
+        });
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeTruthy();
+            break;
+          case 1:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(onCompletedCallCount).toBe(1);
+            break;
+          default:
+        }
+        renderCount += 1;
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks} addTypename={false}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
   });
 
   describe('Optimistic data', () => {
@@ -1873,6 +1930,122 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(6);
+      }).then(resolve, reject);
+    });
+  });
+
+  describe('Client Resolvers', () => {
+
+    itAsync("should receive up to date @client(always: true) fields on entity update", (resolve, reject) => {
+      const query = gql`
+        query GetClientData($id: ID) {
+          clientEntity(id: $id) @client(always: true) {
+            id
+            title
+            titleLength @client(always: true)
+          }
+        }
+      `;
+
+      const mutation = gql`
+        mutation AddOrUpdate {
+          addOrUpdate(id: $id, title: $title) @client
+        }
+      `;
+
+      const fragment = gql`
+      fragment ClientDataFragment on ClientData {
+        id
+        title
+      }
+      `
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(() => Observable.of({ data: { } })),
+        resolvers: {
+          ClientData: {
+            titleLength(data) {
+              return data.title.length
+            }
+          },
+          Query: {
+            clientEntity(_root, {id}, {cache}) {
+              return cache.readFragment({
+                id: cache.identify({id, __typename: "ClientData"}),
+                fragment,
+              });
+            },
+          },
+          Mutation: {
+            addOrUpdate(_root, {id, title}, {cache}) {
+              return cache.writeFragment({
+                id: cache.identify({id, __typename: "ClientData"}),
+                fragment,
+                data: {id, title, __typename: "ClientData"},
+              });
+            },
+          }
+        },
+      });
+
+      const entityId = 1;
+      const shortTitle = "Short";
+      const longerTitle = "A little longer";
+      client.mutate({
+        mutation,
+        variables: {
+          id: entityId,
+          title: shortTitle,
+        },
+      });
+      let renderCount = 0;
+      function App() {
+        const { data } = useQuery(query, {
+          variables: {
+            id: entityId,
+          }
+        });
+
+        switch (++renderCount) {
+          case 2:
+            expect(data.clientEntity).toEqual({
+              id: entityId,
+              title: shortTitle,
+              titleLength: shortTitle.length,
+              __typename: "ClientData",
+            });
+            setTimeout(() => {
+              client.mutate({
+                mutation,
+                variables: {
+                  id: entityId,
+                  title: longerTitle,
+                }
+              });
+            });
+            break;
+          case 3:
+            expect(data.clientEntity).toEqual({
+              id: entityId,
+              title: longerTitle,
+              titleLength: longerTitle.length,
+              __typename: "ClientData",
+            });
+            break;
+          default: // Do nothing
+        }
+
+        return null;
+      }
+
+      render(
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
   });

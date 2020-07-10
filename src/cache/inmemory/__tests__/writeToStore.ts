@@ -12,6 +12,7 @@ import gql from 'graphql-tag';
 import {
   storeKeyNameFromField,
   makeReference,
+  isReference,
 } from '../../../utilities/graphql/storeUtils';
 import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
@@ -2299,6 +2300,28 @@ describe('writing to the store', () => {
           __typename: "Counter",
           count: 3,
         },
+      },
+    });
+  });
+
+  it("writeFragment should be able to infer ROOT_QUERY", () => {
+    const cache = new InMemoryCache;
+
+    const ref = cache.writeFragment({
+      fragment: gql`fragment RootField on Query { field }`,
+      data: {
+        __typename: "Query",
+        field: "value",
+      },
+    });
+
+    expect(isReference(ref)).toBe(true);
+    expect(ref!.__ref).toBe("ROOT_QUERY");
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        field: "value",
       },
     });
   });

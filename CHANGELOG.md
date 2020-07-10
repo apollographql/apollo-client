@@ -53,6 +53,9 @@
 - Apollo Client now supports setting a new `ApolloLink` (or link chain) after `new ApolloClient()` has been called, using the `ApolloClient#setLink` method.  <br/>
   [@hwillson](https://github.com/hwillson) in [#6193](https://github.com/apollographql/apollo-client/pull/6193)
 
+- The final time a mutation `update` function is called, it can no longer accidentally read optimistic data from other concurrent mutations, which ensures the use of optimistic updates has no lasting impact on the state of the cache after mutations have finished. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6551](https://github.com/apollographql/apollo-client/pull/6551)
+
 ### `InMemoryCache`
 
 > ⚠️ **Note:** `InMemoryCache` has been significantly redesigned and rewritten in Apollo Client 3.0. Please consult the [migration guide](https://www.apollographql.com/docs/react/v3.0-beta/migrating/apollo-client-3-migration/#cache-improvements) and read the new [documentation](https://www.apollographql.com/docs/react/v3.0-beta/caching/cache-configuration/) to understand everything that has been improved.
@@ -115,14 +118,18 @@
 
 - `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
   ```ts
-  const v = cache.makeVar(123)
+  import { makeVar } from "@apollo/client"
+  const v = makeVar(123)
   console.log(v()) // 123
   console.log(v(v() + 1)) // 124
   console.log(v()) // 124
   v("asdf") // TS type error
   ```
   These variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
+  [@benjamn](https://github.com/benjamn) in
+  [#5799](https://github.com/apollographql/apollo-client/pull/5799),
+  [#5976](https://github.com/apollographql/apollo-client/pull/5976), and
+  [#6512](https://github.com/apollographql/apollo-client/pull/6512)
 
 - Various cache read and write performance optimizations, cutting read and write times by more than 50% in larger benchmarks. <br/>
   [@benjamn](https://github.com/benjamn) in [#5948](https://github.com/apollographql/apollo-client/pull/5948)
@@ -158,6 +165,9 @@
 
 - **[BREAKING]** The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
 
+- **[BREAKING]** Results with `loading: true` will no longer redeliver previous data, though they may provide partial data from the cache, when available. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6566](https://github.com/apollographql/apollo-client/pull/6566)
+
 - **[BREAKING?]** Remove `fixPolyfills.ts`, except when bundling for React Native. If you have trouble with `Map` or `Set` operations due to frozen key objects in React Native, either update React Native to version 0.59.0 (or 0.61.x, if possible) or investigate why `fixPolyfills.native.js` is not included in your bundle. <br/>
   [@benjamn](https://github.com/benjamn) in [#5962](https://github.com/apollographql/apollo-client/pull/5962)
 
@@ -166,6 +176,9 @@
   import { ApolloClient, ApolloProvider, useQuery } from '@apollo/client';
   ```
   [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
+
+- React SSR features (previously accessed via `@apollo/react-ssr`) can now be accessed from the separate Apollo Client entry point of `@apollo/client/react/ssr`. These features are not included in the default `@apollo/client` bundle.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6499](https://github.com/apollographql/apollo-client/pull/6499)
 
 ### General
 
@@ -189,6 +202,12 @@
 
 - Make sure `ApolloContext` plays nicely with IE11 when storing the shared context.  <br/>
   [@ms](https://github.com/ms) in [#5840](https://github.com/apollographql/apollo-client/pull/5840)
+
+- Migrated React Apollo HOC and Components functionality into Apollo Client, making it accessible from `@apollo/client/react/components` and `@apollo/client/react/hoc` entry points.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6558](https://github.com/apollographql/apollo-client/pull/6558)
+
+- Support passing a `context` object through the link execution chain when using subscriptions.  <br/>
+  [@sgtpepper43](https://github.com/sgtpepper43) in [#4925](https://github.com/apollographql/apollo-client/pull/4925)
 
 ### Bug Fixes
 

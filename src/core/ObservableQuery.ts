@@ -1,7 +1,6 @@
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
-import { tryFunctionOrLogError } from '../utilities/common/errorHandling';
 import { cloneDeep } from '../utilities/common/cloneDeep';
 import { getOperationDefinition } from '../utilities/graphql/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -373,6 +372,7 @@ once, rather than every time you call fetchMore.`);
       .startGraphQLSubscription({
         query: options.document,
         variables: options.variables,
+        context: options.context,
       })
       .subscribe({
         next: (subscriptionData: { data: TSubscriptionData }) => {
@@ -476,11 +476,9 @@ once, rather than every time you call fetchMore.`);
   ): void {
     const { queryManager } = this;
     const previousResult = this.getCurrentQueryResult(false).data;
-    const newResult = tryFunctionOrLogError(
-      () => mapFn(previousResult!, {
-        variables: (this as any).variables,
-      }),
-    );
+    const newResult = mapFn(previousResult!, {
+      variables: (this as any).variables,
+    });
 
     if (newResult) {
       queryManager.cache.writeQuery({
@@ -500,21 +498,35 @@ once, rather than every time you call fetchMore.`);
     partial: boolean;
   } {
     const { fetchPolicy } = this.options;
+    const lastData = this.lastResult?.data;
     if (fetchPolicy === 'no-cache' ||
         fetchPolicy === 'network-only') {
       return {
-        data: this.lastResult?.data,
+        data: lastData,
         partial: false,
       };
     }
 
-    const { result, complete } = this.queryManager.cache.diff<TData>({
+    let { result, complete } = this.queryManager.cache.diff<TData>({
       query: this.options.query,
       variables: this.variables,
       previousResult: this.lastResult?.data,
       returnPartialData: true,
       optimistic,
     });
+
+    if (lastData &&
+        !this.lastError &&
+        // If this.options.query has @client(always: true) fields, we
+        // cannot trust result, since it was read from the cache without
+        // running local resolvers (and it's too late to run resolvers
+        // now, since we must return a result synchronously). TODO In the
+        // future (after Apollo Client 3.0), we should find a way to trust
+        // this.lastResult in more cases, and read from the cache only in
+        // cases when no result has been received yet.
+        this.queryManager.transform(this.options.query).hasForcedResolvers) {
+      result = lastData;
+    }
 
     return {
       data: (complete || this.options.returnPartialData) ? result : void 0,

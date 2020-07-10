@@ -19,7 +19,10 @@ module.exports = {
         },
         checkLinksOptions: {
           exceptions: [
-            '/api/apollo-client/',
+            '/api/cache/',
+            '/api/core/',
+            '/api/link/',
+            '/api/react/',
             '/v2.6/api/apollo-client/',
             '/v2.5/api/apollo-client/',
             '/v2.4/api/apollo-client/',

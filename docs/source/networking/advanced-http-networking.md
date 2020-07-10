@@ -1,5 +1,5 @@
 ---
-title: Advanced HTTP Networking
+title: Advanced HTTP networking
 description: Take full network control with Apollo Link
 ---
 

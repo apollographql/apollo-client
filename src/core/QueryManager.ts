@@ -597,6 +597,7 @@ export class QueryManager<TStore> {
     query,
     fetchPolicy,
     variables,
+    context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
     query = this.transform(query).document;
     variables = this.getVariables(query, variables);
@@ -604,7 +605,7 @@ export class QueryManager<TStore> {
     const makeObservable = (variables: OperationVariables) =>
       this.getObservableFromLink<T>(
         query,
-        {},
+        context,
         variables,
         false,
       ).map(result => {
@@ -636,6 +637,7 @@ export class QueryManager<TStore> {
       const observablePromise = this.localState.addExportedVariables(
         query,
         variables,
+        context,
       ).then(makeObservable);
 
       return new Observable<FetchResult<T>>(observer => {

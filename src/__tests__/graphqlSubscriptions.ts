@@ -29,6 +29,9 @@ describe('GraphQL Subscriptions', () => {
       variables: {
         name: 'Changping Chen',
       },
+      context: {
+        someVar: 'Some value'
+      }
     };
 
     defaultOptions = {
@@ -241,5 +244,24 @@ describe('GraphQL Subscriptions', () => {
       });
       setTimeout(() => link.simulateComplete(), 100);
     });
+  });
+
+  it('should pass a context object through the link execution chain', done => {
+    const link = mockObservableLink();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    client.subscribe(options).subscribe({
+      next() {
+        expect(link.operation.getContext().someVar).toEqual(
+          options.context.someVar
+        );
+        done();
+      },
+    });
+
+    link.simulateResult(results[0]);
   });
 });

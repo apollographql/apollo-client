@@ -206,6 +206,9 @@
 - Migrated React Apollo HOC and Components functionality into Apollo Client, making it accessible from `@apollo/client/react/components` and `@apollo/client/react/hoc` entry points.  <br/>
   [@hwillson](https://github.com/hwillson) in [#6558](https://github.com/apollographql/apollo-client/pull/6558)
 
+- Support passing a `context` object through the link execution chain when using subscriptions.  <br/>
+  [@sgtpepper43](https://github.com/sgtpepper43) in [#4925](https://github.com/apollographql/apollo-client/pull/4925)
+
 ### Bug Fixes
 
 - `useMutation` adjustments to help avoid an infinite loop / too many renders issue, caused by unintentionally modifying the `useState` based mutation result directly.  <br/>

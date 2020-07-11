@@ -120,20 +120,17 @@ These options are passed into a new `HttpLink` instance behind the scenes, which
 
 ### apollo-link-*
 
-To continue using `apollo-link` packages besides `apollo-link-http`, replace each existing dependency with the corresponding package under the `@apollo` namespace:
+The separate `apollo-link-*` packages, that were previously maintained in the https://github.com/apollographql/apollo-link repo, have been merged into the Apollo Client project. These links now have their own nested `@apollo/client` entry points. Imports should be updated as follows:
 
-* `@apollo/link-batch-http`
-* `@apollo/link-context`
-* `@apollo/link-error`
-* `@apollo/link-retry`
-* `@apollo/link-schema`
-* `@apollo/link-ws`
+* `apollo-link-batch` is now `@apollo/client/link/batch`
+* `apollo-link-batch-http` is now `@apollo/client/link/batch-http`
+* `apollo-link-context` is now `@apollo/client/link/context`
+* `apollo-link-error` is now `@apollo/client/link/error`
+* `apollo-link-retry` is now `@apollo/client/link/retry`
+* `apollo-link-schema` is now `@apollo/client/link/schema`
+* `apollo-link-ws` is now `@apollo/client/link/ws`
 
-These packages provide the same functionality as their non-`@apollo` counterparts, but they’re updated for compatibility with the `@apollo/client` package.
-
-`apollo-link-rest` has also been updated to use `@apollo/client`, but does not use `@apollo/link-X` naming. It should still be referenced using `apollo-link-rest`, and updated to its `latest` version.
-
-It is important to note that Apollo Client 3 no longer allows `@client` fields to be passed through a Link chain. While Apollo Client 2 made it possible to intercept `@client` fields in Link's like `apollo-link-state` and `@apollo/link-schema`, Apollo Client 3 enforces that `@client` fields are local only. This helps ensure Apollo Client's local state story is easier to understand, and prevents unwanted fields from accidentally ending up in network requests ([PR #5982](https://github.com/apollographql/apollo-client/pull/5982)).
+It is important to note that Apollo Client 3 no longer allows `@client` fields to be passed through a Link chain. While Apollo Client 2 made it possible to intercept `@client` fields in Link's like `apollo-link-state` and `apollo-link-schema`, Apollo Client 3 enforces that `@client` fields are local only. This helps ensure Apollo Client's local state story is easier to understand, and prevents unwanted fields from accidentally ending up in network requests ([PR #5982](https://github.com/apollographql/apollo-client/pull/5982)).
 
 ### graphql-anywhere
 

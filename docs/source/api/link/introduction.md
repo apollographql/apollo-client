@@ -92,7 +92,7 @@ If you have a collection of two or more links that should always be executed in 
 
 ```js
 import { from, HttpLink } from '@apollo/client';
-import { RetryLink } from '@apollo/link-retry';
+import { RetryLink } from '@apollo/client/link/retry';
 import MyAuthLink from '../auth';
 
 const link = from([
@@ -116,7 +116,7 @@ In the following example, a `RetryLink` passes execution along to one of two dif
 
 ```js
 import { ApolloLink, HttpLink } from '@apollo/client';
-import { RetryLink } from '@apollo/link-retry';
+import { RetryLink } from '@apollo/client/link/retry';
 
 const link = new RetryLink().split(
   (operation) => operation.getContext().version === 1,

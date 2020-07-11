@@ -11,7 +11,7 @@ The schema link provides a [graphql execution environment](http://graphql.org/gr
 
 ## Installation
 
-`npm install @apollo/link-schema --save`
+`npm install @apollo/client --save`
 
 ## Usage
 
@@ -21,7 +21,7 @@ When performing SSR _on the same server_, you can use this library to avoid maki
 
 ```js
 import { ApolloClient } from '@apollo/client';
-import { SchemaLink } from '@apollo/link-schema';
+import { SchemaLink } from '@apollo/client/link/schema';
 
 import schema from './path/to/your/schema';
 
@@ -37,7 +37,7 @@ For more detailed information about mocking, refer to the [graphql-tools documen
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
-import { SchemaLink } from '@apollo/link-schema';
+import { SchemaLink } from '@apollo/client/link/schema';
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 
 const typeDefs = `

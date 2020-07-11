@@ -75,12 +75,12 @@ Because subscriptions maintain a persistent connection, they can't use the defau
 
 ### 1. Install required libraries
 
-**Apollo Link** is a collection of libraries that help you customize Apollo Client's network communication. One of these libraries is `@apollo/link-ws`, which enables communication over WebSocket.
+**Apollo Link** is a collection of libraries that help you customize Apollo Client's network communication. One of these libraries is `@apollo/client/link/ws`, which enables communication over WebSocket.
 
-Install both `@apollo/link-ws` and `subscriptions-transport-ws` in your project, like so:
+Install both `@apollo/client/link/ws` and `subscriptions-transport-ws` in your project, like so:
 
 ```bash
-npm install @apollo/link-ws subscriptions-transport-ws
+npm install @apollo/client subscriptions-transport-ws
 ```
 
 ### 2. Initialize a `WebSocketLink`
@@ -88,7 +88,7 @@ npm install @apollo/link-ws subscriptions-transport-ws
 Import and initialize a `WebSocketLink` object in the same project file where you initialize `ApolloClient`:
 
 ```js
-import { WebSocketLink } from '@apollo/link-ws';
+import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,
@@ -109,7 +109,7 @@ The following example expands on the previous one by initializing both a `WebSoc
 ```js
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { WebSocketLink } from '@apollo/link-ws';
+import { WebSocketLink } from '@apollo/client/link/ws';
 
 const httpLink = new HttpLink({
   uri: 'http://localhost:3000/'
@@ -147,7 +147,7 @@ Using this logic, queries and mutations will use HTTP as normal, and subscriptio
 It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `WebSocketLink` constructor, like so:
 
 ```js{7-9}
-import { WebSocketLink } from '@apollo/link-ws';
+import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,

@@ -21,7 +21,8 @@ const external = [
   'react',
   'zen-observable',
   'prop-types',
-  'hoist-non-react-statics'
+  'hoist-non-react-statics',
+  'subscriptions-transport-ws'
 ];
 
 function prepareESM(input, outputDir) {
@@ -174,47 +175,13 @@ function prepareTesting() {
   };
 }
 
-function prepareReactSSR() {
-  const ssrDistDir = `${distDir}/react/ssr`;
+function prepareBundle(name, path) {
+  const dir = `${distDir}/${path}`;
   return {
-    input: `${ssrDistDir}/index.js`,
+    input: `${dir}/index.js`,
     external,
     output: {
-      file: `${ssrDistDir}/ssr.cjs.js`,
-      format: 'cjs',
-      sourcemap: true,
-      exports: 'named',
-    },
-    plugins: [
-      nodeResolve(),
-    ],
-  };
-}
-
-function prepareReactComponents() {
-  const componentsDistDir = `${distDir}/react/components`;
-  return {
-    input: `${componentsDistDir}/index.js`,
-    external,
-    output: {
-      file: `${componentsDistDir}/components.cjs.js`,
-      format: 'cjs',
-      sourcemap: true,
-      exports: 'named',
-    },
-    plugins: [
-      nodeResolve(),
-    ],
-  };
-}
-
-function prepareReactHoc() {
-  const hocDistDir = `${distDir}/react/hoc`;
-  return {
-    input: `${hocDistDir}/index.js`,
-    external,
-    output: {
-      file: `${hocDistDir}/hoc.cjs.js`,
+      file: `${dir}/${name}.cjs.js`,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
@@ -232,9 +199,16 @@ function rollup() {
     prepareCJSMinified(packageJson.main),
     prepareUtilities(),
     prepareTesting(),
-    prepareReactSSR(),
-    prepareReactComponents(),
-    prepareReactHoc(),
+    prepareBundle('ssr', 'react/ssr'),
+    prepareBundle('components', 'react/components'),
+    prepareBundle('hoc', 'react/hoc'),
+    prepareBundle('batch', 'link/batch'),
+    prepareBundle('batch-http', 'link/batch-http'),
+    prepareBundle('context', 'link/context'),
+    prepareBundle('error', 'link/error'),
+    prepareBundle('retry', 'link/retry'),
+    prepareBundle('schema', 'link/schema'),
+    prepareBundle('ws', 'link/ws'),
   ];
 }
 

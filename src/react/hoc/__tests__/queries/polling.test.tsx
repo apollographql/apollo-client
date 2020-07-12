@@ -4,12 +4,14 @@ import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../ApolloClient';
+import { ApolloLink } from '../../../../core';
 import { ApolloProvider } from '../../../context/ApolloProvider';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
 import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 import { itAsync } from '../../../../utilities/testing/itAsync';
+import { Observable } from '../../../../utilities/observables/Observable';
 
 describe('[queries] polling', () => {
   let error: typeof console.error;
@@ -73,32 +75,47 @@ describe('[queries] polling', () => {
     return wait(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
-  itAsync('exposes stopPolling as part of the props api', (resolve, reject) => {
-    const query: DocumentNode = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
+  const allPeopleQuery: DocumentNode = gql`
+    query people {
+      allPeople(first: 1) {
+        people {
+          name
         }
       }
-    `;
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: { allPeople: { people: [{ name: 'Luke Skywalker' }] } } }
+    }
+  `;
+
+  const lukeLink = new ApolloLink(operation => new Observable(observer => {
+    expect(operation.query).toBe(allPeopleQuery);
+    observer.next({
+      data: {
+        allPeople: {
+          people: [
+            { name: "Luke Skywalker" },
+          ],
+        },
+      },
     });
+    observer.complete();
+  }));
+
+  itAsync('exposes stopPolling as part of the props api', (resolve, reject) => {
     const client = new ApolloClient({
-      link,
+      link: lukeLink,
       cache: new Cache({ addTypename: false })
     });
 
-    const Container = graphql(query)(
+    const Container = graphql(allPeopleQuery)(
       class extends React.Component<ChildProps> {
         componentDidUpdate() {
-          const { data } = this.props;
-          expect(data!.stopPolling).toBeTruthy();
-          expect(data!.stopPolling instanceof Function).toBeTruthy();
-          expect(data!.stopPolling).not.toThrow();
+          try {
+            const { data } = this.props;
+            expect(data!.stopPolling).toBeTruthy();
+            expect(data!.stopPolling instanceof Function).toBeTruthy();
+            expect(data!.stopPolling).not.toThrow();
+          } catch (e) {
+            reject(e);
+          }
         }
         render() {
           return null;
@@ -115,30 +132,21 @@ describe('[queries] polling', () => {
   });
 
   itAsync('exposes startPolling as part of the props api', (resolve, reject) => {
-    const query: DocumentNode = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: { allPeople: { people: [{ name: 'Luke Skywalker' }] } } }
-    });
     const client = new ApolloClient({
-      link,
+      link: lukeLink,
       cache: new Cache({ addTypename: false })
     });
 
-    const Container = graphql(query, { options: { pollInterval: 10 } })(
+    const Container = graphql(allPeopleQuery, { options: { pollInterval: 10 } })(
       class extends React.Component<ChildProps> {
         componentDidUpdate() {
-          const { data } = this.props;
-          expect(data!.startPolling).toBeTruthy();
-          expect(data!.startPolling instanceof Function).toBeTruthy();
+          try {
+            const { data } = this.props;
+            expect(data!.startPolling).toBeTruthy();
+            expect(data!.startPolling instanceof Function).toBeTruthy();
+          } catch (e) {
+            reject(e);
+          }
         }
         render() {
           return null;

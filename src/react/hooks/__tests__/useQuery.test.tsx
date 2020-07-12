@@ -1169,7 +1169,7 @@ describe('useQuery Hook', () => {
       itAsync('updateQuery', (resolve, reject) => {
         let renderCount = 0;
         function App() {
-          const { loading, data, fetchMore } = useQuery(carQuery, {
+          const { loading, networkStatus, data, fetchMore } = useQuery(carQuery, {
             variables: { limit: 1 },
             notifyOnNetworkStatusChange: true
           });
@@ -1177,9 +1177,12 @@ describe('useQuery Hook', () => {
           switch (++renderCount) {
             case 1:
               expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.loading);
+              expect(data).toBeUndefined();
               break;
             case 2:
               expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
               expect(data).toEqual(carResults);
               fetchMore({
                 variables: {
@@ -1194,7 +1197,13 @@ describe('useQuery Hook', () => {
               });
               break;
             case 3:
+              expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.fetchMore);
+              expect(data).toEqual(carResults);
+              break;
+            case 4:
               expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
               expect(data).toEqual({
                 cars: [
                   carResults.cars[0],
@@ -1203,6 +1212,7 @@ describe('useQuery Hook', () => {
               });
               break;
             default:
+              reject("too many updates");
           }
 
           return null;
@@ -1215,14 +1225,14 @@ describe('useQuery Hook', () => {
         );
 
         return wait(() => {
-          expect(renderCount).toBe(3);
+          expect(renderCount).toBe(4);
         }).then(resolve, reject);
       });
 
       itAsync('field policy', (resolve, reject) => {
         let renderCount = 0;
         function App() {
-          const { loading, data, fetchMore } = useQuery(carQuery, {
+          const { loading, networkStatus, data, fetchMore } = useQuery(carQuery, {
             variables: { limit: 1 },
             notifyOnNetworkStatusChange: true
           });
@@ -1230,9 +1240,12 @@ describe('useQuery Hook', () => {
           switch (++renderCount) {
             case 1:
               expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.loading);
+              expect(data).toBeUndefined();
               break;
             case 2:
               expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
               expect(data).toEqual(carResults);
               fetchMore({
                 variables: {
@@ -1241,7 +1254,13 @@ describe('useQuery Hook', () => {
               });
               break;
             case 3:
+              expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.fetchMore);
+              expect(data).toEqual(carResults);
+              break;
+            case 4:
               expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
               expect(data).toEqual({
                 cars: [
                   carResults.cars[0],
@@ -1250,6 +1269,7 @@ describe('useQuery Hook', () => {
               });
               break;
             default:
+              reject("too many updates");
           }
 
           return null;
@@ -1272,7 +1292,7 @@ describe('useQuery Hook', () => {
         );
 
         return wait(() => {
-          expect(renderCount).toBe(3);
+          expect(renderCount).toBe(4);
         }).then(resolve, reject);
       });
     });

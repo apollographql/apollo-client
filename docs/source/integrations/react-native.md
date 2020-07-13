@@ -13,10 +13,12 @@ npm install @apollo/client --save
 ```jsx
 import React from 'react';
 import { AppRegistry } from 'react-native';
-import { ApolloClient, ApolloProvider } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 
 // Create the client as outlined in the setup guide
-const client = new ApolloClient();
+const client = new ApolloClient({
+  cache: new InMemoryCache()
+});
 
 const App = () => (
   <ApolloProvider client={client}>

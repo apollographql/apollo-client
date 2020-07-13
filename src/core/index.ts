@@ -38,36 +38,9 @@ export * from '../cache';
 
 /* Link */
 
-export { empty } from '../link/core/empty';
-export { from } from '../link/core/from';
-export { split } from '../link/core/split';
-export { concat } from '../link/core/concat';
-export { execute } from '../link/core/execute';
-export { ApolloLink } from '../link/core/ApolloLink';
-export * from '../link/core/types';
-export {
-  parseAndCheckHttpResponse,
-  ServerParseError
-} from '../link/http/parseAndCheckHttpResponse';
-export {
-  serializeFetchParameter,
-  ClientParseError
-} from '../link/http/serializeFetchParameter';
-export {
-  HttpOptions,
-  fallbackHttpConfig,
-  selectHttpOptionsAndBody,
-  UriFunction
-} from '../link/http/selectHttpOptionsAndBody';
-export { checkFetcher } from '../link/http/checkFetcher';
-export { createSignalIfSupported } from '../link/http/createSignalIfSupported';
-export { selectURI } from '../link/http/selectURI';
-export { createHttpLink } from '../link/http/createHttpLink';
-export { HttpLink } from '../link/http/HttpLink';
-export { fromError } from '../link/utils/fromError';
-export { toPromise } from '../link/utils/toPromise';
-export { fromPromise } from '../link/utils/fromPromise';
-export { ServerError, throwServerError } from '../link/utils/throwServerError';
+export * from '../link/core';
+export * from '../link/http';
+export * from '../link/utils';
 export {
   Observable,
   Observer,

@@ -990,9 +990,13 @@ describe('fetchMore on an observable query with connection', () => {
               });
               break;
             case 1:
+              expect(networkStatus).toBe(NetworkStatus.fetchMore);
+              expect((data as any).entry.comments.length).toBe(10);
+              break;
+            case 2:
               expect(networkStatus).toBe(NetworkStatus.ready);
               expect((data as any).entry.comments.length).toBe(20);
-              resolve();
+              setTimeout(resolve, 10);
               break;
             default:
               reject(new Error('`next` called too many times'));
@@ -1045,9 +1049,13 @@ describe('fetchMore on an observable query with connection', () => {
               });
               break;
             case 1:
+              expect(networkStatus).toBe(NetworkStatus.fetchMore);
+              expect((data as any).entry.comments.length).toBe(10);
+              break;
+            case 2:
               expect(networkStatus).toBe(NetworkStatus.ready);
               expect((data as any).entry.comments.length).toBe(20);
-              resolve();
+              setTimeout(resolve, 10);
               break;
             default:
               reject(new Error('`next` called too many times'));

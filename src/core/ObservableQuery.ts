@@ -305,6 +305,39 @@ export class ObservableQuery<
 
     const qid = this.queryManager.generateQueryId();
 
+    if (combinedOptions.notifyOnNetworkStatusChange) {
+      const currentResult = this.getCurrentResult();
+      const queryInfo = this.queryManager.getQueryStoreValue(this.queryId);
+      if (queryInfo) {
+        // If we neglect to update queryInfo.networkStatus here,
+        // getCurrentResult may return a loading:false result while
+        // fetchMore is in progress, since getCurrentResult also consults
+        // queryInfo.networkStatus. Note: setting queryInfo.networkStatus
+        // to an in-flight status means that QueryInfo#shouldNotify will
+        // return false while fetchMore is in progress, which is why we
+        // call this.reobserve() explicitly in the .finally callback after
+        // fetchMore (below), since the cache write will not automatically
+        // trigger a notification, even though it does trigger a cache
+        // broadcast. This is a good thing, because it means we won't see
+        // intervening query notifications while fetchMore is pending.
+        queryInfo.networkStatus = NetworkStatus.fetchMore;
+      }
+      // Simulate a loading result for the original query with
+      // networkStatus === NetworkStatus.fetchMore.
+      this.observer.next!({
+        // Note that currentResult is an ApolloCurrentQueryResult<TData>,
+        // whereas this.observer.next expects an ApolloQueryResult<TData>.
+        // Fortunately, ApolloCurrentQueryResult is a subtype of
+        // ApolloQueryResult (with additional .error and .partial fields),
+        // so TypeScript has no problem with this sleight of hand.
+        // TODO Consolidate these two types into a single type (most
+        // likely just ApolloQueryResult) after AC3 is released.
+        ...currentResult,
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+      });
+    }
+
     return this.queryManager.fetchQuery(
       qid,
       combinedOptions,

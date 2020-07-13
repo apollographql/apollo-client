@@ -11,7 +11,8 @@
     "gatsby-theme-apollo-docs": "4.3.4",
     "ink": "^2.7.1",
     "react": "16.12.0",
-    "react-dom": "16.12.0"
+    "react-dom": "16.12.0",
+    "webpack-virtual-modules": "^0.2.2"
   },
   "devDependencies": {
     "typedoc": "0.15.8",

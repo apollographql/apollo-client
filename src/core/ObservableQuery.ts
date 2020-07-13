@@ -305,7 +305,7 @@ export class ObservableQuery<
 
     const qid = this.queryManager.generateQueryId();
 
-    if (this.options.notifyOnNetworkStatusChange) {
+    if (combinedOptions.notifyOnNetworkStatusChange) {
       const currentResult = this.getCurrentResult();
       const queryInfo = this.queryManager.getQueryStoreValue(this.queryId);
       if (queryInfo) {

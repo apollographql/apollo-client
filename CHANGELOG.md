@@ -238,6 +238,9 @@
 - Expand `ApolloError` typings to include `ServerError` and `ServerParseError`.  <br/>
   [@dmarkow](https://github.com/dmarkow) in [#6319](https://github.com/apollographql/apollo-client/pull/6319)
 
+- Fast responses received over the link chain will no longer conflict with `skip` settings.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6587](https://github.com/apollographql/apollo-client/pull/6587)
+
 ## Apollo Client 2.6.8
 
 ### Apollo Client (2.6.8)

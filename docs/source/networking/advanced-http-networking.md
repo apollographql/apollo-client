@@ -80,11 +80,11 @@ In the example above, the `authMiddleware` link sets each request's `Authorizati
 
 You can also use Apollo Link to customize Apollo Client's behavior whenever it receives a response from a request.
 
-The following example demonstrates using [`@apollo/link-error`](../api/link/apollo-link-error/) to handle network errors that are included in a response:
+The following example demonstrates using [`@apollo/client/link/error`](../api/link/apollo-link-error/) to handle network errors that are included in a response:
 
 ```js
 import { ApolloClient, HttpLink } from '@apollo/client';
-import { onError } from '@apollo/link-error';
+import { onError } from '@apollo/client/link/error';
 
 import { logout } from './logout';
 

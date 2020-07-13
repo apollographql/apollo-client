@@ -101,10 +101,8 @@ function writeCjsIndex(bundleName, exportNames, includeNames = true) {
 // Create individual bundle package.json files, storing them in their
 // associated dist directory. This helps provide a way for the Apollo Client
 // core to be used without React, as well as AC's cache, utilities, SSR,
-// components, and HOC to be used by themselves, via the `core.cjs.js`,
-// `cache.cjs.js`, `utilities.cjs.js`, `ssr.cjs.js`, `components.cjs.js`, and
-// `hoc.cjs.js` CommonJS entry point files that only include the exports needed
-// for each bundle.
+// components, HOC, and various links to be used by themselves, via CommonJS
+// entry point files that only include the exports needed for each bundle.
 
 // @apollo/client/core
 fs.writeFileSync(`${distRoot}/core/package.json`, buildPackageJson('core'));
@@ -136,4 +134,46 @@ fs.writeFileSync(
 fs.writeFileSync(
   `${distRoot}/react/hoc/package.json`,
   buildPackageJson('hoc', 'react/hoc')
+);
+
+// @apollo/client/link/batch
+fs.writeFileSync(
+  `${distRoot}/link/batch/package.json`,
+  buildPackageJson('batch', 'link/batch')
+);
+
+// @apollo/client/link/batch-http
+fs.writeFileSync(
+  `${distRoot}/link/batch-http/package.json`,
+  buildPackageJson('batch-http', 'link/batch-http')
+);
+
+// @apollo/client/link/context
+fs.writeFileSync(
+  `${distRoot}/link/context/package.json`,
+  buildPackageJson('context', 'link/context')
+);
+
+// @apollo/client/link/error
+fs.writeFileSync(
+  `${distRoot}/link/error/package.json`,
+  buildPackageJson('error', 'link/error')
+);
+
+// @apollo/client/link/retry
+fs.writeFileSync(
+  `${distRoot}/link/retry/package.json`,
+  buildPackageJson('retry', 'link/retry')
+);
+
+// @apollo/client/link/schema
+fs.writeFileSync(
+  `${distRoot}/link/schema/package.json`,
+  buildPackageJson('schema', 'link/schema')
+);
+
+// @apollo/client/link/ws
+fs.writeFileSync(
+  `${distRoot}/link/ws/package.json`,
+  buildPackageJson('ws', 'link/ws')
 );

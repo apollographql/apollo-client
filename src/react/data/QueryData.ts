@@ -279,18 +279,6 @@ export class QueryData<TData, TVariables> extends OperationData {
           return;
         }
 
-        // If we skipped previously, `previousResult.data` is set to undefined.
-        // When this subscription is run after skipping, Apollo Client sends
-        // the last query result data alongside the `loading` true state. This
-        // means the previous skipped `data` of undefined and the incoming
-        // data won't match, which would normally mean we want to trigger a
-        // render to show the new data. In this case however we're already
-        // showing the loading state, and want to avoid triggering an
-        // additional and unnecessary render showing the same loading state.
-        if (this.previousOptions.skip) {
-          return;
-        }
-
         onNewData();
       },
       error: error => {

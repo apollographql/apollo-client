@@ -2069,4 +2069,41 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
   });
+
+  describe('Skipping', () => {
+    itAsync('should skip running a query when `skip` is `true`', (resolve, reject) => {
+      let renderCount = 0;
+      const Component = () => {
+        const [skip, setSkip] = useState(true);
+        const { loading, data } = useQuery(CAR_QUERY, { skip });
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            setTimeout(() => setSkip(false));
+            break;
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(CAR_RESULT_DATA);
+            break;
+          default:
+        }
+
+        renderCount += 1;
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => expect(renderCount).toBe(3)).then(resolve, reject);
+    });
+  });
 });

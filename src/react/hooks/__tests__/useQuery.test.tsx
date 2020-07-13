@@ -1814,6 +1814,43 @@ describe('useQuery Hook', () => {
 
       return wait().then(resolve, reject);
     });
+
+    itAsync(
+      'should not make extra network requests when `onCompleted` is ' +
+      'defined with a `network-only` fetch policy',
+      (resolve, reject) => {
+        let renderCount = 0;
+        function Component() {
+          const { loading, data } = useQuery(CAR_QUERY, {
+            fetchPolicy: 'network-only',
+            onCompleted: () => undefined
+          });
+          switch (++renderCount) {
+            case 1:
+              expect(loading).toBeTruthy();
+              break;
+            case 2:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(CAR_RESULT_DATA);
+              break;
+            case 3:
+              fail('Too many renders');
+            default:
+          }
+          return null;
+        }
+
+        render(
+          <MockedProvider mocks={CAR_MOCKS}>
+            <Component />
+          </MockedProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(2);
+        }).then(resolve, reject);
+      }
+    );
   });
 
   describe('Optimistic data', () => {

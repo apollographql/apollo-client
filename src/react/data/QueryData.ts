@@ -26,6 +26,8 @@ import {
 } from '../types/types';
 import { OperationData } from './OperationData';
 
+const stripFns = ({ onCompleted, onError, ...rest }: any = {}) => rest;
+
 export class QueryData<TData, TVariables> extends OperationData {
   public onNewData: () => void;
 
@@ -238,12 +240,15 @@ export class QueryData<TData, TVariables> extends OperationData {
       children: null
     };
 
-    if (
-      !equal(
-        newObservableQueryOptions,
-        this.previousData.observableQueryOptions
-      )
-    ) {
+    // When comparing new options against previously stored options,
+    // we'll ignore callback functions since their identities are not
+    // stable, meaning they'll always show as being different. Ignoring
+    // them when determining if options have changed is okay however, as
+    // callback functions are not normally changed between renders.
+    if (!equal(
+      stripFns(newObservableQueryOptions),
+      stripFns(this.previousData.observableQueryOptions),
+    )) {
       this.previousData.observableQueryOptions = newObservableQueryOptions;
       this.currentObservable
         .setOptions(newObservableQueryOptions)

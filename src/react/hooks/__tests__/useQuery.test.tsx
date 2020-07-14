@@ -1798,6 +1798,27 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
+
+    itAsync('should not call onCompleted if skip is true', (resolve, reject) => {
+      function Component() {
+        const { loading } = useQuery(CAR_QUERY, {
+          skip: true,
+          onCompleted() {
+            fail('should not call onCompleted!');
+          }
+        });
+        expect(loading).toBeFalsy();
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait().then(resolve, reject);
+    });
   });
 
   describe('Optimistic data', () => {

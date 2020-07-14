@@ -1,3 +1,10 @@
+## Apollo Client 3.0.1 (TBD - not yet released)
+
+## Bug Fixes
+
+- Make sure `useQuery` `onCompleted` is not fired when `skip` is `true`.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6589](https://github.com/apollographql/apollo-client/pull/6589)
+
 # Apollo Client 3.0.0
 
 ## Improvements

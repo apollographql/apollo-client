@@ -412,7 +412,13 @@ export class QueryData<TData, TVariables> extends OperationData {
     const { data, loading, error } = this.previousData.result;
 
     if (!loading) {
-      const { query, variables, onCompleted, onError } = this.getOptions();
+      const {
+        query,
+        variables,
+        onCompleted,
+        onError,
+        skip
+      } = this.getOptions();
 
       // No changes, so we won't call onError/onCompleted.
       if (
@@ -424,7 +430,7 @@ export class QueryData<TData, TVariables> extends OperationData {
         return;
       }
 
-      if (onCompleted && !error) {
+      if (onCompleted && !error && !skip) {
         onCompleted(data);
       } else if (onError && error) {
         onError(error);

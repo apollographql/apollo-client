@@ -1,4 +1,4 @@
-# Apollo Client 3.0.0 (TBD - not yet released)
+# Apollo Client 3.0.0
 
 ## Improvements
 

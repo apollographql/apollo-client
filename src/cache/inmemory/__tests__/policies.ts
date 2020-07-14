@@ -2381,27 +2381,46 @@ describe("type policies", function () {
         hasNextPage: true,
       };
 
-      const turrellVariables = {
+      const turrellVariables1 = {
         query: "James Turrell",
         first: 1,
       };
 
-      const turrellEdges = [{
-        __typename: "SearchableEdge",
-        node: {
-          __typename: "Artist",
-          href: "/artist/james-turrell",
-          displayLabel: "James Turrell",
-          bio: "American, born 1943, Los Angeles, California",
-        },
-      }];
+      const turrellVariables2 = {
+        query: "James Turrell",
+        first: 2,
+      };
 
-      const turrellPageInfo = {
+      const turrellEdges = [
+        {
+          __typename: "SearchableEdge",
+          node: {
+            __typename: "Artist",
+            href: "/artist/james-turrell",
+            displayLabel: "James Turrell",
+            bio: "American, born 1943, Los Angeles, California",
+          },
+        },
+        {
+          __typename: "SearchableEdge",
+          node: {
+            __typename: "SearchableItem",
+            displayLabel: "James Turrell: Light knows when we’re looking",
+          },
+        },
+      ];
+
+      const turrellPageInfo1 = {
         __typename: "PageInfo",
         startCursor: "YXJyYXljb25uZWN0aW9uOjA=",
         endCursor: "YXJyYXljb25uZWN0aW9uOjA=",
         hasPreviousPage: false,
         hasNextPage: true,
+      };
+
+      const turrellPageInfo2 = {
+        ...turrellPageInfo1,
+        endCursor: "YXJyYXljb25uZWN0aW9uOjEx",
       };
 
       const link = new MockLink([
@@ -2483,13 +2502,28 @@ describe("type policies", function () {
         {
           request: {
             query,
-            variables: turrellVariables,
+            variables: turrellVariables1,
+          },
+          result: {
+            data: {
+              search: {
+                edges: turrellEdges.slice(0, 1),
+                pageInfo: turrellPageInfo1,
+                totalCount: 13531,
+              },
+            },
+          },
+        },
+        {
+          request: {
+            query,
+            variables: turrellVariables2,
           },
           result: {
             data: {
               search: {
                 edges: turrellEdges,
-                pageInfo: turrellPageInfo,
+                pageInfo: turrellPageInfo2,
                 totalCount: 13531,
               },
             },
@@ -2667,8 +2701,8 @@ describe("type policies", function () {
               networkStatus: NetworkStatus.ready,
               data: {
                 search: {
-                  edges: turrellEdges,
-                  pageInfo: turrellPageInfo,
+                  edges: turrellEdges.slice(0, 1),
+                  pageInfo: turrellPageInfo1,
                   totalCount: 13531,
                 },
               },
@@ -2680,17 +2714,17 @@ describe("type policies", function () {
               // Note that Turrell's name has been lower-cased.
               snapshot.ROOT_QUERY!["search:james turrell"]
             ).toEqual({
-              edges: turrellEdges.map(edge => ({
+              edges: turrellEdges.slice(0, 1).map(edge => ({
                 ...edge,
                 // The relayStylePagination merge function updates the
                 // edge.cursor field of the first and last edge, even if
                 // the query did not request the edge.cursor field, if
                 // pageInfo.{start,end}Cursor are defined.
-                cursor: turrellPageInfo.startCursor,
+                cursor: turrellPageInfo1.startCursor,
                 // Artist objects are normalized by HREF:
                 node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
               })),
-              pageInfo: turrellPageInfo,
+              pageInfo: turrellPageInfo1,
               totalCount: 13531,
             });
 
@@ -2745,10 +2779,56 @@ describe("type policies", function () {
 
           expect(cache.extract()).toMatchSnapshot();
 
-          // Wait a bit to make sure there are no additional results for
-          // Basquiat.
-          setTimeout(resolve, 100);
+          // Now search for James Turrell again with args.first === 2
+          // (turrellVariables2), but without args.after, so that the
+          // new results overwrite the existing results (#6592).
+          client.query({
+            query,
+            variables: turrellVariables2,
+            // Necessary to skip the cache, like fetchMore does.
+            fetchPolicy: "network-only",
+          }).then(result => {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                search: {
+                  edges: turrellEdges,
+                  pageInfo: turrellPageInfo2,
+                  totalCount: 13531,
+                },
+              },
+            });
 
+            const snapshot = cache.extract();
+            expect(snapshot).toMatchSnapshot();
+            expect(
+              // Note that Turrell's name has been lower-cased.
+              snapshot.ROOT_QUERY!["search:james turrell"]
+            ).toEqual({
+              edges: turrellEdges.map((edge, i) => ({
+                ...edge,
+                // This time the cursors are different depending on which
+                // of the two edges we're considering.
+                cursor: [
+                  turrellPageInfo2.startCursor,
+                  turrellPageInfo2.endCursor,
+                ][i],
+                node: [
+                  // Artist objects are normalized by HREF:
+                  { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                  // However, SearchableItem objects are not normalized.
+                  edge.node,
+                ][i],
+              })),
+              pageInfo: turrellPageInfo2,
+              totalCount: 13531,
+            });
+
+            // Wait a bit to make sure there are no additional results for
+            // Basquiat.
+            setTimeout(resolve, 100);
+          });
         } else {
           reject("should not receive another result for Basquiat");
         }

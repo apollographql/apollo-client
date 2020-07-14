@@ -209,6 +209,7 @@ function rollup() {
     prepareBundle('retry', 'link/retry'),
     prepareBundle('schema', 'link/schema'),
     prepareBundle('ws', 'link/ws'),
+    prepareBundle('http', 'link/http'),
   ];
 }
 

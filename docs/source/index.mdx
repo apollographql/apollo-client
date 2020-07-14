@@ -1,44 +1,60 @@
 ---
-title: Introduction
-description: What is Apollo Client?
+title: Introduction to Apollo Client
+sidebar_title: Introduction
 ---
 
-**Apollo Client** is a complete state management library for JavaScript apps. Simply write a GraphQL query, and Apollo Client will take care of requesting and caching your data, as well as updating your UI.
+import { Button } from '@apollo/space-kit/Button';
+import { Link } from 'gatsby';
+import { colors } from 'gatsby-theme-apollo-core';
 
-Fetching data with Apollo Client guides you to structure your code in a predictable, declarative way consistent with modern React best practices. With Apollo, you can build high-quality features faster without the hassle of writing data plumbing boilerplate.
+> **Apollo Client 3.0 is officially released.** If you are currently using a previous version of Apollo Client, we recommend [migrating](../migrating/apollo-client-3-migration/).
+>
+> For documentation of previous versions, use the version switcher in the upper left.
+
+**Apollo Client** is a comprehensive state management library for JavaScript that enables you to manage both local and remote data with GraphQL. Use it to fetch, cache, and modify application data, all while automatically updating your UI.
+
+Apollo Client helps helps you structure code in an economical, predictable, and declarative way that's consistent with modern development practices. The core `@apollo/client` library provides built-in integration with React, and the larger Apollo community maintains [integrations for other popular view layers](#community-integrations).
+
+<div>
+  <Button
+    size="large"
+    as={<Link to="/get-started/" />}
+  >
+    Get started!
+  </Button>
+</div>
 
 ## Features
 
-- **Declarative data fetching:** Write a query and receive data without manually tracking loading states
-- **Excellent developer experience:** Enjoy helpful tooling for TypeScript, Chrome DevTools, and VS Code
-- **Designed for modern React:** Take advantage of the latest React features, such as hooks
-- **Incrementally adoptable:** Drop Apollo into any JavaScript app seamlessly
-- **Universally compatible:** Use any build setup and any GraphQL API
-- **Community driven:** Share knowledge with thousands of developers, thanks to our active open source community
+- **Declarative data fetching:** Write a query and receive data without manually tracking loading states.
+- **Excellent developer experience:** Enjoy helpful tooling for TypeScript, Chrome DevTools, and VS Code.
+- **Designed for modern React:** Take advantage of the latest React features, such as hooks.
+- **Incrementally adoptable:** Drop Apollo into any JavaScript app seamlessly.
+- **Universally compatible:** Use any build setup and any GraphQL API.
+- **Community driven:** Share knowledge with thousands of developers, thanks to our active open source community.
 
-## Get started
+## Explore the docs
 
-Follow the [quick start tutorial](get-started/) to start fetching data in minutes. For a longer end-to-end example that includes pagination, local state management, and building a graph API, check out the [official Apollo tutorial](https://www.apollographql.com/docs/tutorial/introduction/).
+After you [get started](./get-started/), check out the full Apollo Client docs, organized into the following sections on the left:
 
-## Explore Apollo Client
-
-The Apollo Client docs are structured into the following sections. We recommend starting with the Essentials first before moving on to advanced topics.
-
-1. **Essentials:** Start here to learn how to fetch data, update data, and manage local state with Apollo Client
-2. **Features:** Learn how to get the most out of Apollo Client's features
-3. **Advanced:** Advanced Apollo Client capabilities to cover all your needs
-4. **Recipes:** How-to guides for accomplishing specific tasks
-5. **API:** Full API details for Apollo Client, its React APIs, and additional packages
+* **Fetching:** Execute queries and other GraphQL operations on your server. **Definitely read [Queries](./data/queries/) if you haven't yet.**
+* **Caching:** Query your cache directly and make local-only modifications to your data.
+* **Local State:** Manage both local and remotely fetched state with a single API.
+* **Development & testing:** Learn about Apollo Client's language and tooling support.
+* **Performance:** Take advantage of advanced features to optimize performance and user experience.
+* **Integrations:** Explore support for view layers besides React.
+* **Networking:** Learn how Apollo Client communicates over the network by default, along with how to customize this behavior.
+* **API:** Consult the complete API reference for Apollo Client, its React APIs, and additional packages.
 
 ## Community integrations
 
-This site's documentation focuses on React, but Apollo Client supports many other platforms:
+This site's documentation focuses on React, but Apollo Client supports many other libraries and languages:
 
 - JavaScript
   - [Angular](https://www.apollographql.com/docs/angular)
   - [Vue](integrations/integrations/#vue)
-  - [Meteor](integrations/meteor/)
   - [Ember](integrations/integrations/#ember)
+  - Meteor (thanks to [DDP-Apollo](https://github.com/Swydo/ddp-apollo))
 - Web Components
   - [Apollo Elements](integrations/integrations/#web-components)
 - Native mobile

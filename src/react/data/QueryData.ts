@@ -279,18 +279,6 @@ export class QueryData<TData, TVariables> extends OperationData {
           return;
         }
 
-        // If we skipped previously, `previousResult.data` is set to undefined.
-        // When this subscription is run after skipping, Apollo Client sends
-        // the last query result data alongside the `loading` true state. This
-        // means the previous skipped `data` of undefined and the incoming
-        // data won't match, which would normally mean we want to trigger a
-        // render to show the new data. In this case however we're already
-        // showing the loading state, and want to avoid triggering an
-        // additional and unnecessary render showing the same loading state.
-        if (this.previousOptions.skip) {
-          return;
-        }
-
         onNewData();
       },
       error: error => {
@@ -350,8 +338,8 @@ export class QueryData<TData, TVariables> extends OperationData {
     } else if (this.currentObservable) {
       // Fetch the current result (if any) from the store.
       const currentResult = this.currentObservable.getCurrentResult();
-      const { loading, partial, networkStatus, errors } = currentResult;
-      let { error, data } = currentResult;
+      const { data, loading, partial, networkStatus, errors } = currentResult;
+      let { error } = currentResult;
 
       // Until a set naming convention for networkError and graphQLErrors is
       // decided upon, we map errors (graphQLErrors) to the error options.
@@ -361,6 +349,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
       result = {
         ...result,
+        data,
         loading,
         networkStatus,
         error,
@@ -368,15 +357,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       };
 
       if (loading) {
-        const previousData =
-          this.previousData.result && this.previousData.result.data;
-        result.data =
-          previousData && data
-            ? {
-                ...previousData,
-                ...data
-              }
-            : previousData || data;
+        // Fall through without modifying result...
       } else if (error) {
         Object.assign(result, {
           data: (this.currentObservable.getLastResult() || ({} as any))
@@ -406,8 +387,6 @@ export class QueryData<TData, TVariables> extends OperationData {
           result.refetch();
           return result;
         }
-
-        result.data = data;
       }
     }
 
@@ -433,7 +412,13 @@ export class QueryData<TData, TVariables> extends OperationData {
     const { data, loading, error } = this.previousData.result;
 
     if (!loading) {
-      const { query, variables, onCompleted, onError } = this.getOptions();
+      const {
+        query,
+        variables,
+        onCompleted,
+        onError,
+        skip
+      } = this.getOptions();
 
       // No changes, so we won't call onError/onCompleted.
       if (
@@ -445,7 +430,7 @@ export class QueryData<TData, TVariables> extends OperationData {
         return;
       }
 
-      if (onCompleted && !error) {
+      if (onCompleted && !error && !skip) {
         onCompleted(data);
       } else if (onError && error) {
         onError(error);
@@ -460,7 +445,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     }
   }
 
-  private obsRefetch = (variables?: TVariables) =>
+  private obsRefetch = (variables?: Partial<TVariables>) =>
     this.currentObservable!.refetch(variables);
 
   private obsFetchMore = <K extends keyof TVariables>(

@@ -5,12 +5,12 @@ description: Batch multiple operations into a single HTTP request
 
 ## Overview
 
-`@apollo/link-batch-http` is a terminating link that combines multiple GraphQL
+`@apollo/client/link/batch-http` is a terminating link that combines multiple GraphQL
 operations into a single HTTP request. This link batches individual
 operations together into an array that is sent to a single GraphQL endpoint.
 
 ```js
-import { BatchHttpLink } from "@apollo/link-batch-http";
+import { BatchHttpLink } from "@apollo/client/link/batch-http";
 
 const link = new BatchHttpLink({ uri: "/graphql" });
 ```

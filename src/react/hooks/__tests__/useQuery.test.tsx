@@ -16,6 +16,7 @@ import { useMutation } from '../useMutation';
 import { QueryFunctionOptions } from '../..';
 import { NetworkStatus } from '../../../core/networkStatus';
 import { Reference } from '../../../utilities/graphql/storeUtils';
+import { concatPagination } from '../../../utilities';
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -1117,60 +1118,58 @@ describe('useQuery Hook', () => {
   });
 
   describe('Pagination', () => {
-    itAsync(
-      'should render `fetchMore.updateQuery` updated results with proper ' +
-        'loading status, when `notifyOnNetworkStatusChange` is true',
-      (resolve, reject) => {
-        const carQuery: DocumentNode = gql`
-          query cars($limit: Int) {
-            cars(limit: $limit) {
-              id
-              make
-              model
-              vin
-              __typename
-            }
+    describe('should render fetchMore-updated results with proper loading status, when `notifyOnNetworkStatusChange` is true', () => {
+      const carQuery: DocumentNode = gql`
+        query cars($limit: Int) {
+          cars(limit: $limit) {
+            id
+            make
+            model
+            vin
+            __typename
           }
-        `;
+        }
+      `;
 
-        const carResults = {
-          cars: [
-            {
-              id: 1,
-              make: 'Audi',
-              model: 'RS8',
-              vin: 'DOLLADOLLABILL',
-              __typename: 'Car'
-            }
-          ]
-        };
-
-        const moreCarResults = {
-          cars: [
-            {
-              id: 2,
-              make: 'Audi',
-              model: 'eTron',
-              vin: 'TREESRGOOD',
-              __typename: 'Car'
-            }
-          ]
-        };
-
-        const mocks = [
+      const carResults = {
+        cars: [
           {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: carResults }
-          },
-          {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: moreCarResults }
+            id: 1,
+            make: 'Audi',
+            model: 'RS8',
+            vin: 'DOLLADOLLABILL',
+            __typename: 'Car'
           }
-        ];
+        ]
+      };
 
+      const moreCarResults = {
+        cars: [
+          {
+            id: 2,
+            make: 'Audi',
+            model: 'eTron',
+            vin: 'TREESRGOOD',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const mocks = [
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: carResults }
+        },
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: moreCarResults }
+        }
+      ];
+
+      itAsync('updateQuery', (resolve, reject) => {
         let renderCount = 0;
         function App() {
-          const { loading, data, fetchMore } = useQuery(carQuery, {
+          const { loading, networkStatus, data, fetchMore } = useQuery(carQuery, {
             variables: { limit: 1 },
             notifyOnNetworkStatusChange: true
           });
@@ -1178,9 +1177,12 @@ describe('useQuery Hook', () => {
           switch (++renderCount) {
             case 1:
               expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.loading);
+              expect(data).toBeUndefined();
               break;
             case 2:
               expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
               expect(data).toEqual(carResults);
               fetchMore({
                 variables: {
@@ -1195,7 +1197,13 @@ describe('useQuery Hook', () => {
               });
               break;
             case 3:
+              expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.fetchMore);
+              expect(data).toEqual(carResults);
+              break;
+            case 4:
               expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
               expect(data).toEqual({
                 cars: [
                   carResults.cars[0],
@@ -1204,6 +1212,7 @@ describe('useQuery Hook', () => {
               });
               break;
             default:
+              reject("too many updates");
           }
 
           return null;
@@ -1216,62 +1225,127 @@ describe('useQuery Hook', () => {
         );
 
         return wait(() => {
-          expect(renderCount).toBe(3);
+          expect(renderCount).toBe(4);
         }).then(resolve, reject);
-      }
-    );
+      });
 
-    itAsync(
-      'should render `fetchMore.updateQuery` updated results with no ' +
-        'loading status, when `notifyOnNetworkStatusChange` is false',
-      (resolve, reject) => {
-        const carQuery: DocumentNode = gql`
-          query cars($limit: Int) {
-            cars(limit: $limit) {
-              id
-              make
-              model
-              vin
-              __typename
-            }
+      itAsync('field policy', (resolve, reject) => {
+        let renderCount = 0;
+        function App() {
+          const { loading, networkStatus, data, fetchMore } = useQuery(carQuery, {
+            variables: { limit: 1 },
+            notifyOnNetworkStatusChange: true
+          });
+
+          switch (++renderCount) {
+            case 1:
+              expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.loading);
+              expect(data).toBeUndefined();
+              break;
+            case 2:
+              expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
+              expect(data).toEqual(carResults);
+              fetchMore({
+                variables: {
+                  limit: 1
+                },
+              });
+              break;
+            case 3:
+              expect(loading).toBeTruthy();
+              expect(networkStatus).toBe(NetworkStatus.fetchMore);
+              expect(data).toEqual(carResults);
+              break;
+            case 4:
+              expect(loading).toBeFalsy();
+              expect(networkStatus).toBe(NetworkStatus.ready);
+              expect(data).toEqual({
+                cars: [
+                  carResults.cars[0],
+                  moreCarResults.cars[0],
+                ],
+              });
+              break;
+            default:
+              reject("too many updates");
           }
-        `;
 
-        const carResults = {
-          cars: [
-            {
-              id: 1,
-              make: 'Audi',
-              model: 'RS8',
-              vin: 'DOLLADOLLABILL',
-              __typename: 'Car'
-            }
-          ]
-        };
+          return null;
+        }
 
-        const moreCarResults = {
-          cars: [
-            {
-              id: 2,
-              make: 'Audi',
-              model: 'eTron',
-              vin: 'TREESRGOOD',
-              __typename: 'Car'
-            }
-          ]
-        };
-
-        const mocks = [
-          {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: carResults }
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                cars: concatPagination(),
+              },
+            },
           },
-          {
-            request: { query: carQuery, variables: { limit: 1 } },
-            result: { data: moreCarResults }
-          }
-        ];
+        });
 
+        render(
+          <MockedProvider mocks={mocks} cache={cache}>
+            <App />
+          </MockedProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(4);
+        }).then(resolve, reject);
+      });
+    });
+
+    describe('should render fetchMore-updated results with no loading status, when `notifyOnNetworkStatusChange` is false', () => {
+      const carQuery: DocumentNode = gql`
+        query cars($limit: Int) {
+          cars(limit: $limit) {
+            id
+            make
+            model
+            vin
+            __typename
+          }
+        }
+      `;
+
+      const carResults = {
+        cars: [
+          {
+            id: 1,
+            make: 'Audi',
+            model: 'RS8',
+            vin: 'DOLLADOLLABILL',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const moreCarResults = {
+        cars: [
+          {
+            id: 2,
+            make: 'Audi',
+            model: 'eTron',
+            vin: 'TREESRGOOD',
+            __typename: 'Car'
+          }
+        ]
+      };
+
+      const mocks = [
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: carResults }
+        },
+        {
+          request: { query: carQuery, variables: { limit: 1 } },
+          result: { data: moreCarResults }
+        }
+      ];
+
+      itAsync('updateQuery', (resolve, reject) => {
         let renderCount = 0;
         function App() {
           const { loading, data, fetchMore } = useQuery(carQuery, {
@@ -1317,8 +1391,63 @@ describe('useQuery Hook', () => {
         return wait(() => {
           expect(renderCount).toBe(3);
         }).then(resolve, reject);
-      }
-    );
+      });
+
+      itAsync('field policy', (resolve, reject) => {
+        let renderCount = 0;
+        function App() {
+          const { loading, data, fetchMore } = useQuery(carQuery, {
+            variables: { limit: 1 },
+            notifyOnNetworkStatusChange: false
+          });
+
+          switch (renderCount) {
+            case 0:
+              expect(loading).toBeTruthy();
+              break;
+            case 1:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(carResults);
+              fetchMore({
+                variables: {
+                  limit: 1
+                },
+              });
+              break;
+            case 2:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual({
+                cars: [carResults.cars[0], moreCarResults.cars[0]]
+              });
+              break;
+            default:
+          }
+
+          renderCount += 1;
+          return null;
+        }
+
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                cars: concatPagination(),
+              },
+            },
+          },
+        });
+
+        render(
+          <MockedProvider mocks={mocks} cache={cache}>
+            <App />
+          </MockedProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3);
+        }).then(resolve, reject);
+      });
+    });
   });
 
   describe('Refetching', () => {
@@ -1612,6 +1741,84 @@ describe('useQuery Hook', () => {
         expect(onCompletedCount).toBe(1);
       }).then(resolve, reject);
     });
+
+    itAsync('should not repeatedly call onCompleted if it alters state', (resolve, reject) => {
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const mocks = [
+        {
+          request: { query, variables: { first: 1 } },
+          result: { data: data1 },
+        },
+      ];
+
+      let renderCount = 0;
+      function Component() {
+        const [onCompletedCallCount, setOnCompletedCallCount] = useState(0);
+        const { loading, data } = useQuery(query, {
+          variables: { first: 1 },
+          onCompleted() {
+            setOnCompletedCallCount(onCompletedCallCount + 1);
+          }
+        });
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeTruthy();
+            break;
+          case 1:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(onCompletedCallCount).toBe(1);
+            break;
+          default:
+        }
+        renderCount += 1;
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks} addTypename={false}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
+
+    itAsync('should not call onCompleted if skip is true', (resolve, reject) => {
+      function Component() {
+        const { loading } = useQuery(CAR_QUERY, {
+          skip: true,
+          onCompleted() {
+            fail('should not call onCompleted!');
+          }
+        });
+        expect(loading).toBeFalsy();
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait().then(resolve, reject);
+    });
   });
 
   describe('Optimistic data', () => {
@@ -1764,6 +1971,163 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(6);
+      }).then(resolve, reject);
+    });
+  });
+
+  describe('Client Resolvers', () => {
+
+    itAsync("should receive up to date @client(always: true) fields on entity update", (resolve, reject) => {
+      const query = gql`
+        query GetClientData($id: ID) {
+          clientEntity(id: $id) @client(always: true) {
+            id
+            title
+            titleLength @client(always: true)
+          }
+        }
+      `;
+
+      const mutation = gql`
+        mutation AddOrUpdate {
+          addOrUpdate(id: $id, title: $title) @client
+        }
+      `;
+
+      const fragment = gql`
+      fragment ClientDataFragment on ClientData {
+        id
+        title
+      }
+      `
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(() => Observable.of({ data: { } })),
+        resolvers: {
+          ClientData: {
+            titleLength(data) {
+              return data.title.length
+            }
+          },
+          Query: {
+            clientEntity(_root, {id}, {cache}) {
+              return cache.readFragment({
+                id: cache.identify({id, __typename: "ClientData"}),
+                fragment,
+              });
+            },
+          },
+          Mutation: {
+            addOrUpdate(_root, {id, title}, {cache}) {
+              return cache.writeFragment({
+                id: cache.identify({id, __typename: "ClientData"}),
+                fragment,
+                data: {id, title, __typename: "ClientData"},
+              });
+            },
+          }
+        },
+      });
+
+      const entityId = 1;
+      const shortTitle = "Short";
+      const longerTitle = "A little longer";
+      client.mutate({
+        mutation,
+        variables: {
+          id: entityId,
+          title: shortTitle,
+        },
+      });
+      let renderCount = 0;
+      function App() {
+        const { data } = useQuery(query, {
+          variables: {
+            id: entityId,
+          }
+        });
+
+        switch (++renderCount) {
+          case 2:
+            expect(data.clientEntity).toEqual({
+              id: entityId,
+              title: shortTitle,
+              titleLength: shortTitle.length,
+              __typename: "ClientData",
+            });
+            setTimeout(() => {
+              client.mutate({
+                mutation,
+                variables: {
+                  id: entityId,
+                  title: longerTitle,
+                }
+              });
+            });
+            break;
+          case 3:
+            expect(data.clientEntity).toEqual({
+              id: entityId,
+              title: longerTitle,
+              titleLength: longerTitle.length,
+              __typename: "ClientData",
+            });
+            break;
+          default: // Do nothing
+        }
+
+        return null;
+      }
+
+      render(
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
+  });
+
+  describe('Skipping', () => {
+    itAsync('should skip running a query when `skip` is `true`', (resolve, reject) => {
+      let renderCount = 0;
+
+      const Component = () => {
+        const [skip, setSkip] = useState(true);
+        const { loading, data } = useQuery(CAR_QUERY, { skip });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            setTimeout(() => setSkip(false));
+            break;
+          case 2:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 3:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(CAR_RESULT_DATA);
+            break;
+          default:
+            reject("too many renders");
+        }
+
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={CAR_MOCKS}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
   });

@@ -11,5 +11,10 @@
         "apollo-docs"
       ]
     }
-  ]
+  ],
+  "packageRules": {
+    "excludePackageNames": [
+      "typedoc"
+    ]
+  }
 }

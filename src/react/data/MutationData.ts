@@ -80,37 +80,9 @@ export class MutationData<
   private mutate(
     mutationFunctionOptions: MutationFunctionOptions<TData, TVariables>
   ) {
-    const {
-      mutation,
-      variables,
-      optimisticResponse,
-      update,
-      context: mutationContext = {},
-      awaitRefetchQueries = false,
-      fetchPolicy,
-      errorPolicy,
-    } = this.getOptions();
-    const mutateOptions = { ...mutationFunctionOptions };
-
-    const mutateVariables = Object.assign(
-      {},
-      variables,
-      mutateOptions.variables
-    );
-    delete mutateOptions.variables;
-
     return this.refreshClient().client.mutate({
-      mutation,
-      optimisticResponse,
-      refetchQueries:
-        mutateOptions.refetchQueries || this.getOptions().refetchQueries,
-      awaitRefetchQueries,
-      update,
-      context: mutationContext,
-      fetchPolicy,
-      errorPolicy,
-      variables: mutateVariables,
-      ...mutateOptions
+      ...(this.getOptions() || {}),
+      ...(mutationFunctionOptions || {})
     });
   }
 

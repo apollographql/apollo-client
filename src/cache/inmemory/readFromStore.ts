@@ -35,7 +35,7 @@ import {
   NormalizedCache,
   ReadMergeModifyContext,
 } from './types';
-import { supportsResultCaching, EntityStore } from './entityStore';
+import { supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
@@ -154,7 +154,6 @@ export class StoreReader {
       result: execResult.result,
       missing: execResult.missing,
       complete: !hasMissingFields,
-      optimistic: !(store instanceof EntityStore.Root),
     };
   }
 

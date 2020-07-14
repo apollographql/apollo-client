@@ -1,7 +1,13 @@
 / /docs/react/
 
+# Redirect all 3.0 beta docs to root
+/docs/react/v3.0-beta/* /docs/react/:splat
+
 # Remove 'Recompose patterns' article
 /docs/react/development-testing/recompose/ /docs/react/
+
+# Client 3.0 changes
+/docs/react/api/apollo-client/ /docs/react/api/core/ApolloClient/
 
 # Apollo Client Information Architecture refresh
 # https://github.com/apollographql/apollo-client/pull/5321

@@ -1084,7 +1084,6 @@ describe('EntityStore', () => {
       },
     })).toEqual({
       complete: false,
-      optimistic: false,
       result: {
         authorOfBook: tedWithoutHobby,
       },
@@ -1687,7 +1686,6 @@ describe('EntityStore', () => {
     })).toEqual({
       complete: false,
       missing,
-      optimistic: true,
       result: {
         book: {
           __typename: "Book",
@@ -1719,7 +1717,6 @@ describe('EntityStore', () => {
     })).toEqual({
       complete: false,
       missing,
-      optimistic: false,
       result: {
         book: {
           __typename: "Book",
@@ -1736,7 +1733,6 @@ describe('EntityStore', () => {
       returnPartialData: true,
     })).toEqual({
       complete: true,
-      optimistic: false,
       result: {
         book: {
           __typename: "Book",
@@ -1937,7 +1933,6 @@ describe('EntityStore', () => {
 
     expect(cuckoosCallingDiffResult).toEqual({
       complete: false,
-      optimistic: false,
       result: {
         book: {
           __typename: "Book",
@@ -2036,5 +2031,102 @@ describe('EntityStore', () => {
         author: "J.K. Rowling",
       },
     });
+  });
+
+  it("supports toReference(id)", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          fields: {
+            favorited(_, { readField, toReference }) {
+              const rootQueryRef = toReference("ROOT_QUERY");
+              expect(rootQueryRef).toEqual(makeReference("ROOT_QUERY"));
+              const favoritedBooks = readField<Reference[]>("favoritedBooks", rootQueryRef);
+              return favoritedBooks!.some(bookRef => {
+                return readField("isbn") === readField("isbn", bookRef);
+              });
+            },
+          },
+          keyFields: ["isbn"],
+        },
+        Query: {
+          fields: {
+            book(_, {
+              args,
+              toReference,
+            }) {
+              const ref = toReference({
+                __typename: "Book",
+                isbn: args!.isbn,
+                title: titlesByISBN.get(args!.isbn),
+              }, true);
+
+              return ref;
+            },
+          },
+        }
+      }
+    });
+
+    cache.writeQuery({
+      query: gql`{
+        favoritedBooks {
+          isbn
+          title
+        }
+      }`,
+      data: {
+        favoritedBooks: [{
+          __typename: "Book",
+          isbn: "9781784295547",
+          title: "Shrill",
+          author: "Lindy West",
+        }],
+      },
+    });
+
+    const titlesByISBN = new Map<string, string>([
+      ["9780062569714", 'Hunger'],
+      ["9781784295547", 'Shrill'],
+      ["9780807083109", 'Kindred'],
+    ]);
+
+    const bookQuery = gql`
+      query {
+        book(isbn: $isbn) {
+          isbn
+          title
+          favorited @client
+        }
+      }
+    `;
+
+    const shrillResult = cache.readQuery({
+      query: bookQuery,
+      variables: {
+        isbn: "9781784295547"
+      }
+    });
+
+    expect(shrillResult).toEqual({book: {
+      __typename: "Book",
+      isbn: "9781784295547",
+      title: "Shrill",
+      favorited: true,
+    }});
+
+    const kindredResult = cache.readQuery({
+      query: bookQuery,
+      variables: {
+        isbn: "9780807083109"
+      }
+    });
+
+    expect(kindredResult).toEqual({book: {
+      __typename: "Book",
+      isbn: "9780807083109",
+      title: "Kindred",
+      favorited: false,
+    }});
   });
 });

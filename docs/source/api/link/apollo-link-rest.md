@@ -27,14 +27,15 @@ npm install --save @apollo/client apollo-link-rest graphql qs
 After this, you're ready to setup the Apollo Client instance:
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { RestLink } from 'apollo-link-rest';
 
 // Set `RestLink` with your endpoint
-const restLink = new RestLink({ uri: "https://swapi.co/api/" });
+const restLink = new RestLink({ uri: "https://swapi.dev/api/" });
 
 // Setup your client
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: restLink
 });
 ```
@@ -394,7 +395,7 @@ const link = new RestLink({
 
 ## Link Context
 
-`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`@apollo/link-context`](./apollo-link-context) page for a discussion of why you might want this).
+`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`@apollo/client/link/context`](./apollo-link-context) page for a discussion of why you might want this).
 
 | Option | Type | Description |
 | - | - | - |
@@ -406,7 +407,7 @@ const link = new RestLink({
 
 ### Example
 
-`RestLink` uses the `headers` field on the [`@apollo/link-context`](./apollo-link-context) so you can compose other links that provide additional & dynamic headers to a given query.
+`RestLink` uses the `headers` field on the [`@apollo/client/link/context`](./apollo-link-context) so you can compose other links that provide additional & dynamic headers to a given query.
 
 Here is one way to add request `headers` to the context and retrieve the response headers of the operation:
 
@@ -436,6 +437,7 @@ const authRestLink = new ApolloLink((operation, forward) => {
 const restLink = new RestLink({ uri: "uri" });
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: ApolloLink.from([authRestLink, restLink])
 });
 ```
@@ -451,6 +453,7 @@ const httpLink = createHttpLink({ uri: "server.com/graphql" });
 const restLink = new RestLink({ uri: "api.server.com" });
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: ApolloLink.from([authLink, restLink, errorLink, retryLink, httpLink])
   // Note: httpLink is terminating so must be last, while retry & error wrap
   // the links to their right. State & context links should happen before (to
@@ -458,7 +461,7 @@ const client = new ApolloClient({
 });
 ```
 
-_Note: you should also consider this if you're using [`@apollo/link-context`](./apollo-link-context) to set `Headers`, you need that link to be before `restLink` as well._
+_Note: you should also consider this if you're using [`@apollo/client/link/context`](./apollo-link-context) to set `Headers`, you need that link to be before `restLink` as well._
 
 ## @rest directive
 
@@ -509,7 +512,7 @@ query PostTitle {
 Things to note:
 
 1. This will be converted into `/search?query=some%20key%20words&page_size=5&lang=en`
-2. The `context.language / lang=en` is extracting an object from the Apollo Context, that was added via an `@apollo/link-context` Link.
+2. The `context.language / lang=en` is extracting an object from the Apollo Context, that was added via an `@apollo/client/link/context` Link.
 3. The query string arguments are assembled by npm:qs and have `encodeURIComponent` called on them.
 
 The available variable sources are:
@@ -518,7 +521,7 @@ The available variable sources are:
 | - | - |
 | `args` | These are the things passed directly to this field parameters. In the above example `postSearch` had `query` and `page_size` in args. |
 | `exportVariables` | These are the things in the parent context that were tagged as `@export(as: ...)` |
-| `context` | These are the apollo-context, so you can have globals set up via `@apollo/link-context` |
+| `context` | These are the apollo-context, so you can have globals set up via `@apollo/client/link/context` |
 | `@rest` | These include any other parameters you pass to the `@rest()` directive. This is probably more useful when working with `pathBuilder`, documented below. |
 
 #### `pathBuilder`

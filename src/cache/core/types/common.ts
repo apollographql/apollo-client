@@ -46,7 +46,7 @@ export interface ReadFieldFunction {
 }
 
 export type ToReferenceFunction = (
-  object: StoreObject,
+  objOrIdOrRef: StoreObject | string | Reference,
   mergeIntoStore?: boolean,
 ) => Reference | undefined;
 

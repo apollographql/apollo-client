@@ -92,7 +92,7 @@ If you have a collection of two or more links that should always be executed in 
 
 ```js
 import { from, HttpLink } from '@apollo/client';
-import { RetryLink } from '@apollo/link-retry';
+import { RetryLink } from '@apollo/client/link/retry';
 import MyAuthLink from '../auth';
 
 const link = from([
@@ -116,7 +116,7 @@ In the following example, a `RetryLink` passes execution along to one of two dif
 
 ```js
 import { ApolloLink, HttpLink } from '@apollo/client';
-import { RetryLink } from '@apollo/link-retry';
+import { RetryLink } from '@apollo/client/link/retry';
 
 const link = new RetryLink().split(
   (operation) => operation.getContext().version === 1,
@@ -173,10 +173,10 @@ This style of link also composes well for customization using a function:
 import { ApolloLink } from '@apollo/client';
 
 const reportErrors = (errorCallback) => new ApolloLink((operation, forward) => {
-  const observer = forward(operation);
+  const observable = forward(operation);
   // errors will be sent to the errorCallback
-  observer.subscribe({ error: errorCallback })
-  return observer;
+  observable.subscribe({ error: errorCallback })
+  return observable;
 });
 
 const link = reportErrors(console.error);
@@ -195,10 +195,10 @@ class ReportErrorLink extends ApolloLink {
     this.errorCallback = errorCallback;
   }
   request(operation, forward) {
-    const observer = forward(operation);
+    const observable = forward(operation);
     // errors will be sent to the errorCallback
-    observer.subscribe({ error: this.errorCallback })
-    return observer;
+    observable.subscribe({ error: this.errorCallback })
+    return observable;
   }
 }
 
@@ -266,7 +266,7 @@ This example defines two links, `timeStartLink` and `logTimeLink`. The `timeStar
 The context's initial value can be set by Apollo Client before the link chain begins its execution. In this example, a call to `client.query` adds a `saveOffline` field to the context, which is then read by the custom link defined at the top:
 
 ```js
-import { ApolloLink } from '@apollo/client';
+import { ApolloLink, InMemoryCache } from '@apollo/client';
 
 const link = new ApolloLink((operation, forward) => {
   const { saveOffline } = operation.getContext();

@@ -654,12 +654,6 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -685,9 +679,10 @@ describe('mutation results', () => {
         },
       })).then(() => {
         subscriptionHandle.unsubscribe();
-        expect(errors).toHaveLength(1);
-        expect(errors[0].message).toBe(`Hello... It's me.`);
-        console.error = oldError;
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
       }).then(resolve, reject);
     });
   });
@@ -1289,12 +1284,6 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -1318,9 +1307,10 @@ describe('mutation results', () => {
         },
       })).then(() => {
         subscriptionHandle.unsubscribe();
-        expect(errors).toHaveLength(1);
-        expect(errors[0].message).toBe(`Hello... It's me.`);
-        console.error = oldError;
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
       }).then(resolve, reject);
     });
 

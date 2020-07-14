@@ -99,6 +99,11 @@ export function relayStylePagination<TNode = Reference>(
         const index = prefix.findIndex(edge => edge.cursor === args.before);
         suffix = index < 0 ? prefix : prefix.slice(index);
         prefix = [];
+      } else {
+        // If we have neither args.after nor args.before, the incoming
+        // edges cannot be spliced into the existing edges, so they must
+        // replace the existing edges. See #6592 for a motivating example.
+        prefix = [];
       }
 
       const edges = [

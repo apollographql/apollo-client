@@ -3,8 +3,6 @@ title: Mocking new schema capabilities
 description: How to build UI features before your GraphQL API supports them
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Imagine we're building out a new feature in our Space Explorer app — we'd like to display a description of each rocket we can choose — but the backend support for this feature isn't going to be available for another few weeks. In keeping with [schema-first design](https://www.apollographql.com/docs/tutorial/schema.html#write-schema), the team has decided that we'll be adding a new field called `description` to an existing type in our schema called `Rocket`.
 
 Even though this field doesn't exist in the schema yet, we can take advantage of client schemas to document it as a _client-side_ field. In this guide, we'll walk through a simple recipe for this technique:
@@ -74,9 +72,6 @@ const resolvers = {
 
 Now, you’re ready to query your new field inside the `RocketDetails` component. Just add your new field to the query and specify the `@client` directive, and start using it in your UI.
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 const GET_ROCKET_DETAILS = gql`
   query RocketDetails($rocketId: ID!) {
@@ -97,36 +92,6 @@ export default function RocketDetails({ rocketId }) {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const GET_ROCKET_DETAILS = gql`
-  query RocketDetails($rocketId: ID!) {
-    rocket(id: $rocketId) {
-      type
-      description @client
-    }
-  }
-`;
-
-export default function RocketDetails({ rocketId }) {
-  return (
-    <Query query={GET_ROCKET_DETAILS} variables={{ rocketId }}>
-      {({ data }) => (
-        <div>
-          <p>Rocket Type: {data.rocket.type}</p>
-          <p>Description: {data.rocket.description}</p>
-        </div>
-      )}
-    </Query>
-  );
-}
-```
-
-</div>
-</MultiCodeBlock>
 
 ## 4. Toggle on “real” data.
 

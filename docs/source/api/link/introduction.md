@@ -266,7 +266,7 @@ This example defines two links, `timeStartLink` and `logTimeLink`. The `timeStar
 The context's initial value can be set by Apollo Client before the link chain begins its execution. In this example, a call to `client.query` adds a `saveOffline` field to the context, which is then read by the custom link defined at the top:
 
 ```js
-import { ApolloLink } from '@apollo/client';
+import { ApolloLink, InMemoryCache } from '@apollo/client';
 
 const link = new ApolloLink((operation, forward) => {
   const { saveOffline } = operation.getContext();

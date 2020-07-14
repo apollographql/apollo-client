@@ -2,8 +2,6 @@
 title: Server-side rendering
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Apollo provides two techniques to allow your applications to load quickly, avoiding unnecessary delays to users:
 
  - Store rehydration, which allows your initial set of queries to return data immediately without a server roundtrip.
@@ -182,7 +180,7 @@ At the point that the promise resolves, your Apollo Client store will be complet
 ```js
 import { getDataFromTree } from "@apollo/react-ssr";
 
-const client = new ApolloClient(....);
+const client = new ApolloClient({ ... });
 
 // during request (see above)
 getDataFromTree(App).then(() => {
@@ -222,7 +220,7 @@ If your GraphQL endpoint is on the same server that you're rendering from, you m
 One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use [SchemaLink](../api/link/apollo-link-schema/) instead of using `createHttpLink` that uses your schema and context to run the query immediately, without any additional network requests.
 
 ```js
-import { ApolloClient } from '@apollo/client'
+import { ApolloClient, InMemoryCache } from '@apollo/client'
 import { SchemaLink } from '@apollo/client/link/schema';
 
 // ...
@@ -239,29 +237,12 @@ const client = new ApolloClient({
 
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 function withClientOnlyUser() {
   useQuery(GET_USER_WITH_ID, { ssr: false });
   return <span>I won't be run on the server</span>;
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const withClientOnlyUser = () => (
-  <Query query={GET_USER_WITH_ID} ssr={false}>
-    {({ data }) => <span>I won't be run on the server</span>}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 ### Using `renderToStringWithData`
 
@@ -271,7 +252,7 @@ The `renderToStringWithData` function simplifies the above and simply returns th
 // server application code (integrated usage)
 import { renderToStringWithData } from "@apollo/react-ssr";
 
-const client = new ApolloClient(...);
+const client = new ApolloClient({ ... });
 
 // during request
 renderToStringWithData(App).then((content) => {

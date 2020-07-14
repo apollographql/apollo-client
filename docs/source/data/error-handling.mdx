@@ -3,8 +3,6 @@ title: Error handling
 description: Handling errors with Apollo
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Any application, from simple to complex, can have its fair share of errors. It is important to handle these errors and when possible, report these errors back to your users for information. Using GraphQL brings a new set of possible errors from the actual GraphQL response itself. With that in mind, here are a few different types of errors:
 
 - GraphQL Errors: errors in the GraphQL results that can appear alongside successful data
@@ -22,9 +20,6 @@ Much like `fetchPolicy`, `errorPolicy` allows you to control how GraphQL Errors 
 - `all`: Using the `all` policy is the best way to notify your users of potential issues while still showing as much data as possible from your server. It saves both data and errors into the Apollo Cache so your UI can use them.
 
 You can set `errorPolicy` on each request like so:
-
-<MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
 
 ```tsx
 const MY_QUERY = gql`
@@ -49,38 +44,6 @@ function ShowingSomeErrors() {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const MY_QUERY = gql`
-  query WillFail {
-    badField
-    goodField
-  }
-`;
-
-const ShowingSomeErrors = () => (
-  <Query query={MY_QUERY} errorPolicy="all">
-    {({ error, data, loading }) => {
-      if (loading) return <span>loading...</span>
-      return (
-        <div>
-          <h2>Good: {data.goodField}</h2>
-          <pre>Bad: {error.graphQLErrors.map(({ message }, i) => (
-            <span key={i}>{message}</span>
-          ))}
-          </pre>
-        </div>
-      )
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 Any errors reported will come under an `error` prop along side the data returned from the cache or server.
 

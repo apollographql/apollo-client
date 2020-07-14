@@ -177,3 +177,9 @@ fs.writeFileSync(
   `${distRoot}/link/ws/package.json`,
   buildPackageJson('ws', 'link/ws')
 );
+
+// @apollo/client/link/http
+fs.writeFileSync(
+  `${distRoot}/link/http/package.json`,
+  buildPackageJson('http', 'link/http')
+);

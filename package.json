@@ -55,9 +55,9 @@
     }
   ],
   "peerDependencies": {
-    "graphql": ">=14.0.0",
-    "react": ">=16.8.0",
-    "subscriptions-transport-ws": ">=0.9.0"
+    "graphql": "^14.0.0 || ^15.0.0",
+    "react": "^16.8.0",
+    "subscriptions-transport-ws": "^0.9.0"
   },
   "peerDependenciesMeta": {
     "react": {

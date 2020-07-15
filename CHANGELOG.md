@@ -2,8 +2,11 @@
 
 ## Bug Fixes
 
-- Make sure `useQuery` `onCompleted` is not fired when `skip` is `true`.  <br/>
+- Make sure `useQuery` `onCompleted` is not fired when `skip` is `true`. <br/>
   [@hwillson](https://github.com/hwillson) in [#6589](https://github.com/apollographql/apollo-client/pull/6589)
+
+- Revert changes to `peerDependencies` in `package.json` ([#6594](https://github.com/apollographql/apollo-client/pull/6594)), which would have allowed using incompatible future versions of `graphql` and/or `react` due to overly-permissive `>=` version constraints. <br/>
+  [@hwillson](https://github.com/hwillson) in [#6605](https://github.com/apollographql/apollo-client/pull/6605)
 
 # Apollo Client 3.0.0
 

@@ -272,7 +272,7 @@ cache.modify({
 });
 ```
 
-The cache utility object that's passed into modifier functions as their second parameter contains several useful utilities, like `fieldName`, `canRead` and `isReference` (TODO: explain these in the cache API reference section and link to them). It also contains a `DELETE` sentinel object, which we're using above, that can be returned to delete a field from the entity object. When the `comments` modifier function above runs, it will remove all comments from the cache for the identified `Thread` object.
+The cache utility object that's passed into modifier functions as their second parameter contains several useful utilities, like `fieldName`, `canRead` and `isReference`. It also contains a `DELETE` sentinel object, which we're using above, that can be returned to delete a field from the entity object. When the `comments` modifier function above runs, it will remove all comments from the cache for the identified `Thread` object.
 
 ## Obtaining an object's custom ID
 

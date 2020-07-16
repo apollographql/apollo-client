@@ -27,16 +27,6 @@ If you’re installing Apollo Client 3.0 in a project that already uses an earli
 
 The `@apollo/client` library includes functionality that previously required installing additional packages. As part of migrating to Apollo Client 3.0, follow the instructions below for each library your application currently uses.
 
-### @apollo/react-hooks
-
-All `@apollo/react-hooks` functionality is included in the `@apollo/client` package. For example:
-
-```js
-import { ApolloProvider, useQuery, useApolloClient } from '@apollo/client'
-```
-
-As part of migrating, we recommend removing all `@apollo/react-hooks` dependencies.
-
 ### @apollo/react-hoc and @apollo/react-components
 
 React Apollo HOC and component functionality is now included in the `@apollo/client` package:
@@ -48,15 +38,15 @@ import { graphql } from '@apollo/client/react/hoc';
 
 As part of migrating, we recommend removing all `@apollo/react-hoc` and `@apollo/react-components` dependencies.
 
-### @apollo/react-testing
+### @apollo/react-hooks
 
-React Apollo’s testing utilities (like `MockedProvider`) are included in the `@apollo/client` package. Access them via `@apollo/client/testing`:
+All `@apollo/react-hooks` functionality is included in the `@apollo/client` package. For example:
 
 ```js
-import { MockedProvider } from '@apollo/client/testing';
+import { ApolloProvider, useQuery, useApolloClient } from '@apollo/client'
 ```
 
-As part of migrating, we recommend removing all `@apollo/react-testing` dependencies.
+As part of migrating, we recommend removing all `@apollo/react-hooks` dependencies.
 
 ### @apollo/react-ssr
 
@@ -68,28 +58,23 @@ import { renderToStringWithData } from '@apollo/client/react/ssr';
 
 As part of migrating, we recommend removing all `@apollo/react-ssr` dependencies.
 
-### react-apollo
+### @apollo/react-testing
 
-`react-apollo` v3 is an umbrella package that re-exports the following packages:
+React Apollo’s testing utilities (like `MockedProvider`) are included in the `@apollo/client` package. Access them via `@apollo/client/testing`:
 
-- `@apollo/react-common`
-- `@apollo/react-hooks`
-- `@apollo/react-components`
-- `@apollo/react-hoc`
-- `@apollo/react-ssr`
-- `@apollo/react-testing`
+```js
+import { MockedProvider } from '@apollo/client/testing';
+```
 
-The `react-apollo` package has been deprecated, and the functionality offered by each of the above packages can now be accessed from `@apollo/client` directly:
-
-- `@apollo/react-hooks` -> now available directly from `@apollo/client`
-- `@apollo/react-components` -> now available from `@apollo/client/react/components`
-- `@apollo/react-hoc` -> now available from `@apollo/client/react/hoc`
-- `@apollo/react-ssr` -> now available from `@apollo/client/react/ssr`
-- `@apollo/react-testing` -> now available from `@apollo/client/testing`
+As part of migrating, we recommend removing all `@apollo/react-testing` dependencies.
 
 ### apollo-boost
 
 The Apollo Boost project is now retired, because Apollo Client 3.0 provides a similarly straightforward setup. We recommend removing all `apollo-boost` dependencies and modifying your `ApolloClient` constructor as needed.
+
+### apollo-client
+
+With Apollo Client 3.0, the `apollo-client` package is retired in favor of `@apollo/client`. As part of migrating, remove all `apollo-client` dependencies.
 
 ### apollo-link and apollo-link-http
 
@@ -139,6 +124,25 @@ The `graphql-anywhere` package’s functionality is no longer included with Apol
 ### graphql-tag
 
 The `@apollo/client` package includes `graphql-tag` as a dependency and re-exports `gql`. To simplify your dependencies, we recommend importing gql from `@apollo/client` and removing all `graphql-tag` dependencies.
+
+### react-apollo
+
+`react-apollo` v3 is an umbrella package that re-exports the following packages:
+
+- `@apollo/react-common`
+- `@apollo/react-hooks`
+- `@apollo/react-components`
+- `@apollo/react-hoc`
+- `@apollo/react-ssr`
+- `@apollo/react-testing`
+
+The `react-apollo` package has been deprecated, and the functionality offered by each of the above packages can now be accessed from `@apollo/client` directly:
+
+- `@apollo/react-hooks` -> now available directly from `@apollo/client`
+- `@apollo/react-components` -> now available from `@apollo/client/react/components`
+- `@apollo/react-hoc` -> now available from `@apollo/client/react/hoc`
+- `@apollo/react-ssr` -> now available from `@apollo/client/react/ssr`
+- `@apollo/react-testing` -> now available from `@apollo/client/testing`
 
 ## Using individual components of Apollo Client 3
 

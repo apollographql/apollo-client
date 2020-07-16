@@ -8,21 +8,22 @@ import packageJson from '../package.json';
 const distDir = './dist';
 
 const external = [
-  'tslib',
-  'ts-invariant',
-  'symbol-observable',
-  'graphql/language/printer',
-  'optimism',
-  'graphql/language/visitor',
-  'graphql-tag',
-  'fast-json-stable-stringify',
   '@wry/context',
   '@wry/equality',
-  'react',
-  'zen-observable',
-  'prop-types',
+  'fast-json-stable-stringify',
+  'graphql-tag',
+  'graphql/execution/execute',
+  'graphql/language/printer',
+  'graphql/language/visitor',
   'hoist-non-react-statics',
-  'subscriptions-transport-ws'
+  'optimism',
+  'prop-types',
+  'react',
+  'subscriptions-transport-ws',
+  'symbol-observable',
+  'ts-invariant',
+  'tslib',
+  'zen-observable',
 ];
 
 function prepareESM(input, outputDir) {

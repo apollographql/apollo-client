@@ -6,20 +6,22 @@ import {
   MutationDataOptions,
   MutationTuple,
   MutationFunctionOptions,
-  MutationResult
+  MutationResult,
 } from '../types/types';
 import { OperationData } from './OperationData';
 import { OperationVariables } from '../../core';
 import { FetchResult } from '../../link/core';
+
+type MutationResultWithoutClient<TData = any> = Omit<MutationResult<TData>, 'client'>;
 
 export class MutationData<
   TData = any,
   TVariables = OperationVariables
 > extends OperationData {
   private mostRecentMutationId: number;
-  private result: MutationResult<TData>;
-  private previousResult?: MutationResult<TData>;
-  private setResult: (result: MutationResult<TData>) => any;
+  private result: MutationResultWithoutClient<TData>;
+  private previousResult?: MutationResultWithoutClient<TData>;
+  private setResult: (result: MutationResultWithoutClient<TData>) => any;
 
   constructor({
     options,
@@ -29,8 +31,8 @@ export class MutationData<
   }: {
     options: MutationDataOptions<TData, TVariables>;
     context: any;
-    result: MutationResult<TData>;
-    setResult: (result: MutationResult<TData>) => any;
+    result: MutationResultWithoutClient<TData>;
+    setResult: (result: MutationResultWithoutClient<TData>) => any;
   }) {
     super(options, context);
     this.verifyDocumentType(options.mutation, DocumentType.Mutation);
@@ -39,7 +41,7 @@ export class MutationData<
     this.mostRecentMutationId = 0;
   }
 
-  public execute(result: MutationResult<TData>) {
+  public execute(result: MutationResultWithoutClient<TData>): MutationTuple<TData, TVariables> {
     this.isMounted = true;
     this.verifyDocumentType(this.getOptions().mutation, DocumentType.Mutation);
     return [
@@ -148,7 +150,7 @@ export class MutationData<
     return this.mostRecentMutationId === mutationId;
   }
 
-  private updateResult(result: MutationResult<TData>) {
+  private updateResult(result: MutationResultWithoutClient<TData>) {
     if (
       this.isMounted &&
       (!this.previousResult || !equal(this.previousResult, result))

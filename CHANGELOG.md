@@ -1,4 +1,11 @@
-## Apollo Client 3.0.1 (TBD - not yet released)
+## Apollo Client 3.0.2
+
+## Bug Fixes
+
+- Avoid duplicating `graphql/execution/execute` dependency in CommonJS bundle for `@apollo/client/link/schema`, fixing `instanceof` errors reported in [#6621](https://github.com/apollographql/apollo-client/issues/6621) and [#6614](https://github.com/apollographql/apollo-client/issues/6614). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6624](https://github.com/apollographql/apollo-client/pull/6624)
+
+## Apollo Client 3.0.1
 
 ## Bug Fixes
 

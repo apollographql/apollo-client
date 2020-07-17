@@ -8,6 +8,12 @@
 
 # Client 3.0 changes
 /docs/react/api/apollo-client/ /docs/react/api/core/ApolloClient/
+/docs/react/api/react-hooks/ /docs/react/api/react/hooks/
+/docs/react/api/react-testing/ /docs/react/api/react/testing/
+/docs/react/api/react-components/ /docs/react/api/react/components/
+/docs/react/api/react-hoc/ /docs/react/api/react/hoc/
+/docs/react/api/react-ssr/ /docs/react/api/react/ssr/
+/docs/react/api/react-common/ /docs/react/api/react/hooks/
 
 # Apollo Client Information Architecture refresh
 # https://github.com/apollographql/apollo-client/pull/5321

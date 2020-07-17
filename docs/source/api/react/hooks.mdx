@@ -3,7 +3,6 @@ title: Hooks
 description: Apollo Client react hooks API reference
 ---
 
-import ApolloProvider from '../../../shared/apollo-provider.mdx';
 import QueryOptions from '../../../shared/query-options.mdx';
 import QueryResult from '../../../shared/query-result.mdx';
 import MutationOptions from '../../../shared/mutation-options.mdx';
@@ -17,7 +16,28 @@ Apollo Client >= 3 includes React hooks functionality out of the box. You don't 
 
 ## `ApolloProvider`
 
-<ApolloProvider />
+The `ApolloProvider` component leverages [React's Context API](https://reactjs.org/docs/context.html) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client` package.
+
+```js
+import { ApolloProvider } from '@apollo/client';
+```
+
+### Props
+
+| Option   | Type                       | Description                 |
+| -------- | -------------------------- | --------------------------- |
+| `client` | ApolloClient&lt;TCache&gt; | An `ApolloClient` instance. |
+
+### Example
+
+```jsx
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <MyRootComponent />
+  </ApolloProvider>,
+  document.getElementById('root'),
+);
+```
 
 ## `ApolloConsumer`
 

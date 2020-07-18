@@ -25,27 +25,6 @@ const external = [
   'zen-observable',
 ];
 
-function prepareESM(input, outputDir) {
-  return {
-    input,
-    external,
-    output: {
-      dir: outputDir,
-      format: 'esm',
-      sourcemap: true,
-    },
-    // The purpose of this job is to ensure each `./dist` ESM file is run
-    // through the `invariantPlugin`, with any resulting changes added
-    // directly back into each ESM file. By setting `preserveModules`
-    // to `true`, we're making sure Rollup doesn't attempt to create a single
-    // combined ESM bundle with the final result of running this job.
-    preserveModules: true,
-    plugins: [
-      nodeResolve(),
-    ],
-  };
-}
-
 function prepareCJS(input, output) {
   return {
     input,
@@ -140,7 +119,6 @@ function prepareBundle({
 }
 
 export default [
-  prepareESM(packageJson.module, distDir),
   prepareCJS(packageJson.module, packageJson.main),
   prepareCJSMinified(packageJson.main),
   ...entryPoints.map(prepareBundle),

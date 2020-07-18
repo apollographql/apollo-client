@@ -128,23 +128,6 @@ function prepareCJSMinified(input) {
   };
 }
 
-function prepareUtilities() {
-  const utilsDistDir = `${distDir}/utilities`;
-  return {
-    input: `${utilsDistDir}/index.js`,
-    external,
-    output: {
-      file: `${utilsDistDir}/utilities.cjs.js`,
-      format: 'cjs',
-      sourcemap: true,
-      exports: 'named',
-    },
-    plugins: [
-      nodeResolve(),
-    ],
-  };
-}
-
 // Build a separate CJS only `testing.js` bundle, that includes React
 // testing utilities like `MockedProvider` (testing utilities are kept out of
 // the main `apollo-client` bundle). This bundle can be accessed directly
@@ -198,19 +181,23 @@ function rollup() {
     prepareESM(packageJson.module, distDir),
     prepareCJS(packageJson.module, packageJson.main),
     prepareCJSMinified(packageJson.main),
-    prepareUtilities(),
+    prepareBundle('cache', 'cache'),
+    prepareBundle('core', 'core'),
+    prepareBundle('link-batch', 'link/batch'),
+    prepareBundle('link-batch-http', 'link/batch-http'),
+    prepareBundle('link-context', 'link/context'),
+    prepareBundle('link-core', 'link/core'),
+    prepareBundle('link-error', 'link/error'),
+    prepareBundle('link-http', 'link/http'),
+    prepareBundle('link-retry', 'link/retry'),
+    prepareBundle('link-schema', 'link/schema'),
+    prepareBundle('link-ws', 'link/ws'),
+    prepareBundle('react', 'react'),
+    prepareBundle('react-components', 'react/components'),
+    prepareBundle('react-hoc', 'react/hoc'),
+    prepareBundle('react-ssr', 'react/ssr'),
+    prepareBundle('utilities', 'utilities'),
     prepareTesting(),
-    prepareBundle('ssr', 'react/ssr'),
-    prepareBundle('components', 'react/components'),
-    prepareBundle('hoc', 'react/hoc'),
-    prepareBundle('batch', 'link/batch'),
-    prepareBundle('batch-http', 'link/batch-http'),
-    prepareBundle('context', 'link/context'),
-    prepareBundle('error', 'link/error'),
-    prepareBundle('retry', 'link/retry'),
-    prepareBundle('schema', 'link/schema'),
-    prepareBundle('ws', 'link/ws'),
-    prepareBundle('http', 'link/http'),
   ];
 }
 

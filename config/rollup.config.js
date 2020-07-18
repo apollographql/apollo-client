@@ -1,4 +1,4 @@
-import nodeResolve from 'rollup-plugin-node-resolve';
+import nodeResolve from '@rollup/plugin-node-resolve';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
 

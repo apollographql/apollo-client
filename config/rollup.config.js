@@ -1,12 +1,13 @@
 import nodeResolve from '@rollup/plugin-node-resolve';
 import { terser as minify } from 'rollup-plugin-terser';
+import path from 'path';
 
 const packageJson = require('../package.json');
 const entryPoints = require('./entryPoints');
 
 const distDir = './dist';
 
-const external = [
+const externalPackages = new Set([
   '@wry/context',
   '@wry/equality',
   'fast-json-stable-stringify',
@@ -23,17 +24,20 @@ const external = [
   'ts-invariant',
   'tslib',
   'zen-observable',
-];
+]);
 
 function prepareCJS(input, output) {
   return {
     input,
-    external,
+    external(id) {
+      return externalPackages.has(id);
+    },
     output: {
       file: output,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
+      externalLiveBindings: false,
     },
     plugins: [
       nodeResolve(),
@@ -105,12 +109,16 @@ function prepareBundle({
   const dir = path.join(distDir, ...dirs);
   return {
     input: `${dir}/index.js`,
-    external,
+    external(id, parentId) {
+      return externalPackages.has(id) ||
+        entryPoints.check(id, parentId);
+    },
     output: {
       file: `${dir}/${bundleName}.cjs.js`,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
+      externalLiveBindings: false,
     },
     plugins: [
       extensions ? nodeResolve({ extensions }) : nodeResolve(),
@@ -119,7 +127,7 @@ function prepareBundle({
 }
 
 export default [
+  ...entryPoints.map(prepareBundle),
   prepareCJS(packageJson.module, packageJson.main),
   prepareCJSMinified(packageJson.main),
-  ...entryPoints.map(prepareBundle),
 ];

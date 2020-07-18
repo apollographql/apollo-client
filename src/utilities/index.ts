@@ -67,3 +67,5 @@ export {
   offsetLimitPagination,
   relayStylePagination,
 } from './policies/pagination';
+
+export { Observable } from './observables/Observable';

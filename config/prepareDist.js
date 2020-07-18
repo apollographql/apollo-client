@@ -12,6 +12,7 @@
 //   store it in the appropriate dist sub-directory.
 
 const fs = require('fs');
+const path = require('path');
 const recast = require('recast');
 
 const distRoot = `${__dirname}/../dist`;
@@ -20,6 +21,7 @@ const distRoot = `${__dirname}/../dist`;
 /* @apollo/client */
 
 const packageJson = require('../package.json');
+const entryPoints = require('./entryPoints.js');
 
 // The root package.json is marked as private to prevent publishing
 // from happening in the root of the project. This sets the package back to
@@ -52,36 +54,23 @@ const destDir = `${srcDir}/dist`;
 fs.copyFileSync(`${srcDir}/README.md`,  `${destDir}/README.md`);
 fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);
 
-function buildPackageJson(bundleName, entryPoint = bundleName) {
-  fs.writeFileSync(
-    `${distRoot}/${entryPoint}/package.json`,
-    JSON.stringify({
-      name: `@apollo/client/${entryPoint}`,
-      main: `${bundleName}.cjs.js`,
-      module: 'index.js',
-      types: 'index.d.ts',
-    }, null, 2) + "\n",
-  );
-}
-
 // Create individual bundle package.json files, storing them in their
 // associated dist directory. This helps provide a way for the Apollo Client
 // core to be used without React, as well as AC's cache, utilities, SSR,
 // components, HOC, and various links to be used by themselves, via CommonJS
 // entry point files that only include the exports needed for each bundle.
-buildPackageJson('cache');
-buildPackageJson('core');
-buildPackageJson('link-batch', 'link/batch');
-buildPackageJson('link-batch-http', 'link/batch-http');
-buildPackageJson('link-context', 'link/context');
-buildPackageJson('link-core', 'link/core');
-buildPackageJson('link-error', 'link/error');
-buildPackageJson('link-http', 'link/http');
-buildPackageJson('link-retry', 'link/retry');
-buildPackageJson('link-schema', 'link/schema');
-buildPackageJson('link-ws', 'link/ws');
-buildPackageJson('react');
-buildPackageJson('react-components', 'react/components');
-buildPackageJson('react-hoc', 'react/hoc');
-buildPackageJson('react-ssr', 'react/ssr');
-buildPackageJson('utilities');
+entryPoints.forEach(function buildPackageJson({
+  dirs,
+  bundleName = dirs[dirs.length - 1],
+}) {
+  if (!dirs.length) return;
+  fs.writeFileSync(
+    path.join(distRoot, ...dirs, 'package.json'),
+    JSON.stringify({
+      name: path.posix.join('@apollo', 'client', ...dirs),
+      main: `${bundleName}.cjs.js`,
+      module: 'index.js',
+      types: 'index.d.ts',
+    }, null, 2) + "\n",
+  );
+});

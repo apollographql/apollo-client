@@ -1,9 +1,9 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
-import fs from 'fs';
 
-import packageJson from '../package.json';
+const packageJson = require('../package.json');
+const entryPoints = require('./entryPoints');
 
 const distDir = './dist';
 
@@ -128,77 +128,30 @@ function prepareCJSMinified(input) {
   };
 }
 
-// Build a separate CJS only `testing.js` bundle, that includes React
-// testing utilities like `MockedProvider` (testing utilities are kept out of
-// the main `apollo-client` bundle). This bundle can be accessed directly
-// like:
-//
-// import { MockedProvider } from '@apollo/client/testing';
-function prepareTesting() {
-  const bundleName = 'testing';
-
-  // Create a type file for the new testing bundle that points to the existing
-  // `react/testing` type definitions.
-  fs.writeFileSync(
-    `${distDir}/${bundleName}.d.ts`,
-    "export * from './utilities/testing';"
-  );
-
-  return {
-    input: `${distDir}/utilities/testing/index.js`,
-    external,
-    output: {
-      file: `${distDir}/${bundleName}.js`,
-      format: 'cjs',
-    },
-    plugins: [
-      nodeResolve({
-        extensions: ['.js', '.jsx'],
-      }),
-    ],
-  };
-}
-
-function prepareBundle(name, path) {
-  const dir = `${distDir}/${path}`;
+function prepareBundle({
+  dirs,
+  bundleName = dirs[dirs.length - 1],
+  extensions,
+}) {
+  const dir = path.join(distDir, ...dirs);
   return {
     input: `${dir}/index.js`,
     external,
     output: {
-      file: `${dir}/${name}.cjs.js`,
+      file: `${dir}/${bundleName}.cjs.js`,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
     },
     plugins: [
-      nodeResolve(),
+      extensions ? nodeResolve({ extensions }) : nodeResolve(),
     ],
   };
 }
 
-function rollup() {
-  return [
-    prepareESM(packageJson.module, distDir),
-    prepareCJS(packageJson.module, packageJson.main),
-    prepareCJSMinified(packageJson.main),
-    prepareBundle('cache', 'cache'),
-    prepareBundle('core', 'core'),
-    prepareBundle('link-batch', 'link/batch'),
-    prepareBundle('link-batch-http', 'link/batch-http'),
-    prepareBundle('link-context', 'link/context'),
-    prepareBundle('link-core', 'link/core'),
-    prepareBundle('link-error', 'link/error'),
-    prepareBundle('link-http', 'link/http'),
-    prepareBundle('link-retry', 'link/retry'),
-    prepareBundle('link-schema', 'link/schema'),
-    prepareBundle('link-ws', 'link/ws'),
-    prepareBundle('react', 'react'),
-    prepareBundle('react-components', 'react/components'),
-    prepareBundle('react-hoc', 'react/hoc'),
-    prepareBundle('react-ssr', 'react/ssr'),
-    prepareBundle('utilities', 'utilities'),
-    prepareTesting(),
-  ];
-}
-
-export default rollup();
+export default [
+  prepareESM(packageJson.module, distDir),
+  prepareCJS(packageJson.module, packageJson.main),
+  prepareCJSMinified(packageJson.main),
+  ...entryPoints.map(prepareBundle),
+];

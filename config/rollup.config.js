@@ -1,5 +1,4 @@
 import nodeResolve from '@rollup/plugin-node-resolve';
-import invariantPlugin from 'rollup-plugin-invariant';
 import { terser as minify } from 'rollup-plugin-terser';
 
 const packageJson = require('../package.json');
@@ -43,15 +42,6 @@ function prepareESM(input, outputDir) {
     preserveModules: true,
     plugins: [
       nodeResolve(),
-      invariantPlugin({
-        // Instead of completely stripping InvariantError messages in
-        // production, this option assigns a numeric code to the
-        // production version of each error (unique to the call/throw
-        // location), which makes it much easier to trace production
-        // errors back to the unminified code where they were thrown,
-        // where the full error string can be found. See #4519.
-        errorCodes: true,
-      })
     ],
   };
 }

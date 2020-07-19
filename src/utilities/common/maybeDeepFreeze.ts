@@ -1,4 +1,4 @@
-import { isDevelopment, isTest } from './environment';
+import { isDevelopment, isProduction, isTest } from './environment';
 
 function isObject(value: any) {
   return value !== null && typeof value === "object";
@@ -18,7 +18,7 @@ function deepFreeze(value: any) {
 }
 
 export function maybeDeepFreeze<T>(obj: T): T {
-  if (process.env.NODE_ENV !== "production" && (isDevelopment() || isTest())) {
+  if (!isProduction() && (isDevelopment() || isTest())) {
     deepFreeze(obj);
   }
   return obj;

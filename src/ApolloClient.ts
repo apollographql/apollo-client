@@ -14,6 +14,7 @@ import {
 } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 import { LocalState, FragmentMatcher } from './core/LocalState';
+import { isProduction } from './utilities/common/environment';
 import { Observable } from './utilities/observables/Observable';
 import {
   QueryOptions,
@@ -168,7 +169,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
     const defaultConnectToDevTools =
-      process.env.NODE_ENV !== 'production' &&
+      !isProduction() &&
       typeof window !== 'undefined' &&
       !(window as any).__APOLLO_CLIENT__;
 
@@ -183,7 +184,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && process.env.NODE_ENV !== 'production') {
+    if (!hasSuggestedDevtools && !isProduction()) {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&

@@ -20,6 +20,7 @@ import {
   Concast,
   ConcastSourcesIterable,
 } from '../utilities';
+import { isProduction } from '../utilities/common/environment';
 import { ApolloError, isApolloError } from '../errors';
 import { MutationStore } from './MutationStore';
 import {
@@ -960,7 +961,7 @@ export class QueryManager<TStore> {
     ) => {
       const data = diff.result as TData;
 
-      if (process.env.NODE_ENV !== 'production' &&
+      if (!isProduction() &&
           isNonEmptyArray(diff.missing) &&
           !equal(data, {})) {
         invariant.warn(`Missing cache result fields: ${

@@ -27,6 +27,7 @@ import {
   maybeDeepFreeze,
   mergeDeepArray,
 } from '../../utilities';
+import { isProduction } from '../../utilities/common/environment';
 import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,
@@ -288,7 +289,7 @@ export class StoreReader {
           // as a scalar value. However, that value should not contain any
           // Reference objects, and should be frozen in development, if it
           // happens to be an object that is mutable.
-          if (process.env.NODE_ENV !== 'production') {
+          if (!isProduction()) {
             assertSelectionSetForIdValue(
               context.store,
               selection,
@@ -337,7 +338,7 @@ export class StoreReader {
     // defensive shallow copies than necessary.
     finalResult.result = mergeDeepArray(objectsToMerge);
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (!isProduction()) {
       Object.freeze(finalResult.result);
     }
 
@@ -414,7 +415,7 @@ export class StoreReader {
         }), i);
       }
 
-      if (process.env.NODE_ENV !== 'production') {
+      if (!isProduction()) {
         assertSelectionSetForIdValue(context.store, field, item);
       }
 
@@ -423,7 +424,7 @@ export class StoreReader {
       return item;
     });
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (!isProduction()) {
       Object.freeze(array);
     }
 

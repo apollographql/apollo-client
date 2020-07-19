@@ -21,6 +21,7 @@ import {
   ErrorPolicy,
 } from './watchQueryOptions';
 import { QueryStoreValue } from './QueryInfo';
+import { isProduction } from '../utilities/common/environment';
 import { Reobserver } from './Reobserver';
 
 export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
@@ -347,7 +348,7 @@ export class ObservableQuery<
       const { updateQuery } = fetchMoreOptions;
 
       if (updateQuery) {
-        if (process.env.NODE_ENV !== "production" &&
+        if (!isProduction() &&
             !warnedAboutUpdateQuery) {
           invariant.warn(
 `The updateQuery callback for fetchMore is deprecated, and will be removed

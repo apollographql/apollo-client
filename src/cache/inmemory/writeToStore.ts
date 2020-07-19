@@ -21,6 +21,7 @@ import {
   hasDirectives,
   cloneDeep,
 } from '../../utilities';
+import { isProduction } from '../../utilities/common/environment';
 
 import { NormalizedCache, ReadMergeModifyContext } from './types';
 import { makeProcessedFieldsMerger, FieldValueToBeMerged, fieldNameFromStoreName } from './helpers';
@@ -259,7 +260,7 @@ export class StoreWriter {
         mergedFields = policies.applyMerges(entityRef, mergedFields, context);
       }
 
-      if (process.env.NODE_ENV !== "production") {
+      if (!isProduction()) {
         Object.keys(mergedFields).forEach(storeFieldName => {
           const fieldName = fieldNameFromStoreName(storeFieldName);
           // If a merge function was defined for this field, trust that it
@@ -293,7 +294,7 @@ export class StoreWriter {
       // In development, we need to clone scalar values so that they can be
       // safely frozen with maybeDeepFreeze in readFromStore.ts. In production,
       // it's cheaper to store the scalar values directly in the cache.
-      return process.env.NODE_ENV === 'production' ? value : cloneDeep(value);
+      return isProduction() ? value : cloneDeep(value);
     }
 
     if (Array.isArray(value)) {

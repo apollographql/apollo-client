@@ -1,4 +1,9 @@
-import { isEnv, isDevelopment, isTest } from '../environment';
+import { refreshEnv, isEnv, isDevelopment, isTest } from '../environment';
+
+function setNodeEnv(env: string|undefined) {
+  process.env.NODE_ENV = env;
+  refreshEnv();
+}
 
 describe('environment', () => {
   let keepEnv: string | undefined;
@@ -10,48 +15,50 @@ describe('environment', () => {
 
   afterEach(() => {
     // restore the NODE_ENV
-    process.env.NODE_ENV = keepEnv;
+    setNodeEnv(keepEnv);
   });
 
   describe('isEnv', () => {
     it(`should match when there's a value`, () => {
       ['production', 'development', 'test'].forEach(env => {
-        process.env.NODE_ENV = env;
+        setNodeEnv(env);
         expect(isEnv(env)).toBe(true);
       });
     });
 
-    it(`should treat no proces.env.NODE_ENV as it'd be in development`, () => {
+    it(`should treat no process.env.NODE_ENV as it'd be in development`, () => {
       delete process.env.NODE_ENV;
+      refreshEnv();
       expect(isEnv('development')).toBe(true);
     });
   });
 
   describe('isTest', () => {
     it('should return true if in test', () => {
-      process.env.NODE_ENV = 'test';
+      setNodeEnv('test');
       expect(isTest()).toBe(true);
     });
 
     it('should return true if not in test', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       expect(!isTest()).toBe(true);
     });
   });
 
   describe('isDevelopment', () => {
     it('should return true if in development', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       expect(isDevelopment()).toBe(true);
     });
 
     it('should return true if not in development and environment is defined', () => {
-      process.env.NODE_ENV = 'test';
+      setNodeEnv('test');
       expect(!isDevelopment()).toBe(true);
     });
 
     it('should make development as the default environment', () => {
       delete process.env.NODE_ENV;
+      refreshEnv();
       expect(isDevelopment()).toBe(true);
     });
   });

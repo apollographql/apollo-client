@@ -45,6 +45,10 @@ function transform(code: string, id: string) {
       const node = path.node;
 
       if (isCallWithLength(node, "invariant", 1)) {
+        if (isNodeEnvConditional(path.parent.node)) {
+          return;
+        }
+
         const newArgs = node.arguments.slice(0, 1);
         newArgs.push(b.numericLiteral(nextErrorCode++));
 
@@ -61,6 +65,9 @@ function transform(code: string, id: string) {
       if (node.callee.type === "MemberExpression" &&
           isIdWithName(node.callee.object, "invariant") &&
           isIdWithName(node.callee.property, "warn", "error")) {
+        if (isNodeEnvLogicalOr(path.parent.node)) {
+          return;
+        }
         return b.logicalExpression("||", makeNodeEnvTest(), node);
       }
     },
@@ -69,6 +76,10 @@ function transform(code: string, id: string) {
       this.traverse(path);
       const node = path.node;
       if (isCallWithLength(node, "InvariantError", 0)) {
+        if (isNodeEnvConditional(path.parent.node)) {
+          return;
+        }
+
         const newArgs = [
           b.numericLiteral(nextErrorCode++),
         ];
@@ -88,11 +99,13 @@ function transform(code: string, id: string) {
   return recast.print(ast).code;
 }
 
+const n = recast.types.namedTypes;
+type Node = recast.types.namedTypes.Node;
 type CallExpression = recast.types.namedTypes.CallExpression;
 type NewExpression = recast.types.namedTypes.NewExpression;
 
-function isIdWithName(node: any, ...names: string[]) {
-  return recast.types.namedTypes.Identifier.check(node) &&
+function isIdWithName(node: Node, ...names: string[]) {
+  return n.Identifier.check(node) &&
     names.some(name => name === node.name);
 }
 
@@ -103,6 +116,17 @@ function isCallWithLength(
 ) {
   return isIdWithName(node.callee, name) &&
     node.arguments.length > length;
+}
+
+function isNodeEnvConditional(node: Node) {
+  return n.ConditionalExpression.check(node) &&
+    isNodeEnvExpr(node.test);
+}
+
+function isNodeEnvLogicalOr(node: Node) {
+  return n.LogicalExpression.check(node) &&
+    node.operator === "||" &&
+    isNodeEnvExpr(node.left);
 }
 
 function makeNodeEnvTest() {
@@ -117,4 +141,9 @@ function makeNodeEnvTest() {
     ),
     b.stringLiteral("production"),
   );
+}
+
+const referenceNodeEnvExpr = makeNodeEnvTest();
+function isNodeEnvExpr(node: Node) {
+  return recast.types.astNodesAreEquivalent(node, referenceNodeEnvExpr);
 }

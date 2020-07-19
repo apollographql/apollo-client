@@ -15,6 +15,7 @@ module.exports = [
   { dirs: ['react'] },
   { dirs: ['react', 'components'] },
   { dirs: ['react', 'context'] },
+  { dirs: ['react', 'data'] },
   { dirs: ['react', 'hoc'] },
   { dirs: ['react', 'hooks'] },
   { dirs: ['react', 'ssr'] },

@@ -110,7 +110,7 @@
     "subscriptions-transport-ws": "^0.9.17",
     "ts-jest": "26.1.1",
     "tsc-watch": "3.0.1",
-    "typescript": "3.9.6",
+    "typescript": "3.9.7",
     "wait-for-observables": "^1.0.3"
   },
   "publishConfig": {

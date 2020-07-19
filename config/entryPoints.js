@@ -18,6 +18,7 @@ module.exports = [
   { dirs: ['react', 'data'] },
   { dirs: ['react', 'hoc'] },
   { dirs: ['react', 'hooks'] },
+  { dirs: ['react', 'parser'] },
   { dirs: ['react', 'ssr'] },
   { dirs: ['utilities'] },
   { dirs: ['testing'], extensions: [".js", ".jsx"] },

@@ -1,6 +1,6 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 
-import { FetchResult } from '../link/core/types';
+import { FetchResult } from '../link/core';
 import { QueryInfo } from './QueryInfo';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';

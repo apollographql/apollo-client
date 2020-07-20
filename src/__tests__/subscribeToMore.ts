@@ -1,14 +1,15 @@
 import gql from 'graphql-tag';
 import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
-import { ApolloLink } from '../link/core/ApolloLink';
-import { Operation } from '../link/core/types';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { mockObservableLink } from '../utilities/testing/mocking/mockSubscriptionLink';
-import { ApolloClient } from '../';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { itAsync } from '../utilities/testing/itAsync';
+import { ApolloClient } from '../core';
+import { InMemoryCache } from '../cache';
+import { ApolloLink, Operation } from '../link/core';
+import {
+  itAsync,
+  stripSymbols,
+  mockSingleLink,
+  mockObservableLink,
+} from '../testing';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions

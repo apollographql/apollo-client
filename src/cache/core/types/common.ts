@@ -5,7 +5,7 @@ import {
   StoreObject,
   StoreValue,
   isReference,
-} from '../../../core';
+} from '../../../utilities';
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when

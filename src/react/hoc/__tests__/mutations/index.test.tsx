@@ -3,12 +3,14 @@ import { render, cleanup } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
-import { createMockClient } from '../../../../utilities/testing/mocking/mockClient';
-import { MockedProvider } from '../../../../utilities/testing/mocking/MockedProvider';
-import { ApolloClient } from '../../../../ApolloClient';
-import { NormalizedCacheObject } from '../../../../cache/inmemory/types';
-import { ApolloProvider } from '../../../context/ApolloProvider';
+import { ApolloClient } from '../../../../core';
+import {
+  stripSymbols,
+  createMockClient,
+  MockedProvider,
+} from '../../../../testing';
+import { NormalizedCacheObject } from '../../../../cache';
+import { ApolloProvider } from '../../../context';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 

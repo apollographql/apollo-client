@@ -3,17 +3,34 @@ import { take, toArray, map } from 'rxjs/operators';
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { MutationQueryReducersMap } from '../core/types';
-import { Observable, ObservableSubscription as Subscription } from '../utilities/observables/Observable';
-import { ApolloClient } from '../';
-import { addTypenameToDocument } from '../utilities/graphql/transform';
-import { makeReference, ApolloLink, ApolloCache } from '../core';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { itAsync } from '../utilities/testing/itAsync';
-import { Cache } from '../cache/core/types/Cache';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { QueryManager } from '../core/QueryManager';
+import {
+  ApolloClient,
+  makeReference,
+  ApolloLink,
+  ApolloCache,
+  MutationQueryReducersMap,
+} from '../core';
+
+import {
+  QueryManager,
+} from '../core/QueryManager';
+
+import {
+  Cache,
+  InMemoryCache,
+} from '../cache';
+
+import {
+  Observable,
+  ObservableSubscription as Subscription,
+  addTypenameToDocument,
+} from '../utilities';
+
+import {
+  stripSymbols,
+  itAsync,
+  mockSingleLink,
+} from '../testing';
 
 describe('optimistic mutation results', () => {
   const query = gql`

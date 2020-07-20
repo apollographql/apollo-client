@@ -11,12 +11,12 @@ import {
 } from 'graphql';
 import gql from 'graphql-tag';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
-import { Observable } from '../../../../utilities/observables/Observable';
-import { renderToStringWithData } from '../../../ssr/renderToStringWithData';
+import { ApolloClient } from '../../../../core';
+import { ApolloProvider } from '../../../context';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { ApolloLink } from '../../../../link/core';
+import { Observable } from '../../../../utilities';
+import { renderToStringWithData } from '../../../ssr';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 

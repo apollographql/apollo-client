@@ -1,14 +1,13 @@
-import { ApolloClient } from '../../ApolloClient';
-import { ApolloQueryResult, OperationVariables } from '../../core/types';
-import { ApolloError } from '../../errors/ApolloError';
+import { ApolloClient } from '../../core';
+import { ApolloError } from '../../errors';
 import {
+  ApolloQueryResult,
+  OperationVariables,
   FetchMoreOptions,
   UpdateQueryOptions,
-} from '../../core/ObservableQuery';
-import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-} from '../../core/watchQueryOptions';
+} from '../../core';
 import {
   MutationFunction,
   BaseQueryOptions,

@@ -3,11 +3,10 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
-import { itAsync } from '../../../utilities/testing/itAsync';
-import { ApolloClient } from '../../../ApolloClient';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../context/ApolloProvider';
+import { ApolloClient } from '../../../core';
+import { InMemoryCache } from '../../../cache';
+import { itAsync, MockedProvider, mockSingleLink } from '../../../testing';
+import { ApolloProvider } from '../../context';
 import { useMutation } from '../useMutation';
 
 describe('useMutation Hook', () => {

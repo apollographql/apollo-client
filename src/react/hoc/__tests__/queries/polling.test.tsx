@@ -3,15 +3,13 @@ import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloLink } from '../../../../core';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
+import { ApolloClient, ApolloLink } from '../../../../core';
+import { ApolloProvider } from '../../../context';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { itAsync, mockSingleLink } from '../../../../testing';
+import { Observable } from '../../../../utilities';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
-import { itAsync } from '../../../../utilities/testing/itAsync';
-import { Observable } from '../../../../utilities/observables/Observable';
 
 describe('[queries] polling', () => {
   let error: typeof console.error;

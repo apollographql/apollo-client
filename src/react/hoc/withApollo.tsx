@@ -2,7 +2,7 @@ import React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 import { invariant } from 'ts-invariant';
 
-import { ApolloConsumer } from '../context/ApolloConsumer';
+import { ApolloConsumer } from '../context';
 import { OperationOption, WithApolloClient } from './types';
 
 function getDisplayName<P>(WrappedComponent: React.ComponentType<P>) {

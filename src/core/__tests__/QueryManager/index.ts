@@ -6,8 +6,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
-import { GraphQLRequest, FetchResult } from '../../../link/core/types';
+import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
 import { InMemoryCache, InMemoryCacheConfig } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,
@@ -26,7 +25,7 @@ import { ObservableQuery } from '../../ObservableQuery';
 import { MutationBaseOptions, MutationOptions, WatchQueryOptions } from '../../watchQueryOptions';
 import { QueryManager } from '../../QueryManager';
 
-import { ApolloError } from '../../../errors/ApolloError';
+import { ApolloError } from '../../../errors';
 
 // testing utils
 import wrap from '../../../utilities/testing/wrap';
@@ -36,7 +35,7 @@ import observableToPromise, {
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
-import { ApolloClient } from '../../../ApolloClient';
+import { ApolloClient } from '../../../core'
 
 interface MockedMutation {
   reject: (reason: any) => any;

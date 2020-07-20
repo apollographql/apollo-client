@@ -1,8 +1,8 @@
 import { GraphQLError } from 'graphql';
 
-import { isNonEmptyArray } from '../utilities/common/arrays';
-import { ServerParseError } from '../link/http/parseAndCheckHttpResponse';
-import { ServerError } from '../link/utils/throwServerError';
+import { isNonEmptyArray } from '../utilities';
+import { ServerParseError } from '../link/http';
+import { ServerError } from '../link/utils';
 
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty('graphQLErrors');

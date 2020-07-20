@@ -3,16 +3,17 @@ import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { MutationUpdaterFn } from '../../../../core/watchQueryOptions';
-import { createMockClient } from '../../../../utilities/testing/mocking/mockClient';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
+import { ApolloClient, MutationUpdaterFn } from '../../../../core';
+import { ApolloProvider } from '../../../context';
+import { InMemoryCache as Cache } from '../../../../cache';
+import {
+  itAsync,
+  stripSymbols,
+  createMockClient,
+  mockSingleLink,
+} from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
-import { itAsync } from '../../../../utilities/testing/itAsync';
 
 describe('graphql(mutation) query integration', () => {
   itAsync('allows for passing optimisticResponse for a mutation', (resolve, reject) => {

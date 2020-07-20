@@ -1,6 +1,6 @@
 import { print } from 'graphql/language/printer';
 
-import { Operation } from '../core/types';
+import { Operation } from '../core';
 
 export interface UriFunction {
   (operation: Operation): string;

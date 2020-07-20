@@ -16,18 +16,17 @@ import {
   isReference,
   makeReference,
   StoreObject,
-} from '../../utilities/graphql/storeUtils';
-import { createFragmentMap, FragmentMap } from '../../utilities/graphql/fragments';
-import { shouldInclude } from '../../utilities/graphql/directives';
-import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import {
+  createFragmentMap,
+  FragmentMap,
+  shouldInclude,
+  addTypenameToDocument,
   getDefaultValues,
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-} from '../../utilities/graphql/getFromAST';
-import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
-import { mergeDeepArray } from '../../utilities/common/mergeDeep';
+  maybeDeepFreeze,
+  mergeDeepArray,
+} from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,

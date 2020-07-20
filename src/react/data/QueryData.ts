@@ -1,22 +1,21 @@
 import { equal } from '@wry/equality';
 
-import { ApolloError } from '../../errors/ApolloError';
-import { NetworkStatus } from '../../core/networkStatus';
+import { ApolloError } from '../../errors';
+
 import {
+  NetworkStatus,
   FetchMoreQueryOptions,
-  SubscribeToMoreOptions
-} from '../../core/watchQueryOptions';
-import {
+  SubscribeToMoreOptions,
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions
-} from '../../core/ObservableQuery';
+} from '../../core';
 
 import {
   ObservableSubscription
-} from '../../utilities/observables/Observable';
+} from '../../utilities';
 
-import { DocumentType } from '../parser/parser';
+import { DocumentType } from '../parser';
 import {
   QueryResult,
   QueryPreviousData,

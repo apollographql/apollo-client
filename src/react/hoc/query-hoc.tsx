@@ -2,9 +2,9 @@ import React from 'react';
 import { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
-import { parser } from '../parser/parser';
+import { parser } from '../parser';
 import { BaseQueryOptions } from '../types/types';
-import { Query } from '../components/Query';
+import { Query } from '../components';
 import {
   getDisplayName,
   GraphQLBase,

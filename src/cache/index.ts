@@ -7,7 +7,7 @@ export {
   Reference,
   isReference,
   makeReference,
-} from '../utilities/graphql/storeUtils';
+} from '../utilities';
 
 export {
   InMemoryCache,
@@ -17,6 +17,7 @@ export {
 export {
   ReactiveVar,
   makeVar,
+  cacheSlot,
 } from './inmemory/reactiveVars';
 
 export {

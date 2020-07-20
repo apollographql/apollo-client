@@ -1,6 +1,5 @@
-import { Operation, FetchResult } from '../core/types';
-import { Observable } from '../../utilities/observables/Observable';
-import { NextLink } from '../core/types';
+import { Operation, FetchResult, NextLink } from '../core';
+import { Observable } from '../../utilities';
 
 export type BatchHandler = (
   operations: Operation[],

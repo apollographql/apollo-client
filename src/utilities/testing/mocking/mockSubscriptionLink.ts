@@ -1,6 +1,5 @@
-import { Observable } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
-import { FetchResult, Operation } from '../../../link/core/types';
+import { Observable } from '../../../utilities';
+import { ApolloLink, FetchResult, Operation } from '../../../link/core';
 
 export interface MockedSubscription {
   request: Operation;

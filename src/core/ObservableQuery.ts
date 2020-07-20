@@ -1,16 +1,17 @@
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
-import { cloneDeep } from '../utilities/common/cloneDeep';
-import { getOperationDefinition } from '../utilities/graphql/getFromAST';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
+  cloneDeep,
+  getOperationDefinition,
   Observable,
   Observer,
-  ObservableSubscription
-} from '../utilities/observables/Observable';
-import { iterateObserversSafely } from '../utilities/observables/iteration';
-import { ApolloError } from '../errors/ApolloError';
+  ObservableSubscription,
+  iterateObserversSafely,
+  isNonEmptyArray,
+} from '../utilities';
+import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
 import { ApolloQueryResult, OperationVariables } from './types';
 import {
@@ -20,7 +21,6 @@ import {
   ErrorPolicy,
 } from './watchQueryOptions';
 import { QueryStoreValue } from './QueryInfo';
-import { isNonEmptyArray } from '../utilities/common/arrays';
 import { Reobserver } from './Reobserver';
 
 export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {

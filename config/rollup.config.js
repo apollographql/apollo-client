@@ -1,13 +1,13 @@
-import nodeResolve from 'rollup-plugin-node-resolve';
-import invariantPlugin from 'rollup-plugin-invariant';
+import nodeResolve from '@rollup/plugin-node-resolve';
 import { terser as minify } from 'rollup-plugin-terser';
-import fs from 'fs';
+import path from 'path';
 
-import packageJson from '../package.json';
+const packageJson = require('../package.json');
+const entryPoints = require('./entryPoints');
 
 const distDir = './dist';
 
-const external = [
+const externalPackages = new Set([
   '@wry/context',
   '@wry/equality',
   'fast-json-stable-stringify',
@@ -24,83 +24,23 @@ const external = [
   'ts-invariant',
   'tslib',
   'zen-observable',
-];
-
-function prepareESM(input, outputDir) {
-  return {
-    input,
-    external,
-    output: {
-      dir: outputDir,
-      format: 'esm',
-      sourcemap: true,
-    },
-    // The purpose of this job is to ensure each `./dist` ESM file is run
-    // through the `invariantPlugin`, with any resulting changes added
-    // directly back into each ESM file. By setting `preserveModules`
-    // to `true`, we're making sure Rollup doesn't attempt to create a single
-    // combined ESM bundle with the final result of running this job.
-    preserveModules: true,
-    plugins: [
-      nodeResolve(),
-      invariantPlugin({
-        // Instead of completely stripping InvariantError messages in
-        // production, this option assigns a numeric code to the
-        // production version of each error (unique to the call/throw
-        // location), which makes it much easier to trace production
-        // errors back to the unminified code where they were thrown,
-        // where the full error string can be found. See #4519.
-        errorCodes: true,
-      })
-    ],
-  };
-}
+]);
 
 function prepareCJS(input, output) {
   return {
     input,
-    external,
+    external(id) {
+      return externalPackages.has(id);
+    },
     output: {
       file: output,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
+      externalLiveBindings: false,
     },
     plugins: [
       nodeResolve(),
-      // When generating the `dist/core/core.cjs.js` entry point (in
-      // `config/prepareDist.js`), we filter and re-export the exports we
-      // need from the main Apollo Client CJS bundle (to exclude React related
-      // code). This means that consumers of `core.cjs.js` attempt to load the
-      // full AC CJS bundle first (before filtering exports), which then means
-      // the React require in the AC CJS bundle is attempted and not found
-      // (since people using `core.cjs.js` want to use Apollo Client without
-      // React). To address this, we make React an optional require in the CJS
-      // bundle.
-      (() => {
-        const cjsBundle = output.replace(`${distDir}/`, '');
-        return {
-          generateBundle(_option, bundle) {
-            const parts = bundle[cjsBundle].code.split(
-              /var React = require\('react'\);/);
-            // The React import should appear only once in the CJS bundle,
-            // since we build the CJS bundle using Rollup, which (hopefully!)
-            // deduplicates all external imports.
-            if (parts && parts.length === 2) {
-              bundle[cjsBundle].code = [
-                parts[0],
-                "try { var React = require('react'); } catch (error) {}",
-                parts[1],
-              ].join("\n");
-            } else {
-              throw new Error(
-                'The CJS bundle could not be prepared as a single React ' +
-                'require could not be found.'
-              );
-            }
-          }
-        }
-      })()
     ],
   };
 }
@@ -128,90 +68,40 @@ function prepareCJSMinified(input) {
   };
 }
 
-function prepareUtilities() {
-  const utilsDistDir = `${distDir}/utilities`;
-  return {
-    input: `${utilsDistDir}/index.js`,
-    external,
-    output: {
-      file: `${utilsDistDir}/utilities.cjs.js`,
-      format: 'cjs',
-      sourcemap: true,
-      exports: 'named',
-    },
-    plugins: [
-      nodeResolve(),
-    ],
-  };
-}
-
-// Build a separate CJS only `testing.js` bundle, that includes React
-// testing utilities like `MockedProvider` (testing utilities are kept out of
-// the main `apollo-client` bundle). This bundle can be accessed directly
-// like:
-//
-// import { MockedProvider } from '@apollo/client/testing';
-function prepareTesting() {
-  const bundleName = 'testing';
-
-  // Create a type file for the new testing bundle that points to the existing
-  // `react/testing` type definitions.
-  fs.writeFileSync(
-    `${distDir}/${bundleName}.d.ts`,
-    "export * from './utilities/testing';"
-  );
-
-  return {
-    input: `${distDir}/utilities/testing/index.js`,
-    external,
-    output: {
-      file: `${distDir}/${bundleName}.js`,
-      format: 'cjs',
-    },
-    plugins: [
-      nodeResolve({
-        extensions: ['.js', '.jsx'],
-      }),
-    ],
-  };
-}
-
-function prepareBundle(name, path) {
-  const dir = `${distDir}/${path}`;
+function prepareBundle({
+  dirs,
+  bundleName = dirs[dirs.length - 1],
+  extensions,
+}) {
+  const dir = path.join(distDir, ...dirs);
   return {
     input: `${dir}/index.js`,
-    external,
+    external(id, parentId) {
+      return externalPackages.has(id) ||
+        entryPoints.check(id, parentId);
+    },
     output: {
-      file: `${dir}/${name}.cjs.js`,
+      file: `${dir}/${bundleName}.cjs.js`,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
+      externalLiveBindings: false,
     },
     plugins: [
-      nodeResolve(),
+      extensions ? nodeResolve({ extensions }) : nodeResolve(),
     ],
   };
 }
 
-function rollup() {
-  return [
-    prepareESM(packageJson.module, distDir),
-    prepareCJS(packageJson.module, packageJson.main),
-    prepareCJSMinified(packageJson.main),
-    prepareUtilities(),
-    prepareTesting(),
-    prepareBundle('ssr', 'react/ssr'),
-    prepareBundle('components', 'react/components'),
-    prepareBundle('hoc', 'react/hoc'),
-    prepareBundle('batch', 'link/batch'),
-    prepareBundle('batch-http', 'link/batch-http'),
-    prepareBundle('context', 'link/context'),
-    prepareBundle('error', 'link/error'),
-    prepareBundle('retry', 'link/retry'),
-    prepareBundle('schema', 'link/schema'),
-    prepareBundle('ws', 'link/ws'),
-    prepareBundle('http', 'link/http'),
-  ];
-}
-
-export default rollup();
+export default [
+  ...entryPoints.map(prepareBundle),
+  // Convert the ESM entry point to a single CJS bundle.
+  prepareCJS(
+    './dist/index.js',
+    './dist/apollo-client.cjs.js',
+  ),
+  // Minify that single CJS bundle.
+  prepareCJSMinified(
+    './dist/apollo-client.cjs.js',
+  ),
+];

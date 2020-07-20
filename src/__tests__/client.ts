@@ -2,17 +2,25 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
-import { Observable, ObservableSubscription } from '../utilities/observables/Observable';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { FetchPolicy, WatchQueryFetchPolicy, QueryOptions } from '../core/watchQueryOptions';
-import { ApolloError } from '../errors/ApolloError';
-import { ApolloClient } from '..';
-import subscribeAndCount from '../utilities/testing/subscribeAndCount';
-import { itAsync } from '../utilities/testing/itAsync';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { ObservableQuery, PossibleTypesMap, makeVar } from '../core';
+import {
+  ApolloClient,
+  FetchPolicy,
+  WatchQueryFetchPolicy,
+  QueryOptions,
+  ObservableQuery,
+} from '../core';
+
+import { Observable, ObservableSubscription } from '../utilities';
+import { ApolloLink } from '../link/core';
+import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
+import { ApolloError } from '../errors';
+
+import {
+  itAsync,
+  stripSymbols,
+  subscribeAndCount,
+  mockSingleLink,
+} from '../testing';
 
 describe('client', () => {
   it('can be loaded via require', () => {

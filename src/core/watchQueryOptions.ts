@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql';
 
-import { ApolloCache } from '../cache/core/cache';
-import { FetchResult } from '../link/core/types';
+import { ApolloCache } from '../cache';
+import { FetchResult } from '../link/core';
 import { MutationQueryReducersMap } from './types';
 import { PureQueryOptions, OperationVariables } from './types';
 

@@ -62,15 +62,18 @@ describe('QueryManager', () => {
     link,
     config = {},
     clientAwareness = {},
+    queryDeduplication = false,
   }: {
     link: ApolloLink;
     config?: Partial<InMemoryCacheConfig>;
     clientAwareness?: { [key: string]: string };
+    queryDeduplication?: boolean;
   }) => {
     return new QueryManager({
       link,
       cache: new InMemoryCache({ addTypename: false, ...config }),
       clientAwareness,
+      queryDeduplication,
     });
   };
 
@@ -5039,4 +5042,46 @@ describe('QueryManager', () => {
       });
     });
   });
+
+  describe('queryDeduplication', () => {
+    it('should be true when context is true, default is false and argument not provided', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+      });
+
+      queryManager.query({ query, context: { queryDeduplication: true } })
+
+      expect(queryManager['inFlightLinkObservables'].size).toBe(1)
+    });
+    it('should allow overriding global queryDeduplication: true to false', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+        queryDeduplication: true,
+      });
+
+      queryManager.query({ query, context: { queryDeduplication: false } })
+
+      expect(queryManager['inFlightLinkObservables'].size).toBe(0)
+    });
+  })
 });

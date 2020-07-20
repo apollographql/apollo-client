@@ -681,7 +681,10 @@ export class QueryManager<TStore> {
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,
-    deduplication: boolean = this.queryDeduplication,
+    deduplication: boolean =
+      // Prefer context.queryDeduplication if specified.
+      context?.queryDeduplication ??
+      this.queryDeduplication,
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
 

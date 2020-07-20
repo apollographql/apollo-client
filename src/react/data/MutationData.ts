@@ -1,7 +1,7 @@
 import { equal } from '@wry/equality';
 
-import { DocumentType } from '../parser/parser';
-import { ApolloError } from '../../errors/ApolloError';
+import { DocumentType } from '../parser';
+import { ApolloError } from '../../errors';
 import {
   MutationDataOptions,
   MutationTuple,
@@ -9,8 +9,8 @@ import {
   MutationResult
 } from '../types/types';
 import { OperationData } from './OperationData';
-import { OperationVariables } from '../../core/types';
-import { FetchResult } from '../../link/core/types';
+import { OperationVariables } from '../../core';
+import { FetchResult } from '../../link/core';
 
 export class MutationData<
   TData = any,

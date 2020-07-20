@@ -1,0 +1,259 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`exports of public entry points @apollo/client 1`] = `
+Array [
+  "ApolloCache",
+  "ApolloClient",
+  "ApolloConsumer",
+  "ApolloError",
+  "ApolloLink",
+  "ApolloProvider",
+  "Cache",
+  "DocumentType",
+  "HttpLink",
+  "InMemoryCache",
+  "MissingFieldError",
+  "NetworkStatus",
+  "Observable",
+  "ObservableQuery",
+  "RenderPromises",
+  "checkFetcher",
+  "concat",
+  "createHttpLink",
+  "createSignalIfSupported",
+  "defaultDataIdFromObject",
+  "disableExperimentalFragmentVariables",
+  "disableFragmentWarnings",
+  "empty",
+  "enableExperimentalFragmentVariables",
+  "execute",
+  "fallbackHttpConfig",
+  "from",
+  "fromError",
+  "fromPromise",
+  "getApolloContext",
+  "gql",
+  "isApolloError",
+  "isReference",
+  "makeReference",
+  "makeVar",
+  "operationName",
+  "parseAndCheckHttpResponse",
+  "parser",
+  "resetApolloContext",
+  "resetCaches",
+  "rewriteURIForGET",
+  "selectHttpOptionsAndBody",
+  "selectURI",
+  "serializeFetchParameter",
+  "split",
+  "throwServerError",
+  "toPromise",
+  "useApolloClient",
+  "useLazyQuery",
+  "useMutation",
+  "useQuery",
+  "useSubscription",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/cache 1`] = `
+Array [
+  "ApolloCache",
+  "Cache",
+  "InMemoryCache",
+  "MissingFieldError",
+  "defaultDataIdFromObject",
+  "isReference",
+  "makeReference",
+  "makeVar",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/core 1`] = `
+Array [
+  "ApolloCache",
+  "ApolloClient",
+  "ApolloError",
+  "ApolloLink",
+  "Cache",
+  "HttpLink",
+  "InMemoryCache",
+  "MissingFieldError",
+  "NetworkStatus",
+  "Observable",
+  "ObservableQuery",
+  "checkFetcher",
+  "concat",
+  "createHttpLink",
+  "createSignalIfSupported",
+  "defaultDataIdFromObject",
+  "disableExperimentalFragmentVariables",
+  "disableFragmentWarnings",
+  "empty",
+  "enableExperimentalFragmentVariables",
+  "execute",
+  "fallbackHttpConfig",
+  "from",
+  "fromError",
+  "fromPromise",
+  "gql",
+  "isApolloError",
+  "isReference",
+  "makeReference",
+  "makeVar",
+  "parseAndCheckHttpResponse",
+  "resetCaches",
+  "rewriteURIForGET",
+  "selectHttpOptionsAndBody",
+  "selectURI",
+  "serializeFetchParameter",
+  "split",
+  "throwServerError",
+  "toPromise",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/batch 1`] = `
+Array [
+  "BatchLink",
+  "OperationBatcher",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/batch-http 1`] = `
+Array [
+  "BatchHttpLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/context 1`] = `
+Array [
+  "setContext",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/error 1`] = `
+Array [
+  "ErrorLink",
+  "onError",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/http 1`] = `
+Array [
+  "HttpLink",
+  "checkFetcher",
+  "createHttpLink",
+  "createSignalIfSupported",
+  "fallbackHttpConfig",
+  "parseAndCheckHttpResponse",
+  "rewriteURIForGET",
+  "selectHttpOptionsAndBody",
+  "selectURI",
+  "serializeFetchParameter",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/retry 1`] = `
+Array [
+  "RetryLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/schema 1`] = `
+Array [
+  "SchemaLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/ws 1`] = `
+Array [
+  "WebSocketLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react 1`] = `
+Array [
+  "ApolloConsumer",
+  "ApolloProvider",
+  "DocumentType",
+  "RenderPromises",
+  "getApolloContext",
+  "operationName",
+  "parser",
+  "resetApolloContext",
+  "useApolloClient",
+  "useLazyQuery",
+  "useMutation",
+  "useQuery",
+  "useSubscription",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react/components 1`] = `
+Array [
+  "Mutation",
+  "Query",
+  "Subscription",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
+Array [
+  "graphql",
+  "withApollo",
+  "withMutation",
+  "withQuery",
+  "withSubscription",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
+Array [
+  "getDataFromTree",
+  "getMarkupFromTree",
+  "renderToStringWithData",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities 1`] = `
+Array [
+  "addTypenameToDocument",
+  "argumentsObjectFromField",
+  "buildQueryFromSelectionSet",
+  "checkDocument",
+  "concatPagination",
+  "createFragmentMap",
+  "getDefaultValues",
+  "getDirectiveNames",
+  "getFragmentDefinition",
+  "getFragmentDefinitions",
+  "getFragmentFromSelection",
+  "getFragmentQueryDocument",
+  "getInclusionDirectives",
+  "getMainDefinition",
+  "getOperationDefinition",
+  "getOperationName",
+  "getQueryDefinition",
+  "getStoreKeyName",
+  "getTypenameFromResult",
+  "hasClientExports",
+  "hasDirectives",
+  "isField",
+  "isInlineFragment",
+  "isReference",
+  "makeReference",
+  "offsetLimitPagination",
+  "relayStylePagination",
+  "removeArgumentsFromDocument",
+  "removeClientSetsFromDocument",
+  "removeConnectionDirectiveFromDocument",
+  "removeDirectivesFromDocument",
+  "removeFragmentSpreadFromDocument",
+  "resultKeyNameFromField",
+  "shouldInclude",
+  "storeKeyNameFromField",
+  "valueToObjectRepresentation",
+]
+`;

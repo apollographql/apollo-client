@@ -114,6 +114,13 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/errors 1`] = `
+Array [
+  "ApolloError",
+  "isApolloError",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/batch 1`] = `
 Array [
   "BatchLink",
@@ -130,6 +137,17 @@ Array [
 exports[`exports of public entry points @apollo/client/link/context 1`] = `
 Array [
   "setContext",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/core 1`] = `
+Array [
+  "ApolloLink",
+  "concat",
+  "empty",
+  "execute",
+  "from",
+  "split",
 ]
 `;
 
@@ -167,6 +185,18 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/link/utils 1`] = `
+Array [
+  "createOperation",
+  "fromError",
+  "fromPromise",
+  "throwServerError",
+  "toPromise",
+  "transformOperation",
+  "validateOperation",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/ws 1`] = `
 Array [
   "WebSocketLink",
@@ -198,6 +228,24 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/react/context 1`] = `
+Array [
+  "ApolloConsumer",
+  "ApolloProvider",
+  "getApolloContext",
+  "resetApolloContext",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react/data 1`] = `
+Array [
+  "MutationData",
+  "OperationData",
+  "QueryData",
+  "SubscriptionData",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
 Array [
   "graphql",
@@ -208,12 +256,44 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
+Array [
+  "useApolloClient",
+  "useLazyQuery",
+  "useMutation",
+  "useQuery",
+  "useSubscription",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react/parser 1`] = `
+Array [
+  "DocumentType",
+  "operationName",
+  "parser",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
 Array [
   "RenderPromises",
   "getDataFromTree",
   "getMarkupFromTree",
   "renderToStringWithData",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing 1`] = `
+Array [
+  "MockLink",
+  "MockSubscriptionLink",
+  "MockedProvider",
+  "createMockClient",
+  "itAsync",
+  "mockObservableLink",
+  "mockSingleLink",
+  "stripSymbols",
+  "subscribeAndCount",
 ]
 `;
 

@@ -8,6 +8,10 @@
 - Tolerate `!==` callback functions (like `onCompleted` and `onError`) in `useQuery` options, since those functions are almost always freshly evaluated each time `useQuery` is called. <br/>
   [@hwillson](https://github.com/hwillson) and [@benjamn](https://github.com/benjamn) in [#6588](https://github.com/apollographql/apollo-client/pull/6588)
 
+- Respect `context.queryDeduplication` if provided, and otherwise fall back to `client.deduplication` (as before). <br/>
+  [@igaloly](https://github.com/igaloly) in [#6261](https://github.com/apollographql/apollo-client/pull/6261) and
+  [@Kujawadl](https://github.com/Kujawadl) in [#6526](https://github.com/apollographql/apollo-client/pull/6526)
+
 ## Improvements
 
 - Make the `client` field of the `MutationResult` type non-optional, since it is always provided. <br/>

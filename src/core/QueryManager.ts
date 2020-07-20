@@ -681,18 +681,12 @@ export class QueryManager<TStore> {
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,
-    deduplication?: boolean,
+    deduplication: boolean =
+      // Prefer context.queryDeduplication if specified.
+      context?.queryDeduplication ??
+      this.queryDeduplication,
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
-
-    // Set default deduplication value if arg was not passed
-    if(typeof deduplication === 'undefined') {
-      if(typeof context === 'object' && 'queryDeduplication' in context) {
-        deduplication = context.queryDeduplication
-      } else {
-        deduplication = this.queryDeduplication
-      }
-    }
 
     const { serverQuery } = this.transform(query);
     if (serverQuery) {

@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
 import { Observable } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
+import { ApolloLink } from '../../../link/core';
 import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import { itAsync } from '../../../utilities/testing/itAsync';

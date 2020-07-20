@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql';
 
 import { LazyQueryHookOptions, QueryTuple } from '../types/types';
 import { useBaseQuery } from './utils/useBaseQuery';
-import { OperationVariables } from '../../core/types';
+import { OperationVariables } from '../../core';
 
 export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,

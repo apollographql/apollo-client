@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql';
 
 import { QueryHookOptions, QueryResult } from '../types/types';
 import { useBaseQuery } from './utils/useBaseQuery';
-import { OperationVariables } from '../../core/types';
+import { OperationVariables } from '../../core';
 
 export function useQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,

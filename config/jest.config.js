@@ -1,3 +1,5 @@
+const { compilerOptions } = require("../tsconfig.json");
+
 module.exports = {
   rootDir: '..',
   transform: {
@@ -6,6 +8,10 @@ module.exports = {
   globals: {
     'ts-jest': {
       diagnostics: true,
+      tsConfig: {
+        ...compilerOptions,
+        allowJs: true,
+      },
     },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],

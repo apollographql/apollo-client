@@ -23,11 +23,16 @@ import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
 import * as utilities from "../utilities";
 
+const entryPoints = require("../../config/entryPoints.js");
+
 type Namespace = object;
 
 describe('exports of public entry points', () => {
+  const testedIds = new Set<string>();
+
   function check(id: string, ns: Namespace) {
     it(id, () => {
+      testedIds.add(id);
       expect(Object.keys(ns).sort()).toMatchSnapshot();
     });
   }
@@ -56,4 +61,12 @@ describe('exports of public entry points', () => {
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
   check("@apollo/client/utilities", utilities);
+
+  it("completeness", () => {
+    const { join } = require("path").posix;
+    entryPoints.forEach((info: Record<string, any>) => {
+      const id = join("@apollo/client", ...info.dirs);
+      expect(testedIds).toContain(id);
+    });
+  });
 });

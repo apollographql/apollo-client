@@ -13,7 +13,7 @@
   ],
   "author": "opensource@apollographql.com",
   "license": "MIT",
-  "main": "./dist/apollo-client.cjs.js",
+  "main": "./dist/main.cjs.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": [

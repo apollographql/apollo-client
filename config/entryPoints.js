@@ -1,5 +1,5 @@
 module.exports = [
-  { dirs: [], bundleName: "apollo-client" },
+  { dirs: [], bundleName: "main" },
   { dirs: ['cache'] },
   { dirs: ['core'] },
   { dirs: ['link', 'batch'] },

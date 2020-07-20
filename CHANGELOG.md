@@ -1,3 +1,10 @@
+## Apollo Client 3.1.0
+
+## Bug Fixes
+
+- Rework interdependencies between `@apollo/client/*` entry points, so that CommonJS and ESM modules are supported equally well, without any duplication of shared code. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6058](https://github.com/apollographql/apollo-client/pull/6058)
+
 ## Apollo Client 3.0.2
 
 ## Bug Fixes

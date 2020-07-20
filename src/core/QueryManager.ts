@@ -2,30 +2,26 @@ import { DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
-import { ApolloLink } from '../link/core/ApolloLink';
-import { execute } from '../link/core/execute';
-import { FetchResult } from '../link/core/types';
-import { Cache } from '../cache/core/types/Cache';
+import { ApolloLink, execute, FetchResult } from '../link/core';
+import { Cache, ApolloCache } from '../cache';
 
 import {
   getDefaultValues,
   getOperationDefinition,
   getOperationName,
-} from '../utilities/graphql/getFromAST';
-import {
   hasClientExports,
-} from '../utilities/graphql/directives';
-import {
   graphQLResultHasError,
-} from '../utilities/common/errorHandling';
-import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
-import { canUseWeakMap } from '../utilities/common/canUse';
-import { ApolloError, isApolloError } from '../errors/ApolloError';
-import {
+  removeConnectionDirectiveFromDocument,
+  canUseWeakMap,
   ObservableSubscription,
   Observable,
-} from '../utilities/observables/Observable';
-import { MutationStore } from '../data/mutations';
+  asyncMap,
+  isNonEmptyArray,
+  Concast,
+  ConcastSourcesIterable,
+} from '../utilities';
+import { ApolloError, isApolloError } from '../errors';
+import { MutationStore } from './MutationStore';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -43,13 +39,6 @@ import {
   MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap } from '../utilities/observables/asyncMap';
-import {
-  Concast,
-  ConcastSourcesIterable,
-} from '../utilities/observables/Concast';
-import { isNonEmptyArray } from '../utilities/common/arrays';
-import { ApolloCache } from '../cache/core/cache';
 
 import { QueryInfo, QueryStoreValue } from './QueryInfo';
 

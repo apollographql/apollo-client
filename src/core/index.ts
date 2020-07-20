@@ -3,7 +3,7 @@
 export {
   ApolloClient,
   ApolloClientOptions,
-  DefaultOptions
+  DefaultOptions,
 } from '../ApolloClient';
 export {
   ObservableQuery,
@@ -28,13 +28,20 @@ export { NetworkStatus } from './networkStatus';
 export * from './types';
 export {
   Resolver,
-  FragmentMatcher as LocalStateFragmentMatcher,
+  FragmentMatcher,
 } from './LocalState';
-export { isApolloError, ApolloError } from '../errors/ApolloError';
+export { isApolloError, ApolloError } from '../errors';
 
 /* Cache */
 
-export * from '../cache';
+export {
+  Cache,
+  ApolloCache,
+  InMemoryCache,
+  MissingFieldError,
+  defaultDataIdFromObject,
+  makeVar,
+} from '../cache';
 
 /* Link */
 
@@ -53,8 +60,12 @@ export {
 export {
   Observable,
   Observer,
-  ObservableSubscription
-} from '../utilities/observables/Observable';
+  ObservableSubscription,
+  Reference,
+  isReference,
+  makeReference,
+  StoreObject,
+} from '../utilities';
 
 /* Supporting */
 

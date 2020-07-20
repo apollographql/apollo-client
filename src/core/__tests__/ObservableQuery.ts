@@ -1,23 +1,19 @@
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 
-import { Observable } from '../../utilities/observables/Observable';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
+import { ApolloClient, NetworkStatus } from '../../core';
+import { ObservableQuery } from '../ObservableQuery';
+import { QueryManager } from '../QueryManager';
+
+import { Observable } from '../../utilities';
+import { ApolloLink } from '../../link/core';
+import { InMemoryCache, NormalizedCacheObject } from '../../cache';
+import { ApolloError } from '../../errors';
+
+import { itAsync, stripSymbols, mockSingleLink, subscribeAndCount } from '../../testing';
 import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
 import mockWatchQuery from '../../utilities/testing/mocking/mockWatchQuery';
-import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
-
-import { ObservableQuery } from '../ObservableQuery';
-import { NetworkStatus } from '../networkStatus';
-import { QueryManager } from '../QueryManager';
-import { ApolloClient, NormalizedCacheObject } from '../../';
-
 import wrap from '../../utilities/testing/wrap';
-import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
-import { stripSymbols } from '../../utilities/testing/stripSymbols';
-import { itAsync } from '../../utilities/testing/itAsync';
-import { ApolloError } from '../../errors/ApolloError';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests

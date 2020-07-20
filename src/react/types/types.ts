@@ -176,7 +176,7 @@ export interface MutationFunctionOptions<
   TVariables = OperationVariables
 > {
   variables?: TVariables;
-  optimisticResponse?: TData | ((vars: TVariables | {}) => TData);
+  optimisticResponse?: TData | ((vars: TVariables) => TData);
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
   update?: MutationUpdaterFn<TData>;

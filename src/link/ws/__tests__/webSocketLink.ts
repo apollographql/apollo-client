@@ -2,9 +2,9 @@ import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { ExecutionResult } from 'graphql';
 import gql from 'graphql-tag';
 
-import { Observable } from '../../../utilities/observables/Observable';
-import { execute } from '../../core/execute';
-import { WebSocketLink } from '../webSocketLink';
+import { Observable } from '../../../utilities';
+import { execute } from '../../core';
+import { WebSocketLink } from '..';
 
 const query = gql`
   query SampleQuery {

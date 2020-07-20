@@ -95,6 +95,13 @@ function prepareBundle({
 
 export default [
   ...entryPoints.map(prepareBundle),
-  prepareCJS(packageJson.module, packageJson.main),
-  prepareCJSMinified(packageJson.main),
+  // Convert the ESM entry point to a single CJS bundle.
+  prepareCJS(
+    './dist/index.js',
+    './dist/apollo-client.cjs.js',
+  ),
+  // Minify that single CJS bundle.
+  prepareCJSMinified(
+    './dist/apollo-client.cjs.js',
+  ),
 ];

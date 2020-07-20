@@ -2,12 +2,11 @@ import React from 'react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { getApolloContext } from '../../../context/ApolloContext';
-import { getDataFromTree } from '../../../ssr/getDataFromTree';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
+import { ApolloClient } from '../../../../core';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { ApolloProvider, getApolloContext } from '../../../context';
+import { getDataFromTree } from '../../../ssr';
+import { mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
 
 describe('SSR', () => {

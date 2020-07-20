@@ -3,14 +3,13 @@ import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { Query as QueryComponent } from '../../../components/Query';
+import { ApolloClient } from '../../../../core';
+import { ApolloProvider } from '../../../context';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { itAsync, mockSingleLink } from '../../../../testing';
+import { Query as QueryComponent } from '../../../components';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
-import { itAsync } from '../../../../utilities/testing/itAsync';
 
 describe('[queries] lifecycle', () => {
   // lifecycle

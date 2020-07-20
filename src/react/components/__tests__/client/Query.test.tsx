@@ -3,17 +3,13 @@ import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 import { render, wait } from '@testing-library/react';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { NetworkStatus } from '../../../../core/networkStatus';
+import { ApolloClient, NetworkStatus } from '../../../../core';
 import { ApolloError } from '../../../../errors';
 import { ApolloLink } from '../../../../link/core';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { MockedProvider } from '../../../../utilities/testing/mocking/MockedProvider';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { ApolloProvider } from '../../../context';
+import { itAsync, stripSymbols, MockedProvider, mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
-import { itAsync } from '../../../../utilities/testing/itAsync';
 
 const allPeopleQuery: DocumentNode = gql`
   query people {

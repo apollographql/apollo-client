@@ -2,8 +2,8 @@ import React, { useContext } from 'react';
 import { render, cleanup } from '@testing-library/react';
 
 import { ApolloLink } from '../../../link/core';
-import { ApolloClient } from '../../../ApolloClient';
-import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
+import { ApolloClient } from '../../../core';
+import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider } from '../ApolloProvider';
 import { getApolloContext } from '../ApolloContext';
 

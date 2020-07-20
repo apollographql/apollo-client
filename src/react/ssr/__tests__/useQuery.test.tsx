@@ -1,12 +1,11 @@
 import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { MockedProvider } from '../../../utilities/testing/mocking/MockedProvider';
-import { mockSingleLink } from '../../../utilities/testing/mocking/mockLink';
-import { ApolloClient } from '../../../ApolloClient';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../context/ApolloProvider';
-import { useQuery } from '../../hooks/useQuery';
+import { MockedProvider, mockSingleLink } from '../../../testing';
+import { ApolloClient } from '../../../core';
+import { InMemoryCache } from '../../../cache';
+import { ApolloProvider } from '../../context';
+import { useQuery } from '../../hooks';
 import { render, wait } from '@testing-library/react';
 import { renderToStringWithData } from '..';
 

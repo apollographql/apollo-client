@@ -1,11 +1,9 @@
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import subscribeAndCount from '../utilities/testing/subscribeAndCount';
-import { InMemoryCache, InMemoryCacheConfig } from '../cache/inmemory/inMemoryCache';
-import { ApolloClient, NetworkStatus, ObservableQuery } from '../';
-import { itAsync } from '../utilities/testing/itAsync';
+import { itAsync, mockSingleLink, subscribeAndCount } from '../testing';
+import { InMemoryCache, InMemoryCacheConfig } from '../cache';
+import { ApolloClient, NetworkStatus, ObservableQuery } from '../core';
 import { offsetLimitPagination, concatPagination } from '../utilities';
 
 describe('updateQuery on a simple query', () => {

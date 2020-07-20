@@ -1,9 +1,9 @@
 import gql from 'graphql-tag';
 
-import { Observable } from '../../utilities/observables/Observable';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { ApolloClient } from '../..';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
+import { Observable } from '../../utilities';
+import { ApolloLink } from '../../link/core';
+import { ApolloClient } from '../../core';
+import { InMemoryCache } from '../../cache';
 
 describe('Basic functionality', () => {
   it('should not break subscriptions', done => {

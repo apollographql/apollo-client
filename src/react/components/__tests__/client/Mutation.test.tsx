@@ -3,14 +3,11 @@ import gql from 'graphql-tag';
 import { ExecutionResult, GraphQLError } from 'graphql';
 import { render, cleanup, fireEvent, wait } from '@testing-library/react';
 
-import { ApolloClient } from '../../../../ApolloClient';
+import { ApolloClient } from '../../../../core';
 import { ApolloError } from '../../../../errors';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { DataProxy } from '../../../../cache/core/types/DataProxy';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { MockedProvider } from '../../../../utilities/testing/mocking/MockedProvider';
-import { MockLink, mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
+import { DataProxy, InMemoryCache as Cache } from '../../../../cache';
+import { ApolloProvider } from '../../../context';
+import { stripSymbols, MockedProvider, MockLink, mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 

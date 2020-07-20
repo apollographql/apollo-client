@@ -4,7 +4,7 @@ export {
   ApolloClient,
   ApolloClientOptions,
   DefaultOptions,
-} from '../ApolloClient';
+} from './ApolloClient';
 export {
   ObservableQuery,
   FetchMoreOptions,

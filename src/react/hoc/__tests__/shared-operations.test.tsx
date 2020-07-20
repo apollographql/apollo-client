@@ -3,11 +3,11 @@ import { render, cleanup } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../ApolloClient';
-import { ApolloProvider } from '../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
+import { ApolloClient } from '../../../core';
+import { ApolloProvider } from '../../context';
+import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloLink } from '../../../link/core';
-import { mockSingleLink } from '../../../utilities/testing/mocking/mockLink';
+import { mockSingleLink } from '../../../testing';
 import { graphql } from '../graphql';
 import { ChildProps, DataValue } from '../types';
 import { withApollo } from '../withApollo';

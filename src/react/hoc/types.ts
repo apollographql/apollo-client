@@ -1,4 +1,4 @@
-import { ApolloClient } from '../..';
+import { ApolloClient } from '../../core';
 import { ApolloError } from '../../errors';
 import {
   ApolloQueryResult,

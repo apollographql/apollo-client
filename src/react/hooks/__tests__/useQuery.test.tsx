@@ -3,20 +3,15 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { Observable } from '../../../utilities/observables/Observable';
+import { ApolloClient, NetworkStatus } from '../../../core';
+import { InMemoryCache } from '../../../cache';
+import { ApolloProvider } from '../../context';
+import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
-import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
-import { MockLink } from '../../../utilities/testing/mocking/mockLink';
-import { itAsync } from '../../../utilities/testing/itAsync';
-import { ApolloClient } from '../../../ApolloClient';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../context/ApolloProvider';
+import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { QueryFunctionOptions } from '../..';
-import { NetworkStatus } from '../../../core/networkStatus';
-import { Reference } from '../../../utilities/graphql/storeUtils';
-import { concatPagination } from '../../../utilities';
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`

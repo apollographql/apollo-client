@@ -188,7 +188,7 @@ export interface MutationResult<TData = any> {
   error?: ApolloError;
   loading: boolean;
   called: boolean;
-  client?: ApolloClient<object>;
+  client: ApolloClient<object>;
 }
 
 export declare type MutationFunction<

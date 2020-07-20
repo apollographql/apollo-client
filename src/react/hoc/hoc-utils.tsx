@@ -1,7 +1,7 @@
 import React from 'react';
 import { invariant } from 'ts-invariant';
-import { OperationVariables } from '../../core/types';
-import { IDocumentDefinition } from '../parser/parser';
+import { OperationVariables } from '../../core';
+import { IDocumentDefinition } from '../parser';
 
 export const defaultMapPropsToOptions = () => ({});
 export const defaultMapResultToProps: <P>(props: P) => P = props => props;

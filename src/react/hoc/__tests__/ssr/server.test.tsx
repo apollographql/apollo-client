@@ -14,7 +14,7 @@ import gql from 'graphql-tag';
 import { ApolloClient } from '../../../../ApolloClient';
 import { ApolloProvider } from '../../../context/ApolloProvider';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
+import { ApolloLink } from '../../../../link/core';
 import { Observable } from '../../../../utilities/observables/Observable';
 import { renderToStringWithData } from '../../../ssr/renderToStringWithData';
 import { graphql } from '../../graphql';

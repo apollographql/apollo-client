@@ -6,7 +6,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../../ApolloClient';
 import { ApolloProvider } from '../../../context/ApolloProvider';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
+import { ApolloLink } from '../../../../link/core';
 import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
 import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
 import { graphql } from '../../graphql';

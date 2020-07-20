@@ -11,8 +11,6 @@ import { invariant, InvariantError } from 'ts-invariant';
 import {
   FragmentMap,
   getFragmentFromSelection,
-} from '../../utilities/graphql/fragments';
-import {
   isField,
   getTypenameFromResult,
   storeKeyNameFromField,
@@ -22,8 +20,8 @@ import {
   Reference,
   isReference,
   getStoreKeyName,
-} from '../../utilities/graphql/storeUtils';
-import { canUseWeakMap } from '../../utilities/common/canUse';
+  canUseWeakMap,
+} from '../../utilities';
 import { IdGetter, ReadMergeModifyContext } from "./types";
 import {
   hasOwn,

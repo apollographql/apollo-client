@@ -5,7 +5,7 @@ import {
   StoreObject,
   StoreValue,
   Reference,
-} from '../../utilities/graphql/storeUtils';
+} from '../../utilities';
 import { FieldValueGetter } from './entityStore';
 import { KeyFieldsFunction } from './policies';
 import {

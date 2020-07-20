@@ -1,8 +1,11 @@
 import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 
-import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
-import { StoreObject, Reference } from '../../utilities/graphql/storeUtils';
+import {
+  StoreObject,
+  Reference,
+  getFragmentQueryDocument,
+} from '../../utilities';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
 

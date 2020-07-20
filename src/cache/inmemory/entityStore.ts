@@ -6,11 +6,11 @@ import {
   StoreValue,
   StoreObject,
   Reference,
-  makeReference
-} from '../../utilities/graphql/storeUtils';
-import { DeepMerger } from '../../utilities/common/mergeDeep';
-import { maybeDeepFreeze } from '../../utilities/common/maybeDeepFreeze';
-import { canUseWeakMap } from '../../utilities/common/canUse';
+  makeReference,
+  DeepMerger,
+  maybeDeepFreeze,
+  canUseWeakMap,
+} from '../../utilities';
 import { NormalizedCache, NormalizedCacheObject } from './types';
 import { hasOwn, fieldNameFromStoreName } from './helpers';
 import { Policies } from './policies';

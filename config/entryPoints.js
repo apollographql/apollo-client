@@ -2,6 +2,7 @@ module.exports = [
   { dirs: [], bundleName: "main" },
   { dirs: ['cache'] },
   { dirs: ['core'] },
+  { dirs: ['errors'] },
   { dirs: ['link', 'batch'] },
   { dirs: ['link', 'batch-http'] },
   { dirs: ['link', 'context'] },

@@ -5,8 +5,8 @@ import { render, wait } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../ApolloClient';
 import { NetworkStatus } from '../../../../core/networkStatus';
-import { ApolloError } from '../../../../errors/ApolloError';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
+import { ApolloError } from '../../../../errors';
+import { ApolloLink } from '../../../../link/core';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../../context/ApolloProvider';
 import { MockedProvider } from '../../../../utilities/testing/mocking/MockedProvider';

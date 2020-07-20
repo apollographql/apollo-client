@@ -4,7 +4,7 @@ import { ExecutionResult, GraphQLError } from 'graphql';
 import { render, cleanup, fireEvent, wait } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloError } from '../../../../errors/ApolloError';
+import { ApolloError } from '../../../../errors';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
 import { DataProxy } from '../../../../cache/core/types/DataProxy';
 import { ApolloProvider } from '../../../context/ApolloProvider';

@@ -13,7 +13,7 @@ import gql from 'graphql-tag';
 import { ApolloClient } from '../../../../ApolloClient';
 import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
 import { ApolloProvider } from '../../../context/ApolloProvider';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
+import { ApolloLink } from '../../../../link/core';
 import { Observable } from '../../../../utilities/observables/Observable';
 import { renderToStringWithData } from '../../../ssr/renderToStringWithData';
 import { Query } from '../../Query';

@@ -27,6 +27,7 @@ export {
 } from './graphql/getFromAST';
 
 export {
+  StoreObject,
   Reference,
   StoreValue,
   Directives,
@@ -67,3 +68,19 @@ export {
   offsetLimitPagination,
   relayStylePagination,
 } from './policies/pagination';
+
+export {
+  Observable,
+  Observer,
+  ObservableSubscription
+} from './observables/Observable';
+
+export * from './common/mergeDeep';
+export * from './common/cloneDeep';
+export * from './common/maybeDeepFreeze';
+export * from './observables/iteration';
+export * from './observables/asyncMap';
+export * from './observables/Concast';
+export * from './common/arrays';
+export * from './common/errorHandling';
+export * from './common/canUse';

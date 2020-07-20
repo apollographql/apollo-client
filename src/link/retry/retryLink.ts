@@ -1,7 +1,5 @@
-import { ApolloLink } from '../core/ApolloLink';
-import { Operation, FetchResult } from '../core/types';
-import { Observable } from '../../utilities/observables/Observable';
-import { NextLink } from '../core/types';
+import { ApolloLink, Operation, FetchResult, NextLink } from '../core';
+import { Observable } from '../../utilities';
 import {
   DelayFunction,
   DelayFunctionOptions,

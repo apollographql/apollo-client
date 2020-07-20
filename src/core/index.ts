@@ -40,7 +40,16 @@ export * from '../cache';
 
 export * from '../link/core';
 export * from '../link/http';
-export * from '../link/utils';
+export {
+  fromError,
+  toPromise,
+  fromPromise,
+  ServerError,
+  throwServerError,
+} from '../link/utils';
+
+/* Utilities */
+
 export {
   Observable,
   Observer,

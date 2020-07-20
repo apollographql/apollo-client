@@ -11,6 +11,7 @@ module.exports = [
   { dirs: ['link', 'http'] },
   { dirs: ['link', 'retry'] },
   { dirs: ['link', 'schema'] },
+  { dirs: ['link', 'utils'] },
   { dirs: ['link', 'ws'] },
   { dirs: ['react'] },
   { dirs: ['react', 'components'] },

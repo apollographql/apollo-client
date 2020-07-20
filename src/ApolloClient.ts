@@ -1,30 +1,24 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 
-import { ApolloLink } from './link/core/ApolloLink';
-import { FetchResult, GraphQLRequest } from './link/core/types';
-import { execute } from './link/core/execute';
-import { ApolloCache } from './cache/core/cache';
-import { DataProxy } from './cache/core/types/DataProxy';
-import { QueryManager } from './core/QueryManager';
+import { ApolloLink, FetchResult, GraphQLRequest, execute } from './link/core';
+import { ApolloCache, DataProxy } from './cache';
 import {
+  QueryManager,
   ApolloQueryResult,
   OperationVariables,
   Resolvers,
-} from './core/types';
-import { ObservableQuery } from './core/ObservableQuery';
-import { LocalState, FragmentMatcher } from './core/LocalState';
-import { Observable } from './utilities/observables/Observable';
-import {
+  ObservableQuery,
   QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
   WatchQueryFetchPolicy,
-} from './core/watchQueryOptions';
+} from './core';
+import { LocalState, FragmentMatcher } from './core';
+import { Observable } from './utilities';
 import { version } from './version';
-import { HttpLink } from './link/http/HttpLink';
-import { UriFunction } from './link/http/selectHttpOptionsAndBody';
+import { HttpLink, UriFunction } from './link/http';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions>;

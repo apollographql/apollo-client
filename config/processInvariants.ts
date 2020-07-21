@@ -65,7 +65,7 @@ function getErrorCode(
   const numLit = b.numericLiteral(nextErrorCode++);
   errorCodeManifest.properties.push(
     b.property("init", numLit, b.objectExpression([
-      b.property("init", b.identifier("file"), b.stringLiteral(file)),
+      b.property("init", b.identifier("file"), b.stringLiteral("@apollo/client/" + file)),
       b.property("init", b.identifier("node"), expr),
     ])),
   );

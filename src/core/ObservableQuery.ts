@@ -18,9 +18,7 @@ import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  ErrorPolicy,
 } from './watchQueryOptions';
-import { QueryStoreValue } from './QueryInfo';
 import { Reobserver } from './Reobserver';
 
 export interface FetchMoreOptions<
@@ -39,14 +37,6 @@ export interface FetchMoreOptions<
 export interface UpdateQueryOptions<TVariables> {
   variables?: TVariables;
 }
-
-export const hasError = (
-  storeValue: QueryStoreValue,
-  policy: ErrorPolicy = 'none',
-) => storeValue && (
-  storeValue.networkError ||
-  (policy === 'none' && isNonEmptyArray(storeValue.graphQLErrors))
-);
 
 let warnedAboutUpdateQuery = false;
 
@@ -147,8 +137,7 @@ export class ObservableQuery<
       NetworkStatus.ready;
 
     const result: ApolloQueryResult<TData> = {
-      ...(lastError ? null : lastResult),
-      error: lastError,
+      ...(lastError ? { error: lastError } : lastResult),
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     };
@@ -164,44 +153,13 @@ export class ObservableQuery<
     if (queryStoreValue) {
       const { networkStatus } = queryStoreValue;
 
-      if (hasError(queryStoreValue, this.options.errorPolicy)) {
-        return Object.assign(result, {
-          data: void 0,
-          networkStatus,
-          error: new ApolloError({
-            graphQLErrors: queryStoreValue.graphQLErrors,
-            networkError: queryStoreValue.networkError,
-          }),
-        });
-      }
-
-      // Variables might have been added dynamically at query time, when
-      // using `@client @export(as: "varname")` for example. When this happens,
-      // the variables have been updated in the query store, but not updated on
-      // the original `ObservableQuery`. We'll update the observable query
-      // variables here to match, so retrieving from the cache doesn't fail.
-      if (queryStoreValue.variables) {
-        this.options.variables = {
-          ...this.options.variables,
-          ...(queryStoreValue.variables as TVariables),
-        };
-      }
-
       Object.assign(result, {
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
       });
-
-      if (queryStoreValue.graphQLErrors && this.options.errorPolicy === 'all') {
-        result.errors = queryStoreValue.graphQLErrors;
-      }
     }
 
-    if (partial) {
-      this.resetLastResults();
-    } else {
-      this.updateLastResult(result);
-    }
+    this.updateLastResult(result);
 
     return result;
   }

@@ -18,7 +18,9 @@ export function getDataFromTree(
 export type GetMarkupFromTreeOptions = {
   tree: React.ReactNode;
   context?: { [key: string]: any };
-  renderFunction?: (tree: React.ReactElement<any>) => string | Promise<string>;
+  renderFunction?: (
+    tree: React.ReactElement<any>,
+  ) => string | PromiseLike<string>;
 };
 
 export function getMarkupFromTree({

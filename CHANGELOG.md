@@ -21,6 +21,9 @@
 - Make the `client` field of the `MutationResult` type non-optional, since it is always provided. <br/>
   [@glasser](https://github.com/glasser) in [#6617](https://github.com/apollographql/apollo-client/pull/6617)
 
+- Allow passing an asynchronous `options.renderFunction` to `getMarkupFromTree`. <br/>
+  [@richardscarrott](https://github.com/richardscarrott) in [#6576](https://github.com/apollographql/apollo-client/pull/6576)
+
 ## Apollo Client 3.0.2
 
 ## Bug Fixes

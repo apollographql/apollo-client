@@ -18,7 +18,9 @@ export function getDataFromTree(
 export type GetMarkupFromTreeOptions = {
   tree: React.ReactNode;
   context?: { [key: string]: any };
-  renderFunction?: (tree: React.ReactElement<any>) => string;
+  renderFunction?: (
+    tree: React.ReactElement<any>,
+  ) => string | PromiseLike<string>;
 };
 
 export function getMarkupFromTree({
@@ -31,24 +33,26 @@ export function getMarkupFromTree({
 }: GetMarkupFromTreeOptions): Promise<string> {
   const renderPromises = new RenderPromises();
 
-  function process(): Promise<string> | string {
+  function process(): Promise<string> {
     // Always re-render from the rootElement, even though it might seem
     // better to render the children of the component responsible for the
     // promise, because it is not possible to reconstruct the full context
     // of the original rendering (including all unknown context provider
     // elements) for a subtree of the original component tree.
     const ApolloContext = getApolloContext();
-    const html = renderFunction(
-      React.createElement(
-        ApolloContext.Provider,
-        { value: { ...context, renderPromises } },
-        tree
-      )
-    );
 
-    return renderPromises.hasPromises()
-      ? renderPromises.consumeAndAwaitPromises().then(process)
-      : html;
+    return new Promise<string>(resolve => {
+      const element = React.createElement(
+        ApolloContext.Provider,
+        { value: { ...context, renderPromises }},
+        tree,
+      );
+      resolve(renderFunction(element));
+    }).then(html => {
+      return renderPromises.hasPromises()
+        ? renderPromises.consumeAndAwaitPromises().then(process)
+        : html;
+    });
   }
 
   return Promise.resolve().then(process);

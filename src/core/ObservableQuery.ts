@@ -503,8 +503,15 @@ once, rather than every time you call fetchMore.`);
     ) => TData,
   ): void {
     const { queryManager } = this;
-    const previousResult = this.getCurrentQueryResult(false).data;
-    const newResult = mapFn(previousResult!, {
+    const { result } = queryManager.cache.diff<TData>({
+      query: this.options.query,
+      variables: this.variables,
+      previousResult: this.lastResult?.data,
+      returnPartialData: true,
+      optimistic: false,
+    });
+
+    const newResult = mapFn(result!, {
       variables: (this as any).variables,
     });
 

@@ -1887,11 +1887,11 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         error() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
-          expect(queryStore.graphQLErrors).toEqual([graphQLError]);
+          const queryInfo = queryManager["queries"].get(observable.queryId);
+          expect(queryInfo.graphQLErrors).toEqual([graphQLError]);
 
           observable.resetQueryStoreErrors();
-          expect(queryStore.graphQLErrors).toEqual([]);
+          expect(queryInfo.graphQLErrors).toEqual([]);
 
           resolve();
         }
@@ -1909,10 +1909,10 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         next() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
-          queryStore.networkError = networkError;
+          const queryInfo = queryManager["queries"].get(observable.queryId);
+          queryInfo.networkError = networkError;
           observable.resetQueryStoreErrors();
-          expect(queryStore.networkError).toBeUndefined();
+          expect(queryInfo.networkError).toBeUndefined();
           resolve();
         }
       });

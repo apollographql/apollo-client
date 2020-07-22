@@ -357,8 +357,25 @@ export class QueryManager<TStore> {
     return store;
   }
 
-  public getQueryStoreValue(queryId: string): QueryStoreValue | undefined {
-    return queryId ? this.queries.get(queryId) : undefined;
+  public resetErrors(queryId: string) {
+    const queryInfo = this.queries.get(queryId);
+    if (queryInfo) {
+      queryInfo.networkError = undefined;
+      queryInfo.graphQLErrors = [];
+    }
+  }
+
+  public getNetworkStatus(queryId: string): NetworkStatus {
+    const queryInfo = this.queries.get(queryId);
+    const status = queryInfo && queryInfo.networkStatus;
+    return status || NetworkStatus.ready;
+  }
+
+  public setNetworkStatus(queryId: string, status: NetworkStatus) {
+    const queryInfo = this.queries.get(queryId);
+    if (queryInfo) {
+      queryInfo.networkStatus = status;
+    }
   }
 
   private transformCache = new (canUseWeakMap ? WeakMap : Map)<
@@ -1065,16 +1082,6 @@ export class QueryManager<TStore> {
       ...newContext,
       clientAwareness: this.clientAwareness,
     };
-  }
-
-  public checkInFlight(queryId: string): boolean {
-    const query = this.getQueryStoreValue(queryId);
-    return (
-      !!query &&
-      !!query.networkStatus &&
-      query.networkStatus !== NetworkStatus.ready &&
-      query.networkStatus !== NetworkStatus.error
-    );
   }
 }
 

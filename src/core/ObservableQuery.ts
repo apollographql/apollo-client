@@ -120,22 +120,8 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(): ApolloQueryResult<TData> {
-    const {
-      lastResult,
-      lastError,
-      options: { fetchPolicy },
-    } = this;
-
-    const isNetworkFetchPolicy =
-      fetchPolicy === 'network-only' ||
-      fetchPolicy === 'no-cache';
-
-    const networkStatus =
-      lastError ? NetworkStatus.error :
-      lastResult ? lastResult.networkStatus :
-      isNetworkFetchPolicy ? NetworkStatus.loading :
-      NetworkStatus.ready;
-
+    const { lastResult, lastError } = this;
+    const networkStatus = this.queryManager.getNetworkStatus(this.queryId);
     const result: ApolloQueryResult<TData> = {
       ...(lastError ? { error: lastError } : lastResult),
       loading: isNetworkRequestInFlight(networkStatus),
@@ -148,16 +134,6 @@ export class ObservableQuery<
 
     const { data, partial } = this.getCurrentQueryResult();
     Object.assign(result, { data, partial });
-
-    const queryStoreValue = this.queryManager.getQueryStoreValue(this.queryId);
-    if (queryStoreValue) {
-      const { networkStatus } = queryStoreValue;
-
-      Object.assign(result, {
-        loading: isNetworkRequestInFlight(networkStatus),
-        networkStatus,
-      });
-    }
 
     this.updateLastResult(result);
 
@@ -188,11 +164,7 @@ export class ObservableQuery<
   }
 
   public resetQueryStoreErrors() {
-    const queryStore = this.queryManager.getQueryStoreValue(this.queryId);
-    if (queryStore) {
-      queryStore.networkError = undefined;
-      queryStore.graphQLErrors = [];
-    }
+    this.queryManager.resetErrors(this.queryId);
   }
 
   /**
@@ -260,21 +232,20 @@ export class ObservableQuery<
 
     if (combinedOptions.notifyOnNetworkStatusChange) {
       const currentResult = this.getCurrentResult();
-      const queryInfo = this.queryManager.getQueryStoreValue(this.queryId);
-      if (queryInfo) {
-        // If we neglect to update queryInfo.networkStatus here,
-        // getCurrentResult may return a loading:false result while
-        // fetchMore is in progress, since getCurrentResult also consults
-        // queryInfo.networkStatus. Note: setting queryInfo.networkStatus
-        // to an in-flight status means that QueryInfo#shouldNotify will
-        // return false while fetchMore is in progress, which is why we
-        // call this.reobserve() explicitly in the .finally callback after
-        // fetchMore (below), since the cache write will not automatically
-        // trigger a notification, even though it does trigger a cache
-        // broadcast. This is a good thing, because it means we won't see
-        // intervening query notifications while fetchMore is pending.
-        queryInfo.networkStatus = NetworkStatus.fetchMore;
-      }
+
+      // If we neglect to update queryInfo.networkStatus here,
+      // getCurrentResult may return a loading:false result while
+      // fetchMore is in progress, since getCurrentResult also consults
+      // queryInfo.networkStatus. Note: setting queryInfo.networkStatus
+      // to an in-flight status means that QueryInfo#shouldNotify will
+      // return false while fetchMore is in progress, which is why we
+      // call this.reobserve() explicitly in the .finally callback after
+      // fetchMore (below), since the cache write will not automatically
+      // trigger a notification, even though it does trigger a cache
+      // broadcast. This is a good thing, because it means we won't see
+      // intervening query notifications while fetchMore is pending.
+      this.queryManager.setNetworkStatus(this.queryId, NetworkStatus.fetchMore);
+
       // Simulate a loading result for the original query with
       // networkStatus === NetworkStatus.fetchMore.
       this.observer.next!({
@@ -619,7 +590,9 @@ once, rather than every time you call fetchMore.`);
         );
       },
       // Avoid polling during SSR and when the query is already in flight.
-      !queryManager.ssrMode && (() => !queryManager.checkInFlight(queryId)),
+      !queryManager.ssrMode && (
+        () => !isNetworkRequestInFlight(
+          queryManager.getNetworkStatus(queryId))),
     );
   }
 

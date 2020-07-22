@@ -477,13 +477,7 @@ once, rather than every time you call fetchMore.`);
       };
     }
 
-    let { result, complete } = this.queryManager.cache.diff<TData>({
-      query: this.options.query,
-      variables: this.variables,
-      previousResult: this.lastResult?.data,
-      returnPartialData: true,
-      optimistic,
-    });
+    let { result, complete } = this.queryInfo.getDiff();
 
     if (lastData &&
         !this.lastError &&

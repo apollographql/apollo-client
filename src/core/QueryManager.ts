@@ -456,12 +456,16 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
+    const queryInfo = new QueryInfo(this.cache);
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
+      queryInfo,
       options,
     });
 
-    this.getQuery(observable.queryId).init({
+    this.queries.set(observable.queryId, queryInfo);
+
+    queryInfo.init({
       document: options.query,
       observableQuery: observable,
       variables: options.variables,

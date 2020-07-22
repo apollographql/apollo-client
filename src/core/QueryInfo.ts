@@ -133,6 +133,7 @@ export class QueryInfo {
     (this as any).observableQuery = oq;
 
     if (oq) {
+      oq["queryInfo"] = this;
       this.listeners.add(this.oqListener = () => oq.reobserve());
     } else {
       delete this.oqListener;

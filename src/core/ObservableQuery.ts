@@ -20,6 +20,7 @@ import {
   SubscribeToMoreOptions,
 } from './watchQueryOptions';
 import { Reobserver } from './Reobserver';
+import { QueryInfo } from './QueryInfo';
 
 export interface FetchMoreOptions<
   TData = any,
@@ -62,12 +63,15 @@ export class ObservableQuery<
   private lastResult: ApolloQueryResult<TData>;
   private lastResultSnapshot: ApolloQueryResult<TData>;
   private lastError: ApolloError;
+  private queryInfo: QueryInfo;
 
   constructor({
     queryManager,
+    queryInfo,
     options,
   }: {
     queryManager: QueryManager<any>;
+    queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables>;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) =>
@@ -86,6 +90,8 @@ export class ObservableQuery<
 
     // related classes
     this.queryManager = queryManager;
+
+    this.queryInfo = queryInfo;
   }
 
   public result(): Promise<ApolloQueryResult<TData>> {

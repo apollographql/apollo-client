@@ -965,14 +965,9 @@ export class QueryManager<TStore> {
       variables,
       lastRequestId: this.generateRequestId(),
       networkStatus,
-    }).updateWatch(variables);
-
-    const readCache = () => this.cache.diff<any>({
-      query,
-      variables,
-      returnPartialData: true,
-      optimistic: true,
     });
+
+    const readCache = () => queryInfo.getDiff(variables);
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,

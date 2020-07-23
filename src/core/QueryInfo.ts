@@ -176,14 +176,6 @@ export class QueryInfo {
     // QueryInfo.prototype.
     delete this.cancel;
 
-    this.variables =
-    this.networkStatus =
-    this.networkError =
-    this.graphQLErrors =
-    this.lastWatch =
-    this.lastWrittenResult =
-    this.lastWrittenVars = void 0;
-
     const oq = this.observableQuery;
     if (oq) oq.stopPolling();
   }

@@ -413,6 +413,10 @@ automatically broadcast to queries that are listening for changes to that data.
 Consequently, your application's UI will update to reflect newly cached
 values.
 
+#### Gotchas
+
+Keep in mind that in order for `readQuery` to find the query, it must have been executed already, and the call must include the same variables. The cached object returned is immutable. To update data in the cache, create a replacement object to pass to `writeQuery`.
+
 ## Tracking loading and error states
 
 The `useMutation` hook provides mechanisms for tracking the loading and error

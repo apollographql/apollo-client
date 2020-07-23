@@ -326,7 +326,7 @@ export class QueryManager<TStore> {
             }
 
             resolve(storeResult!);
-          });
+          }, reject);
         },
       });
     });

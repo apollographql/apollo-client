@@ -3968,4 +3968,63 @@ describe("type policies", function () {
     // Unchanged because the merge function prefers the existing object.
     expect(cache.extract()).toEqual(snapshot);
   });
+
+  it("can alter the root query __typename", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        RootQuery: {
+          queryType: true,
+        },
+      }
+    });
+
+    const ALL_ITEMS = gql`
+      query Items {
+        __typename
+        items {
+          id
+          query {
+            id
+          }
+        }
+      }
+    `;
+
+    function makeItem(id: number) {
+      return {
+        id,
+        query: {
+          __typename: "Query",
+          id,
+        },
+      };
+    }
+
+    cache.writeQuery({
+      query: ALL_ITEMS,
+      data: {
+        __typename: "RootQuery",
+        items: [
+          makeItem(0),
+          makeItem(1),
+          makeItem(2),
+          makeItem(3),
+        ],
+      },
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+
+    expect(cache.readQuery({
+      query: ALL_ITEMS,
+    })).toEqual({
+      __typename: "RootQuery",
+      items: [
+        makeItem(0),
+        makeItem(1),
+        makeItem(2),
+        makeItem(3),
+      ],
+    });
+  });
 });

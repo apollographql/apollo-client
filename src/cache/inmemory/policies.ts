@@ -372,7 +372,12 @@ export class Policies {
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
       invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      // First, delete any old __typename associated with this rootId from
+      // rootIdsByTypename.
+      if (old) delete this.rootIdsByTypename[old];
+      // Now make this the only __typename that maps to this rootId.
       this.rootIdsByTypename[typename] = rootId;
+      // Finally, update the __typename associated with this rootId.
       this.rootTypenamesById[rootId] = typename;
     }
   }

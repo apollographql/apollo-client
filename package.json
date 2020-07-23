@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.0.2",
+  "version": "3.1.0-pre.0",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -45,7 +45,7 @@
     "bundlesize": "npm run build && bundlesize",
     "prepdist": "node ./config/prepareDist.js",
     "predeploy": "npm run build",
-    "deploy": "cd dist && npm publish"
+    "deploy": "cd dist && npm publish --tag beta"
   },
   "bundlesize": [
     {

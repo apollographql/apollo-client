@@ -33,7 +33,6 @@ import {
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
-  QueryListener,
   ApolloQueryResult,
   OperationVariables,
   MutationQueryReducer,
@@ -525,10 +524,6 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) queryInfo.stop();
-  }
-
-  public addQueryListener(queryId: string, listener: QueryListener) {
-    this.getQuery(queryId).listeners.add(listener);
   }
 
   public clearStore(): Promise<void> {

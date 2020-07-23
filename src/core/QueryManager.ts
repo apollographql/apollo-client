@@ -364,19 +364,6 @@ export class QueryManager<TStore> {
     }
   }
 
-  public getNetworkStatus(queryId: string): NetworkStatus {
-    const queryInfo = this.queries.get(queryId);
-    const status = queryInfo && queryInfo.networkStatus;
-    return status || NetworkStatus.ready;
-  }
-
-  public setNetworkStatus(queryId: string, status: NetworkStatus) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) {
-      queryInfo.networkStatus = status;
-    }
-  }
-
   private transformCache = new (canUseWeakMap ? WeakMap : Map)<
     DocumentNode,
     Readonly<{

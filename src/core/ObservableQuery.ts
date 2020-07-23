@@ -127,7 +127,7 @@ export class ObservableQuery<
 
   public getCurrentResult(): ApolloQueryResult<TData> {
     const { lastResult, lastError } = this;
-    const networkStatus = this.queryManager.getNetworkStatus(this.queryId);
+    const networkStatus = this.queryInfo.networkStatus || NetworkStatus.ready;
     const result: ApolloQueryResult<TData> = {
       ...(lastError ? { error: lastError } : lastResult),
       loading: isNetworkRequestInFlight(networkStatus),
@@ -250,7 +250,7 @@ export class ObservableQuery<
       // trigger a notification, even though it does trigger a cache
       // broadcast. This is a good thing, because it means we won't see
       // intervening query notifications while fetchMore is pending.
-      this.queryManager.setNetworkStatus(this.queryId, NetworkStatus.fetchMore);
+      this.queryInfo.networkStatus = NetworkStatus.fetchMore;
 
       // Simulate a loading result for the original query with
       // networkStatus === NetworkStatus.fetchMore.
@@ -597,8 +597,7 @@ once, rather than every time you call fetchMore.`);
       },
       // Avoid polling during SSR and when the query is already in flight.
       !queryManager.ssrMode && (
-        () => !isNetworkRequestInFlight(
-          queryManager.getNetworkStatus(queryId))),
+        () => !isNetworkRequestInFlight(this.queryInfo.networkStatus))
     );
   }
 

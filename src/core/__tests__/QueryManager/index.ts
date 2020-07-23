@@ -191,8 +191,15 @@ describe('QueryManager', () => {
 
   function getCurrentQueryResult<TData, TVars>(
     observableQuery: ObservableQuery<TData, TVars>,
-  ): ReturnType<ObservableQuery<TData, TVars>["getCurrentQueryResult"]> {
-    return (observableQuery as any).getCurrentQueryResult();
+  ): {
+    data?: TData;
+    partial: boolean;
+  } {
+    const result = observableQuery.getCurrentResult();
+    return {
+      data: result.data,
+      partial: !!result.partial,
+    };
   }
 
   itAsync('handles GraphQL errors', (resolve, reject) => {

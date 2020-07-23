@@ -138,8 +138,28 @@ export class ObservableQuery<
       return result;
     }
 
-    const { data, partial } = this.getCurrentQueryResult();
-    Object.assign(result, { data, partial });
+    const { fetchPolicy } = this.options;
+    if (fetchPolicy === 'no-cache' ||
+        fetchPolicy === 'network-only') {
+      result.partial = false;
+    } else if (
+      !result.data ||
+      // If this.options.query has @client(always: true) fields, we cannot
+      // trust result.data, since it was read from the cache without
+      // running local resolvers (and it's too late to run resolvers now,
+      // since we must return a result synchronously). TODO In the future
+      // (after Apollo Client 3.0), we should find a way to trust
+      // this.lastResult in more cases, and read from the cache only in
+      // cases when no result has been received yet.
+      !this.queryManager.transform(this.options.query).hasForcedResolvers
+    ) {
+      const diff = this.queryInfo.getDiff();
+      result.partial = !diff.complete;
+      result.data = (
+        diff.complete ||
+        this.options.returnPartialData
+      ) ? diff.result : void 0;
+    }
 
     this.updateLastResult(result);
 
@@ -459,43 +479,6 @@ once, rather than every time you call fetchMore.`);
 
       queryManager.broadcastQueries();
     }
-  }
-
-  private getCurrentQueryResult(
-    optimistic: boolean = true,
-  ): {
-    data?: TData;
-    partial: boolean;
-  } {
-    const { fetchPolicy } = this.options;
-    const lastData = this.lastResult?.data;
-    if (fetchPolicy === 'no-cache' ||
-        fetchPolicy === 'network-only') {
-      return {
-        data: lastData,
-        partial: false,
-      };
-    }
-
-    let { result, complete } = this.queryInfo.getDiff();
-
-    if (lastData &&
-        !this.lastError &&
-        // If this.options.query has @client(always: true) fields, we
-        // cannot trust result, since it was read from the cache without
-        // running local resolvers (and it's too late to run resolvers
-        // now, since we must return a result synchronously). TODO In the
-        // future (after Apollo Client 3.0), we should find a way to trust
-        // this.lastResult in more cases, and read from the cache only in
-        // cases when no result has been received yet.
-        this.queryManager.transform(this.options.query).hasForcedResolvers) {
-      result = lastData;
-    }
-
-    return {
-      data: (complete || this.options.returnPartialData) ? result : void 0,
-      partial: !complete,
-    };
   }
 
   public startPolling(pollInterval: number) {

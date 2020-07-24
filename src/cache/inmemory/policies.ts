@@ -198,12 +198,13 @@ export const defaultDataIdFromObject = (
         _id !== void 0 ? { _id } :
         void 0;
     }
-    const idValue = id || _id;
-    if (idValue !== void 0) {
+    // If there is no object.id, fall back to object._id.
+    if (id === void 0) id = _id;
+    if (id !== void 0) {
       return `${__typename}:${(
-        typeof idValue === "number" ||
-        typeof idValue === "string"
-      ) ? idValue : JSON.stringify(idValue)}`;
+        typeof id === "number" ||
+        typeof id === "string"
+      ) ? id : JSON.stringify(id)}`;
     }
   }
 };
@@ -372,7 +373,12 @@ export class Policies {
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
       invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      // First, delete any old __typename associated with this rootId from
+      // rootIdsByTypename.
+      if (old) delete this.rootIdsByTypename[old];
+      // Now make this the only __typename that maps to this rootId.
       this.rootIdsByTypename[typename] = rootId;
+      // Finally, update the __typename associated with this rootId.
       this.rootTypenamesById[rootId] = typename;
     }
   }

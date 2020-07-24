@@ -93,30 +93,6 @@ function prepareBundle({
   };
 }
 
-// Resolve indirect imports and exports to the original exporting module,
-// so that more imports are explicitly named (fewer *s), and all source
-// module identifiers have file extensions.
-function resolveESMImportsAndFileExtensions(input, outputDir) {
-  return {
-    input,
-    external(id) {
-      return externalPackages.has(id);
-    },
-    output: {
-      dir: outputDir,
-      format: 'esm',
-      sourcemap: true,
-    },
-    // By setting preserveModules to true, we're making sure Rollup
-    // doesn't attempt to create a single combined ESM bundle with the
-    // final result of running this job.
-    preserveModules: true,
-    plugins: [
-      nodeResolve(),
-    ],
-  };
-}
-
 export default [
   ...entryPoints.map(prepareBundle),
   // Convert the ESM entry point to a single CJS bundle.
@@ -128,5 +104,4 @@ export default [
   prepareCJSMinified(
     './dist/apollo-client.cjs.js',
   ),
-  resolveESMImportsAndFileExtensions(packageJson.module, distDir),
 ];

@@ -2,7 +2,7 @@
  * This jscodeshift transform takes care of some of the rote
  * things you'll need to do while migrating from v2 to v3.
  * Currently it:
- *   - Replaces @apollo/react-hooks imports with
+ *   - Replaces apollo-client imports with
  *     @apollo/client
  *   - Removes gql imports from graphql-tag and replaces them
  *     with an import from @apollo/client
@@ -17,33 +17,14 @@ export default function transformer(file, api) {
 
     const source = j(file.source);
 
-    // Replace `apollo-client` with `@apollo/client`
     renameImport('apollo-client', '@apollo/client');
 
-    // TODO: Create if @apollo/client doesn't exist.
-    // source.find(j.Program).replaceWith(p => ({
-    //     ...p.value,
-    //     body: [
-    //         {
-    //             type: 'ImportDeclaration',
-    //             specifiers: specifiers.map(
-    //                 importSpecifier,
-    //             ),
-    //             source: {
-    //                 type: 'Literal',
-    //                 value: '@apollo/client',
-    //             },
-    //         },
-    //         ...p.value.body,
-    //     ],
-    // }));
-
-    moveSpecifiersToApolloClient('@apollo/react-hooks', []);
+    moveSpecifiersToApolloClient('@apollo/react-hooks');
     moveSpecifiersToApolloClient('apollo-cache-inmemory', ['InMemoryCache']);
-    moveSpecifiersToApolloClient('graphql-tag', []);
-    moveSpecifiersToApolloClient('apollo-link', []);
-    moveSpecifiersToApolloClient('apollo-link-http', []);
-    moveSpecifiersToApolloClient('apollo-link-http-common', []);
+    moveSpecifiersToApolloClient('graphql-tag');
+    moveSpecifiersToApolloClient('apollo-link');
+    moveSpecifiersToApolloClient('apollo-link-http');
+    moveSpecifiersToApolloClient('apollo-link-http-common');
 
     renameImport('@apollo/react-components', '@apollo/client/react/components');
     renameImport('@apollo/react-hoc', '@apollo/client/react/hoc');
@@ -54,22 +35,25 @@ export default function transformer(file, api) {
 
     function moveSpecifiersToApolloClient(
         moduleName,
-        specifiers,
+        specifiers = [],
     ) {
         const moduleImport = getImport(moduleName);
-        moduleImport.remove();
+
         if (moduleImport.size()) {
+            //
             const clientImports = getImport('@apollo/client');
             if (clientImports.size()) {
                 clientImports.replaceWith(p => ({
                     ...p.value,
                     specifiers: [
-                        ...specifiers.map(importSpecifier),
                         ...p.value.specifiers,
+                        ...(specifiers.length ? specifiers.map(importSpecifier) : moduleImport.get().value.specifiers),
                     ],
                 }));
             }
         }
+
+        moduleImport.remove();
     }
 
     function renameImport(oldModuleName, newModuleName) {
@@ -99,7 +83,3 @@ function importSpecifier(name) {
         },
     };
 }
-
-// Warn about apollo-boost?
-// Warn about graphql-anywhere?
-// Warn about graphql-tag?

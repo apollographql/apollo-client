@@ -4782,7 +4782,9 @@ describe('QueryManager', () => {
   });
 
   describe('awaitRefetchQueries', () => {
-    const awaitRefetchTest = ({ awaitRefetchQueries }: MutationBaseOptions) => new Promise((resolve, reject) => {
+    const awaitRefetchTest =
+    ({ awaitRefetchQueries, testQueryError = false }: MutationBaseOptions & { testQueryError?: boolean }) =>
+    new Promise((resolve, reject) => {
       const query = gql`
         query getAuthors($id: ID!) {
           author(id: $id) {
@@ -4824,6 +4826,8 @@ describe('QueryManager', () => {
 
       const variables = { id: '1234' };
 
+      const refetchError = testQueryError ? new Error('Refetch failed') : undefined;
+
       const queryManager = mockQueryManager(
         reject,
         {
@@ -4837,6 +4841,7 @@ describe('QueryManager', () => {
         {
           request: { query, variables },
           result: { data: secondReqData },
+          error: refetchError,
         },
       );
 
@@ -4846,6 +4851,7 @@ describe('QueryManager', () => {
         notifyOnNetworkStatusChange: false,
       });
 
+      let isRefetchErrorCaught = false;
       let mutationComplete = false;
       return observableToPromise(
         { observable },
@@ -4860,6 +4866,10 @@ describe('QueryManager', () => {
           }
           queryManager.mutate(mutateOptions).then(() => {
             mutationComplete = true;
+          })
+          .catch(error => {
+            expect(error).toBeDefined();
+            isRefetchErrorCaught = true;
           });
         },
         result => {
@@ -4873,7 +4883,21 @@ describe('QueryManager', () => {
           );
           expect(stripSymbols(result.data)).toEqual(secondReqData);
         },
-      ).then(resolve, reject);
+      )
+      .then(resolve)
+      .catch(error => {
+        const isRefetchError = awaitRefetchQueries && testQueryError &&
+          error.message.includes(refetchError?.message);
+
+        if (isRefetchError) {
+          return setTimeout(() => {
+            expect(isRefetchErrorCaught).toBe(true);
+            resolve();
+          }, 10);
+        }
+
+        reject(error);
+      });
     });
 
     it(
@@ -4893,6 +4917,12 @@ describe('QueryManager', () => {
         'the mutation, when `awaitRefetchQueries` is `true`',
       () => awaitRefetchTest({ awaitRefetchQueries: true })
     );
+
+    it(
+      'should allow catching errors from `refetchQueries` when ' +
+        '`awaitRefetchQueries` is `true`',
+      () => awaitRefetchTest({ awaitRefetchQueries: true, testQueryError: true })
+    )
   });
 
   describe('store watchers', () => {

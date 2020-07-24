@@ -1,29 +1,15 @@
 import * as fs from "fs";
 import * as path from "path";
-import glob = require("glob");
+import { distDir, eachFile, reparse, reprint } from './helpers';
 
-const distDir = path.resolve(__dirname, "..", "dist");
-
-glob(`${distDir}/**/*.js`, (error, files) => {
-  if (error) throw error;
-
-  files.sort().forEach(file => {
-    const relPath = path.relative(distDir, file);
-
-    // Outside the distDir, somehow.
-    if (relPath.startsWith("../")) return;
-
-    // Avoid re-transforming CommonJS bundle files.
-    if (relPath.endsWith(".cjs.js")) return;
-
-    const source = fs.readFileSync(file, "utf8");
-    const output = transform(source, relPath);
-    if (source !== output) {
-      console.log("transformed invariants in " + relPath);
-      fs.writeFileSync(file, output, "utf8");
-    }
-  });
-
+eachFile(distDir, (file, relPath) => {
+  const source = fs.readFileSync(file, "utf8");
+  const output = transform(source, relPath);
+  if (source !== output) {
+    console.log("Transformed invariants in " + relPath);
+    fs.writeFileSync(file, output, "utf8");
+  }
+}).then(() => {
   fs.writeFileSync(
     path.join(distDir, "invariantErrorCodes.js"),
     recast.print(errorCodeManifest, {
@@ -33,7 +19,6 @@ glob(`${distDir}/**/*.js`, (error, files) => {
 });
 
 import * as recast from "recast";
-import * as parser from "recast/parsers/babel";
 const b = recast.types.builders;
 const n = recast.types.namedTypes;
 type Node = recast.types.namedTypes.Node;
@@ -79,7 +64,7 @@ function transform(code: string, file: string) {
     return code;
   }
 
-  const ast = recast.parse(code, { parser });
+  const ast = reparse(code);
 
   recast.visit(ast, {
     visitCallExpression(path) {
@@ -136,7 +121,7 @@ function transform(code: string, file: string) {
     }
   });
 
-  return recast.print(ast).code;
+  return reprint(ast);
 }
 
 function isIdWithName(node: Node, ...names: string[]) {

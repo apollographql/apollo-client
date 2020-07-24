@@ -10,7 +10,6 @@ eachFile(distDir, (file, relPath) => new Promise((resolve, reject) => {
     if (source === output) {
       resolve(file);
     } else {
-      console.log("Resolved module identifiers in " + relPath);
       fs.writeFile(file, output, "utf8", error => {
         error ? reject(error) : resolve(file);
       });
@@ -70,9 +69,10 @@ function normalizeId(id: string, file: string) {
   const absPath = resolve.sync(id, {
     basedir,
     packageFilter(pkg) {
-      if (pkg.module) {
-        return { ...pkg, main: pkg.module };
-      }
+      return pkg.module ? {
+        ...pkg,
+        main: pkg.module,
+      } : pkg;
     },
   });
   const relPath = path.relative(basedir, absPath);

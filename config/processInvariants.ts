@@ -6,7 +6,6 @@ eachFile(distDir, (file, relPath) => {
   const source = fs.readFileSync(file, "utf8");
   const output = transform(source, relPath);
   if (source !== output) {
-    console.log("Transformed invariants in " + relPath);
     fs.writeFileSync(file, output, "utf8");
   }
 }).then(() => {

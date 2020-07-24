@@ -2,6 +2,10 @@
 
 exports[`type policies can alter the root query __typename 1`] = `
 Object {
+  "Query:0": Object {
+    "__typename": "Query",
+    "id": 0,
+  },
   "Query:1": Object {
     "__typename": "Query",
     "id": 1,
@@ -20,8 +24,7 @@ Object {
       Object {
         "id": 0,
         "query": Object {
-          "__typename": "Query",
-          "id": 0,
+          "__ref": "Query:0",
         },
       },
       Object {

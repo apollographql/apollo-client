@@ -198,12 +198,13 @@ export const defaultDataIdFromObject = (
         _id !== void 0 ? { _id } :
         void 0;
     }
-    const idValue = id || _id;
-    if (idValue !== void 0) {
+    // If there is no object.id, fall back to object._id.
+    if (id === void 0) id = _id;
+    if (id !== void 0) {
       return `${__typename}:${(
-        typeof idValue === "number" ||
-        typeof idValue === "string"
-      ) ? idValue : JSON.stringify(idValue)}`;
+        typeof id === "number" ||
+        typeof id === "string"
+      ) ? id : JSON.stringify(id)}`;
     }
   }
 };

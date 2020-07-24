@@ -194,6 +194,10 @@ export class QueryInfo {
   private lastWatch?: Cache.WatchOptions;
 
   private updateWatch(variables = this.variables) {
+    const oq = this.observableQuery;
+    if (oq && oq.options.fetchPolicy === "no-cache") {
+      return;
+    }
     if (!this.lastWatch ||
         this.lastWatch.query !== this.document ||
         !equal(variables, this.lastWatch.variables)) {

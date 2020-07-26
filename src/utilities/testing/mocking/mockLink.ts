@@ -19,11 +19,14 @@ import {
 
 export type ResultFunction<T> = () => T;
 
-export interface MockedResponse<TData = Record<string, any>> {
+export type VariableMatcher<V> = (variables: V) => boolean;
+
+export interface MockedResponse<TData = Record<string, any>, TVariables = Record<string, any>> {
   request: GraphQLRequest;
   result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
   error?: Error;
   delay?: number;
+  variableMatcher?: VariableMatcher<TVariables>,
   newData?: ResultFunction<FetchResult>;
 }
 

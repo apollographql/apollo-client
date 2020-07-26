@@ -94,6 +94,57 @@ describe('General use', () => {
     return wait().then(resolve, reject);
   });
 
+  itAsync('should pass the variables to the variableMatcher', async (resolve, reject) => {
+    function Component({ ...variables }: Variables) {
+      useQuery<Data, Variables>(query, { variables });
+      return null;
+    }
+
+    const mock2: MockedResponse<Data, Variables> = {
+      request: {
+        query
+      },
+      variableMatcher: jest.fn().mockReturnValue(true),
+      result: { data: { user } }
+    };
+
+    render(
+      <MockedProvider mocks={[mock2]}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    return wait(() => {
+      expect(mock2.variableMatcher as jest.Mock).toHaveBeenCalledWith(variables);
+    }).then(resolve, reject);
+  });
+
+  itAsync('should use a mock if the variableMatcher returns true', async (resolve, reject) => {
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        expect(data!.user).toMatchSnapshot();
+      }
+      return null;
+    }
+
+    const mock2: MockedResponse<Data, Variables> = {
+      request: {
+        query
+      },
+      variableMatcher: (v: Variables) => v.username === variables.username,
+      result: { data: { user } }
+    };
+
+    render(
+      <MockedProvider mocks={[mock2]}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    return wait().then(resolve, reject);
+  });
+
   itAsync('should allow querying with the typename', async (resolve, reject) => {
     function Component({ username }: Variables) {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
@@ -162,6 +213,33 @@ describe('General use', () => {
     render(
       <MockedProvider link={link}>
         <Component {...variables2} />
+      </MockedProvider>
+    );
+
+    return wait(() => {
+      expect(errorThrown).toBeTruthy();
+    }).then(resolve, reject);
+  });
+
+  itAsync('should error if the variableMatcher returns false', async (resolve, reject) => {
+    function Component({ ...variables }: Variables) {
+      useQuery<Data, Variables>(query, { variables });
+      return null;
+    }
+
+    const mock2: MockedResponse<Data, Variables> = {
+      request: {
+        query
+      },
+      variableMatcher: () => false,
+      result: { data: { user } }
+    };
+
+    const link = ApolloLink.from([errorLink, new MockLink([mock2])]);
+
+    render(
+      <MockedProvider link={link}>
+        <Component {...variables} />
       </MockedProvider>
     );
 
@@ -294,6 +372,34 @@ describe('General use', () => {
     ];
 
     const link = ApolloLink.from([errorLink, new MockLink(mocksDifferentQuery)]);
+
+    render(
+      <MockedProvider link={link}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    return wait(() => {
+      expect(errorThrown).toBeTruthy();
+    }).then(resolve, reject);
+  });
+
+  itAsync('should error if both variables and a variableMatcher are provided', async (resolve, reject) => {
+    function Component({ ...variables }: Variables) {
+      useQuery<Data, Variables>(query, { variables });
+      return null;
+    }
+
+    const mock2: MockedResponse<Data, Variables> = {
+      request: {
+        query,
+        variables
+      },
+      variableMatcher: () => true,
+      result: { data: { user } }
+    };
+
+    const link = ApolloLink.from([errorLink, new MockLink([mock2])]);
 
     render(
       <MockedProvider link={link}>

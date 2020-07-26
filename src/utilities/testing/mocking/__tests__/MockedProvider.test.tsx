@@ -94,6 +94,31 @@ describe('General use', () => {
     return wait().then(resolve, reject);
   });
 
+  itAsync('should pass the variables to the result function', async (resolve, reject) => {
+    function Component({ ...variables }: Variables) {
+      useQuery<Data, Variables>(query, { variables });
+      return null;
+    }
+
+    const mock2: MockedResponse<Data, Variables> = {
+      request: {
+        query,
+        variables
+      },
+      result: jest.fn().mockResolvedValue({ data: { user } })
+    };
+
+    render(
+      <MockedProvider mocks={[mock2]}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    return wait(() => {
+      expect(mock2.result as jest.Mock).toHaveBeenCalledWith(variables);
+    }).then(resolve, reject);
+  });
+
   itAsync('should pass the variables to the variableMatcher', async (resolve, reject) => {
     function Component({ ...variables }: Variables) {
       useQuery<Data, Variables>(query, { variables });

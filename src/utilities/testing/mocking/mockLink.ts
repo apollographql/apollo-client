@@ -17,13 +17,13 @@ import {
   cloneDeep,
 } from '../../../utilities';
 
-export type ResultFunction<T> = () => T;
+export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
 
 export type VariableMatcher<V> = (variables: V) => boolean;
 
 export interface MockedResponse<TData = Record<string, any>, TVariables = Record<string, any>> {
   request: GraphQLRequest;
-  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>,
@@ -100,7 +100,7 @@ export class MockLink extends ApolloLink {
     const { newData } = response!;
 
     if (newData) {
-      response!.result = newData();
+      response!.result = newData(operation.variables);
       this.mockedResponsesByKey[key].push(response!);
     }
 
@@ -121,7 +121,7 @@ export class MockLink extends ApolloLink {
             if (result) {
               observer.next(
                 typeof result === 'function'
-                  ? (result as ResultFunction<FetchResult>)()
+                  ? (result as ResultFunction<FetchResult>)(operation.variables)
                   : result
               );
             }

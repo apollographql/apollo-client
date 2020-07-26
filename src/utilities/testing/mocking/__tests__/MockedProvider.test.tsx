@@ -384,12 +384,7 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should error if both variables and a variableMatcher are provided', async (resolve, reject) => {
-    function Component({ ...variables }: Variables) {
-      useQuery<Data, Variables>(query, { variables });
-      return null;
-    }
-
+  it('should error if both variables and a variableMatcher are provided', () => {
     const mock2: MockedResponse<Data, Variables> = {
       request: {
         query,
@@ -399,17 +394,8 @@ describe('General use', () => {
       result: { data: { user } }
     };
 
-    const link = ApolloLink.from([errorLink, new MockLink([mock2])]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    return wait(() => {
-      expect(errorThrown).toBeTruthy();
-    }).then(resolve, reject);
+    expect(() => new MockLink([mock2]))
+      .toThrow('Mocked response should contain either variableMatcher or request.variables');
   });
 
   it('should pass down props prop in mock as props for the component', () => {

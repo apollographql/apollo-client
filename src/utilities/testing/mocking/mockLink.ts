@@ -78,9 +78,7 @@ export class MockLink extends ApolloLink {
     let responseIndex: number = 0;
     const response = (this.mockedResponsesByKey[key] || []).find(
       (res, index) => {
-        const requestVariables = operation.variables || {};
-        const mockedResponseVariables = res.request.variables || {};
-        if (equal(requestVariables, mockedResponseVariables)) {
+        if (res.variableMatcher && res.variableMatcher(operation.variables)) {
           responseIndex = index;
           return true;
         }
@@ -152,7 +150,23 @@ export class MockLink extends ApolloLink {
     if (query) {
       newMockedResponse.request.query = query;
     }
+    this.normalizeVariableMatching(newMockedResponse);
     return newMockedResponse;
+  }
+
+  private normalizeVariableMatching(mockedResponse: MockedResponse) {
+    const variables = mockedResponse.request.variables;
+    if (mockedResponse.variableMatcher && variables) {
+      throw new Error('Mocked response should contain either variableMatcher or request.variables');
+    }
+
+    if (!mockedResponse.variableMatcher) {
+      mockedResponse.variableMatcher = (vars) => {
+        const requestVariables = vars || {};
+        const mockedResponseVariables = variables || {};
+        return equal(requestVariables, mockedResponseVariables);
+      };
+    }
   }
 }
 

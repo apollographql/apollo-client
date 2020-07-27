@@ -191,8 +191,15 @@ describe('QueryManager', () => {
 
   function getCurrentQueryResult<TData, TVars>(
     observableQuery: ObservableQuery<TData, TVars>,
-  ): ReturnType<ObservableQuery<TData, TVars>["getCurrentQueryResult"]> {
-    return (observableQuery as any).getCurrentQueryResult();
+  ): {
+    data?: TData;
+    partial: boolean;
+  } {
+    const result = observableQuery.getCurrentResult();
+    return {
+      data: result.data,
+      partial: !!result.partial,
+    };
   }
 
   itAsync('handles GraphQL errors', (resolve, reject) => {
@@ -2128,6 +2135,7 @@ describe('QueryManager', () => {
             data: {},
             loading: true,
             networkStatus: NetworkStatus.loading,
+            partial: true,
           });
         },
         result => {
@@ -2202,6 +2210,7 @@ describe('QueryManager', () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           data: {},
+          partial: true,
         });
       } else if (count === 2) {
         expect(result).toEqual({
@@ -2220,6 +2229,7 @@ describe('QueryManager', () => {
           data: {
             info: {},
           },
+          partial: true,
         });
       } else if (count === 4) {
         expect(result).toEqual({
@@ -2243,6 +2253,7 @@ describe('QueryManager', () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           data: {},
+          partial: true,
         });
       } else if (count === 2) {
         expect(result).toEqual({

@@ -321,9 +321,6 @@ describe('[queries] observableQuery', () => {
               expect(stripSymbols(allPeople)).toEqual(data.allPeople);
               break;
             case 3:
-              expect(loading).toBe(true);
-              break;
-            case 4:
               expect(loading).toBe(false);
               expect(stripSymbols(allPeople)).toEqual(data.allPeople);
               break;

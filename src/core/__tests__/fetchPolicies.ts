@@ -494,6 +494,7 @@ describe('cache-and-network', function() {
           data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
+          partial: true,
         });
       } else if (count === 3) {
         expect(result).toEqual({
@@ -520,6 +521,7 @@ describe('cache-and-network', function() {
           data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
+          partial: true,
         });
       } else if (count === 7) {
         expect(result).toEqual({

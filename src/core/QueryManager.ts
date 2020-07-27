@@ -33,7 +33,6 @@ import {
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
-  QueryListener,
   ApolloQueryResult,
   OperationVariables,
   MutationQueryReducer,
@@ -357,8 +356,12 @@ export class QueryManager<TStore> {
     return store;
   }
 
-  public getQueryStoreValue(queryId: string): QueryStoreValue | undefined {
-    return queryId ? this.queries.get(queryId) : undefined;
+  public resetErrors(queryId: string) {
+    const queryInfo = this.queries.get(queryId);
+    if (queryInfo) {
+      queryInfo.networkError = undefined;
+      queryInfo.graphQLErrors = [];
+    }
   }
 
   private transformCache = new (canUseWeakMap ? WeakMap : Map)<
@@ -440,12 +443,16 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
+    const queryInfo = new QueryInfo(this.cache);
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
+      queryInfo,
       options,
     });
 
-    this.getQuery(observable.queryId).init({
+    this.queries.set(observable.queryId, queryInfo);
+
+    queryInfo.init({
       document: options.query,
       observableQuery: observable,
       variables: options.variables,
@@ -508,10 +515,6 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) queryInfo.stop();
-  }
-
-  public addQueryListener(queryId: string, listener: QueryListener) {
-    this.getQuery(queryId).listeners.add(listener);
   }
 
   public clearStore(): Promise<void> {
@@ -833,24 +836,6 @@ export class QueryManager<TStore> {
       context = {},
     } = options;
 
-    if (fetchPolicy === "cache-and-network" ||
-        fetchPolicy === "network-only") {
-      // When someone chooses cache-and-network or network-only as their
-      // initial FetchPolicy, they almost certainly do not want future cache
-      // updates to trigger unconditional network requests, which is what
-      // repeatedly applying the cache-and-network or network-only policies
-      // would seem to require. Instead, when the cache reports an update
-      // after the initial network request, subsequent network requests should
-      // be triggered only if the cache result is incomplete. This behavior
-      // corresponds exactly to switching to a cache-first FetchPolicy, so we
-      // modify options.fetchPolicy here for the next fetchQueryObservable
-      // call, using the same options object that the Reobserver always passes
-      // to fetchQueryObservable. Note: if these FetchPolicy transitions get
-      // much more complicated, we might consider using some sort of state
-      // machine to capture the transition rules.
-      options.fetchPolicy = "cache-first";
-    }
-
     const mightUseNetwork =
       fetchPolicy === "cache-first" ||
       fetchPolicy === "cache-and-network" ||
@@ -921,7 +906,27 @@ export class QueryManager<TStore> {
         : fromVariables(normalized.variables!)
     );
 
-    concast.cleanup(() => this.fetchCancelFns.delete(queryId));
+    concast.cleanup(() => {
+      this.fetchCancelFns.delete(queryId);
+
+      if (fetchPolicy === "cache-and-network" ||
+          fetchPolicy === "network-only") {
+        // When someone chooses cache-and-network or network-only as their
+        // initial FetchPolicy, they almost certainly do not want future cache
+        // updates to trigger unconditional network requests, which is what
+        // repeatedly applying the cache-and-network or network-only policies
+        // would seem to require. Instead, when the cache reports an update
+        // after the initial network request, subsequent network requests should
+        // be triggered only if the cache result is incomplete. This behavior
+        // corresponds exactly to switching to a cache-first FetchPolicy, so we
+        // modify options.fetchPolicy here for the next fetchQueryObservable
+        // call, using the same options object that the Reobserver always passes
+        // to fetchQueryObservable. Note: if these FetchPolicy transitions get
+        // much more complicated, we might consider using some sort of state
+        // machine to capture the transition rules.
+        options.fetchPolicy = "cache-first";
+      }
+    });
 
     return concast;
   }
@@ -948,14 +953,9 @@ export class QueryManager<TStore> {
       variables,
       lastRequestId: this.generateRequestId(),
       networkStatus,
-    }).updateWatch(variables);
-
-    const readCache = () => this.cache.diff<any>({
-      query,
-      variables,
-      returnPartialData: true,
-      optimistic: true,
     });
+
+    const readCache = () => queryInfo.getDiff(variables);
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
@@ -975,6 +975,7 @@ export class QueryManager<TStore> {
         data,
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
+        ...(diff.complete ? null : { partial: true }),
       } as ApolloQueryResult<TData>);
 
       if (this.transform(query).hasForcedResolvers) {
@@ -1064,16 +1065,6 @@ export class QueryManager<TStore> {
       ...newContext,
       clientAwareness: this.clientAwareness,
     };
-  }
-
-  public checkInFlight(queryId: string): boolean {
-    const query = this.getQueryStoreValue(queryId);
-    return (
-      !!query &&
-      !!query.networkStatus &&
-      query.networkStatus !== NetworkStatus.ready &&
-      query.networkStatus !== NetworkStatus.error
-    );
   }
 }
 

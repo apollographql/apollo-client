@@ -1176,6 +1176,7 @@ describe('ObservableQuery', () => {
               },
               loading: true,
               networkStatus: NetworkStatus.loading,
+              partial: true,
             });
           } else if (handleCount === 2) {
             expect(result).toEqual({
@@ -1395,8 +1396,8 @@ describe('ObservableQuery', () => {
         });
         expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: dataOne,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
           partial: false,
         });
       }).then(resolve, reject);
@@ -1597,6 +1598,7 @@ describe('ObservableQuery', () => {
               data: dataOne,
               loading: true,
               networkStatus: 1,
+              partial: true,
             });
 
           } else if (handleCount === 2) {
@@ -1885,11 +1887,11 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         error() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
-          expect(queryStore.graphQLErrors).toEqual([graphQLError]);
+          const queryInfo = queryManager["queries"].get(observable.queryId);
+          expect(queryInfo.graphQLErrors).toEqual([graphQLError]);
 
           observable.resetQueryStoreErrors();
-          expect(queryStore.graphQLErrors).toEqual([]);
+          expect(queryInfo.graphQLErrors).toEqual([]);
 
           resolve();
         }
@@ -1907,10 +1909,10 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         next() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
-          queryStore.networkError = networkError;
+          const queryInfo = queryManager["queries"].get(observable.queryId);
+          queryInfo.networkError = networkError;
           observable.resetQueryStoreErrors();
-          expect(queryStore.networkError).toBeUndefined();
+          expect(queryInfo.networkError).toBeUndefined();
           resolve();
         }
       });

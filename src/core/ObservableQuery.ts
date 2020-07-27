@@ -18,15 +18,9 @@ import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  ErrorPolicy,
 } from './watchQueryOptions';
-import { QueryStoreValue } from './QueryInfo';
 import { Reobserver } from './Reobserver';
-
-export type ApolloCurrentQueryResult<T> = ApolloQueryResult<T> & {
-  error?: ApolloError;
-  partial?: boolean;
-};
+import { QueryInfo } from './QueryInfo';
 
 export interface FetchMoreOptions<
   TData = any,
@@ -44,14 +38,6 @@ export interface FetchMoreOptions<
 export interface UpdateQueryOptions<TVariables> {
   variables?: TVariables;
 }
-
-export const hasError = (
-  storeValue: QueryStoreValue,
-  policy: ErrorPolicy = 'none',
-) => storeValue && (
-  storeValue.networkError ||
-  (policy === 'none' && isNonEmptyArray(storeValue.graphQLErrors))
-);
 
 let warnedAboutUpdateQuery = false;
 
@@ -77,12 +63,15 @@ export class ObservableQuery<
   private lastResult: ApolloQueryResult<TData>;
   private lastResultSnapshot: ApolloQueryResult<TData>;
   private lastError: ApolloError;
+  private queryInfo: QueryInfo;
 
   constructor({
     queryManager,
+    queryInfo,
     options,
   }: {
     queryManager: QueryManager<any>;
+    queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables>;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) =>
@@ -101,6 +90,8 @@ export class ObservableQuery<
 
     // related classes
     this.queryManager = queryManager;
+
+    this.queryInfo = queryInfo;
   }
 
   public result(): Promise<ApolloQueryResult<TData>> {
@@ -134,26 +125,11 @@ export class ObservableQuery<
     });
   }
 
-  public getCurrentResult(): ApolloCurrentQueryResult<TData> {
-    const {
-      lastResult,
-      lastError,
-      options: { fetchPolicy },
-    } = this;
-
-    const isNetworkFetchPolicy =
-      fetchPolicy === 'network-only' ||
-      fetchPolicy === 'no-cache';
-
-    const networkStatus =
-      lastError ? NetworkStatus.error :
-      lastResult ? lastResult.networkStatus :
-      isNetworkFetchPolicy ? NetworkStatus.loading :
-      NetworkStatus.ready;
-
-    const result: ApolloCurrentQueryResult<TData> = {
-      data: !lastError && lastResult && lastResult.data || void 0,
-      error: lastError,
+  public getCurrentResult(): ApolloQueryResult<TData> {
+    const { lastResult, lastError } = this;
+    const networkStatus = this.queryInfo.networkStatus || NetworkStatus.ready;
+    const result: ApolloQueryResult<TData> = {
+      ...(lastError ? { error: lastError } : lastResult),
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     };
@@ -162,51 +138,40 @@ export class ObservableQuery<
       return result;
     }
 
-    const { data, partial } = this.getCurrentQueryResult();
-    Object.assign(result, { data, partial });
-
-    const queryStoreValue = this.queryManager.getQueryStoreValue(this.queryId);
-    if (queryStoreValue) {
-      const { networkStatus } = queryStoreValue;
-
-      if (hasError(queryStoreValue, this.options.errorPolicy)) {
-        return Object.assign(result, {
-          data: void 0,
-          networkStatus,
-          error: new ApolloError({
-            graphQLErrors: queryStoreValue.graphQLErrors,
-            networkError: queryStoreValue.networkError,
-          }),
-        });
-      }
-
-      // Variables might have been added dynamically at query time, when
-      // using `@client @export(as: "varname")` for example. When this happens,
-      // the variables have been updated in the query store, but not updated on
-      // the original `ObservableQuery`. We'll update the observable query
-      // variables here to match, so retrieving from the cache doesn't fail.
-      if (queryStoreValue.variables) {
-        this.options.variables = {
-          ...this.options.variables,
-          ...(queryStoreValue.variables as TVariables),
-        };
-      }
-
-      Object.assign(result, {
-        loading: isNetworkRequestInFlight(networkStatus),
-        networkStatus,
-      });
-
-      if (queryStoreValue.graphQLErrors && this.options.errorPolicy === 'all') {
-        result.errors = queryStoreValue.graphQLErrors;
+    const { fetchPolicy = 'cache-first' } = this.options;
+    if (fetchPolicy === 'no-cache' ||
+        fetchPolicy === 'network-only') {
+      result.partial = false;
+    } else if (
+      !result.data ||
+      // If this.options.query has @client(always: true) fields, we cannot
+      // trust result.data, since it was read from the cache without
+      // running local resolvers (and it's too late to run resolvers now,
+      // since we must return a result synchronously). TODO In the future
+      // (after Apollo Client 3.0), we should find a way to trust
+      // this.lastResult in more cases, and read from the cache only in
+      // cases when no result has been received yet.
+      !this.queryManager.transform(this.options.query).hasForcedResolvers
+    ) {
+      const diff = this.queryInfo.getDiff();
+      result.partial = !diff.complete;
+      result.data = (
+        diff.complete ||
+        this.options.returnPartialData
+      ) ? diff.result : void 0;
+      // If the cache diff is complete, and we're using a FetchPolicy that
+      // terminates after a complete cache read, we can assume the next
+      // result we receive will have NetworkStatus.ready and !loading.
+      if (diff.complete &&
+          result.networkStatus === NetworkStatus.loading &&
+          (fetchPolicy === 'cache-first' ||
+           fetchPolicy === 'cache-only')) {
+        result.networkStatus = NetworkStatus.ready;
+        result.loading = false;
       }
     }
 
-    if (partial) {
-      this.resetLastResults();
-    } else {
-      this.updateLastResult(result);
-    }
+    this.updateLastResult(result);
 
     return result;
   }
@@ -235,11 +200,7 @@ export class ObservableQuery<
   }
 
   public resetQueryStoreErrors() {
-    const queryStore = this.queryManager.getQueryStoreValue(this.queryId);
-    if (queryStore) {
-      queryStore.networkError = undefined;
-      queryStore.graphQLErrors = [];
-    }
+    this.queryManager.resetErrors(this.queryId);
   }
 
   /**
@@ -307,21 +268,20 @@ export class ObservableQuery<
 
     if (combinedOptions.notifyOnNetworkStatusChange) {
       const currentResult = this.getCurrentResult();
-      const queryInfo = this.queryManager.getQueryStoreValue(this.queryId);
-      if (queryInfo) {
-        // If we neglect to update queryInfo.networkStatus here,
-        // getCurrentResult may return a loading:false result while
-        // fetchMore is in progress, since getCurrentResult also consults
-        // queryInfo.networkStatus. Note: setting queryInfo.networkStatus
-        // to an in-flight status means that QueryInfo#shouldNotify will
-        // return false while fetchMore is in progress, which is why we
-        // call this.reobserve() explicitly in the .finally callback after
-        // fetchMore (below), since the cache write will not automatically
-        // trigger a notification, even though it does trigger a cache
-        // broadcast. This is a good thing, because it means we won't see
-        // intervening query notifications while fetchMore is pending.
-        queryInfo.networkStatus = NetworkStatus.fetchMore;
-      }
+
+      // If we neglect to update queryInfo.networkStatus here,
+      // getCurrentResult may return a loading:false result while
+      // fetchMore is in progress, since getCurrentResult also consults
+      // queryInfo.networkStatus. Note: setting queryInfo.networkStatus
+      // to an in-flight status means that QueryInfo#shouldNotify will
+      // return false while fetchMore is in progress, which is why we
+      // call this.reobserve() explicitly in the .finally callback after
+      // fetchMore (below), since the cache write will not automatically
+      // trigger a notification, even though it does trigger a cache
+      // broadcast. This is a good thing, because it means we won't see
+      // intervening query notifications while fetchMore is pending.
+      this.queryInfo.networkStatus = NetworkStatus.fetchMore;
+
       // Simulate a loading result for the original query with
       // networkStatus === NetworkStatus.fetchMore.
       this.observer.next!({
@@ -508,8 +468,15 @@ once, rather than every time you call fetchMore.`);
     ) => TData,
   ): void {
     const { queryManager } = this;
-    const previousResult = this.getCurrentQueryResult(false).data;
-    const newResult = mapFn(previousResult!, {
+    const { result } = queryManager.cache.diff<TData>({
+      query: this.options.query,
+      variables: this.variables,
+      previousResult: this.lastResult?.data,
+      returnPartialData: true,
+      optimistic: false,
+    });
+
+    const newResult = mapFn(result!, {
       variables: (this as any).variables,
     });
 
@@ -522,49 +489,6 @@ once, rather than every time you call fetchMore.`);
 
       queryManager.broadcastQueries();
     }
-  }
-
-  private getCurrentQueryResult(
-    optimistic: boolean = true,
-  ): {
-    data?: TData;
-    partial: boolean;
-  } {
-    const { fetchPolicy } = this.options;
-    const lastData = this.lastResult?.data;
-    if (fetchPolicy === 'no-cache' ||
-        fetchPolicy === 'network-only') {
-      return {
-        data: lastData,
-        partial: false,
-      };
-    }
-
-    let { result, complete } = this.queryManager.cache.diff<TData>({
-      query: this.options.query,
-      variables: this.variables,
-      previousResult: this.lastResult?.data,
-      returnPartialData: true,
-      optimistic,
-    });
-
-    if (lastData &&
-        !this.lastError &&
-        // If this.options.query has @client(always: true) fields, we
-        // cannot trust result, since it was read from the cache without
-        // running local resolvers (and it's too late to run resolvers
-        // now, since we must return a result synchronously). TODO In the
-        // future (after Apollo Client 3.0), we should find a way to trust
-        // this.lastResult in more cases, and read from the cache only in
-        // cases when no result has been received yet.
-        this.queryManager.transform(this.options.query).hasForcedResolvers) {
-      result = lastData;
-    }
-
-    return {
-      data: (complete || this.options.returnPartialData) ? result : void 0,
-      partial: !complete,
-    };
   }
 
   public startPolling(pollInterval: number) {
@@ -659,7 +583,8 @@ once, rather than every time you call fetchMore.`);
         );
       },
       // Avoid polling during SSR and when the query is already in flight.
-      !queryManager.ssrMode && (() => !queryManager.checkInFlight(queryId)),
+      !queryManager.ssrMode && (
+        () => !isNetworkRequestInFlight(this.queryInfo.networkStatus))
     );
   }
 

@@ -2,7 +2,7 @@ import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
 import { itAsync, mockSingleLink, subscribeAndCount } from '../testing';
-import { InMemoryCache, InMemoryCacheConfig } from '../cache';
+import { InMemoryCache, InMemoryCacheConfig, FieldMergeFunction } from '../cache';
 import { ApolloClient, NetworkStatus, ObservableQuery } from '../core';
 import { offsetLimitPagination, concatPagination } from '../utilities';
 
@@ -215,9 +215,7 @@ describe('fetchMore on an observable query', () => {
           Query: {
             fields: {
               entry: {
-                merge(_, incoming) {
-                  return incoming;
-                },
+                merge: false,
               },
             },
           },
@@ -414,7 +412,8 @@ describe('fetchMore on an observable query', () => {
     const { merge } = groceriesFieldPolicy;
     groceriesFieldPolicy.merge = function (existing, incoming, options) {
       mergeArgsHistory.push(options.args);
-      return merge!.call(this, existing, incoming, options);
+      return (merge as FieldMergeFunction<any>).call(
+        this, existing, incoming, options);
     };
 
     const cache = new InMemoryCache({
@@ -831,9 +830,7 @@ describe('fetchMore on an observable query with connection', () => {
           Query: {
             fields: {
               entry: {
-                merge(_, incoming) {
-                  return incoming;
-                },
+                merge: false,
               },
             },
           },

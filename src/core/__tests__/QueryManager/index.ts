@@ -2167,9 +2167,7 @@ describe('QueryManager', () => {
         Query: {
           fields: {
             info: {
-              merge(_, incoming) {
-                return incoming;
-              },
+              merge: false,
             },
           },
         },

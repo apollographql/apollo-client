@@ -876,9 +876,7 @@ describe('Cache', () => {
               d: {
                 // Deliberately silence "Cache data may be lost..."
                 // warnings by unconditionally favoring the incoming data.
-                merge(_, incoming) {
-                  return incoming;
-                },
+                merge: false,
               },
             },
           },

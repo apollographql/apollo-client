@@ -3267,6 +3267,10 @@ describe("type policies", function () {
         },
       });
 
+      testForceMerges(cache);
+    });
+
+    function testForceMerges(cache: InMemoryCache) {
       const queryWithAuthorName = gql`
         query {
           currentlyReading {
@@ -3443,6 +3447,56 @@ describe("type policies", function () {
           },
         },
       });
+    }
+
+    // Same as previous test, except with merge:true for Book.author.
+    it("can force merging with merge: true", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+            fields: {
+              author: {
+                merge: true,
+              },
+            },
+          },
+
+          Author: {
+            keyFields: false,
+            fields: {
+              books: {
+                merge(existing: any[], incoming: any[], {
+                  isReference,
+                }) {
+                  const merged = existing ? existing.slice(0) : [];
+                  const seen = new Set<string>();
+                  if (existing) {
+                    existing.forEach(book => {
+                      if (isReference(book)) {
+                        seen.add(book.__ref);
+                      }
+                    });
+                  }
+                  incoming.forEach(book => {
+                    if (isReference(book)) {
+                      if (!seen.has(book.__ref)) {
+                        merged.push(book);
+                        seen.add(book.__ref);
+                      }
+                    } else {
+                      merged.push(book);
+                    }
+                  });
+                  return merged;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      testForceMerges(cache);
     });
   });
 

@@ -215,9 +215,7 @@ describe('fetchMore on an observable query', () => {
           Query: {
             fields: {
               entry: {
-                merge(_, incoming) {
-                  return incoming;
-                },
+                merge: false,
               },
             },
           },
@@ -414,7 +412,7 @@ describe('fetchMore on an observable query', () => {
     const { merge } = groceriesFieldPolicy;
     groceriesFieldPolicy.merge = function (existing, incoming, options) {
       mergeArgsHistory.push(options.args);
-      return merge!.call(this, existing, incoming, options);
+      return (merge as any).call(this, existing, incoming, options);
     };
 
     const cache = new InMemoryCache({
@@ -831,9 +829,7 @@ describe('fetchMore on an observable query with connection', () => {
           Query: {
             fields: {
               entry: {
-                merge(_, incoming) {
-                  return incoming;
-                },
+                merge: false,
               },
             },
           },

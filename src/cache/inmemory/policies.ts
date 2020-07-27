@@ -98,7 +98,7 @@ export type FieldPolicy<
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
-  merge?: FieldMergeFunction<TExisting, TIncoming>;
+  merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
 
 type StorageType = Record<string, any>;
@@ -211,6 +211,12 @@ export const defaultDataIdFromObject = (
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
+
+// These merge functions can be selected by specifying merge:true or
+// merge:false in a field policy.
+const mergeTrueFn: FieldMergeFunction<any> =
+  (existing, incoming, { mergeObjects }) => mergeObjects(existing, incoming);
+const mergeFalseFn: FieldMergeFunction<any> = (_, incoming) => incoming;
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -349,7 +355,16 @@ export class Policies {
               existing.keyFn;
 
             if (typeof read === "function") existing.read = read;
-            if (typeof merge === "function") existing.merge = merge;
+
+            existing.merge =
+              typeof merge === "function" ? merge :
+              // Pass merge:true as a shorthand for a merge implementation
+              // that returns options.mergeObjects(existing, incoming).
+              merge === true ? mergeTrueFn :
+              // Pass merge:false to make incoming always replace existing
+              // without any warnings about data clobbering.
+              merge === false ? mergeFalseFn :
+              existing.merge;
           }
 
           if (existing.read && existing.merge) {

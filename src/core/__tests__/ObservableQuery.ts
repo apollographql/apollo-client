@@ -1396,8 +1396,8 @@ describe('ObservableQuery', () => {
         });
         expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: dataOne,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
           partial: false,
         });
       }).then(resolve, reject);

@@ -138,7 +138,7 @@ export class ObservableQuery<
       return result;
     }
 
-    const { fetchPolicy } = this.options;
+    const { fetchPolicy = 'cache-first' } = this.options;
     if (fetchPolicy === 'no-cache' ||
         fetchPolicy === 'network-only') {
       result.partial = false;
@@ -159,6 +159,16 @@ export class ObservableQuery<
         diff.complete ||
         this.options.returnPartialData
       ) ? diff.result : void 0;
+      // If the cache diff is complete, and we're using a FetchPolicy that
+      // terminates after a complete cache read, we can assume the next
+      // result we receive will have NetworkStatus.ready and !loading.
+      if (diff.complete &&
+          result.networkStatus === NetworkStatus.loading &&
+          (fetchPolicy === 'cache-first' ||
+           fetchPolicy === 'cache-only')) {
+        result.networkStatus = NetworkStatus.ready;
+        result.loading = false;
+      }
     }
 
     this.updateLastResult(result);

@@ -88,6 +88,7 @@ export type KeyArgsFunction = (
     typename: string;
     fieldName: string;
     field: FieldNode | null;
+    variables?: Record<string, any>;
   },
 ) => KeySpecifier | ReturnType<IdGetter>;
 
@@ -492,6 +493,7 @@ export class Policies {
         typename,
         fieldName,
         field: fieldSpec.field || null,
+        variables: fieldSpec.variables,
       };
       const args = argsFromFieldSpecifier(fieldSpec);
       while (keyFn) {

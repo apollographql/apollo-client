@@ -624,6 +624,9 @@ describe("type policies", function () {
                   expect(context.typename).toBe("Thread");
                   expect(context.fieldName).toBe("comments");
                   expect(context.field!.name.value).toBe("comments");
+                  expect(context.variables).toEqual({
+                    unused: "check me",
+                  });
 
                   if (typeof args!.limit === "number") {
                     if (typeof args!.offset === "number") {
@@ -681,6 +684,9 @@ describe("type policies", function () {
               author: { name: "Hobbes" },
             }],
           },
+        },
+        variables: {
+          unused: "check me",
         },
       });
 

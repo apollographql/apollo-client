@@ -836,24 +836,6 @@ export class QueryManager<TStore> {
       context = {},
     } = options;
 
-    if (fetchPolicy === "cache-and-network" ||
-        fetchPolicy === "network-only") {
-      // When someone chooses cache-and-network or network-only as their
-      // initial FetchPolicy, they almost certainly do not want future cache
-      // updates to trigger unconditional network requests, which is what
-      // repeatedly applying the cache-and-network or network-only policies
-      // would seem to require. Instead, when the cache reports an update
-      // after the initial network request, subsequent network requests should
-      // be triggered only if the cache result is incomplete. This behavior
-      // corresponds exactly to switching to a cache-first FetchPolicy, so we
-      // modify options.fetchPolicy here for the next fetchQueryObservable
-      // call, using the same options object that the Reobserver always passes
-      // to fetchQueryObservable. Note: if these FetchPolicy transitions get
-      // much more complicated, we might consider using some sort of state
-      // machine to capture the transition rules.
-      options.fetchPolicy = "cache-first";
-    }
-
     const mightUseNetwork =
       fetchPolicy === "cache-first" ||
       fetchPolicy === "cache-and-network" ||
@@ -924,7 +906,27 @@ export class QueryManager<TStore> {
         : fromVariables(normalized.variables!)
     );
 
-    concast.cleanup(() => this.fetchCancelFns.delete(queryId));
+    concast.cleanup(() => {
+      this.fetchCancelFns.delete(queryId);
+
+      if (fetchPolicy === "cache-and-network" ||
+          fetchPolicy === "network-only") {
+        // When someone chooses cache-and-network or network-only as their
+        // initial FetchPolicy, they almost certainly do not want future cache
+        // updates to trigger unconditional network requests, which is what
+        // repeatedly applying the cache-and-network or network-only policies
+        // would seem to require. Instead, when the cache reports an update
+        // after the initial network request, subsequent network requests should
+        // be triggered only if the cache result is incomplete. This behavior
+        // corresponds exactly to switching to a cache-first FetchPolicy, so we
+        // modify options.fetchPolicy here for the next fetchQueryObservable
+        // call, using the same options object that the Reobserver always passes
+        // to fetchQueryObservable. Note: if these FetchPolicy transitions get
+        // much more complicated, we might consider using some sort of state
+        // machine to capture the transition rules.
+        options.fetchPolicy = "cache-first";
+      }
+    });
 
     return concast;
   }

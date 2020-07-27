@@ -619,32 +619,35 @@ describe('[queries] skip', () => {
     })(
       class extends React.Component<any> {
         render() {
-          switch (count) {
-            case 0:
-              expect(this.props.data.loading).toBeTruthy();
+          switch (++count) {
+            case 1:
+              expect(this.props.data.loading).toBe(true);
               expect(ranQuery).toBe(1);
               break;
-            case 1:
-              expect(this.props.data.loading).toBeFalsy();
+            case 2:
+              expect(this.props.data.loading).toBe(false);
               expect(ranQuery).toBe(1);
               setTimeout(() => {
                 this.props.setSkip(true);
               });
               break;
-            case 2:
+            case 3:
               expect(this.props.data).toBeUndefined();
               expect(ranQuery).toBe(1);
               setTimeout(() => {
                 this.props.setSkip(false);
               });
               break;
-            case 3:
-              expect(this.props.data!.loading).toBeFalsy();
-              expect(ranQuery).toBe(2);
+            case 4:
+              expect(this.props.data!.loading).toBe(true);
+              expect(ranQuery).toBe(3);
+              break;
+            case 5:
+              expect(this.props.data!.loading).toBe(false);
+              expect(ranQuery).toBe(3);
               break;
             default:
           }
-          count += 1;
           return null;
         }
       }
@@ -669,7 +672,7 @@ describe('[queries] skip', () => {
     );
 
     await wait(() => {
-      expect(count).toEqual(4);
+      expect(count).toEqual(5);
     });
   });
 

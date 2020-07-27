@@ -27,6 +27,9 @@
 - Allow passing an asynchronous `options.renderFunction` to `getMarkupFromTree`. <br/>
   [@richardscarrott](https://github.com/richardscarrott) in [#6576](https://github.com/apollographql/apollo-client/pull/6576)
 
+- Ergonomic improvements for `merge` and `keyArgs` functions in cache field policies. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6714](https://github.com/apollographql/apollo-client/pull/6714)
+
 ## Apollo Client 3.0.2
 
 ## Bug Fixes

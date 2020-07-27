@@ -909,22 +909,20 @@ export class QueryManager<TStore> {
     concast.cleanup(() => {
       this.fetchCancelFns.delete(queryId);
 
-      if (fetchPolicy === "cache-and-network" ||
-          fetchPolicy === "network-only") {
+      if (options.nextFetchPolicy) {
         // When someone chooses cache-and-network or network-only as their
-        // initial FetchPolicy, they almost certainly do not want future cache
-        // updates to trigger unconditional network requests, which is what
-        // repeatedly applying the cache-and-network or network-only policies
-        // would seem to require. Instead, when the cache reports an update
-        // after the initial network request, subsequent network requests should
-        // be triggered only if the cache result is incomplete. This behavior
-        // corresponds exactly to switching to a cache-first FetchPolicy, so we
-        // modify options.fetchPolicy here for the next fetchQueryObservable
-        // call, using the same options object that the Reobserver always passes
-        // to fetchQueryObservable. Note: if these FetchPolicy transitions get
-        // much more complicated, we might consider using some sort of state
-        // machine to capture the transition rules.
-        options.fetchPolicy = "cache-first";
+        // initial FetchPolicy, they often do not want future cache updates to
+        // trigger unconditional network requests, which is what repeatedly
+        // applying the cache-and-network or network-only policies would seem
+        // to imply. Instead, when the cache reports an update after the
+        // initial network request, it may be desirable for subsequent network
+        // requests to be triggered only if the cache result is incomplete.
+        // The options.nextFetchPolicy option provides an easy way to update
+        // options.fetchPolicy after the intial network request, without
+        // having to call observableQuery.setOptions.
+        options.fetchPolicy = options.nextFetchPolicy;
+        // The options.nextFetchPolicy transition should happen only once.
+        options.nextFetchPolicy = void 0;
       }
     });
 

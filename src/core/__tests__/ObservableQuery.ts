@@ -986,8 +986,7 @@ describe('ObservableQuery', () => {
           // Although the options.fetchPolicy we passed just now to
           // fetchQueryByPolicy should have been network-only,
           // observable.options.fetchPolicy should now be updated to
-          // cache-first, since network-only (and cache-and-network) fetch
-          // policies fall back to cache-first after the first request.
+          // cache-first, thanks to options.nextFetchPolicy.
           expect(observable.options.fetchPolicy).toBe('cache-first');
           const fqoCalls = mocks.fetchQueryObservable.mock.calls;
           expect(fqoCalls.length).toBe(2);
@@ -1206,17 +1205,26 @@ describe('ObservableQuery', () => {
                 observable.refetch().then(result => {
                   expect(result).toEqual({
                     data: {
-                      counter: 3,
+                      counter: 5,
                       name: 'Ben',
                     },
                     loading: false,
                     networkStatus: NetworkStatus.ready,
                   });
-                  resolve();
+                  setTimeout(resolve, 50);
                 }, reject);
               },
             );
-          } else if (handleCount > 2) {
+          } else if (handleCount === 3) {
+            expect(result).toEqual({
+              data: {
+                counter: 3,
+                name: 'Ben',
+              },
+              loading: true,
+              networkStatus: NetworkStatus.refetch,
+            });
+          } else if (handleCount > 3) {
             reject(new Error('should not get here'));
           }
         },

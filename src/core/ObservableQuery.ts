@@ -219,28 +219,33 @@ export class ObservableQuery<
       ));
     }
 
+    const reobserveOptions: Partial<WatchQueryOptions<TVariables>> = {
+      // Always disable polling for refetches.
+      pollInterval: 0,
+    };
+
     // Unless the provided fetchPolicy always consults the network
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
     if (fetchPolicy !== 'no-cache' &&
         fetchPolicy !== 'cache-and-network') {
-      fetchPolicy = 'network-only';
+      reobserveOptions.fetchPolicy = 'network-only';
+      // Go back to the original options.fetchPolicy after this refetch.
+      reobserveOptions.nextFetchPolicy = fetchPolicy;
     }
 
     if (variables && !equal(this.options.variables, variables)) {
       // Update the existing options with new variables
-      this.options.variables = {
+      reobserveOptions.variables = this.options.variables = {
         ...this.options.variables,
         ...variables,
       } as TVariables;
     }
 
-    return this.newReobserver(false).reobserve({
-      fetchPolicy,
-      variables: this.options.variables,
-      // Always disable polling for refetches.
-      pollInterval: 0,
-    }, NetworkStatus.refetch);
+    return this.newReobserver(false).reobserve(
+      reobserveOptions,
+      NetworkStatus.refetch,
+    );
   }
 
   public fetchMore<K extends keyof TVariables>(

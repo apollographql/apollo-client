@@ -309,6 +309,7 @@ Array [
   "canUseWeakMap",
   "checkDocument",
   "cloneDeep",
+  "compact",
   "concatPagination",
   "createFragmentMap",
   "getDefaultValues",

@@ -1708,7 +1708,12 @@ describe('client', () => {
         },
       });
 
-      checkCacheAndNetworkError(() => client.query({ query }));
+      checkCacheAndNetworkError(() => client.query({
+        query,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.query.fetchPolicy.
+        fetchPolicy: void 0,
+      }));
     });
 
     itAsync('fetches from cache first, then network', (resolve, reject) => {
@@ -3149,7 +3154,12 @@ describe('@connection', () => {
         data: initialData,
       });
 
-      const obs = client.watchQuery({ query });
+      const obs = client.watchQuery({
+        query,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.watchQuery.fetchPolicy.
+        fetchPolicy: void 0,
+      });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         const resultData = stripSymbols(result.data);
@@ -3207,7 +3217,12 @@ describe('@connection', () => {
         },
       });
 
-      return client.mutate({ mutation }).then(result => {
+      return client.mutate({
+        mutation,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.mutate.variables.
+        variables: void 0,
+      }).then(result => {
         expect(result.data).toEqual(data);
       }).then(resolve, reject);
     });

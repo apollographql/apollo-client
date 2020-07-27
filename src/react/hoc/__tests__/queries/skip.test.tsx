@@ -613,6 +613,7 @@ describe('[queries] skip', () => {
     const Container = graphql<any>(query, {
       options: {
         fetchPolicy: 'network-only',
+        nextFetchPolicy: 'cache-first',
         notifyOnNetworkStatusChange: true
       },
       skip: ({ skip }) => skip

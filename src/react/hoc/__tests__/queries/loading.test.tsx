@@ -328,7 +328,10 @@ describe('[queries] loading', () => {
     let count = 0;
 
     const Container = graphql<{}, Data>(query, {
-      options: { fetchPolicy: 'network-only' }
+      options: {
+        fetchPolicy: 'network-only',
+        nextFetchPolicy: 'cache-first',
+      },
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {

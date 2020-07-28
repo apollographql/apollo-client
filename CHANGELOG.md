@@ -16,6 +16,9 @@
 - Refactor `ObservableQuery#getCurrentResult` to reenable immediate delivery of warm cache results. As part of this refactoring, the `ApolloCurrentQueryResult` type was eliminated in favor of `ApolloQueryResult`. <br/>
   [@benjamn](https://github.com/benjamn) in [#6710](https://github.com/apollographql/apollo-client/pull/6710)
 
+- Avoid clobbering `defaultOptions` with `undefined` values. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6715](https://github.com/apollographql/apollo-client/pull/6715)
+
 ## Improvements
 
 - Apollo Client will no longer modify `options.fetchPolicy` unless you pass `options.nextFetchPolicy` to request an explicit change in `FetchPolicy` after the current request. Although this is technically a breaking change, `options.nextFieldPolicy` makes it easy to restore the old behavior (by passing `cache-first`). <br/>

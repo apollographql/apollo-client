@@ -34,13 +34,28 @@ export { isApolloError, ApolloError } from '../errors';
 /* Cache */
 
 export {
+  // All the exports (types and values) from ../cache, minus cacheSlot,
+  // which we want to keep semi-private.
   Cache,
   ApolloCache,
+  Transaction,
+  DataProxy,
   InMemoryCache,
+  InMemoryCacheConfig,
   MissingFieldError,
   defaultDataIdFromObject,
+  ReactiveVar,
   makeVar,
+  TypePolicies,
+  TypePolicy,
+  FieldPolicy,
+  FieldReadFunction,
+  FieldMergeFunction,
+  FieldFunctionOptions,
+  PossibleTypesMap,
 } from '../cache';
+
+export * from '../cache/inmemory/types';
 
 /* Link */
 

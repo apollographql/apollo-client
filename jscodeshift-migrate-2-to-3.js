@@ -1,15 +1,6 @@
 /**
  * This jscodeshift transform takes care of some of the rote
  * things you'll need to do while migrating from v2 to v3.
- * Currently it:
- *   - Replaces apollo-client imports with
- *     @apollo/client
- *   - Removes gql imports from graphql-tag and replaces them
- *     with an import from @apollo/client
- *   - Removes Observable import from apollo-link and moves
- *     it to @apollo/client
- *
- * Author: Dmitry Minkovsky <dminkovsky@gmail.com>
  */
 
 export default function transformer(file, api) {

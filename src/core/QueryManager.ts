@@ -333,7 +333,7 @@ export class QueryManager<TStore> {
 
   public fetchQuery<TData, TVars>(
     queryId: string,
-    options: WatchQueryOptions<TVars>,
+    options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     return this.fetchQueryObservable<TData, TVars>(
@@ -428,7 +428,7 @@ export class QueryManager<TStore> {
   }
 
   public watchQuery<T, TVariables = OperationVariables>(
-    options: WatchQueryOptions<TVariables>,
+    options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     // assign variable default values if supplied
     options = {
@@ -462,7 +462,7 @@ export class QueryManager<TStore> {
   }
 
   public query<TData, TVars = OperationVariables>(
-    options: QueryOptions<TVars>,
+    options: QueryOptions<TVars, TData>,
   ): Promise<ApolloQueryResult<TData>> {
     invariant(
       options.query,
@@ -759,7 +759,7 @@ export class QueryManager<TStore> {
   private getResultsFromLink<TData, TVars>(
     queryInfo: QueryInfo,
     allowCacheWrite: boolean,
-    options: Pick<WatchQueryOptions<TVars>,
+    options: Pick<WatchQueryOptions<TVars, TData>,
       | "variables"
       | "context"
       | "fetchPolicy"
@@ -817,7 +817,7 @@ export class QueryManager<TStore> {
 
   public fetchQueryObservable<TData, TVars>(
     queryId: string,
-    options: WatchQueryOptions<TVars>,
+    options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
@@ -931,7 +931,7 @@ export class QueryManager<TStore> {
 
   private fetchQueryByPolicy<TData, TVars>(
     queryInfo: QueryInfo,
-    options: WatchQueryOptions<TVars>,
+    options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.

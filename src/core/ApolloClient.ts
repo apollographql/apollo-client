@@ -277,7 +277,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * a description of store reactivity.
    */
   public watchQuery<T = any, TVariables = OperationVariables>(
-    options: WatchQueryOptions<TVariables>,
+    options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = compact(this.defaultOptions.watchQuery, options);
@@ -305,7 +305,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * server at all or just resolve from the cache, etc.
    */
   public query<T = any, TVariables = OperationVariables>(
-    options: QueryOptions<TVariables>,
+    options: QueryOptions<TVariables, T>,
   ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
       options = compact(this.defaultOptions.query, options);
@@ -347,7 +347,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * {@link Observable} which either emits received data or an error.
    */
   public subscribe<T = any, TVariables = OperationVariables>(
-    options: SubscriptionOptions<TVariables>,
+    options: SubscriptionOptions<TVariables, T>,
   ): Observable<FetchResult<T>> {
     return this.queryManager.startGraphQLSubscription<T>(options);
   }
@@ -362,7 +362,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * optimistic results. Is `false` by default.
    */
   public readQuery<T = any, TVariables = OperationVariables>(
-    options: DataProxy.Query<TVariables>,
+    options: DataProxy.Query<TVariables, T>,
     optimistic: boolean = false,
   ): T | null {
     return this.cache.readQuery<T, TVariables>(options, optimistic);
@@ -383,7 +383,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * optimistic results. Is `false` by default.
    */
   public readFragment<T = any, TVariables = OperationVariables>(
-    options: DataProxy.Fragment<TVariables>,
+    options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false,
   ): T | null {
     return this.cache.readFragment<T, TVariables>(options, optimistic);

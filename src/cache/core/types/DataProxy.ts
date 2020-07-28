@@ -1,15 +1,16 @@
 import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { MissingFieldError } from './common';
 
 export namespace DataProxy {
-  export interface Query<TVariables> {
+  export interface Query<TVariables, TData> {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
      * shape of the data to be read.
      */
-    query: DocumentNode;
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
     /**
      * Any variables that the GraphQL query may depend on.
@@ -24,7 +25,7 @@ export namespace DataProxy {
     id?: string;
   }
 
-  export interface Fragment<TVariables> {
+  export interface Fragment<TVariables, TData> {
     /**
      * The root id to be used. This id should take the same form as the
      * value returned by your `dataIdFromObject` function. If a value with your
@@ -38,7 +39,7 @@ export namespace DataProxy {
      * the shape of data to read. If you provide more than one fragment in this
      * document then you must also specify `fragmentName` to select a single.
      */
-    fragment: DocumentNode;
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
     /**
      * The name of the fragment in your GraphQL document to be used. If you do
@@ -54,7 +55,7 @@ export namespace DataProxy {
   }
 
   export interface WriteQueryOptions<TData, TVariables>
-    extends Query<TVariables> {
+    extends Query<TVariables, TData> {
     /**
      * The data you will be writing to the store.
      */
@@ -66,7 +67,7 @@ export namespace DataProxy {
   }
 
   export interface WriteFragmentOptions<TData, TVariables>
-    extends Fragment<TVariables> {
+    extends Fragment<TVariables, TData> {
     /**
      * The data you will be writing to the store.
      */
@@ -95,7 +96,7 @@ export interface DataProxy {
    * Reads a GraphQL query from the root query id.
    */
   readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables>,
+    options: DataProxy.Query<TVariables, QueryType>,
     optimistic?: boolean,
   ): QueryType | null;
 
@@ -105,7 +106,7 @@ export interface DataProxy {
    * provided to select the correct fragment.
    */
   readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables>,
+    options: DataProxy.Fragment<TVariables, FragmentType>,
     optimistic?: boolean,
   ): FragmentType | null;
 

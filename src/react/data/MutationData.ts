@@ -11,6 +11,7 @@ import {
 import { OperationData } from './OperationData';
 import { OperationVariables } from '../../core';
 import { FetchResult } from '../../link/core';
+import { compact } from '../../utilities';
 
 type MutationResultWithoutClient<TData = any> = Omit<MutationResult<TData>, 'client'>;
 
@@ -82,10 +83,9 @@ export class MutationData<
   private mutate(
     mutationFunctionOptions: MutationFunctionOptions<TData, TVariables>
   ) {
-    return this.refreshClient().client.mutate({
-      ...(this.getOptions() || {}),
-      ...(mutationFunctionOptions || {})
-    });
+    return this.refreshClient().client.mutate(
+      compact(this.getOptions(), mutationFunctionOptions)
+    );
   }
 
   private onMutationStart() {

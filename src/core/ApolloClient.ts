@@ -3,7 +3,7 @@ import { invariant, InvariantError } from 'ts-invariant';
 
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
 import { ApolloCache, DataProxy } from '../cache';
-import { Observable } from '../utilities';
+import { Observable, compact } from '../utilities';
 import { version } from '../version';
 import { HttpLink, UriFunction } from '../link/http';
 
@@ -280,10 +280,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: WatchQueryOptions<TVariables>,
   ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
-      options = {
-        ...this.defaultOptions.watchQuery,
-        ...options,
-      } as WatchQueryOptions<TVariables>;
+      options = compact(this.defaultOptions.watchQuery, options);
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
@@ -311,9 +308,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: QueryOptions<TVariables>,
   ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
-      options = { ...this.defaultOptions.query, ...options } as QueryOptions<
-        TVariables
-      >;
+      options = compact(this.defaultOptions.query, options);
     }
 
     invariant(
@@ -342,12 +337,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: MutationOptions<T, TVariables>,
   ): Promise<FetchResult<T>> {
     if (this.defaultOptions.mutate) {
-      options = {
-        ...this.defaultOptions.mutate,
-        ...options,
-      } as MutationOptions<T, TVariables>;
+      options = compact(this.defaultOptions.mutate, options);
     }
-
     return this.queryManager.mutate<T>(options);
   }
 

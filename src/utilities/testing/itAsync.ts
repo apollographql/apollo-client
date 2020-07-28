@@ -1,7 +1,5 @@
-const itIsDefined = typeof it === "object";
-
 function wrap<TResult>(
-  original: ((...args: any[]) => TResult) | false,
+  original: (...args: any[]) => TResult,
 ) {
   return (
     message: string,
@@ -10,20 +8,20 @@ function wrap<TResult>(
       reject: (reason?: any) => void,
     ) => any,
     timeout?: number,
-  ) => original && original(message, function () {
+  ) => original(message, function () {
     return new Promise(
       (resolve, reject) => callback.call(this, resolve, reject),
     );
   }, timeout);
 }
 
-const wrappedIt = wrap(itIsDefined && it);
+const wrappedIt = wrap(it);
 export function itAsync(...args: Parameters<typeof wrappedIt>) {
   return wrappedIt.apply(this, args);
 }
 
 export namespace itAsync {
-  export const only = wrap(itIsDefined && it.only);
-  export const skip = wrap(itIsDefined && it.skip);
-  export const todo = wrap(itIsDefined && it.todo);
+  export const only = wrap(it.only);
+  export const skip = wrap(it.skip);
+  export const todo = wrap(it.todo);
 }

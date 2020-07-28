@@ -71,7 +71,7 @@
     "@wry/context": "^0.5.2",
     "@wry/equality": "^0.2.0",
     "fast-json-stable-stringify": "^2.0.0",
-    "graphql-tag": "^2.10.4",
+    "graphql-tag": "^2.11.0",
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.12.1",
     "prop-types": "^15.7.2",

@@ -67,7 +67,7 @@
     }
   },
   "dependencies": {
-    "@graphql-typed-document-node/core": "0.0.1",
+    "@graphql-typed-document-node/core": "1.0.0",
     "@types/zen-observable": "^0.8.0",
     "@wry/context": "^0.5.2",
     "@wry/equality": "^0.2.0",

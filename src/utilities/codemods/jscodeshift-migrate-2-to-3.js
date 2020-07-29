@@ -4,73 +4,73 @@
  */
 
 export default function transformer(file, api) {
-    const j = api.jscodeshift;
+  const j = api.jscodeshift;
 
-    const source = j(file.source);
+  const source = j(file.source);
 
-    renameImport('apollo-client', '@apollo/client');
+  renameOrCreateApolloClientImport();
 
-    moveSpecifiersToApolloClient('@apollo/react-hooks');
-    moveSpecifiersToApolloClient('apollo-cache-inmemory', ['InMemoryCache']);
-    moveSpecifiersToApolloClient('graphql-tag');
-    moveSpecifiersToApolloClient('apollo-link');
-    moveSpecifiersToApolloClient('apollo-link-http');
-    moveSpecifiersToApolloClient('apollo-link-http-common');
+  moveSpecifiersToApolloClient('@apollo/react-hooks');
+  moveSpecifiersToApolloClient('apollo-cache-inmemory', ['InMemoryCache']);
+  moveSpecifiersToApolloClient('graphql-tag');
+  moveSpecifiersToApolloClient('apollo-link');
+  moveSpecifiersToApolloClient('apollo-link-http');
+  moveSpecifiersToApolloClient('apollo-link-http-common');
 
-    renameImport('@apollo/react-components', '@apollo/client/react/components');
-    renameImport('@apollo/react-hoc', '@apollo/client/react/hoc');
-    renameImport('@apollo/react-ssr', '@apollo/client/react/ssr');
-    renameImport('@apollo/react-testing', '@apollo/client/testing');
+  renameImport('@apollo/react-components', '@apollo/client/react/components');
+  renameImport('@apollo/react-hoc', '@apollo/client/react/hoc');
+  renameImport('@apollo/react-ssr', '@apollo/client/react/ssr');
+  renameImport('@apollo/react-testing', '@apollo/client/testing');
 
-    return source.toSource();
+  return source.toSource();
 
-    function moveSpecifiersToApolloClient(
-        moduleName,
-        specifiers = [],
-    ) {
-        const moduleImport = getImport(moduleName);
+  function renameOrCreateApolloClientImport() {
+    const apolloClientImport = getImport('apollo-client');
+    if (apolloClientImport.size()) {
+      renameImport('apollo-client', '@apollo/client');
+    } else {
+      source.find(j.ImportDeclaration).at(0).insertBefore(() => j.importDeclaration([], j.literal('@apollo/client')));
+    }
+  }
 
-        if (moduleImport.size()) {
-            //
-            const clientImports = getImport('@apollo/client');
-            if (clientImports.size()) {
-                clientImports.replaceWith(p => ({
-                    ...p.value,
-                    specifiers: [
-                        ...p.value.specifiers,
-                        ...(specifiers.length ? specifiers.map(importSpecifier) : moduleImport.get().value.specifiers),
-                    ],
-                }));
-            }
-        }
+  function moveSpecifiersToApolloClient(
+    moduleName,
+    specifiers = [],
+  ) {
+    const moduleImport = getImport(moduleName);
 
-        moduleImport.remove();
+    if (moduleImport.size()) {
+      const clientImports = getImport('@apollo/client');
+      const specifiersToAdd = (specifiers.length ? specifiers.map(importSpecifier) : moduleImport.get().value.specifiers);
+      clientImports.replaceWith(p => ({
+        ...p.value,
+        specifiers: [
+            ...p.value.specifiers,
+            ...specifiersToAdd.map(path => importSpecifier((path.imported || path.local).name)),
+        ],
+      }));
     }
 
-    function renameImport(oldModuleName, newModuleName) {
-        getImport(oldModuleName)
-            .find(j.Literal)
-            .replaceWith(path => ({
-                ...path.value,
-                value: newModuleName,
-            }));
-    }
+    moduleImport.remove();
+  }
 
-    function getImport(moduleName) {
-        return source
-            .find(j.ImportDeclaration)
-            .filter(
-                path => path.value.source.value === moduleName,
-            );
-    }
-}
+  function renameImport(oldModuleName, newModuleName) {
+    getImport(oldModuleName)
+      .find(j.Literal)
+      .replaceWith(path => ({
+          ...path.value,
+          value: newModuleName,
+      }));
+  }
 
-function importSpecifier(name) {
-    return {
-        type: 'ImportSpecifier',
-        imported: {
-            type: 'Identifier',
-            name,
-        },
-    };
+  function getImport(moduleName) {
+    return source
+      .find(j.ImportDeclaration, {
+        source: { value: moduleName }
+      });
+  }
+
+  function importSpecifier(name) {
+    return j.importSpecifier(j.identifier(name));
+  }
 }

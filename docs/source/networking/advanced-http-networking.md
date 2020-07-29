@@ -76,7 +76,7 @@ const client = new ApolloClient({
 });
 ```
 
-In the example above, the `authMiddleware` link sets each request's `Authorization` header, and the `acivityMiddleware` then sets each request's `Recent-Activity` header. Finally, the `HttpLink` sends the modified request.
+In the example above, the `authMiddleware` link sets each request's `Authorization` header, and the `activityMiddleware` then sets each request's `Recent-Activity` header. Finally, the `HttpLink` sends the modified request.
 
 ## Customizing response logic
 

@@ -1,3 +1,10 @@
+## Apollo Client 3.1.1
+
+## Bug Fixes
+
+- Re-export cache types from `@apollo/client/core` (and thus also `@apollo/client`), again. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6725](https://github.com/apollographql/apollo-client/pull/6725)
+
 ## Apollo Client 3.1.0
 
 ## Bug Fixes

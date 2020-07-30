@@ -41,7 +41,7 @@ export default function transformer(file, api) {
 
     if (moduleImport.size()) {
       const clientImports = getImport('@apollo/client');
-      const specifiersToAdd = (specifiers.length ? specifiers.map(importSpecifier) : moduleImport.get().value.specifiers);
+      const specifiersToAdd = (specifiers.length ? specifiers.map(importSpecifier) : moduleImport.get("specifiers").value);
       clientImports.replaceWith(p => ({
         ...p.value,
         specifiers: [

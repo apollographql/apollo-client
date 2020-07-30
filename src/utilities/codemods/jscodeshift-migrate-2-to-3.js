@@ -11,7 +11,7 @@ export default function transformer(file, api) {
   renameOrCreateApolloClientImport();
 
   moveSpecifiersToApolloClient('@apollo/react-hooks');
-  moveSpecifiersToApolloClient('apollo-cache-inmemory', ['InMemoryCache']);
+  moveSpecifiersToApolloClient('apollo-cache-inmemory');
   moveSpecifiersToApolloClient('graphql-tag');
   moveSpecifiersToApolloClient('apollo-link');
   moveSpecifiersToApolloClient('apollo-link-http');
@@ -25,8 +25,13 @@ export default function transformer(file, api) {
   return source.toSource();
 
   function renameOrCreateApolloClientImport() {
-    const apolloClientImport = getImport('apollo-client');
-    if (apolloClientImport.size()) {
+    const v3Import = getImport('@apollo/client');
+    if (v3Import.size()) {
+      return;
+    }
+
+    const v2Import = getImport('apollo-client');
+    if (v2Import.size()) {
       renameImport('apollo-client', '@apollo/client');
     } else {
       source.find(j.ImportDeclaration).at(0).insertBefore(() => j.importDeclaration([], j.literal('@apollo/client')));
@@ -35,13 +40,12 @@ export default function transformer(file, api) {
 
   function moveSpecifiersToApolloClient(
     moduleName,
-    specifiers = [],
   ) {
     const moduleImport = getImport(moduleName);
 
     if (moduleImport.size()) {
       const clientImports = getImport('@apollo/client');
-      const specifiersToAdd = (specifiers.length ? specifiers.map(importSpecifier) : moduleImport.get("specifiers").value);
+      const specifiersToAdd = moduleImport.get("specifiers").value;
       clientImports.replaceWith(p => ({
         ...p.value,
         specifiers: [

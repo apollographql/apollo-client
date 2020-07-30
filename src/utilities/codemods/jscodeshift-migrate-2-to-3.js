@@ -12,10 +12,12 @@ export default function transformer(file, api) {
 
   moveSpecifiersToApolloClient('@apollo/react-hooks');
   moveSpecifiersToApolloClient('apollo-cache-inmemory');
-  moveSpecifiersToApolloClient('graphql-tag');
   moveSpecifiersToApolloClient('apollo-link');
   moveSpecifiersToApolloClient('apollo-link-http');
   moveSpecifiersToApolloClient('apollo-link-http-common');
+
+  renameDefaultSpecifier(getImport('graphql-tag'), 'gql');
+  moveSpecifiersToApolloClient('graphql-tag');
 
   renameImport('@apollo/react-components', '@apollo/client/react/components');
   renameImport('@apollo/react-hoc', '@apollo/client/react/hoc');
@@ -41,6 +43,7 @@ export default function transformer(file, api) {
 
     const v2Import = getImport('apollo-client');
     if (v2Import.size()) {
+      renameDefaultSpecifier(v2Import, 'ApolloClient');
       renameImport('apollo-client', '@apollo/client');
     } else {
       source.find(j.ImportDeclaration).at(0).insertBefore(() => j.importDeclaration([], j.literal('@apollo/client')));
@@ -54,14 +57,8 @@ export default function transformer(file, api) {
 
     if (moduleImport.size()) {
       const clientImports = getImport('@apollo/client');
-      const specifiersToAdd = moduleImport.get("specifiers").value;
-      clientImports.replaceWith(p => ({
-        ...p.value,
-        specifiers: [
-            ...p.value.specifiers,
-            ...specifiersToAdd.map(path => importSpecifier((path.imported || path.local).name)),
-        ],
-      }));
+      const specifiersToAdd = moduleImport.get('specifiers').value;
+      clientImports.get('specifiers').push(...specifiersToAdd);
     }
 
     moduleImport.remove();
@@ -85,5 +82,14 @@ export default function transformer(file, api) {
 
   function importSpecifier(name) {
     return j.importSpecifier(j.identifier(name));
+  }
+
+  function renameDefaultSpecifier(moduleImport, name) {
+    moduleImport
+      .find(j.ImportDefaultSpecifier).replaceWith(path => {
+        return path.value.local.name === name
+          ? importSpecifier(name)
+          : j.importSpecifier(j.identifier(name), path.value.local);
+      });
   }
 }

@@ -17,13 +17,11 @@ The constructor for `ApolloClient` accepts an `ApolloClientOptions` object that 
 ### Example constructor call
 
 ```js
-import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 
 // Instantiate required constructor fields
 const cache = new InMemoryCache();
-const link = new HttpLink({
+const link = createHttpLink({
   uri: 'http://localhost:4000/',
 });
 
@@ -50,7 +48,7 @@ const client = new ApolloClient({
 | - | - |
 | `uri` | A URI pointing to the backend GraphQL endpoint that Apollo Client will communicate with. **Note:** One of `uri` or `link` is required; if both are specified, `link` will take precedence. |
 | `link` | You can provide an Apollo Link instance to serve as Apollo Client's network layer. For more information, see the [advanced HTTP networking](../../networking/advanced-http-networking/) section. **Note:** One of `uri` or `link` is required; if both are specified, `link` will take precedence. |
-| `cache` | Apollo Client uses an Apollo Cache instance to handle its caching strategy. The recommended cache is `apollo-cache-inmemory`, which exports an `{ InMemoryCache }`. For more information, see [Configuring the cache](../../caching/cache-configuration/). |
+| `cache` | Apollo Client uses an Apollo Cache instance to handle its caching strategy. The recommended cache is `InMemoryCache` which is provided by the `@apollo/client` package. For more information, see [Configuring the cache](../../caching/cache-configuration/). |
 
 ### Optional fields
 

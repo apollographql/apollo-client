@@ -2162,5 +2162,68 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
+
+    itAsync('should not make network requests when `skip` is `true`', (resolve, reject) => {
+      let networkRequestCount = 0;
+      const link = new ApolloLink((o, f) => {
+        networkRequestCount += 1;
+        return f ? f(o) : null;
+      }).concat(mockSingleLink(
+        {
+          request: {
+            query: CAR_QUERY,
+            variables: { someVar: true }
+          },
+          result: { data: CAR_RESULT_DATA }
+        }
+      ));
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache()
+      });
+
+      let renderCount = 0;
+      const Component = () => {
+        const [skip, setSkip] = useState(false);
+        const { loading, data } = useQuery(CAR_QUERY, {
+          fetchPolicy: 'no-cache',
+          skip,
+          variables: { someVar: !skip }
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(CAR_RESULT_DATA);
+            expect(networkRequestCount).toBe(1);
+            setTimeout(() => setSkip(true));
+            break;
+          case 3:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            expect(networkRequestCount).toBe(1);
+            break;
+          default:
+            reject('too many renders');
+        }
+
+        return null;
+      };
+
+      render(
+        <ApolloProvider client={client}>
+          <Component />
+        </ApolloProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
   });
 });

@@ -23,6 +23,8 @@ export default function transformer(file, api) {
   renameImport('@apollo/react-hoc', '@apollo/client/react/hoc');
   renameImport('@apollo/react-ssr', '@apollo/client/react/ssr');
   renameImport('@apollo/react-testing', '@apollo/client/testing');
+
+  renameDefaultSpecifier(getImport('apollo-link-schema'), 'SchemaLink');
   [
     'batch',
     'batch-http',

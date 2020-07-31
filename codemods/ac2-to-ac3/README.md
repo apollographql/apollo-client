@@ -18,24 +18,27 @@ following commands to run, depending on the types of files you have:
 ```sh
 # To transform all .js files:
 npx jscodeshift \
-  -t node_modules/@apollo/client/utilities/codemods/ac2-to-ac3/imports.js \
+  -t apollo-client/codemods/ac2-to-ac3/imports.js \
   --extensions js \
   source-directory
 
 # To transform all .ts files:
 npx jscodeshift \
-  -t node_modules/@apollo/client/utilities/codemods/ac2-to-ac3/imports.js \
+  -t apollo-client/codemods/ac2-to-ac3/imports.js \
   --extensions ts --parser ts \
   source-directory
 
 # To transform all .tsx files:
 npx jscodeshift \
-  -t node_modules/@apollo/client/utilities/codemods/ac2-to-ac3/imports.js \
+  -t apollo-client/codemods/ac2-to-ac3/imports.js \
   --extensions tsx --parser tsx \
   source-directory
 ```
 
-## Seeing example results
+Note that the `apollo-client` directory here is intended to be a checkout
+of [this repository](https://github.com/apollographql/apollo-client/).
+
+## Kicking the tires
 
 To see how the transform handles some example source files, run the
 following commands in this directory (within a checkout of the Apollo

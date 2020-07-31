@@ -82,16 +82,23 @@ export default function transformer(file, api) {
       });
   }
 
-  function importSpecifier(name) {
-    return j.importSpecifier(j.identifier(name));
-  }
-
   function renameDefaultSpecifier(moduleImport, name) {
+    function replacer(path) {
+      return path.value.local.name === name
+        ? j.importSpecifier(j.identifier(name))
+        : j.importSpecifier(j.identifier(name), path.value.local);
+    }
+
+    // Handle ordinary (no-{}s) default imports.
     moduleImport
-      .find(j.ImportDefaultSpecifier).replaceWith(path => {
-        return path.value.local.name === name
-          ? importSpecifier(name)
-          : j.importSpecifier(j.identifier(name), path.value.local);
-      });
+      .find(j.ImportDefaultSpecifier)
+      .replaceWith(replacer);
+
+    // Handle { default as Foo } default imports.
+    moduleImport.find(j.ImportSpecifier, {
+      imported: {
+        name: "default",
+      },
+    }).replaceWith(replacer);
   }
 }

@@ -1,13 +1,14 @@
 import gql from 'graphql-tag';
 
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../utilities/testing/stripSymbols';
-import { itAsync } from '../../utilities/testing/itAsync';
-import { ApolloClient } from '../..';
-import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
-import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
-import { NetworkStatus } from '../networkStatus';
+import { ApolloClient, NetworkStatus } from '../../core';
+import { ApolloLink } from '../../link/core';
+import { InMemoryCache } from '../../cache';
+import {
+  stripSymbols,
+  subscribeAndCount,
+  itAsync,
+  mockSingleLink,
+} from '../../testing';
 
 const query = gql`
   query {
@@ -324,6 +325,120 @@ describe('no-cache', () => {
   });
 });
 
+describe('cache-first', () => {
+  itAsync.skip('does not trigger network request during optimistic update', (resolve, reject) => {
+    const results: any[] = [];
+    const client = new ApolloClient({
+      link: new ApolloLink((operation, forward) => {
+        return forward(operation).map(result => {
+          results.push(result);
+          return result;
+        });
+      }).concat(createMutationLink(reject)),
+      cache: new InMemoryCache,
+    });
+
+    let inOptimisticTransaction = false;
+
+    subscribeAndCount(reject, client.watchQuery({
+      query,
+      fetchPolicy: "cache-and-network",
+      returnPartialData: true,
+    }), (count, { data, loading, networkStatus }) => {
+      if (count === 1) {
+        expect(results.length).toBe(0);
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.loading);
+        expect(data).toEqual({});
+      } else if (count === 2) {
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Author",
+            id: 1,
+            firstName: "John",
+            lastName: "Smith",
+          },
+        });
+
+        inOptimisticTransaction = true;
+        client.cache.recordOptimisticTransaction(cache => {
+          cache.writeQuery({
+            query,
+            data: {
+              author: {
+                __typename: "Bogus",
+              },
+            },
+          });
+        }, "bogus");
+
+      } else if (count === 3) {
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Bogus",
+          },
+        });
+
+        setTimeout(() => {
+          inOptimisticTransaction = false;
+          client.cache.removeOptimistic("bogus");
+        }, 100);
+
+      } else if (count === 4) {
+        // A network request should not be triggered until after the bogus
+        // optimistic transaction has been removed.
+        expect(inOptimisticTransaction).toBe(false);
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Author",
+            id: 1,
+            firstName: "John",
+            lastName: "Smith",
+          },
+        });
+
+        client.cache.writeQuery({
+          query,
+          data: {
+            author: {
+              __typename: "Author",
+              id: 2,
+              firstName: "Chinua",
+              lastName: "Achebe",
+            },
+          },
+        });
+
+      } else if (count === 5) {
+        expect(inOptimisticTransaction).toBe(false);
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Author",
+            id: 2,
+            firstName: "Chinua",
+            lastName: "Achebe",
+          },
+        });
+        setTimeout(resolve, 100);
+      } else {
+        reject(new Error("unreached"));
+      }
+    });
+  });
+});
+
 describe('cache-and-network', function() {
   itAsync('gives appropriate networkStatus for refetched queries', (resolve, reject) => {
     const client = new ApolloClient({
@@ -379,6 +494,7 @@ describe('cache-and-network', function() {
           data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
+          partial: true,
         });
       } else if (count === 3) {
         expect(result).toEqual({
@@ -405,6 +521,7 @@ describe('cache-and-network', function() {
           data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
+          partial: true,
         });
       } else if (count === 7) {
         expect(result).toEqual({

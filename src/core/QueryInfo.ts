@@ -1,20 +1,21 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
-import { Cache } from '../cache/core/types/Cache';
-import { ApolloCache } from '../cache/core/cache';
+import { Cache, ApolloCache } from '../cache';
 import { WatchQueryOptions } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { QueryListener } from './types';
-import { FetchResult } from '../link/core/types';
-import { ObservableSubscription } from '../utilities/observables/Observable';
-import { isNonEmptyArray } from '../utilities/common/arrays';
-import { graphQLResultHasError } from '../utilities/common/errorHandling';
+import { FetchResult } from '../link/core';
+import {
+  ObservableSubscription,
+  isNonEmptyArray,
+  graphQLResultHasError,
+} from '../utilities';
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
 } from './networkStatus';
-import { ApolloError } from '../errors/ApolloError';
+import { ApolloError } from '../errors';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -28,7 +29,7 @@ export type QueryStoreValue = Pick<QueryInfo,
 // this.queries Map. QueryInfo objects store the latest results and errors
 // for the given query, and are responsible for reporting those results to
 // the corresponding ObservableQuery, via the QueryInfo.notify method.
-// Results are reported asynchronously whenever setDirty marks the
+// Results are reported asynchronously whenever setDiff marks the
 // QueryInfo object as dirty, though a call to the QueryManager's
 // broadcastQueries method may trigger the notification before it happens
 // automatically. This class used to be a simple interface type without
@@ -64,6 +65,10 @@ export class QueryInfo {
       networkStatus = NetworkStatus.setVariables;
     }
 
+    if (!equal(query.variables, this.variables)) {
+      this.diff = null;
+    }
+
     Object.assign(this, {
       document: query.document,
       variables: query.variables,
@@ -85,25 +90,33 @@ export class QueryInfo {
 
   private dirty: boolean = false;
 
-  public setDirty(): this {
-    if (!this.dirty) {
-      this.dirty = true;
-      if (!this.notifyTimeout) {
-        this.notifyTimeout = setTimeout(() => this.notify(), 0);
-      }
-    }
-    return this;
-  }
-
   private notifyTimeout?: ReturnType<typeof setTimeout>;
 
   private diff: Cache.DiffResult<any> | null = null;
+
+  getDiff(variables = this.variables): Cache.DiffResult<any> {
+    if (this.diff && equal(variables, this.variables)) {
+      return this.diff;
+    }
+
+    this.updateWatch(this.variables = variables);
+
+    return this.diff = this.cache.diff({
+      query: this.document!,
+      variables,
+      returnPartialData: true,
+      optimistic: true,
+    });
+  }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.diff;
     this.diff = diff;
     if (!this.dirty && diff?.result !== oldDiff?.result) {
-      this.setDirty();
+      this.dirty = true;
+      if (!this.notifyTimeout) {
+        this.notifyTimeout = setTimeout(() => this.notify(), 0);
+      }
     }
   }
 
@@ -120,6 +133,7 @@ export class QueryInfo {
     (this as any).observableQuery = oq;
 
     if (oq) {
+      oq["queryInfo"] = this;
       this.listeners.add(this.oqListener = () => oq.reobserve());
     } else {
       delete this.oqListener;
@@ -162,11 +176,6 @@ export class QueryInfo {
     // QueryInfo.prototype.
     delete this.cancel;
 
-    this.variables =
-    this.networkStatus =
-    this.networkError =
-    this.graphQLErrors = void 0;
-
     const oq = this.observableQuery;
     if (oq) oq.stopPolling();
   }
@@ -177,7 +186,11 @@ export class QueryInfo {
 
   private lastWatch?: Cache.WatchOptions;
 
-  public updateWatch<TVars = Record<string, any>>(variables: TVars): this {
+  private updateWatch(variables = this.variables) {
+    const oq = this.observableQuery;
+    if (oq && oq.options.fetchPolicy === "no-cache") {
+      return;
+    }
     if (!this.lastWatch ||
         this.lastWatch.query !== this.document ||
         !equal(variables, this.lastWatch.variables)) {
@@ -189,8 +202,10 @@ export class QueryInfo {
         callback: diff => this.setDiff(diff),
       });
     }
-    return this;
   }
+
+  private lastWrittenResult?: FetchResult<any>;
+  private lastWrittenVars?: WatchQueryOptions["variables"];
 
   public markResult<T>(
     result: FetchResult<T>,
@@ -200,6 +215,8 @@ export class QueryInfo {
       | "errorPolicy">,
     allowCacheWrite: boolean,
   ) {
+    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+
     if (options.fetchPolicy === 'no-cache') {
       this.diff = { result: result.data, complete: true };
 
@@ -218,11 +235,57 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction(cache => {
-          cache.writeQuery({
-            query: this.document!,
-            data: result.data as T,
-            variables: options.variables,
-          });
+          if (equal(result, this.lastWrittenResult) &&
+              equal(options.variables, this.lastWrittenVars)) {
+            // If result is the same as the last result we received from
+            // the network (and the variables match too), avoid writing
+            // result into the cache again. The wisdom of skipping this
+            // cache write is far from obvious, since any cache write
+            // could be the one that puts the cache back into a desired
+            // state, fixing corruption or missing data. However, if we
+            // always write every network result into the cache, we enable
+            // feuds between queries competing to update the same data in
+            // incompatible ways, which can lead to an endless cycle of
+            // cache broadcasts and useless network requests. As with any
+            // feud, eventually one side must step back from the brink,
+            // letting the other side(s) have the last word(s). There may
+            // be other points where we could break this cycle, such as
+            // silencing the broadcast for cache.writeQuery (not a good
+            // idea, since it just delays the feud a bit) or somehow
+            // avoiding the network request that just happened (also bad,
+            // because the server could return useful new data). All
+            // options considered, skipping this cache write seems to be
+            // the least damaging place to break the cycle, because it
+            // reflects the intuition that we recently wrote this exact
+            // result into the cache, so the cache *should* already/still
+            // contain this data. If some other query has clobbered that
+            // data in the meantime, that's too bad, but there will be no
+            // winners if every query blindly reverts to its own version
+            // of the data. This approach also gives the network a chance
+            // to return new data, which will be written into the cache as
+            // usual, notifying only those queries that are directly
+            // affected by the cache updates, as usual. In the future, an
+            // even more sophisticated cache could perhaps prevent or
+            // mitigate the clobbering somehow, but that would make this
+            // particular cache write even less important, and thus
+            // skipping it would be even safer than it is today.
+            if (this.diff && this.diff.complete) {
+              // Reuse data from the last good (complete) diff that we
+              // received, when possible.
+              result.data = this.diff.result;
+              return;
+            }
+            // If the previous this.diff was incomplete, fall through to
+            // re-reading the latest data with cache.diff, below.
+          } else {
+            cache.writeQuery({
+              query: this.document!,
+              data: result.data as T,
+              variables: options.variables,
+            });
+            this.lastWrittenResult = result;
+            this.lastWrittenVars = options.variables;
+          }
 
           const diff = cache.diff<T>({
             query: this.document!,
@@ -230,6 +293,10 @@ export class QueryInfo {
             returnPartialData: true,
             optimistic: true,
           });
+
+          // Any time we're about to update this.diff, we need to make
+          // sure we've started watching the cache.
+          this.updateWatch(options.variables);
 
           // If we're allowed to write to the cache, and we can read a
           // complete result from the cache, update result.data to be the
@@ -241,10 +308,11 @@ export class QueryInfo {
             result.data = diff.result;
           }
         });
+
+      } else {
+        this.lastWrittenResult = this.lastWrittenVars = void 0;
       }
     }
-
-    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
   }
 
   public markReady() {
@@ -254,6 +322,7 @@ export class QueryInfo {
 
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
+    this.lastWrittenResult = this.lastWrittenVars = void 0;
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

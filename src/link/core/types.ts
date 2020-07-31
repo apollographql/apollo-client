@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql/language/ast';
 import { ExecutionResult } from 'graphql/execution/execute';
 export { DocumentNode };
 
-import { Observable } from '../../utilities/observables/Observable';
+import { Observable } from '../../utilities';
 
 export interface GraphQLRequest {
   query: DocumentNode;

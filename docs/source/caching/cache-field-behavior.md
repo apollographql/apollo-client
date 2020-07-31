@@ -1,18 +1,24 @@
 ---
 title: Customizing the behavior of cached fields
+sidebar_title: Customizing field behavior
 ---
 
-You can customize how individual fields in the Apollo Client cache are read and written. To do so, you define a `FieldPolicy` object for a given field. You nest a `FieldPolicy` object within whatever [`TypePolicy` object](./cache-configuration/#the-typepolicy-type)  corresponds to the type that contains the field.
+You can customize how a particular field in your Apollo Client cache is read and written. To do so, you define a **field policy** for the field. A field policy can include:
 
-The following example defines a `FieldPolicy` for the `name` field of a `Person` type. The `FieldPolicy` includes a [`read` function](#the-read-function), which modifies what the cache returns whenever the field is queried:
+* A [`read` function](#the-read-function) that specifies what happens when the field's cached value is read
+* A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
+* An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
-```ts
+You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whatever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the type that contains the field. The following example defines a field policy for the `name` field of a `Person` type: 
+
+```ts{5-10}
 const cache = new InMemoryCache({
   typePolicies: {
     Person: {
       fields: {
         name: {
           read(name) {
+            // Return the cached name, transformed to upper case
             return name.toUpperCase();
           }
         }
@@ -22,43 +28,15 @@ const cache = new InMemoryCache({
 });
 ```
 
-The use cases for `FieldPolicy` objects are described below.
+The field policy above defines a [`read` function](#the-read-function) that specifies what the cache returns whenever `Person.name` is queried.
 
-## Reducing cache duplicates by specifying key arguments
-
-If a field accepts arguments, you can specify an array of `keyArgs` in the field's `FieldPolicy`. This array indicates which arguments are **key arguments** that are used to calculate the field's value. Specifying this array can help reduce the amount of duplicate data in your cache.
-
-Let's say your schema's `Query` type includes a `monthForNumber` field that returns the details of a `Month` type, given a provided `number` argument (January for `1` and so on). The `number` argument is a key argument for this field, because it is used when calculating the field's result:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        monthForNumber: {
-          keyArgs: ["number"],
-        },
-      },
-    },
-  },
-});
-```
-
-An example of a _non-key_ argument is an access token, which is used to authorize a query but _not_ to calculate its result. If `monthForNumber` accepts an `accessToken` argument, the value of that argument does _not_ affect the details of the returned `Month` type.
-
-By default, the cache stores a separate value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different queries with the `monthForNumber` field, passing the _same_ `number` argument but _different_ `accessToken` arguments, the second query response will overwrite the first, because both invocations have the same key arguments.
-
-## Customizing field reads and writes
-
-You can customize the cache's behavior when you read or write a particular field. For example, you might want the cache to return a particular default value for a field when that field isn't present in the cache.
-
-To accomplish this, you can define `read` and `merge` functions as part of any field's `FieldPolicy`. These functions are called whenever the associated field is queried (`read`) or updated (`merge`) in the cache.
-
-### The `read` function
+## The `read` function
 
 If you define a `read` function for a field, the cache calls that function whenever your client queries for the field. In the query response, the field is populated with the `read` function's return value, _instead of the field's cached value_.
 
-The `read` function takes the field's cached value as a parameter, so you can use it to help determine the function's return value.
+The first parameter of a `read` function provides the field's currently cached value, if one exists. You can use this to help determine the function's return value.
+
+The second parameter is an object that provides access to several properties and helper functions, which are explained in the [`FieldPolicy` API reference](#fieldpolicy-api-reference).
 
 The following `read` function assigns a default value of `UNKNOWN NAME` to the `name` field of a `Person` type, if the actual value is not available in the cache. In all other cases, the cached value is returned.
 
@@ -78,7 +56,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-If a field accepts arguments, its associated `read` function is passed the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
+If a field accepts arguments, the second parameter includes the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
 
 ```ts
 const cache = new InMemoryCache({
@@ -116,7 +94,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-> Note that to query for a field that is only defined locally, your query should [include the `@client` directive](/data/local-state/#querying-local-state) on that field so that Apollo Client doesn't include it in requests to your GraphQL server.
+> Note that to query for a field that is only defined locally, your query should [include the `@client` directive](../local-state/managing-state-with-field-policies#querying) on that field so that Apollo Client doesn't include it in requests to your GraphQL server.
 
 Other use cases for a `read` function include:
 
@@ -126,11 +104,11 @@ Other use cases for a `read` function include:
 
 For a full list of the options provided to the `read` function, see the [API reference](#fieldpolicy-api-reference). You will almost never need to use all of these options, but each one has an important role when reading fields from the cache.
 
-### The `merge` function
+## The `merge` function
 
 If you define a `merge` function for a field, the cache calls that function whenever the field is about to be written with an incoming value (such as from your GraphQL server). When the write occurs, the field's new value is set to the `merge` function's return value, _instead of the original incoming value_.
 
-#### Merging arrays
+### Merging arrays
 
 A common use case for a `merge` function is to define how to write to a field that holds an array. By default, the field's existing array is _completely replaced_ by the incoming array. Often, it's preferable to _concatenate_ the two arrays instead, like so:
 
@@ -154,7 +132,7 @@ Note that `existing` is undefined the very first time this function is called fo
 
 > Your `merge` function **cannot** push the `incoming` array directly onto the `existing` array. It must instead return a new array to prevent potential errors. In development mode, Apollo Client prevents unintended modification of the `existing` data with `Object.freeze`.
 
-#### Merging non-normalized objects
+### Merging non-normalized objects
 
 Another common use case for custom field `merge` functions is to combine nested objects that do not have IDs, but are known (by you, the application developer) to represent the same logical object, assuming the parent object is the same.
 
@@ -230,6 +208,23 @@ const cache = new InMemoryCache({
 });
 ```
 
+Since writing this kind of `merge` function can become repetitive, the following shorthand will provide the same behavior:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        author: {
+          // Short for always preferring incoming over existing data.
+          merge: false,
+        },
+      },
+    },
+  },
+});
+```
+
 When you use `{ ...existing, ...incoming }`, `Author` objects with differing fields (`name`, `dateOfBirth`) can be combined without losing fields, which is definitely an improvement over blind replacement.
 
 But what if the `Author` type defines its own custom `merge` functions for fields of the `incoming` object? Since we're using [object spread syntax](https://2ality.com/2016/10/rest-spread-properties.html), such fields will immediately overwrite fields in `existing`, without triggering any nested `merge` functions. The `{ ...existing, ...incoming }` syntax may be an improvement, but it is not fully correct.
@@ -255,9 +250,26 @@ const cache = new InMemoryCache({
 
 Because this `Book.author` field policy has no `Book`- or `Author`-specific logic in it, you can reuse this `merge` function for any field that needs this kind of handling.
 
+Since writing this kind of `merge` function can become repetitive, the following shorthand will provide the same behavior:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        author: {
+          // Short for options.mergeObjects(existing, incoming).
+          merge: true,
+        },
+      },
+    },
+  },
+});
+```
+
 In summary, the `Book.author` policy above allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
 
-#### Merging arrays of non-normalized objects
+### Merging arrays of non-normalized objects
 
 Once you're comfortable with the ideas and recommendations from the previous section, consider what happens when a `Book` can have multiple authors:
 
@@ -471,6 +483,34 @@ const cache = new InMemoryCache({
 });
 ```
 
+## Specifying key arguments
+
+If a field accepts arguments, you can specify an array of `keyArgs` in the field's `FieldPolicy`. This array indicates which arguments are **key arguments** that are used to calculate the field's value. Specifying this array can help reduce the amount of duplicate data in your cache.
+
+### Example
+
+Let's say your schema's `Query` type includes a `monthForNumber` field. This field returns the details of particular month, given a provided `number` argument (January for `1` and so on). The `number` argument is a key argument for this field, because it is used when calculating the field's result:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        monthForNumber: {
+          keyArgs: ["number"],
+        },
+      },
+    },
+  },
+});
+```
+
+An example of a _non-key_ argument is an access token, which is used to authorize a query but _not_ to calculate its result. If `monthForNumber` also accepts an `accessToken` argument, the value of that argument does _not_ affect which month's details are returned.
+
+By default, the cache stores a separate value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different queries with the `monthForNumber` field, passing the _same_ `number` argument but _different_ `accessToken` arguments, the second query response will overwrite the first, because both invocations use the exact same value for all key arguments.
+
+If you need more control over the behavior of `keyArgs`, you can pass a function instead of an array. This `keyArgs` function will receive the arguments object as its first parameter, and a `context` object providing other relevant details as its second parameter. See `KeyArgsFunction` in the types below for further information.
+
 ## `FieldPolicy` API reference
 
 Here are the definitions for the `FieldPolicy` type and its related types:
@@ -485,7 +525,7 @@ type FieldPolicy<
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
-  merge?: FieldMergeFunction<TExisting, TIncoming>;
+  merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
 
 type KeySpecifier = (string | KeySpecifier)[];
@@ -496,6 +536,7 @@ type KeyArgsFunction = (
     typename: string;
     fieldName: string;
     field: FieldNode | null;
+    variables?: Record<string, any>;
   },
 ) => string | KeySpecifier | null | void;
 
@@ -512,6 +553,8 @@ type FieldMergeFunction<TExisting, TIncoming = TExisting> = (
 
 // These options are common to both read and merge functions:
 interface FieldFunctionOptions {
+  cache: InMemoryCache;
+
   // The final argument values passed to the field, after applying variables.
   // If no arguments were provided, this property will be null.
   args: Record<string, any> | null;
@@ -538,8 +581,13 @@ interface FieldFunctionOptions {
   // at minimum, a __typename and any necessary key fields. If true is
   // passed for the optional mergeIntoStore argument, the object's fields
   // will also be persisted into the cache, which can be useful to ensure
-  // the Reference actually refers to data stored in the cache.
-  toReference(obj: StoreObject, mergeIntoStore?: boolean): Reference;
+  // the Reference actually refers to data stored in the cache. If you
+  // pass an ID string, toReference will make a Reference out of it. If
+  // you pass a Reference, toReference will return it as-is.
+  toReference(
+    objOrIdOrRef: StoreObject | string | Reference,
+    mergeIntoStore?: boolean,
+  ): Reference | undefined;
 
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
@@ -554,6 +602,11 @@ interface FieldFunctionOptions {
     nameOrField: string | FieldNode,
     foreignObjOrRef?: StoreObject | Reference,
   ): T;
+
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  canRead(value: StoreValue): boolean;
 
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,

@@ -1,13 +1,11 @@
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { Observable, ObservableSubscription as Subscription } from '../utilities/observables/Observable';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { ApolloClient } from '..';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { itAsync } from '../utilities/testing/itAsync';
-import subscribeAndCount from '../utilities/testing/subscribeAndCount';
+import { ApolloClient } from '../core';
+import { InMemoryCache } from '../cache';
+import { ApolloLink } from '../link/core';
+import { Observable, ObservableSubscription as Subscription } from '../utilities';
+import { itAsync, subscribeAndCount, mockSingleLink } from '../testing';
 
 describe('mutation results', () => {
   const query = gql`
@@ -654,12 +652,6 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -685,9 +677,10 @@ describe('mutation results', () => {
         },
       })).then(() => {
         subscriptionHandle.unsubscribe();
-        expect(errors).toHaveLength(1);
-        expect(errors[0].message).toBe(`Hello... It's me.`);
-        console.error = oldError;
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
       }).then(resolve, reject);
     });
   });
@@ -1289,12 +1282,6 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -1318,9 +1305,10 @@ describe('mutation results', () => {
         },
       })).then(() => {
         subscriptionHandle.unsubscribe();
-        expect(errors).toHaveLength(1);
-        expect(errors[0].message).toBe(`Hello... It's me.`);
-        console.error = oldError;
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
       }).then(resolve, reject);
     });
 

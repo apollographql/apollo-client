@@ -6,9 +6,8 @@ import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
-import { GraphQLRequest, FetchResult } from '../../../link/core/types';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
+import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
+import { InMemoryCache, InMemoryCacheConfig } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject
@@ -26,7 +25,7 @@ import { ObservableQuery } from '../../ObservableQuery';
 import { MutationBaseOptions, MutationOptions, WatchQueryOptions } from '../../watchQueryOptions';
 import { QueryManager } from '../../QueryManager';
 
-import { ApolloError } from '../../../errors/ApolloError';
+import { ApolloError } from '../../../errors';
 
 // testing utils
 import wrap from '../../../utilities/testing/wrap';
@@ -36,6 +35,7 @@ import observableToPromise, {
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
+import { ApolloClient } from '../../../core'
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -62,15 +62,18 @@ describe('QueryManager', () => {
     link,
     config = {},
     clientAwareness = {},
+    queryDeduplication = false,
   }: {
     link: ApolloLink;
-    config?: ApolloReducerConfig;
+    config?: Partial<InMemoryCacheConfig>;
     clientAwareness?: { [key: string]: string };
+    queryDeduplication?: boolean;
   }) => {
     return new QueryManager({
       link,
       cache: new InMemoryCache({ addTypename: false, ...config }),
       clientAwareness,
+      queryDeduplication,
     });
   };
 
@@ -188,8 +191,15 @@ describe('QueryManager', () => {
 
   function getCurrentQueryResult<TData, TVars>(
     observableQuery: ObservableQuery<TData, TVars>,
-  ): ReturnType<ObservableQuery<TData, TVars>["getCurrentQueryResult"]> {
-    return (observableQuery as any).getCurrentQueryResult();
+  ): {
+    data?: TData;
+    partial: boolean;
+  } {
+    const result = observableQuery.getCurrentResult();
+    return {
+      data: result.data,
+      partial: !!result.partial,
+    };
   }
 
   itAsync('handles GraphQL errors', (resolve, reject) => {
@@ -2049,19 +2059,6 @@ describe('QueryManager', () => {
             networkStatus: NetworkStatus.ready,
           });
         },
-        result => {
-          expect(stripSymbols(result)).toEqual({
-            data: {
-              ...data2,
-              author: {
-                ...data2.author,
-                id: data1.author.id,
-              },
-            },
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-          });
-        },
       ),
     ]).then(resolve, reject);
   });
@@ -2138,6 +2135,7 @@ describe('QueryManager', () => {
             data: {},
             loading: true,
             networkStatus: NetworkStatus.loading,
+            partial: true,
           });
         },
         result => {
@@ -2161,6 +2159,133 @@ describe('QueryManager', () => {
         },
       ),
     ]).then(resolve, reject);
+  });
+
+  itAsync("should not write unchanged network results to cache", (resolve, reject) => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            info: {
+              merge: false,
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(operation => new Observable((observer: Observer<FetchResult>) => {
+        switch (operation.operationName) {
+          case "A":
+            observer.next!({ data: { info: { a: "ay" }}});
+            break;
+          case "B":
+            observer.next!({ data: { info: { b: "bee" }}});
+            break;
+        }
+        observer.complete!();
+      })),
+    });
+
+    const queryA = gql`query A { info { a } }`;
+    const queryB = gql`query B { info { b } }`;
+
+    const obsA = client.watchQuery({
+      query: queryA,
+      returnPartialData: true,
+    });
+
+    const obsB = client.watchQuery({
+      query: queryB,
+      returnPartialData: true,
+    });
+
+    subscribeAndCount(reject, obsA, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {},
+          partial: true,
+        });
+      } else if (count === 2) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              a: "ay",
+            },
+          },
+        });
+      } else if (count === 3) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {
+            info: {},
+          },
+          partial: true,
+        });
+      } else if (count === 4) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              a: "ay",
+            },
+          },
+        });
+        setTimeout(resolve, 100);
+      } else {
+        reject(new Error(`Unexpected ${JSON.stringify({count,result})}`));
+      }
+    });
+
+    subscribeAndCount(reject, obsB, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {},
+          partial: true,
+        });
+      } else if (count === 2) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              b: "bee",
+            },
+          },
+        });
+      } else if (count === 3) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {
+            info: {},
+          },
+        });
+      } else if (count === 4) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              b: "bee",
+            },
+          },
+        });
+        setTimeout(resolve, 100);
+      } else {
+        reject(new Error(`Unexpected ${JSON.stringify({count,result})}`));
+      }
+    });
   });
 
   itAsync('should not error when replacing unidentified data with a normalized ID', (resolve, reject) => {
@@ -2210,6 +2335,7 @@ describe('QueryManager', () => {
       },
     };
 
+    let mergeCount = 0;
     const queryManager = createQueryManager({
       link: mockSingleLink({
         request: { query: queryWithoutId },
@@ -2218,6 +2344,34 @@ describe('QueryManager', () => {
         request: { query: queryWithId },
         result: { data: dataWithId },
       }).setOnError(reject),
+      config: {
+        typePolicies: {
+          Query: {
+            fields: {
+              author: {
+                merge(existing, incoming, { isReference, readField }) {
+                  switch (++mergeCount) {
+                    case 1:
+                      expect(existing).toBeUndefined();
+                      expect(isReference(incoming)).toBe(false);
+                      expect(incoming).toEqual(dataWithoutId.author);
+                      break;
+                    case 2:
+                      expect(existing).toEqual(dataWithoutId.author);
+                      expect(isReference(incoming)).toBe(true);
+                      expect(readField("id", incoming)).toBe("129");
+                      expect(readField("name", incoming)).toEqual(dataWithId.author.name);
+                      break;
+                    default:
+                      fail("unreached");
+                  }
+                  return incoming;
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const observableWithId = queryManager.watchQuery<any>({
@@ -4637,7 +4791,9 @@ describe('QueryManager', () => {
   });
 
   describe('awaitRefetchQueries', () => {
-    const awaitRefetchTest = ({ awaitRefetchQueries }: MutationBaseOptions) => new Promise((resolve, reject) => {
+    const awaitRefetchTest =
+    ({ awaitRefetchQueries, testQueryError = false }: MutationBaseOptions & { testQueryError?: boolean }) =>
+    new Promise((resolve, reject) => {
       const query = gql`
         query getAuthors($id: ID!) {
           author(id: $id) {
@@ -4679,6 +4835,8 @@ describe('QueryManager', () => {
 
       const variables = { id: '1234' };
 
+      const refetchError = testQueryError ? new Error('Refetch failed') : undefined;
+
       const queryManager = mockQueryManager(
         reject,
         {
@@ -4692,6 +4850,7 @@ describe('QueryManager', () => {
         {
           request: { query, variables },
           result: { data: secondReqData },
+          error: refetchError,
         },
       );
 
@@ -4701,6 +4860,7 @@ describe('QueryManager', () => {
         notifyOnNetworkStatusChange: false,
       });
 
+      let isRefetchErrorCaught = false;
       let mutationComplete = false;
       return observableToPromise(
         { observable },
@@ -4715,6 +4875,10 @@ describe('QueryManager', () => {
           }
           queryManager.mutate(mutateOptions).then(() => {
             mutationComplete = true;
+          })
+          .catch(error => {
+            expect(error).toBeDefined();
+            isRefetchErrorCaught = true;
           });
         },
         result => {
@@ -4728,7 +4892,21 @@ describe('QueryManager', () => {
           );
           expect(stripSymbols(result.data)).toEqual(secondReqData);
         },
-      ).then(resolve, reject);
+      )
+      .then(resolve)
+      .catch(error => {
+        const isRefetchError = awaitRefetchQueries && testQueryError &&
+          error.message.includes(refetchError?.message);
+
+        if (isRefetchError) {
+          return setTimeout(() => {
+            expect(isRefetchErrorCaught).toBe(true);
+            resolve();
+          }, 10);
+        }
+
+        reject(error);
+      });
     });
 
     it(
@@ -4748,6 +4926,12 @@ describe('QueryManager', () => {
         'the mutation, when `awaitRefetchQueries` is `true`',
       () => awaitRefetchTest({ awaitRefetchQueries: true })
     );
+
+    it(
+      'should allow catching errors from `refetchQueries` when ' +
+        '`awaitRefetchQueries` is `true`',
+      () => awaitRefetchTest({ awaitRefetchQueries: true, testQueryError: true })
+    )
   });
 
   describe('store watchers', () => {
@@ -4897,4 +5081,46 @@ describe('QueryManager', () => {
       });
     });
   });
+
+  describe('queryDeduplication', () => {
+    it('should be true when context is true, default is false and argument not provided', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+      });
+
+      queryManager.query({ query, context: { queryDeduplication: true } })
+
+      expect(queryManager['inFlightLinkObservables'].size).toBe(1)
+    });
+    it('should allow overriding global queryDeduplication: true to false', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+        queryDeduplication: true,
+      });
+
+      queryManager.query({ query, context: { queryDeduplication: false } })
+
+      expect(queryManager['inFlightLinkObservables'].size).toBe(0)
+    });
+  })
 });

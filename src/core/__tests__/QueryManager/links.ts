@@ -2,7 +2,7 @@
 import gql from 'graphql-tag';
 
 import { Observable } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
+import { ApolloLink } from '../../../link/core';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 

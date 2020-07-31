@@ -8,7 +8,7 @@ description: Send GraphQL operations over a WebSocket. Works with GraphQL Subscr
 This link is particularly useful to use with GraphQL Subscriptions, but it will also allow you to send GraphQL queries and mutations over WebSockets.
 
 ```js
-import { WebSocketLink } from "@apollo/link-ws";
+import { WebSocketLink } from "@apollo/client/link/ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const GRAPHQL_ENDPOINT = "ws://localhost:3000/graphql";
@@ -22,7 +22,7 @@ const link = new WebSocketLink(client);
 
 ## Options
 
-`@apollo/link-ws` takes either a subscription client, or an object with three options, to customize the behavior of the link.
+`@apollo/client/link/ws` takes either a subscription client, or an object with three options, to customize the behavior of the link.
 
 | Option | Description |
 | - | - |

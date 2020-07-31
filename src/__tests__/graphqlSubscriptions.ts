@@ -1,11 +1,9 @@
 import gql from 'graphql-tag';
 
-import {
-  mockObservableLink
-} from '../utilities/testing/mocking/mockSubscriptionLink';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { ApolloClient } from '../';
+import { ApolloClient } from '../core';
+import { InMemoryCache } from '../cache';
 import { QueryManager } from '../core/QueryManager';
+import { mockObservableLink } from '../testing';
 
 describe('GraphQL Subscriptions', () => {
   const results = [
@@ -29,6 +27,9 @@ describe('GraphQL Subscriptions', () => {
       variables: {
         name: 'Changping Chen',
       },
+      context: {
+        someVar: 'Some value'
+      }
     };
 
     defaultOptions = {
@@ -241,5 +242,24 @@ describe('GraphQL Subscriptions', () => {
       });
       setTimeout(() => link.simulateComplete(), 100);
     });
+  });
+
+  it('should pass a context object through the link execution chain', done => {
+    const link = mockObservableLink();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    client.subscribe(options).subscribe({
+      next() {
+        expect(link.operation.getContext().someVar).toEqual(
+          options.context.someVar
+        );
+        done();
+      },
+    });
+
+    link.simulateResult(results[0]);
   });
 });

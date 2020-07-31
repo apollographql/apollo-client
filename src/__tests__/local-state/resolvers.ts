@@ -2,16 +2,21 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 
-import { Observable, Observer } from '../../utilities/observables/Observable';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { ApolloClient } from '../..';
+import { LocalState } from '../../core/LocalState';
+
+import {
+  ApolloClient,
+  ApolloQueryResult,
+  Resolvers,
+  WatchQueryOptions,
+} from '../../core';
+
+import { InMemoryCache } from '../../cache';
+import { Observable, Observer } from '../../utilities';
+import { ApolloLink } from '../../link/core';
+import { itAsync } from '../../testing';
 import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
 import wrap from '../../utilities/testing/wrap';
-import { itAsync } from '../../utilities/testing/itAsync';
-import { ApolloQueryResult, Resolvers } from '../../core/types';
-import { WatchQueryOptions } from '../../core/watchQueryOptions';
-import { LocalState } from '../../core/LocalState';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
@@ -546,21 +551,21 @@ describe('Writing cache data from resolvers', () => {
       resolvers: {
         Mutation: {
           start() {
-            const obj = {
-              __typename: 'Object',
-              id: 'uniqueId',
-              field: 1,
-            };
-
             cache.writeQuery({
               query,
-              data: { obj },
+              data: {
+                obj: { field: 1, id: 'uniqueId', __typename: 'Object' },
+              },
             });
 
-            cache.writeFragment({
-              id: cache.identify(obj)!,
-              fragment: gql`fragment Field on Object { field }`,
-              data: { field: 2 },
+            cache.modify({
+              id: 'Object:uniqueId',
+              fields: {
+                field(value) {
+                  expect(value).toBe(1);
+                  return 2;
+                },
+              },
             });
 
             return { start: true };
@@ -577,7 +582,7 @@ describe('Writing cache data from resolvers', () => {
       });
   });
 
-  itAsync('should not overwrite __typename when writing to the cache with an id', (resolve, reject) => {
+  it('should not overwrite __typename when writing to the cache with an id', () => {
     const query = gql`
       {
         obj @client {
@@ -603,35 +608,25 @@ describe('Writing cache data from resolvers', () => {
       resolvers: {
         Mutation: {
           start() {
-            const obj = {
-              __typename: 'Object',
-              id: 'uniqueId',
-              field: {
-                __typename: 'Field',
-                field2: 1,
-              },
-            };
-
             cache.writeQuery({
               query,
-              data: { obj },
-            });
-
-            cache.writeFragment({
-              id: cache.identify(obj)!,
-              fragment: gql`fragment FieldField2 on Object {
-                field {
-                  field2
-                }
-              }`,
               data: {
-                field: {
-                  __typename: 'Field',
-                  field2: 2,
+                obj: {
+                  field: { field2: 1, __typename: 'Field' },
+                  id: 'uniqueId',
+                  __typename: 'Object',
                 },
               },
             });
-
+            cache.modify({
+              id: 'Object:uniqueId',
+              fields: {
+                field(value: { field2: number }) {
+                  expect(value.field2).toBe(1);
+                  return { ...value, field2: 2 };
+                },
+              },
+            })
             return { start: true };
           },
         },
@@ -644,7 +639,8 @@ describe('Writing cache data from resolvers', () => {
       .then(({ data }: any) => {
         expect(data.obj.__typename).toEqual('Object');
         expect(data.obj.field.__typename).toEqual('Field');
-      }).then(resolve, reject);
+      })
+      .catch(e => console.log(e));
   });
 });
 

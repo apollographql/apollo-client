@@ -7,13 +7,18 @@ export {
   Reference,
   isReference,
   makeReference,
-} from '../utilities/graphql/storeUtils';
+} from '../utilities';
 
 export {
   InMemoryCache,
   InMemoryCacheConfig,
-  ReactiveVar,
 } from './inmemory/inMemoryCache';
+
+export {
+  ReactiveVar,
+  makeVar,
+  cacheSlot,
+} from './inmemory/reactiveVars';
 
 export {
   defaultDataIdFromObject,

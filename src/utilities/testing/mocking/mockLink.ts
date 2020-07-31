@@ -1,20 +1,21 @@
 import { print } from 'graphql/language/printer';
 import { equal } from '@wry/equality';
+import { invariant } from 'ts-invariant';
 
-import { Observable } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
 import {
+  ApolloLink,
   Operation,
   GraphQLRequest,
   FetchResult,
-} from '../../../link/core/types';
+} from '../../../link/core';
+
 import {
+  Observable,
   addTypenameToDocument,
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
-} from '../../../utilities/graphql/transform';
-import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import invariant from 'ts-invariant';
+  cloneDeep,
+} from '../../../utilities';
 
 export type ResultFunction<T> = () => T;
 

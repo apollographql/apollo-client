@@ -2,17 +2,25 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
-import { Observable, ObservableSubscription } from '../utilities/observables/Observable';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { FetchPolicy, WatchQueryFetchPolicy, QueryOptions } from '../core/watchQueryOptions';
-import { ApolloError } from '../errors/ApolloError';
-import { ApolloClient } from '..';
-import subscribeAndCount from '../utilities/testing/subscribeAndCount';
-import { itAsync } from '../utilities/testing/itAsync';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { ObservableQuery, PossibleTypesMap } from '../core';
+import {
+  ApolloClient,
+  FetchPolicy,
+  WatchQueryFetchPolicy,
+  QueryOptions,
+  ObservableQuery,
+} from '../core';
+
+import { Observable, ObservableSubscription } from '../utilities';
+import { ApolloLink } from '../link/core';
+import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
+import { ApolloError } from '../errors';
+
+import {
+  itAsync,
+  stripSymbols,
+  subscribeAndCount,
+  mockSingleLink,
+} from '../testing';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -1348,20 +1356,23 @@ describe('client', () => {
       },
     };
 
-    // we have two responses for identical queries, but only the first should be requested.
-    // the second one should never make it through to the network interface.
-    const link = mockSingleLink({
-      request: { query: queryDoc },
-      result: { data },
-      delay: 10,
-    }, {
-      request: { query: queryDoc },
-      result: { data: data2 },
-    }).setOnError(reject);
+    // we have two responses for identical queries, and both should be requested.
+    // the second one should make it through to the network interface.
+    const link = mockSingleLink(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    ).setOnError(reject);
+
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
-
       queryDeduplication: false,
     });
 
@@ -1416,6 +1427,103 @@ describe('client', () => {
     return Promise.all([q1, q2]).then(([result1, result2]) => {
       expect(result1.data).toEqual(result2.data);
     }).then(resolve, reject);
+  });
+
+  it('deduplicates queries if query context.queryDeduplication is set to true', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const link = mockSingleLink(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+      queryDeduplication: false,
+    });
+
+    // Both queries need to be deduplicated, otherwise only one gets tracked
+    const q1 = client.query({ query: queryDoc, context: { queryDeduplication: true } });
+    const q2 = client.query({ query: queryDoc, context: { queryDeduplication: true } });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      expect(stripSymbols(result1.data)).toEqual(data);
+      expect(stripSymbols(result2.data)).toEqual(data);
+    });
+  });
+
+  it('does not deduplicate queries if query context.queryDeduplication is set to false', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, and both should be requested.
+    // the second one should make it through to the network interface.
+    const link = mockSingleLink(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    // The first query gets tracked in the dedup logic, the second one ignores it and runs anyways
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc, context: { queryDeduplication: false } });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      expect(stripSymbols(result1.data)).toEqual(data);
+      expect(stripSymbols(result2.data)).toEqual(data2);
+    });
   });
 
   itAsync('unsubscribes from deduplicated observables only once', (resolve, reject) => {
@@ -1600,7 +1708,12 @@ describe('client', () => {
         },
       });
 
-      checkCacheAndNetworkError(() => client.query({ query }));
+      checkCacheAndNetworkError(() => client.query({
+        query,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.query.fetchPolicy.
+        fetchPolicy: void 0,
+      }));
     });
 
     itAsync('fetches from cache first, then network', (resolve, reject) => {
@@ -2815,6 +2928,8 @@ describe('@connection', () => {
   });
 
   itAsync('should broadcast changes for reactive variables', async (resolve, reject) => {
+    const aVar = makeVar(123);
+    const bVar = makeVar("asdf");
     const cache: InMemoryCache = new InMemoryCache({
       typePolicies: {
         Query: {
@@ -2829,9 +2944,6 @@ describe('@connection', () => {
         },
       },
     });
-
-    const aVar = cache.makeVar(123);
-    const bVar = cache.makeVar("asdf");
 
     const client = new ApolloClient({ cache });
 
@@ -2913,7 +3025,7 @@ describe('@connection', () => {
     expect(checkLastResult(abResults, a456bOyez)).toBe(a456bOyez);
 
     // Now invalidate the ROOT_QUERY.a field.
-    client.cache.evict("ROOT_QUERY", "a");
+    client.cache.evict({ fieldName: "a" });
     await wait();
 
     // The results are structurally the same, but the result objects have
@@ -2942,7 +3054,22 @@ describe('@connection', () => {
     checkLastResult(abResults, a456bOyez);
     checkLastResult(cResults, { c: "see" });
 
-    client.cache.evict("ROOT_QUERY", "c");
+    cache.modify({
+      fields: {
+        c(value) {
+          expect(value).toBe("see");
+          return "saw";
+        },
+      },
+    });
+    await wait();
+
+    checkLastResult(aResults, a456);
+    checkLastResult(bResults, bOyez);
+    checkLastResult(abResults, a456bOyez);
+    checkLastResult(cResults, { c: "saw" });
+
+    client.cache.evict({ fieldName: "c" });
     await wait();
 
     checkLastResult(aResults, a456);
@@ -2978,6 +3105,7 @@ describe('@connection', () => {
     expect(cResults).toEqual([
       {},
       { c: "see" },
+      { c: "saw" },
       {},
     ]);
 
@@ -3026,7 +3154,12 @@ describe('@connection', () => {
         data: initialData,
       });
 
-      const obs = client.watchQuery({ query });
+      const obs = client.watchQuery({
+        query,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.watchQuery.fetchPolicy.
+        fetchPolicy: void 0,
+      });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         const resultData = stripSymbols(result.data);
@@ -3084,7 +3217,12 @@ describe('@connection', () => {
         },
       });
 
-      return client.mutate({ mutation }).then(result => {
+      return client.mutate({
+        mutation,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.mutate.variables.
+        variables: void 0,
+      }).then(result => {
         expect(result.data).toEqual(data);
       }).then(resolve, reject);
     });

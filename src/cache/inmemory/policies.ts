@@ -11,8 +11,6 @@ import { invariant, InvariantError } from 'ts-invariant';
 import {
   FragmentMap,
   getFragmentFromSelection,
-} from '../../utilities/graphql/fragments';
-import {
   isField,
   getTypenameFromResult,
   storeKeyNameFromField,
@@ -22,19 +20,26 @@ import {
   Reference,
   isReference,
   getStoreKeyName,
-} from '../../utilities/graphql/storeUtils';
-import { canUseWeakMap } from '../../utilities/common/canUse';
-import { IdGetter } from "./types";
+  canUseWeakMap,
+} from '../../utilities';
+import { IdGetter, ReadMergeModifyContext } from "./types";
 import {
+  hasOwn,
   fieldNameFromStoreName,
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
 } from './helpers';
-import { FieldValueGetter, ToReferenceFunction } from './entityStore';
-import { SafeReadonly } from '../core/types/common';
-
-const hasOwn = Object.prototype.hasOwnProperty;
+import { cacheSlot } from './reactiveVars';
+import { InMemoryCache } from './inMemoryCache';
+import {
+  SafeReadonly,
+  FieldSpecifier,
+  ToReferenceFunction,
+  ReadFieldFunction,
+  ReadFieldOptions,
+  CanReadFunction,
+} from '../core/types/common';
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -83,6 +88,7 @@ export type KeyArgsFunction = (
     typename: string;
     fieldName: string;
     field: FieldNode | null;
+    variables?: Record<string, any>;
   },
 ) => KeySpecifier | ReturnType<IdGetter>;
 
@@ -93,26 +99,14 @@ export type FieldPolicy<
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
-  merge?: FieldMergeFunction<TExisting, TIncoming>;
+  merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
 
 type StorageType = Record<string, any>;
 
-interface FieldSpecifier {
-  typename?: string;
-  fieldName: string;
-  field?: FieldNode;
-  args?: Record<string, any>;
-  variables?: Record<string, any>;
-}
-
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0 ? spec.args :
     spec.field ? argumentsObjectFromField(spec.field, spec.variables) : null;
-}
-
-export interface ReadFieldOptions extends FieldSpecifier {
-  from?: StoreObject | Reference;
 }
 
 export interface FieldFunctionOptions<
@@ -141,6 +135,13 @@ export interface FieldFunctionOptions<
   isReference: typeof isReference;
   toReference: ToReferenceFunction;
 
+  // A handy place to put field-specific data that you want to survive
+  // across multiple read function calls. Useful for field-level caching,
+  // if your read function does any expensive work.
+  storage: StorageType | null;
+
+  cache: InMemoryCache;
+
   // Helper function for reading other fields within the current object.
   // If a foreign object or reference is provided, the field will be read
   // from that object instead of the current object, so this function can
@@ -150,16 +151,12 @@ export interface FieldFunctionOptions<
   // to compute the argument values. Note that this function will invoke
   // custom read functions for other fields, if defined. Always returns
   // immutable data (enforced with Object.freeze in development).
-  readField<T = StoreValue>(options: ReadFieldOptions): SafeReadonly<T> | undefined;
-  readField<T = StoreValue>(
-    fieldName: string,
-    from?: StoreObject | Reference,
-  ): SafeReadonly<T> | undefined;
+  readField: ReadFieldFunction;
 
-  // A handy place to put field-specific data that you want to survive
-  // across multiple read function calls. Useful for field-level caching,
-  // if your read function does any expensive work.
-  storage: StorageType | null;
+  // Returns true for non-normalized StoreObjects and non-dangling
+  // References, indicating that readField(name, objOrRef) has a chance of
+  // working. Useful for filtering out dangling references from lists.
+  canRead: CanReadFunction;
 
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
@@ -189,11 +186,11 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   // reasons discussed in FieldReadFunction above.
   incoming: SafeReadonly<TIncoming>,
   options: FieldFunctionOptions,
-) => TExisting;
+) => SafeReadonly<TExisting>;
 
-export const defaultDataIdFromObject: KeyFieldsFunction = (
-  { __typename, id, _id },
-  context,
+export const defaultDataIdFromObject = (
+  { __typename, id, _id }: Readonly<StoreObject>,
+  context?: KeyFieldsContext,
 ) => {
   if (typeof __typename === "string") {
     if (context) {
@@ -202,18 +199,25 @@ export const defaultDataIdFromObject: KeyFieldsFunction = (
         _id !== void 0 ? { _id } :
         void 0;
     }
-    const idValue = id || _id;
-    if (idValue !== void 0) {
+    // If there is no object.id, fall back to object._id.
+    if (id === void 0) id = _id;
+    if (id !== void 0) {
       return `${__typename}:${(
-        typeof idValue === "number" ||
-        typeof idValue === "string"
-      ) ? idValue : JSON.stringify(idValue)}`;
+        typeof id === "number" ||
+        typeof id === "string"
+      ) ? id : JSON.stringify(id)}`;
     }
   }
 };
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
+
+// These merge functions can be selected by specifying merge:true or
+// merge:false in a field policy.
+const mergeTrueFn: FieldMergeFunction<any> =
+  (existing, incoming, { mergeObjects }) => mergeObjects(existing, incoming);
+const mergeFalseFn: FieldMergeFunction<any> = (_, incoming) => incoming;
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -234,20 +238,25 @@ export class Policies {
     };
   } = Object.create(null);
 
+  public readonly cache: InMemoryCache;
+
   public readonly rootIdsByTypename: Record<string, string> = Object.create(null);
   public readonly rootTypenamesById: Record<string, string> = Object.create(null);
 
   public readonly usingPossibleTypes = false;
 
   constructor(private config: {
+    cache: InMemoryCache;
     dataIdFromObject?: KeyFieldsFunction;
     possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
-  } = {}) {
+  }) {
     this.config = {
       dataIdFromObject: defaultDataIdFromObject,
       ...config,
     };
+
+    this.cache = this.config.cache;
 
     this.setRootTypename("Query");
     this.setRootTypename("Mutation");
@@ -272,6 +281,11 @@ export class Policies {
     const typename = selectionSet && fragmentMap
       ? getTypenameFromResult(object, selectionSet, fragmentMap)
       : object.__typename;
+
+    if (typename) {
+      const rootId = this.rootIdsByTypename[typename];
+      if ("string" === typeof rootId) return [rootId];
+    }
 
     const context: KeyFieldsContext = {
       typename,
@@ -342,7 +356,16 @@ export class Policies {
               existing.keyFn;
 
             if (typeof read === "function") existing.read = read;
-            if (typeof merge === "function") existing.merge = merge;
+
+            existing.merge =
+              typeof merge === "function" ? merge :
+              // Pass merge:true as a shorthand for a merge implementation
+              // that returns options.mergeObjects(existing, incoming).
+              merge === true ? mergeTrueFn :
+              // Pass merge:false to make incoming always replace existing
+              // without any warnings about data clobbering.
+              merge === false ? mergeFalseFn :
+              existing.merge;
           }
 
           if (existing.read && existing.merge) {
@@ -366,7 +389,12 @@ export class Policies {
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
       invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      // First, delete any old __typename associated with this rootId from
+      // rootIdsByTypename.
+      if (old) delete this.rootIdsByTypename[old];
+      // Now make this the only __typename that maps to this rootId.
       this.rootIdsByTypename[typename] = rootId;
+      // Finally, update the __typename associated with this rootId.
       this.rootTypenamesById[rootId] = typename;
     }
   }
@@ -465,6 +493,7 @@ export class Policies {
         typename,
         fieldName,
         field: fieldSpec.field || null,
+        variables: fieldSpec.variables,
       };
       const args = argsFromFieldSpecifier(fieldSpec);
       while (keyFn) {
@@ -498,7 +527,7 @@ export class Policies {
 
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
-    context: ReadMergeContext,
+    context: ReadMergeModifyContext,
   ): SafeReadonly<V> | undefined {
     const objectOrReference = options.from;
     if (!objectOrReference) return;
@@ -507,32 +536,36 @@ export class Policies {
     if (!nameOrField) return;
 
     if (options.typename === void 0) {
-      const typename = context.getFieldValue<string>(
-        objectOrReference, "__typename");
+      const typename = context.store.getFieldValue<string>(objectOrReference, "__typename");
       if (typename) options.typename = typename;
     }
 
     const storeFieldName = this.getStoreFieldName(options);
     const fieldName = fieldNameFromStoreName(storeFieldName);
-    const existing = context.getFieldValue<V>(objectOrReference, storeFieldName);
+    const existing = context.store.getFieldValue<V>(objectOrReference, storeFieldName);
     const policy = this.getFieldPolicy(options.typename, fieldName, false);
     const read = policy && policy.read;
 
     if (read) {
-      const storage = this.storageTrie.lookup(
-        isReference(objectOrReference)
-          ? objectOrReference.__ref
-          : objectOrReference,
-        storeFieldName,
-      );
-
-      return read(existing, makeFieldFunctionOptions(
+      const readOptions = makeFieldFunctionOptions(
         this,
         objectOrReference,
         options,
-        storage,
         context,
-      )) as SafeReadonly<V>;
+        this.storageTrie.lookup(
+          isReference(objectOrReference)
+            ? objectOrReference.__ref
+            : objectOrReference,
+          storeFieldName,
+        ),
+      );
+
+      // Call read(existing, readOptions) with cacheSlot holding this.cache.
+      return cacheSlot.withValue(
+        this.cache,
+        read,
+        [existing, readOptions],
+      ) as SafeReadonly<V>;
     }
 
     return existing;
@@ -549,7 +582,7 @@ export class Policies {
   public applyMerges<T extends StoreValue>(
     existing: T | Reference,
     incoming: T | FieldValueToBeMerged,
-    context: ReadMergeContext,
+    context: ReadMergeModifyContext,
     storageKeys?: [string | StoreObject, string],
   ): T {
     if (isFieldValueToBeMerged(incoming)) {
@@ -589,8 +622,8 @@ export class Policies {
           fieldName,
           field,
           variables: context.variables },
-        storage,
         context,
+        storage,
       )) as T;
     }
 
@@ -629,7 +662,7 @@ export class Policies {
       Object.keys(i).forEach(storeFieldName => {
         const incomingValue = i[storeFieldName];
         const appliedValue = this.applyMerges(
-          context.getFieldValue(e, storeFieldName),
+          context.store.getFieldValue(e, storeFieldName),
           incomingValue,
           context,
           // Avoid enabling options.storage when firstStorageKey is falsy,
@@ -652,24 +685,18 @@ export class Policies {
   }
 }
 
-export interface ReadMergeContext {
-  variables: Record<string, any>;
-  // A JSON.stringify-serialized version of context.variables.
-  varString: string;
-  toReference: ToReferenceFunction;
-  getFieldValue: FieldValueGetter;
-}
-
 function makeFieldFunctionOptions(
   policies: Policies,
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
+  context: ReadMergeModifyContext,
   storage: StorageType | null,
-  context: ReadMergeContext,
 ): FieldFunctionOptions {
-  const { toReference, getFieldValue, variables } = context;
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
+  const variables = fieldSpec.variables || context.variables;
+  const { getFieldValue, toReference, canRead } = context.store;
+
   return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
@@ -679,6 +706,8 @@ function makeFieldFunctionOptions(
     isReference,
     toReference,
     storage,
+    cache: policies.cache,
+    canRead,
 
     readField<T>(
       fieldNameOrOptions: string | ReadFieldOptions,
@@ -688,12 +717,17 @@ function makeFieldFunctionOptions(
         typeof fieldNameOrOptions === "string" ? {
           fieldName: fieldNameOrOptions,
           from,
-        } : fieldNameOrOptions;
+        } : { ...fieldNameOrOptions };
 
-      return policies.readField<T>(options.from ? options : {
-        ...options,
-        from: objectOrReference,
-      }, context);
+      if (void 0 === options.from) {
+        options.from = objectOrReference;
+      }
+
+      if (void 0 === options.variables) {
+        options.variables = variables;
+      }
+
+      return policies.readField<T>(options, context);
     },
 
     mergeObjects(existing, incoming) {

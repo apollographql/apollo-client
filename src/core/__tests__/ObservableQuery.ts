@@ -1,23 +1,19 @@
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 
-import { Observable } from '../../utilities/observables/Observable';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
+import { ApolloClient, NetworkStatus } from '../../core';
+import { ObservableQuery } from '../ObservableQuery';
+import { QueryManager } from '../QueryManager';
+
+import { Observable } from '../../utilities';
+import { ApolloLink } from '../../link/core';
+import { InMemoryCache, NormalizedCacheObject } from '../../cache';
+import { ApolloError } from '../../errors';
+
+import { itAsync, stripSymbols, mockSingleLink, subscribeAndCount } from '../../testing';
 import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
 import mockWatchQuery from '../../utilities/testing/mocking/mockWatchQuery';
-import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
-
-import { ObservableQuery } from '../ObservableQuery';
-import { NetworkStatus } from '../networkStatus';
-import { QueryManager } from '../QueryManager';
-import { ApolloClient, NormalizedCacheObject } from '../../';
-
 import wrap from '../../utilities/testing/wrap';
-import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
-import { stripSymbols } from '../../utilities/testing/stripSymbols';
-import { itAsync } from '../../utilities/testing/itAsync';
-import { ApolloError } from '../../errors/ApolloError';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests
@@ -933,15 +929,29 @@ describe('ObservableQuery', () => {
   });
 
   describe('refetch', () => {
-    type TFQO = QueryManager<any>["fetchQueryObservable"];
     function mockFetchQuery(queryManager: QueryManager<any>) {
-      const origFetchQuery: TFQO = (queryManager as any).fetchQueryObservable;
-      return (queryManager as any).fetchQueryObservable = jest.fn<
-        ReturnType<TFQO>,
-        Parameters<TFQO>
+      const fetchQueryObservable = queryManager.fetchQueryObservable;
+      const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] =
+        (queryManager as any).fetchQueryByPolicy;
+
+      const mock = <T extends
+        | typeof fetchQueryObservable
+        | typeof fetchQueryByPolicy
+      >(original: T) => jest.fn<
+        ReturnType<T>,
+        Parameters<T>
       >(function () {
-        return origFetchQuery.apply(queryManager, arguments);
+        return original.apply(queryManager, arguments);
       });
+
+      const mocks = {
+        fetchQueryObservable: mock(fetchQueryObservable),
+        fetchQueryByPolicy: mock(fetchQueryByPolicy),
+      };
+
+      Object.assign(queryManager, mocks);
+
+      return mocks;
     }
 
     itAsync('calls fetchRequest with fetchPolicy `network-only` when using a non-networked fetch policy', (resolve, reject) => {
@@ -964,15 +974,23 @@ describe('ObservableQuery', () => {
         fetchPolicy: 'cache-first',
       });
 
-      const mocked = mockFetchQuery(queryManager);
+      const mocks = mockFetchQuery(queryManager);
 
       subscribeAndCount(reject, observable, handleCount => {
         if (handleCount === 1) {
           observable.refetch(differentVariables);
         } else if (handleCount === 2) {
-          expect(mocked.mock.calls[1][1].fetchPolicy).toEqual(
-            'network-only',
-          );
+          const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
+          expect(fqbpCalls.length).toBe(2);
+          expect(fqbpCalls[1][1].fetchPolicy).toEqual('network-only');
+          // Although the options.fetchPolicy we passed just now to
+          // fetchQueryByPolicy should have been network-only,
+          // observable.options.fetchPolicy should now be updated to
+          // cache-first, thanks to options.nextFetchPolicy.
+          expect(observable.options.fetchPolicy).toBe('cache-first');
+          const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+          expect(fqoCalls.length).toBe(2);
+          expect(fqoCalls[1][1].fetchPolicy).toEqual('cache-first');
           resolve();
         }
       });
@@ -1000,15 +1018,24 @@ describe('ObservableQuery', () => {
           fetchPolicy: 'no-cache',
         });
 
-        const mocked = mockFetchQuery(queryManager);
+        const mocks = mockFetchQuery(queryManager);
 
         subscribeAndCount(reject, observable, handleCount => {
           if (handleCount === 1) {
             observable.refetch(differentVariables);
           } else if (handleCount === 2) {
-            expect(
-              mocked.mock.calls[1][1].fetchPolicy,
-            ).toEqual('no-cache');
+            const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
+            expect(fqbpCalls.length).toBe(2);
+            expect(fqbpCalls[1][1].fetchPolicy).toBe('no-cache');
+
+            // Unlike network-only or cache-and-network, the no-cache
+            // FetchPolicy does not switch to cache-first after the first
+            // network request.
+            expect(observable.options.fetchPolicy).toBe('no-cache');
+            const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+            expect(fqoCalls.length).toBe(2);
+            expect(fqoCalls[1][1].fetchPolicy).toBe('no-cache');
+
             resolve();
           }
         });
@@ -1148,6 +1175,7 @@ describe('ObservableQuery', () => {
               },
               loading: true,
               networkStatus: NetworkStatus.loading,
+              partial: true,
             });
           } else if (handleCount === 2) {
             expect(result).toEqual({
@@ -1159,20 +1187,32 @@ describe('ObservableQuery', () => {
               networkStatus: NetworkStatus.ready,
             });
 
+            const oldLinkObs = linkObservable;
             // Make the next network request fail.
             linkObservable = errorObservable;
 
             observable.refetch().then(
-              result => {
-                expect(result).toEqual({
-                  data: {
-                    counter: 3,
-                    name: 'Ben',
-                  },
-                });
+              () => {
+                reject(new Error('should have gotten an error'));
               },
+
               error => {
                 expect(error).toBe(intentionalNetworkFailure);
+
+                // Switch back from errorObservable.
+                linkObservable = oldLinkObs;
+
+                observable.refetch().then(result => {
+                  expect(result).toEqual({
+                    data: {
+                      counter: 5,
+                      name: 'Ben',
+                    },
+                    loading: false,
+                    networkStatus: NetworkStatus.ready,
+                  });
+                  setTimeout(resolve, 50);
+                }, reject);
               },
             );
           } else if (handleCount === 3) {
@@ -1184,9 +1224,7 @@ describe('ObservableQuery', () => {
               loading: true,
               networkStatus: NetworkStatus.refetch,
             });
-
-            resolve();
-          } else if (handleCount > 4) {
+          } else if (handleCount > 3) {
             reject(new Error('should not get here'));
           }
         },
@@ -1366,8 +1404,8 @@ describe('ObservableQuery', () => {
         });
         expect(stripSymbols(observable.getCurrentResult())).toEqual({
           data: dataOne,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
           partial: false,
         });
       }).then(resolve, reject);
@@ -1438,6 +1476,56 @@ describe('ObservableQuery', () => {
         expect(currentResult.errors).toEqual([error]);
         expect(currentResult.error).toBeUndefined();
       }).then(resolve, reject);
+    });
+
+    itAsync('errors out if errorPolicy is none', (resolve, reject) => {
+      const queryManager = mockQueryManager(reject, {
+        request: { query, variables },
+        result: { data: dataOne, errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'none',
+      });
+
+      return observable.result().then(() => reject('Observable did not error when it should have')).catch(currentError => {
+        expect(currentError).toEqual(error);
+        const lastError = observable.getLastError();
+        expect(lastError).toEqual(error);
+        resolve()
+      }).catch(reject);
+    });
+
+    itAsync('errors out if errorPolicy is none and the observable has completed', (resolve, reject) => {
+      const queryManager = mockQueryManager(reject, {
+        request: { query, variables },
+        result: { data: dataOne, errors: [error] },
+      }, 
+      // FIXME: We shouldn't need a second mock, there should only be one network request
+      {
+        request: { query, variables },
+        result: { data: dataOne, errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'none',
+      });
+
+      return observable.result()
+      .then(() => reject('Observable did not error when it should have'))
+      // We wait for the observable to error out and reobtain a promise
+      .catch(() => observable.result())
+      .then((result) => reject('Observable did not error the second time we fetched results when it should have'))
+      .catch(currentError => {
+        expect(currentError).toEqual(error);
+        const lastError = observable.getLastError();
+        expect(lastError).toEqual(error);
+        resolve()
+      }).catch(reject);
     });
 
     itAsync('ignores errors with data if errorPolicy is ignore', (resolve, reject) => {
@@ -1518,6 +1606,7 @@ describe('ObservableQuery', () => {
               data: dataOne,
               loading: true,
               networkStatus: 1,
+              partial: true,
             });
 
           } else if (handleCount === 2) {
@@ -1545,38 +1634,38 @@ describe('ObservableQuery', () => {
         },
       );
 
-      queryManager.query({ query, variables }).then(() => {
+      queryManager.query({ query, variables }).then(result => {
+        expect(result).toEqual({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+
         const observable = queryManager.watchQuery({
           query,
           variables,
           fetchPolicy: 'network-only',
         });
-        expect(stripSymbols(observable.getCurrentResult())).toEqual({
-          data: undefined,
+
+        expect(observable.getCurrentResult()).toEqual({
+          data: void 0,
           loading: true,
           networkStatus: 1,
           partial: false,
         });
 
         subscribeAndCount(reject, observable, (handleCount, subResult) => {
-          const {
-            data,
-            loading,
-            networkStatus,
-          } = observable.getCurrentResult();
-
           if (handleCount === 1) {
             expect(subResult).toEqual({
-              data,
-              loading,
-              networkStatus,
+              loading: true,
+              networkStatus: NetworkStatus.loading,
               partial: false,
             });
           } else if (handleCount === 2) {
-            expect(stripSymbols(subResult)).toEqual({
+            expect(subResult).toEqual({
               data: dataTwo,
               loading: false,
-              networkStatus: 7,
+              networkStatus: NetworkStatus.ready,
             });
             resolve();
           }
@@ -1806,11 +1895,11 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         error() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
-          expect(queryStore.graphQLErrors).toEqual([graphQLError]);
+          const queryInfo = queryManager["queries"].get(observable.queryId);
+          expect(queryInfo.graphQLErrors).toEqual([graphQLError]);
 
           observable.resetQueryStoreErrors();
-          expect(queryStore.graphQLErrors).toEqual([]);
+          expect(queryInfo.graphQLErrors).toEqual([]);
 
           resolve();
         }
@@ -1828,10 +1917,10 @@ describe('ObservableQuery', () => {
       observable.subscribe({
         next() {
           const { queryManager } = (observable as any);
-          const queryStore = queryManager.getQueryStoreValue(observable.queryId);
-          queryStore.networkError = networkError;
+          const queryInfo = queryManager["queries"].get(observable.queryId);
+          queryInfo.networkError = networkError;
           observable.resetQueryStoreErrors();
-          expect(queryStore.networkError).toBeUndefined();
+          expect(queryInfo.networkError).toBeUndefined();
           resolve();
         }
       });

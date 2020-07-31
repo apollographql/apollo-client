@@ -20,7 +20,7 @@ To learn more about Graph Manager, check out the [overview](https://www.apollogr
 
 ## Apollo Client Devtools
 
-The [Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) is a Chrome extension.
+The Apollo Client Devtools are available as extension for [Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/).
 
 ### Features
 

@@ -33,6 +33,7 @@ export interface BaseQueryOptions<TVariables = OperationVariables> {
   ssr?: boolean;
   variables?: TVariables;
   fetchPolicy?: WatchQueryFetchPolicy;
+  nextFetchPolicy?: WatchQueryFetchPolicy;
   errorPolicy?: ErrorPolicy;
   pollInterval?: number;
   client?: ApolloClient<any>;

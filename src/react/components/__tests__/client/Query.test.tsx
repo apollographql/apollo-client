@@ -1674,9 +1674,6 @@ describe('Query component', () => {
               });
               break;
             case 4:
-              expect(props.loading).toBeTruthy();
-              break;
-            case 5:
               // Good result should be received without any errors.
               expect(props.error).toBeFalsy();
               expect(props.data.allPeople).toBeTruthy();
@@ -1698,7 +1695,7 @@ describe('Query component', () => {
         </Query>
       );
 
-      return wait(() => expect(count).toBe(6)).then(resolve, reject);
+      return wait(() => expect(count).toBe(5)).then(resolve, reject);
     }
   );
 

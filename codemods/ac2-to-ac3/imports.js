@@ -1,8 +1,12 @@
 /**
- * This jscodeshift transform takes care of some of the rote
- * things you'll need to do while migrating from v2 to v3.
+ * This jscodeshift transform takes care of some of the rote things you'll
+ * need to do while migrating from v2 to v3. See README.md for usage
+ * instructions and further explanation.
+ *
+ * Original author: @dminkovsky (PR #6486)
+ * Contributors: @jcreighton @benjamn
+ * Reviewers: @hwillson @bnjmnt4n
  */
-
 export default function transformer(file, api) {
   const j = api.jscodeshift;
 

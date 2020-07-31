@@ -33,7 +33,7 @@ export default function transformer(file, api) {
     'retry',
     'schema',
     'ws',
-  ].forEach(link => renameImport(`@apollo-link-${link}`, `@apollo/client/link/${link}`));
+  ].forEach(link => renameImport(`apollo-link-${link}`, `@apollo/client/link/${link}`));
 
   return source.toSource();
 

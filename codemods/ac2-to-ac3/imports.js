@@ -39,6 +39,11 @@ export default function transformer(file, api) {
     'ws',
   ].forEach(link => renameImport(`apollo-link-${link}`, `@apollo/client/link/${link}`));
 
+  const apolloClientImport = getImport('@apollo/client');
+  if (!apolloClientImport.get('specifiers', 'length').value) {
+    apolloClientImport.remove();
+  }
+
   return source.toSource();
 
   function renameOrCreateApolloClientImport() {

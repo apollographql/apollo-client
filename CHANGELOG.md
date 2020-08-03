@@ -1,4 +1,4 @@
-## Apollo Client 3.1.2 (not yet released)
+## Apollo Client 3.1.2
 
 ## Bug Fixes
 

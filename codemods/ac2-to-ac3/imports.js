@@ -39,27 +39,32 @@ export default function transformer(file, api) {
     'ws',
   ].forEach(link => renameImport(`apollo-link-${link}`, `@apollo/client/link/${link}`));
 
-  const apolloClientImport = getImport('@apollo/client');
-  if (apolloClientImport.size()) {
-    if (!apolloClientImport.get('specifiers', 'length').value) {
-      apolloClientImport.remove();
-    }
-  }
+  removeApolloClientImportIfEmpty();
 
   return source.toSource();
 
   function renameOrCreateApolloClientImport() {
-    const v3Import = getImport('@apollo/client');
-    if (v3Import.size()) {
+    const ac3Import = getImport('@apollo/client');
+    if (ac3Import.size()) {
       return;
     }
 
-    const v2Import = getImport('apollo-client');
-    if (v2Import.size()) {
-      renameDefaultSpecifier(v2Import, 'ApolloClient');
+    const ac2Import = getImport('apollo-client');
+    if (ac2Import.size()) {
+      renameDefaultSpecifier(ac2Import, 'ApolloClient');
       renameImport('apollo-client', '@apollo/client');
     } else {
       source.find(j.ImportDeclaration).at(0).insertBefore(() => j.importDeclaration([], j.literal('@apollo/client')));
+    }
+  }
+
+  function removeApolloClientImportIfEmpty() {
+    const ac3Import = getImport('@apollo/client');
+    if (
+      ac3Import.size() &&
+      !ac3Import.get('specifiers', 'length').value
+    ) {
+      ac3Import.remove();
     }
   }
 

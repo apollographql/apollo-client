@@ -388,8 +388,7 @@ and wait until our `Stats` component is called to add a new type/field policy (u
 
 ```jsx:title=Stats.jsx
 import React from "react";
-import { gql, useApolloClient, useQuery } from "@apollo/client";
-import gql from "graphql-tag";
+import { useApolloClient, useQuery, gql } from "@apollo/client";
 
 const GET_MESSAGE_COUNT = gql`
   {

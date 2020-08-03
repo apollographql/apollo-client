@@ -369,7 +369,7 @@ For more advanced usage, such as persisting the cache when the app is in the bac
 
 ## Code splitting
 
-Depending on the complexity and size of your cache type/field policies, you might not always want to define them up front, when you create your initial `InMemoryCache` instance. If you have type/field policies that are only needed in a specific part of your application, you can leverage `InMemoryCache`'s `policies.addTypePolicies()` method to adjust your cache policy map at any point. This can be really useful when leveraging techniques like route based code-splitting, using something like `react-loadable`.
+Depending on the complexity and size of your cache type/field policies, you might not always want to define them up front, when you create your initial `InMemoryCache` instance. If you have type/field policies that are only needed in a specific part of your application, you can leverage `InMemoryCache`'s `.policies.addTypePolicies()` method to adjust your cache policy map at any point. This can be really useful when leveraging techniques like route based code-splitting, using a tool like [`react-loadable`](https://www.npmjs.com/package/react-loadable).
 
 Let's say we're building a messaging app and have a `/stats` route that is used to return the total number of messages stored locally. If we use `react-loadable` to load our `Stats` component like:
 

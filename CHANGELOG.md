@@ -5,6 +5,11 @@
 - Avoid making network requests when `skip` is `true`.  <br/>
   [@hwillson](https://github.com/hwillson) in [#6752](https://github.com/apollographql/apollo-client/pull/6752)
 
+## Improvements
+
+- Allow `SchemaLink.Options.context` function to be `async` (or return a `Promise`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6735](https://github.com/apollographql/apollo-client/pull/6735)
+
 ## Apollo Client 3.1.1
 
 ## Bug Fixes

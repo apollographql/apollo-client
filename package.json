@@ -101,7 +101,7 @@
     "graphql": "15.3.0",
     "graphql-tools": "^6.0.12",
     "jest": "26.2.2",
-    "jest-junit": "11.0.1",
+    "jest-junit": "11.1.0",
     "lodash": "4.17.19",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

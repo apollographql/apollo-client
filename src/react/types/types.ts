@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { JSX, ReactNode } from 'react';
 import { DocumentNode } from 'graphql';
 
 import { Observable } from '../../utilities';

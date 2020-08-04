@@ -45,7 +45,7 @@ export class ObservableQuery<
   TData = any,
   TVariables = OperationVariables
 > extends Observable<ApolloQueryResult<TData>> {
-  public readonly options: WatchQueryOptions<TVariables>;
+  public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;
 
@@ -72,7 +72,7 @@ export class ObservableQuery<
   }: {
     queryManager: QueryManager<any>;
     queryInfo: QueryInfo;
-    options: WatchQueryOptions<TVariables>;
+    options: WatchQueryOptions<TVariables, TData>;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) =>
       this.onSubscribe(observer),
@@ -219,7 +219,7 @@ export class ObservableQuery<
       ));
     }
 
-    const reobserveOptions: Partial<WatchQueryOptions<TVariables>> = {
+    const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
     };
@@ -249,7 +249,7 @@ export class ObservableQuery<
   }
 
   public fetchMore<K extends keyof TVariables>(
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K> &
+    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K, TData> &
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     const combinedOptions = {
@@ -404,7 +404,7 @@ once, rather than every time you call fetchMore.`);
   }
 
   public setOptions(
-    newOptions: Partial<WatchQueryOptions<TVariables>>,
+    newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
   ): Promise<ApolloQueryResult<TData>> {
     return this.reobserve(newOptions);
   }
@@ -469,7 +469,7 @@ once, rather than every time you call fetchMore.`);
   public updateQuery<TVars = TVariables>(
     mapFn: (
       previousQueryResult: TData,
-      options: Pick<WatchQueryOptions<TVars>, "variables">,
+      options: Pick<WatchQueryOptions<TVars, TData>, "variables">,
     ) => TData,
   ): void {
     const { queryManager } = this;
@@ -594,7 +594,7 @@ once, rather than every time you call fetchMore.`);
   }
 
   public reobserve(
-    newOptions?: Partial<WatchQueryOptions<TVariables>>,
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;

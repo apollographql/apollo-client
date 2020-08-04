@@ -15,7 +15,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
   public abstract read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>,
+    query: Cache.ReadOptions<TVariables, T>,
   ): T | null;
   public abstract write<TResult = any, TVariables = any>(
     write: Cache.WriteOptions<TResult, TVariables>,
@@ -104,7 +104,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * @param optimistic
    */
   public readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables>,
+    options: DataProxy.Query<TVariables, QueryType>,
     optimistic: boolean = false,
   ): QueryType | null {
     return this.read({
@@ -120,7 +120,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   private getFragmentDoc = wrap(getFragmentQueryDocument);
 
   public readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables>,
+    options: DataProxy.Fragment<TVariables, FragmentType>,
     optimistic: boolean = false,
   ): FragmentType | null {
     return this.read({

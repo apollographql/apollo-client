@@ -24,7 +24,7 @@ export interface QueryControls<
   loading: boolean;
   variables: TGraphQLVariables;
   fetchMore: (
-    fetchMoreOptions: FetchMoreQueryOptions<TGraphQLVariables, any> &
+    fetchMoreOptions: FetchMoreQueryOptions<TGraphQLVariables, any, TData> &
       FetchMoreOptions<TData, TGraphQLVariables>
   ) => Promise<ApolloQueryResult<TData>>;
   refetch: (variables?: TGraphQLVariables) => Promise<ApolloQueryResult<TData>>;

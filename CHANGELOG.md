@@ -1,3 +1,10 @@
+## Apollo Client 3.2.0 (not yet released)
+
+## Improvements
+
+- Substantially improve type inference for data and variables types using `TypedDocumentNode<Data, Variables>` type instead of `DocumentNode`. <br/>
+  [@dotansimha](https://github.com/dotansimha) in [#6720](https://github.com/apollographql/apollo-client/pull/6720)
+
 ## Apollo Client 3.1.2
 
 ## Bug Fixes

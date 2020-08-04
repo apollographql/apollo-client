@@ -67,7 +67,6 @@
     }
   },
   "dependencies": {
-    "@graphql-typed-document-node/core": "1.0.0",
     "@types/zen-observable": "^0.8.0",
     "@wry/context": "^0.5.2",
     "@wry/equality": "^0.2.0",
@@ -83,6 +82,7 @@
   },
   "devDependencies": {
     "@babel/parser": "7.11.0",
+    "@graphql-typed-document-node/core": "2.1.0",
     "@rollup/plugin-node-resolve": "8.4.0",
     "@testing-library/react": "9.4.1",
     "@types/fast-json-stable-stringify": "2.0.0",

@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference, Reference, makeVar } from '../../../core';
+import { makeReference, Reference, makeVar, TypedDocumentNode, isReference } from '../../../core';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 disableFragmentWarnings();
@@ -2492,6 +2492,162 @@ describe("ReactiveVar and makeVar", () => {
       onCall: {
         __typename: "Person",
         name: "Hugh",
+      },
+    });
+  });
+});
+
+describe('TypedDocumentNode<Data, Variables>', () => {
+  type Book = {
+    isbn?: string;
+    title: string;
+    author: {
+      name: string;
+    };
+  };
+
+  const query: TypedDocumentNode<
+    { book: Book },
+    { isbn: string }
+  > = gql`query GetBook($isbn: String!) {
+    book(isbn: $isbn) {
+      title
+      author {
+        name
+      }
+    }
+  }`;
+
+  const fragment: TypedDocumentNode<Book> = gql`
+    fragment TitleAndAuthor on Book {
+      title
+      isbn
+      author {
+        name
+      }
+    }
+  `;
+
+  it('should determine Data and Variables types of {write,read}{Query,Fragment}', () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            book(existing, { args, toReference }) {
+              return existing ?? (args && toReference({
+                __typename: "Book",
+                isbn: args.isbn,
+              }));
+            }
+          }
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+
+        Author: {
+          keyFields: ["name"],
+        },
+      },
+    });
+
+    // We need to define these objects separately from calling writeQuery,
+    // because passing them directly to writeQuery will trigger excess property
+    // warnings due to the extra __typename and isbn fields. Internally, we
+    // almost never pass object literals to writeQuery or writeFragment, so
+    // excess property checks should not be a problem in practice.
+    const jcmAuthor = {
+      __typename: "Author",
+      name: "John C. Mitchell",
+    };
+
+    const ffplBook = {
+      __typename: "Book",
+      isbn: "0262133210",
+      title: "Foundations for Programming Languages",
+      author: jcmAuthor,
+    };
+
+    const ffplVariables = {
+      isbn: "0262133210",
+    };
+
+    cache.writeQuery({
+      query,
+      variables: ffplVariables,
+      data: {
+        book: ffplBook,
+      },
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+
+    const ffplQueryResult = cache.readQuery({
+      query,
+      variables: ffplVariables,
+    });
+
+    if (ffplQueryResult === null) throw new Error("null result");
+    expect(ffplQueryResult.book.isbn).toBeUndefined();
+    expect(ffplQueryResult.book.author.name).toBe(jcmAuthor.name);
+    expect(ffplQueryResult).toEqual({
+      book: {
+        __typename: "Book",
+        title: "Foundations for Programming Languages",
+        author: {
+          __typename: "Author",
+          name: "John C. Mitchell",
+        },
+      },
+    });
+
+    const sicpBook = {
+      __typename: "Book",
+      isbn: "0262510871",
+      title: "Structure and Interpretation of Computer Programs",
+      author: {
+        __typename: "Author",
+        name: "Harold Abelson",
+      },
+    };
+
+    const sicpRef = cache.writeFragment({
+      fragment,
+      data: sicpBook,
+    });
+
+    expect(isReference(sicpRef)).toBe(true);
+    expect(cache.extract()).toMatchSnapshot();
+
+    const ffplFragmentResult = cache.readFragment({
+      fragment,
+      id: cache.identify(ffplBook),
+    });
+    if (ffplFragmentResult === null) throw new Error("null result");
+    expect(ffplFragmentResult.title).toBe(ffplBook.title);
+    expect(ffplFragmentResult.author.name).toBe(ffplBook.author.name);
+    expect(ffplFragmentResult).toEqual(ffplBook);
+
+    // This uses the read function for the Query.book field.
+    const sicpReadResult = cache.readQuery({
+      query,
+      variables: {
+        isbn: sicpBook.isbn,
+      },
+    });
+    if (sicpReadResult === null) throw new Error("null result");
+    expect(sicpReadResult.book.isbn).toBeUndefined();
+    expect(sicpReadResult.book.title).toBe(sicpBook.title);
+    expect(sicpReadResult.book.author.name).toBe(sicpBook.author.name);
+    expect(sicpReadResult).toEqual({
+      book: {
+        __typename: "Book",
+        title: "Structure and Interpretation of Computer Programs",
+        author: {
+          __typename: "Author",
+          name: "Harold Abelson",
+        },
       },
     });
   });

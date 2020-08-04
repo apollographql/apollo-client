@@ -47,7 +47,7 @@
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
     "bundlesize": "npm run build && bundlesize",
     "predeploy": "npm run build",
-    "deploy": "cd dist && npm publish"
+    "deploy": "cd dist && npm publish --tag beta"
   },
   "bundlesize": [
     {

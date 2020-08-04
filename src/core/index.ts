@@ -103,4 +103,3 @@ export const {
   disableExperimentalFragmentVariables
 } = gql;
 export { gql };
-export { TypedDocumentNode } from '@graphql-typed-document-node/core';

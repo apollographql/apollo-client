@@ -1,3 +1,15 @@
+## Apollo Client 3.1.3
+
+## Bug Fixes
+
+- Consider only `result.data` (rather than all properties of `result`) when settling cache feuds. <br/>
+  [@danReynolds](https://github.com/danReynolds) in [#6777](https://github.com/apollographql/apollo-client/pull/6777)
+
+## Improvements
+
+- Provide [jscodeshift](https://www.npmjs.com/package/jscodeshift) transform for automatically converting Apollo Client 2.x `import` declarations to use Apollo Client 3.x packages. [Instructions](https://github.com/apollographql/apollo-client/tree/master/codemods/ac2-to-ac3). <br/>
+  [@dminkovsky](https://github.com/dminkovsky) and [@jcreighton](https://github.com/jcreighton) in [#6486](https://github.com/apollographql/apollo-client/pull/6486)
+
 ## Apollo Client 3.1.2
 
 ## Bug Fixes

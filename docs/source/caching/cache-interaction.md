@@ -150,17 +150,17 @@ client.writeQuery({
 
 ## `cache.modify`
 
-The `modify` method of `InMemoryCache` enables you to modify the values of individual cached fields, or even delete fields entirely.
+The `modify` method of `InMemoryCache` enables you to directly modify the values of individual cached fields, or even delete fields entirely.
 
-* Unlike `writeQuery` and `writeFragment`, `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are definitely overwritten with exactly the values you specify.
-* _Like_ `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you [override this behavior](#parameters)).
+* Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you [override this behavior](#parameters)).
+* _Unlike_ `writeQuery` and `writeFragment`, `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are always overwritten with exactly the values you specify.
 
 ### Parameters
 
 The `modify` method takes the following parameters: 
 
 * The ID of a cached object to modify (which we recommend obtaining with [`cache.identify`](#obtaining-an-objects-custom-id))
-* A collection of **modifier functions** to execute
+* A collection of **modifier functions** to execute (one for each field to modify)
 * An optional `broadcast` boolean to disable automatic refresh of affected queries
 
 A modifier function applies to a single field. It takes its associated field's current cached value as a parameter and returns whatever value should replace it.
@@ -179,6 +179,22 @@ cache.modify({
 
 > If you don't provide a modifier function for a particular field, that field's cached value remains unchanged.
 
+### Modifier function utilities
+
+A modifier function can optionally take a second parameter, which is an object that contains several helpful utilities:
+
+| Name | Description |
+| ---- | ----------- |
+| `DELETE` | The modifier function can return this sentinel object to delete the associated field from the cache. |
+| `fieldName` | The name of the field this modifier function is being applied to. |
+| `storeFieldName` | ??? |
+| `readField` | A function that returns the value of a specified field from a provided object or object reference. |
+| `canRead` | ??? |
+| `isReference` | A function that returns `true` if a provided value is a reference to a cached object. |
+| `toReference` | ??? |
+
+The [first example below](#example-removing-an-item-from-a-list) uses the `readField` utility function.
+
 ### Example: Removing an item from a list
 
 Let's say we have a blog application where each `Post` has an array of `Comment`s. Here's how we might remove a specific `Comment` from a paginated `Post.comments` array:
@@ -187,9 +203,9 @@ Let's say we have a blog application where each `Post` has an array of `Comment`
 const idToRemove = 'abc123';
 
 cache.modify({
-  id: cache.identify(post),
+  id: cache.identify(myPost),
   fields: {
-    comments(existingCommentRefs: Reference[], { readField }) {
+    comments(existingCommentRefs, { readField }) {
       return existingCommentRefs.filter(
         commentRef => idToRemove !== readField('id', commentRef)
       );
@@ -206,13 +222,7 @@ Let's break this down:
 
 * The `comments` modifier function takes our existing cached array of comments as a parameter (`existingCommentRefs`). It also takes the `readField` helper function, which helps you read the value of any cached field.
 
-* The modifier function returns an array that filters out all comments with an ID that matches `idToRemove`. This replaces the existing array in the cache.
-
-
-
-Modifier functions (`comments` in the above) receive either the current value of the associated field in the cache (if modifying a single entity), or an array of references pointing to the field's current values in the cache (if modifying a list of entities), as the first parameter. In the example above `existingCommentRefs` is an array of comment references that the `comments` field points to in the cache, before the modifier function runs.
-
-As the second parameter, modifier functions receive a cache utility object. In the example above, `readField` is a cache utility function extracted from the second parameter object, that can be used to get the value of a field from a specific object. `readField` is quite flexible, allowing you to retrieve field values from either an object directly, or from an object pointed to by a reference. `readField('id', commentRef)` looks the comment object up by reference, finds its `id`, and returns it.
+* The modifier function returns an array that filters out all comments with an ID that matches `idToRemove`. The returned array replaces the existing array in the cache.
 
 ### Example: Adding an item to a list
 
@@ -221,8 +231,8 @@ Now let's look at _adding_ a `Comment` to a `Post`:
 ```js
 const newComment = {
   __typename: 'Comment',
-  id: 'C3',
-  text: 'Apollo Client is doctor recommended.',
+  id: 'abc123',
+  text: 'Great blog post!',
 };
 
 cache.modify({
@@ -238,8 +248,8 @@ cache.modify({
         `
       });
 
-      // Quick safety check - if the new comment was already
-      // written to the cache, we don't need to add it again.
+      // Quick safety check - if the new comment is already
+      // present in the cache, we don't need to add it again.
       if (existingCommentRefs.some(
         ref => readField('id', ref) === newComment.id
       )) {
@@ -252,9 +262,15 @@ cache.modify({
 });
 ```
 
-When the `comments` field modifier function is called, we first use `writeFragment` to store our `newComment` data in the cache. After the data is written to the cache, we get back a reference (`newCommentRef`) that points to this data in the cache. As a safety check, we then scan the array of existing comment references (`existingCommentRefs`) to make sure the new comment we've added to the cache hasn't already been added to the list of comments. If it hasn't, we add the new comment reference to the list of references, returning the full list to be updated in the cache.
+When the `comments` field modifier function is called, it first calls `writeFragment` to store our `newComment` data in the cache. The `writeFragment` function returns a reference(`newCommentRef`) that points to the newly cached comment.
 
-It's important to note that `writeFragment` will only add data to the cache if an existing `===` object doesn't already exist in the cache. This means we can also use `writeFragment` to get a reference to an existing object in the cache. This can come in handy when using Apollo Client features like `useMutation` that might have already added the new data we're interested in working with. For example:
+As a safety check, we then scan the array of existing comment references (`existingCommentRefs`) to make sure that our new isn't already in the list. If it isn't, we add the new comment reference to the list of references, returning the full list to be stored in the cache.
+
+### Example: Updating the cache after a mutation
+
+If you call `writeFragment` with data that's identical (`===`) to an existing object in the cache, it returns a reference to the _existing_ object without writing any new data. This means we can use `writeFragment` to obtain a reference to an existing object in the cache. This can come in handy when using Apollo Client features like [`useMutation`](../data/mutations/), which might have already added data we're interested in working with. 
+
+For example:
 
 ```js
 const [addComment] = useMutation(ADD_COMMENT, {
@@ -279,22 +295,26 @@ const [addComment] = useMutation(ADD_COMMENT, {
 });
 ```
 
-`useMutation` will automatically add the new comment to the cache as a standalone normalized entity, but it doesn't know how to update the list of comments in the cache. This means that even though we've added the new comment, any queries we have watching the list of comments in the cache won't be updated to show the new comment. To help address this, we're using `useMutation`'s `update` callback and `cache.modify` to update the list of comments in the cache, with the new comment. Since the comment was already added to the cache by `useMutation`, we're using `cache.writeFragment` to get its existing reference (and if it was somehow removed before we had a chance to read its reference, `writeFragment` will add it to the cache for us again).
+In this example, `useMutation` automatically adds the newly created `Comment` to the cache, but it _doesn't_ automatically know how to add that `Comment` to the corresponding `Post`'s list of `comments`. This means that any queries watching the `Post`'s list of `comments` _won't_ update.
 
-Let's look at one more example, showing how `cache.modify` can be used to delete a field from a cached entity object:
+To address this, we use the [`update` callback](../data/mutations/#updating-the-cache-after-a-mutation) of `useMutation` to call `cache.modify`. Like the [previous example](#example-adding-an-item-to-a-list), we add the new comment to the list. _Unlike_ the previous example, the comment was already added to the cache by `useMutation`. Consequently, `cache.writeFragment` returns a reference to the existing object.
+
+### Example: Deleting a field from a cached object
+
+A modifier function's optional second parameter is an object that includes [several helpful utilities](#modifier-function-utilities), such as the `canRead` and `isReference` functions. It also includes a sentinel object called `DELETE`.
+
+To delete a field from a particular cached object, return the `DELETE` sentinel object from the field's modifier function, like so:
 
 ```js
 cache.modify({
-  id: cache.identify(thread),
+  id: cache.identify(myPost),
   fields: {
-    comments(_, { DELETE }) {
+    comments(existingCommentRefs, { DELETE }) {
       return DELETE;
     },
   },
 });
 ```
-
-The cache utility object that's passed into modifier functions as their second parameter contains several useful utilities, like `fieldName`, `canRead` and `isReference`. It also contains a `DELETE` sentinel object, which we're using above, that can be returned to delete a field from the entity object. When the `comments` modifier function above runs, it will remove all comments from the cache for the identified `Thread` object.
 
 ## Obtaining an object's custom ID
 

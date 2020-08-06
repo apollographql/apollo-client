@@ -235,7 +235,8 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction(cache => {
-          if (equal(result?.data, this.lastWrittenResult?.data) &&
+          if (this.lastWrittenResult &&
+              equal(result.data, this.lastWrittenResult.data) &&
               equal(options.variables, this.lastWrittenVars)) {
             // If result is the same as the last result we received from
             // the network (and the variables match too), avoid writing

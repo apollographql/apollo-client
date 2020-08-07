@@ -152,18 +152,20 @@ client.writeQuery({
 
 The `modify` method of `InMemoryCache` enables you to directly modify the values of individual cached fields, or even delete fields entirely.
 
-* Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you [override this behavior](#parameters)).
+* Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you override this behavior).
 * _Unlike_ `writeQuery` and `writeFragment`, `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are always overwritten with exactly the values you specify.
 
 ### Parameters
 
-The `modify` method takes the following parameters: 
+Canonically documented in the [API reference](../api/cache/InMemoryCache/#modify), the `modify` method takes the following parameters:
 
 * The ID of a cached object to modify (which we recommend obtaining with [`cache.identify`](#obtaining-an-objects-custom-id))
-* A collection of **modifier functions** to execute (one for each field to modify)
-* An optional `broadcast` boolean to disable automatic refresh of affected queries
+* A map of **modifier functions** to execute (one for each field to modify)
+* Optional `broadcast` and `optimistic` boolean values to customize behavior
 
 A modifier function applies to a single field. It takes its associated field's current cached value as a parameter and returns whatever value should replace it.
+
+Here's an example call to `modify` that modifies a `name` field to convert its value to upper case:
 
 ```js
 cache.modify({
@@ -179,21 +181,17 @@ cache.modify({
 
 > If you don't provide a modifier function for a particular field, that field's cached value remains unchanged.
 
+#### Values vs. references
+
+When you define a modifier function for a field that contains a scalar, an enum, or a list of these base types, the modifier function is passed the exact existing value for the field. For example, if you define a modifier function for an object's `quantity` field that has current value `5`, your modifier function is passed the value `5`.
+
+**However**, when you define a modifier function for a field that contains an object type or a list of objects, those objects are represented as **references**. Each reference points to its corresponding object in the cache by its identifier. If you return a _different_ reference in your modifier function, you change _which_ other cached object is contained in this field. You _don't_ modify the original cached object's data.
+
 ### Modifier function utilities
 
-A modifier function can optionally take a second parameter, which is an object that contains several helpful utilities:
+A modifier function can optionally take a second parameter, which is an object that contains several helpful utilities.
 
-| Name | Description |
-| ---- | ----------- |
-| `DELETE` | The modifier function can return this sentinel object to delete the associated field from the cache. |
-| `fieldName` | The name of the field this modifier function is being applied to. |
-| `storeFieldName` | ??? |
-| `readField` | A function that returns the value of a specified field from a provided object or object reference. |
-| `canRead` | ??? |
-| `isReference` | A function that returns `true` if a provided value is a reference to a cached object. |
-| `toReference` | ??? |
-
-The [first example below](#example-removing-an-item-from-a-list) uses the `readField` utility function.
+A couple of these utilities (the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-functions).
 
 ### Example: Removing an item from a list
 
@@ -220,7 +218,7 @@ Let's break this down:
 
 * In the `fields` field, we provide an object that lists our modifier functions. In this case, we define a single modifier function (for the `comments` field).
 
-* The `comments` modifier function takes our existing cached array of comments as a parameter (`existingCommentRefs`). It also takes the `readField` helper function, which helps you read the value of any cached field.
+* The `comments` modifier function takes our existing cached array of comments as a parameter (`existingCommentRefs`). It also uses the `readField` utility function, which helps you read the value of any cached field.
 
 * The modifier function returns an array that filters out all comments with an ID that matches `idToRemove`. The returned array replaces the existing array in the cache.
 
@@ -262,7 +260,7 @@ cache.modify({
 });
 ```
 
-When the `comments` field modifier function is called, it first calls `writeFragment` to store our `newComment` data in the cache. The `writeFragment` function returns a reference(`newCommentRef`) that points to the newly cached comment.
+When the `comments` field modifier function is called, it first calls `writeFragment` to store our `newComment` data in the cache. The `writeFragment` function returns a reference (`newCommentRef`) that points to the newly cached comment.
 
 As a safety check, we then scan the array of existing comment references (`existingCommentRefs`) to make sure that our new isn't already in the list. If it isn't, we add the new comment reference to the list of references, returning the full list to be stored in the cache.
 
@@ -295,7 +293,7 @@ const [addComment] = useMutation(ADD_COMMENT, {
 });
 ```
 
-In this example, `useMutation` automatically adds the newly created `Comment` to the cache, but it _doesn't_ automatically know how to add that `Comment` to the corresponding `Post`'s list of `comments`. This means that any queries watching the `Post`'s list of `comments` _won't_ update.
+In this example, `useMutation` creates a `Comment` and automatically adds it to the cache, but it _doesn't_ automatically know how to add that `Comment` to the corresponding `Post`'s list of `comments`. This means that any queries watching the `Post`'s list of `comments` _won't_ update.
 
 To address this, we use the [`update` callback](../data/mutations/#updating-the-cache-after-a-mutation) of `useMutation` to call `cache.modify`. Like the [previous example](#example-adding-an-item-to-a-list), we add the new comment to the list. _Unlike_ the previous example, the comment was already added to the cache by `useMutation`. Consequently, `cache.writeFragment` returns a reference to the existing object.
 
@@ -318,7 +316,7 @@ cache.modify({
 
 ## Obtaining an object's custom ID
 
-If a type in your cache uses a [custom identifier](./cache-configuration/#customizing-identifier-generation-by-type), you can use the `cache.identify` method to obtain the identifier for an object of that type. This method takes an object and computes its ID based on both its `__typename` and its custom identifier field(s). This means you don't have to keep track of which fields make up each type's identifier.
+If a type in your cache uses a [custom identifier](./cache-configuration/#customizing-identifier-generation-by-type) (or even if it doesn't), you can use the `cache.identify` method to obtain the identifier for an object of that type. This method takes an object and computes its ID based on both its `__typename` and its identifier field(s). This means you don't have to keep track of which fields make up each type's identifier.
 
 ### Example
 

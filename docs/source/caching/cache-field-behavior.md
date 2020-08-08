@@ -208,6 +208,23 @@ const cache = new InMemoryCache({
 });
 ```
 
+Since writing this kind of `merge` function can become repetitive, the following shorthand will provide the same behavior:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        author: {
+          // Short for always preferring incoming over existing data.
+          merge: false,
+        },
+      },
+    },
+  },
+});
+```
+
 When you use `{ ...existing, ...incoming }`, `Author` objects with differing fields (`name`, `dateOfBirth`) can be combined without losing fields, which is definitely an improvement over blind replacement.
 
 But what if the `Author` type defines its own custom `merge` functions for fields of the `incoming` object? Since we're using [object spread syntax](https://2ality.com/2016/10/rest-spread-properties.html), such fields will immediately overwrite fields in `existing`, without triggering any nested `merge` functions. The `{ ...existing, ...incoming }` syntax may be an improvement, but it is not fully correct.
@@ -232,6 +249,23 @@ const cache = new InMemoryCache({
 ```
 
 Because this `Book.author` field policy has no `Book`- or `Author`-specific logic in it, you can reuse this `merge` function for any field that needs this kind of handling.
+
+Since writing this kind of `merge` function can become repetitive, the following shorthand will provide the same behavior:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        author: {
+          // Short for options.mergeObjects(existing, incoming).
+          merge: true,
+        },
+      },
+    },
+  },
+});
+```
 
 In summary, the `Book.author` policy above allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
 
@@ -475,6 +509,7 @@ An example of a _non-key_ argument is an access token, which is used to authoriz
 
 By default, the cache stores a separate value for _every unique combination of argument values you provide when querying a particular field_. When you specify a field's key arguments, the cache understands that any _non_-key arguments don't affect that field's value. Consequently, if you execute two different queries with the `monthForNumber` field, passing the _same_ `number` argument but _different_ `accessToken` arguments, the second query response will overwrite the first, because both invocations use the exact same value for all key arguments.
 
+If you need more control over the behavior of `keyArgs`, you can pass a function instead of an array. This `keyArgs` function will receive the arguments object as its first parameter, and a `context` object providing other relevant details as its second parameter. See `KeyArgsFunction` in the types below for further information.
 
 ## `FieldPolicy` API reference
 
@@ -490,7 +525,7 @@ type FieldPolicy<
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
-  merge?: FieldMergeFunction<TExisting, TIncoming>;
+  merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
 
 type KeySpecifier = (string | KeySpecifier)[];
@@ -501,6 +536,7 @@ type KeyArgsFunction = (
     typename: string;
     fieldName: string;
     field: FieldNode | null;
+    variables?: Record<string, any>;
   },
 ) => string | KeySpecifier | null | void;
 

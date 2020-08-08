@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 
-import { OperationVariables } from '../../core/types';
+import { OperationVariables } from '../../core';
 import { SubscriptionComponentOptions } from './types';
-import { useSubscription } from '../hooks/useSubscription';
+import { useSubscription } from '../hooks';
 
 export function Subscription<TData = any, TVariables = OperationVariables>(
   props: SubscriptionComponentOptions<TData, TVariables>

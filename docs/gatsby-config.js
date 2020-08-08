@@ -26,7 +26,12 @@ module.exports = {
           ],
         },
         sidebarCategories: {
-          null: ['index', 'why-apollo', 'get-started'],
+          null: [
+            'index',
+            'why-apollo',
+            'get-started',
+            '[Changelog](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md)',
+          ],
           'Fetching': [
             'data/queries',
             'data/mutations',

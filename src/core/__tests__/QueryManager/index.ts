@@ -6,8 +6,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
-import { GraphQLRequest, FetchResult } from '../../../link/core/types';
+import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
 import { InMemoryCache, InMemoryCacheConfig } from '../../../cache/inmemory/inMemoryCache';
 import {
   ApolloReducerConfig,
@@ -26,7 +25,7 @@ import { ObservableQuery } from '../../ObservableQuery';
 import { MutationBaseOptions, MutationOptions, WatchQueryOptions } from '../../watchQueryOptions';
 import { QueryManager } from '../../QueryManager';
 
-import { ApolloError } from '../../../errors/ApolloError';
+import { ApolloError } from '../../../errors';
 
 // testing utils
 import wrap from '../../../utilities/testing/wrap';
@@ -36,7 +35,7 @@ import observableToPromise, {
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
-import { ApolloClient } from '../../../ApolloClient';
+import { ApolloClient } from '../../../core'
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -63,15 +62,18 @@ describe('QueryManager', () => {
     link,
     config = {},
     clientAwareness = {},
+    queryDeduplication = false,
   }: {
     link: ApolloLink;
     config?: Partial<InMemoryCacheConfig>;
     clientAwareness?: { [key: string]: string };
+    queryDeduplication?: boolean;
   }) => {
     return new QueryManager({
       link,
       cache: new InMemoryCache({ addTypename: false, ...config }),
       clientAwareness,
+      queryDeduplication,
     });
   };
 
@@ -189,8 +191,15 @@ describe('QueryManager', () => {
 
   function getCurrentQueryResult<TData, TVars>(
     observableQuery: ObservableQuery<TData, TVars>,
-  ): ReturnType<ObservableQuery<TData, TVars>["getCurrentQueryResult"]> {
-    return (observableQuery as any).getCurrentQueryResult();
+  ): {
+    data?: TData;
+    partial: boolean;
+  } {
+    const result = observableQuery.getCurrentResult();
+    return {
+      data: result.data,
+      partial: !!result.partial,
+    };
   }
 
   itAsync('handles GraphQL errors', (resolve, reject) => {
@@ -2126,6 +2135,7 @@ describe('QueryManager', () => {
             data: {},
             loading: true,
             networkStatus: NetworkStatus.loading,
+            partial: true,
           });
         },
         result => {
@@ -2157,9 +2167,7 @@ describe('QueryManager', () => {
         Query: {
           fields: {
             info: {
-              merge(_, incoming) {
-                return incoming;
-              },
+              merge: false,
             },
           },
         },
@@ -2200,6 +2208,7 @@ describe('QueryManager', () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           data: {},
+          partial: true,
         });
       } else if (count === 2) {
         expect(result).toEqual({
@@ -2218,6 +2227,7 @@ describe('QueryManager', () => {
           data: {
             info: {},
           },
+          partial: true,
         });
       } else if (count === 4) {
         expect(result).toEqual({
@@ -2241,6 +2251,7 @@ describe('QueryManager', () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           data: {},
+          partial: true,
         });
       } else if (count === 2) {
         expect(result).toEqual({
@@ -4780,7 +4791,9 @@ describe('QueryManager', () => {
   });
 
   describe('awaitRefetchQueries', () => {
-    const awaitRefetchTest = ({ awaitRefetchQueries }: MutationBaseOptions) => new Promise((resolve, reject) => {
+    const awaitRefetchTest =
+    ({ awaitRefetchQueries, testQueryError = false }: MutationBaseOptions & { testQueryError?: boolean }) =>
+    new Promise((resolve, reject) => {
       const query = gql`
         query getAuthors($id: ID!) {
           author(id: $id) {
@@ -4822,6 +4835,8 @@ describe('QueryManager', () => {
 
       const variables = { id: '1234' };
 
+      const refetchError = testQueryError ? new Error('Refetch failed') : undefined;
+
       const queryManager = mockQueryManager(
         reject,
         {
@@ -4835,6 +4850,7 @@ describe('QueryManager', () => {
         {
           request: { query, variables },
           result: { data: secondReqData },
+          error: refetchError,
         },
       );
 
@@ -4844,6 +4860,7 @@ describe('QueryManager', () => {
         notifyOnNetworkStatusChange: false,
       });
 
+      let isRefetchErrorCaught = false;
       let mutationComplete = false;
       return observableToPromise(
         { observable },
@@ -4858,6 +4875,10 @@ describe('QueryManager', () => {
           }
           queryManager.mutate(mutateOptions).then(() => {
             mutationComplete = true;
+          })
+          .catch(error => {
+            expect(error).toBeDefined();
+            isRefetchErrorCaught = true;
           });
         },
         result => {
@@ -4871,7 +4892,21 @@ describe('QueryManager', () => {
           );
           expect(stripSymbols(result.data)).toEqual(secondReqData);
         },
-      ).then(resolve, reject);
+      )
+      .then(resolve)
+      .catch(error => {
+        const isRefetchError = awaitRefetchQueries && testQueryError &&
+          error.message.includes(refetchError?.message);
+
+        if (isRefetchError) {
+          return setTimeout(() => {
+            expect(isRefetchErrorCaught).toBe(true);
+            resolve();
+          }, 10);
+        }
+
+        reject(error);
+      });
     });
 
     it(
@@ -4891,6 +4926,12 @@ describe('QueryManager', () => {
         'the mutation, when `awaitRefetchQueries` is `true`',
       () => awaitRefetchTest({ awaitRefetchQueries: true })
     );
+
+    it(
+      'should allow catching errors from `refetchQueries` when ' +
+        '`awaitRefetchQueries` is `true`',
+      () => awaitRefetchTest({ awaitRefetchQueries: true, testQueryError: true })
+    )
   });
 
   describe('store watchers', () => {
@@ -5040,4 +5081,46 @@ describe('QueryManager', () => {
       });
     });
   });
+
+  describe('queryDeduplication', () => {
+    it('should be true when context is true, default is false and argument not provided', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+      });
+
+      queryManager.query({ query, context: { queryDeduplication: true } })
+
+      expect(queryManager['inFlightLinkObservables'].size).toBe(1)
+    });
+    it('should allow overriding global queryDeduplication: true to false', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { author: { firstName: 'John' } },
+        }),
+        queryDeduplication: true,
+      });
+
+      queryManager.query({ query, context: { queryDeduplication: false } })
+
+      expect(queryManager['inFlightLinkObservables'].size).toBe(0)
+    });
+  })
 });

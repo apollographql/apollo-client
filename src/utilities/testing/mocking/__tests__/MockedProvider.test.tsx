@@ -8,7 +8,7 @@ import { MockedResponse, MockLink } from '../mockLink';
 import { DocumentNode } from 'graphql';
 import { useQuery } from '../../../../react/hooks/useQuery';
 import { InMemoryCache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
+import { ApolloLink } from '../../../../link/core';
 
 const variables = {
   username: 'mock_username'

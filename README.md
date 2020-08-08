@@ -2,7 +2,7 @@
 
 ## Apollo Client
 
-[![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
+[![npm version](https://badge.fury.io/js/%40apollo%2Fclient.svg)](https://badge.fury.io/js/%40apollo%2Fclient)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-client.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-client)
 [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 

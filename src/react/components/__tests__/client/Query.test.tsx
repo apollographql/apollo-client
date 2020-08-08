@@ -3,17 +3,13 @@ import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 import { render, wait } from '@testing-library/react';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { NetworkStatus } from '../../../../core/networkStatus';
-import { ApolloError } from '../../../../errors/ApolloError';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { MockedProvider } from '../../../../utilities/testing/mocking/MockedProvider';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
+import { ApolloClient, NetworkStatus } from '../../../../core';
+import { ApolloError } from '../../../../errors';
+import { ApolloLink } from '../../../../link/core';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { ApolloProvider } from '../../../context';
+import { itAsync, stripSymbols, MockedProvider, mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
-import { itAsync } from '../../../../utilities/testing/itAsync';
 
 const allPeopleQuery: DocumentNode = gql`
   query people {
@@ -1678,9 +1674,6 @@ describe('Query component', () => {
               });
               break;
             case 4:
-              expect(props.loading).toBeTruthy();
-              break;
-            case 5:
               // Good result should be received without any errors.
               expect(props.error).toBeFalsy();
               expect(props.data.allPeople).toBeTruthy();
@@ -1702,7 +1695,7 @@ describe('Query component', () => {
         </Query>
       );
 
-      return wait(() => expect(count).toBe(6)).then(resolve, reject);
+      return wait(() => expect(count).toBe(5)).then(resolve, reject);
     }
   );
 

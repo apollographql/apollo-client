@@ -2,14 +2,12 @@ import React from 'react';
 import gql from 'graphql-tag';
 import { render, wait } from '@testing-library/react';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { ApolloLink } from '../../../../link/core/ApolloLink';
-import { MockSubscriptionLink } from '../../../../utilities/testing/mocking/mockSubscriptionLink';
-import { Operation } from '../../../../link/core/types';
+import { ApolloClient } from '../../../../core';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { ApolloProvider } from '../../../context';
+import { ApolloLink, Operation } from '../../../../link/core';
+import { itAsync, MockSubscriptionLink } from '../../../../testing';
 import { Subscription } from '../../Subscription';
-import { itAsync } from '../../../../utilities/testing/itAsync';
 
 const results = [
   'Luke Skywalker',

@@ -59,13 +59,13 @@ client
 
 Run this code, open your console, and inspect the result object. You should see a `data` property with `rates` attached, along with some other properties like `loading` and `networkStatus`.
 
-Although executing GraphQL operations like this can be useful, Apollo Client really shines when it's integrated with a view layer like react. You can bind queries to your UI and update it automatically as new data is fetched.
+Although executing GraphQL operations like this can be useful, Apollo Client really shines when it's integrated with a view layer like React. You can bind queries to your UI and update it automatically as new data is fetched.
 
 Let's look at how that works!
 
 ## Connect your client to React
 
-To connect Apollo Client to React with the `ApolloProvider` component. The `ApolloProvider` is similar to React's [`Context.Provider`](https://reactjs.org/docs/context.html#contextprovider). It wraps your React app and places the client on the context, which enables you to access it from anywhere in your component tree.
+You connect Apollo Client to React with the `ApolloProvider` component. The `ApolloProvider` is similar to React's [`Context.Provider`](https://reactjs.org/docs/context.html#contextprovider). It wraps your React app and places the client on the context, which enables you to access it from anywhere in your component tree.
 
 In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest putting the `ApolloProvider` somewhere high in your app, above any component that might need to access GraphQL data. For example, it could be outside of your root route component if you're using React Router.
 
@@ -136,5 +136,5 @@ To play around with the app we just built, [check it out on CodeSandbox](https:/
 Now that you've learned how to fetch data with Apollo Client, you're ready to dive deeper into creating more complex queries and mutations. After this section, we recommend moving on to:
 
 - [Queries](data/queries/): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `useQuery`.
-- [Mutations](data/mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `useMutation` components.
+- [Mutations](data/mutations/): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `useMutation`.
 - [Apollo Client API](api/core/ApolloClient/): Sometimes, you'll need to access the client directly like we did in our plain JavaScript example above. Visit the API reference for a full list of options.

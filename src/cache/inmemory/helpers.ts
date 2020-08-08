@@ -6,9 +6,10 @@ import {
   isReference,
   StoreValue,
   StoreObject,
-  isField
-} from '../../utilities/graphql/storeUtils';
-import { DeepMerger, ReconcilerFunction } from '../../utilities/common/mergeDeep';
+  isField,
+  DeepMerger,
+  ReconcilerFunction,
+} from '../../utilities';
 
 export const hasOwn = Object.prototype.hasOwnProperty;
 

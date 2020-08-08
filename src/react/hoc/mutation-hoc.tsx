@@ -2,13 +2,13 @@ import React from 'react';
 import { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
-import { parser } from '../parser/parser';
+import { parser } from '../parser';
 import {
   BaseMutationOptions,
   MutationFunction,
   MutationResult
 } from '../types/types';
-import { Mutation } from '../components/Mutation';
+import { Mutation } from '../components';
 
 import {
   defaultMapPropsToOptions,

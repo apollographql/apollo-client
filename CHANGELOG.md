@@ -1,9 +1,88 @@
-## Apollo Client 3.0.1 (TBD - not yet released)
+## Apollo Client 3.1.3
 
 ## Bug Fixes
 
-- Make sure `useQuery` `onCompleted` is not fired when `skip` is `true`.  <br/>
+- Consider only `result.data` (rather than all properties of `result`) when settling cache feuds. <br/>
+  [@danReynolds](https://github.com/danReynolds) in [#6777](https://github.com/apollographql/apollo-client/pull/6777)
+
+## Improvements
+
+- Provide [jscodeshift](https://www.npmjs.com/package/jscodeshift) transform for automatically converting Apollo Client 2.x `import` declarations to use Apollo Client 3.x packages. [Instructions](https://github.com/apollographql/apollo-client/tree/master/codemods/ac2-to-ac3). <br/>
+  [@dminkovsky](https://github.com/dminkovsky) and [@jcreighton](https://github.com/jcreighton) in [#6486](https://github.com/apollographql/apollo-client/pull/6486)
+
+## Apollo Client 3.1.2
+
+## Bug Fixes
+
+- Avoid making network requests when `skip` is `true`.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6752](https://github.com/apollographql/apollo-client/pull/6752)
+
+## Improvements
+
+- Allow `SchemaLink.Options.context` function to be `async` (or return a `Promise`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6735](https://github.com/apollographql/apollo-client/pull/6735)
+
+## Apollo Client 3.1.1
+
+## Bug Fixes
+
+- Re-export cache types from `@apollo/client/core` (and thus also `@apollo/client`), again. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6725](https://github.com/apollographql/apollo-client/pull/6725)
+
+## Apollo Client 3.1.0
+
+## Bug Fixes
+
+- Rework interdependencies between `@apollo/client/*` entry points, so that CommonJS and ESM modules are supported equally well, without any duplication of shared code. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6656](https://github.com/apollographql/apollo-client/pull/6656) and
+  [#6657](https://github.com/apollographql/apollo-client/pull/6657)
+
+- Tolerate `!==` callback functions (like `onCompleted` and `onError`) in `useQuery` options, since those functions are almost always freshly evaluated each time `useQuery` is called. <br/>
+  [@hwillson](https://github.com/hwillson) and [@benjamn](https://github.com/benjamn) in [#6588](https://github.com/apollographql/apollo-client/pull/6588)
+
+- Respect `context.queryDeduplication` if provided, and otherwise fall back to `client.deduplication` (as before). <br/>
+  [@igaloly](https://github.com/igaloly) in [#6261](https://github.com/apollographql/apollo-client/pull/6261) and
+  [@Kujawadl](https://github.com/Kujawadl) in [#6526](https://github.com/apollographql/apollo-client/pull/6526)
+
+- Refactor `ObservableQuery#getCurrentResult` to reenable immediate delivery of warm cache results. As part of this refactoring, the `ApolloCurrentQueryResult` type was eliminated in favor of `ApolloQueryResult`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6710](https://github.com/apollographql/apollo-client/pull/6710)
+
+- Avoid clobbering `defaultOptions` with `undefined` values. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6715](https://github.com/apollographql/apollo-client/pull/6715)
+
+## Improvements
+
+- Apollo Client will no longer modify `options.fetchPolicy` unless you pass `options.nextFetchPolicy` to request an explicit change in `FetchPolicy` after the current request. Although this is technically a breaking change, `options.nextFieldPolicy` makes it easy to restore the old behavior (by passing `cache-first`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6712](https://github.com/apollographql/apollo-client/pull/6712), reverting [#6353](https://github.com/apollographql/apollo-client/pull/6353)
+
+- Errors of the form `Invariant Violation: 42` thrown in production can now be looked up much more easily, by consulting the auto-generated `@apollo/client/invariantErrorCodes.js` file specific to your `@apollo/client` version. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6665](https://github.com/apollographql/apollo-client/pull/6665)
+
+- Make the `client` field of the `MutationResult` type non-optional, since it is always provided. <br/>
+  [@glasser](https://github.com/glasser) in [#6617](https://github.com/apollographql/apollo-client/pull/6617)
+
+- Allow passing an asynchronous `options.renderFunction` to `getMarkupFromTree`. <br/>
+  [@richardscarrott](https://github.com/richardscarrott) in [#6576](https://github.com/apollographql/apollo-client/pull/6576)
+
+- Ergonomic improvements for `merge` and `keyArgs` functions in cache field policies. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6714](https://github.com/apollographql/apollo-client/pull/6714)
+
+## Apollo Client 3.0.2
+
+## Bug Fixes
+
+- Avoid duplicating `graphql/execution/execute` dependency in CommonJS bundle for `@apollo/client/link/schema`, fixing `instanceof` errors reported in [#6621](https://github.com/apollographql/apollo-client/issues/6621) and [#6614](https://github.com/apollographql/apollo-client/issues/6614). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6624](https://github.com/apollographql/apollo-client/pull/6624)
+
+## Apollo Client 3.0.1
+
+## Bug Fixes
+
+- Make sure `useQuery` `onCompleted` is not fired when `skip` is `true`. <br/>
   [@hwillson](https://github.com/hwillson) in [#6589](https://github.com/apollographql/apollo-client/pull/6589)
+
+- Revert changes to `peerDependencies` in `package.json` ([#6594](https://github.com/apollographql/apollo-client/pull/6594)), which would have allowed using incompatible future versions of `graphql` and/or `react` due to overly-permissive `>=` version constraints. <br/>
+  [@hwillson](https://github.com/hwillson) in [#6605](https://github.com/apollographql/apollo-client/pull/6605)
 
 # Apollo Client 3.0.0
 

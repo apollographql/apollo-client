@@ -127,10 +127,10 @@ import { defaultDataIdFromObject } from '@apollo/client';
 
 const cache = new InMemoryCache({
   dataIdFromObject(responseObject) {
-    switch (object.__typename) {
-      case 'Product': return `Product:${object.upc}`;
-      case 'Person': return `Person:${object.name}:${object.email}`;
-      default: return defaultDataIdFromObject(object);
+    switch (responseObject.__typename) {
+      case 'Product': return `Product:${responseObject.upc}`;
+      case 'Person': return `Person:${responseObject.name}:${responseObject.email}`;
+      default: return defaultDataIdFromObject(responseObject);
     }
   }
 });

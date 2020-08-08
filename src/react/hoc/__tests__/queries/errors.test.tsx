@@ -4,16 +4,14 @@ import gql from 'graphql-tag';
 import { withState } from 'recompose';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
+import { ApolloClient } from '../../../../core';
+import { ApolloProvider } from '../../../context';
+import { InMemoryCache as Cache } from '../../../../cache';
 import { QueryResult } from '../../../types/types';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
+import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
 import { Query } from '../../../components/Query';
 import { graphql } from '../../graphql';
 import { ChildProps, DataValue } from '../../types';
-import { itAsync } from '../../../../utilities/testing/itAsync';
 
 describe('[queries] errors', () => {
   let error: typeof console.error;

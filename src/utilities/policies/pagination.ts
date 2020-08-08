@@ -61,7 +61,8 @@ export function relayStylePagination<TNode = Reference>(
   return {
     keyArgs,
 
-    read(existing = makeEmptyData(), { canRead }) {
+    read(existing, { canRead }) {
+      if (!existing) return;
       const edges = existing.edges.filter(edge => canRead(edge.node));
       return {
         // Some implementations return additional Connection fields, such

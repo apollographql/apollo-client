@@ -1,5 +1,55 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`type policies can alter the root query __typename 1`] = `
+Object {
+  "Query:0": Object {
+    "__typename": "Query",
+    "id": 0,
+  },
+  "Query:1": Object {
+    "__typename": "Query",
+    "id": 1,
+  },
+  "Query:2": Object {
+    "__typename": "Query",
+    "id": 2,
+  },
+  "Query:3": Object {
+    "__typename": "Query",
+    "id": 3,
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "RootQuery",
+    "items": Array [
+      Object {
+        "id": 0,
+        "query": Object {
+          "__ref": "Query:0",
+        },
+      },
+      Object {
+        "id": 1,
+        "query": Object {
+          "__ref": "Query:1",
+        },
+      },
+      Object {
+        "id": 2,
+        "query": Object {
+          "__ref": "Query:2",
+        },
+      },
+      Object {
+        "id": 3,
+        "query": Object {
+          "__ref": "Query:3",
+        },
+      },
+    ],
+  },
+}
+`;
+
 exports[`type policies field policies can handle Relay-style pagination 1`] = `
 Object {
   "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {

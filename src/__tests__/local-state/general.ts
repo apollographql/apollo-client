@@ -2,13 +2,12 @@ import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 import { getIntrospectionQuery } from 'graphql/utilities';
 
-import { Observable } from '../../utilities/observables/Observable';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { Operation } from '../../link/core/types';
-import { ApolloClient } from '../..';
-import { ApolloCache } from '../../cache/core/cache';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { itAsync } from '../../utilities/testing/itAsync';
+import { Observable } from '../../utilities';
+import { ApolloLink } from '../../link/core';
+import { Operation } from '../../link/core';
+import { ApolloClient } from '../../core';
+import { ApolloCache, InMemoryCache } from '../../cache';
+import { itAsync } from '../../testing';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {

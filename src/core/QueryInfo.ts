@@ -1,20 +1,21 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
-import { Cache } from '../cache/core/types/Cache';
-import { ApolloCache } from '../cache/core/cache';
+import { Cache, ApolloCache } from '../cache';
 import { WatchQueryOptions } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { QueryListener } from './types';
-import { FetchResult } from '../link/core/types';
-import { ObservableSubscription } from '../utilities/observables/Observable';
-import { isNonEmptyArray } from '../utilities/common/arrays';
-import { graphQLResultHasError } from '../utilities/common/errorHandling';
+import { FetchResult } from '../link/core';
+import {
+  ObservableSubscription,
+  isNonEmptyArray,
+  graphQLResultHasError,
+} from '../utilities';
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
 } from './networkStatus';
-import { ApolloError } from '../errors/ApolloError';
+import { ApolloError } from '../errors';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -28,7 +29,7 @@ export type QueryStoreValue = Pick<QueryInfo,
 // this.queries Map. QueryInfo objects store the latest results and errors
 // for the given query, and are responsible for reporting those results to
 // the corresponding ObservableQuery, via the QueryInfo.notify method.
-// Results are reported asynchronously whenever setDirty marks the
+// Results are reported asynchronously whenever setDiff marks the
 // QueryInfo object as dirty, though a call to the QueryManager's
 // broadcastQueries method may trigger the notification before it happens
 // automatically. This class used to be a simple interface type without
@@ -64,6 +65,10 @@ export class QueryInfo {
       networkStatus = NetworkStatus.setVariables;
     }
 
+    if (!equal(query.variables, this.variables)) {
+      this.diff = null;
+    }
+
     Object.assign(this, {
       document: query.document,
       variables: query.variables,
@@ -85,25 +90,33 @@ export class QueryInfo {
 
   private dirty: boolean = false;
 
-  public setDirty(): this {
-    if (!this.dirty) {
-      this.dirty = true;
-      if (!this.notifyTimeout) {
-        this.notifyTimeout = setTimeout(() => this.notify(), 0);
-      }
-    }
-    return this;
-  }
-
   private notifyTimeout?: ReturnType<typeof setTimeout>;
 
   private diff: Cache.DiffResult<any> | null = null;
+
+  getDiff(variables = this.variables): Cache.DiffResult<any> {
+    if (this.diff && equal(variables, this.variables)) {
+      return this.diff;
+    }
+
+    this.updateWatch(this.variables = variables);
+
+    return this.diff = this.cache.diff({
+      query: this.document!,
+      variables,
+      returnPartialData: true,
+      optimistic: true,
+    });
+  }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.diff;
     this.diff = diff;
     if (!this.dirty && diff?.result !== oldDiff?.result) {
-      this.setDirty();
+      this.dirty = true;
+      if (!this.notifyTimeout) {
+        this.notifyTimeout = setTimeout(() => this.notify(), 0);
+      }
     }
   }
 
@@ -120,6 +133,7 @@ export class QueryInfo {
     (this as any).observableQuery = oq;
 
     if (oq) {
+      oq["queryInfo"] = this;
       this.listeners.add(this.oqListener = () => oq.reobserve());
     } else {
       delete this.oqListener;
@@ -162,14 +176,6 @@ export class QueryInfo {
     // QueryInfo.prototype.
     delete this.cancel;
 
-    this.variables =
-    this.networkStatus =
-    this.networkError =
-    this.graphQLErrors =
-    this.lastWatch =
-    this.lastWrittenResult =
-    this.lastWrittenVars = void 0;
-
     const oq = this.observableQuery;
     if (oq) oq.stopPolling();
   }
@@ -180,7 +186,11 @@ export class QueryInfo {
 
   private lastWatch?: Cache.WatchOptions;
 
-  public updateWatch<TVars = Record<string, any>>(variables: TVars): this {
+  private updateWatch(variables = this.variables) {
+    const oq = this.observableQuery;
+    if (oq && oq.options.fetchPolicy === "no-cache") {
+      return;
+    }
     if (!this.lastWatch ||
         this.lastWatch.query !== this.document ||
         !equal(variables, this.lastWatch.variables)) {
@@ -192,7 +202,6 @@ export class QueryInfo {
         callback: diff => this.setDiff(diff),
       });
     }
-    return this;
   }
 
   private lastWrittenResult?: FetchResult<any>;
@@ -226,7 +235,8 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction(cache => {
-          if (equal(result, this.lastWrittenResult) &&
+          if (this.lastWrittenResult &&
+              equal(result.data, this.lastWrittenResult.data) &&
               equal(options.variables, this.lastWrittenVars)) {
             // If result is the same as the last result we received from
             // the network (and the variables match too), avoid writing
@@ -284,6 +294,10 @@ export class QueryInfo {
             returnPartialData: true,
             optimistic: true,
           });
+
+          // Any time we're about to update this.diff, we need to make
+          // sure we've started watching the cache.
+          this.updateWatch(options.variables);
 
           // If we're allowed to write to the cache, and we can read a
           // complete result from the cache, update result.data to be the

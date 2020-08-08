@@ -2,9 +2,9 @@ import { useContext, useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 
 import { MutationHookOptions, MutationTuple } from '../types/types';
-import { MutationData } from '../data/MutationData';
-import { OperationVariables } from '../../core/types';
-import { getApolloContext } from '../context/ApolloContext';
+import { MutationData } from '../data';
+import { OperationVariables } from '../../core';
+import { getApolloContext } from '../context';
 
 export function useMutation<TData = any, TVariables = OperationVariables>(
   mutation: DocumentNode,

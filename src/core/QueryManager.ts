@@ -2,30 +2,26 @@ import { DocumentNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
-import { ApolloLink } from '../link/core/ApolloLink';
-import { execute } from '../link/core/execute';
-import { FetchResult } from '../link/core/types';
-import { Cache } from '../cache/core/types/Cache';
+import { ApolloLink, execute, FetchResult } from '../link/core';
+import { Cache, ApolloCache } from '../cache';
 
 import {
   getDefaultValues,
   getOperationDefinition,
   getOperationName,
-} from '../utilities/graphql/getFromAST';
-import {
   hasClientExports,
-} from '../utilities/graphql/directives';
-import {
   graphQLResultHasError,
-} from '../utilities/common/errorHandling';
-import { removeConnectionDirectiveFromDocument } from '../utilities/graphql/transform';
-import { canUseWeakMap } from '../utilities/common/canUse';
-import { ApolloError, isApolloError } from '../errors/ApolloError';
-import {
+  removeConnectionDirectiveFromDocument,
+  canUseWeakMap,
   ObservableSubscription,
   Observable,
-} from '../utilities/observables/Observable';
-import { MutationStore } from '../data/mutations';
+  asyncMap,
+  isNonEmptyArray,
+  Concast,
+  ConcastSourcesIterable,
+} from '../utilities';
+import { ApolloError, isApolloError } from '../errors';
+import { MutationStore } from './MutationStore';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -37,19 +33,11 @@ import {
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
-  QueryListener,
   ApolloQueryResult,
   OperationVariables,
   MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
-import { asyncMap } from '../utilities/observables/asyncMap';
-import {
-  Concast,
-  ConcastSourcesIterable,
-} from '../utilities/observables/Concast';
-import { isNonEmptyArray } from '../utilities/common/arrays';
-import { ApolloCache } from '../cache/core/cache';
 
 import { QueryInfo, QueryStoreValue } from './QueryInfo';
 
@@ -337,7 +325,7 @@ export class QueryManager<TStore> {
             }
 
             resolve(storeResult!);
-          });
+          }, reject);
         },
       });
     });
@@ -368,8 +356,12 @@ export class QueryManager<TStore> {
     return store;
   }
 
-  public getQueryStoreValue(queryId: string): QueryStoreValue | undefined {
-    return queryId ? this.queries.get(queryId) : undefined;
+  public resetErrors(queryId: string) {
+    const queryInfo = this.queries.get(queryId);
+    if (queryInfo) {
+      queryInfo.networkError = undefined;
+      queryInfo.graphQLErrors = [];
+    }
   }
 
   private transformCache = new (canUseWeakMap ? WeakMap : Map)<
@@ -451,12 +443,16 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
+    const queryInfo = new QueryInfo(this.cache);
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
+      queryInfo,
       options,
     });
 
-    this.getQuery(observable.queryId).init({
+    this.queries.set(observable.queryId, queryInfo);
+
+    queryInfo.init({
       document: options.query,
       observableQuery: observable,
       variables: options.variables,
@@ -519,10 +515,6 @@ export class QueryManager<TStore> {
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) queryInfo.stop();
-  }
-
-  public addQueryListener(queryId: string, listener: QueryListener) {
-    this.getQuery(queryId).listeners.add(listener);
   }
 
   public clearStore(): Promise<void> {
@@ -692,7 +684,10 @@ export class QueryManager<TStore> {
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,
-    deduplication: boolean = this.queryDeduplication,
+    deduplication: boolean =
+      // Prefer context.queryDeduplication if specified.
+      context?.queryDeduplication ??
+      this.queryDeduplication,
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
 
@@ -841,24 +836,6 @@ export class QueryManager<TStore> {
       context = {},
     } = options;
 
-    if (fetchPolicy === "cache-and-network" ||
-        fetchPolicy === "network-only") {
-      // When someone chooses cache-and-network or network-only as their
-      // initial FetchPolicy, they almost certainly do not want future cache
-      // updates to trigger unconditional network requests, which is what
-      // repeatedly applying the cache-and-network or network-only policies
-      // would seem to require. Instead, when the cache reports an update
-      // after the initial network request, subsequent network requests should
-      // be triggered only if the cache result is incomplete. This behavior
-      // corresponds exactly to switching to a cache-first FetchPolicy, so we
-      // modify options.fetchPolicy here for the next fetchQueryObservable
-      // call, using the same options object that the Reobserver always passes
-      // to fetchQueryObservable. Note: if these FetchPolicy transitions get
-      // much more complicated, we might consider using some sort of state
-      // machine to capture the transition rules.
-      options.fetchPolicy = "cache-first";
-    }
-
     const mightUseNetwork =
       fetchPolicy === "cache-first" ||
       fetchPolicy === "cache-and-network" ||
@@ -929,7 +906,25 @@ export class QueryManager<TStore> {
         : fromVariables(normalized.variables!)
     );
 
-    concast.cleanup(() => this.fetchCancelFns.delete(queryId));
+    concast.cleanup(() => {
+      this.fetchCancelFns.delete(queryId);
+
+      if (options.nextFetchPolicy) {
+        // When someone chooses cache-and-network or network-only as their
+        // initial FetchPolicy, they often do not want future cache updates to
+        // trigger unconditional network requests, which is what repeatedly
+        // applying the cache-and-network or network-only policies would seem
+        // to imply. Instead, when the cache reports an update after the
+        // initial network request, it may be desirable for subsequent network
+        // requests to be triggered only if the cache result is incomplete.
+        // The options.nextFetchPolicy option provides an easy way to update
+        // options.fetchPolicy after the intial network request, without
+        // having to call observableQuery.setOptions.
+        options.fetchPolicy = options.nextFetchPolicy;
+        // The options.nextFetchPolicy transition should happen only once.
+        options.nextFetchPolicy = void 0;
+      }
+    });
 
     return concast;
   }
@@ -956,14 +951,9 @@ export class QueryManager<TStore> {
       variables,
       lastRequestId: this.generateRequestId(),
       networkStatus,
-    }).updateWatch(variables);
-
-    const readCache = () => this.cache.diff<any>({
-      query,
-      variables,
-      returnPartialData: true,
-      optimistic: true,
     });
+
+    const readCache = () => queryInfo.getDiff(variables);
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
@@ -983,6 +973,7 @@ export class QueryManager<TStore> {
         data,
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
+        ...(diff.complete ? null : { partial: true }),
       } as ApolloQueryResult<TData>);
 
       if (this.transform(query).hasForcedResolvers) {
@@ -1072,16 +1063,6 @@ export class QueryManager<TStore> {
       ...newContext,
       clientAwareness: this.clientAwareness,
     };
-  }
-
-  public checkInFlight(queryId: string): boolean {
-    const query = this.getQueryStoreValue(queryId);
-    return (
-      !!query &&
-      !!query.networkStatus &&
-      query.networkStatus !== NetworkStatus.ready &&
-      query.networkStatus !== NetworkStatus.error
-    );
   }
 }
 

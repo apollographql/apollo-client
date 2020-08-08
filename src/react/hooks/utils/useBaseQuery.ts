@@ -7,10 +7,10 @@ import {
   QueryTuple,
   QueryResult,
 } from '../../types/types';
-import { QueryData } from '../../data/QueryData';
+import { QueryData } from '../../data';
 import { useDeepMemo } from './useDeepMemo';
-import { OperationVariables } from '../../../core/types';
-import { getApolloContext } from '../../context/ApolloContext';
+import { OperationVariables } from '../../../core';
+import { getApolloContext } from '../../context';
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,

@@ -6,15 +6,9 @@ import {
   createFragmentMap,
   FragmentMap,
   getFragmentFromSelection,
-} from '../../utilities/graphql/fragments';
-
-import {
   getDefaultValues,
   getFragmentDefinitions,
   getOperationDefinition,
-} from '../../utilities/graphql/getFromAST';
-
-import {
   getTypenameFromResult,
   makeReference,
   isField,
@@ -23,10 +17,10 @@ import {
   StoreObject,
   Reference,
   isReference,
-} from '../../utilities/graphql/storeUtils';
-
-import { shouldInclude, hasDirectives } from '../../utilities/graphql/directives';
-import { cloneDeep } from '../../utilities/common/cloneDeep';
+  shouldInclude,
+  hasDirectives,
+  cloneDeep,
+} from '../../utilities';
 
 import { NormalizedCache, ReadMergeModifyContext } from './types';
 import { makeProcessedFieldsMerger, FieldValueToBeMerged, fieldNameFromStoreName } from './helpers';

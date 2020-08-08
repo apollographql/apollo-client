@@ -6,8 +6,12 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
-import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { StoreObject, Reference, isReference }  from '../../utilities/graphql/storeUtils';
+import {
+  addTypenameToDocument,
+  StoreObject,
+  Reference,
+  isReference,
+} from '../../utilities';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,

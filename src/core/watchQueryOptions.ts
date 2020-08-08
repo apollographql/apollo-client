@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql';
 
-import { ApolloCache } from '../cache/core/cache';
-import { FetchResult } from '../link/core/types';
+import { ApolloCache } from '../cache';
+import { FetchResult } from '../link/core';
 import { MutationQueryReducersMap } from './types';
 import { PureQueryOptions, OperationVariables } from './types';
 
@@ -108,9 +108,13 @@ export interface WatchQueryOptions<TVariables = OperationVariables>
   extends QueryBaseOptions<TVariables>,
     ModifiableWatchQueryOptions<TVariables> {
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query
+   * Specifies the {@link FetchPolicy} to be used for this query.
    */
   fetchPolicy?: WatchQueryFetchPolicy;
+  /**
+   * Specifies the {@link FetchPolicy} to be used after this query has completed.
+   */
+  nextFetchPolicy?: WatchQueryFetchPolicy;
 }
 
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {

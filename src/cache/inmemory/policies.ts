@@ -11,8 +11,6 @@ import { invariant, InvariantError } from 'ts-invariant';
 import {
   FragmentMap,
   getFragmentFromSelection,
-} from '../../utilities/graphql/fragments';
-import {
   isField,
   getTypenameFromResult,
   storeKeyNameFromField,
@@ -22,8 +20,8 @@ import {
   Reference,
   isReference,
   getStoreKeyName,
-} from '../../utilities/graphql/storeUtils';
-import { canUseWeakMap } from '../../utilities/common/canUse';
+  canUseWeakMap,
+} from '../../utilities';
 import { IdGetter, ReadMergeModifyContext } from "./types";
 import {
   hasOwn,
@@ -90,6 +88,7 @@ export type KeyArgsFunction = (
     typename: string;
     fieldName: string;
     field: FieldNode | null;
+    variables?: Record<string, any>;
   },
 ) => KeySpecifier | ReturnType<IdGetter>;
 
@@ -100,7 +99,7 @@ export type FieldPolicy<
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
-  merge?: FieldMergeFunction<TExisting, TIncoming>;
+  merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
 
 type StorageType = Record<string, any>;
@@ -200,18 +199,25 @@ export const defaultDataIdFromObject = (
         _id !== void 0 ? { _id } :
         void 0;
     }
-    const idValue = id || _id;
-    if (idValue !== void 0) {
+    // If there is no object.id, fall back to object._id.
+    if (id === void 0) id = _id;
+    if (id !== void 0) {
       return `${__typename}:${(
-        typeof idValue === "number" ||
-        typeof idValue === "string"
-      ) ? idValue : JSON.stringify(idValue)}`;
+        typeof id === "number" ||
+        typeof id === "string"
+      ) ? id : JSON.stringify(id)}`;
     }
   }
 };
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
+
+// These merge functions can be selected by specifying merge:true or
+// merge:false in a field policy.
+const mergeTrueFn: FieldMergeFunction<any> =
+  (existing, incoming, { mergeObjects }) => mergeObjects(existing, incoming);
+const mergeFalseFn: FieldMergeFunction<any> = (_, incoming) => incoming;
 
 export type PossibleTypesMap = {
   [supertype: string]: string[];
@@ -350,7 +356,16 @@ export class Policies {
               existing.keyFn;
 
             if (typeof read === "function") existing.read = read;
-            if (typeof merge === "function") existing.merge = merge;
+
+            existing.merge =
+              typeof merge === "function" ? merge :
+              // Pass merge:true as a shorthand for a merge implementation
+              // that returns options.mergeObjects(existing, incoming).
+              merge === true ? mergeTrueFn :
+              // Pass merge:false to make incoming always replace existing
+              // without any warnings about data clobbering.
+              merge === false ? mergeFalseFn :
+              existing.merge;
           }
 
           if (existing.read && existing.merge) {
@@ -374,7 +389,12 @@ export class Policies {
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
       invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      // First, delete any old __typename associated with this rootId from
+      // rootIdsByTypename.
+      if (old) delete this.rootIdsByTypename[old];
+      // Now make this the only __typename that maps to this rootId.
       this.rootIdsByTypename[typename] = rootId;
+      // Finally, update the __typename associated with this rootId.
       this.rootTypenamesById[rootId] = typename;
     }
   }
@@ -473,6 +493,7 @@ export class Policies {
         typename,
         fieldName,
         field: fieldSpec.field || null,
+        variables: fieldSpec.variables,
       };
       const args = argsFromFieldSpecifier(fieldSpec);
       while (keyFn) {

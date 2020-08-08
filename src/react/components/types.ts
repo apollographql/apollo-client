@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import { OperationVariables } from '../../core/types';
+import { OperationVariables } from '../../core';
 import {
   QueryFunctionOptions,
   QueryResult,

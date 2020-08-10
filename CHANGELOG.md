@@ -5,6 +5,9 @@
 - Substantially improve type inference for data and variables types using `TypedDocumentNode<Data, Variables>` type instead of `DocumentNode`. <br/>
   [@dotansimha](https://github.com/dotansimha) in [#6720](https://github.com/apollographql/apollo-client/pull/6720)
 
+- Disable feud-stopping logic after any cache eviction. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6817](https://github.com/apollographql/apollo-client/pull/6817)
+
 ## Apollo Client 3.1.3
 
 ## Bug Fixes

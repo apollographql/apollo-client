@@ -10,6 +10,7 @@ import {
   ObservableSubscription,
   isNonEmptyArray,
   graphQLResultHasError,
+  canUseWeakMap,
 } from '../utilities';
 import {
   NetworkStatus,
@@ -23,6 +24,10 @@ export type QueryStoreValue = Pick<QueryInfo,
   | "networkError"
   | "graphQLErrors"
   >;
+
+const cacheEvictCounts = new (
+  canUseWeakMap ? WeakMap : Map
+)<ApolloCache<any>, number>();
 
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
@@ -46,7 +51,28 @@ export class QueryInfo {
   networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
 
-  constructor(private cache: ApolloCache<any>) {}
+  constructor(private cache: ApolloCache<any>) {
+    // Track how often cache.evict is called, since we want eviction to
+    // override the feud-stopping logic in the markResult method, by
+    // causing shouldWrite to return true. Wrapping the cache.evict method
+    // is a bit of a hack, but it saves us from having to make eviction
+    // counting an official part of the ApolloCache API.
+    if (!cacheEvictCounts.has(cache) && cache.evict) {
+      cacheEvictCounts.set(cache, 0);
+      const originalEvict = cache.evict;
+      cache.evict = function evict() {
+        cacheEvictCounts.set(
+          cache,
+          // The %1e15 allows the count to wrap around to 0 safely every
+          // quadrillion evictions, so there's no risk of overflow. To be
+          // clear, this is more of a pedantic principle than something
+          // that matters in any conceivable practical scenario.
+          (cacheEvictCounts.get(cache)! + 1) % 1e15,
+        );
+        return originalEvict.apply(this, arguments);
+      };
+    }
+  }
 
   public init(query: {
     document: DocumentNode;
@@ -204,8 +230,27 @@ export class QueryInfo {
     }
   }
 
-  private lastWrittenResult?: FetchResult<any>;
-  private lastWrittenVars?: WatchQueryOptions["variables"];
+  private lastWrite?: {
+    result: FetchResult<any>;
+    variables: WatchQueryOptions["variables"];
+    evictCount: number | undefined;
+  };
+
+  private shouldWrite(
+    result: FetchResult<any>,
+    variables: WatchQueryOptions["variables"],
+  ) {
+    const { lastWrite } = this;
+    return !(
+      lastWrite &&
+      // If cache.evict has been called since the last time we wrote this
+      // data into the cache, there's a chance writing this result into
+      // the cache will repair what was evicted.
+      lastWrite.evictCount === cacheEvictCounts.get(this.cache) &&
+      equal(variables, lastWrite.variables) &&
+      equal(result.data, lastWrite.result.data)
+    );
+  }
 
   public markResult<T>(
     result: FetchResult<T>,
@@ -235,9 +280,19 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction(cache => {
-          if (this.lastWrittenResult &&
-              equal(result.data, this.lastWrittenResult.data) &&
-              equal(options.variables, this.lastWrittenVars)) {
+          if (this.shouldWrite(result, options.variables)) {
+            cache.writeQuery({
+              query: this.document!,
+              data: result.data as T,
+              variables: options.variables,
+            });
+
+            this.lastWrite = {
+              result,
+              variables: options.variables,
+              evictCount: cacheEvictCounts.get(this.cache),
+            };
+          } else {
             // If result is the same as the last result we received from
             // the network (and the variables match too), avoid writing
             // result into the cache again. The wisdom of skipping this
@@ -278,14 +333,6 @@ export class QueryInfo {
             }
             // If the previous this.diff was incomplete, fall through to
             // re-reading the latest data with cache.diff, below.
-          } else {
-            cache.writeQuery({
-              query: this.document!,
-              data: result.data as T,
-              variables: options.variables,
-            });
-            this.lastWrittenResult = result;
-            this.lastWrittenVars = options.variables;
           }
 
           const diff = cache.diff<T>({
@@ -311,7 +358,7 @@ export class QueryInfo {
         });
 
       } else {
-        this.lastWrittenResult = this.lastWrittenVars = void 0;
+        this.lastWrite = void 0;
       }
     }
   }
@@ -323,7 +370,7 @@ export class QueryInfo {
 
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
-    this.lastWrittenResult = this.lastWrittenVars = void 0;
+    this.lastWrite = void 0;
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

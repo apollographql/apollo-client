@@ -1937,6 +1937,7 @@ describe('optimistic mutation results', () => {
       expect(optimisticDiffs).toEqual([
         {
           complete: true,
+          fromOptimisticTransaction: true,
           result: {
             items: manualItems,
           },
@@ -2099,12 +2100,14 @@ describe('optimistic mutation results', () => {
         expect(optimisticDiffs).toEqual([
           {
             complete: true,
+            fromOptimisticTransaction: true,
             result: {
               items: manualItems,
             },
           },
           {
             complete: true,
+            fromOptimisticTransaction: true,
             result: {
               items: [...manualItems, optimisticItem],
             },

@@ -141,7 +141,9 @@ export class ObservableQuery<
     const { fetchPolicy = 'cache-first' } = this.options;
     if (fetchPolicy === 'no-cache' ||
         fetchPolicy === 'network-only') {
-      result.partial = false;
+      // Similar to setting result.partial to false, but taking advantage
+      // of the falsiness of missing fields.
+      delete result.partial;
     } else if (
       !result.data ||
       // If this.options.query has @client(always: true) fields, we cannot
@@ -154,20 +156,23 @@ export class ObservableQuery<
       !this.queryManager.transform(this.options.query).hasForcedResolvers
     ) {
       const diff = this.queryInfo.getDiff();
-      result.partial = !diff.complete;
       result.data = (
         diff.complete ||
         this.options.returnPartialData
       ) ? diff.result : void 0;
-      // If the cache diff is complete, and we're using a FetchPolicy that
-      // terminates after a complete cache read, we can assume the next
-      // result we receive will have NetworkStatus.ready and !loading.
-      if (diff.complete &&
-          result.networkStatus === NetworkStatus.loading &&
-          (fetchPolicy === 'cache-first' ||
-           fetchPolicy === 'cache-only')) {
-        result.networkStatus = NetworkStatus.ready;
-        result.loading = false;
+      if (diff.complete) {
+        // If the diff is complete, and we're using a FetchPolicy that
+        // terminates after a complete cache read, we can assume the next
+        // result we receive will have NetworkStatus.ready and !loading.
+        if (result.networkStatus === NetworkStatus.loading &&
+            (fetchPolicy === 'cache-first' ||
+             fetchPolicy === 'cache-only')) {
+          result.networkStatus = NetworkStatus.ready;
+          result.loading = false;
+        }
+        delete result.partial;
+      } else {
+        result.partial = true;
       }
     }
 

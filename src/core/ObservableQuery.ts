@@ -125,7 +125,7 @@ export class ObservableQuery<
     });
   }
 
-  public getCurrentResult(saveAsLastResult?: boolean): ApolloQueryResult<TData> {
+  public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
     const { lastResult, lastError } = this;
     const networkStatus = this.queryInfo.networkStatus || NetworkStatus.ready;
     const result: ApolloQueryResult<TData> = {
@@ -176,7 +176,7 @@ export class ObservableQuery<
       }
     }
 
-    if (saveAsLastResult !== false) {
+    if (saveAsLastResult) {
       this.updateLastResult(result);
     }
 

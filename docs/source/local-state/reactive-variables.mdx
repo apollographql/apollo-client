@@ -26,7 +26,7 @@ This code creates a reactive variable with an empty array as its initial value.
 To read the value of your reactive variable, call the function returned by `makeVar` with zero arguments:
 
 ```js
-const cartItems = cache.makeVar([]);
+const cartItems = makeVar([]);
 
 // Output: []
 console.log(cartItems());
@@ -37,7 +37,7 @@ console.log(cartItems());
 To modify the value of your reactive variable, call the function returned by `makeVar` with one argument (the variable's new value):
 
 ```js
-const cartItems = cache.makeVar([]);
+const cartItems = makeVar([]);
 
 cartItems([100, 101, 102]);
 

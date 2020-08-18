@@ -2325,4 +2325,17 @@ describe('writing to the store', () => {
       },
     });
   });
+
+  it("writeFragment should warn if it cannot identify the result object", () => {
+    const cache = new InMemoryCache;
+
+    expect(() => {
+      cache.writeFragment({
+        fragment: gql`fragment Count on Counter { count }`,
+        data: {
+          count: 1,
+        },
+      });
+    }).toThrowError(/writeFragment could not identify object/);
+  });
 });

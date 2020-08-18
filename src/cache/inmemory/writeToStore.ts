@@ -105,6 +105,10 @@ export class StoreWriter {
       },
     });
 
+    if (typeof dataId === 'undefined' && !isReference(objOrRef)) {
+      throw new InvariantError("writeFragment could not identify object");
+    }
+
     const ref = isReference(objOrRef) ? objOrRef :
       dataId && makeReference(dataId) || void 0;
 

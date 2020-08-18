@@ -83,7 +83,7 @@
   },
   "devDependencies": {
     "@babel/parser": "7.11.3",
-    "@rollup/plugin-node-resolve": "8.4.0",
+    "@rollup/plugin-node-resolve": "9.0.0",
     "@testing-library/react": "9.4.1",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/fetch-mock": "^7.3.2",

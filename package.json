@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.1.0-pre.2",
+  "version": "3.1.3",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -47,7 +47,7 @@
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
     "bundlesize": "npm run build && bundlesize",
     "predeploy": "npm run build",
-    "deploy": "cd dist && npm publish --tag beta"
+    "deploy": "cd dist && npm publish"
   },
   "bundlesize": [
     {
@@ -71,7 +71,7 @@
     "@wry/context": "^0.5.2",
     "@wry/equality": "^0.2.0",
     "fast-json-stable-stringify": "^2.0.0",
-    "graphql-tag": "^2.10.4",
+    "graphql-tag": "^2.11.0",
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.12.1",
     "prop-types": "^15.7.2",
@@ -81,16 +81,16 @@
     "zen-observable": "^0.8.14"
   },
   "devDependencies": {
-    "@babel/parser": "7.10.5",
+    "@babel/parser": "7.11.3",
     "@rollup/plugin-node-resolve": "8.4.0",
     "@testing-library/react": "9.4.1",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/fetch-mock": "^7.3.2",
     "@types/glob": "7.1.3",
     "@types/hoist-non-react-statics": "^3.3.1",
-    "@types/jest": "26.0.5",
+    "@types/jest": "26.0.8",
     "@types/lodash": "4.14.157",
-    "@types/node": "14.0.23",
+    "@types/node": "14.0.27",
     "@types/react": "^16.9.32",
     "@types/react-dom": "^16.9.6",
     "@types/recompose": "^0.30.7",
@@ -100,8 +100,8 @@
     "glob": "7.1.6",
     "graphql": "15.3.0",
     "graphql-tools": "^6.0.12",
-    "jest": "26.1.0",
-    "jest-junit": "11.0.1",
+    "jest": "26.2.2",
+    "jest-junit": "11.1.0",
     "lodash": "4.17.19",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -111,9 +111,9 @@
     "rimraf": "3.0.2",
     "rollup": "1.31.1",
     "rollup-plugin-terser": "5.1.3",
-    "rxjs": "6.6.0",
+    "rxjs": "6.6.2",
     "subscriptions-transport-ws": "^0.9.17",
-    "ts-jest": "26.1.3",
+    "ts-jest": "26.1.4",
     "ts-node": "8.10.2",
     "tsc-watch": "3.0.1",
     "typescript": "3.9.7",

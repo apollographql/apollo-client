@@ -2,7 +2,10 @@
 title: Migrating to Apollo Client 3.0
 ---
 
-This article walks you through migrating your application to Apollo Client 3.0 from previous versions of Apollo Client.
+This article walks you through migrating your application to Apollo Client 3.0 from previous versions of Apollo Client. 
+
+To illustrate the migration process, we've also made this video that uses the example app from our [full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/) as a starting point, updating it from Apollo client 2.6 to 3.0: 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/dlKzlksOUtU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## What’s new in 3.0
 

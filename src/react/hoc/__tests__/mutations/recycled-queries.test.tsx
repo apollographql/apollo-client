@@ -162,9 +162,6 @@ describe('graphql(mutation) update queries', () => {
               });
               break;
             case 3:
-              expect(this.props.data!.loading).toBeTruthy();
-              break;
-            case 4:
               expect(stripSymbols(this.props.data!.todo_list)).toEqual({
                 id: '123',
                 title: 'how to apollo',
@@ -228,7 +225,6 @@ describe('graphql(mutation) update queries', () => {
               expect(todoUpdateQueryCount).toBe(2);
               expect(queryMountCount).toBe(2);
               expect(queryUnmountCount).toBe(2);
-              expect(queryRenderCount).toBe(5);
             }, 5);
           }, 5);
         }, 5);
@@ -236,7 +232,7 @@ describe('graphql(mutation) update queries', () => {
     }, 5);
 
     return wait(() => {
-      expect(queryRenderCount).toBe(5);
+      expect(queryRenderCount).toBe(4);
     });
   });
 
@@ -359,12 +355,6 @@ describe('graphql(mutation) update queries', () => {
               );
               break;
             case 3:
-              expect(this.props.data!.loading).toBeTruthy();
-              expect(stripSymbols(this.props.data!.todo_list)).toEqual(
-                updatedData.todo_list
-              );
-              break;
-            case 4:
               expect(this.props.data!.loading).toBeFalsy();
               expect(stripSymbols(this.props.data!.todo_list)).toEqual(
                 updatedData.todo_list
@@ -405,7 +395,7 @@ describe('graphql(mutation) update queries', () => {
     });
 
     return wait(() => {
-      expect(queryRenderCount).toBe(5);
+      expect(queryRenderCount).toBe(4);
     });
   });
 });

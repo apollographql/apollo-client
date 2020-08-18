@@ -1361,7 +1361,6 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
-          partial: false,
         });
         resolve();
       });
@@ -1406,7 +1405,6 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          partial: false,
         });
       }).then(resolve, reject);
     });
@@ -1502,7 +1500,7 @@ describe('ObservableQuery', () => {
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },
         result: { data: dataOne, errors: [error] },
-      }, 
+      },
       // FIXME: We shouldn't need a second mock, there should only be one network request
       {
         request: { query, variables },
@@ -1651,7 +1649,6 @@ describe('ObservableQuery', () => {
           data: void 0,
           loading: true,
           networkStatus: 1,
-          partial: false,
         });
 
         subscribeAndCount(reject, observable, (handleCount, subResult) => {
@@ -1659,7 +1656,6 @@ describe('ObservableQuery', () => {
             expect(subResult).toEqual({
               loading: true,
               networkStatus: NetworkStatus.loading,
-              partial: false,
             });
           } else if (handleCount === 2) {
             expect(subResult).toEqual({
@@ -1696,7 +1692,6 @@ describe('ObservableQuery', () => {
           data: undefined,
           loading: true,
           networkStatus: 1,
-          partial: false,
         });
 
         subscribeAndCount(reject, observable, (handleCount, subResult) => {
@@ -1711,7 +1706,6 @@ describe('ObservableQuery', () => {
               data,
               loading,
               networkStatus,
-              partial: false,
             });
           } else if (handleCount === 2) {
             expect(stripSymbols(subResult)).toEqual({

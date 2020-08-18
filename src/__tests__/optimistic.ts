@@ -1334,7 +1334,7 @@ describe('optimistic mutation results', () => {
         client.watchQuery({ query }) as any as ObservableInput<any>,
       ).pipe(
         map(value => stripSymbols(value.data.todoList.todos)),
-        take(4),
+        take(5),
         toArray(),
       ).toPromise();
 
@@ -1360,6 +1360,10 @@ describe('optimistic mutation results', () => {
 
       expect(responses).toEqual([
         defaultTodos,
+        [
+          customOptimisticResponse1.createTodo,
+          ...defaultTodos,
+        ],
         [
           customOptimisticResponse2.createTodo,
           customOptimisticResponse1.createTodo,
@@ -1811,7 +1815,7 @@ describe('optimistic mutation results', () => {
         client.watchQuery({ query }) as any as ObservableInput<any>,
       ).pipe(
         map(value => stripSymbols(value.data.todoList.todos)),
-        take(4),
+        take(5),
         toArray(),
       ).toPromise();
 
@@ -1833,6 +1837,10 @@ describe('optimistic mutation results', () => {
       const defaultTodos = stripSymbols(result.data.todoList.todos);
       expect(responses).toEqual([
         defaultTodos,
+        [
+          customOptimisticResponse1.createTodo,
+          ...defaultTodos,
+        ],
         [
           customOptimisticResponse2.createTodo,
           customOptimisticResponse1.createTodo,
@@ -1937,6 +1945,7 @@ describe('optimistic mutation results', () => {
       expect(optimisticDiffs).toEqual([
         {
           complete: true,
+          fromOptimisticTransaction: true,
           result: {
             items: manualItems,
           },
@@ -2099,12 +2108,14 @@ describe('optimistic mutation results', () => {
         expect(optimisticDiffs).toEqual([
           {
             complete: true,
+            fromOptimisticTransaction: true,
             result: {
               items: manualItems,
             },
           },
           {
             complete: true,
+            fromOptimisticTransaction: true,
             result: {
               items: [...manualItems, optimisticItem],
             },

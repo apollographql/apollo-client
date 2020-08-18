@@ -585,7 +585,7 @@ once, rather than every time you call fetchMore.`);
 
   // Pass the current result to this.observer.next without applying any
   // fetch policies, bypassing the Reobserver.
-  public observe() {
+  private observe() {
     // Passing false is important so that this.getCurrentResult doesn't
     // save the fetchMore result as this.lastResult, causing it to be
     // ignored due to the this.isDifferentFromLastResult check in

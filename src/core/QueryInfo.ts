@@ -167,7 +167,7 @@ export class QueryInfo {
         // request, and we don't want to trigger network requests for
         // optimistic updates.
         if (this.getDiff().fromOptimisticTransaction) {
-          oq.observe();
+          oq["observe"]();
         } else {
           oq.reobserve();
         }

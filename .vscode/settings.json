@@ -7,6 +7,5 @@
   "typescript.tsdk": "../node_modules/typescript/lib",
   "cSpell.enableFiletypes": [
     "mdx"
-  ],
-  "deno.enable": false
+  ]
 }

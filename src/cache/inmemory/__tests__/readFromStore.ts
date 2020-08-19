@@ -6,6 +6,7 @@ import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
 import { makeReference, InMemoryCache, Reference, isReference } from '../../../core';
 import { Cache } from '../../core/types/Cache';
+import { MissingFieldError } from '../../core/types/common';
 import { defaultNormalizedCacheFactory } from './helpers';
 import { withError } from './diffAgainstStore';
 
@@ -554,6 +555,74 @@ describe('reading from the store', () => {
         `,
       });
     }).toThrowError(/Can't find field 'missingField' on ROOT_QUERY object/);
+  });
+
+  it('distinguishes between missing @client and non-@client fields', () => {
+    const query = gql`
+      query {
+        normal {
+          present @client
+          missing
+        }
+        clientOnly @client {
+          present
+          missing
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            normal() {
+              return { present: "here" };
+            },
+            clientOnly() {
+              return { present: "also here" };
+            },
+          },
+        },
+      },
+    });
+
+    const { result, complete, missing } = cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    });
+
+    expect(complete).toBe(false);
+
+    expect(result).toEqual({
+      normal: {
+        present: "here",
+      },
+      clientOnly: {
+        present: "also here",
+      },
+    });
+
+    expect(missing).toEqual([
+      new MissingFieldError(
+        `Can't find field 'missing' on object {
+  "present": "here"
+}`,
+        ["normal", "missing"],
+        query,
+        false, // clientOnly
+        {}, // variables
+      ),
+      new MissingFieldError(
+        `Can't find field 'missing' on object {
+  "present": "also here"
+}`,
+        ["clientOnly", "missing"],
+        query,
+        true, // clientOnly
+        {}, // variables
+      ),
+    ]);
   });
 
   it('runs a nested query where the reference is null', () => {

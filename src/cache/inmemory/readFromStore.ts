@@ -47,6 +47,7 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   path: (string | number)[];
+  clientOnly: boolean;
 };
 
 export type ExecResult<R = any> = {
@@ -62,6 +63,7 @@ function missingFromInvariant(
     err.message,
     context.path.slice(),
     context.query,
+    context.clientOnly,
     context.variables,
   );
 }
@@ -140,6 +142,7 @@ export class StoreReader {
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         path: [],
+        clientOnly: false,
       },
     });
 
@@ -260,6 +263,20 @@ export class StoreReader {
         const resultName = resultKeyNameFromField(selection);
         context.path.push(resultName);
 
+        // If this field has an @client directive, then the field and
+        // everything beneath it is client-only, meaning it will never be
+        // sent to the server.
+        const wasClientOnly = context.clientOnly;
+        // Once we enter a client-only subtree of the query, we can avoid
+        // repeatedly checking selection.directives.
+        context.clientOnly = wasClientOnly || !!(
+          // We don't use the hasDirectives helper here, because it looks
+          // for directives anywhere inside the AST node, whereas we only
+          // care about directives directly attached to this field.
+          selection.directives &&
+          selection.directives.some(d => d.name.value === "client")
+        );
+
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
             getMissing().push(
@@ -311,6 +328,8 @@ export class StoreReader {
         if (fieldValue !== void 0) {
           objectsToMerge.push({ [resultName]: fieldValue });
         }
+
+        context.clientOnly = wasClientOnly;
 
         invariant(context.path.pop() === resultName);
 

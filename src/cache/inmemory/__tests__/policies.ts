@@ -1040,8 +1040,9 @@ describe("type policies", function () {
         return new MissingFieldError(
           `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
           ["jobs", jobNumber - 1, "result"],
-          expect.anything(),
-          expect.anything(),
+          expect.anything(), // query
+          false, // clientOnly
+          expect.anything(), // variables
         );
       }
 

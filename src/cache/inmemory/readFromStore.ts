@@ -30,7 +30,6 @@ import {
 import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,
-  ReadQueryOptions,
   NormalizedCache,
   ReadMergeModifyContext,
 } from './types';
@@ -88,26 +87,6 @@ export interface StoreReaderConfig {
 export class StoreReader {
   constructor(private config: StoreReaderConfig) {
     this.config = { addTypename: true, ...config };
-  }
-
-  /**
-   * Resolves the result of a query solely from the store (i.e. never hits the server).
-   *
-   * @param {Store} store The {@link NormalizedCache} used by Apollo for the `data` portion of the
-   * store.
-   *
-   * @param {DocumentNode} query The query document to resolve from the data available in the store.
-   *
-   * @param {Object} [variables] A map from the name of a variable to its value. These variables can
-   * be referenced by the query document.
-   */
-  public readQueryFromStore<QueryType>(
-    options: ReadQueryOptions,
-  ): QueryType | undefined {
-    return this.diffQueryAgainstStore<QueryType>({
-      ...options,
-      returnPartialData: false,
-    }).result;
   }
 
   /**

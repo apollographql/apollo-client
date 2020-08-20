@@ -7,7 +7,7 @@ import { StoreReader } from '../readFromStore';
 import { makeReference, InMemoryCache, Reference, isReference } from '../../../core';
 import { Cache } from '../../core/types/Cache';
 import { MissingFieldError } from '../../core/types/common';
-import { defaultNormalizedCacheFactory } from './helpers';
+import { defaultNormalizedCacheFactory, readQueryFromStore } from './helpers';
 import { withError } from './diffAgainstStore';
 
 describe('reading from the store', () => {
@@ -33,7 +33,7 @@ describe('reading from the store', () => {
         } as StoreObject,
       });
 
-      const queryResult = reader.readQueryFromStore({
+      const queryResult = readQueryFromStore(reader, {
         store,
         query: gql`
           {
@@ -75,7 +75,7 @@ describe('reading from the store', () => {
 
   it('rejects malformed queries', () => {
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store: defaultNormalizedCacheFactory(),
         query: gql`
           query {
@@ -90,7 +90,7 @@ describe('reading from the store', () => {
     }).toThrowError(/2 operations/);
 
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store: defaultNormalizedCacheFactory(),
         query: gql`
           fragment x on y {
@@ -113,7 +113,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         query {
@@ -155,7 +155,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const result = reader.readQueryFromStore({
+    const result = readQueryFromStore(reader, {
       store,
       query,
       variables,
@@ -188,7 +188,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const result = reader.readQueryFromStore({
+    const result = readQueryFromStore(reader, {
       store,
       query,
     });
@@ -228,7 +228,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const result = reader.readQueryFromStore({
+    const result = readQueryFromStore(reader, {
       store,
       query,
       variables,
@@ -263,7 +263,7 @@ describe('reading from the store', () => {
       abcde: result.nestedObj,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -324,7 +324,7 @@ describe('reading from the store', () => {
       abcdef: result.deepNestedObj as StoreObject,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -401,7 +401,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -452,7 +452,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -504,7 +504,7 @@ describe('reading from the store', () => {
       abcde: result.nestedArray[1],
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -545,7 +545,7 @@ describe('reading from the store', () => {
     const store = defaultNormalizedCacheFactory({ ROOT_QUERY: result });
 
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store,
         query: gql`
           {
@@ -640,7 +640,7 @@ describe('reading from the store', () => {
       }) as StoreObject,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -675,7 +675,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -707,7 +707,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -762,7 +762,7 @@ describe('reading from the store', () => {
       abcdef: data.deepNestedObj as StoreObject,
     });
 
-    const queryResult1 = reader.readQueryFromStore({
+    const queryResult1 = readQueryFromStore(reader, {
       store,
       rootId: 'abcde',
       query: gql`
@@ -790,7 +790,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const queryResult2 = reader.readQueryFromStore({
+    const queryResult2 = readQueryFromStore(reader, {
       store,
       rootId: 'abcdef',
       query: gql`
@@ -820,7 +820,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -868,7 +868,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -923,7 +923,7 @@ describe('reading from the store', () => {
     });
 
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store,
         query: gql`
           {
@@ -939,7 +939,7 @@ describe('reading from the store', () => {
     );
 
     expect(
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store,
         query: gql`
           {

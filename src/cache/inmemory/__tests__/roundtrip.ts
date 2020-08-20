@@ -6,7 +6,7 @@ import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { InMemoryCache } from '../inMemoryCache';
-import { writeQueryToStore } from './helpers';
+import { writeQueryToStore, readQueryFromStore } from './helpers';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
@@ -43,17 +43,17 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     variables,
   };
 
-  const reconstructedResult = reader.readQueryFromStore<any>(readOptions);
+  const reconstructedResult = readQueryFromStore(reader, readOptions);
   expect(reconstructedResult).toEqual(result);
 
   // Make sure the result is identical if we haven't written anything new
   // to the store. https://github.com/apollographql/apollo-client/pull/3394
   expect(store).toBeInstanceOf(EntityStore);
-  expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
+  expect(readQueryFromStore(reader, readOptions)).toBe(reconstructedResult);
 
-  const immutableResult = reader.readQueryFromStore(readOptions);
+  const immutableResult = readQueryFromStore(reader, readOptions);
   expect(immutableResult).toEqual(reconstructedResult);
-  expect(reader.readQueryFromStore(readOptions)).toBe(immutableResult);
+  expect(readQueryFromStore(reader, readOptions)).toBe(immutableResult);
   if (process.env.NODE_ENV !== 'production') {
     try {
       // Note: this illegal assignment will only throw in strict mode, but that's
@@ -80,7 +80,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     `,
   });
 
-  const deletedRootResult = reader.readQueryFromStore<any>(readOptions);
+  const deletedRootResult = readQueryFromStore(reader, readOptions);
   expect(deletedRootResult).toEqual(result);
 
   if (deletedRootResult === reconstructedResult) {

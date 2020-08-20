@@ -2326,7 +2326,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it("writeFragment should warn if it cannot identify the result object", () => {
+  it("should warn if it cannot identify the result object", () => {
     const cache = new InMemoryCache;
 
     expect(() => {
@@ -2336,6 +2336,6 @@ describe('writing to the store', () => {
           count: 1,
         },
       });
-    }).toThrowError(/writeFragment could not identify object/);
+    }).toThrowError(/Could not identify object/);
   });
 });

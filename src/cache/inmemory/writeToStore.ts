@@ -89,7 +89,7 @@ export class StoreWriter {
       ...variables,
     };
 
-    const objOrRef = this.processSelectionSet({
+    const ref = this.processSelectionSet({
       result: result || Object.create(null),
       dataId,
       selectionSet: operationDefinition.selectionSet,
@@ -105,18 +105,13 @@ export class StoreWriter {
       },
     });
 
-    if (typeof dataId === 'undefined' && !isReference(objOrRef)) {
-      throw new InvariantError("writeFragment could not identify object");
+    if (!isReference(ref)) {
+      throw new InvariantError("Could not identify object");
     }
 
-    const ref = isReference(objOrRef) ? objOrRef :
-      dataId && makeReference(dataId) || void 0;
-
-    if (ref) {
-      // Any IDs written explicitly to the cache (including ROOT_QUERY,
-      // most frequently) will be retained as reachable root IDs.
-      store.retain(ref.__ref);
-    }
+    // Any IDs written explicitly to the cache (including ROOT_QUERY,
+    // most frequently) will be retained as reachable root IDs.
+    store.retain(ref.__ref);
 
     return ref;
   }

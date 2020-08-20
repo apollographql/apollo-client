@@ -3,6 +3,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference } from '../../../core';
+import { Cache } from '../../../cache';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 disableFragmentWarnings();
@@ -2494,6 +2495,105 @@ describe("ReactiveVar and makeVar", () => {
         name: "Hugh",
       },
     });
+  });
+
+  it("should broadcast only once for multiple reads of same variable", () => {
+    const nameVar = makeVar("Ben");
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            name() {
+              return nameVar();
+            },
+          },
+        },
+      },
+    });
+
+    // TODO This should not be necessary, but cache.readQuery currently
+    // returns null if we read a query before writing any queries.
+    cache.restore({
+      ROOT_QUERY: {}
+    });
+
+    const broadcast = cache["broadcastWatches"];
+    let broadcastCount = 0;
+    cache["broadcastWatches"] = function () {
+      ++broadcastCount;
+      return broadcast.apply(this, arguments);
+    };
+
+    const query = gql`
+      query {
+        name1: name
+        name2: name
+      }
+    `;
+
+    const watchDiffs: Cache.DiffResult<any>[] = [];
+    cache.watch({
+      query,
+      optimistic: true,
+      callback(diff) {
+        watchDiffs.push(diff);
+      },
+    });
+
+    const benResult = cache.readQuery({ query });
+    expect(benResult).toEqual({
+      name1: "Ben",
+      name2: "Ben",
+    });
+
+    expect(watchDiffs).toEqual([]);
+
+    expect(broadcastCount).toBe(0);
+    nameVar("Jenn");
+    expect(broadcastCount).toBe(1);
+
+    const jennResult = cache.readQuery({ query });
+    expect(jennResult).toEqual({
+      name1: "Jenn",
+      name2: "Jenn",
+    });
+
+    expect(watchDiffs).toEqual([
+      {
+        complete: true,
+        result: {
+          name1: "Jenn",
+          name2: "Jenn",
+        },
+      },
+    ]);
+
+    expect(broadcastCount).toBe(1);
+    nameVar("Hugh");
+    expect(broadcastCount).toBe(2);
+
+    const hughResult = cache.readQuery({ query });
+    expect(hughResult).toEqual({
+      name1: "Hugh",
+      name2: "Hugh",
+    });
+
+    expect(watchDiffs).toEqual([
+      {
+        complete: true,
+        result: {
+          name1: "Jenn",
+          name2: "Jenn",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          name1: "Hugh",
+          name2: "Hugh",
+        },
+      },
+    ]);
   });
 });
 

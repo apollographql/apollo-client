@@ -79,8 +79,18 @@ export abstract class EntityStore implements NormalizedCache {
     // should not rely on this dependency, since the contents could change
     // without the object being added or removed.
     if (dependOnExistence) this.group.depend(dataId, "__exists");
-    return hasOwn.call(this.data, dataId) ? this.data[dataId] :
-      this instanceof Layer ? this.parent.lookup(dataId, dependOnExistence) : void 0;
+
+    if (hasOwn.call(this.data, dataId)) {
+      return this.data[dataId];
+    }
+
+    if (this instanceof Layer) {
+      return this.parent.lookup(dataId, dependOnExistence);
+    }
+
+    if (this.policies.rootTypenamesById[dataId]) {
+      return Object.create(null);
+    }
   }
 
   public merge(dataId: string, incoming: StoreObject): void {

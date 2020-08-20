@@ -28,13 +28,21 @@ function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
 }
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
+  const caches = new Set<ApolloCache<any>>();
   const listeners = new Set<ReactiveListener<T>>();
 
   const rv: ReactiveVar<T> = function (newValue) {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;
+        // First, invalidate any fields with custom read functions that
+        // consumed this variable, so query results involving those fields
+        // will be recomputed the next time we read them.
         varDep.dirty(rv);
+        // Next, broadcast changes to any caches that have previously read
+        // from this variable.
+        caches.forEach(broadcast);
+        // Finally, notify any listeners added via rv.onNextChange.
         consumeAndIterate(listeners, listener => listener(value));
       }
     } else {
@@ -42,9 +50,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       // context via cacheSlot. This isn't entirely foolproof, but it's
       // the same system that powers varDep.
       const cache = cacheSlot.getValue();
-      if (cache && (cache as any).broadcastWatches) {
-        listeners.add(() => broadcast(cache));
-      }
+      if (cache) caches.add(cache);
       varDep(rv);
     }
 

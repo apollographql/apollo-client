@@ -11,6 +11,9 @@
 - Prevent full reobservation of queries affected by optimistic mutation updates, while still delivering results from the cache. <br/>
   [@benjamn](https://github.com/benjamn) in [#6854](https://github.com/apollographql/apollo-client/pull/6854)
 
+- Implement `useReactiveVar` hook for consuming reactive variables in React components. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6867](https://github.com/apollographql/apollo-client/pull/6867)
+
 ## Apollo Client 3.1.3
 
 ## Bug Fixes

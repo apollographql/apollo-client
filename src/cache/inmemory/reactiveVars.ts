@@ -16,6 +16,17 @@ const varDep = dep<ReactiveVar<any>>();
 // called in Policies#readField.
 export const cacheSlot = new Slot<ApolloCache<any>>();
 
+// A listener function could in theory cause another listener to be added
+// to the set while we're iterating over it, so it's important to commit
+// to the original elements of the set before we begin iterating. See
+// iterateObserversSafely for another example of this pattern.
+function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
+  const items: T[] = [];
+  set.forEach(item => items.push(item));
+  set.clear();
+  items.forEach(callback);
+}
+
 export function makeVar<T>(value: T): ReactiveVar<T> {
   const listeners = new Set<ReactiveListener<T>>();
 
@@ -24,12 +35,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       if (value !== newValue) {
         value = newValue!;
         varDep.dirty(rv);
-        listeners.forEach(listener => {
-          // Listener functions listen only for the next update, not all
-          // future updates.
-          listeners.delete(listener);
-          listener(value);
-        });
+        consumeAndIterate(listeners, listener => listener(value));
       }
     } else {
       // When reading from the variable, obtain the current cache from

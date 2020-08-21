@@ -232,7 +232,7 @@ export class StoreWriter {
           !hasDirectives(["defer", "client"], selection)
         ) {
           throw new InvariantError(
-            `'${dataId}' contains field '${resultFieldKey}' which is not defined in the schema: ${JSON.stringify(
+            `${dataId ?  dataId : 'Object'} contains field '${resultFieldKey}' which is not defined in the schema: ${JSON.stringify(
               result,
               null,
               2,

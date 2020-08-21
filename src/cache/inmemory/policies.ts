@@ -227,7 +227,6 @@ export class Policies {
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
-      subtypes?: Set<string>;
       fields?: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
@@ -237,6 +236,12 @@ export class Policies {
       };
     };
   } = Object.create(null);
+
+  // Map from subtype names to sets of supertype names. Note that this
+  // representation inverts the structure of possibleTypes (whose keys are
+  // supertypes and whose values are arrays of subtypes) because it tends
+  // to be much more efficient to search upwards than downwards.
+  private supertypeMap = new Map<string, Set<string>>();
 
   public readonly cache: InMemoryCache;
 
@@ -407,8 +412,9 @@ export class Policies {
   public addPossibleTypes(possibleTypes: PossibleTypesMap) {
     (this.usingPossibleTypes as boolean) = true;
     Object.keys(possibleTypes).forEach(supertype => {
-      const subtypeSet = this.getSubtypeSet(supertype, true);
-      possibleTypes[supertype].forEach(subtypeSet!.add, subtypeSet);
+      possibleTypes[supertype].forEach(subtype => {
+        this.getSupertypeSet(subtype, true)!.add(supertype);
+      });
     });
   }
 
@@ -419,17 +425,6 @@ export class Policies {
     if (typename) {
       return this.typePolicies[typename] || (
         createIfMissing && (this.typePolicies[typename] = Object.create(null)));
-    }
-  }
-
-  private getSubtypeSet(
-    supertype: string,
-    createIfMissing: boolean,
-  ): Set<string> | undefined {
-    const policy = this.getTypePolicy(supertype, createIfMissing);
-    if (policy) {
-      return policy.subtypes || (
-        createIfMissing ? policy.subtypes = new Set<string>() : void 0);
     }
   }
 
@@ -453,6 +448,17 @@ export class Policies {
     }
   }
 
+  private getSupertypeSet(
+    subtype: string,
+    createIfMissing: boolean,
+  ): Set<string> | undefined {
+    let supertypeSet = this.supertypeMap.get(subtype);
+    if (!supertypeSet && createIfMissing) {
+      this.supertypeMap.set(subtype, supertypeSet = new Set<string>());
+    }
+    return supertypeSet;
+  }
+
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string | undefined,
@@ -464,23 +470,34 @@ export class Policies {
     if (!typename) return false;
 
     const supertype = fragment.typeCondition.name.value;
+    // Common case: fragment type condition and __typename are the same.
     if (typename === supertype) return true;
 
     if (this.usingPossibleTypes) {
-      const workQueue = [this.getSubtypeSet(supertype, false)];
+      const typenameSupertypeSet = this.getSupertypeSet(typename, true)!;
+      const workQueue = [typenameSupertypeSet];
+      const maybeEnqueue = (subtype: string) => {
+        const supertypeSet = this.getSupertypeSet(subtype, false);
+        if (supertypeSet && workQueue.indexOf(supertypeSet) < 0) {
+          workQueue.push(supertypeSet);
+        }
+      };
+
       // It's important to keep evaluating workQueue.length each time through
       // the loop, because the queue can grow while we're iterating over it.
       for (let i = 0; i < workQueue.length; ++i) {
-        const subtypes = workQueue[i];
-        if (subtypes) {
-          if (subtypes.has(typename)) return true;
-          subtypes.forEach(subtype => {
-            const subsubtypes = this.getSubtypeSet(subtype, false);
-            if (subsubtypes && workQueue.indexOf(subsubtypes) < 0) {
-              workQueue.push(subsubtypes);
-            }
-          });
+        const supertypeSet = workQueue[i];
+
+        if (supertypeSet.has(supertype)) {
+          // Record positive results for faster future lookup.
+          // Unfortunately, we cannot safely cache negative results,
+          // because new possibleTypes data could always be added to the
+          // Policies class.
+          typenameSupertypeSet.add(supertype);
+          return true;
         }
+
+        supertypeSet.forEach(maybeEnqueue);
       }
     }
 

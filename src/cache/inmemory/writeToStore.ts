@@ -106,7 +106,7 @@ export class StoreWriter {
     });
 
     if (!isReference(ref)) {
-      throw new InvariantError("Could not identify object");
+      throw new InvariantError(`Could not identify object ${JSON.stringify(result)}`);
     }
 
     // Any IDs written explicitly to the cache (including ROOT_QUERY,

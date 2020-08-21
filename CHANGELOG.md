@@ -14,6 +14,9 @@
 - Implement `useReactiveVar` hook for consuming reactive variables in React components. <br/>
   [@benjamn](https://github.com/benjamn) in [#6867](https://github.com/apollographql/apollo-client/pull/6867)
 
+- Throw if `writeFragment` cannot identify `options.data` when no `options.id` provided. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#6859](https://github.com/apollographql/apollo-client/pull/6859)
+
 ## Apollo Client 3.1.3
 
 ## Bug Fixes

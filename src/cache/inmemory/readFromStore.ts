@@ -1,8 +1,6 @@
 import {
   DocumentNode,
   FieldNode,
-  FragmentDefinitionNode,
-  InlineFragmentNode,
   SelectionSetNode,
 } from 'graphql';
 import { wrap, OptimisticWrapperFunction } from 'optimism';
@@ -10,7 +8,6 @@ import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   isField,
-  isInlineFragment,
   resultKeyNameFromField,
   Reference,
   isReference,
@@ -26,6 +23,7 @@ import {
   getQueryDefinition,
   maybeDeepFreeze,
   mergeDeepArray,
+  getFragmentFromSelection,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
@@ -201,7 +199,7 @@ export class StoreReader {
       };
     }
 
-    const { fragmentMap, variables, policies, store } = context;
+    const { variables, policies, store } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
     const typename = store.getFieldValue<string>(objectOrReference, "__typename");
@@ -313,19 +311,12 @@ export class StoreReader {
         invariant(context.path.pop() === resultName);
 
       } else {
-        let fragment: InlineFragmentNode | FragmentDefinitionNode;
+        const fragment = getFragmentFromSelection(
+          selection,
+          context.fragmentMap,
+        );
 
-        if (isInlineFragment(selection)) {
-          fragment = selection;
-        } else {
-          // This is a named fragment
-          invariant(
-            fragment = fragmentMap[selection.name.value],
-            `No fragment named ${selection.name.value}`,
-          );
-        }
-
-        if (policies.fragmentMatches(fragment, typename)) {
+        if (fragment && policies.fragmentMatches(fragment, typename)) {
           fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }

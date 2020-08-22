@@ -29,6 +29,8 @@ import {
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
+  selectionSetMatchesResult,
+  TypeOrFieldNameRegExp,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
 import { InMemoryCache } from './inMemoryCache';
@@ -243,6 +245,12 @@ export class Policies {
   // to be much more efficient to search upwards than downwards.
   private supertypeMap = new Map<string, Set<string>>();
 
+  // Any fuzzy subtypes specified by possibleTypes will be converted to
+  // RegExp objects and recorded here. Every key of this map can also be
+  // found in supertypeMap. In many cases this Map will be empty, which
+  // means no fuzzy subtype checking will happen in fragmentMatches.
+  private fuzzySubtypes = new Map<string, RegExp>();
+
   public readonly cache: InMemoryCache;
 
   public readonly rootIdsByTypename: Record<string, string> = Object.create(null);
@@ -414,6 +422,11 @@ export class Policies {
     Object.keys(possibleTypes).forEach(supertype => {
       possibleTypes[supertype].forEach(subtype => {
         this.getSupertypeSet(subtype, true)!.add(supertype);
+        const match = subtype.match(TypeOrFieldNameRegExp);
+        if (!match || match[0] !== subtype) {
+          // TODO Don't interpret just any invalid typename as a RegExp.
+          this.fuzzySubtypes.set(subtype, new RegExp(subtype));
+        }
       });
     });
   }
@@ -462,6 +475,8 @@ export class Policies {
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string | undefined,
+    result?: Record<string, any>,
+    variables?: Record<string, any>,
   ): boolean {
     if (!fragment.typeCondition) return true;
 
@@ -483,12 +498,40 @@ export class Policies {
         }
       };
 
+      // We need to check fuzzy subtypes only if we encountered fuzzy
+      // subtype strings in addPossibleTypes, and only while writing to
+      // the cache, since that's when selectionSetMatchesResult gives a
+      // strong signal of fragment matching. The StoreReader class calls
+      // policies.fragmentMatches without passing a result object, so
+      // needToCheckFuzzySubtypes is always false while reading.
+      let needToCheckFuzzySubtypes = !!(result && this.fuzzySubtypes.size);
+
+      // We don't need to check selectionSetMatchesResult for known
+      // supertype/subtype relationships specified in possibleTypes, but
+      // we will need to enforce that verification once we begin checking
+      // fuzzy subtypes.
+      let mustVerifyResult = false;
+
       // It's important to keep evaluating workQueue.length each time through
       // the loop, because the queue can grow while we're iterating over it.
       for (let i = 0; i < workQueue.length; ++i) {
         const supertypeSet = workQueue[i];
 
         if (supertypeSet.has(supertype)) {
+          if (result && mustVerifyResult) {
+            // Since this verification doesn't depend on any for-loop
+            // variables, we could technically hoist it outside the loop,
+            // but the verification can be expensive, so we postpone it
+            // until the last possible moment (here).
+            if (selectionSetMatchesResult(fragment.selectionSet, result, variables)) {
+              invariant.warn(`Inferring subtype ${typename} of supertype ${supertype}`);
+            } else {
+              // Since the result of the verification isn't going to
+              // change the next time we do it, we can go ahead and
+              // terminate the search at this point.
+              return false;
+            }
+          }
           // Record positive results for faster future lookup.
           // Unfortunately, we cannot safely cache negative results,
           // because new possibleTypes data could always be added to the
@@ -498,6 +541,31 @@ export class Policies {
         }
 
         supertypeSet.forEach(maybeEnqueue);
+
+        // We start checking fuzzy subtypes only after we've exhausted all
+        // non-fuzzy subtypes.
+        const isFinalIteration = i === workQueue.length - 1;
+        if (isFinalIteration && needToCheckFuzzySubtypes) {
+          // Check fuzzy subtypes at most once (that is, don't run the
+          // this.fuzzySubtypes.forEach loop more than once).
+          needToCheckFuzzySubtypes = false;
+
+          // Now that we're checking fuzzy subtypes, enforce heuristic
+          // fragment/result matching before returning true if/when we
+          // find a matching supertype.
+          mustVerifyResult = true;
+
+          // If we find any fuzzy subtypes that match typename, extend the
+          // workQueue to search through the supertypes of those fuzzy
+          // subtypes. Otherwise the for-loop will terminate and we'll
+          // return false below.
+          this.fuzzySubtypes.forEach((regExp, fuzzyString) => {
+            const match = typename.match(regExp);
+            if (match && match[0] === typename) {
+              maybeEnqueue(fuzzyString);
+            }
+          });
+        }
       }
     }
 

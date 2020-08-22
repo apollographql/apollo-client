@@ -102,7 +102,7 @@ export type FieldPolicy<
   merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
 
-type StorageType = Record<string, any>;
+export type StorageType = Record<string, any>;
 
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0 ? spec.args :

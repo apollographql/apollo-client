@@ -7,6 +7,8 @@ import {
   isReference,
 } from '../../../utilities';
 
+import { StorageType } from '../../inmemory/policies';
+
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
 // a generic type parameter like TExisting might be a string or some other
@@ -62,6 +64,7 @@ export type Modifier<T> = (value: T, details: {
   canRead: CanReadFunction;
   isReference: typeof isReference;
   toReference: ToReferenceFunction;
+  storage: StorageType;
 }) => T;
 
 export type Modifiers = {

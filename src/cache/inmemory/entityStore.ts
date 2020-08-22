@@ -158,6 +158,8 @@ export abstract class EntityStore implements NormalizedCache {
               ...sharedDetails,
               fieldName,
               storeFieldName,
+              storage: this.policies["storageTrie"]
+                .lookup(dataId, storeFieldName),
             });
           if (newValue === INVALIDATE) {
             this.group.dirty(dataId, storeFieldName);

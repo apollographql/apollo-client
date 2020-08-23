@@ -39,17 +39,19 @@ export function offsetLimitPagination<T = Reference>(
   };
 }
 
+type TIInternalRelayPageInfo = {
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+  startCursor: string;
+  endCursor: string;
+}
+
 type TInternalRelay<TNode> = Readonly<{
   edges: Array<{
     cursor: string;
     node: TNode;
   }>;
-  pageInfo: Readonly<{
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-    startCursor: string;
-    endCursor: string;
-  }>;
+  pageInfo: Readonly<TIInternalRelayPageInfo>;
 }>;
 
 // As proof of the flexibility of field policies, this function generates
@@ -113,14 +115,14 @@ export function relayStylePagination<TNode = Reference>(
         ...suffix,
       ];
 
-      const pageInfo = {
-        ...incoming.pageInfo,
+      const pageInfo: TIInternalRelayPageInfo = {
         ...existing.pageInfo,
+        ...incoming.pageInfo,
         startCursor: cursorFromEdge(edges, 0),
         endCursor: cursorFromEdge(edges, -1),
       };
 
-      const updatePageInfo = (name: keyof TInternalRelay<TNode>["pageInfo"]) => {
+      const updatePageInfo = (name: keyof TIInternalRelayPageInfo) => {
         const value = incoming.pageInfo[name];
         if (value !== void 0) {
           (pageInfo as any)[name] = value;

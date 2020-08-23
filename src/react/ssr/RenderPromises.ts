@@ -80,7 +80,18 @@ export class RenderPromises {
       promises.push(promise);
     });
     this.queryPromises.clear();
-    return Promise.all(promises);
+    return Promise.all(
+      promises.map(promise => promise.then(
+        value => ({
+          status: "fulfilled",
+          value,
+        }),
+        reason => ({
+          status: "rejected",
+          reason,
+        }),
+      ))
+    );
   }
 
   private lookupQueryInfo<TData, TVariables>(

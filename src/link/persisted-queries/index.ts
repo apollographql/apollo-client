@@ -41,7 +41,7 @@ namespace PersistedQueryLink {
   export type Options = SHA256Options | GenerateHashOptions;
 }
 
-export const defaultOptions = {
+const defaultOptions = {
   disable: ({ graphQLErrors, operation }: ErrorResponse) => {
     // if the server doesn't support persisted queries, don't try anymore
     if (

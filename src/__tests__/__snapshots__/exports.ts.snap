@@ -178,7 +178,6 @@ exports[`exports of public entry points @apollo/client/link/persisted-queries 1`
 Array [
   "VERSION",
   "createPersistedQueryLink",
-  "defaultGenerateHash",
   "defaultOptions",
 ]
 `;

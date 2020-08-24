@@ -46,9 +46,10 @@ let hash: string;
 
 describe('happy path', () => {
   beforeEach(fetch.mockReset);
+
   it('sends a sha256 hash of the query under extensions', done => {
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
     execute(link, { query, variables }).subscribe(result => {
       expect(result.data).toEqual(data);
       const [uri, request] = fetch.mock.calls[0];
@@ -68,9 +69,10 @@ describe('happy path', () => {
       done();
     }, done.fail);
   });
+
   it('sends a version along with the request', done => {
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
     execute(link, { query, variables }).subscribe(result => {
       expect(result.data).toEqual(data);
@@ -81,10 +83,11 @@ describe('happy path', () => {
       done();
     }, done.fail);
   });
+
   it('memoizes between requests', done => {
     fetch.mockResponseOnce(response);
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
     let start = new Date();
     execute(link, { query, variables }).subscribe(result => {
@@ -100,6 +103,7 @@ describe('happy path', () => {
       }, done.fail);
     }, done.fail);
   });
+
   it('supports loading the hash from other method', done => {
     fetch.mockResponseOnce(response);
     const generateHash =
@@ -120,13 +124,14 @@ describe('happy path', () => {
 
   it('errors if unable to convert to sha256', done => {
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
     execute(link, { query: '1234', variables } as any).subscribe(done.fail as any, error => {
       expect(error.message).toMatch(/Invalid AST Node/);
       done();
     });
   });
+
   it('unsubscribes correctly', done => {
     const delay = new ApolloLink(() => {
       return new Observable(ob => {
@@ -136,7 +141,7 @@ describe('happy path', () => {
         }, 100);
       });
     });
-    const link = createPersistedQuery().concat(delay);
+    const link = createPersistedQuery({ sha256 }).concat(delay);
 
     const sub = execute(link, { query, variables }).subscribe(
       done.fail as any,
@@ -149,13 +154,79 @@ describe('happy path', () => {
       done();
     }, 10);
   });
+
+  it('should error if `sha256` and `generateHash` options are both missing', () => {
+    const createPersistedQueryFn = createPersistedQuery as any;
+    try {
+      createPersistedQueryFn();
+      fail('should have thrown an error');
+    } catch (error) {
+      expect(
+        error.message.indexOf(
+          'Missing/invalid "sha256" or "generateHash" function'
+        )
+      ).toBe(0);
+    }
+  });
+
+  it('should error if `sha256` or `generateHash` options are not functions', () => {
+    const createPersistedQueryFn = createPersistedQuery as any;
+    [
+      { sha256: 'ooops' },
+      { generateHash: 'ooops' }
+    ].forEach(options => {
+      try {
+        createPersistedQueryFn(options);
+        fail('should have thrown an error');
+      } catch (error) {
+        expect(
+          error.message.indexOf(
+            'Missing/invalid "sha256" or "generateHash" function'
+          )
+        ).toBe(0);
+      }
+    });
+  });
+
+  it('should work with a synchronous SHA-256 function', done => {
+    const crypto = require('crypto');
+    const sha256Hash = crypto.createHmac('sha256', queryString).digest('hex');
+
+    fetch.mockResponseOnce(response);
+    const link = createPersistedQuery({
+      sha256(data) {
+        return crypto.createHmac('sha256', data).digest('hex');
+      }
+    }).concat(createHttpLink());
+
+    execute(link, { query, variables }).subscribe(result => {
+      expect(result.data).toEqual(data);
+      const [uri, request] = fetch.mock.calls[0];
+      expect(uri).toEqual('/graphql');
+      expect(request!.body!).toBe(
+        JSON.stringify({
+          operationName: 'Test',
+          variables,
+          extensions: {
+            persistedQuery: {
+              version: VERSION,
+              sha256Hash: sha256Hash,
+            },
+          },
+        }),
+      );
+      done();
+    }, done.fail);
+  });
 });
+
 describe('failure path', () => {
   beforeEach(fetch.mockReset);
+
   it('correctly identifies the error shape from the server', done => {
     fetch.mockResponseOnce(errorResponse);
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
     execute(link, { query, variables }).subscribe(result => {
       expect(result.data).toEqual(data);
       const [, failure] = fetch.mock.calls[0];
@@ -168,10 +239,11 @@ describe('failure path', () => {
       done();
     }, done.fail);
   });
+
   it('sends GET for the first response only with useGETForHashedQueries', done => {
     fetch.mockResponseOnce(errorResponse);
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery({ useGETForHashedQueries: true }).concat(
+    const link = createPersistedQuery({ sha256, useGETForHashedQueries: true }).concat(
       createHttpLink(),
     );
     execute(link, { query, variables }).subscribe(result => {
@@ -188,13 +260,14 @@ describe('failure path', () => {
       done();
     }, done.fail);
   });
+
   it('does not try again after receiving NotSupported error', done => {
     fetch.mockResponseOnce(giveUpResponse);
     fetch.mockResponseOnce(response);
 
     // mock it again so we can verify it doesn't try anymore
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
     execute(link, { query, variables }).subscribe(result => {
       expect(result.data).toEqual(data);
@@ -217,7 +290,7 @@ describe('failure path', () => {
   it('works with multiple errors', done => {
     fetch.mockResponseOnce(multiResponse);
     fetch.mockResponseOnce(response);
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
     execute(link, { query, variables }).subscribe(result => {
       expect(result.data).toEqual(data);
       const [, failure] = fetch.mock.calls[0];
@@ -230,6 +303,7 @@ describe('failure path', () => {
       done();
     }, done.fail);
   });
+
   it('handles a 500 network error and still retries', done => {
     let failed = false;
     fetch.mockResponseOnce(response);
@@ -249,7 +323,7 @@ describe('failure path', () => {
 
       return fetch(...args);
     };
-    const link = createPersistedQuery().concat(
+    const link = createPersistedQuery({ sha256 }).concat(
       createHttpLink({ fetch: fetcher } as any),
     );
 
@@ -268,6 +342,7 @@ describe('failure path', () => {
       }, done.fail);
     }, done.fail);
   });
+
   it('handles a 400 network error and still retries', done => {
     let failed = false;
     fetch.mockResponseOnce(response);
@@ -287,7 +362,7 @@ describe('failure path', () => {
 
       return fetch(...args);
     };
-    const link = createPersistedQuery().concat(
+    const link = createPersistedQuery({ sha256 }).concat(
       createHttpLink({ fetch: fetcher } as any),
     );
 
@@ -317,7 +392,7 @@ describe('failure path', () => {
         status: 400,
       });
     };
-    const link = createPersistedQuery().concat(
+    const link = createPersistedQuery({ sha256 }).concat(
       createHttpLink({ fetch: fetcher } as any),
     );
 

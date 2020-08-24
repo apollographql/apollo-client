@@ -52,7 +52,7 @@ describe('react application', () => {
     fetch.mockResponseOnce(response);
     fetch.mockResponseOnce(response2);
 
-    const link = createPersistedQuery().concat(createHttpLink());
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
     const client = new ApolloClient({
       link,

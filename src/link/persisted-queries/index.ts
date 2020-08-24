@@ -1,4 +1,3 @@
-import { sha256 } from 'crypto-hash';
 import { print } from 'graphql/language/printer';
 import {
   DefinitionNode,
@@ -6,6 +5,7 @@ import {
   ExecutionResult,
   GraphQLError,
 } from 'graphql';
+import { invariant } from 'ts-invariant';
 
 import { ApolloLink, Operation } from '../core';
 import { Observable, Observer } from '../../utilities';
@@ -19,19 +19,29 @@ export interface ErrorResponse {
   operation: Operation;
 }
 
+type SHA256Function = (...args: any[]) => string | Promise<string>;
+type GenerateHashFunction = (document: DocumentNode) => Promise<string>;
+
 namespace PersistedQueryLink {
-  export type Options = {
-    generateHash?: (document: DocumentNode) => Promise<string>;
+  interface BaseOptions {
     disable?: (error: ErrorResponse) => boolean;
     useGETForHashedQueries?: boolean;
   };
+
+  interface SHA256Options extends BaseOptions {
+    sha256: SHA256Function;
+    generateHash?: never;
+  };
+
+  interface GenerateHashOptions extends BaseOptions {
+    sha256?: never;
+    generateHash: GenerateHashFunction;
+  };
+
+  export type Options = SHA256Options | GenerateHashOptions;
 }
 
-export const defaultGenerateHash =
-  (query: DocumentNode): Promise<string> => sha256(print(query));
-
 export const defaultOptions = {
-  generateHash: defaultGenerateHash,
   disable: ({ graphQLErrors, operation }: ErrorResponse) => {
     // if the server doesn't support persisted queries, don't try anymore
     if (
@@ -68,6 +78,26 @@ function operationIsQuery(operation: Operation) {
   return !operation.query.definitions.some(definitionIsMutation);
 }
 
+// Ensure a SHA-256 hash function is provided, if a custom hash generation
+// function is not provided. We don't supply a SHA-256 hash function by
+// default, to avoid forcing one as a dependency. Developers should pick the
+// most appropriate SHA-256 function (sync or async) for their
+// needs/environment, or provide a fully custom hash generation function
+// (via the `generateHash` option) if they want to handle hashing with
+// something other than SHA-256.
+function verifyHashFunction(
+  sha256?: SHA256Function,
+  generateHash?: GenerateHashFunction
+) {
+  invariant(
+    (sha256 && typeof sha256 === 'function') ||
+    (generateHash && typeof generateHash === 'function'),
+    'Missing/invalid "sha256" or "generateHash" function. Please ' +
+    'configure one using the "createPersistedQueryLink(options)" options ' +
+    'parameter. '
+  );
+}
+
 const { hasOwnProperty } = Object.prototype;
 const hashesKeyString = '__createPersistedQueryLink_hashes';
 const hashesKey =
@@ -75,13 +105,26 @@ const hashesKey =
 let nextHashesChildKey = 0;
 
 export const createPersistedQueryLink = (
-  options: PersistedQueryLink.Options = {},
+  options: PersistedQueryLink.Options,
 ) => {
-  const { generateHash, disable, useGETForHashedQueries } = Object.assign(
-    {},
-    defaultOptions,
-    options,
-  );
+  const {
+    sha256,
+    generateHash,
+    disable,
+    useGETForHashedQueries
+  } = Object.assign({}, defaultOptions, options);
+
+  verifyHashFunction(sha256, generateHash);
+
+  // If both a `sha256` and `generateHash` option are provided, the
+  // `sha256` option will be ignored. Developers can configure and
+  // use any hashing approach they want in a custom `generateHash`
+  // function; they aren't limited to SHA-256.
+  const hash =
+    generateHash ||
+    ((query: DocumentNode): Promise<string> =>
+      Promise.resolve(sha256!(print(query))));
+
   let supportsPersistedQueries = true;
 
   const hashesChildKey = 'forLink' + nextHashesChildKey++;
@@ -90,7 +133,7 @@ export const createPersistedQueryLink = (
       // If the query is not an object, we won't be able to store its hash as
       // a property of query[hashesKey], so we let generateHash(query) decide
       // what to do with the bogus query.
-      return generateHash(query);
+      return hash(query);
     }
     if (!hasOwnProperty.call(query, hashesKey)) {
       Object.defineProperty(query, hashesKey, {
@@ -101,15 +144,14 @@ export const createPersistedQueryLink = (
     const hashes = (query as any)[hashesKey];
     return hasOwnProperty.call(hashes, hashesChildKey)
       ? hashes[hashesChildKey]
-      : (hashes[hashesChildKey] = generateHash(query));
+      : (hashes[hashesChildKey] = hash(query));
   }
 
   return new ApolloLink((operation, forward) => {
-    if (!forward) {
-      throw new Error(
-        'PersistedQueryLink cannot be the last link in the chain.',
-      );
-    }
+    invariant(
+      forward,
+      'PersistedQueryLink cannot be the last link in the chain.'
+    );
 
     const { query } = operation;
 

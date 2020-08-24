@@ -909,7 +909,13 @@ export class QueryManager<TStore> {
     concast.cleanup(() => {
       this.fetchCancelFns.delete(queryId);
 
-      if (options.nextFetchPolicy) {
+      const { nextFetchPolicy } = options;
+      if (nextFetchPolicy) {
+        // The options.nextFetchPolicy transition should happen only once,
+        // but it should be possible for a nextFetchPolicy function to set
+        // this.nextFetchPolicy to perform an additional transition.
+        options.nextFetchPolicy = void 0;
+
         // When someone chooses cache-and-network or network-only as their
         // initial FetchPolicy, they often do not want future cache updates to
         // trigger unconditional network requests, which is what repeatedly
@@ -920,9 +926,9 @@ export class QueryManager<TStore> {
         // The options.nextFetchPolicy option provides an easy way to update
         // options.fetchPolicy after the intial network request, without
         // having to call observableQuery.setOptions.
-        options.fetchPolicy = options.nextFetchPolicy;
-        // The options.nextFetchPolicy transition should happen only once.
-        options.nextFetchPolicy = void 0;
+        options.fetchPolicy = typeof nextFetchPolicy === "function"
+          ? nextFetchPolicy.call(options, options.fetchPolicy || "cache-first")
+          : nextFetchPolicy;
       }
     });
 

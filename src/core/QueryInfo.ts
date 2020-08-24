@@ -138,7 +138,9 @@ export class QueryInfo {
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.diff;
     this.diff = diff;
-    if (!this.dirty && diff?.result !== oldDiff?.result) {
+    if (!this.dirty &&
+        !equal(oldDiff && oldDiff.result,
+               diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {
         this.notifyTimeout = setTimeout(() => this.notify(), 0);

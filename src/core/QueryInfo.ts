@@ -197,7 +197,8 @@ export class QueryInfo {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
     this.updateLastDiff(diff);
     if (!this.dirty &&
-        (diff && diff.result) !== (oldDiff && oldDiff.result)) {
+        !equal(oldDiff && oldDiff.result,
+               diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {
         this.notifyTimeout = setTimeout(() => this.notify(), 0);

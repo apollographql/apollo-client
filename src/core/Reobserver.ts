@@ -133,6 +133,7 @@ export class Reobserver<TData, TVars> {
         if (this.shouldFetch && this.shouldFetch()) {
           this.reobserve({
             fetchPolicy: "network-only",
+            nextFetchPolicy: this.options.fetchPolicy || "cache-first",
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();

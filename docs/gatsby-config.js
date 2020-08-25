@@ -30,7 +30,7 @@ module.exports = {
             'index',
             'why-apollo',
             'get-started',
-            '[Changelog](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md)',
+            '[Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md)',
           ],
           'Fetching': [
             'data/queries',

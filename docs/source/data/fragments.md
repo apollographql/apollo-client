@@ -151,7 +151,7 @@ There's nothing special about the naming of `VoteButtons.fragments.entry` or `Re
 
 ### Importing fragments when using Webpack
 
-When loading `.graphql` files with [graphql-tag/loader](https://github.com/apollographql/graphql-tag/blob/master/loader.js), we can include fragments using `import` statements. For example:
+When loading `.graphql` files with [graphql-tag/loader](https://github.com/apollographql/graphql-tag/blob/main/loader.js), we can include fragments using `import` statements. For example:
 
 ```graphql
 #import "./someFragment.graphql"

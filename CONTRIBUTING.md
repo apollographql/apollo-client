@@ -117,8 +117,6 @@ jest --config ./config/jest.config.js --testRegex __tests__/useQuery.test.tsx
 
 It can be useful to link an Apollo Client checkout into an application, to test how Apollo Client development changes impact a real app. We'll use the [Apollo fullstack tutorial application](https://github.com/apollographql/fullstack-tutorial) to demonstrate this.
 
-> **Note:** The fullstack tutorial updates for Apollo Client 3 haven't been merged into `master` yet, so for now we'll use the tutorial's `apollo-client-3` branch.
-
 1) Clone and install Apollo Client.
 
 ```
@@ -135,7 +133,6 @@ cd ..
 ```
 git clone https://github.com/apollographql/fullstack-tutorial.git
 cd fullstack-tutorial
-git checkout apollo-client-3
 cd final/server
 npm i
 cd ../client

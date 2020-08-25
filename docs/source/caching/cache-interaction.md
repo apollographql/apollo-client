@@ -11,7 +11,7 @@ Apollo Client provides the following methods for reading and writing data to the
 
 These methods are described in detail below.
 
-All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
+All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`. You can access your instance of `ApolloClient` with the [`useApolloClient`](https://www.apollographql.com/docs/react/api/react/hooks/#useapolloclient) hook.
 
 ## `readQuery`
 

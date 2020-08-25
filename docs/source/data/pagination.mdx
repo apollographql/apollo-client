@@ -93,7 +93,7 @@ const MORE_COMMENTS_QUERY = gql`
 `;
 
 function CommentsWithData() {
-  const { data: { comments, cursor }, loading, fetchMore } = useQuery(
+  const { data: { moreComments: {comments, cursor} }, loading, fetchMore } = useQuery(
     MORE_COMMENTS_QUERY
   );
 

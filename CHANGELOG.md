@@ -5,10 +5,16 @@
 - Check structural equality of diff results in `QueryInfo#setDiff` instead of reference equality. <br/>
   [@benjamn](https://github.com/benjamn) in [#6891](https://github.com/apollographql/apollo-client/pull/6891)
 
+- Use `options.nextFetchPolicy` internally to restore original `FetchPolicy` after polling with `fetchPolicy: "network-only"`, so that polling does not interfere with normal query watching. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
+
 ## Improvements
 
 - Substantially improve type inference for data and variables types using `TypedDocumentNode<Data, Variables>` type instead of `DocumentNode`. <br/>
   [@dotansimha](https://github.com/dotansimha) in [#6720](https://github.com/apollographql/apollo-client/pull/6720)
+
+- Allow `options.nextFetchPolicy` to be a function that takes the current `FetchPolicy` and returns a new (or the same) `FetchPolicy`, making `nextFetchPolicy` more suitable for global use in `defaultOptions.watchQuery`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
 
 - Disable feud-stopping logic after any cache eviction. <br/>
   [@benjamn](https://github.com/benjamn) in [#6817](https://github.com/apollographql/apollo-client/pull/6817)

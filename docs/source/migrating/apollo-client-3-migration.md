@@ -12,11 +12,11 @@ To illustrate the migration process, we've also made this video that uses the ex
 * Apollo Client is now distributed as the `@apollo/client` package (previous versions are distributed as `apollo-client`).
 * The `@apollo/client` package includes both React hooks and GraphQL request handling, which previously required installing separate packages.
 * Apollo Client’s cache (`InMemoryCache`) is more flexible and performant. It now supports garbage collection, storage of both normalized and non-normalized data, and the customization of cached data with new `TypePolicy` and `FieldPolicy` APIs.
-* The update also includes numerous bug fixes and optimizations, as described in the [changelog](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+* The update also includes numerous bug fixes and optimizations, as described in the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
 ## Installation
 
-> **WARNING:** Apollo Client 3.0 is a major-version release that includes **breaking changes**. If you are updating an existing application to use Apollo Client 3.0, please see the [changelog](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md) for details about these changes.
+> **WARNING:** Apollo Client 3.0 is a major-version release that includes **breaking changes**. If you are updating an existing application to use Apollo Client 3.0, please see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md) for details about these changes.
 
 Install Apollo Client 3.0 with the following command:
 

@@ -16,8 +16,10 @@
 - Allow `options.nextFetchPolicy` to be a function that takes the current `FetchPolicy` and returns a new (or the same) `FetchPolicy`, making `nextFetchPolicy` more suitable for global use in `defaultOptions.watchQuery`. <br/>
   [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
 
-- Disable feud-stopping logic after any cache eviction. <br/>
-  [@benjamn](https://github.com/benjamn) in [#6817](https://github.com/apollographql/apollo-client/pull/6817)
+- Disable feud-stopping logic after any `cache.evict` or `cache.modify` operation. <br/>
+  [@benjamn](https://github.com/benjamn) in
+  [#6817](https://github.com/apollographql/apollo-client/pull/6817) and
+  [#6898](https://github.com/apollographql/apollo-client/pull/6898)
 
 - Prevent full reobservation of queries affected by optimistic mutation updates, while still delivering results from the cache. <br/>
   [@benjamn](https://github.com/benjamn) in [#6854](https://github.com/apollographql/apollo-client/pull/6854)

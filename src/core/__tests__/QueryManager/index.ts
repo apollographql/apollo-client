@@ -2288,6 +2288,112 @@ describe('QueryManager', () => {
     });
   });
 
+  itAsync("should disable feud-stopping logic after evict or modify", (resolve, reject) => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            info: {
+              merge: false,
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(operation => new Observable((observer: Observer<FetchResult>) => {
+        observer.next!({ data: { info: { c: "see" }}});
+        observer.complete!();
+      })),
+    });
+
+    const query = gql`query { info { c } }`;
+
+    const obs = client.watchQuery({
+      query,
+      returnPartialData: true,
+    });
+
+    subscribeAndCount(reject, obs, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {},
+          partial: true,
+        });
+
+      } else if (count === 2) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              c: "see",
+            },
+          },
+        });
+
+        cache.evict({
+          fieldName: "info",
+        });
+
+      } else if (count === 3) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {},
+          partial: true,
+        });
+
+      } else if (count === 4) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              c: "see",
+            },
+          },
+        });
+
+        cache.modify({
+          fields: {
+            info(_, { DELETE }) {
+              return DELETE;
+            },
+          },
+        });
+
+      } else if (count === 5) {
+        expect(result).toEqual({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          data: {},
+          partial: true,
+        });
+
+      } else if (count === 6) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            info: {
+              c: "see",
+            },
+          },
+        });
+
+        setTimeout(resolve, 100);
+
+      } else {
+        reject(new Error(`Unexpected ${JSON.stringify({count,result})}`));
+      }
+    });
+  });
+
   itAsync('should not error when replacing unidentified data with a normalized ID', (resolve, reject) => {
     const queryWithoutId = gql`
       query {

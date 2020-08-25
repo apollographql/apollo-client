@@ -25,9 +25,29 @@ export type QueryStoreValue = Pick<QueryInfo,
   | "graphQLErrors"
   >;
 
-const cacheEvictCounts = new (
+const destructiveMethodCounts = new (
   canUseWeakMap ? WeakMap : Map
 )<ApolloCache<any>, number>();
+
+function wrapDestructiveCacheMethod(
+  cache: ApolloCache<any>,
+  methodName: keyof ApolloCache<any>,
+) {
+  const original = cache[methodName];
+  if (typeof original === "function") {
+    cache[methodName] = function () {
+      destructiveMethodCounts.set(
+        cache,
+        // The %1e15 allows the count to wrap around to 0 safely every
+        // quadrillion evictions, so there's no risk of overflow. To be
+        // clear, this is more of a pedantic principle than something
+        // that matters in any conceivable practical scenario.
+        (destructiveMethodCounts.get(cache)! + 1) % 1e15,
+      );
+      return original.apply(this, arguments);
+    };
+  }
+}
 
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
@@ -57,20 +77,9 @@ export class QueryInfo {
     // causing shouldWrite to return true. Wrapping the cache.evict method
     // is a bit of a hack, but it saves us from having to make eviction
     // counting an official part of the ApolloCache API.
-    if (!cacheEvictCounts.has(cache) && cache.evict) {
-      cacheEvictCounts.set(cache, 0);
-      const originalEvict = cache.evict;
-      cache.evict = function evict() {
-        cacheEvictCounts.set(
-          cache,
-          // The %1e15 allows the count to wrap around to 0 safely every
-          // quadrillion evictions, so there's no risk of overflow. To be
-          // clear, this is more of a pedantic principle than something
-          // that matters in any conceivable practical scenario.
-          (cacheEvictCounts.get(cache)! + 1) % 1e15,
-        );
-        return originalEvict.apply(this, arguments);
-      };
+    if (!destructiveMethodCounts.has(cache)) {
+      wrapDestructiveCacheMethod(cache, "evict");
+      wrapDestructiveCacheMethod(cache, "modify");
     }
   }
 
@@ -246,7 +255,7 @@ export class QueryInfo {
   private lastWrite?: {
     result: FetchResult<any>;
     variables: WatchQueryOptions["variables"];
-    evictCount: number | undefined;
+    dmCount: number | undefined;
   };
 
   private shouldWrite(
@@ -259,7 +268,7 @@ export class QueryInfo {
       // If cache.evict has been called since the last time we wrote this
       // data into the cache, there's a chance writing this result into
       // the cache will repair what was evicted.
-      lastWrite.evictCount === cacheEvictCounts.get(this.cache) &&
+      lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
       equal(variables, lastWrite.variables) &&
       equal(result.data, lastWrite.result.data)
     );
@@ -303,7 +312,7 @@ export class QueryInfo {
             this.lastWrite = {
               result,
               variables: options.variables,
-              evictCount: cacheEvictCounts.get(this.cache),
+              dmCount: destructiveMethodCounts.get(this.cache),
             };
           } else {
             // If result is the same as the last result we received from

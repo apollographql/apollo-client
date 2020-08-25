@@ -238,7 +238,7 @@ export class ObservableQuery<
         fetchPolicy !== 'cache-and-network') {
       reobserveOptions.fetchPolicy = 'network-only';
       // Go back to the original options.fetchPolicy after this refetch.
-      reobserveOptions.nextFetchPolicy = fetchPolicy;
+      reobserveOptions.nextFetchPolicy = fetchPolicy || "cache-first";
     }
 
     if (variables && !equal(this.options.variables, variables)) {
@@ -436,16 +436,22 @@ once, rather than every time you call fetchMore.`);
     }
 
     let { fetchPolicy = 'cache-first' } = this.options;
+    const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
+      fetchPolicy,
+      variables,
+    };
+
     if (fetchPolicy !== 'cache-first' &&
         fetchPolicy !== 'no-cache' &&
         fetchPolicy !== 'network-only') {
-      fetchPolicy = 'cache-and-network';
+      reobserveOptions.fetchPolicy = 'cache-and-network';
+      reobserveOptions.nextFetchPolicy = fetchPolicy;
     }
 
-    return this.reobserve({
-      fetchPolicy,
-      variables,
-    }, NetworkStatus.setVariables);
+    return this.reobserve(
+      reobserveOptions,
+      NetworkStatus.setVariables,
+    );
   }
 
   public updateQuery<TVars = TVariables>(

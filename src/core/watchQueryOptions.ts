@@ -115,7 +115,10 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
   /**
    * Specifies the {@link FetchPolicy} to be used after this query has completed.
    */
-  nextFetchPolicy?: WatchQueryFetchPolicy;
+  nextFetchPolicy?: WatchQueryFetchPolicy | ((
+    this: WatchQueryOptions<TVariables, TData>,
+    lastFetchPolicy: WatchQueryFetchPolicy,
+  ) => WatchQueryFetchPolicy);
 }
 
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables, TData = any> {

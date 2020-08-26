@@ -513,12 +513,7 @@ export class Policies {
       // policies.fragmentMatches without passing a result object, so
       // needToCheckFuzzySubtypes is always false while reading.
       let needToCheckFuzzySubtypes = !!(result && this.fuzzySubtypes.size);
-
-      // We don't need to check selectionSetMatchesResult for known
-      // supertype/subtype relationships specified in possibleTypes, but
-      // we will need to enforce that verification once we begin checking
-      // fuzzy subtypes.
-      let mustVerifyResult = false;
+      let checkingFuzzySubtypes = false;
 
       // It's important to keep evaluating workQueue.length each time through
       // the loop, because the queue can grow while we're iterating over it.
@@ -526,42 +521,35 @@ export class Policies {
         const supertypeSet = workQueue[i];
 
         if (supertypeSet.has(supertype)) {
-          if (result && mustVerifyResult) {
-            // Since this verification doesn't depend on any for-loop
-            // variables, we could technically hoist it outside the loop,
-            // but the verification can be expensive, so we postpone it
-            // until the last possible moment (here).
-            if (selectionSetMatchesResult(fragment.selectionSet, result, variables)) {
+          if (!typenameSupertypeSet.has(supertype)) {
+            if (checkingFuzzySubtypes) {
               invariant.warn(`Inferring subtype ${typename} of supertype ${supertype}`);
-            } else {
-              // Since the result of the verification isn't going to
-              // change the next time we do it, we can go ahead and
-              // terminate the search at this point.
-              return false;
             }
+            // Record positive results for faster future lookup.
+            // Unfortunately, we cannot safely cache negative results,
+            // because new possibleTypes data could always be added to the
+            // Policies class.
+            typenameSupertypeSet.add(supertype);
           }
-          // Record positive results for faster future lookup.
-          // Unfortunately, we cannot safely cache negative results,
-          // because new possibleTypes data could always be added to the
-          // Policies class.
-          typenameSupertypeSet.add(supertype);
           return true;
         }
 
         supertypeSet.forEach(maybeEnqueue);
 
-        // We start checking fuzzy subtypes only after we've exhausted all
-        // non-fuzzy subtypes.
-        const isFinalIteration = i === workQueue.length - 1;
-        if (isFinalIteration && needToCheckFuzzySubtypes) {
-          // Check fuzzy subtypes at most once (that is, don't run the
-          // this.fuzzySubtypes.forEach loop more than once).
+        if (needToCheckFuzzySubtypes &&
+            // Start checking fuzzy subtypes only after exhausting all
+            // non-fuzzy subtypes (after the final iteration of the loop).
+            i === workQueue.length - 1 &&
+            // We could wait to compare fragment.selectionSet to result
+            // after we verify the supertype, but this check is often less
+            // expensive than that search, and we will have to do the
+            // comparison anyway whenever we find a potential match.
+            selectionSetMatchesResult(fragment.selectionSet, result!, variables)) {
+          // We don't always need to check fuzzy subtypes (if no result
+          // was provided, or !this.fuzzySubtypes.size), but, when we do,
+          // we only want to check them once.
           needToCheckFuzzySubtypes = false;
-
-          // Now that we're checking fuzzy subtypes, enforce heuristic
-          // fragment/result matching before returning true if/when we
-          // find a matching supertype.
-          mustVerifyResult = true;
+          checkingFuzzySubtypes = true;
 
           // If we find any fuzzy subtypes that match typename, extend the
           // workQueue to search through the supertypes of those fuzzy

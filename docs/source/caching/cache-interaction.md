@@ -114,7 +114,7 @@ All subscribers to the Apollo Client cache (including all active queries) see th
 
 ## Combining reads and writes
 
-Combine `readQuery` and `writeQuery` to fetch currently cached data and make selective modifications to it. The example below creates a new `Todo` item and adds it your cached to-do list. Remember, this addition is _not_ sent to your remote server.
+Combine `readQuery` and `writeQuery` to fetch currently cached data and make selective modifications to it. The example below creates a new `Todo` item and adds it to your cached to-do list. Remember, this addition is _not_ sent to your remote server.
 
 ```js
 // Query that fetches all existing to-do items

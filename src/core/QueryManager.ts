@@ -661,7 +661,6 @@ export class QueryManager<TStore> {
         query,
         context,
         variables,
-        false,
       ).map(result => {
         if (fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.

@@ -26,6 +26,7 @@ import {
 
 const DELETE: any = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
+const INVALIDATE: any = Object.create(null);
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
@@ -128,6 +129,7 @@ export abstract class EntityStore implements NormalizedCache {
 
       const sharedDetails = {
         DELETE,
+        INVALIDATE,
         isReference,
         toReference: this.toReference,
         canRead: this.canRead,
@@ -157,11 +159,15 @@ export abstract class EntityStore implements NormalizedCache {
               fieldName,
               storeFieldName,
             });
-          if (newValue === DELETE) newValue = void 0;
-          if (newValue !== fieldValue) {
-            changedFields[storeFieldName] = newValue;
-            needToMerge = true;
-            fieldValue = newValue;
+          if (newValue === INVALIDATE) {
+            this.group.dirty(dataId, storeFieldName);
+          } else {
+            if (newValue === DELETE) newValue = void 0;
+            if (newValue !== fieldValue) {
+              changedFields[storeFieldName] = newValue;
+              needToMerge = true;
+              fieldValue = newValue;
+            }
           }
         }
         if (fieldValue !== void 0) {

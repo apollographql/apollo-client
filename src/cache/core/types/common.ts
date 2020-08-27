@@ -55,6 +55,7 @@ export type CanReadFunction = (value: StoreValue) => boolean;
 
 export type Modifier<T> = (value: T, details: {
   DELETE: any;
+  INVALIDATE: any;
   fieldName: string;
   storeFieldName: string;
   readField: ReadFieldFunction;

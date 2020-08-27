@@ -228,6 +228,29 @@ Object {
 }
 `;
 
+exports[`InMemoryCache#modify should allow invalidation using details.INVALIDATE 1`] = `
+Object {
+  "Author:{\\"name\\":\\"Maria Dahvana Headley\\"}": Object {
+    "__typename": "Author",
+    "name": "Maria Dahvana Headley",
+  },
+  "Book:{\\"isbn\\":\\"0374110034\\"}": Object {
+    "__typename": "Book",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Maria Dahvana Headley\\"}",
+    },
+    "isbn": "0374110034",
+    "title": "Beowulf: A New Translation",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "currentlyReading": Object {
+      "__ref": "Book:{\\"isbn\\":\\"0374110034\\"}",
+    },
+  },
+}
+`;
+
 exports[`TypedDocumentNode<Data, Variables> should determine Data and Variables types of {write,read}{Query,Fragment} 1`] = `
 Object {
   "Author:{\\"name\\":\\"John C. Mitchell\\"}": Object {

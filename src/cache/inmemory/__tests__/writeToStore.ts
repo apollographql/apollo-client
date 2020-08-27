@@ -2325,4 +2325,126 @@ describe('writing to the store', () => {
       },
     });
   });
+
+  it('user objects should be able to have { __typename: "Subscription" }', () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Subscription: {
+          keyFields: ["subId"],
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        subscriptions {
+          __typename
+          subscriber {
+            name
+          }
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        subscriptions: [
+          {
+            __typename: "Subscription",
+            subId: 1,
+            subscriber: {
+              name: "Alice",
+            },
+          },
+          {
+            __typename: "Subscription",
+            subId: 2,
+            subscriber: {
+              name: "Bob",
+            },
+          },
+          {
+            __typename: "Subscription",
+            subId: 3,
+            subscriber: {
+              name: "Clytemnestra",
+            },
+          },
+        ],
+      },
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+    expect(cache.readQuery({ query })).toEqual({
+      subscriptions: [
+        { __typename: "Subscription", subscriber: { name: "Alice" }},
+        { __typename: "Subscription", subscriber: { name: "Bob" }},
+        { __typename: "Subscription", subscriber: { name: "Clytemnestra" }},
+      ],
+    });
+  });
+
+  it('user objects should be able to have { __typename: "Mutation" }', () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Mutation: {
+          keyFields: ["gene", ["id"], "name"],
+        },
+        Gene: {
+          keyFields: ["id"],
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        mutations {
+          __typename
+          gene { id }
+          name
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        mutations: [
+          {
+            __typename: "Mutation",
+            gene: {
+              __typename: "Gene",
+              id: "SLC45A2",
+            },
+            name: "albinism",
+          },
+          {
+            __typename: "Mutation",
+            gene: {
+              __typename: "Gene",
+              id: "SNAI2",
+            },
+            name: "piebaldism",
+          },
+        ],
+      },
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+    expect(cache.readQuery({ query })).toEqual({
+      mutations: [
+        {
+          __typename: "Mutation",
+          gene: { __typename: "Gene", id: "SLC45A2" },
+          name: "albinism",
+        },
+        {
+          __typename: "Mutation",
+          gene: { __typename: "Gene", id: "SNAI2" },
+          name: "piebaldism",
+        },
+      ],
+    });
+  });
 });

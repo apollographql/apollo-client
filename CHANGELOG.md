@@ -1,3 +1,10 @@
+## Apollo Client 3.1.4
+
+## Bug Fixes
+
+- Restrict root object identification to `ROOT_QUERY` (the ID corresponding to the root `Query` object), allowing `Mutation` and `Subscription` as user-defined types. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6914](https://github.com/apollographql/apollo-client/pull/6914)
+
 ## Apollo Client 3.1.3
 
 ## Bug Fixes

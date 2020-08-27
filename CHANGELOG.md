@@ -5,6 +5,9 @@
 - Restrict root object identification to `ROOT_QUERY` (the ID corresponding to the root `Query` object), allowing `Mutation` and `Subscription` as user-defined types. <br/>
   [@benjamn](https://github.com/benjamn) in [#6914](https://github.com/apollographql/apollo-client/pull/6914)
 
+- Prevent crash when `pageInfo` and empty `edges` are received by `relayStylePagination`. <br/>
+  [@fracmak](https://github.com/fracmak) in [#6918](https://github.com/apollographql/apollo-client/pull/6918)
+
 ## Apollo Client 3.1.3
 
 ## Bug Fixes

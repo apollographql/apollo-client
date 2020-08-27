@@ -19,7 +19,6 @@ import {
   SafeReadonly,
   Modifier,
   Modifiers,
-  ReadFieldFunction,
   ReadFieldOptions,
   ToReferenceFunction,
   CanReadFunction,
@@ -127,16 +126,22 @@ export abstract class EntityStore implements NormalizedCache {
       let needToMerge = false;
       let allDeleted = true;
 
-      const readField: ReadFieldFunction = <V = StoreValue>(
-        fieldNameOrOptions: string | ReadFieldOptions,
-        from?: StoreObject | Reference,
-      ) => this.policies.readField<V>(
-        typeof fieldNameOrOptions === "string" ? {
-          fieldName: fieldNameOrOptions,
-          from: from || makeReference(dataId),
-        } : fieldNameOrOptions,
-        { store: this },
-      );
+      const sharedDetails = {
+        DELETE,
+        isReference,
+        toReference: this.toReference,
+        canRead: this.canRead,
+        readField: <V = StoreValue>(
+          fieldNameOrOptions: string | ReadFieldOptions,
+          from?: StoreObject | Reference,
+        ) => this.policies.readField<V>(
+          typeof fieldNameOrOptions === "string" ? {
+            fieldName: fieldNameOrOptions,
+            from: from || makeReference(dataId),
+          } : fieldNameOrOptions,
+          { store: this },
+        ),
+      };
 
       Object.keys(storeObject).forEach(storeFieldName => {
         const fieldName = fieldNameFromStoreName(storeFieldName);
@@ -148,13 +153,9 @@ export abstract class EntityStore implements NormalizedCache {
         if (modify) {
           let newValue = modify === delModifier ? DELETE :
             modify(maybeDeepFreeze(fieldValue), {
-              DELETE,
+              ...sharedDetails,
               fieldName,
               storeFieldName,
-              isReference,
-              toReference: this.toReference,
-              canRead: this.canRead,
-              readField,
             });
           if (newValue === DELETE) newValue = void 0;
           if (newValue !== fieldValue) {

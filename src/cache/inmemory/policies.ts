@@ -282,9 +282,14 @@ export class Policies {
       ? getTypenameFromResult(object, selectionSet, fragmentMap)
       : object.__typename;
 
-    if (typename) {
-      const rootId = this.rootIdsByTypename[typename];
-      if ("string" === typeof rootId) return [rootId];
+    // It should be possible to write root Query fields with
+    // writeFragment, using { __typename: "Query", ... } as the data, but
+    // it does not make sense to allow the same identification behavior
+    // for the Mutation and Subscription types, since application code
+    // should never be writing directly to (or reading directly from)
+    // those root objects.
+    if (typename === this.rootTypenamesById.ROOT_QUERY) {
+      return ["ROOT_QUERY"];
     }
 
     const context: KeyFieldsContext = {

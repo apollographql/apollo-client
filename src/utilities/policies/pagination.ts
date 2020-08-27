@@ -167,7 +167,7 @@ function updateCursor<TNode>(
 ) {
   if (index < 0) index += edges.length;
   const edge = edges[index];
-  if (cursor && cursor !== edge.cursor) {
+  if (cursor && edge && cursor !== edge.cursor) {
     edges[index] = { ...edge, cursor };
   }
 }

@@ -282,9 +282,11 @@ import {
 import Pages from './pages';
 import Login from './pages/login';
 
+const cache = new InMemoryCache();
+
 const client = new ApolloClient({
   uri: 'http://localhost:4000/graphql',
-  cache: new InMemoryCache(),
+  cache
 });
 
 const IS_LOGGED_IN = gql`

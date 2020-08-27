@@ -13,6 +13,8 @@ These methods are described in detail below.
 
 All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
 
+> In a React component, you can access your instance of `ApolloClient` using [`ApolloProvider`](https://www.apollographql.com/docs/react/api/react/hooks/#apolloprovider) and the [`useApolloClient`](https://www.apollographql.com/docs/react/api/react/hooks/#useapolloclient) hook.
+
 ## `readQuery`
 
 The `readQuery` method enables you to run a GraphQL query directly on your cache.
@@ -114,7 +116,7 @@ All subscribers to the Apollo Client cache (including all active queries) see th
 
 ## Combining reads and writes
 
-Combine `readQuery` and `writeQuery` to fetch currently cached data and make selective modifications to it. The example below creates a new `Todo` item and adds it your cached to-do list. Remember, this addition is _not_ sent to your remote server.
+Combine `readQuery` and `writeQuery` to fetch currently cached data and make selective modifications to it. The example below creates a new `Todo` item and adds it to your cached to-do list. Remember, this addition is _not_ sent to your remote server.
 
 ```js
 // Query that fetches all existing to-do items

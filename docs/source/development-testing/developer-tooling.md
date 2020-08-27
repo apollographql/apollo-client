@@ -9,7 +9,7 @@ description: Improve your developer experience with these these services and ext
 
 It provides the following features to all Apollo users for free:
 
-- A query window that connects to all your environments and provides erganomic ways to author and manage queries.
+- A query window that connects to all your environments and provides ergonomic ways to author and manage queries.
 - A GraphQL schema registry that tracks the evolution of your graph across your environments.
 - Key insights into which parts of your schema are being actively used, and by whom.
 - Team collaboration via organizations

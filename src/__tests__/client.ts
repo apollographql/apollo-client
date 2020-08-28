@@ -3028,9 +3028,11 @@ describe('@connection', () => {
     client.cache.evict({ fieldName: "a" });
     await wait();
 
-    expect(checkLastResult(aResults, a456)).toBe(a456);
+    // The results are structurally the same, but the result objects have
+    // been recomputed for queries that involved the ROOT_QUERY.a field.
+    expect(checkLastResult(aResults, a456)).not.toBe(a456);
     expect(checkLastResult(bResults, bOyez)).toBe(bOyez);
-    expect(checkLastResult(abResults, a456bOyez)).toBe(a456bOyez);
+    expect(checkLastResult(abResults, a456bOyez)).not.toBe(a456bOyez);
 
     const cQuery = gql`{ c }`;
     // Passing cache-only as the fetchPolicy allows the { c: "see" }
@@ -3079,11 +3081,15 @@ describe('@connection', () => {
       { a: 123 },
       { a: 234 },
       { a: 456 },
+      // Delivered again because we explicitly called resetLastResults.
+      { a: 456 },
     ]);
 
     expect(bResults).toEqual([
       { b: "asdf" },
       { b: "ASDF" },
+      { b: "oyez" },
+      // Delivered again because we explicitly called resetLastResults.
       { b: "oyez" },
     ]);
 
@@ -3091,6 +3097,8 @@ describe('@connection', () => {
       { a: 123, b: "asdf" },
       { a: 234, b: "asdf" },
       { a: 234, b: "ASDF" },
+      { a: 456, b: "oyez" },
+      // Delivered again because we explicitly called resetLastResults.
       { a: 456, b: "oyez" },
     ]);
 

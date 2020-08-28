@@ -2,9 +2,6 @@
 
 ## Bug Fixes
 
-- Check structural equality of diff results in `QueryInfo#setDiff` instead of reference equality. <br/>
-  [@benjamn](https://github.com/benjamn) in [#6891](https://github.com/apollographql/apollo-client/pull/6891)
-
 - Use `options.nextFetchPolicy` internally to restore original `FetchPolicy` after polling with `fetchPolicy: "network-only"`, so that polling does not interfere with normal query watching. <br/>
   [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
 

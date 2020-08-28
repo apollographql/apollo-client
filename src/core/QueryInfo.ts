@@ -78,6 +78,7 @@ export class QueryInfo {
     // is a bit of a hack, but it saves us from having to make eviction
     // counting an official part of the ApolloCache API.
     if (!destructiveMethodCounts.has(cache)) {
+      destructiveMethodCounts.set(cache, 0);
       wrapDestructiveCacheMethod(cache, "evict");
       wrapDestructiveCacheMethod(cache, "modify");
     }

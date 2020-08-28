@@ -251,19 +251,11 @@ describe('graphql(mutation)', () => {
           query: queryWithVariables,
           variables: {
             first: 1,
-          },
+            second: 2
+          }
         },
         result: { data: expectedData },
-      },
-      {
-        request: {
-          query: queryWithVariables,
-          variables: {
-            second: 2,
-          },
-        },
-        result: { data: expectedData },
-      },
+      }
     ];
 
     interface Props {}

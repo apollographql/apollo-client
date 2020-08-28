@@ -17,8 +17,8 @@ describe('useMutation Hook', () => {
   }
 
   const CREATE_TODO_MUTATION: DocumentNode = gql`
-    mutation createTodo($description: String!) {
-      createTodo(description: $description) {
+    mutation createTodo($description: String!, $priority: String) {
+      createTodo(description: $description, priority: $priority) {
         id
         description
         priority
@@ -370,6 +370,59 @@ describe('useMutation Hook', () => {
       );
 
       return wait();
+    });
+
+    it('should merge provided variables', async () => {
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.'
+            }
+          },
+          result: {
+            data: {
+              createTodo: {
+                id: 1,
+                description: 'Get milk!',
+                priority: 'Low',
+                __typename: 'Todo'
+              }
+            }
+          }
+        }
+      ];
+
+      const Component = () => {
+        const [createTodo, result] = useMutation<
+          { createTodo: Todo },
+          { priority?: string, description?: string }
+        >(CREATE_TODO_MUTATION, {
+          variables: { priority: 'Low' }
+        });
+
+        useEffect(() => {
+          createTodo({ variables: { description: 'Get milk.' } })
+        }, []);
+
+        return (
+          <>
+            {result.data ? JSON.stringify(result.data.createTodo) : null}
+          </>
+        );
+      };
+
+      const {getByText} = render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+
+      await wait(() => {
+        getByText('{"id":1,"description":"Get milk!","priority":"Low","__typename":"Todo"}')
+      });
     });
   });
 

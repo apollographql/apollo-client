@@ -38,7 +38,7 @@ const client = new ApolloClient({
 This next example demonstrates providing multiple custom links in an array:
 
 ```js
-import { ApolloClient, HttpLink, ApolloLink, InMemoryCache, from } from '@apollo/client';
+import { ApolloClient, HttpLink, ApolloLink, InMemoryCache} from '@apollo/client';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 

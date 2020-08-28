@@ -3,7 +3,7 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { ApolloCache } from '../cache';
 import { FetchResult } from '../link/core';
-import { MutationQueryReducersMap } from './types';
+import { MutationQueryReducersMap, ReobserveQueryCallback } from './types';
 import { PureQueryOptions, OperationVariables } from './types';
 
 /**
@@ -240,6 +240,12 @@ export interface MutationBaseOptions<
    * `client.mutate` instead.
    */
   update?: MutationUpdaterFn<T>;
+
+  /**
+   * A function that will be called for each ObservableQuery affected by
+   * this mutation, after the mutation has completed.
+   */
+  reobserveQuery?: ReobserveQueryCallback;
 
   /**
    * Specifies the {@link ErrorPolicy} to be used for this operation

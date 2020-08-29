@@ -106,7 +106,7 @@
     "lodash": "4.17.20",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "recast": "0.19.1",
+    "recast": "0.20.2",
     "recompose": "^0.30.0",
     "resolve": "^1.17.0",
     "rimraf": "3.0.2",

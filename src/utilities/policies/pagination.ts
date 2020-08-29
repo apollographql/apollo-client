@@ -79,7 +79,7 @@ export function relayStylePagination<TNode = Reference>(
     },
 
     merge(existing = makeEmptyData(), incoming, { args }) {
-      if (!args) return {...existing, ...incoming}; // TODO Maybe throw?
+      if (!args) return {...existing, ...incoming};
 
       const incomingEdges = (incoming.edges || []).slice(0);
       if (incoming.pageInfo) {

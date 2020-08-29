@@ -79,9 +79,9 @@ export function relayStylePagination<TNode = Reference>(
     },
 
     merge(existing = makeEmptyData(), incoming, { args }) {
-      if (!args) return existing; // TODO Maybe throw?
+      if (!args) return {...existing, ...incoming}; // TODO Maybe throw?
 
-      const incomingEdges = incoming.edges.slice(0);
+      const incomingEdges = (incoming.edges || []).slice(0);
       if (incoming.pageInfo) {
         updateCursor(incomingEdges, 0, incoming.pageInfo.startCursor);
         updateCursor(incomingEdges, -1, incoming.pageInfo.endCursor);
@@ -121,7 +121,7 @@ export function relayStylePagination<TNode = Reference>(
       };
 
       const updatePageInfo = (name: keyof TInternalRelay<TNode>["pageInfo"]) => {
-        const value = incoming.pageInfo[name];
+        const value = incoming.pageInfo && incoming.pageInfo[name];
         if (value !== void 0) {
           (pageInfo as any)[name] = value;
         }

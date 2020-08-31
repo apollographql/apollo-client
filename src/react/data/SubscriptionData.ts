@@ -53,7 +53,8 @@ export class SubscriptionData<
       shouldResubscribe !== false &&
       this.previousOptions &&
       Object.keys(this.previousOptions).length > 0 &&
-      (this.previousOptions.subscription !== this.getOptions().subscription ||
+	  (this.previousOptions.subscription !== this.getOptions().subscription ||
+	  	!equal(this.previousOptions.variables, this.getOptions().variables) ||
         this.previousOptions.skip !== this.getOptions().skip)
     ) {
       this.cleanup();

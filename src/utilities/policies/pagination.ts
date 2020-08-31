@@ -57,7 +57,7 @@ type TInternalRelay<TNode> = Readonly<{
 // anything about connections, edges, cursors, or pageInfo objects.
 export function relayStylePagination<TNode = Reference>(
   keyArgs: KeyArgs = false,
-): FieldPolicy<TInternalRelay<TNode>> {
+): FieldPolicy<TInternalRelay<TNode>, Partial<TInternalRelay<TNode>>> {
   return {
     keyArgs,
 
@@ -79,10 +79,8 @@ export function relayStylePagination<TNode = Reference>(
     },
 
     merge(existing = makeEmptyData(), incoming, { args }) {
-      if (!args) return {...existing, ...incoming};
-
-      const incomingEdges = (incoming.edges || []).slice(0);
-      if (incoming.pageInfo) {
+      const incomingEdges = incoming.edges?.slice(0);
+      if (incoming.pageInfo && incomingEdges) {
         updateCursor(incomingEdges, 0, incoming.pageInfo.startCursor);
         updateCursor(incomingEdges, -1, incoming.pageInfo.endCursor);
       }
@@ -90,13 +88,13 @@ export function relayStylePagination<TNode = Reference>(
       let prefix = existing.edges;
       let suffix: typeof prefix = [];
 
-      if (args.after) {
+      if (args?.after) {
         const index = prefix.findIndex(edge => edge.cursor === args.after);
         if (index >= 0) {
           prefix = prefix.slice(0, index + 1);
           // suffix = []; // already true
         }
-      } else if (args.before) {
+      } else if (args?.before) {
         const index = prefix.findIndex(edge => edge.cursor === args.before);
         suffix = index < 0 ? prefix : prefix.slice(index);
         prefix = [];
@@ -104,17 +102,18 @@ export function relayStylePagination<TNode = Reference>(
         // If we have neither args.after nor args.before, the incoming
         // edges cannot be spliced into the existing edges, so they must
         // replace the existing edges. See #6592 for a motivating example.
-        prefix = [];
+        if(incomingEdges)
+          prefix = [];
       }
 
       const edges = [
         ...prefix,
-        ...incomingEdges,
+        ...(incomingEdges || []),
         ...suffix,
       ];
 
       const pageInfo = {
-        ...incoming.pageInfo,
+        ...(incoming.pageInfo || {}),
         ...existing.pageInfo,
         startCursor: cursorFromEdge(edges, 0),
         endCursor: cursorFromEdge(edges, -1),

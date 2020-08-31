@@ -2189,7 +2189,7 @@ describe("type policies", function () {
         },
       });
 
-      const initialQuery = gql`
+      const firstQuery = gql`
         query TodoQuery {
           todos {
             totalCount
@@ -2197,7 +2197,7 @@ describe("type policies", function () {
         }
       `
 
-      const query = gql`
+      const secondQuery = gql`
         query TodoQuery {
           todos(after: $after, first: $first) {
             pageInfo {
@@ -2218,11 +2218,20 @@ describe("type policies", function () {
         }
       `
 
-      const firstVariables = {
+      const thirdQuery = gql`
+        query TodoQuery {
+          todos {
+            totalCount
+            extraMetaData
+          }
+        }
+      `
+
+      const secondVariables = {
         first: 1,
       };
 
-      const firstEdges = [
+      const secondEdges = [
         {
           __typename: "TodoEdge",
           node: {
@@ -2233,7 +2242,7 @@ describe("type policies", function () {
         },
       ];
 
-      const firstPageInfo = {
+      const secondPageInfo = {
         __typename: "PageInfo",
         endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
         hasNextPage: true,
@@ -2242,7 +2251,7 @@ describe("type policies", function () {
       const link = new MockLink([
         {
           request: {
-            query: initialQuery,
+            query: firstQuery,
           },
           result: {
             data: {
@@ -2254,24 +2263,37 @@ describe("type policies", function () {
         },
         {
           request: {
-            query,
-            variables: firstVariables,
+            query: secondQuery,
+            variables: secondVariables,
           },
           result: {
             data: {
               todos: {
-                edges: firstEdges,
-                pageInfo: firstPageInfo,
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
                 totalCount: 1292,
               }
             }
           },
         },
+        {
+          request: {
+            query: thirdQuery,
+          },
+          result: {
+            data: {
+              todos: {
+                totalCount: 1293,
+                extraMetaData: 'extra',
+              }
+            }
+          },
+        }
       ]).setOnError(reject);
 
       const client = new ApolloClient({ link, cache });
 
-      client.query({query: initialQuery}).then(result => {
+      client.query({query: firstQuery}).then(result => {
         expect(result).toEqual({
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2298,21 +2320,35 @@ describe("type policies", function () {
           }
         });
 
-        client.query({query, variables: firstVariables}).then(result => {
+        client.query({query: secondQuery, variables: secondVariables}).then(result => {
           expect(result).toEqual({
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
               todos: {
-                edges: firstEdges,
-                pageInfo: firstPageInfo,
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
                 totalCount: 1292,
               }
             }
           })
 
           expect(cache.extract()).toMatchSnapshot()
-          resolve()
+
+          client.query({query: thirdQuery}).then(result => {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                todos: {
+                  totalCount: 1293,
+                  extraMetaData: 'extra',
+                }
+              }
+            })
+            expect(cache.extract()).toMatchSnapshot()
+            resolve()
+          })
         })
       })
     })

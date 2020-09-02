@@ -103,7 +103,6 @@ export class MockLink extends ApolloLink {
           : ""
         }`
       )
-      console.log(error)
       this.onError(error);
       return null;
     }

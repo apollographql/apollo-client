@@ -73,6 +73,7 @@ export class MockLink extends ApolloLink {
     this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
     let responseIndex: number = 0;
+    let diffs: Array<Record<string, any>> = [];
     const response = (this.mockedResponsesByKey[key] || []).find(
       (res, index) => {
         const requestVariables = operation.variables || {};
@@ -81,6 +82,7 @@ export class MockLink extends ApolloLink {
           responseIndex = index;
           return true;
         }
+        diffs.push(mockedResponseVariables);
         return false;
       }
     );
@@ -89,8 +91,17 @@ export class MockLink extends ApolloLink {
       this.onError(new Error(
         `No more mocked responses for the query: ${print(
           operation.query
-        )}, variables: ${JSON.stringify(operation.variables)}`
-      ));
+        )}\nExpected variables:\n\t${JSON.stringify(operation.variables)}${
+        diffs.length > 0
+          ? `\nFound ${diffs.length} mock${
+          diffs.length > 1 ? "s" : ""
+          } with variables:\n${diffs.map(
+            (d, i) => `\t${i + 1}: ${JSON.stringify(d)}\n`
+          )}`
+          : ""
+        }`
+      )
+      );
       return null;
     }
 
@@ -141,7 +152,7 @@ export class MockLink extends ApolloLink {
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
     const queryWithoutConnection = removeConnectionDirectiveFromDocument(
-        newMockedResponse.request.query
+      newMockedResponse.request.query
     );
     invariant(queryWithoutConnection, "query is required");
     newMockedResponse.request.query = queryWithoutConnection!;

@@ -31,8 +31,7 @@ Accepts the following parameters:
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -43,8 +42,6 @@ Accepts the following parameters:
 <td>
 
 ###### `options`
-</td>
-<td>
 
 `Object`
 </td>
@@ -52,7 +49,7 @@ Accepts the following parameters:
 
 **Required.** Provides configuration options for the query, including the actual query to execute.
 
-Supported values are listed in [Options](#options).
+Supported fields are listed below.
 </td>
 </tr>
 
@@ -60,8 +57,6 @@ Supported values are listed in [Options](#options).
 <td>
 
 ###### `optimistic`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -81,8 +76,7 @@ The default value is `false`.
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -93,8 +87,6 @@ The default value is `false`.
 <td>
 
 ###### `query`
-</td>
-<td>
 
 `DocumentNode`
 </td>
@@ -109,8 +101,6 @@ The default value is `false`.
 <td>
 
 ###### `variables`
-</td>
-<td>
 
 `Object`
 </td>
@@ -125,8 +115,6 @@ A map of any GraphQL variable names and values required by `query`.
 <td>
 
 ###### `id`
-</td>
-<td>
 
 `String`
 </td>
@@ -166,8 +154,7 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -178,8 +165,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `query`
-</td>
-<td>
 
 `DocumentNode`
 </td>
@@ -193,8 +178,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `data`
-</td>
-<td>
 
 `Object`
 </td>
@@ -208,8 +191,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `variables`
-</td>
-<td>
 
 `Object`
 </td>
@@ -224,8 +205,6 @@ A map of any GraphQL variable names and values required by `query`.
 <td>
 
 ###### `id`
-</td>
-<td>
 
 `String`
 </td>
@@ -244,8 +223,6 @@ By specifying the ID of another cached object, you can modify arbitrary cached d
 <td>
 
 ###### `broadcast`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -294,8 +271,7 @@ Accepts the following parameters:
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -306,8 +282,6 @@ Accepts the following parameters:
 <td>
 
 ###### `options`
-</td>
-<td>
 
 `Object`
 </td>
@@ -315,7 +289,7 @@ Accepts the following parameters:
 
 **Required.** Provides configuration options, including the actual fragment to use.
 
-Supported values are listed in [Options](#options-3).
+Supported fields are listed below.
 </td>
 </tr>
 
@@ -323,8 +297,6 @@ Supported values are listed in [Options](#options-3).
 <td>
 
 ###### `optimistic`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -344,8 +316,7 @@ The default value is `false`.
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -356,8 +327,6 @@ The default value is `false`.
 <td>
 
 ###### `id`
-</td>
-<td>
 
 `String`
 </td>
@@ -373,8 +342,6 @@ If the cache does not contain an object with the specified ID, `readFragment` re
 <td>
 
 ###### `fragment`
-</td>
-<td>
 
 `DocumentNode`
 </td>
@@ -390,9 +357,6 @@ If the document includes more than one fragment, you must also provide [`fragmen
 <td>
 
 ###### `fragmentName`
-</td>
-<td>
-
 `String`
 </td>
 <td>
@@ -408,8 +372,6 @@ You don't need to provide this value if the `fragment` document includes only on
 <td>
 
 ###### `variables`
-</td>
-<td>
 
 `Object`
 </td>
@@ -444,8 +406,7 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -456,8 +417,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `id`
-</td>
-<td>
 
 `String`
 </td>
@@ -474,8 +433,6 @@ If the cache does not contain an object with the specified ID, `writeFragment` r
 <td>
 
 ###### `fragment`
-</td>
-<td>
 
 `DocumentNode`
 </td>
@@ -492,8 +449,6 @@ If the document includes more than one fragment, you must also provide [`fragmen
 <td>
 
 ###### `data`
-</td>
-<td>
 
 `Object`
 </td>
@@ -508,8 +463,6 @@ If the document includes more than one fragment, you must also provide [`fragmen
 <td>
 
 ###### `fragmentName`
-</td>
-<td>
 
 `String`
 </td>
@@ -526,8 +479,6 @@ You don't need to provide this value if the `fragment` document includes only on
 <td>
 
 ###### `variables`
-</td>
-<td>
 
 `Object`
 </td>
@@ -542,8 +493,6 @@ A map of any GraphQL variable names and values required by `fragment`.
 <td>
 
 ###### `broadcast`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -583,8 +532,7 @@ Accepts the following parameters:
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -595,8 +543,6 @@ Accepts the following parameters:
 <td>
 
 ###### `object`
-</td>
-<td>
 
 `StoreObject` or `Reference`
 </td>
@@ -629,8 +575,7 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -641,8 +586,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `id`
-</td>
-<td>
 
 `String`
 </td>
@@ -657,8 +600,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `fields`
-</td>
-<td>
 
 `Object`
 </td>
@@ -675,8 +616,6 @@ See [Modifier function API](#modifier-function-api) below.
 <td>
 
 ###### `optimistic`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -692,8 +631,6 @@ The default value is `false`.
 <td>
 
 ###### `broadcast`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -720,8 +657,7 @@ The second parameter is a helper object that contains the following utilities:
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -732,8 +668,6 @@ The second parameter is a helper object that contains the following utilities:
 <td>
 
 ###### `fieldName`
-</td>
-<td>
 
 `String`
 </td>
@@ -748,8 +682,6 @@ The name of the field being modified.
 <td>
 
 ###### `storeFieldName`
-</td>
-<td>
 
 `String`
 </td>
@@ -764,8 +696,6 @@ The full key for the field used internally, including serialized key arguments.
 <td>
 
 ###### `readField`
-</td>
-<td>
 
 `Function`
 </td>
@@ -780,8 +710,6 @@ A helper function for reading other fields within the current object.
 <td>
 
 ###### `canRead`
-</td>
-<td>
 
 `Function`
 </td>
@@ -798,8 +726,6 @@ Useful for filtering dangling references out of lists.
 <td>
 
 ###### `isReference`
-</td>
-<td>
 
 `Function`
 </td>
@@ -814,8 +740,6 @@ A helper function that returns `true` if a particular object is a reference to a
 <td>
 
 ###### `DELETE`
-</td>
-<td>
 
 `Object`
 </td>
@@ -871,8 +795,7 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -883,8 +806,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `id`
-</td>
-<td>
 
 `String`
 </td>
@@ -899,8 +820,6 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 <td>
 
 ###### `fieldName`
-</td>
-<td>
 
 `String`
 </td>
@@ -917,8 +836,6 @@ Omit this option if you are removing the entire object.
 <td>
 
 ###### `args`
-</td>
-<td>
 
 `Record<string, any>`
 </td>
@@ -935,8 +852,6 @@ Otherwise, all instances of the field are removed for the cached object.
 <td>
 
 ###### `broadcast`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -965,8 +880,7 @@ Accepts the following parameters:
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -977,8 +891,6 @@ Accepts the following parameters:
 <td>
 
 ###### `optimistic`
-</td>
-<td>
 
 `Boolean`
 </td>
@@ -1010,8 +922,7 @@ Accepts the following parameters:
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -1022,8 +933,6 @@ Accepts the following parameters:
 <td>
 
 ###### `data`
-</td>
-<td>
 
 `NormalizedCacheObject`
 </td>
@@ -1059,8 +968,7 @@ Accepts the following parameters:
 <table class="field-table">
   <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
+      <th>Name /<br/>Type</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -1071,8 +979,6 @@ Accepts the following parameters:
 <td>
 
 ###### `value`
-</td>
-<td>
 
 Any
 </td>

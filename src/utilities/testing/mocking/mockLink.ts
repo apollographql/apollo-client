@@ -88,20 +88,23 @@ export class MockLink extends ApolloLink {
     );
 
     if (!response || typeof responseIndex === 'undefined') {
-      this.onError(new Error(
+      const replacer = (key: string, value: any) =>
+        typeof value === 'undefined' ? "undefined" : value;
+      const error = new Error(
         `No more mocked responses for the query: ${print(
           operation.query
-        )}\nExpected variables:\n\t${JSON.stringify(operation.variables)}${
+        )}\nExpected variables:\n\t${JSON.stringify(operation.variables, replacer)}${
         diffs.length > 0
           ? `\nFound ${diffs.length} mock${
           diffs.length > 1 ? "s" : ""
           } with variables:\n${diffs.map(
-            (d, i) => `\t${i + 1}: ${JSON.stringify(d)}\n`
+            (d, i) => `\t${i + 1}: ${JSON.stringify(d, replacer)}\n`
           )}`
           : ""
         }`
       )
-      );
+      console.log(error)
+      this.onError(error);
       return null;
     }
 

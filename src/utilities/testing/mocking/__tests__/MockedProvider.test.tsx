@@ -11,7 +11,7 @@ import { InMemoryCache } from '../../../../cache/inmemory/inMemoryCache';
 import { ApolloLink } from '../../../../link/core';
 
 const variables = {
-  username: 'mock_username'
+  username: 'mock_username',
 };
 
 const userWithoutTypeName = {
@@ -154,7 +154,8 @@ describe('General use', () => {
     }
 
     const variables2 = {
-      username: 'other_user'
+      username: 'mock_username',
+      age: undefined
     };
 
     const link = ApolloLink.from([errorLink, new MockLink(mocks)]);
@@ -222,7 +223,7 @@ describe('General use', () => {
           query,
           variables: {
             age: 13,
-            username: 'some_user'
+            username: 'some_user',
           }
         },
         result: { data: { user } }
@@ -231,7 +232,7 @@ describe('General use', () => {
 
     const variables2 = {
       username: 'some_user',
-      age: 13
+      age: 13,
     };
 
     render(

@@ -1645,6 +1645,104 @@ describe("InMemoryCache#modify", () => {
     expect(resultAfterModify).toEqual({ a: 1, b: -1, c: 0 });
   });
 
+  it("should allow invalidation using details.INVALIDATE", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          keyFields: ["isbn"],
+        },
+        Author: {
+          keyFields: ["name"],
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{
+      currentlyReading: {
+        title: string;
+        isbn: string;
+        author: {
+          name: string;
+        },
+      },
+    }> = gql`
+      query {
+        currentlyReading {
+          title
+          isbn
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    const currentlyReading = {
+      __typename: "Book",
+      isbn: "0374110034",
+      title: "Beowulf: A New Translation",
+      author: {
+        __typename: "Author",
+        name: "Maria Dahvana Headley",
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        currentlyReading,
+      }
+    });
+
+    function read() {
+      return cache.readQuery({ query })!;
+    }
+
+    const initialResult = read();
+
+    expect(cache.extract()).toMatchSnapshot();
+
+    expect(cache.modify({
+      id: cache.identify({
+        __typename: "Author",
+        name: "Maria Dahvana Headley",
+      }),
+      fields: {
+        name(_, { INVALIDATE }) {
+          return INVALIDATE;
+        },
+      },
+    })).toBe(false); // Nothing actually modified.
+
+    const resultAfterAuthorInvalidation = read();
+    expect(resultAfterAuthorInvalidation).not.toBe(initialResult);
+    expect(resultAfterAuthorInvalidation).toEqual(initialResult);
+
+    expect(cache.modify({
+      id: cache.identify({
+        __typename: "Book",
+        isbn: "0374110034",
+      }),
+      // Invalidate all fields of the Book entity.
+      fields(_, { INVALIDATE }) {
+        return INVALIDATE;
+      },
+    })).toBe(false); // Nothing actually modified.
+
+    const resultAfterBookInvalidation = read();
+    expect(resultAfterBookInvalidation).not.toBe(resultAfterAuthorInvalidation);
+    expect(resultAfterBookInvalidation).toEqual(resultAfterAuthorInvalidation);
+    expect(resultAfterBookInvalidation.currentlyReading.author).toEqual({
+      __typename: "Author",
+      name: "Maria Dahvana Headley",
+    });
+    expect(
+      resultAfterBookInvalidation.currentlyReading.author
+    ).toBe(
+      resultAfterAuthorInvalidation.currentlyReading.author
+    );
+  });
+
   it("should allow deletion using details.DELETE", () => {
     const cache = new InMemoryCache({
       typePolicies: {

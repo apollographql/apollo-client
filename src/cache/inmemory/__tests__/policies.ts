@@ -2,12 +2,13 @@ import gql from "graphql-tag";
 
 import { InMemoryCache } from "../inMemoryCache";
 import { ReactiveVar, makeVar } from "../reactiveVars";
-import { Reference, StoreObject, ApolloClient, NetworkStatus } from "../../../core";
+import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { itAsync } from '../../../utilities/testing/itAsync';
+import { FieldPolicy, StorageType } from "../policies";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -736,8 +737,8 @@ describe("type policies", function () {
       });
     });
 
-    it("can use stable storage in read functions", function () {
-      const storageSet = new Set<Record<string, any> | null>();
+    it("can use options.storage in read functions", function () {
+      const storageSet = new Set<Record<string, any>>();
 
       const cache = new InMemoryCache({
         typePolicies: {
@@ -745,8 +746,8 @@ describe("type policies", function () {
             fields: {
               result(existing, { args, storage }) {
                 storageSet.add(storage);
-                if (storage?.result) return storage.result;
-                return storage!.result = compute();
+                if (storage.result) return storage.result;
+                return storage.result = compute();
               },
             },
           },
@@ -840,9 +841,7 @@ describe("type policies", function () {
 
       // Clear the cached results.
       storageSet.forEach(storage => {
-        if (storage) {
-          delete storage.result;
-        }
+        delete storage.result;
       });
 
       const result3 = cache.readQuery({
@@ -965,16 +964,16 @@ describe("type policies", function () {
             fields: {
               result: {
                 read(_, { storage }) {
-                  if (!storage!.jobName) {
-                    storage!.jobName = makeVar(undefined);
+                  if (!storage.jobName) {
+                    storage.jobName = makeVar(undefined);
                   }
-                  return storage!.jobName();
+                  return storage.jobName();
                 },
                 merge(_, incoming: string, { storage }) {
-                  if (storage!.jobName) {
-                    storage!.jobName(incoming);
+                  if (storage.jobName) {
+                    storage.jobName(incoming);
                   } else {
-                    storage!.jobName = makeVar(incoming);
+                    storage.jobName = makeVar(incoming);
                   }
                 },
               },
@@ -1227,6 +1226,157 @@ describe("type policies", function () {
           result: "result for job 4",
         }],
       });
+    });
+
+    it("read, merge, and modify functions can access options.storage", function () {
+      const storageByFieldName = new Map<string, StorageType>();
+
+      function recordStorageOnce(fieldName: string, storage: StorageType) {
+        if (storageByFieldName.has(fieldName)) {
+          expect(storageByFieldName.get(fieldName)).toBe(storage);
+        } else {
+          storageByFieldName.set(fieldName, storage);
+        }
+      }
+
+      function makeFieldPolicy(): FieldPolicy<number> {
+        return {
+          read(existing = 0, { fieldName, storage }) {
+            storage.readCount = (storage.readCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return existing;
+          },
+          merge(existing = 0, incoming, { fieldName, storage }) {
+            storage.mergeCount = (storage.mergeCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return existing + incoming;
+          },
+        };
+      };
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              mergeRead: makeFieldPolicy(),
+              mergeModify: makeFieldPolicy(),
+              mergeReadModify: makeFieldPolicy(),
+            },
+          },
+        },
+      });
+
+      const query: TypedDocumentNode<{
+        mergeRead: number;
+        mergeModify: number;
+        mergeReadModify: number;
+      }> = gql`
+        query {
+          mergeRead
+          mergeModify
+          mergeReadModify
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          mergeRead: 1,
+          mergeModify: 10,
+          mergeReadModify: 100,
+        },
+      });
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(cache.readQuery({
+        query: gql`query { mergeRead mergeReadModify }`,
+      })).toEqual({
+        mergeRead: 1,
+        mergeReadModify: 100,
+      });
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+      });
+
+      expect(cache.modify({
+        fields: {
+          mergeModify(value, { fieldName, storage }) {
+            storage.modifyCount = (storage.modifyCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return value + 1;
+          },
+          mergeReadModify(value, { fieldName, storage }) {
+            storage.modifyCount = (storage.modifyCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return value + 1;
+          },
+        },
+      })).toBe(true);
+
+      expect(cache.extract()).toMatchSnapshot();
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+        modifyCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+        modifyCount: 1,
+      });
+
+      expect(cache.readQuery({ query })).toEqual({
+        mergeRead: 1,
+        mergeModify: 11,
+        mergeReadModify: 101,
+      });
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+        readCount: 2,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+        modifyCount: 1,
+        readCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+        readCount: 2,
+        modifyCount: 1,
+      });
+
+      expect(cache.extract()).toMatchSnapshot();
     });
 
     it("merge functions can deduplicate items using readField", function () {

@@ -316,6 +316,36 @@ cache.modify({
 });
 ```
 
+### Example: Invalidating fields within a cached object
+
+Normally, changing or deleting a field's value also _invalidates_ the field, causing watched queries to be reread if they previously consumed the field.
+
+Using `cache.modify`, it's also possible to invalidate the field without changing or deleting its value, by returning the `INVALIDATE` sentinel:
+
+```js
+cache.modify({
+  id: cache.identify(myPost),
+  fields: {
+    comments(existingCommentRefs, { INVALIDATE }) {
+      return INVALIDATE;
+    },
+  },
+});
+```
+
+If you need to invalidate all fields within the given object, you can pass a modifier function as the value of the `fields` option:
+
+```js
+cache.modify({
+  id: cache.identify(myPost),
+  fields(fieldValue, details) {
+    return details.INVALIDATE;
+  },
+});
+```
+
+When using this form of `cache.modify`, you can determine the individual field names using `details.fieldName`. This technique works for any modifier function, not just those that return `INVALIDATE`.
+
 ## Obtaining an object's custom ID
 
 If a type in your cache uses a [custom identifier](./cache-configuration/#customizing-identifier-generation-by-type) (or even if it doesn't), you can use the `cache.identify` method to obtain the identifier for an object of that type. This method takes an object and computes its ID based on both its `__typename` and its identifier field(s). This means you don't have to keep track of which fields make up each type's identifier.

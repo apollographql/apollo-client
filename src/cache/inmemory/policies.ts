@@ -528,8 +528,6 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  private storageTrie = new KeyTrie<StorageType>(true);
-
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
     context: ReadMergeModifyContext,
@@ -557,7 +555,7 @@ export class Policies {
         objectOrReference,
         options,
         context,
-        this.storageTrie.lookup(
+        context.store.getStorage(
           isReference(objectOrReference)
             ? objectOrReference.__ref
             : objectOrReference,
@@ -618,7 +616,7 @@ export class Policies {
           variables: context.variables },
         context,
         storageKeys
-          ? this.storageTrie.lookupArray(storageKeys)
+          ? context.store.getStorage(...storageKeys)
           : Object.create(null),
       )) as T;
     }

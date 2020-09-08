@@ -13,7 +13,7 @@ import {
 } from '../../utilities';
 import { NormalizedCache, NormalizedCacheObject } from './types';
 import { hasOwn, fieldNameFromStoreName } from './helpers';
-import { Policies } from './policies';
+import { Policies, StorageType } from './policies';
 import { Cache } from '../core/types/Cache';
 import {
   SafeReadonly,
@@ -158,8 +158,7 @@ export abstract class EntityStore implements NormalizedCache {
               ...sharedDetails,
               fieldName,
               storeFieldName,
-              storage: this.policies["storageTrie"]
-                .lookup(dataId, storeFieldName),
+              storage: this.getStorage(dataId, storeFieldName),
             });
           if (newValue === INVALIDATE) {
             this.group.dirty(dataId, storeFieldName);
@@ -256,6 +255,11 @@ export abstract class EntityStore implements NormalizedCache {
       });
     }
   }
+
+  public abstract getStorage(
+    idOrObj: string | StoreObject,
+    storeFieldName: string,
+  ): StorageType;
 
   // Maps root entity IDs to the number of times they have been retained, minus
   // the number of times they have been released. Retained entities keep other
@@ -476,6 +480,14 @@ export namespace EntityStore {
       // Never remove the root layer.
       return this;
     }
+
+    public readonly storageTrie = new KeyTrie<StorageType>(canUseWeakMap);
+    public getStorage(
+      idOrObj: string | StoreObject,
+      storeFieldName: string,
+    ): StorageType {
+      return this.storageTrie.lookup(idOrObj, storeFieldName);
+    }
   }
 }
 
@@ -539,6 +551,13 @@ class Layer extends EntityStore {
       ...fromParent,
       ...super.findChildRefIds(dataId),
     } : fromParent;
+  }
+
+  public getStorage(
+    idOrObj: string | StoreObject,
+    storeFieldName: string,
+  ): StorageType {
+    return this.parent.getStorage(idOrObj, storeFieldName);
   }
 }
 

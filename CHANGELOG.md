@@ -27,6 +27,12 @@
 - Throw if `writeFragment` cannot identify `options.data` when no `options.id` provided. <br/>
   [@jcreighton](https://github.com/jcreighton) in [#6859](https://github.com/apollographql/apollo-client/pull/6859)
 
+- Provide `options.storage` object to `cache.modify` functions, as provided to `read` and `merge` functions. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6991](https://github.com/apollographql/apollo-client/pull/6991)
+
+- Allow `cache.modify` functions to return `details.INVALIDATE` (similar to `details.DELETE`) to invalidate the current field, causing affected queries to rerun, even if the field's value is unchanged. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6991](https://github.com/apollographql/apollo-client/pull/6991)
+
 ## Apollo Client 3.1.4
 
 ## Bug Fixes

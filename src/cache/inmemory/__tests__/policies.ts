@@ -736,8 +736,8 @@ describe("type policies", function () {
       });
     });
 
-    it("can use stable storage in read functions", function () {
-      const storageSet = new Set<Record<string, any> | null>();
+    it("can use options.storage in read functions", function () {
+      const storageSet = new Set<Record<string, any>>();
 
       const cache = new InMemoryCache({
         typePolicies: {
@@ -745,8 +745,8 @@ describe("type policies", function () {
             fields: {
               result(existing, { args, storage }) {
                 storageSet.add(storage);
-                if (storage?.result) return storage.result;
-                return storage!.result = compute();
+                if (storage.result) return storage.result;
+                return storage.result = compute();
               },
             },
           },
@@ -840,9 +840,7 @@ describe("type policies", function () {
 
       // Clear the cached results.
       storageSet.forEach(storage => {
-        if (storage) {
-          delete storage.result;
-        }
+        delete storage.result;
       });
 
       const result3 = cache.readQuery({
@@ -965,16 +963,16 @@ describe("type policies", function () {
             fields: {
               result: {
                 read(_, { storage }) {
-                  if (!storage!.jobName) {
-                    storage!.jobName = makeVar(undefined);
+                  if (!storage.jobName) {
+                    storage.jobName = makeVar(undefined);
                   }
-                  return storage!.jobName();
+                  return storage.jobName();
                 },
                 merge(_, incoming: string, { storage }) {
-                  if (storage!.jobName) {
-                    storage!.jobName(incoming);
+                  if (storage.jobName) {
+                    storage.jobName(incoming);
                   } else {
-                    storage!.jobName = makeVar(incoming);
+                    storage.jobName = makeVar(incoming);
                   }
                 },
               },

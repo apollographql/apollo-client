@@ -138,7 +138,7 @@ export interface FieldFunctionOptions<
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
-  storage: StorageType | null;
+  storage: StorageType;
 
   cache: InMemoryCache;
 
@@ -598,17 +598,6 @@ export class Policies {
       const { merge } = this.getFieldPolicy(
         incoming.__typename, fieldName, false)!;
 
-      // If storage ends up null, that just means no options.storage object
-      // has ever been created for a read function for this field before, so
-      // there's nothing this merge function could do with options.storage
-      // that would help the read function do its work. Most merge functions
-      // will never need to worry about options.storage, but if you're reading
-      // this comment then you probably have good reasons for wanting to know
-      // esoteric details like these, you wizard, you.
-      const storage = storageKeys
-        ? this.storageTrie.lookupArray(storageKeys)
-        : null;
-
       incoming = merge!(existing, incoming.__value, makeFieldFunctionOptions(
         this,
         // Unlike options.readField for read functions, we do not fall
@@ -628,7 +617,9 @@ export class Policies {
           field,
           variables: context.variables },
         context,
-        storage,
+        storageKeys
+          ? this.storageTrie.lookupArray(storageKeys)
+          : Object.create(null),
       )) as T;
     }
 
@@ -695,7 +686,7 @@ function makeFieldFunctionOptions(
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
   context: ReadMergeModifyContext,
-  storage: StorageType | null,
+  storage: StorageType,
 ): FieldFunctionOptions {
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);

@@ -78,6 +78,11 @@ Include a `keyFields` field in relevant `TypePolicy` objects, like so:
 ```ts
 const cache = new InMemoryCache({
   typePolicies: {
+    AllProducts: {
+      // Singleton types that have no identifying field can use an empty
+      // array for their keyFields.
+      keyFields: [],
+    },
     Product: {
       // In most inventory management systems, a single UPC code uniquely
       // identifies any product.

@@ -133,10 +133,6 @@ export class ObservableQuery<
       networkStatus,
     };
 
-    if (this.lastError) {
-      result.error = this.lastError;
-    }
-
     if (this.isTornDown) {
       return result;
     }
@@ -617,6 +613,7 @@ once, rather than every time you call fetchMore.`);
       // must mirror the updates that occur in QueryStore.markQueryError here
       this.updateLastResult({
         ...this.lastResult,
+        error,
         errors: error.graphQLErrors,
         networkStatus: NetworkStatus.error,
         loading: false,

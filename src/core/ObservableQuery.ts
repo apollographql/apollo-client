@@ -126,10 +126,15 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
-    const { lastResult, lastError } = this;
-    const networkStatus = this.queryInfo.networkStatus || NetworkStatus.ready;
+    const { lastResult } = this;
+
+    const networkStatus =
+      this.queryInfo.networkStatus ||
+      (lastResult && lastResult.networkStatus) ||
+      NetworkStatus.ready;
+
     const result: ApolloQueryResult<TData> = {
-      ...(lastError ? { error: lastError } : lastResult),
+      ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     };
@@ -612,6 +617,7 @@ once, rather than every time you call fetchMore.`);
       // must mirror the updates that occur in QueryStore.markQueryError here
       this.updateLastResult({
         ...this.lastResult,
+        error,
         errors: error.graphQLErrors,
         networkStatus: NetworkStatus.error,
         loading: false,

@@ -19,7 +19,7 @@ export type PureQueryOptions = {
 };
 
 export type ApolloQueryResult<T> = {
-  data?: T;
+  data: T;
   errors?: ReadonlyArray<GraphQLError>;
   error?: ApolloError;
   loading: boolean;

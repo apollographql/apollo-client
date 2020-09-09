@@ -766,6 +766,71 @@ Object {
 }
 `;
 
+exports[`type policies field policies can handle Relay-style pagination without args 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__typename": "TodoEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+          "node": Object {
+            "__ref": "Todo:1",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1292,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination without args 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__typename": "TodoEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+          "node": Object {
+            "__ref": "Todo:1",
+          },
+        },
+      ],
+      "extraMetaData": "extra",
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1293,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+}
+`;
+
 exports[`type policies field policies read, merge, and modify functions can access options.storage 1`] = `
 Object {
   "ROOT_QUERY": Object {

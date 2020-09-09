@@ -33,6 +33,18 @@
 - Allow `cache.modify` functions to return `details.INVALIDATE` (similar to `details.DELETE`) to invalidate the current field, causing affected queries to rerun, even if the field's value is unchanged. <br/>
   [@benjamn](https://github.com/benjamn) in [#6991](https://github.com/apollographql/apollo-client/pull/6991)
 
+## Apollo Client 3.1.5
+
+## Bug Fixes
+
+- Make `ApolloQueryResult.data` field non-optional again. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6997](https://github.com/apollographql/apollo-client/pull/6997)
+
+## Improvements
+
+- Allow querying `Connection` metadata without `args` in `relayStylePagination`. <br/>
+  [@anark](https://github.com/anark) in [#6935](https://github.com/apollographql/apollo-client/pull/6935)
+
 ## Apollo Client 3.1.4
 
 ## Bug Fixes

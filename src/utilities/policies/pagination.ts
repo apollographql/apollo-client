@@ -79,8 +79,8 @@ export function relayStylePagination<TNode = Reference>(
     },
 
     merge(existing = makeEmptyData(), incoming, { args }) {
-      const incomingEdges = incoming.edges?.slice(0);
-      if (incoming.pageInfo && incomingEdges) {
+      const incomingEdges = incoming.edges ? incoming.edges.slice(0) : [];
+      if (incoming.pageInfo) {
         updateCursor(incomingEdges, 0, incoming.pageInfo.startCursor);
         updateCursor(incomingEdges, -1, incoming.pageInfo.endCursor);
       }
@@ -88,27 +88,26 @@ export function relayStylePagination<TNode = Reference>(
       let prefix = existing.edges;
       let suffix: typeof prefix = [];
 
-      if (args?.after) {
+      if (args && args.after) {
         const index = prefix.findIndex(edge => edge.cursor === args.after);
         if (index >= 0) {
           prefix = prefix.slice(0, index + 1);
           // suffix = []; // already true
         }
-      } else if (args?.before) {
+      } else if (args && args.before) {
         const index = prefix.findIndex(edge => edge.cursor === args.before);
         suffix = index < 0 ? prefix : prefix.slice(index);
         prefix = [];
-      } else {
+      } else if (incoming.edges) {
         // If we have neither args.after nor args.before, the incoming
         // edges cannot be spliced into the existing edges, so they must
         // replace the existing edges. See #6592 for a motivating example.
-        if(incomingEdges)
-          prefix = [];
+        prefix = [];
       }
 
       const edges = [
         ...prefix,
-        ...(incomingEdges || []),
+        ...incomingEdges,
         ...suffix,
       ];
 

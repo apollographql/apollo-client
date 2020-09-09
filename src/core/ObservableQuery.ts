@@ -126,9 +126,15 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(): ApolloQueryResult<TData> {
-    const networkStatus = this.queryInfo.networkStatus || NetworkStatus.ready;
+    const { lastResult } = this;
+
+    const networkStatus =
+      this.queryInfo.networkStatus ||
+      (lastResult && lastResult.networkStatus) ||
+      NetworkStatus.ready;
+
     const result: ApolloQueryResult<TData> = {
-      ...this.lastResult,
+      ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     };

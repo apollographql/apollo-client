@@ -126,13 +126,16 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(): ApolloQueryResult<TData> {
-    const { lastResult, lastError } = this;
     const networkStatus = this.queryInfo.networkStatus || NetworkStatus.ready;
     const result: ApolloQueryResult<TData> = {
-      ...(lastError ? { error: lastError } : lastResult),
+      ...this.lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     };
+
+    if (this.lastError) {
+      result.error = this.lastError;
+    }
 
     if (this.isTornDown) {
       return result;

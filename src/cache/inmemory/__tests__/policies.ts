@@ -2177,6 +2177,182 @@ describe("type policies", function () {
       });
     });
 
+    itAsync("can handle Relay-style pagination without args", (resolve, reject) => {
+      const cache = new InMemoryCache({
+        addTypename: false,
+        typePolicies: {
+          Query: {
+            fields: {
+              todos: relayStylePagination(),
+            },
+          },
+        },
+      });
+
+      const firstQuery = gql`
+        query TodoQuery {
+          todos {
+            totalCount
+          }
+        }
+      `
+
+      const secondQuery = gql`
+        query TodoQuery {
+          todos(after: $after, first: $first) {
+            pageInfo {
+              __typename
+              hasNextPage
+              endCursor
+            }
+            totalCount
+            edges {
+              __typename
+              node {
+                __typename
+                id
+                title
+              }
+            }
+          }
+        }
+      `
+
+      const thirdQuery = gql`
+        query TodoQuery {
+          todos {
+            totalCount
+            extraMetaData
+          }
+        }
+      `
+
+      const secondVariables = {
+        first: 1,
+      };
+
+      const secondEdges = [
+        {
+          __typename: "TodoEdge",
+          node: {
+            __typename: "Todo",
+            id: '1',
+            title: 'Fix the tests'
+          }
+        },
+      ];
+
+      const secondPageInfo = {
+        __typename: "PageInfo",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
+        hasNextPage: true,
+      };
+
+      const link = new MockLink([
+        {
+          request: {
+            query: firstQuery,
+          },
+          result: {
+            data: {
+              todos: {
+                totalCount: 1292
+              }
+            }
+          }
+        },
+        {
+          request: {
+            query: secondQuery,
+            variables: secondVariables,
+          },
+          result: {
+            data: {
+              todos: {
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
+                totalCount: 1292,
+              }
+            }
+          },
+        },
+        {
+          request: {
+            query: thirdQuery,
+          },
+          result: {
+            data: {
+              todos: {
+                totalCount: 1293,
+                extraMetaData: 'extra',
+              }
+            }
+          },
+        }
+      ]).setOnError(reject);
+
+      const client = new ApolloClient({ link, cache });
+
+      client.query({query: firstQuery}).then(result => {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            todos: {
+              totalCount: 1292
+            }
+          }
+        })
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            todos: {
+              edges: [],
+              pageInfo: {
+                "endCursor": "",
+                "hasNextPage": true,
+                "hasPreviousPage": false,
+                "startCursor": "",
+               },
+               totalCount: 1292
+             },
+          }
+        });
+
+        client.query({query: secondQuery, variables: secondVariables}).then(result => {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              todos: {
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
+                totalCount: 1292,
+              }
+            }
+          })
+
+          expect(cache.extract()).toMatchSnapshot()
+
+          client.query({query: thirdQuery}).then(result => {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                todos: {
+                  totalCount: 1293,
+                  extraMetaData: 'extra',
+                }
+              }
+            })
+            expect(cache.extract()).toMatchSnapshot()
+            resolve()
+          })
+        })
+      })
+    })
+
     itAsync("can handle Relay-style pagination", (resolve, reject) => {
       const cache = new InMemoryCache({
         addTypename: false,

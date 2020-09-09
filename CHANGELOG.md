@@ -1,3 +1,10 @@
+## Apollo Client 3.1.5
+
+## Bug Fixes
+
+- Make `ApolloQueryResult.data` field non-optional again. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6997](https://github.com/apollographql/apollo-client/pull/6997)
+
 ## Apollo Client 3.1.4
 
 ## Bug Fixes

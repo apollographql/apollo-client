@@ -2,7 +2,7 @@
 
 | Property | Type | Description |
 | - | - | - |
-| `mutate` | (options?: MutationOptions) => Promise&lt;FetchResult&gt; | A function to trigger a mutation from your UI. You can optionally pass `variables`, `optimisticResponse`, `refetchQueries`, and `update` in as options, which will override options/props passed to `useMutation` / `Mutation`. The function returns a promise that fulfills with your mutation result. |
+| `mutate` | (options?: MutationOptions) => Promise&lt;FetchResult&gt; | A function to trigger a mutation from your UI. You can optionally pass `awaitRefetchQueries`, `context`, `fetchPolicy`, `optimisticResponse`, `refetchQueries`, `update`, and `variables` in as options, which will override options/props passed to `useMutation` / `Mutation`. The function returns a promise that fulfills with your mutation result. |
 
 **Mutation result:**
 

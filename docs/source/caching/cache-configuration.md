@@ -80,7 +80,7 @@ const cache = new InMemoryCache({
   typePolicies: {
     AllProducts: {
       // Singleton types that have no identifying field can use an empty
-      // array for their keyFields
+      // array for their keyFields.
       keyFields: [],
     },
     Product: {

@@ -5,6 +5,11 @@
 - Make `ApolloQueryResult.data` field non-optional again. <br/>
   [@benjamn](https://github.com/benjamn) in [#6997](https://github.com/apollographql/apollo-client/pull/6997)
 
+## Improvements
+
+- Allow querying `Connection` metadata without `args` in `relayStylePagination`. <br/>
+  [@anark](https://github.com/anark) in [#6935](https://github.com/apollographql/apollo-client/pull/6935)
+
 ## Apollo Client 3.1.4
 
 ## Bug Fixes

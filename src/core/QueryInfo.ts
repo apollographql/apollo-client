@@ -2,7 +2,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
-import { WatchQueryOptions } from './watchQueryOptions';
+import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { QueryListener } from './types';
 import { FetchResult } from '../link/core';
@@ -288,15 +288,7 @@ export class QueryInfo {
       this.diff = { result: result.data, complete: true };
 
     } else if (allowCacheWrite) {
-      const ignoreErrors =
-        options.errorPolicy === 'ignore' ||
-        options.errorPolicy === 'all';
-      let writeWithErrors = !graphQLResultHasError(result);
-      if (!writeWithErrors && ignoreErrors && result.data) {
-        writeWithErrors = true;
-      }
-
-      if (writeWithErrors) {
+      if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
         // of writeQuery, so we can store the new diff quietly and ignore
@@ -404,4 +396,18 @@ export class QueryInfo {
 
     return error;
   }
+}
+
+export function shouldWriteResult<T>(
+  result: FetchResult<T>,
+  errorPolicy: ErrorPolicy = "none",
+) {
+  const ignoreErrors =
+    errorPolicy === "ignore" ||
+    errorPolicy === "all";
+  let writeWithErrors = !graphQLResultHasError(result);
+  if (!writeWithErrors && ignoreErrors && result.data) {
+    writeWithErrors = true;
+  }
+  return writeWithErrors;
 }

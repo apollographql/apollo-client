@@ -39,7 +39,7 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 
-import { QueryInfo, QueryStoreValue } from './QueryInfo';
+import { QueryInfo, QueryStoreValue, shouldWriteResult } from './QueryInfo';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -192,6 +192,7 @@ export class QueryManager<TStore> {
             result: { data: optimistic },
             document: mutation,
             variables: variables,
+            errorPolicy,
             queryUpdatersById: generateUpdateQueriesInfo(),
             update: updateWithProxyFn,
           }, cache);
@@ -235,6 +236,7 @@ export class QueryManager<TStore> {
                 result,
                 document: mutation,
                 variables,
+                errorPolicy,
                 queryUpdatersById: generateUpdateQueriesInfo(),
                 update: updateWithProxyFn,
               }, self.cache);
@@ -588,6 +590,7 @@ export class QueryManager<TStore> {
   public startGraphQLSubscription<T = any>({
     query,
     fetchPolicy,
+    errorPolicy,
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
@@ -601,10 +604,10 @@ export class QueryManager<TStore> {
         variables,
         false,
       ).map(result => {
-        if (!fetchPolicy || fetchPolicy !== 'no-cache') {
+        if (fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.
           // XXX I don't think we ever send in an object with errors, but we might in the future...
-          if (!graphQLResultHasError(result)) {
+          if (shouldWriteResult(result, errorPolicy)) {
             this.cache.write({
               query,
               result: result.data,
@@ -1078,6 +1081,7 @@ function markMutationResult<TStore, TData>(
     result: FetchResult<TData>;
     document: DocumentNode;
     variables: any;
+    errorPolicy: ErrorPolicy;
     queryUpdatersById: Record<string, QueryWithUpdater>;
     update:
       ((cache: ApolloCache<TStore>, mutationResult: Object) => void) |
@@ -1086,7 +1090,7 @@ function markMutationResult<TStore, TData>(
   cache: ApolloCache<TStore>,
 ) {
   // Incorporate the result from this mutation into the store
-  if (!graphQLResultHasError(mutation.result)) {
+  if (shouldWriteResult(mutation.result, mutation.errorPolicy)) {
     const cacheWrites: Cache.WriteOptions[] = [{
       result: mutation.result.data,
       dataId: 'ROOT_MUTATION',

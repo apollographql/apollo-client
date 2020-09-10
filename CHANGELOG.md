@@ -10,6 +10,9 @@
 - Substantially improve type inference for data and variables types using `TypedDocumentNode<Data, Variables>` type instead of `DocumentNode`. <br/>
   [@dotansimha](https://github.com/dotansimha) in [#6720](https://github.com/apollographql/apollo-client/pull/6720)
 
+- Bring back an improved form of heuristic fragment matching, by allowing `possibleTypes` to specify subtype regular expression strings, which count as matches if the written result object has all the fields expected for the fragment. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6901](https://github.com/apollographql/apollo-client/pull/6901)
+
 - Allow `options.nextFetchPolicy` to be a function that takes the current `FetchPolicy` and returns a new (or the same) `FetchPolicy`, making `nextFetchPolicy` more suitable for global use in `defaultOptions.watchQuery`. <br/>
   [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
 

@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`policies.fragmentMatches can infer fuzzy subtypes heuristically 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "objects": Array [
+      Object {
+        "__typename": "E",
+        "c": "ce",
+      },
+      Object {
+        "__typename": "F",
+        "c": "cf",
+      },
+      Object {
+        "__typename": "G",
+        "c": "cg",
+      },
+      Object {
+        "__typename": "TooLong",
+      },
+      Object {
+        "__typename": "H",
+      },
+    ],
+  },
+}
+`;

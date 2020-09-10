@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { ApolloClient, NetworkStatus } from '../../core';
 import { ApolloLink } from '../../link/core';
 import { InMemoryCache } from '../../cache';
+import { Observable } from '../../utilities';
 import {
   stripSymbols,
   subscribeAndCount,
@@ -434,6 +435,62 @@ describe('cache-first', () => {
         setTimeout(resolve, 100);
       } else {
         reject(new Error("unreached"));
+      }
+    });
+  });
+});
+
+describe('cache-only', () => {
+  itAsync('allows explicit refetch to happen', (resolve, reject) => {
+    let counter = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache,
+      link: new ApolloLink(operation => new Observable(observer => {
+        observer.next({
+          data: {
+            count: ++counter,
+          },
+        });
+        observer.complete();
+      })),
+    });
+
+    const query = gql`query { counter }`;
+
+    const observable = client.watchQuery({
+      query,
+      nextFetchPolicy: 'cache-only',
+    });
+
+    subscribeAndCount(reject, observable, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            count: 1,
+          },
+        });
+
+        expect(observable.options.fetchPolicy).toBe('cache-only');
+
+        observable.refetch().catch(reject);
+
+      } else if (count === 2) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            count: 2,
+          },
+        });
+
+        expect(observable.options.fetchPolicy).toBe('cache-only');
+
+        setTimeout(resolve, 50);
+
+      } else {
+        reject(`too many results (${count})`);
       }
     });
   });

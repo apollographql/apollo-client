@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -223,14 +223,6 @@ export class ObservableQuery<
    * the previous values of those variables will be used.
    */
   public refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>> {
-    let { fetchPolicy } = this.options;
-    // early return if trying to read from cache during refetch
-    if (fetchPolicy === 'cache-only') {
-      return Promise.reject(new InvariantError(
-        'cache-only fetchPolicy option should not be used together with query refetch.',
-      ));
-    }
-
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -239,6 +231,7 @@ export class ObservableQuery<
     // Unless the provided fetchPolicy always consults the network
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
+    const { fetchPolicy } = this.options;
     if (fetchPolicy !== 'no-cache' &&
         fetchPolicy !== 'cache-and-network') {
       reobserveOptions.fetchPolicy = 'network-only';

@@ -79,9 +79,12 @@ function operationIsQuery(operation: Operation) {
 }
 
 const { hasOwnProperty } = Object.prototype;
-const hashesKeyString = '__createPersistedQueryLink_hashes';
-const hashesKey =
-  typeof Symbol === 'function' ? Symbol.for(hashesKeyString) : hashesKeyString;
+
+const hashesByQuery = new WeakMap<
+  DocumentNode,
+  Record<string, Promise<string>>
+>();
+
 let nextHashesChildKey = 0;
 
 export const createPersistedQueryLink = (
@@ -130,13 +133,8 @@ export const createPersistedQueryLink = (
       // what to do with the bogus query.
       return getHashPromise(query);
     }
-    if (!hasOwnProperty.call(query, hashesKey)) {
-      Object.defineProperty(query, hashesKey, {
-        value: Object.create(null),
-        enumerable: false,
-      });
-    }
-    const hashes = (query as any)[hashesKey];
+    let hashes = hashesByQuery.get(query)!;
+    if (!hashes) hashesByQuery.set(query, hashes = Object.create(null));
     return hasOwnProperty.call(hashes, hashesChildKey)
       ? hashes[hashesChildKey]
       : hashes[hashesChildKey] = getHashPromise(query);

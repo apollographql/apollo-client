@@ -170,6 +170,11 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
   fetchPolicy?: FetchPolicy;
 
   /**
+   * Specifies the {@link ErrorPolicy} to be used for this operation
+   */
+  errorPolicy?: ErrorPolicy;
+
+  /**
    * Context object to be passed through the link execution chain.
    */
   context?: Record<string, any>;

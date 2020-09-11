@@ -1,4 +1,4 @@
-import Observable from 'zen-observable';
+import * as Observable from 'zen-observable';
 
 // This simplified polyfill attempts to follow the ECMAScript Observable
 // proposal (https://github.com/zenparsing/es-observable)

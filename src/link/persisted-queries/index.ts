@@ -19,8 +19,8 @@ export interface ErrorResponse {
   operation: Operation;
 }
 
-type SHA256Function = (...args: any[]) => string | Promise<string>;
-type GenerateHashFunction = (document: DocumentNode) => Promise<string>;
+type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
+type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
 namespace PersistedQueryLink {
   interface BaseOptions {
@@ -119,12 +119,16 @@ export const createPersistedQueryLink = (
   let supportsPersistedQueries = true;
 
   const hashesChildKey = 'forLink' + nextHashesChildKey++;
+
+  const getHashPromise = (query: DocumentNode) =>
+    new Promise<string>(resolve => resolve(generateHash(query)));
+
   function getQueryHash(query: DocumentNode): Promise<string> {
     if (!query || typeof query !== 'object') {
       // If the query is not an object, we won't be able to store its hash as
       // a property of query[hashesKey], so we let generateHash(query) decide
       // what to do with the bogus query.
-      return generateHash(query);
+      return getHashPromise(query);
     }
     if (!hasOwnProperty.call(query, hashesKey)) {
       Object.defineProperty(query, hashesKey, {
@@ -135,7 +139,7 @@ export const createPersistedQueryLink = (
     const hashes = (query as any)[hashesKey];
     return hasOwnProperty.call(hashes, hashesChildKey)
       ? hashes[hashesChildKey]
-      : (hashes[hashesChildKey] = generateHash(query));
+      : hashes[hashesChildKey] = getHashPromise(query);
   }
 
   return new ApolloLink((operation, forward) => {

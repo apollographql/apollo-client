@@ -1,6 +1,5 @@
 import { print } from 'graphql/language/printer';
 import {
-  DefinitionNode,
   DocumentNode,
   ExecutionResult,
   GraphQLError,
@@ -69,13 +68,9 @@ const defaultOptions = {
   useGETForHashedQueries: false,
 };
 
-function definitionIsMutation(d: DefinitionNode) {
-  return d.kind === 'OperationDefinition' && d.operation === 'mutation';
-}
-
-// Note that this also returns true for subscriptions.
-function operationIsQuery(operation: Operation) {
-  return !operation.query.definitions.some(definitionIsMutation);
+function operationDefinesMutation(operation: Operation) {
+  return operation.query.definitions.some(
+    d => d.kind === 'OperationDefinition' && d.operation === 'mutation');
 }
 
 const { hasOwnProperty } = Object.prototype;
@@ -226,7 +221,7 @@ export const createPersistedQueryLink = (
       if (
         useGETForHashedQueries &&
         supportsPersistedQueries &&
-        operationIsQuery(operation)
+        !operationDefinesMutation(operation)
       ) {
         operation.setContext(
           ({ fetchOptions = {} }: { fetchOptions: Record<string, any> }) => {

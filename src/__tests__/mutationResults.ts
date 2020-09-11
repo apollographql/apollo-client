@@ -1,5 +1,6 @@
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
+import { GraphQLError } from 'graphql';
 
 import { ApolloClient } from '../core';
 import { InMemoryCache } from '../cache';
@@ -304,6 +305,99 @@ describe('mutation results', () => {
       },
       error: reject,
     });
+  });
+
+  itAsync("should write results to cache according to errorPolicy", async (resolve, reject) => {
+    const expectedFakeError = new GraphQLError("expected/fake error");
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Person: {
+            keyFields: ["name"],
+          },
+        },
+      }),
+
+      link: new ApolloLink(operation => new Observable(observer => {
+        observer.next({
+          errors: [
+            expectedFakeError,
+          ],
+          data: {
+            newPerson: {
+              __typename: "Person",
+              name: operation.variables.newName,
+            },
+          },
+        });
+        observer.complete();
+      })).setOnError(reject),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await client.mutate({
+      mutation,
+      variables: {
+        newName: "Hugh Willson",
+      },
+    }).then(() => {
+      reject("should have thrown for default errorPolicy");
+    }, error => {
+      expect(error.message).toBe(expectedFakeError.message);
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    const ignoreErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "ignore",
+      variables: {
+        newName: "Jenn Creighton",
+      },
+    });
+
+    expect(ignoreErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Jenn Creighton",
+        },
+      },
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    const allErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "all",
+      variables: {
+        newName: "Ellen Shapiro",
+      },
+    });
+
+    expect(allErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Ellen Shapiro",
+        },
+      },
+      errors: [
+        expectedFakeError,
+      ],
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    resolve();
   });
 
   itAsync("should warn when the result fields don't match the query fields", (resolve, reject) => {

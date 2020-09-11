@@ -8,7 +8,7 @@ import {
 import { invariant } from 'ts-invariant';
 
 import { ApolloLink, Operation } from '../core';
-import { Observable, Observer } from '../../utilities';
+import { Observable, Observer, compact } from '../../utilities';
 
 export const VERSION = 1;
 
@@ -78,26 +78,6 @@ function operationIsQuery(operation: Operation) {
   return !operation.query.definitions.some(definitionIsMutation);
 }
 
-// Ensure a SHA-256 hash function is provided, if a custom hash generation
-// function is not provided. We don't supply a SHA-256 hash function by
-// default, to avoid forcing one as a dependency. Developers should pick the
-// most appropriate SHA-256 function (sync or async) for their
-// needs/environment, or provide a fully custom hash generation function
-// (via the `generateHash` option) if they want to handle hashing with
-// something other than SHA-256.
-function verifyHashFunction(
-  sha256?: SHA256Function,
-  generateHash?: GenerateHashFunction
-) {
-  invariant(
-    (sha256 && typeof sha256 === 'function') ||
-    (generateHash && typeof generateHash === 'function'),
-    'Missing/invalid "sha256" or "generateHash" function. Please ' +
-    'configure one using the "createPersistedQueryLink(options)" options ' +
-    'parameter. '
-  );
-}
-
 const { hasOwnProperty } = Object.prototype;
 const hashesKeyString = '__createPersistedQueryLink_hashes';
 const hashesKey =
@@ -107,23 +87,34 @@ let nextHashesChildKey = 0;
 export const createPersistedQueryLink = (
   options: PersistedQueryLink.Options,
 ) => {
+  // Ensure a SHA-256 hash function is provided, if a custom hash
+  // generation function is not provided. We don't supply a SHA-256 hash
+  // function by default, to avoid forcing one as a dependency. Developers
+  // should pick the most appropriate SHA-256 function (sync or async) for
+  // their needs/environment, or provide a fully custom hash generation
+  // function (via the `generateHash` option) if they want to handle
+  // hashing with something other than SHA-256.
+  invariant(
+    options && (
+      typeof options.sha256 === 'function' ||
+      typeof options.generateHash === 'function'
+    ),
+    'Missing/invalid "sha256" or "generateHash" function. Please ' +
+      'configure one using the "createPersistedQueryLink(options)" options ' +
+      'parameter.'
+  );
+
   const {
     sha256,
-    generateHash,
+    // If both a `sha256` and `generateHash` option are provided, the
+    // `sha256` option will be ignored. Developers can configure and
+    // use any hashing approach they want in a custom `generateHash`
+    // function; they aren't limited to SHA-256.
+    generateHash = (query: DocumentNode) =>
+      Promise.resolve<string>(sha256!(print(query))),
     disable,
     useGETForHashedQueries
-  } = Object.assign({}, defaultOptions, options);
-
-  verifyHashFunction(sha256, generateHash);
-
-  // If both a `sha256` and `generateHash` option are provided, the
-  // `sha256` option will be ignored. Developers can configure and
-  // use any hashing approach they want in a custom `generateHash`
-  // function; they aren't limited to SHA-256.
-  const hash =
-    generateHash ||
-    ((query: DocumentNode): Promise<string> =>
-      Promise.resolve(sha256!(print(query))));
+  } = compact(defaultOptions, options);
 
   let supportsPersistedQueries = true;
 
@@ -133,7 +124,7 @@ export const createPersistedQueryLink = (
       // If the query is not an object, we won't be able to store its hash as
       // a property of query[hashesKey], so we let generateHash(query) decide
       // what to do with the bogus query.
-      return hash(query);
+      return generateHash(query);
     }
     if (!hasOwnProperty.call(query, hashesKey)) {
       Object.defineProperty(query, hashesKey, {
@@ -144,7 +135,7 @@ export const createPersistedQueryLink = (
     const hashes = (query as any)[hashesKey];
     return hasOwnProperty.call(hashes, hashesChildKey)
       ? hashes[hashesChildKey]
-      : (hashes[hashesChildKey] = hash(query));
+      : (hashes[hashesChildKey] = generateHash(query));
   }
 
   return new ApolloLink((operation, forward) => {
@@ -239,7 +230,10 @@ export const createPersistedQueryLink = (
           ({ fetchOptions = {} }: { fetchOptions: Record<string, any> }) => {
             originalFetchOptions = fetchOptions;
             return {
-              fetchOptions: Object.assign({}, fetchOptions, { method: 'GET' }),
+              fetchOptions: {
+                ...fetchOptions,
+                method: 'GET',
+              },
             };
           },
         );

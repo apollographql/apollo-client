@@ -39,6 +39,9 @@
 - Allow `cache.modify` functions to return `details.INVALIDATE` (similar to `details.DELETE`) to invalidate the current field, causing affected queries to rerun, even if the field's value is unchanged. <br/>
   [@benjamn](https://github.com/benjamn) in [#6991](https://github.com/apollographql/apollo-client/pull/6991)
 
+- Move `apollo-link-persisted-queries` implementation to `@apollo/client/link/persisted-queries`. Try running our [automated imports transform](https://github.com/apollographql/apollo-client/tree/main/codemods/ac2-to-ac3) to handle this conversion, if you're using `apollo-link-persisted-queries`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#6837](https://github.com/apollographql/apollo-client/pull/6837)
+
 - Remove invariant forbidding a `FetchPolicy` of `cache-only` in `ObservableQuery#refetch`. <br/>
   [@benjamn](https://github.com/benjamn) in [ccb0a79a](https://github.com/apollographql/apollo-client/pull/6774/commits/ccb0a79a588721f08bf87a131c31bf37fa3238e5), fixing [#6702](https://github.com/apollographql/apollo-client/issues/6702)
 

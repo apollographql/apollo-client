@@ -274,6 +274,7 @@ Array [
   "useApolloClient",
   "useLazyQuery",
   "useMutation",
+  "useCachedMutation",
   "useQuery",
   "useReactiveVar",
   "useSubscription",

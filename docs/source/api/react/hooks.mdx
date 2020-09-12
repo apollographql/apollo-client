@@ -219,7 +219,55 @@ function AddTodo() {
 }
 ```
 
-> Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useMutation`.
+## `useCachedMutation`
+
+### Example
+
+```jsx
+import { gql, useCachedMutation } from '@apollo/client';
+
+const ADD_TODO = gql`
+  mutation AddTodo($type: String!) {
+    addTodo(type: $type) {
+      id
+      type
+    }
+  }
+`;
+
+const FRAGMENT = gql`
+    fragment NewTodo on AddTodo {
+      id
+      type
+    }
+  `;
+
+function AddTodo() {
+  let input;
+  const [addTodo, { data }] = useMutation(ADD_TODO, FRAGMENT, 'AddTodo', 'todos');
+
+  return (
+    <div>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          addTodo({ variables: { type: input.value } });
+          input.value = '';
+        }}
+      >
+        <input
+          ref={node => {
+            input = node;
+          }}
+        />
+        <button type="submit">Add Todo</button>
+      </form>
+    </div>
+  );
+}
+```
+
+> Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useCachedMutation`.
 
 ### Function Signature
 

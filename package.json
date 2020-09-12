@@ -96,7 +96,7 @@
     "@types/react-dom": "^16.9.6",
     "@types/recompose": "^0.30.7",
     "bundlesize": "0.18.0",
-    "cross-fetch": "3.0.5",
+    "cross-fetch": "3.0.6",
     "fetch-mock": "7.7.3",
     "glob": "7.1.6",
     "graphql": "15.3.0",

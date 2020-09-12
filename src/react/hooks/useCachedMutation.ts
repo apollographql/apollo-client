@@ -3,7 +3,7 @@ import { DocumentNode } from 'graphql';
 import { MutationHookOptions, MutationTuple } from '../types/types';
 import { OperationVariables } from '../../core';
 
-import { useMutation } from './';
+import { useMutation } from './useMutation';
 
 /*
 mutationName: is the name of the mutation

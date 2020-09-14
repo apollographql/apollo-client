@@ -4,15 +4,15 @@ import { Modifier, Modifiers } from './common';
 export namespace Cache {
   export type WatchCallback = (diff: Cache.DiffResult<any>) => void;
 
-  export interface ReadOptions<TVariables = any>
-    extends DataProxy.Query<TVariables> {
+  export interface ReadOptions<TVariables = any, TData = any>
+    extends DataProxy.Query<TVariables, TData> {
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
   }
 
   export interface WriteOptions<TResult = any, TVariables = any>
-    extends DataProxy.Query<TVariables> {
+    extends DataProxy.Query<TVariables, TResult> {
     dataId?: string;
     result: TResult;
     broadcast?: boolean;

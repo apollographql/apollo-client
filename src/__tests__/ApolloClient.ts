@@ -13,6 +13,7 @@ import { ApolloLink } from '../link/core';
 import { HttpLink } from '../link/http';
 import { InMemoryCache } from '../cache';
 import { stripSymbols } from '../testing';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -1210,6 +1211,22 @@ describe('ApolloClient', () => {
       }
 
       describe('using writeQuery', () => {
+        it('with TypedDocumentNode', async () => {
+          const client = newClient();
+
+          // This is defined manually for the purpose of the test, but
+          // eventually this could be generated with graphql-code-generator
+          const typedQuery: TypedDocumentNode<Data, { testVar: string }> = query;
+
+          // The result and variables are being typed automatically, based on the query object we pass,
+          // and type inference is done based on the TypeDocumentNode object.
+          const result = await client.query({ query: typedQuery, variables: { testVar: 'foo' } });
+
+          // Just try to access it, if something will break, TS will throw an error
+          // during the test
+          result.data?.people.friends[0].id;
+        });
+
         it('with a replacement of nested array (wq)', done => {
           let count = 0;
           const client = newClient();

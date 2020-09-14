@@ -102,7 +102,8 @@ module.exports = {
             'api/link/apollo-link-rest',
             'api/link/apollo-link-retry',
             'api/link/apollo-link-schema',
-            'api/link/apollo-link-ws'
+            'api/link/apollo-link-ws',
+            'api/link/persisted-queries'
           ],
         },
       },

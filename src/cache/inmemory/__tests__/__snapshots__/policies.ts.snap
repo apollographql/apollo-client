@@ -830,3 +830,25 @@ Object {
   },
 }
 `;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;

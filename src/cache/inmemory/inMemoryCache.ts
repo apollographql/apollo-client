@@ -110,13 +110,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
       return null;
     }
-    return this.storeReader.readQueryFromStore({
+    return this.storeReader.diffQueryAgainstStore<T>({
       store,
       query: options.query,
       variables: options.variables,
       rootId: options.rootId,
       config: this.config,
-    }) || null;
+      returnPartialData: false,
+    }).result || null;
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {
@@ -278,11 +279,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     };
 
+    let fromOptimisticTransaction = false;
+
     if (typeof optimisticId === 'string') {
       // Note that there can be multiple layers with the same optimisticId.
       // When removeOptimistic(id) is called for that id, all matching layers
       // will be removed, and the remaining layers will be reapplied.
       this.optimisticData = this.optimisticData.addLayer(optimisticId, perform);
+      fromOptimisticTransaction = true;
     } else if (optimisticId === null) {
       // Ensure both this.data and this.optimisticData refer to the root
       // (non-optimistic) layer of the cache during the transaction. Note
@@ -297,7 +301,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
 
     // This broadcast does nothing if this.txCount > 0.
-    this.broadcastWatches();
+    this.broadcastWatches(fromOptimisticTransaction);
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
@@ -316,14 +320,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return document;
   }
 
-  protected broadcastWatches() {
+  protected broadcastWatches(fromOptimisticTransaction?: boolean) {
     if (!this.txCount) {
-      this.watches.forEach(c => this.maybeBroadcastWatch(c));
+      this.watches.forEach(c => this.maybeBroadcastWatch(c, fromOptimisticTransaction));
     }
   }
 
-  private maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
-    return this.broadcastWatch.call(this, c);
+  private maybeBroadcastWatch = wrap((
+    c: Cache.WatchOptions,
+    fromOptimisticTransaction?: boolean,
+  ) => {
+    return this.broadcastWatch.call(this, c, !!fromOptimisticTransaction);
   }, {
     makeCacheKey: (c: Cache.WatchOptions) => {
       // Return a cache key (thus enabling result caching) only if we're
@@ -354,7 +361,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // simpler to check for changes after recomputing a result but before
   // broadcasting it, but this wrapping approach allows us to skip both
   // the recomputation and the broadcast, in most cases.
-  private broadcastWatch(c: Cache.WatchOptions) {
+  private broadcastWatch(
+    c: Cache.WatchOptions,
+    fromOptimisticTransaction: boolean,
+  ) {
     // First, invalidate any other maybeBroadcastWatch wrapper functions
     // currently depending on this Cache.WatchOptions object (including
     // the one currently calling broadcastWatch), so they will be included
@@ -372,10 +382,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // changed since they were previously delivered.
     this.watchDep(c);
 
-    c.callback(this.diff({
+    const diff = this.diff<any>({
       query: c.query,
       variables: c.variables,
       optimistic: c.optimistic,
-    }));
+    });
+
+    if (c.optimistic && fromOptimisticTransaction) {
+      diff.fromOptimisticTransaction = true;
+    }
+
+    c.callback(diff);
   }
 }

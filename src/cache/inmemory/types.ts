@@ -7,7 +7,7 @@ import {
   Reference,
 } from '../../utilities';
 import { FieldValueGetter } from './entityStore';
-import { KeyFieldsFunction } from './policies';
+import { KeyFieldsFunction, StorageType } from './policies';
 import {
   Modifier,
   Modifiers,
@@ -62,6 +62,11 @@ export interface NormalizedCache {
   getFieldValue: FieldValueGetter;
   toReference: ToReferenceFunction;
   canRead: CanReadFunction;
+
+  getStorage(
+    idOrObj: string | StoreObject,
+    storeFieldName: string,
+  ): StorageType;
 }
 
 /**

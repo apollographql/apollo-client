@@ -3,7 +3,12 @@ import { dep } from "optimism";
 import { InMemoryCache } from "./inMemoryCache";
 import { ApolloCache } from '../../core';
 
-export type ReactiveVar<T> = (newValue?: T) => T;
+export interface ReactiveVar<T> {
+  (newValue?: T): T;
+  onNextChange(listener: ReactiveListener<T>): () => void;
+}
+
+export type ReactiveListener<T> = (value: T) => any;
 
 const varDep = dep<ReactiveVar<any>>();
 
@@ -11,17 +16,34 @@ const varDep = dep<ReactiveVar<any>>();
 // called in Policies#readField.
 export const cacheSlot = new Slot<ApolloCache<any>>();
 
+// A listener function could in theory cause another listener to be added
+// to the set while we're iterating over it, so it's important to commit
+// to the original elements of the set before we begin iterating. See
+// iterateObserversSafely for another example of this pattern.
+function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
+  const items: T[] = [];
+  set.forEach(item => items.push(item));
+  set.clear();
+  items.forEach(callback);
+}
+
 export function makeVar<T>(value: T): ReactiveVar<T> {
   const caches = new Set<ApolloCache<any>>();
+  const listeners = new Set<ReactiveListener<T>>();
 
-  return function rv(newValue) {
+  const rv: ReactiveVar<T> = function (newValue) {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;
+        // First, invalidate any fields with custom read functions that
+        // consumed this variable, so query results involving those fields
+        // will be recomputed the next time we read them.
         varDep.dirty(rv);
-        // Trigger broadcast for any caches that were previously involved
-        // in reading this variable.
+        // Next, broadcast changes to any caches that have previously read
+        // from this variable.
         caches.forEach(broadcast);
+        // Finally, notify any listeners added via rv.onNextChange.
+        consumeAndIterate(listeners, listener => listener(value));
       }
     } else {
       // When reading from the variable, obtain the current cache from
@@ -34,12 +56,21 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
 
     return value;
   };
+
+  rv.onNextChange = listener => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+
+  return rv;
 }
 
 type Broadcastable = ApolloCache<any> & {
   // This method is protected in InMemoryCache, which we are ignoring, but
   // we still want some semblance of type safety when we call it.
-  broadcastWatches: InMemoryCache["broadcastWatches"];
+  broadcastWatches?: InMemoryCache["broadcastWatches"];
 };
 
 function broadcast(cache: Broadcastable) {

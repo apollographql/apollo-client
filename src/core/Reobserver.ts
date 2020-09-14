@@ -17,13 +17,13 @@ import { invariant } from 'ts-invariant';
 export class Reobserver<TData, TVars> {
   constructor(
     private observer: Observer<ApolloQueryResult<TData>>,
-    private options: WatchQueryOptions<TVars>,
+    private options: WatchQueryOptions<TVars, TData>,
     // Almost certainly just a wrapper function around
     // QueryManager#fetchQueryObservable, but this small dose of
     // indirection means the Reobserver doesn't have to know/assume
     // anything about the QueryManager class.
     private fetch: (
-      options: WatchQueryOptions<TVars>,
+      options: WatchQueryOptions<TVars, TData>,
       newNetworkStatus?: NetworkStatus,
     ) => Concast<ApolloQueryResult<TData>>,
     // If we're polling, there may be times when we should avoid fetching,
@@ -37,7 +37,7 @@ export class Reobserver<TData, TVars> {
   private concast?: Concast<ApolloQueryResult<TData>>;
 
   public reobserve(
-    newOptions?: Partial<WatchQueryOptions<TVars>>,
+    newOptions?: Partial<WatchQueryOptions<TVars, TData>>,
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     if (newOptions) {
@@ -66,7 +66,7 @@ export class Reobserver<TData, TVars> {
     return (this.concast = concast).promise;
   }
 
-  public updateOptions(newOptions: Partial<WatchQueryOptions<TVars>>) {
+  public updateOptions(newOptions: Partial<WatchQueryOptions<TVars, TData>>) {
     Object.assign(this.options, compact(newOptions));
     this.updatePolling();
     return this;
@@ -133,6 +133,7 @@ export class Reobserver<TData, TVars> {
         if (this.shouldFetch && this.shouldFetch()) {
           this.reobserve({
             fetchPolicy: "network-only",
+            nextFetchPolicy: this.options.fetchPolicy || "cache-first",
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();

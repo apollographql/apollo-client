@@ -39,7 +39,7 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 
-import { QueryInfo, QueryStoreValue } from './QueryInfo';
+import { QueryInfo, QueryStoreValue, shouldWriteResult } from './QueryInfo';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -192,6 +192,7 @@ export class QueryManager<TStore> {
             result: { data: optimistic },
             document: mutation,
             variables: variables,
+            errorPolicy,
             queryUpdatersById: generateUpdateQueriesInfo(),
             update: updateWithProxyFn,
           }, cache);
@@ -235,6 +236,7 @@ export class QueryManager<TStore> {
                 result,
                 document: mutation,
                 variables,
+                errorPolicy,
                 queryUpdatersById: generateUpdateQueriesInfo(),
                 update: updateWithProxyFn,
               }, self.cache);
@@ -333,7 +335,7 @@ export class QueryManager<TStore> {
 
   public fetchQuery<TData, TVars>(
     queryId: string,
-    options: WatchQueryOptions<TVars>,
+    options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     return this.fetchQueryObservable<TData, TVars>(
@@ -428,7 +430,7 @@ export class QueryManager<TStore> {
   }
 
   public watchQuery<T, TVariables = OperationVariables>(
-    options: WatchQueryOptions<TVariables>,
+    options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     // assign variable default values if supplied
     options = {
@@ -462,7 +464,7 @@ export class QueryManager<TStore> {
   }
 
   public query<TData, TVars = OperationVariables>(
-    options: QueryOptions<TVars>,
+    options: QueryOptions<TVars, TData>,
   ): Promise<ApolloQueryResult<TData>> {
     invariant(
       options.query,
@@ -588,6 +590,7 @@ export class QueryManager<TStore> {
   public startGraphQLSubscription<T = any>({
     query,
     fetchPolicy,
+    errorPolicy,
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
@@ -601,10 +604,10 @@ export class QueryManager<TStore> {
         variables,
         false,
       ).map(result => {
-        if (!fetchPolicy || fetchPolicy !== 'no-cache') {
+        if (fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.
           // XXX I don't think we ever send in an object with errors, but we might in the future...
-          if (!graphQLResultHasError(result)) {
+          if (shouldWriteResult(result, errorPolicy)) {
             this.cache.write({
               query,
               result: result.data,
@@ -759,7 +762,7 @@ export class QueryManager<TStore> {
   private getResultsFromLink<TData, TVars>(
     queryInfo: QueryInfo,
     allowCacheWrite: boolean,
-    options: Pick<WatchQueryOptions<TVars>,
+    options: Pick<WatchQueryOptions<TVars, TData>,
       | "variables"
       | "context"
       | "fetchPolicy"
@@ -817,7 +820,7 @@ export class QueryManager<TStore> {
 
   public fetchQueryObservable<TData, TVars>(
     queryId: string,
-    options: WatchQueryOptions<TVars>,
+    options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
@@ -909,7 +912,13 @@ export class QueryManager<TStore> {
     concast.cleanup(() => {
       this.fetchCancelFns.delete(queryId);
 
-      if (options.nextFetchPolicy) {
+      const { nextFetchPolicy } = options;
+      if (nextFetchPolicy) {
+        // The options.nextFetchPolicy transition should happen only once,
+        // but it should be possible for a nextFetchPolicy function to set
+        // this.nextFetchPolicy to perform an additional transition.
+        options.nextFetchPolicy = void 0;
+
         // When someone chooses cache-and-network or network-only as their
         // initial FetchPolicy, they often do not want future cache updates to
         // trigger unconditional network requests, which is what repeatedly
@@ -920,9 +929,9 @@ export class QueryManager<TStore> {
         // The options.nextFetchPolicy option provides an easy way to update
         // options.fetchPolicy after the intial network request, without
         // having to call observableQuery.setOptions.
-        options.fetchPolicy = options.nextFetchPolicy;
-        // The options.nextFetchPolicy transition should happen only once.
-        options.nextFetchPolicy = void 0;
+        options.fetchPolicy = typeof nextFetchPolicy === "function"
+          ? nextFetchPolicy.call(options, options.fetchPolicy || "cache-first")
+          : nextFetchPolicy;
       }
     });
 
@@ -931,7 +940,7 @@ export class QueryManager<TStore> {
 
   private fetchQueryByPolicy<TData, TVars>(
     queryInfo: QueryInfo,
-    options: WatchQueryOptions<TVars>,
+    options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
@@ -1072,6 +1081,7 @@ function markMutationResult<TStore, TData>(
     result: FetchResult<TData>;
     document: DocumentNode;
     variables: any;
+    errorPolicy: ErrorPolicy;
     queryUpdatersById: Record<string, QueryWithUpdater>;
     update:
       ((cache: ApolloCache<TStore>, mutationResult: Object) => void) |
@@ -1080,7 +1090,7 @@ function markMutationResult<TStore, TData>(
   cache: ApolloCache<TStore>,
 ) {
   // Incorporate the result from this mutation into the store
-  if (!graphQLResultHasError(mutation.result)) {
+  if (shouldWriteResult(mutation.result, mutation.errorPolicy)) {
     const cacheWrites: Cache.WriteOptions[] = [{
       result: mutation.result.data,
       dataId: 'ROOT_MUTATION',

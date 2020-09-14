@@ -97,6 +97,7 @@ When you execute a mutation, you modify back-end data. If that data
 is also present in your [Apollo Client cache](../caching/cache-configuration/),
 you might need to update your cache to reflect the result of the mutation.
 This depends on whether the mutation _updates a single existing entity_.
+To execute a mutation and update the cache, you can use the [useCachedMutation](../api/react/hooks) hook
 
 ### Updating a single existing entity
 

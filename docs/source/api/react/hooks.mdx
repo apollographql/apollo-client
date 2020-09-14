@@ -219,6 +219,16 @@ function AddTodo() {
 }
 ```
 
+> Refer to the [Mutation](../../data/mutations/) section for a more in-depth overview of `useMutation`.
+
+#### `options`
+
+<MutationOptions />
+
+### Result
+
+<MutationResult />
+
 ## `useCachedMutation`
 
 ### Example
@@ -244,7 +254,7 @@ const FRAGMENT = gql`
 
 function AddTodo() {
   let input;
-  const [addTodo, { data }] = useMutation(ADD_TODO, FRAGMENT, 'AddTodo', 'todos');
+  const [addTodo, { data }] = useCachedMutation(ADD_TODO, FRAGMENT, 'AddTodo', 'todos');
 
   return (
     <div>
@@ -267,13 +277,14 @@ function AddTodo() {
 }
 ```
 
-> Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useCachedMutation`.
-
 ### Function Signature
 
 ```ts
-function useMutation<TData = any, TVariables = OperationVariables>(
+export function useCachedMutation<TData = any, TVariables = OperationVariables>(
   mutation: DocumentNode,
+  fragment: DocumentNode,
+  mutationName: string,
+  cacheId: string,
   options?: MutationHookOptions<TData, TVariables>,
 ): MutationTuple<TData, TVariables> {}
 ```
@@ -286,13 +297,32 @@ function useMutation<TData = any, TVariables = OperationVariables>(
 | ---------- | ------------ | ---------------------------------------------------------------- |
 | `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `gql`. |
 
+#### `fragment`
+
+| Param      | Type         | Description                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------- |
+| `fragment` | DocumentNode | A GraphQL fragment document parsed into an AST by `gql`. |
+
+#### `mutationName`
+
+| Param      | Type         | Description                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------- |
+| `mutationName` | string | The name of the mutation. |
+
+#### `cacheId`
+
+| Param      | Type         | Description                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------- |
+| `cacheId` | string | The id of the item into the cache. You can more about it [here](../cache/InMemoryCache#input) |
+
 #### `options`
 
-<MutationOptions />
+The options for this hooks is the same options that you can pass to [useMutation](./hooks#options-2) hook. The only difference is
+that you don't need to pass the `update` property.
 
 ### Result
 
-<MutationResult />
+The result of this hooks is the same of [useMutation](./hooks#result-2) hook result
 
 ## `useSubscription`
 
@@ -332,6 +362,31 @@ function useSubscription<TData = any, TVariables = OperationVariables>(
   error?: ApolloError;
 } {}
 ```
+
+### Function Signature
+
+```ts
+function useCachedMutation<TData = any, TVariables = OperationVariables>(
+  mutation: DocumentNode,
+  options?: MutationHookOptions<TData, TVariables>,
+): MutationTuple<TData, TVariables> {}
+```
+
+### Params
+
+#### `mutation`
+
+| Param      | Type         | Description                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------- |
+| `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `gql`. |
+
+#### `options`
+
+<MutationOptions />
+
+### Result
+
+<MutationResult />
 
 ### Params
 

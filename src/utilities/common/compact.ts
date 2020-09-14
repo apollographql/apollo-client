@@ -4,7 +4,7 @@ import { TupleToIntersection } from './mergeDeep';
  * Merges the provided objects shallowly and removes
  * all properties with an `undefined` value
  */
-export function compact<TArgs extends object[]>(
+export function compact<TArgs extends any[]>(
   ...objects: TArgs
 ): TupleToIntersection<TArgs> {
   const result = Object.create(null);

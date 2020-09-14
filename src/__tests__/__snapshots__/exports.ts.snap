@@ -52,6 +52,7 @@ Array [
   "useLazyQuery",
   "useMutation",
   "useQuery",
+  "useReactiveVar",
   "useSubscription",
 ]
 `;
@@ -173,6 +174,13 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
+Array [
+  "VERSION",
+  "createPersistedQueryLink",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/retry 1`] = `
 Array [
   "RetryLink",
@@ -216,6 +224,7 @@ Array [
   "useLazyQuery",
   "useMutation",
   "useQuery",
+  "useReactiveVar",
   "useSubscription",
 ]
 `;
@@ -262,6 +271,7 @@ Array [
   "useLazyQuery",
   "useMutation",
   "useQuery",
+  "useReactiveVar",
   "useSubscription",
 ]
 `;

@@ -1,6 +1,11 @@
-import { NormalizedCache, NormalizedCacheObject } from "../types";
+import {
+  NormalizedCache,
+  NormalizedCacheObject,
+  DiffQueryAgainstStoreOptions,
+} from "../types";
 import { EntityStore } from "../entityStore";
 import { InMemoryCache } from "../inMemoryCache";
+import { StoreReader } from "../readFromStore";
 import { StoreWriter, WriteToStoreOptions } from "../writeToStore";
 
 export function defaultNormalizedCacheFactory(
@@ -18,6 +23,16 @@ interface WriteQueryToStoreOptions
 extends Omit<WriteToStoreOptions, "store"> {
   writer: StoreWriter;
   store?: NormalizedCache;
+}
+
+export function readQueryFromStore<T = any>(
+  reader: StoreReader,
+  options: DiffQueryAgainstStoreOptions,
+) {
+  return reader.diffQueryAgainstStore<T>({
+    ...options,
+    returnPartialData: false,
+  }).result;
 }
 
 export function writeQueryToStore(

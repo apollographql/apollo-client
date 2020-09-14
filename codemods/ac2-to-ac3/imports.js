@@ -34,6 +34,7 @@ export default function transformer(file, api) {
     'batch-http',
     'context',
     'error',
+    'persisted-queries',
     'retry',
     'schema',
     'ws',

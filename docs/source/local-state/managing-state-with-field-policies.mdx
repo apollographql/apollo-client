@@ -147,15 +147,14 @@ This `read` function returns the value of our reactive variable whenever `cartIt
 
 Now, let's create a button component that enables the user to add a product to their cart:
 
-```jsx{8}:title=AddToCartButton.js
+```jsx{7}:title=AddToCartButton.js
 import { cartItemsVar } from './cache';
 // ... other imports
 
 export function AddToCartButton({ productId }) {
-  const cartItems = cartItemsVar();
   return (
     <div class="add-to-cart-button">
-      <Button onClick={() => cartItemsVar([...cartItems, productId])}>
+      <Button onClick={() => cartItemsVar([...cartItemsVar(), productId])}>
         Add to Cart
       </Button>
     </div>
@@ -166,8 +165,6 @@ export function AddToCartButton({ productId }) {
 On click, this button updates the value of `cartItemsVar` to append the button's associated `productId`. When this happens, Apollo Client notifies every active query that includes the `cartItems` field.
 
 Here's a `Cart` component that uses the `GET_CART_ITEMS` query and therefore refreshes automatically whenever the value of `cartItemsVar` changes:
-
-<ExpansionPanel title="Expand example">
 
 ```jsx:title=Cart.js
 export const GET_CART_ITEMS = gql`
@@ -199,7 +196,32 @@ export function Cart() {
 }
 ```
 
-</ExpansionPanel>
+Alternatively, you can read directly from a reactive variable using the `useReactiveVar` hook introduced in Apollo Client 3.2.0:
+
+```jsx:title=Cart.js
+import { useReactiveVar } from '@apollo/client';
+
+export function Cart() {
+  const cartItems = useReactiveVar(cartItemsVar);
+
+  return (
+    <div class="cart">
+      <Header>My Cart</Header>
+      {cartItems.length === 0 ? (
+        <p>No items in your cart</p>
+      ) : (
+        <Fragment>
+          {cartItems.map(productId => (
+            <CartItem key={productId} />
+          ))}
+        </Fragment>
+      )}
+    </div>
+  );
+}
+```
+
+As in the earlier `useQuery` example, whenever the `cartItemsVar` variable is updated, any currently-mounted `Cart` components will rerender. Calling `cartItemsVar()` without `useReactiveVar` will not capture this dependency, so future variable updates will not rerender the component. Both of these approaches are useful in different situations.
 
 ### Storing local state in the cache
 

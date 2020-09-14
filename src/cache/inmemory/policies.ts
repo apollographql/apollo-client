@@ -29,6 +29,8 @@ import {
   FieldValueToBeMerged,
   isFieldValueToBeMerged,
   storeValueIsStoreObject,
+  selectionSetMatchesResult,
+  TypeOrFieldNameRegExp,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
 import { InMemoryCache } from './inMemoryCache';
@@ -102,7 +104,7 @@ export type FieldPolicy<
   merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
 
-type StorageType = Record<string, any>;
+export type StorageType = Record<string, any>;
 
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0 ? spec.args :
@@ -138,7 +140,7 @@ export interface FieldFunctionOptions<
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
-  storage: StorageType | null;
+  storage: StorageType;
 
   cache: InMemoryCache;
 
@@ -227,7 +229,6 @@ export class Policies {
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
-      subtypes?: Set<string>;
       fields?: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
@@ -237,6 +238,18 @@ export class Policies {
       };
     };
   } = Object.create(null);
+
+  // Map from subtype names to sets of supertype names. Note that this
+  // representation inverts the structure of possibleTypes (whose keys are
+  // supertypes and whose values are arrays of subtypes) because it tends
+  // to be much more efficient to search upwards than downwards.
+  private supertypeMap = new Map<string, Set<string>>();
+
+  // Any fuzzy subtypes specified by possibleTypes will be converted to
+  // RegExp objects and recorded here. Every key of this map can also be
+  // found in supertypeMap. In many cases this Map will be empty, which
+  // means no fuzzy subtype checking will happen in fragmentMatches.
+  private fuzzySubtypes = new Map<string, RegExp>();
 
   public readonly cache: InMemoryCache;
 
@@ -407,8 +420,19 @@ export class Policies {
   public addPossibleTypes(possibleTypes: PossibleTypesMap) {
     (this.usingPossibleTypes as boolean) = true;
     Object.keys(possibleTypes).forEach(supertype => {
-      const subtypeSet = this.getSubtypeSet(supertype, true);
-      possibleTypes[supertype].forEach(subtypeSet!.add, subtypeSet);
+      // Make sure all types have an entry in this.supertypeMap, even if
+      // their supertype set is empty, so we can return false immediately
+      // from policies.fragmentMatches for unknown supertypes.
+      this.getSupertypeSet(supertype, true);
+
+      possibleTypes[supertype].forEach(subtype => {
+        this.getSupertypeSet(subtype, true)!.add(supertype);
+        const match = subtype.match(TypeOrFieldNameRegExp);
+        if (!match || match[0] !== subtype) {
+          // TODO Don't interpret just any invalid typename as a RegExp.
+          this.fuzzySubtypes.set(subtype, new RegExp(subtype));
+        }
+      });
     });
   }
 
@@ -419,17 +443,6 @@ export class Policies {
     if (typename) {
       return this.typePolicies[typename] || (
         createIfMissing && (this.typePolicies[typename] = Object.create(null)));
-    }
-  }
-
-  private getSubtypeSet(
-    supertype: string,
-    createIfMissing: boolean,
-  ): Set<string> | undefined {
-    const policy = this.getTypePolicy(supertype, createIfMissing);
-    if (policy) {
-      return policy.subtypes || (
-        createIfMissing ? policy.subtypes = new Set<string>() : void 0);
     }
   }
 
@@ -453,9 +466,22 @@ export class Policies {
     }
   }
 
+  private getSupertypeSet(
+    subtype: string,
+    createIfMissing: boolean,
+  ): Set<string> | undefined {
+    let supertypeSet = this.supertypeMap.get(subtype);
+    if (!supertypeSet && createIfMissing) {
+      this.supertypeMap.set(subtype, supertypeSet = new Set<string>());
+    }
+    return supertypeSet;
+  }
+
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string | undefined,
+    result?: Record<string, any>,
+    variables?: Record<string, any>,
   ): boolean {
     if (!fragment.typeCondition) return true;
 
@@ -464,20 +490,75 @@ export class Policies {
     if (!typename) return false;
 
     const supertype = fragment.typeCondition.name.value;
+    // Common case: fragment type condition and __typename are the same.
     if (typename === supertype) return true;
 
-    if (this.usingPossibleTypes) {
-      const workQueue = [this.getSubtypeSet(supertype, false)];
+    if (this.usingPossibleTypes &&
+        this.supertypeMap.has(supertype)) {
+      const typenameSupertypeSet = this.getSupertypeSet(typename, true)!;
+      const workQueue = [typenameSupertypeSet];
+      const maybeEnqueue = (subtype: string) => {
+        const supertypeSet = this.getSupertypeSet(subtype, false);
+        if (supertypeSet &&
+            supertypeSet.size &&
+            workQueue.indexOf(supertypeSet) < 0) {
+          workQueue.push(supertypeSet);
+        }
+      };
+
+      // We need to check fuzzy subtypes only if we encountered fuzzy
+      // subtype strings in addPossibleTypes, and only while writing to
+      // the cache, since that's when selectionSetMatchesResult gives a
+      // strong signal of fragment matching. The StoreReader class calls
+      // policies.fragmentMatches without passing a result object, so
+      // needToCheckFuzzySubtypes is always false while reading.
+      let needToCheckFuzzySubtypes = !!(result && this.fuzzySubtypes.size);
+      let checkingFuzzySubtypes = false;
+
       // It's important to keep evaluating workQueue.length each time through
       // the loop, because the queue can grow while we're iterating over it.
       for (let i = 0; i < workQueue.length; ++i) {
-        const subtypes = workQueue[i];
-        if (subtypes) {
-          if (subtypes.has(typename)) return true;
-          subtypes.forEach(subtype => {
-            const subsubtypes = this.getSubtypeSet(subtype, false);
-            if (subsubtypes && workQueue.indexOf(subsubtypes) < 0) {
-              workQueue.push(subsubtypes);
+        const supertypeSet = workQueue[i];
+
+        if (supertypeSet.has(supertype)) {
+          if (!typenameSupertypeSet.has(supertype)) {
+            if (checkingFuzzySubtypes) {
+              invariant.warn(`Inferring subtype ${typename} of supertype ${supertype}`);
+            }
+            // Record positive results for faster future lookup.
+            // Unfortunately, we cannot safely cache negative results,
+            // because new possibleTypes data could always be added to the
+            // Policies class.
+            typenameSupertypeSet.add(supertype);
+          }
+          return true;
+        }
+
+        supertypeSet.forEach(maybeEnqueue);
+
+        if (needToCheckFuzzySubtypes &&
+            // Start checking fuzzy subtypes only after exhausting all
+            // non-fuzzy subtypes (after the final iteration of the loop).
+            i === workQueue.length - 1 &&
+            // We could wait to compare fragment.selectionSet to result
+            // after we verify the supertype, but this check is often less
+            // expensive than that search, and we will have to do the
+            // comparison anyway whenever we find a potential match.
+            selectionSetMatchesResult(fragment.selectionSet, result!, variables)) {
+          // We don't always need to check fuzzy subtypes (if no result
+          // was provided, or !this.fuzzySubtypes.size), but, when we do,
+          // we only want to check them once.
+          needToCheckFuzzySubtypes = false;
+          checkingFuzzySubtypes = true;
+
+          // If we find any fuzzy subtypes that match typename, extend the
+          // workQueue to search through the supertypes of those fuzzy
+          // subtypes. Otherwise the for-loop will terminate and we'll
+          // return false below.
+          this.fuzzySubtypes.forEach((regExp, fuzzyString) => {
+            const match = typename.match(regExp);
+            if (match && match[0] === typename) {
+              maybeEnqueue(fuzzyString);
             }
           });
         }
@@ -528,8 +609,6 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  private storageTrie = new KeyTrie<StorageType>(true);
-
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
     context: ReadMergeModifyContext,
@@ -557,7 +636,7 @@ export class Policies {
         objectOrReference,
         options,
         context,
-        this.storageTrie.lookup(
+        context.store.getStorage(
           isReference(objectOrReference)
             ? objectOrReference.__ref
             : objectOrReference,
@@ -598,17 +677,6 @@ export class Policies {
       const { merge } = this.getFieldPolicy(
         incoming.__typename, fieldName, false)!;
 
-      // If storage ends up null, that just means no options.storage object
-      // has ever been created for a read function for this field before, so
-      // there's nothing this merge function could do with options.storage
-      // that would help the read function do its work. Most merge functions
-      // will never need to worry about options.storage, but if you're reading
-      // this comment then you probably have good reasons for wanting to know
-      // esoteric details like these, you wizard, you.
-      const storage = storageKeys
-        ? this.storageTrie.lookupArray(storageKeys)
-        : null;
-
       incoming = merge!(existing, incoming.__value, makeFieldFunctionOptions(
         this,
         // Unlike options.readField for read functions, we do not fall
@@ -628,7 +696,9 @@ export class Policies {
           field,
           variables: context.variables },
         context,
-        storage,
+        storageKeys
+          ? context.store.getStorage(...storageKeys)
+          : Object.create(null),
       )) as T;
     }
 
@@ -695,7 +765,7 @@ function makeFieldFunctionOptions(
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
   context: ReadMergeModifyContext,
-  storage: StorageType | null,
+  storage: StorageType,
 ): FieldFunctionOptions {
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);

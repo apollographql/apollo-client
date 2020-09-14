@@ -9,6 +9,7 @@ const entryPoints = [
   { dirs: ['link', 'core'] },
   { dirs: ['link', 'error'] },
   { dirs: ['link', 'http'] },
+  { dirs: ['link', 'persisted-queries'] },
   { dirs: ['link', 'retry'] },
   { dirs: ['link', 'schema'] },
   { dirs: ['link', 'utils'] },

@@ -2,7 +2,8 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference, Reference, makeVar } from '../../../core';
+import { makeReference, Reference, makeVar, TypedDocumentNode, isReference } from '../../../core';
+import { Cache } from '../../../cache';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 disableFragmentWarnings();
@@ -1644,6 +1645,104 @@ describe("InMemoryCache#modify", () => {
     expect(resultAfterModify).toEqual({ a: 1, b: -1, c: 0 });
   });
 
+  it("should allow invalidation using details.INVALIDATE", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          keyFields: ["isbn"],
+        },
+        Author: {
+          keyFields: ["name"],
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{
+      currentlyReading: {
+        title: string;
+        isbn: string;
+        author: {
+          name: string;
+        },
+      },
+    }> = gql`
+      query {
+        currentlyReading {
+          title
+          isbn
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    const currentlyReading = {
+      __typename: "Book",
+      isbn: "0374110034",
+      title: "Beowulf: A New Translation",
+      author: {
+        __typename: "Author",
+        name: "Maria Dahvana Headley",
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        currentlyReading,
+      }
+    });
+
+    function read() {
+      return cache.readQuery({ query })!;
+    }
+
+    const initialResult = read();
+
+    expect(cache.extract()).toMatchSnapshot();
+
+    expect(cache.modify({
+      id: cache.identify({
+        __typename: "Author",
+        name: "Maria Dahvana Headley",
+      }),
+      fields: {
+        name(_, { INVALIDATE }) {
+          return INVALIDATE;
+        },
+      },
+    })).toBe(false); // Nothing actually modified.
+
+    const resultAfterAuthorInvalidation = read();
+    expect(resultAfterAuthorInvalidation).not.toBe(initialResult);
+    expect(resultAfterAuthorInvalidation).toEqual(initialResult);
+
+    expect(cache.modify({
+      id: cache.identify({
+        __typename: "Book",
+        isbn: "0374110034",
+      }),
+      // Invalidate all fields of the Book entity.
+      fields(_, { INVALIDATE }) {
+        return INVALIDATE;
+      },
+    })).toBe(false); // Nothing actually modified.
+
+    const resultAfterBookInvalidation = read();
+    expect(resultAfterBookInvalidation).not.toBe(resultAfterAuthorInvalidation);
+    expect(resultAfterBookInvalidation).toEqual(resultAfterAuthorInvalidation);
+    expect(resultAfterBookInvalidation.currentlyReading.author).toEqual({
+      __typename: "Author",
+      name: "Maria Dahvana Headley",
+    });
+    expect(
+      resultAfterBookInvalidation.currentlyReading.author
+    ).toBe(
+      resultAfterAuthorInvalidation.currentlyReading.author
+    );
+  });
+
   it("should allow deletion using details.DELETE", () => {
     const cache = new InMemoryCache({
       typePolicies: {
@@ -2492,6 +2591,261 @@ describe("ReactiveVar and makeVar", () => {
       onCall: {
         __typename: "Person",
         name: "Hugh",
+      },
+    });
+  });
+
+  it("should broadcast only once for multiple reads of same variable", () => {
+    const nameVar = makeVar("Ben");
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            name() {
+              return nameVar();
+            },
+          },
+        },
+      },
+    });
+
+    // TODO This should not be necessary, but cache.readQuery currently
+    // returns null if we read a query before writing any queries.
+    cache.restore({
+      ROOT_QUERY: {}
+    });
+
+    const broadcast = cache["broadcastWatches"];
+    let broadcastCount = 0;
+    cache["broadcastWatches"] = function () {
+      ++broadcastCount;
+      return broadcast.apply(this, arguments);
+    };
+
+    const query = gql`
+      query {
+        name1: name
+        name2: name
+      }
+    `;
+
+    const watchDiffs: Cache.DiffResult<any>[] = [];
+    cache.watch({
+      query,
+      optimistic: true,
+      callback(diff) {
+        watchDiffs.push(diff);
+      },
+    });
+
+    const benResult = cache.readQuery({ query });
+    expect(benResult).toEqual({
+      name1: "Ben",
+      name2: "Ben",
+    });
+
+    expect(watchDiffs).toEqual([]);
+
+    expect(broadcastCount).toBe(0);
+    nameVar("Jenn");
+    expect(broadcastCount).toBe(1);
+
+    const jennResult = cache.readQuery({ query });
+    expect(jennResult).toEqual({
+      name1: "Jenn",
+      name2: "Jenn",
+    });
+
+    expect(watchDiffs).toEqual([
+      {
+        complete: true,
+        result: {
+          name1: "Jenn",
+          name2: "Jenn",
+        },
+      },
+    ]);
+
+    expect(broadcastCount).toBe(1);
+    nameVar("Hugh");
+    expect(broadcastCount).toBe(2);
+
+    const hughResult = cache.readQuery({ query });
+    expect(hughResult).toEqual({
+      name1: "Hugh",
+      name2: "Hugh",
+    });
+
+    expect(watchDiffs).toEqual([
+      {
+        complete: true,
+        result: {
+          name1: "Jenn",
+          name2: "Jenn",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          name1: "Hugh",
+          name2: "Hugh",
+        },
+      },
+    ]);
+  });
+});
+
+describe('TypedDocumentNode<Data, Variables>', () => {
+  type Book = {
+    isbn?: string;
+    title: string;
+    author: {
+      name: string;
+    };
+  };
+
+  const query: TypedDocumentNode<
+    { book: Book },
+    { isbn: string }
+  > = gql`query GetBook($isbn: String!) {
+    book(isbn: $isbn) {
+      title
+      author {
+        name
+      }
+    }
+  }`;
+
+  const fragment: TypedDocumentNode<Book> = gql`
+    fragment TitleAndAuthor on Book {
+      title
+      isbn
+      author {
+        name
+      }
+    }
+  `;
+
+  it('should determine Data and Variables types of {write,read}{Query,Fragment}', () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            book(existing, { args, toReference }) {
+              return existing ?? (args && toReference({
+                __typename: "Book",
+                isbn: args.isbn,
+              }));
+            }
+          }
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+
+        Author: {
+          keyFields: ["name"],
+        },
+      },
+    });
+
+    // We need to define these objects separately from calling writeQuery,
+    // because passing them directly to writeQuery will trigger excess property
+    // warnings due to the extra __typename and isbn fields. Internally, we
+    // almost never pass object literals to writeQuery or writeFragment, so
+    // excess property checks should not be a problem in practice.
+    const jcmAuthor = {
+      __typename: "Author",
+      name: "John C. Mitchell",
+    };
+
+    const ffplBook = {
+      __typename: "Book",
+      isbn: "0262133210",
+      title: "Foundations for Programming Languages",
+      author: jcmAuthor,
+    };
+
+    const ffplVariables = {
+      isbn: "0262133210",
+    };
+
+    cache.writeQuery({
+      query,
+      variables: ffplVariables,
+      data: {
+        book: ffplBook,
+      },
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+
+    const ffplQueryResult = cache.readQuery({
+      query,
+      variables: ffplVariables,
+    });
+
+    if (ffplQueryResult === null) throw new Error("null result");
+    expect(ffplQueryResult.book.isbn).toBeUndefined();
+    expect(ffplQueryResult.book.author.name).toBe(jcmAuthor.name);
+    expect(ffplQueryResult).toEqual({
+      book: {
+        __typename: "Book",
+        title: "Foundations for Programming Languages",
+        author: {
+          __typename: "Author",
+          name: "John C. Mitchell",
+        },
+      },
+    });
+
+    const sicpBook = {
+      __typename: "Book",
+      isbn: "0262510871",
+      title: "Structure and Interpretation of Computer Programs",
+      author: {
+        __typename: "Author",
+        name: "Harold Abelson",
+      },
+    };
+
+    const sicpRef = cache.writeFragment({
+      fragment,
+      data: sicpBook,
+    });
+
+    expect(isReference(sicpRef)).toBe(true);
+    expect(cache.extract()).toMatchSnapshot();
+
+    const ffplFragmentResult = cache.readFragment({
+      fragment,
+      id: cache.identify(ffplBook),
+    });
+    if (ffplFragmentResult === null) throw new Error("null result");
+    expect(ffplFragmentResult.title).toBe(ffplBook.title);
+    expect(ffplFragmentResult.author.name).toBe(ffplBook.author.name);
+    expect(ffplFragmentResult).toEqual(ffplBook);
+
+    // This uses the read function for the Query.book field.
+    const sicpReadResult = cache.readQuery({
+      query,
+      variables: {
+        isbn: sicpBook.isbn,
+      },
+    });
+    if (sicpReadResult === null) throw new Error("null result");
+    expect(sicpReadResult.book.isbn).toBeUndefined();
+    expect(sicpReadResult.book.title).toBe(sicpBook.title);
+    expect(sicpReadResult.book.author.name).toBe(sicpBook.author.name);
+    expect(sicpReadResult).toEqual({
+      book: {
+        __typename: "Book",
+        title: "Structure and Interpretation of Computer Programs",
+        author: {
+          __typename: "Author",
+          name: "Harold Abelson",
+        },
       },
     });
   });

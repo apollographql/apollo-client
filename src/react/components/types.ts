@@ -1,4 +1,5 @@
 import { DocumentNode } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { OperationVariables } from '../../core';
 import {
@@ -16,14 +17,14 @@ export interface QueryComponentOptions<
   TVariables = OperationVariables
 > extends QueryFunctionOptions<TData, TVariables> {
   children: (result: QueryResult<TData, TVariables>) => JSX.Element | null;
-  query: DocumentNode;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface MutationComponentOptions<
   TData = any,
   TVariables = OperationVariables
 > extends BaseMutationOptions<TData, TVariables> {
-  mutation: DocumentNode;
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children: (
     mutateFunction: MutationFunction<TData, TVariables>,
     result: MutationResult<TData>
@@ -34,6 +35,6 @@ export interface SubscriptionComponentOptions<
   TData = any,
   TVariables = OperationVariables
 > extends BaseSubscriptionOptions<TData, TVariables> {
-  subscription: DocumentNode;
+  subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);
 }

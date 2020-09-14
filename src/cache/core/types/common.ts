@@ -7,6 +7,8 @@ import {
   isReference,
 } from '../../../utilities';
 
+import { StorageType } from '../../inmemory/policies';
+
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
 // a generic type parameter like TExisting might be a string or some other
@@ -21,6 +23,7 @@ export class MissingFieldError {
     public readonly message: string,
     public readonly path: (string | number)[],
     public readonly query: import('graphql').DocumentNode,
+    public readonly clientOnly: boolean,
     public readonly variables?: Record<string, any>,
   ) {}
 }
@@ -54,12 +57,14 @@ export type CanReadFunction = (value: StoreValue) => boolean;
 
 export type Modifier<T> = (value: T, details: {
   DELETE: any;
+  INVALIDATE: any;
   fieldName: string;
   storeFieldName: string;
   readField: ReadFieldFunction;
   canRead: CanReadFunction;
   isReference: typeof isReference;
   toReference: ToReferenceFunction;
+  storage: StorageType;
 }) => T;
 
 export type Modifiers = {

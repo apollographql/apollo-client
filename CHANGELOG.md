@@ -1,4 +1,4 @@
-## Apollo Client 3.2.0 (not yet released)
+## Apollo Client 3.2.0
 
 ## Bug Fixes
 
@@ -7,6 +7,9 @@
 
 - Initialize `ObservableQuery` in `updateObservableQuery` even if `skip` is `true`. <br/>
   [@mu29](https://github.com/mu29) in [#6999](https://github.com/apollographql/apollo-client/pull/6999)
+
+- Prevent full reobservation of queries affected by optimistic mutation updates, while still delivering results from the cache. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6854](https://github.com/apollographql/apollo-client/pull/6854)
 
 ## Improvements
 
@@ -19,16 +22,16 @@
 - Allow `options.nextFetchPolicy` to be a function that takes the current `FetchPolicy` and returns a new (or the same) `FetchPolicy`, making `nextFetchPolicy` more suitable for global use in `defaultOptions.watchQuery`. <br/>
   [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
 
+- Implement `useReactiveVar` hook for consuming reactive variables in React components. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6867](https://github.com/apollographql/apollo-client/pull/6867)
+
+- Move `apollo-link-persisted-queries` implementation to `@apollo/client/link/persisted-queries`. Try running our [automated imports transform](https://github.com/apollographql/apollo-client/tree/main/codemods/ac2-to-ac3) to handle this conversion, if you're using `apollo-link-persisted-queries`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#6837](https://github.com/apollographql/apollo-client/pull/6837)
+
 - Disable feud-stopping logic after any `cache.evict` or `cache.modify` operation. <br/>
   [@benjamn](https://github.com/benjamn) in
   [#6817](https://github.com/apollographql/apollo-client/pull/6817) and
   [#6898](https://github.com/apollographql/apollo-client/pull/6898)
-
-- Prevent full reobservation of queries affected by optimistic mutation updates, while still delivering results from the cache. <br/>
-  [@benjamn](https://github.com/benjamn) in [#6854](https://github.com/apollographql/apollo-client/pull/6854)
-
-- Implement `useReactiveVar` hook for consuming reactive variables in React components. <br/>
-  [@benjamn](https://github.com/benjamn) in [#6867](https://github.com/apollographql/apollo-client/pull/6867)
 
 - Throw if `writeFragment` cannot identify `options.data` when no `options.id` provided. <br/>
   [@jcreighton](https://github.com/jcreighton) in [#6859](https://github.com/apollographql/apollo-client/pull/6859)
@@ -38,9 +41,6 @@
 
 - Allow `cache.modify` functions to return `details.INVALIDATE` (similar to `details.DELETE`) to invalidate the current field, causing affected queries to rerun, even if the field's value is unchanged. <br/>
   [@benjamn](https://github.com/benjamn) in [#6991](https://github.com/apollographql/apollo-client/pull/6991)
-
-- Move `apollo-link-persisted-queries` implementation to `@apollo/client/link/persisted-queries`. Try running our [automated imports transform](https://github.com/apollographql/apollo-client/tree/main/codemods/ac2-to-ac3) to handle this conversion, if you're using `apollo-link-persisted-queries`. <br/>
-  [@hwillson](https://github.com/hwillson) in [#6837](https://github.com/apollographql/apollo-client/pull/6837)
 
 - Support non-default `ErrorPolicy` values (that is, `"ignore"` and `"all"`, in addition to the default value `"none"`) for mutations and subscriptions, like we do for queries. <br/>
   [@benjamn](https://github.com/benjamn) in [#7003](https://github.com/apollographql/apollo-client/pull/7003)

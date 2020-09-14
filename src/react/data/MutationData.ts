@@ -9,9 +9,8 @@ import {
   MutationResult,
 } from '../types/types';
 import { OperationData } from './OperationData';
-import { OperationVariables, MutationOptions } from '../../core';
+import { OperationVariables, MutationOptions, mergeOptions } from '../../core';
 import { FetchResult } from '../../link/core';
-import { mergeOptions } from '../../core/ApolloClient';
 
 type MutationResultWithoutClient<TData = any> = Omit<MutationResult<TData>, 'client'>;
 

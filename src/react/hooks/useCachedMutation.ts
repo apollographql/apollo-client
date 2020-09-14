@@ -7,14 +7,14 @@ import { useMutation } from './useMutation';
 
 /*
 mutationName: is the name of the mutation
-typeName: Is the rootID of cache
+cacheId: Is the rootID of cache
  */
 
 export function useCachedMutation<TData = any, TVariables = OperationVariables>(
   mutation: DocumentNode,
   fragment: DocumentNode,
   mutationName: string,
-  typeName: string,
+  cacheId: string,
   options?: MutationHookOptions<TData, TVariables>,
 ): MutationTuple<TData, TVariables> {
   //was did in this way to ensure that the user won't pass this prop;
@@ -26,7 +26,7 @@ export function useCachedMutation<TData = any, TVariables = OperationVariables>(
 
       cache.modify({
         fields: {
-          [typeName]: (existingData = []) => {
+          [cacheId]: (existingData = []) => {
             const newTweetRef = cache.writeFragment({
               data: response,
               fragment,

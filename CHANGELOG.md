@@ -10,7 +10,7 @@
 
 ## Improvements
 
-- Substantially improve type inference for data and variables types using `TypedDocumentNode<Data, Variables>` type instead of `DocumentNode`. <br/>
+- In TypeScript, all APIs that take `DocumentNode` parameters now may alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation but allows the APIs to infer the data and variable types instead of requiring you to specify types explicitly at the call site. <br/>
   [@dotansimha](https://github.com/dotansimha) in [#6720](https://github.com/apollographql/apollo-client/pull/6720)
 
 - Bring back an improved form of heuristic fragment matching, by allowing `possibleTypes` to specify subtype regular expression strings, which count as matches if the written result object has all the fields expected for the fragment. <br/>

@@ -4,6 +4,7 @@ export {
   ApolloClient,
   ApolloClientOptions,
   DefaultOptions,
+  mergeOptions,
 } from './ApolloClient';
 export {
   ObservableQuery,

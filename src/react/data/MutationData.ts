@@ -9,9 +9,8 @@ import {
   MutationResult,
 } from '../types/types';
 import { OperationData } from './OperationData';
-import { OperationVariables } from '../../core';
+import { OperationVariables, MutationOptions, mergeOptions } from '../../core';
 import { FetchResult } from '../../link/core';
-import { compact } from '../../utilities';
 
 type MutationResultWithoutClient<TData = any> = Omit<MutationResult<TData>, 'client'>;
 
@@ -81,10 +80,13 @@ export class MutationData<
   };
 
   private mutate(
-    mutationFunctionOptions: MutationFunctionOptions<TData, TVariables>
+    options: MutationFunctionOptions<TData, TVariables>
   ) {
     return this.refreshClient().client.mutate(
-      compact(this.getOptions(), mutationFunctionOptions)
+      mergeOptions(
+        this.getOptions(),
+        options as MutationOptions<TData, TVariables>,
+      ),
     );
   }
 

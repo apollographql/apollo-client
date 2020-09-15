@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { of } from 'rxjs';
 
 import { ApolloClient, NetworkStatus } from '../../core';
 import { ObservableQuery } from '../ObservableQuery';
@@ -1262,7 +1263,7 @@ describe('ObservableQuery', () => {
 
       let count = 0;
 
-      let linkObservable = Observable.of({
+      let linkObservable = of({
         data: {
           name: 'Ben',
         },

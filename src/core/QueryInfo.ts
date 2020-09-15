@@ -293,7 +293,7 @@ export class QueryInfo {
 
   // This method is a no-op by default, until/unless overridden by the
   // updateWatch method.
-  private cancel() {}
+  private cancel?() {}
 
   private lastWatch?: Cache.WatchOptions;
 
@@ -314,7 +314,7 @@ export class QueryInfo {
 
     if (!this.lastWatch ||
         !equal(watchOptions, this.lastWatch)) {
-      this.cancel();
+      this.cancel!();
       this.cancel = this.cache.watch(this.lastWatch = watchOptions);
     }
   }

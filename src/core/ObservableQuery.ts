@@ -204,7 +204,7 @@ export class ObservableQuery<
       NetworkStatus.ready;
 
     const result = {
-      ...lastResult,
+      ...lastResult!,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
     } as ApolloQueryResult<TData>;

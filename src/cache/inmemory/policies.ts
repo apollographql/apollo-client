@@ -303,7 +303,6 @@ export class Policies {
     selectionSet?: SelectionSetNode,
     fragmentMap?: FragmentMap,
   ): [string?, StoreObject?] {
-    // TODO Consider subtypes?
     // TODO Use an AliasMap here?
     const typename = selectionSet && fragmentMap
       ? getTypenameFromResult(object, selectionSet, fragmentMap)
@@ -463,6 +462,36 @@ export class Policies {
       const policy: Policies["typePolicies"][string] =
         this.typePolicies[typename] = Object.create(null);
       policy.fields = Object.create(null);
+
+      // When the TypePolicy for typename is first accessed, instead of
+      // starting with an empty policy object, inherit any properties or
+      // fields from the type policies of the supertypes of typename.
+      //
+      // Any properties or fields defined explicitly within the TypePolicy
+      // for typename will take precedence, and if there are multiple
+      // supertypes, the properties of policies whose types were added
+      // later via addPossibleTypes will take precedence over those of
+      // earlier supertypes. TODO Perhaps we should warn about these
+      // conflicts in development, and recommend defining the property
+      // explicitly in the subtype policy?
+      //
+      // Field policy inheritance is atomic/shallow: you can't inherit a
+      // field policy and then override just its read function, since read
+      // and merge functions often need to cooperate, so changing only one
+      // of them would be a recipe for inconsistency.
+      //
+      // Once the TypePolicy for typename has been accessed, its
+      // properties can still be updated directly using addTypePolicies,
+      // but future changes to supertype policies will not be reflected in
+      // this policy, because this code runs at most once per typename.
+      const supertypes = this.supertypeMap.get(typename);
+      if (supertypes && supertypes.size) {
+        supertypes.forEach(supertype => {
+          const { fields, ...rest } = this.getTypePolicy(supertype);
+          Object.assign(policy, rest);
+          Object.assign(policy.fields, fields);
+        });
+      }
     }
 
     const inbox = this.toBeAdded[typename];

@@ -21,6 +21,7 @@ import {
   isReference,
   getStoreKeyName,
   canUseWeakMap,
+  compact,
 } from '../../utilities';
 import { IdGetter, ReadMergeModifyContext } from "./types";
 import {
@@ -248,6 +249,10 @@ export class Policies {
     };
   } = Object.create(null);
 
+  private toBeAdded: {
+    [__typename: string]: TypePolicy[];
+  } = Object.create(null);
+
   // Map from subtype names to sets of supertype names. Note that this
   // representation inverts the structure of possibleTypes (whose keys are
   // supertypes and whose values are arrays of subtypes) because it tends
@@ -341,71 +346,79 @@ export class Policies {
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const existing = this.getTypePolicy(typename);
       const incoming = typePolicies[typename];
-      const { keyFields, fields } = incoming;
-
-      if (incoming.queryType) this.setRootTypename("Query", typename);
-      if (incoming.mutationType) this.setRootTypename("Mutation", typename);
-      if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
-
-      existing.keyFn =
-        // Pass false to disable normalization for this typename.
-        keyFields === false ? nullKeyFieldsFn :
-        // Pass an array of strings to use those fields to compute a
-        // composite ID for objects of this typename.
-        Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
-        // Pass a function to take full control over identification.
-        typeof keyFields === "function" ? keyFields :
-        // Leave existing.keyFn unchanged if above cases fail.
-        existing.keyFn;
-
-      if (fields) {
-        Object.keys(fields).forEach(fieldName => {
-          const existing = this.getFieldPolicy(typename, fieldName, true)!;
-          const incoming = fields[fieldName];
-
-          if (typeof incoming === "function") {
-            existing.read = incoming;
-          } else {
-            const { keyArgs, read, merge } = incoming;
-
-            existing.keyFn =
-              // Pass false to disable argument-based differentiation of
-              // field identities.
-              keyArgs === false ? simpleKeyArgsFn :
-              // Pass an array of strings to use named arguments to
-              // compute a composite identity for the field.
-              Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
-              // Pass a function to take full control over field identity.
-              typeof keyArgs === "function" ? keyArgs :
-              // Leave existing.keyFn unchanged if above cases fail.
-              existing.keyFn;
-
-            if (typeof read === "function") existing.read = read;
-
-            existing.merge =
-              typeof merge === "function" ? merge :
-              // Pass merge:true as a shorthand for a merge implementation
-              // that returns options.mergeObjects(existing, incoming).
-              merge === true ? mergeTrueFn :
-              // Pass merge:false to make incoming always replace existing
-              // without any warnings about data clobbering.
-              merge === false ? mergeFalseFn :
-              existing.merge;
-          }
-
-          if (existing.read && existing.merge) {
-            // If we have both a read and a merge function, assume
-            // keyArgs:false, because read and merge together can take
-            // responsibility for interpreting arguments in and out. This
-            // default assumption can always be overridden by specifying
-            // keyArgs explicitly in the FieldPolicy.
-            existing.keyFn = existing.keyFn || simpleKeyArgsFn;
-          }
-        });
+      if (hasOwn.call(this.toBeAdded, typename)) {
+        this.toBeAdded[typename].push(incoming);
+      } else {
+        this.toBeAdded[typename] = [incoming];
       }
     });
+  }
+
+  private updateTypePolicy(typename: string, incoming: TypePolicy) {
+    const existing = this.getTypePolicy(typename);
+    const { keyFields, fields } = incoming;
+
+    if (incoming.queryType) this.setRootTypename("Query", typename);
+    if (incoming.mutationType) this.setRootTypename("Mutation", typename);
+    if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
+
+    existing.keyFn =
+      // Pass false to disable normalization for this typename.
+      keyFields === false ? nullKeyFieldsFn :
+      // Pass an array of strings to use those fields to compute a
+      // composite ID for objects of this typename.
+      Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
+      // Pass a function to take full control over identification.
+      typeof keyFields === "function" ? keyFields :
+      // Leave existing.keyFn unchanged if above cases fail.
+      existing.keyFn;
+
+    if (fields) {
+      Object.keys(fields).forEach(fieldName => {
+        const existing = this.getFieldPolicy(typename, fieldName, true)!;
+        const incoming = fields[fieldName];
+
+        if (typeof incoming === "function") {
+          existing.read = incoming;
+        } else {
+          const { keyArgs, read, merge } = incoming;
+
+          existing.keyFn =
+            // Pass false to disable argument-based differentiation of
+            // field identities.
+            keyArgs === false ? simpleKeyArgsFn :
+            // Pass an array of strings to use named arguments to
+            // compute a composite identity for the field.
+            Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
+            // Pass a function to take full control over field identity.
+            typeof keyArgs === "function" ? keyArgs :
+            // Leave existing.keyFn unchanged if above cases fail.
+            existing.keyFn;
+
+          if (typeof read === "function") existing.read = read;
+
+          existing.merge =
+            typeof merge === "function" ? merge :
+            // Pass merge:true as a shorthand for a merge implementation
+            // that returns options.mergeObjects(existing, incoming).
+            merge === true ? mergeTrueFn :
+            // Pass merge:false to make incoming always replace existing
+            // without any warnings about data clobbering.
+            merge === false ? mergeFalseFn :
+            existing.merge;
+        }
+
+        if (existing.read && existing.merge) {
+          // If we have both a read and a merge function, assume
+          // keyArgs:false, because read and merge together can take
+          // responsibility for interpreting arguments in and out. This
+          // default assumption can always be overridden by specifying
+          // keyArgs explicitly in the FieldPolicy.
+          existing.keyFn = existing.keyFn || simpleKeyArgsFn;
+        }
+      });
+    }
   }
 
   private setRootTypename(
@@ -451,6 +464,12 @@ export class Policies {
         this.typePolicies[typename] = Object.create(null);
       policy.fields = Object.create(null);
     }
+
+    const inbox = this.toBeAdded[typename];
+    if (inbox && inbox.length) {
+      this.updateTypePolicy(typename, compact(...inbox.splice(0)));
+    }
+
     return this.typePolicies[typename];
   }
 

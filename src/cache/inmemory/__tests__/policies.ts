@@ -2359,6 +2359,7 @@ describe("type policies", function () {
             totalCount
             edges {
               __typename
+              id
               node {
                 __typename
                 id
@@ -2385,6 +2386,7 @@ describe("type policies", function () {
       const secondEdges = [
         {
           __typename: "TodoEdge",
+          id: "edge1",
           node: {
             __typename: "Todo",
             id: '1',

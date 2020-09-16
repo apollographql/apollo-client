@@ -61,9 +61,9 @@ export function relayStylePagination<TNode = Reference>(
   return {
     keyArgs,
 
-    read(existing, { canRead }) {
+    read(existing) {
       if (!existing) return;
-      const edges = existing.edges.filter(edge => canRead(edge.node));
+      const edges = existing.edges;
       return {
         // Some implementations return additional Connection fields, such
         // as existing.totalCount. These fields are saved by the merge

@@ -1,3 +1,5 @@
+import { __rest } from "tslib";
+
 import { FieldPolicy, Reference } from '../../cache';
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
@@ -205,12 +207,8 @@ export function relayStylePagination<TNode = Reference>(
 }
 
 // Returns any unrecognized properties of the given object.
-const getExtras = ({
-  edges,
-  wrappers,
-  pageInfo,
-  ...extras
-}: Record<string, any>) => extras;
+const getExtras = (obj: Record<string, any>) => __rest(obj, notExtras);
+const notExtras = ["edges", "wrappers", "pageInfo"];
 
 function makeEmptyData(): TExistingRelay<any> {
   return {

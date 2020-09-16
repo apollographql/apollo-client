@@ -71,7 +71,7 @@ export function relayStylePagination<TNode = Reference>(
         // Some implementations return additional Connection fields, such
         // as existing.totalCount. These fields are saved by the merge
         // function, so the read function should also preserve them.
-        ...existing,
+        ...getExtras(existing),
         edges,
         pageInfo: {
           ...existing.pageInfo,
@@ -131,14 +131,22 @@ export function relayStylePagination<TNode = Reference>(
       if (!suffix.length) updatePageInfo("hasNextPage");
 
       return {
-        ...existing,
-        ...incoming,
+        ...getExtras(existing),
+        ...getExtras(incoming),
         edges,
         pageInfo,
       };
     },
   };
 }
+
+// Returns any unrecognized properties of the given object.
+const getExtras = ({
+  edges,
+  wrappers,
+  pageInfo,
+  ...extras
+}: Record<string, any>) => extras;
 
 function makeEmptyData() {
   return {

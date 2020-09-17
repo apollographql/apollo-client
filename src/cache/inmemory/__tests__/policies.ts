@@ -2359,6 +2359,7 @@ describe("type policies", function () {
             totalCount
             edges {
               __typename
+              id
               node {
                 __typename
                 id
@@ -2385,6 +2386,7 @@ describe("type policies", function () {
       const secondEdges = [
         {
           __typename: "TodoEdge",
+          id: "edge1",
           node: {
             __typename: "Todo",
             id: '1',
@@ -2459,7 +2461,7 @@ describe("type policies", function () {
           ROOT_QUERY: {
             __typename: "Query",
             todos: {
-              edges: [],
+              wrappers: [],
               pageInfo: {
                 "endCursor": "",
                 "hasNextPage": true,
@@ -3047,15 +3049,17 @@ describe("type policies", function () {
               // Note that Turrell's name has been lower-cased.
               snapshot.ROOT_QUERY!["search:james turrell"]
             ).toEqual({
-              edges: turrellEdges.slice(0, 1).map(edge => ({
-                ...edge,
+              wrappers: turrellEdges.slice(0, 1).map(edge => ({
                 // The relayStylePagination merge function updates the
                 // edge.cursor field of the first and last edge, even if
                 // the query did not request the edge.cursor field, if
                 // pageInfo.{start,end}Cursor are defined.
                 cursor: turrellPageInfo1.startCursor,
-                // Artist objects are normalized by HREF:
-                node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                edge: {
+                  ...edge,
+                  // Artist objects are normalized by HREF:
+                  node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                },
               })),
               pageInfo: turrellPageInfo1,
               totalCount: 13531,
@@ -3139,20 +3143,22 @@ describe("type policies", function () {
               // Note that Turrell's name has been lower-cased.
               snapshot.ROOT_QUERY!["search:james turrell"]
             ).toEqual({
-              edges: turrellEdges.map((edge, i) => ({
-                ...edge,
+              wrappers: turrellEdges.map((edge, i) => ({
                 // This time the cursors are different depending on which
                 // of the two edges we're considering.
                 cursor: [
                   turrellPageInfo2.startCursor,
                   turrellPageInfo2.endCursor,
                 ][i],
-                node: [
-                  // Artist objects are normalized by HREF:
-                  { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-                  // However, SearchableItem objects are not normalized.
-                  edge.node,
-                ][i],
+                edge: {
+                  ...edge,
+                  node: [
+                    // Artist objects are normalized by HREF:
+                    { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                    // However, SearchableItem objects are not normalized.
+                    edge.node,
+                  ][i],
+                },
               })),
               pageInfo: turrellPageInfo2,
               totalCount: 13531,

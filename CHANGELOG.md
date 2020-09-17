@@ -1,3 +1,10 @@
+## Apollo Client 3.2.1
+
+## Bug Fixes
+
+- Fix `relayStylePagination` to handle the possibility that edges might be normalized `Reference` objects (uncommon). <br/>
+  [@anark](https://github.com/anark) and [@benjamn](https://github.com/benjamn) in [#7023](https://github.com/apollographql/apollo-client/pull/7023)
+
 ## Apollo Client 3.2.0
 
 ## Bug Fixes

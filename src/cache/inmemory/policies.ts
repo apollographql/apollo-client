@@ -95,9 +95,18 @@ export type KeyArgsFunction = (
 ) => KeySpecifier | ReturnType<IdGetter>;
 
 export type FieldPolicy<
+  // The internal representation used to store the field's data in the
+  // cache. Must be JSON-serializable if you plan to serialize the result
+  // of cache.extract() using JSON.
   TExisting = any,
+  // The type of the incoming parameter passed to the merge function,
+  // typically matching the GraphQL response format, but with Reference
+  // objects substituted for any identifiable child objects. Often the
+  // same as TExisting, but not necessarily.
   TIncoming = TExisting,
-  TReadResult = TExisting,
+  // The type that the read function actually returns, using TExisting
+  // data and options.args as input. Usually the same as TIncoming.
+  TReadResult = TIncoming,
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;

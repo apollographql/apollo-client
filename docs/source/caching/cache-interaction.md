@@ -5,7 +5,7 @@ sidebar_title: Reading and writing
 
 Apollo Client provides the following methods for reading and writing data to the cache:
 
-* [`readQuery`](#readquery) and [`readFragment`](#readfragment) 
+* [`readQuery`](#readquery) and [`readFragment`](#readfragment)
 * [`writeQuery` and `writeFragment`](#writequery-and-writefragment)
 * [`cache.modify`](#cachemodify) (a method of `InMemoryCache`)
 
@@ -81,7 +81,7 @@ const todo = client.readFragment({
 
 The first argument, `id`, is the value of the unique identifier for the object you want to read from the cache. By default, this is the value of the object's `id` field, but you can [customize this behavior](./cache-configuration/#generating-unique-identifiers).
 
-In the example above: 
+In the example above:
 
 * If a `Todo` object with an `id` of `5` is _not_ in the cache,
 `readFragment` returns `null`.
@@ -155,6 +155,7 @@ client.writeQuery({
 The `modify` method of `InMemoryCache` enables you to directly modify the values of individual cached fields, or even delete fields entirely.
 
 * Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you override this behavior).
+* You can override the behavior of the above by the [`nextFetchPolicy`](https://www.apollographql.com/docs/react/api/react/hooks/#options) property of the `useQuery` hook
 * _Unlike_ `writeQuery` and `writeFragment`, `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are always overwritten with exactly the values you specify.
 
 ### Parameters
@@ -268,7 +269,7 @@ As a safety check, we then scan the array of existing comment references (`exist
 
 ### Example: Updating the cache after a mutation
 
-If you call `writeFragment` with data that's identical (`===`) to an existing object in the cache, it returns a reference to the _existing_ object without writing any new data. This means we can use `writeFragment` to obtain a reference to an existing object in the cache. This can come in handy when using Apollo Client features like [`useMutation`](../data/mutations/), which might have already added data we're interested in working with. 
+If you call `writeFragment` with data that's identical (`===`) to an existing object in the cache, it returns a reference to the _existing_ object without writing any new data. This means we can use `writeFragment` to obtain a reference to an existing object in the cache. This can come in handy when using Apollo Client features like [`useMutation`](../data/mutations/), which might have already added data we're interested in working with.
 
 For example:
 

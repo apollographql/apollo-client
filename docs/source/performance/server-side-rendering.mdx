@@ -25,7 +25,7 @@ You can then rehydrate the client using the initial state passed from the server
 
 ```js
 const client = new ApolloClient({
-  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
+  cache: new InMemoryCache().restore(JSON.parse(window.__APOLLO_STATE__)),
   link,
 });
 ```
@@ -38,7 +38,7 @@ If you are using `fetchPolicy: network-only` or `fetchPolicy: cache-and-network`
 
 ```js
 const client = new ApolloClient({
-  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
+  cache: new InMemoryCache().restore(JSON.parse(window.__APOLLO_STATE__)),
   link,
   ssrForceFetchDelay: 100,
 });

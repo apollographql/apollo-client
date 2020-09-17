@@ -337,7 +337,7 @@ First, you will need to initialize an `InMemoryCache` on the server and create a
 On the client, you can rehydrate the cache using the initial data passed from the server:
 
 ```js
-cache: new Cache().restore(window.__APOLLO_STATE__)
+cache: new Cache().restore(JSON.parse(window.__APOLLO_STATE__))
 ```
 
 If you would like to learn more about server side rendering, please check out our more in depth guide [here](../performance/server-side-rendering/).

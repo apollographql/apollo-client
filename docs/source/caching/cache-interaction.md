@@ -269,7 +269,11 @@ As a safety check, we then scan the array of existing comment references (`exist
 
 ### Example: Updating the cache after a mutation
 
-If you call `writeFragment` with data that's identical (`===`) to an existing object in the cache, it returns a reference to the _existing_ object without writing any new data. This means we can use `writeFragment` to obtain a reference to an existing object in the cache. This can come in handy when using Apollo Client features like [`useMutation`](../data/mutations/), which might have already added data we're interested in working with.
+If you call `writeFragment` with an `options.data` object that the cache is able to identify, based on its `__typename` and primary key fields, you can avoid passing `options.id` to `writeFragment`.
+
+Whether you provide `options.id` explicitly or let `writeFragment` figure it out using `options.data`, `writeFragment` returns a `Reference` to the identified object.
+
+This behavior makes `writeFragment` a good tool for obtaining a `Reference` to an existing object in the cache, which can come in handy when writing an `update` function for [`useMutation`](../data/mutations/):
 
 For example:
 
@@ -296,7 +300,7 @@ const [addComment] = useMutation(ADD_COMMENT, {
 });
 ```
 
-In this example, `useMutation` creates a `Comment` and automatically adds it to the cache, but it _doesn't_ automatically know how to add that `Comment` to the corresponding `Post`'s list of `comments`. This means that any queries watching the `Post`'s list of `comments` _won't_ update.
+In this example, `useMutation` automatically creates a `Comment` and adds it to the cache, but it _doesn't_ automatically know how to add that `Comment` to the corresponding `Post`'s list of `comments`. This means that any queries watching the `Post`'s list of `comments` _won't_ update.
 
 To address this, we use the [`update` callback](../data/mutations/#updating-the-cache-after-a-mutation) of `useMutation` to call `cache.modify`. Like the [previous example](#example-adding-an-item-to-a-list), we add the new comment to the list. _Unlike_ the previous example, the comment was already added to the cache by `useMutation`. Consequently, `cache.writeFragment` returns a reference to the existing object.
 

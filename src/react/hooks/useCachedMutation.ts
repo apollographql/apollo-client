@@ -1,37 +1,44 @@
-import { DocumentNode } from 'graphql';
+import {DocumentNode} from 'graphql';
 
-import { MutationHookOptions, MutationTuple } from '../types/types';
-import { OperationVariables } from '../../core';
+import {CachedMutationHookOptions, MutationTuple} from '../types/types';
+import {OperationVariables} from '../../core';
 
-import { useMutation } from './useMutation';
-
-/*
-mutationName: is the name of the mutation
-cacheId: Is the rootID of cache
- */
+import {useMutation} from './useMutation';
 
 export function useCachedMutation<TData = any, TVariables = OperationVariables>(
   mutation: DocumentNode,
   fragment: DocumentNode,
-  mutationName: string,
-  cacheId: string,
-  options?: MutationHookOptions<TData, TVariables>,
+  options: CachedMutationHookOptions<TData, TVariables>,
 ): MutationTuple<TData, TVariables> {
   //was did in this way to ensure that the user won't pass this prop;
   delete options?.update;
 
+  const {mutationName, rootCacheId} = options;
+
   return useMutation(mutation, {
-    update(cache, { data }) {
+    update(cache, {data}) {
       const response = (data as any)[mutationName];
 
       cache.modify({
         fields: {
-          [cacheId]: (existingData = []) => {
-            const newTweetRef = cache.writeFragment({
+          [rootCacheId]: (existingData = []) => {
+            const newRef = cache.writeFragment({
               data: response,
               fragment,
             });
-            return [...existingData, newTweetRef];
+
+            if (options?.updateKey) {
+              if (typeof existingData === 'object') {
+                return {
+                  ...existingData,
+                  [options.updateKey]: [
+                    newRef,
+                    ...existingData[options.updateKey],
+                  ],
+                };
+              }
+            }
+            return [...existingData, newRef];
           },
         },
       });

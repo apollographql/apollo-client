@@ -200,6 +200,15 @@ export interface MutationHookOptions<
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
+export interface CachedMutationHookOptions<
+  TData = any,
+  TVariables = OperationVariables
+> extends BaseMutationOptions<TData, TVariables> {
+  mutationName: string;
+  rootCacheId: string;
+  updateKey?: string;
+}
+
 export interface MutationDataOptions<TData = any, TVariables = OperationVariables>
   extends BaseMutationOptions<TData, TVariables> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;

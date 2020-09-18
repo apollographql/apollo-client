@@ -20,10 +20,12 @@ export function concatPagination<T = Reference>(
   };
 }
 
-// A basic field policy that uses options.args.{offset,limit} to splice
-// the incoming data into the existing array. If your arguments are called
-// something different (like args.{start,count}), feel free to copy/paste
-// this implementation and make the appropriate changes.
+// A basic field policy that uses options.args.offset as the starting
+// point to display output.  It uses the length of the incoming
+// data to determine the length of the returned merged result.
+// If your arguments are called something different (like args.{start,limit}),
+// it is suggested that you use this function as a basis for your own 
+// implementation and make the necessary changes.
 export function offsetLimitPagination<T = Reference>(
   keyArgs: KeyArgs = false,
 ): FieldPolicy<T[]> {

@@ -164,14 +164,14 @@ export class StoreWriter {
       }
     }
 
-    // This mergedFields variable will be repeatedly updated using context.merge
-    // to accumulate all fields that need to be written into the store.
-    let mergedFields: StoreObject = Object.create(null);
+    // This variable will be repeatedly updated using context.merge to
+    // accumulate all fields that need to be written into the store.
+    let incomingFields: StoreObject = Object.create(null);
 
     // Write any key fields that were used during identification, even if
     // they were not mentioned in the original query.
     if (keyObject) {
-      mergedFields = context.merge(mergedFields, keyObject);
+      incomingFields = context.merge(incomingFields, keyObject);
     }
 
     // If typename was not passed in, infer it. Note that typename is
@@ -183,7 +183,7 @@ export class StoreWriter {
       (dataId && context.store.get(dataId, "__typename") as string);
 
     if ("string" === typeof typename) {
-      mergedFields.__typename = typename;
+      incomingFields.__typename = typename;
     }
 
     const workSet = new Set(selectionSet.selections);
@@ -217,12 +217,12 @@ export class StoreWriter {
               __value: incomingValue,
             } as FieldValueToBeMerged;
 
-            // Communicate to the caller that mergedFields contains at
+            // Communicate to the caller that newFields contains at
             // least one FieldValueToBeMerged.
             out.shouldApplyMerges = true;
           }
 
-          mergedFields = context.merge(mergedFields, {
+          incomingFields = context.merge(incomingFields, {
             [storeFieldName]: incomingValue,
           });
 
@@ -274,18 +274,18 @@ export class StoreWriter {
       const entityRef = makeReference(dataId);
 
       if (out.shouldApplyMerges) {
-        mergedFields = policies.applyMerges(entityRef, mergedFields, context);
+        incomingFields = policies.applyMerges(entityRef, incomingFields, context);
       }
 
       if (process.env.NODE_ENV !== "production") {
-        Object.keys(mergedFields).forEach(storeFieldName => {
+        Object.keys(incomingFields).forEach(storeFieldName => {
           const fieldName = fieldNameFromStoreName(storeFieldName);
           // If a merge function was defined for this field, trust that it
           // did the right thing about (not) clobbering data.
           if (!policies.hasMergeFunction(typename, fieldName)) {
             warnAboutDataLoss(
               entityRef,
-              mergedFields,
+              incomingFields,
               storeFieldName,
               context.store,
             );
@@ -293,12 +293,12 @@ export class StoreWriter {
         });
       }
 
-      context.store.merge(dataId, mergedFields);
+      context.store.merge(dataId, incomingFields);
 
       return entityRef;
     }
 
-    return mergedFields;
+    return incomingFields;
   }
 
   private processFieldValue(

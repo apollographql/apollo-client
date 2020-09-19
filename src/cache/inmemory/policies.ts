@@ -23,12 +23,10 @@ import {
   canUseWeakMap,
   compact,
 } from '../../utilities';
-import { IdGetter, ReadMergeModifyContext } from "./types";
+import { IdGetter, ReadMergeModifyContext, MergeInfo } from "./types";
 import {
   hasOwn,
   fieldNameFromStoreName,
-  FieldValueToBeMerged,
-  isFieldValueToBeMerged,
   storeValueIsStoreObject,
   selectionSetMatchesResult,
   TypeOrFieldNameRegExp,
@@ -715,21 +713,17 @@ export class Policies {
     return !!(policy && policy.merge);
   }
 
-  public applyMerges<T extends StoreValue>(
-    existing: T | Reference,
-    incoming: T | FieldValueToBeMerged,
+  public runMergeFunction(
+    existing: StoreValue,
+    incoming: StoreValue,
+    { field, typename }: MergeInfo,
     context: ReadMergeModifyContext,
-    storageKeys?: [string | StoreObject, string],
-  ): T {
-    if (isFieldValueToBeMerged(incoming)) {
-      const field = incoming.__field;
-      const fieldName = field.name.value;
-      // This policy and its merge function are guaranteed to exist
-      // because the incoming value is a FieldValueToBeMerged object.
-      const { merge } = this.getFieldPolicy(
-        incoming.__typename, fieldName, false)!;
-
-      incoming = merge!(existing, incoming.__value, makeFieldFunctionOptions(
+    storage?: StorageType,
+  ) {
+    const fieldName = field.name.value;
+    const { merge } = this.getFieldPolicy(typename, fieldName, false)!;
+    if (merge) {
+      return merge(existing, incoming, makeFieldFunctionOptions(
         this,
         // Unlike options.readField for read functions, we do not fall
         // back to the current object if no foreignObjOrRef is provided,
@@ -743,69 +737,13 @@ export class Policies {
         // However, readField(name, ref) is useful for merge functions
         // that need to deduplicate child objects and references.
         void 0,
-        { typename: incoming.__typename,
+        { typename,
           fieldName,
           field,
           variables: context.variables },
         context,
-        storageKeys
-          ? context.store.getStorage(...storageKeys)
-          : Object.create(null),
-      )) as T;
-    }
-
-    if (Array.isArray(incoming)) {
-      return incoming!.map(item => this.applyMerges(
-        // Items in the same position in different arrays are not
-        // necessarily related to each other, so there is no basis for
-        // merging them. Passing void here means any FieldValueToBeMerged
-        // objects within item will be handled as if there was no existing
-        // data. Also, we do not pass storageKeys because the array itself
-        // is never an entity with a __typename, so its indices can never
-        // have custom read or merge functions.
-        void 0,
-        item,
-        context,
-      )) as T;
-    }
-
-    if (storeValueIsStoreObject(incoming)) {
-      const e = existing as StoreObject | Reference;
-      const i = incoming as StoreObject;
-
-      // If the existing object is a { __ref } object, e.__ref provides a
-      // stable key for looking up the storage object associated with
-      // e.__ref and storeFieldName. Otherwise, storage is enabled only if
-      // existing is actually a non-null object. It's less common for a
-      // merge function to use options.storage, but it's conceivable that a
-      // pair of read and merge functions might want to cooperate in
-      // managing their shared options.storage object.
-      const firstStorageKey = isReference(e)
-        ? e.__ref
-        : typeof e === "object" && e;
-
-      let newFields: StoreObject | undefined;
-
-      Object.keys(i).forEach(storeFieldName => {
-        const incomingValue = i[storeFieldName];
-        const appliedValue = this.applyMerges(
-          context.store.getFieldValue(e, storeFieldName),
-          incomingValue,
-          context,
-          // Avoid enabling options.storage when firstStorageKey is falsy,
-          // which implies no options.storage object has ever been created
-          // for a read/merge function for this field.
-          firstStorageKey ? [firstStorageKey, storeFieldName] : void 0,
-        );
-        if (appliedValue !== incomingValue) {
-          newFields = newFields || Object.create(null);
-          newFields![storeFieldName] = appliedValue;
-        }
-      });
-
-      if (newFields) {
-        return { ...i, ...newFields } as typeof incoming;
-      }
+        storage || Object.create(null),
+      ));
     }
 
     return incoming;
@@ -872,21 +810,15 @@ function makeFieldFunctionOptions(
         const iType = getFieldValue(incoming, "__typename");
         const typesDiffer = eType && iType && eType !== iType;
 
-        const applied = policies.applyMerges(
-          typesDiffer ? void 0 : existing,
-          incoming,
-          context,
-        );
-
         if (
           typesDiffer ||
           !storeValueIsStoreObject(existing) ||
-          !storeValueIsStoreObject(applied)
+          !storeValueIsStoreObject(incoming)
         ) {
-          return applied;
+          return incoming;
         }
 
-        return { ...existing, ...applied };
+        return { ...existing, ...incoming };
       }
 
       return incoming;

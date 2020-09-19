@@ -258,7 +258,7 @@ export abstract class EntityStore implements NormalizedCache {
 
   public abstract getStorage(
     idOrObj: string | StoreObject,
-    storeFieldName: string,
+    storeFieldName: string | number,
   ): StorageType;
 
   // Maps root entity IDs to the number of times they have been retained, minus
@@ -353,7 +353,7 @@ export abstract class EntityStore implements NormalizedCache {
   // Bound function that can be passed around to provide easy access to fields
   // of Reference objects as well as ordinary objects.
   public getFieldValue = <T = StoreValue>(
-    objectOrReference: StoreObject | Reference,
+    objectOrReference: StoreObject | Reference | undefined,
     storeFieldName: string,
   ) => maybeDeepFreeze(
     isReference(objectOrReference)
@@ -484,9 +484,14 @@ export namespace EntityStore {
     public readonly storageTrie = new KeyTrie<StorageType>(canUseWeakMap);
     public getStorage(
       idOrObj: string | StoreObject,
-      storeFieldName: string,
+      storeFieldName: string | number,
     ): StorageType {
-      return this.storageTrie.lookup(idOrObj, storeFieldName);
+      return this.storageTrie.lookup(
+        idOrObj,
+        // Normalize numbers to strings, so we don't accidentally end up
+        // with multiple storage objects for the same field.
+        String(storeFieldName),
+      );
     }
   }
 }
@@ -555,7 +560,7 @@ class Layer extends EntityStore {
 
   public getStorage(
     idOrObj: string | StoreObject,
-    storeFieldName: string,
+    storeFieldName: string | number,
   ): StorageType {
     return this.parent.getStorage(idOrObj, storeFieldName);
   }

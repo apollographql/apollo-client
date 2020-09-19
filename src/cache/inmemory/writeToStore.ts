@@ -22,8 +22,8 @@ import {
   cloneDeep,
 } from '../../utilities';
 
-import { NormalizedCache, ReadMergeModifyContext } from './types';
-import { makeProcessedFieldsMerger, FieldValueToBeMerged, fieldNameFromStoreName } from './helpers';
+import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
+import { makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject } from './helpers';
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 
@@ -41,9 +41,7 @@ interface ProcessSelectionSetOptions {
   result: Record<string, any>;
   selectionSet: SelectionSetNode;
   context: WriteContext;
-  out?: {
-    shouldApplyMerges: boolean;
-  };
+  mergeTree: MergeTree;
 }
 
 export interface WriteToStoreOptions {
@@ -93,6 +91,7 @@ export class StoreWriter {
       result: result || Object.create(null),
       dataId,
       selectionSet: operationDefinition.selectionSet,
+      mergeTree: { map: new Map },
       context: {
         store,
         written: Object.create(null),
@@ -123,9 +122,7 @@ export class StoreWriter {
     context,
     // This object allows processSelectionSet to report useful information
     // to its callers without explicitly returning that information.
-    out = {
-      shouldApplyMerges: false,
-    },
+    mergeTree,
   }: ProcessSelectionSetOptions): StoreObject | Reference {
     const { policies } = this.cache;
 
@@ -203,23 +200,20 @@ export class StoreWriter {
             variables: context.variables,
           });
 
+          const childTree = getChildMergeTree(mergeTree, storeFieldName);
+
           let incomingValue =
-            this.processFieldValue(value, selection, context, out);
+            this.processFieldValue(value, selection, context, childTree);
 
           if (policies.hasMergeFunction(typename, selection.name.value)) {
-            // If a custom merge function is defined for this field, store
-            // a special FieldValueToBeMerged object, so that we can run
-            // the merge function later, after all processSelectionSet
-            // work is finished.
-            incomingValue = {
-              __field: selection,
-              __typename: typename,
-              __value: incomingValue,
-            } as FieldValueToBeMerged;
-
-            // Communicate to the caller that newFields contains at
-            // least one FieldValueToBeMerged.
-            out.shouldApplyMerges = true;
+            childTree.info = {
+              // TODO Check compatibility against any existing
+              // childTree.field?
+              field: selection,
+              typename,
+            };
+          } else {
+            maybeRecycleChildMergeTree(mergeTree, storeFieldName);
           }
 
           incomingFields = context.merge(incomingFields, {
@@ -273,8 +267,8 @@ export class StoreWriter {
     if ("string" === typeof dataId) {
       const entityRef = makeReference(dataId);
 
-      if (out.shouldApplyMerges) {
-        incomingFields = policies.applyMerges(entityRef, incomingFields, context);
+      if (mergeTree.map.size) {
+        incomingFields = this.applyMerges(mergeTree, entityRef, incomingFields, context);
       }
 
       if (process.env.NODE_ENV !== "production") {
@@ -305,7 +299,7 @@ export class StoreWriter {
     value: any,
     field: FieldNode,
     context: WriteContext,
-    out: ProcessSelectionSetOptions["out"],
+    mergeTree: MergeTree,
   ): StoreValue {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
@@ -315,15 +309,134 @@ export class StoreWriter {
     }
 
     if (Array.isArray(value)) {
-      return value.map(item => this.processFieldValue(item, field, context, out));
+      return value.map((item, i) => {
+        const value = this.processFieldValue(
+          item, field, context, getChildMergeTree(mergeTree, i));
+        maybeRecycleChildMergeTree(mergeTree, i);
+        return value;
+      });
     }
 
     return this.processSelectionSet({
       result: value,
       selectionSet: field.selectionSet,
       context,
-      out,
+      mergeTree,
     });
+  }
+
+  private applyMerges<T extends StoreValue>(
+    mergeTree: MergeTree,
+    existing: StoreValue,
+    incoming: T,
+    context: ReadMergeModifyContext,
+    storageKeys?: [string | StoreObject, string | number],
+  ): T {
+    if (mergeTree.map.size && !isReference(incoming)) {
+      const e: StoreObject | Reference | undefined = (
+        // Items in the same position in different arrays are not
+        // necessarily related to each other, so when incoming is an array
+        // we process its elements as if there was no existing data.
+        !Array.isArray(incoming) &&
+        // Likewise, existing must be either a Reference or a StoreObject
+        // in order for its fields to be safe to merge with the fields of
+        // the incoming object.
+        (isReference(existing) || storeValueIsStoreObject(existing))
+      ) ? existing : void 0;
+
+      // This narrowing is implied by mergeTree.map.size > 0 and
+      // !isReference(incoming), though TypeScript understandably cannot
+      // hope to infer this type.
+      const i = incoming as StoreObject | StoreValue[];
+
+      // The options.storage objects provided to read and merge functions
+      // are derived from the identity of the parent object and the
+      // storeFieldName string of each field to be merged. Since the
+      // parent identity remains the same for each iteration of the loop
+      // below, we can precompute it here.
+      const firstStorageKey: string | StoreObject | undefined =
+        isReference(e) ? e.__ref : e;
+
+      // It's possible that applying merge functions to this subtree will
+      // not change the incoming data, so this variable tracks the fields
+      // that did change, so we can create a new incoming object when (and
+      // only when) at least one incoming field has changed. We use a Map
+      // to preserve the type of numeric keys.
+      let changedFields: Map<string | number, StoreValue> | undefined;
+
+      const getValue = (
+        from: typeof e | typeof i,
+        name: string | number,
+      ): StoreValue => {
+        return Array.isArray(from)
+          ? (typeof name === "number" ? from[name] : void 0)
+          : context.store.getFieldValue(from, String(name))
+      };
+
+      mergeTree.map.forEach((childTree, storeFieldName) => {
+        const eVal = getValue(e, storeFieldName);
+        const iVal = getValue(i, storeFieldName);
+        const aVal = this.applyMerges(
+          childTree,
+          eVal,
+          iVal,
+          context,
+          firstStorageKey ? [
+            firstStorageKey,
+            storeFieldName,
+          ] : void 0,
+        );
+        if (aVal !== iVal) {
+          changedFields = changedFields || new Map;
+          changedFields.set(storeFieldName, aVal);
+        }
+      });
+
+      if (changedFields) {
+        // Shallow clone i so we can add changed fields to it.
+        incoming = (Array.isArray(i) ? i.slice(0) : { ...i }) as T;
+        changedFields.forEach((value, name) => {
+          (incoming as any)[name] = value;
+        });
+      }
+    }
+
+    if (mergeTree.info) {
+      return this.cache.policies.runMergeFunction(
+        existing,
+        incoming,
+        mergeTree.info,
+        context,
+        storageKeys && context.store.getStorage(...storageKeys),
+      );
+    }
+
+    return incoming;
+  }
+}
+
+const emptyMergeTreePool: MergeTree[] = [];
+
+function getChildMergeTree(
+  { map }: MergeTree,
+  name: string | number,
+): MergeTree {
+  if (!map.has(name)) {
+    map.set(name, emptyMergeTreePool.pop() || { map: new Map });
+  }
+  return map.get(name)!;
+}
+
+function maybeRecycleChildMergeTree(
+  { map }: MergeTree,
+  name: string | number,
+) {
+  const childTree = map.get(name);
+  if (childTree &&
+      !childTree.info &&
+      !childTree.map.size) {
+    emptyMergeTreePool.push(childTree);
+    map.delete(name);
   }
 }
 

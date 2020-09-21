@@ -10,7 +10,7 @@ export function useCachedMutation<TData = any, TVariables = OperationVariables>(
   fragment: DocumentNode,
   options: CachedMutationHookOptions<TData, TVariables>,
 ): MutationTuple<TData, TVariables> {
-  //was did in this way to ensure that the user won't pass this prop;
+  //It was done in this way to ensure that the user won't pass this prop;
   delete options?.update;
 
   const {mutationName, rootCacheId} = options;
@@ -29,16 +29,35 @@ export function useCachedMutation<TData = any, TVariables = OperationVariables>(
 
             if (options?.updateKey) {
               if (typeof existingData === 'object') {
-                return {
-                  ...existingData,
-                  [options.updateKey]: [
-                    newRef,
-                    ...existingData[options.updateKey],
-                  ],
-                };
+                const key = options.updateKey;
+
+                if (!existingData[key].find((data: any) => data.__ref === newRef?.__ref)) {
+                  return {
+                    ...existingData,
+                    [key]: [
+                      newRef,
+                      ...existingData[key],
+                    ],
+                  };
+                } else {
+                  const newData = existingData[key].filter((data: any) => data.__ref !== newRef?.__ref);
+                  return {
+                    ...existingData,
+                    [key]: [
+                      newRef,
+                      ...newData,
+                    ],
+                  };
+                }
               }
             }
-            return [...existingData, newRef];
+
+            if (!existingData.find((data: any) => data.__ref === newRef?.__ref)) {
+              return [...existingData, newRef]
+            } else {
+              const newData = existingData.filter((data: any) => data.__ref !== newRef?.__ref);
+              return [...newData, newRef];
+            }
           },
         },
       });

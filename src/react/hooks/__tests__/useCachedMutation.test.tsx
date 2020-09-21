@@ -19,6 +19,16 @@ describe('useCachedMutation Hook', () => {
     }
   `;
 
+  const UPDATE_TODO_MUTATION: DocumentNode = gql`
+    mutation updateTodo($priority: String!) {
+      updateTodo(priority: $priority) {
+        id
+        description
+        priority
+      }
+    }
+  `;
+
   const FRAGMENT = gql`
     fragment NewTodo on createTodo {
       id
@@ -47,6 +57,23 @@ describe('useCachedMutation Hook', () => {
         description: 'Make the new apollo-client hook 😎!',
         priority: 'High',
         __typename: 'Todo'
+      },
+    ]
+  }
+
+  const CACHE_BEFORE_UPDATE = {
+    todos: [
+      {
+        id: 1,
+        description: 'Make the new apollo-client hook 😎!',
+        priority: 'High',
+        __typename: 'Todo'
+      },
+      {
+        id: 2,
+        description: 'Get Coffe!',
+        priority: 'High',
+        __typename: 'Todo'
       }
     ]
   }
@@ -65,11 +92,40 @@ describe('useCachedMutation Hook', () => {
     }
   }
 
+  const PAGINATION_CACHE_BEFORE_UPDATE = {
+    todos: {
+      todos: [
+        {
+          id: 1,
+          description: 'Make the new apollo-client hook 😎!',
+          priority: 'High',
+          __typename: 'Todo'
+        },
+        {
+          id: 2,
+          description: 'Get Coffe!',
+          priority: 'High',
+          __typename: 'Todo'
+        }
+      ],
+      totalPages: 2
+    }
+  }
+
   const CREATE_TODO_RESULT = {
     createTodo: {
       id: 2,
       description: 'Get Coffe!',
       priority: 'High',
+      __typename: 'Todo'
+    }
+  };
+
+  const UPDATE_TODO_RESULT = {
+    updateTodo: {
+      id: 2,
+      description: 'Get Coffe!',
+      priority: 'Low',
       __typename: 'Todo'
     }
   };
@@ -91,6 +147,23 @@ describe('useCachedMutation Hook', () => {
     ]
   }
 
+  const CACHE_AFTER_UPDATE = {
+    todos: [
+      {
+        id: 1,
+        description: 'Make the new apollo-client hook 😎!',
+        priority: 'High',
+        __typename: 'Todo'
+      },
+      {
+        id: 2,
+        description: 'Get Coffe!',
+        priority: 'Low',
+        __typename: 'Todo'
+      }
+    ]
+  }
+
   const PAGINATION_CACHE_AFTER_CREATE = {
     todos: {
       todos: [
@@ -98,6 +171,26 @@ describe('useCachedMutation Hook', () => {
           id: 2,
           description: 'Get Coffe!',
           priority: 'High',
+          __typename: 'Todo'
+        },
+        {
+          id: 1,
+          description: 'Make the new apollo-client hook 😎!',
+          priority: 'High',
+          __typename: 'Todo'
+        },
+      ],
+      totalPages: 2
+    }
+  }
+
+  const PAGINATION_CACHE_AFTER_UPDATE = {
+    todos: {
+      todos: [
+        {
+          id: 2,
+          description: 'Get Coffe!',
+          priority: 'Low',
           __typename: 'Todo'
         },
         {
@@ -290,7 +383,7 @@ describe('useCachedMutation Hook', () => {
       });
     });
 
-    it('should update the cache of a specific key', async () => {
+    it('should update the cache of a specific key when a new todo is created', async () => {
       const variables = {
         description: 'Get coffe!'
       };
@@ -354,6 +447,141 @@ describe('useCachedMutation Hook', () => {
       return wait(() => {
         const cacheData = cache.read({ query: TODO_PAGINATION_QUERY, optimistic: false })
         expect(cacheData).toEqual(PAGINATION_CACHE_AFTER_CREATE);
+        expect(renderCount).toBe(3);
+      });
+    });
+
+    it('should update the todo and update the cache', async () => {
+      const variables = {
+        priority: 'Low'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: UPDATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: UPDATE_TODO_RESULT }
+        }
+      ];
+
+      let renderCount = 0;
+      const Component = () => {
+
+        const [updateTodo, { loading, data }] = useCachedMutation(
+          UPDATE_TODO_MUTATION,
+          FRAGMENT,
+          {
+            mutationName: 'updateTodo',
+            rootCacheId: 'todos'
+          }
+        );
+
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            updateTodo({ variables });
+            break;
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(UPDATE_TODO_RESULT);
+            break;
+          default:
+        }
+        renderCount += 1;
+        return null;
+      };
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: TODO_QUERY,
+        data: CACHE_BEFORE_UPDATE
+      })
+
+      render(
+        <MockedProvider mocks={mocks} cache={cache}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        const cacheData = cache.read({ query: TODO_QUERY, optimistic: false });
+        expect(cacheData).toEqual(CACHE_AFTER_UPDATE);
+        expect(renderCount).toBe(3);
+      });
+    });
+
+    it('should update the cache of a specific key when a todo is updated', async () => {
+      const variables = {
+        priority: 'Low'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: UPDATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: UPDATE_TODO_RESULT }
+        }
+      ];
+
+      let renderCount = 0;
+      const Component = () => {
+
+        const [createTodo, { loading, data }] = useCachedMutation(
+          UPDATE_TODO_MUTATION,
+          PAGINATION_FRAGMENT,
+          {
+            mutationName: 'updateTodo',
+            rootCacheId: 'todos',
+            updateKey: 'todos'
+          }
+        );
+
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            createTodo({ variables });
+            break;
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(UPDATE_TODO_RESULT);
+            break;
+          default:
+        }
+        renderCount += 1;
+        return null;
+      };
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: TODO_PAGINATION_QUERY,
+        data: PAGINATION_CACHE_BEFORE_UPDATE,
+      })
+
+      render(
+        <MockedProvider mocks={mocks} cache={cache}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        const cacheData = cache.read({ query: TODO_PAGINATION_QUERY, optimistic: false });
+        expect(cacheData).toEqual(PAGINATION_CACHE_AFTER_UPDATE);
         expect(renderCount).toBe(3);
       });
     });

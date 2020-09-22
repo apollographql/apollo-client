@@ -41,6 +41,7 @@ import {
   ReadFieldOptions,
   CanReadFunction,
 } from '../core/types/common';
+import { FieldValueGetter } from './entityStore';
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -171,11 +172,13 @@ export interface FieldFunctionOptions<
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
-  mergeObjects<T extends StoreObject | Reference>(
-    existing: T,
-    incoming: T,
-  ): T | undefined;
+  mergeObjects: MergeObjectsFunction;
 }
+
+type MergeObjectsFunction = <T extends StoreObject | Reference>(
+  existing: T,
+  incoming: T,
+) => T;
 
 export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
   // When reading a field, one often needs to know about any existing
@@ -795,34 +798,38 @@ function makeFieldFunctionOptions(
       return policies.readField<T>(options, context);
     },
 
-    mergeObjects(existing, incoming) {
-      if (Array.isArray(existing) || Array.isArray(incoming)) {
-        throw new InvariantError("Cannot automatically merge arrays");
-      }
+    mergeObjects: makeMergeObjectsFunction(getFieldValue),
+  };
+}
 
-      // These dynamic checks are necessary because the parameters of a
-      // custom merge function can easily have the any type, so the type
-      // system cannot always enforce the StoreObject | Reference
-      // parameter types of options.mergeObjects.
-      if (existing && typeof existing === "object" &&
-          incoming && typeof incoming === "object") {
-        const eType = getFieldValue(existing, "__typename");
-        const iType = getFieldValue(incoming, "__typename");
-        const typesDiffer = eType && iType && eType !== iType;
-
-        if (
-          typesDiffer ||
-          !storeValueIsStoreObject(existing) ||
-          !storeValueIsStoreObject(incoming)
-        ) {
-          return incoming;
-        }
-
-        return { ...existing, ...incoming };
-      }
-
-      return incoming;
+function makeMergeObjectsFunction(
+  getFieldValue: FieldValueGetter,
+): MergeObjectsFunction {
+  return function mergeObjects(existing, incoming) {
+    if (Array.isArray(existing) || Array.isArray(incoming)) {
+      throw new InvariantError("Cannot automatically merge arrays");
     }
+
+    // These dynamic checks are necessary because the parameters of a
+    // custom merge function can easily have the any type, so the type
+    // system cannot always enforce the StoreObject | Reference parameter
+    // types of options.mergeObjects.
+    if (existing && typeof existing === "object" &&
+        incoming && typeof incoming === "object") {
+      const eType = getFieldValue(existing, "__typename");
+      const iType = getFieldValue(incoming, "__typename");
+      const typesDiffer = eType && iType && eType !== iType;
+
+      if (typesDiffer ||
+          !storeValueIsStoreObject(existing) ||
+          !storeValueIsStoreObject(incoming)) {
+        return incoming;
+      }
+
+      return { ...existing, ...incoming };
+    }
+
+    return incoming;
   };
 }
 

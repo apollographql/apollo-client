@@ -65,10 +65,21 @@ export type KeyFieldsFunction = (
   context: KeyFieldsContext,
 ) => KeySpecifier | ReturnType<IdGetter>;
 
+// TODO Should TypePolicy be a generic type, with a TObject or TEntity
+// type parameter?
 export type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
   // array of field names or a function that returns an arbitrary string.
   keyFields?: KeySpecifier | KeyFieldsFunction | false;
+
+  // Allows defining a merge function (or merge:true/false shorthand) to
+  // be used for merging objects of this type wherever they appear, unless
+  // the parent field also defines a merge function/boolean (that is,
+  // parent field merge functions take precedence over type policy merge
+  // functions). In many cases, defining merge:true for a given type
+  // policy can save you from specifying merge:true for all the field
+  // policies where that type might be encountered.
+  merge?: FieldMergeFunction | boolean;
 
   // In the rare event that your schema happens to use a different
   // __typename for the root Query, Mutation, and/or Schema types, you can
@@ -240,6 +251,7 @@ export class Policies {
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
+      merge?: FieldMergeFunction<any>;
       fields: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
@@ -359,6 +371,25 @@ export class Policies {
     const existing = this.getTypePolicy(typename);
     const { keyFields, fields } = incoming;
 
+    function setMerge(
+      existing: { merge?: FieldMergeFunction | boolean; },
+      merge?: FieldMergeFunction | boolean,
+    ) {
+      existing.merge =
+        typeof merge === "function" ? merge :
+        // Pass merge:true as a shorthand for a merge implementation
+        // that returns options.mergeObjects(existing, incoming).
+        merge === true ? mergeTrueFn :
+        // Pass merge:false to make incoming always replace existing
+        // without any warnings about data clobbering.
+        merge === false ? mergeFalseFn :
+        existing.merge;
+    }
+
+    // Type policies can define merge functions, as an alternative to
+    // using field policies to merge child objects.
+    setMerge(existing, incoming.merge);
+
     if (incoming.queryType) this.setRootTypename("Query", typename);
     if (incoming.mutationType) this.setRootTypename("Mutation", typename);
     if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
@@ -396,17 +427,11 @@ export class Policies {
             // Leave existing.keyFn unchanged if above cases fail.
             existing.keyFn;
 
-          if (typeof read === "function") existing.read = read;
+          if (typeof read === "function") {
+            existing.read = read;
+          }
 
-          existing.merge =
-            typeof merge === "function" ? merge :
-            // Pass merge:true as a shorthand for a merge implementation
-            // that returns options.mergeObjects(existing, incoming).
-            merge === true ? mergeTrueFn :
-            // Pass merge:false to make incoming always replace existing
-            // without any warnings about data clobbering.
-            merge === false ? mergeFalseFn :
-            existing.merge;
+          setMerge(existing, merge);
         }
 
         if (existing.read && existing.merge) {
@@ -709,11 +734,21 @@ export class Policies {
   }
 
   public getMergeFunction(
-    typename: string | undefined,
+    parentTypename: string | undefined,
     fieldName: string,
-  ) {
-    const policy = this.getFieldPolicy(typename, fieldName, false);
-    return policy && policy.merge;
+    childTypename: string | undefined,
+  ): FieldMergeFunction | undefined {
+    let policy:
+      | Policies["typePolicies"][string]
+      | Policies["typePolicies"][string]["fields"][string]
+      | undefined =
+      this.getFieldPolicy(parentTypename, fieldName, false);
+    let merge = policy && policy.merge;
+    if (!merge && childTypename) {
+      policy = this.getTypePolicy(childTypename);
+      merge = policy && policy.merge;
+    }
+    return merge;
   }
 
   public runMergeFunction(

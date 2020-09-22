@@ -205,7 +205,16 @@ export class StoreWriter {
           let incomingValue =
             this.processFieldValue(value, selection, context, childTree);
 
-          const merge = policies.getMergeFunction(typename, selection.name.value);
+          const childTypename = selection.selectionSet
+            && context.store.getFieldValue<string>(incomingValue as StoreObject, "__typename")
+            || void 0;
+
+          const merge = policies.getMergeFunction(
+            typename,
+            selection.name.value,
+            childTypename,
+          );
+
           if (merge) {
             childTree.info = {
               // TODO Check compatibility against any existing

@@ -7,7 +7,7 @@ import {
   Reference,
 } from '../../utilities';
 import { FieldValueGetter } from './entityStore';
-import { KeyFieldsFunction, StorageType } from './policies';
+import { KeyFieldsFunction, StorageType, FieldMergeFunction } from './policies';
 import {
   Modifier,
   Modifiers,
@@ -104,6 +104,7 @@ export type ApolloReducerConfig = {
 export interface MergeInfo {
   field: FieldNode;
   typename: string | undefined;
+  merge: FieldMergeFunction;
 };
 
 export interface MergeTree {

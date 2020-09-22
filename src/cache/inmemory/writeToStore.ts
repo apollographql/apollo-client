@@ -205,12 +205,14 @@ export class StoreWriter {
           let incomingValue =
             this.processFieldValue(value, selection, context, childTree);
 
-          if (policies.hasMergeFunction(typename, selection.name.value)) {
+          const merge = policies.getMergeFunction(typename, selection.name.value);
+          if (merge) {
             childTree.info = {
               // TODO Check compatibility against any existing
               // childTree.field?
               field: selection,
               typename,
+              merge,
             };
           } else {
             maybeRecycleChildMergeTree(mergeTree, storeFieldName);
@@ -272,11 +274,15 @@ export class StoreWriter {
       }
 
       if (process.env.NODE_ENV !== "production") {
+        const hasMergeFunction = (storeFieldName: string) => {
+          const childTree = mergeTree.map.get(storeFieldName);
+          return Boolean(childTree && childTree.info && childTree.info.merge);
+        };
+
         Object.keys(incomingFields).forEach(storeFieldName => {
-          const fieldName = fieldNameFromStoreName(storeFieldName);
           // If a merge function was defined for this field, trust that it
           // did the right thing about (not) clobbering data.
-          if (!policies.hasMergeFunction(typename, fieldName)) {
+          if (!hasMergeFunction(storeFieldName)) {
             warnAboutDataLoss(
               entityRef,
               incomingFields,

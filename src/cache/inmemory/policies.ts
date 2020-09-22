@@ -708,48 +708,57 @@ export class Policies {
     return existing;
   }
 
-  public hasMergeFunction(
+  public getMergeFunction(
     typename: string | undefined,
     fieldName: string,
   ) {
     const policy = this.getFieldPolicy(typename, fieldName, false);
-    return !!(policy && policy.merge);
+    return policy && policy.merge;
   }
 
   public runMergeFunction(
     existing: StoreValue,
     incoming: StoreValue,
-    { field, typename }: MergeInfo,
+    { field, typename, merge }: MergeInfo,
     context: ReadMergeModifyContext,
     storage?: StorageType,
   ) {
-    const fieldName = field.name.value;
-    const { merge } = this.getFieldPolicy(typename, fieldName, false)!;
-    if (merge) {
-      return merge(existing, incoming, makeFieldFunctionOptions(
-        this,
-        // Unlike options.readField for read functions, we do not fall
-        // back to the current object if no foreignObjOrRef is provided,
-        // because it's not clear what the current object should be for
-        // merge functions: the (possibly undefined) existing object, or
-        // the incoming object? If you think your merge function needs
-        // to read sibling fields in order to produce a new value for
-        // the current field, you might want to rethink your strategy,
-        // because that's a recipe for making merge behavior sensitive
-        // to the order in which fields are written into the cache.
-        // However, readField(name, ref) is useful for merge functions
-        // that need to deduplicate child objects and references.
-        void 0,
-        { typename,
-          fieldName,
-          field,
-          variables: context.variables },
-        context,
-        storage || Object.create(null),
-      ));
+    if (merge === mergeTrueFn) {
+      // Instead of going to the trouble of creating a full
+      // FieldFunctionOptions object and calling mergeTrueFn, we can
+      // simply call mergeObjects, as mergeTrueFn would.
+      return makeMergeObjectsFunction(
+        context.store.getFieldValue
+      )(existing as StoreObject,
+        incoming as StoreObject);
     }
 
-    return incoming;
+    if (merge === mergeFalseFn) {
+      // Likewise for mergeFalseFn, whose implementation is even simpler.
+      return incoming;
+    }
+
+    return merge(existing, incoming, makeFieldFunctionOptions(
+      this,
+      // Unlike options.readField for read functions, we do not fall
+      // back to the current object if no foreignObjOrRef is provided,
+      // because it's not clear what the current object should be for
+      // merge functions: the (possibly undefined) existing object, or
+      // the incoming object? If you think your merge function needs
+      // to read sibling fields in order to produce a new value for
+      // the current field, you might want to rethink your strategy,
+      // because that's a recipe for making merge behavior sensitive
+      // to the order in which fields are written into the cache.
+      // However, readField(name, ref) is useful for merge functions
+      // that need to deduplicate child objects and references.
+      void 0,
+      { typename,
+        fieldName: field.name.value,
+        field,
+        variables: context.variables },
+      context,
+      storage || Object.create(null),
+    ));
   }
 }
 

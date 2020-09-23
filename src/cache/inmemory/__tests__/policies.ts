@@ -318,6 +318,134 @@ describe("type policies", function () {
     })).toBe("MotionPicture::3993d4118143");
   });
 
+  it("support inheritance", function () {
+    const cache = new InMemoryCache({
+      possibleTypes: {
+        Reptile: ["Snake", "Turtle"],
+        Snake: ["Python", "Viper", "Cobra"],
+        Viper: ["Cottonmouth"],
+      },
+
+      typePolicies: {
+        Reptile: {
+          keyFields: ["tagId"],
+
+          fields: {
+            scientificName: {
+              merge(_, incoming) {
+                // Normalize all scientific names to lower case.
+                return incoming.toLowerCase();
+              },
+            },
+          },
+        },
+
+        Snake: {
+          fields: {
+            // Default to a truthy non-boolean value if we don't know
+            // whether this snake is venomous.
+            venomous(status = "unknown") {
+              return status;
+            },
+          },
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{
+      reptiles: Record<string, any>[];
+    }> = gql`
+      query {
+        reptiles {
+          tagId
+          scientificName
+          ... on Snake {
+            venomous
+          }
+        }
+      }
+    `;
+
+    const reptiles = [
+      {
+        __typename: "Turtle",
+        tagId: "RedEaredSlider42",
+        scientificName: "Trachemys scripta elegans",
+      },
+      {
+        __typename: "Python",
+        tagId: "BigHug4U",
+        scientificName: "Malayopython reticulatus",
+        venomous: false,
+      },
+      {
+        __typename: "Cobra",
+        tagId: "Egypt30BC",
+        scientificName: "Naja haje",
+        venomous: true,
+      },
+      {
+        __typename: "Cottonmouth",
+        tagId: "CM420",
+        scientificName: "Agkistrodon piscivorus",
+        venomous: true,
+      },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { reptiles },
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+
+    const result1 = cache.readQuery({ query })!;
+    expect(result1).toEqual({
+      reptiles: reptiles.map(reptile => ({
+        ...reptile,
+        scientificName: reptile.scientificName.toLowerCase(),
+      })),
+    });
+
+    const cmId = cache.identify({
+      __typename: "Cottonmouth",
+      tagId: "CM420",
+    });
+
+    expect(cache.evict({
+      id: cmId,
+      fieldName: "venomous",
+    })).toBe(true);
+
+    const result2 = cache.readQuery({ query })!;
+
+    result2.reptiles.forEach((reptile, i) => {
+      if (reptile.__typename === "Cottonmouth") {
+        expect(reptile).not.toBe(result1.reptiles[i]);
+        expect(reptile).not.toEqual(result1.reptiles[i]);
+        expect(reptile).toEqual({
+          __typename: "Cottonmouth",
+          tagId: "CM420",
+          // This name has been normalized to lower case.
+          scientificName: "agkistrodon piscivorus",
+          // Venomosity status has been set to a default value.
+          venomous: "unknown",
+        });
+      } else {
+        expect(reptile).toBe(result1.reptiles[i]);
+      }
+    });
+
+    cache.policies.addPossibleTypes({
+      Viper: ["DeathAdder"],
+    });
+
+    expect(cache.identify({
+      __typename: "DeathAdder",
+      tagId: "LethalAbacus666",
+    })).toBe('DeathAdder:{"tagId":"LethalAbacus666"}');
+  });
+
   describe("field policies", function () {
     it("can filter key arguments", function () {
       const cache = new InMemoryCache({

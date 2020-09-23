@@ -977,3 +977,48 @@ Object {
   },
 }
 `;
+
+exports[`type policies support inheritance 1`] = `
+Object {
+  "Cobra:{\\"tagId\\":\\"Egypt30BC\\"}": Object {
+    "__typename": "Cobra",
+    "scientificName": "naja haje",
+    "tagId": "Egypt30BC",
+    "venomous": true,
+  },
+  "Cottonmouth:{\\"tagId\\":\\"CM420\\"}": Object {
+    "__typename": "Cottonmouth",
+    "scientificName": "agkistrodon piscivorus",
+    "tagId": "CM420",
+    "venomous": true,
+  },
+  "Python:{\\"tagId\\":\\"BigHug4U\\"}": Object {
+    "__typename": "Python",
+    "scientificName": "malayopython reticulatus",
+    "tagId": "BigHug4U",
+    "venomous": false,
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "reptiles": Array [
+      Object {
+        "__ref": "Turtle:{\\"tagId\\":\\"RedEaredSlider42\\"}",
+      },
+      Object {
+        "__ref": "Python:{\\"tagId\\":\\"BigHug4U\\"}",
+      },
+      Object {
+        "__ref": "Cobra:{\\"tagId\\":\\"Egypt30BC\\"}",
+      },
+      Object {
+        "__ref": "Cottonmouth:{\\"tagId\\":\\"CM420\\"}",
+      },
+    ],
+  },
+  "Turtle:{\\"tagId\\":\\"RedEaredSlider42\\"}": Object {
+    "__typename": "Turtle",
+    "scientificName": "trachemys scripta elegans",
+    "tagId": "RedEaredSlider42",
+  },
+}
+`;

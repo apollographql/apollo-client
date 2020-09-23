@@ -65,7 +65,7 @@ export interface NormalizedCache {
 
   getStorage(
     idOrObj: string | StoreObject,
-    storeFieldName: string | number,
+    ...storeFieldNames: (string | number)[]
   ): StorageType;
 }
 

@@ -26,6 +26,7 @@ import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
 import { makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject } from './helpers';
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
+import { EntityStore } from './entityStore';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -345,7 +346,7 @@ export class StoreWriter {
     existing: StoreValue,
     incoming: T,
     context: ReadMergeModifyContext,
-    storageKeys?: [string | StoreObject, string | number],
+    getStorageArgs?: Parameters<EntityStore["getStorage"]>,
   ): T {
     if (mergeTree.map.size && !isReference(incoming)) {
       const e: StoreObject | Reference | undefined = (
@@ -365,12 +366,12 @@ export class StoreWriter {
       const i = incoming as StoreObject | StoreValue[];
 
       // The options.storage objects provided to read and merge functions
-      // are derived from the identity of the parent object and the
-      // storeFieldName string of each field to be merged. Since the
-      // parent identity remains the same for each iteration of the loop
-      // below, we can precompute it here.
-      const firstStorageKey: string | StoreObject | undefined =
-        isReference(e) ? e.__ref : e;
+      // are derived from the identity of the parent object plus a
+      // sequence of storeFieldName strings/numbers identifying the nested
+      // field name path of each field value to be merged.
+      if (e && !getStorageArgs) {
+        getStorageArgs = [isReference(e) ? e.__ref : e];
+      }
 
       // It's possible that applying merge functions to this subtree will
       // not change the incoming data, so this variable tracks the fields
@@ -389,6 +390,9 @@ export class StoreWriter {
       };
 
       mergeTree.map.forEach((childTree, storeFieldName) => {
+        if (getStorageArgs) {
+          getStorageArgs.push(storeFieldName);
+        }
         const eVal = getValue(e, storeFieldName);
         const iVal = getValue(i, storeFieldName);
         const aVal = this.applyMerges(
@@ -396,14 +400,14 @@ export class StoreWriter {
           eVal,
           iVal,
           context,
-          firstStorageKey ? [
-            firstStorageKey,
-            storeFieldName,
-          ] : void 0,
+          getStorageArgs,
         );
         if (aVal !== iVal) {
           changedFields = changedFields || new Map;
           changedFields.set(storeFieldName, aVal);
+        }
+        if (getStorageArgs) {
+          invariant(getStorageArgs.pop() === storeFieldName);
         }
       });
 
@@ -422,7 +426,7 @@ export class StoreWriter {
         incoming,
         mergeTree.info,
         context,
-        storageKeys && context.store.getStorage(...storageKeys),
+        getStorageArgs && context.store.getStorage(...getStorageArgs),
       );
     }
 

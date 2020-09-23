@@ -258,7 +258,7 @@ export abstract class EntityStore implements NormalizedCache {
 
   public abstract getStorage(
     idOrObj: string | StoreObject,
-    storeFieldName: string | number,
+    ...storeFieldNames: (string | number)[]
   ): StorageType;
 
   // Maps root entity IDs to the number of times they have been retained, minus
@@ -482,16 +482,8 @@ export namespace EntityStore {
     }
 
     public readonly storageTrie = new KeyTrie<StorageType>(canUseWeakMap);
-    public getStorage(
-      idOrObj: string | StoreObject,
-      storeFieldName: string | number,
-    ): StorageType {
-      return this.storageTrie.lookup(
-        idOrObj,
-        // Normalize numbers to strings, so we don't accidentally end up
-        // with multiple storage objects for the same field.
-        String(storeFieldName),
-      );
+    public getStorage(): StorageType {
+      return this.storageTrie.lookupArray(arguments);
     }
   }
 }
@@ -558,11 +550,10 @@ class Layer extends EntityStore {
     } : fromParent;
   }
 
-  public getStorage(
-    idOrObj: string | StoreObject,
-    storeFieldName: string | number,
-  ): StorageType {
-    return this.parent.getStorage(idOrObj, storeFieldName);
+  public getStorage(): StorageType {
+    let p: EntityStore = this.parent;
+    while ((p as Layer).parent) p = (p as Layer).parent;
+    return p.getStorage.apply(p, arguments);
   }
 }
 

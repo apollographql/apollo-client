@@ -5230,7 +5230,7 @@ describe('QueryManager', () => {
     });
   });
 
-  describe('warnings', () => {
+  describe('missing cache field warnings', () => {
     const originalWarn = console.warn;
     let warnCount = 0;
 
@@ -5245,7 +5245,12 @@ describe('QueryManager', () => {
       console.warn = originalWarn;
     });
 
-    itAsync('should show missing cache result fields warning when returnPartialData is false', (resolve, reject) => {
+    function validateWarnings(
+      resolve: (result?: any) => void,
+      reject: (reason?: any) => void,
+      returnPartialData = false,
+      expectedWarnCount = 1
+    ) {
       const query1 = gql`
         query {
           car {
@@ -5290,9 +5295,10 @@ describe('QueryManager', () => {
       const observable2 = queryManager.watchQuery<any>({
         query: query2,
         fetchPolicy: 'cache-only',
+        returnPartialData,
       });
 
-      observableToPromise(
+      return observableToPromise(
         { observable: observable1 },
         result => {
           expect(result).toEqual({
@@ -5311,83 +5317,18 @@ describe('QueryManager', () => {
               networkStatus: NetworkStatus.ready,
               partial: true,
             });
-            expect(warnCount).toBe(1);
+            expect(warnCount).toBe(expectedWarnCount);
           },
         ).then(resolve, reject)
       });
+    }
+
+    itAsync('should show missing cache result fields warning when returnPartialData is false', (resolve, reject) => {
+      validateWarnings(resolve, reject, false, 1);
     });
 
     itAsync('should not show missing cache result fields warning when returnPartialData is true', (resolve, reject) => {
-      const query1 = gql`
-        query {
-          car {
-            make
-            model
-            id
-            __typename
-          }
-        }
-      `;
-
-      const query2 = gql`
-        query {
-          car {
-            make
-            model
-            vin
-            id
-            __typename
-          }
-        }
-      `;
-
-      const data1 = {
-        car: {
-          make: 'Ford',
-          model: 'Pinto',
-          id: 123,
-          __typename: 'Car'
-        },
-      };
-
-      const queryManager = mockQueryManager(
-        reject,
-        {
-          request: { query: query1 },
-          result: { data: data1 },
-        },
-      );
-
-      const observable1 = queryManager.watchQuery<any>({ query: query1 });
-      const observable2 = queryManager.watchQuery<any>({
-        query: query2,
-        fetchPolicy: 'cache-only',
-        returnPartialData: true,
-      });
-
-      observableToPromise(
-        { observable: observable1 },
-        result => {
-          expect(result).toEqual({
-            loading: false,
-            data: data1,
-            networkStatus: NetworkStatus.ready,
-          });
-        },
-      ).then(() => {
-        observableToPromise(
-          { observable: observable2 },
-          result => {
-            expect(result).toEqual({
-              data: data1,
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              partial: true,
-            });
-            expect(warnCount).toBe(0);
-          },
-        ).then(resolve, reject)
-      });
+      validateWarnings(resolve, reject, true, 0);
     });
   });
 });

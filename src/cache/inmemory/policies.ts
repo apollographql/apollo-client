@@ -238,7 +238,7 @@ export class Policies {
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
-      fields?: {
+      fields: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
           read?: FieldReadFunction<any>;
@@ -322,7 +322,7 @@ export class Policies {
 
     let id: string | undefined;
 
-    const policy = this.getTypePolicy(typename, false);
+    const policy = typename && this.getTypePolicy(typename);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
@@ -341,7 +341,7 @@ export class Policies {
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const existing = this.getTypePolicy(typename, true)!;
+      const existing = this.getTypePolicy(typename);
       const incoming = typePolicies[typename];
       const { keyFields, fields } = incoming;
 
@@ -445,14 +445,13 @@ export class Policies {
     });
   }
 
-  private getTypePolicy(
-    typename: string | undefined,
-    createIfMissing: boolean,
-  ): Policies["typePolicies"][string] | undefined {
-    if (typename) {
-      return this.typePolicies[typename] || (
-        createIfMissing && (this.typePolicies[typename] = Object.create(null)));
+  private getTypePolicy(typename: string): Policies["typePolicies"][string] {
+    if (!hasOwn.call(this.typePolicies, typename)) {
+      const policy: Policies["typePolicies"][string] =
+        this.typePolicies[typename] = Object.create(null);
+      policy.fields = Object.create(null);
     }
+    return this.typePolicies[typename];
   }
 
   private getFieldPolicy(
@@ -464,14 +463,10 @@ export class Policies {
     read?: FieldReadFunction<any>;
     merge?: FieldMergeFunction<any>;
   } | undefined {
-    const typePolicy = this.getTypePolicy(typename, createIfMissing);
-    if (typePolicy) {
-      const fieldPolicies = typePolicy.fields || (
-        createIfMissing && (typePolicy.fields = Object.create(null)));
-      if (fieldPolicies) {
-        return fieldPolicies[fieldName] || (
-          createIfMissing && (fieldPolicies[fieldName] = Object.create(null)));
-      }
+    if (typename) {
+      const fieldPolicies = this.getTypePolicy(typename).fields;
+      return fieldPolicies[fieldName] || (
+        createIfMissing && (fieldPolicies[fieldName] = Object.create(null)));
     }
   }
 

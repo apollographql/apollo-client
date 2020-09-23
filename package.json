@@ -64,6 +64,9 @@
   "peerDependenciesMeta": {
     "react": {
       "optional": true
+    },
+    "subscriptions-transport-ws": {
+      "optional": true
     }
   },
   "dependencies": {

@@ -8,6 +8,11 @@
 - Disable "Missing cache result fields" warnings when `returnPartialData` is `true`.  <br/>
   [@hwillson](https://github.com/hwillson) in [#7055](https://github.com/apollographql/apollo-client/pull/7055)
 
+## Improvements
+
+- Mark `subscriptions-transport-ws` `peerDependency` as optional. <br/>
+  [@MasterOdin](https://github.com/MasterOdin) in [#7047](https://github.com/apollographql/apollo-client/pull/7047)
+
 ## Apollo Client 3.2.0
 
 ## Bug Fixes

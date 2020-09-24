@@ -525,7 +525,7 @@ function warnAboutDataLoss(
 To address this problem (which is not a bug in Apollo Client), ${
   childTypenames.length
     ? "either ensure all objects of type " +
-        childTypenames.join(" and ") + " have IDs, or "
+        childTypenames.join(" and ") + " have an ID or a custom merge function, or "
     : ""
 }define a custom merge function for the ${
   typeDotName

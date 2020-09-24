@@ -21,6 +21,7 @@ import {
   isReference,
   getStoreKeyName,
   canUseWeakMap,
+  compact,
 } from '../../utilities';
 import { IdGetter, ReadMergeModifyContext } from "./types";
 import {
@@ -238,7 +239,7 @@ export class Policies {
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
-      fields?: {
+      fields: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
           read?: FieldReadFunction<any>;
@@ -246,6 +247,10 @@ export class Policies {
         };
       };
     };
+  } = Object.create(null);
+
+  private toBeAdded: {
+    [__typename: string]: TypePolicy[];
   } = Object.create(null);
 
   // Map from subtype names to sets of supertype names. Note that this
@@ -298,7 +303,6 @@ export class Policies {
     selectionSet?: SelectionSetNode,
     fragmentMap?: FragmentMap,
   ): [string?, StoreObject?] {
-    // TODO Consider subtypes?
     // TODO Use an AliasMap here?
     const typename = selectionSet && fragmentMap
       ? getTypenameFromResult(object, selectionSet, fragmentMap)
@@ -322,7 +326,7 @@ export class Policies {
 
     let id: string | undefined;
 
-    const policy = this.getTypePolicy(typename, false);
+    const policy = typename && this.getTypePolicy(typename);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
@@ -341,71 +345,79 @@ export class Policies {
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const existing = this.getTypePolicy(typename, true)!;
       const incoming = typePolicies[typename];
-      const { keyFields, fields } = incoming;
-
-      if (incoming.queryType) this.setRootTypename("Query", typename);
-      if (incoming.mutationType) this.setRootTypename("Mutation", typename);
-      if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
-
-      existing.keyFn =
-        // Pass false to disable normalization for this typename.
-        keyFields === false ? nullKeyFieldsFn :
-        // Pass an array of strings to use those fields to compute a
-        // composite ID for objects of this typename.
-        Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
-        // Pass a function to take full control over identification.
-        typeof keyFields === "function" ? keyFields :
-        // Leave existing.keyFn unchanged if above cases fail.
-        existing.keyFn;
-
-      if (fields) {
-        Object.keys(fields).forEach(fieldName => {
-          const existing = this.getFieldPolicy(typename, fieldName, true)!;
-          const incoming = fields[fieldName];
-
-          if (typeof incoming === "function") {
-            existing.read = incoming;
-          } else {
-            const { keyArgs, read, merge } = incoming;
-
-            existing.keyFn =
-              // Pass false to disable argument-based differentiation of
-              // field identities.
-              keyArgs === false ? simpleKeyArgsFn :
-              // Pass an array of strings to use named arguments to
-              // compute a composite identity for the field.
-              Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
-              // Pass a function to take full control over field identity.
-              typeof keyArgs === "function" ? keyArgs :
-              // Leave existing.keyFn unchanged if above cases fail.
-              existing.keyFn;
-
-            if (typeof read === "function") existing.read = read;
-
-            existing.merge =
-              typeof merge === "function" ? merge :
-              // Pass merge:true as a shorthand for a merge implementation
-              // that returns options.mergeObjects(existing, incoming).
-              merge === true ? mergeTrueFn :
-              // Pass merge:false to make incoming always replace existing
-              // without any warnings about data clobbering.
-              merge === false ? mergeFalseFn :
-              existing.merge;
-          }
-
-          if (existing.read && existing.merge) {
-            // If we have both a read and a merge function, assume
-            // keyArgs:false, because read and merge together can take
-            // responsibility for interpreting arguments in and out. This
-            // default assumption can always be overridden by specifying
-            // keyArgs explicitly in the FieldPolicy.
-            existing.keyFn = existing.keyFn || simpleKeyArgsFn;
-          }
-        });
+      if (hasOwn.call(this.toBeAdded, typename)) {
+        this.toBeAdded[typename].push(incoming);
+      } else {
+        this.toBeAdded[typename] = [incoming];
       }
     });
+  }
+
+  private updateTypePolicy(typename: string, incoming: TypePolicy) {
+    const existing = this.getTypePolicy(typename);
+    const { keyFields, fields } = incoming;
+
+    if (incoming.queryType) this.setRootTypename("Query", typename);
+    if (incoming.mutationType) this.setRootTypename("Mutation", typename);
+    if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
+
+    existing.keyFn =
+      // Pass false to disable normalization for this typename.
+      keyFields === false ? nullKeyFieldsFn :
+      // Pass an array of strings to use those fields to compute a
+      // composite ID for objects of this typename.
+      Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
+      // Pass a function to take full control over identification.
+      typeof keyFields === "function" ? keyFields :
+      // Leave existing.keyFn unchanged if above cases fail.
+      existing.keyFn;
+
+    if (fields) {
+      Object.keys(fields).forEach(fieldName => {
+        const existing = this.getFieldPolicy(typename, fieldName, true)!;
+        const incoming = fields[fieldName];
+
+        if (typeof incoming === "function") {
+          existing.read = incoming;
+        } else {
+          const { keyArgs, read, merge } = incoming;
+
+          existing.keyFn =
+            // Pass false to disable argument-based differentiation of
+            // field identities.
+            keyArgs === false ? simpleKeyArgsFn :
+            // Pass an array of strings to use named arguments to
+            // compute a composite identity for the field.
+            Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
+            // Pass a function to take full control over field identity.
+            typeof keyArgs === "function" ? keyArgs :
+            // Leave existing.keyFn unchanged if above cases fail.
+            existing.keyFn;
+
+          if (typeof read === "function") existing.read = read;
+
+          existing.merge =
+            typeof merge === "function" ? merge :
+            // Pass merge:true as a shorthand for a merge implementation
+            // that returns options.mergeObjects(existing, incoming).
+            merge === true ? mergeTrueFn :
+            // Pass merge:false to make incoming always replace existing
+            // without any warnings about data clobbering.
+            merge === false ? mergeFalseFn :
+            existing.merge;
+        }
+
+        if (existing.read && existing.merge) {
+          // If we have both a read and a merge function, assume
+          // keyArgs:false, because read and merge together can take
+          // responsibility for interpreting arguments in and out. This
+          // default assumption can always be overridden by specifying
+          // keyArgs explicitly in the FieldPolicy.
+          existing.keyFn = existing.keyFn || simpleKeyArgsFn;
+        }
+      });
+    }
   }
 
   private setRootTypename(
@@ -445,14 +457,49 @@ export class Policies {
     });
   }
 
-  private getTypePolicy(
-    typename: string | undefined,
-    createIfMissing: boolean,
-  ): Policies["typePolicies"][string] | undefined {
-    if (typename) {
-      return this.typePolicies[typename] || (
-        createIfMissing && (this.typePolicies[typename] = Object.create(null)));
+  private getTypePolicy(typename: string): Policies["typePolicies"][string] {
+    if (!hasOwn.call(this.typePolicies, typename)) {
+      const policy: Policies["typePolicies"][string] =
+        this.typePolicies[typename] = Object.create(null);
+      policy.fields = Object.create(null);
+
+      // When the TypePolicy for typename is first accessed, instead of
+      // starting with an empty policy object, inherit any properties or
+      // fields from the type policies of the supertypes of typename.
+      //
+      // Any properties or fields defined explicitly within the TypePolicy
+      // for typename will take precedence, and if there are multiple
+      // supertypes, the properties of policies whose types were added
+      // later via addPossibleTypes will take precedence over those of
+      // earlier supertypes. TODO Perhaps we should warn about these
+      // conflicts in development, and recommend defining the property
+      // explicitly in the subtype policy?
+      //
+      // Field policy inheritance is atomic/shallow: you can't inherit a
+      // field policy and then override just its read function, since read
+      // and merge functions often need to cooperate, so changing only one
+      // of them would be a recipe for inconsistency.
+      //
+      // Once the TypePolicy for typename has been accessed, its
+      // properties can still be updated directly using addTypePolicies,
+      // but future changes to supertype policies will not be reflected in
+      // this policy, because this code runs at most once per typename.
+      const supertypes = this.supertypeMap.get(typename);
+      if (supertypes && supertypes.size) {
+        supertypes.forEach(supertype => {
+          const { fields, ...rest } = this.getTypePolicy(supertype);
+          Object.assign(policy, rest);
+          Object.assign(policy.fields, fields);
+        });
+      }
     }
+
+    const inbox = this.toBeAdded[typename];
+    if (inbox && inbox.length) {
+      this.updateTypePolicy(typename, compact(...inbox.splice(0)));
+    }
+
+    return this.typePolicies[typename];
   }
 
   private getFieldPolicy(
@@ -464,14 +511,10 @@ export class Policies {
     read?: FieldReadFunction<any>;
     merge?: FieldMergeFunction<any>;
   } | undefined {
-    const typePolicy = this.getTypePolicy(typename, createIfMissing);
-    if (typePolicy) {
-      const fieldPolicies = typePolicy.fields || (
-        createIfMissing && (typePolicy.fields = Object.create(null)));
-      if (fieldPolicies) {
-        return fieldPolicies[fieldName] || (
-          createIfMissing && (fieldPolicies[fieldName] = Object.create(null)));
-      }
+    if (typename) {
+      const fieldPolicies = this.getTypePolicy(typename).fields;
+      return fieldPolicies[fieldName] || (
+        createIfMissing && (fieldPolicies[fieldName] = Object.create(null)));
     }
   }
 

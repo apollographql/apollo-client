@@ -6,6 +6,9 @@
 
 ## Improvements
 
+- Support inheritance of type and field policies, according to `possibleTypes`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7065](https://github.com/apollographql/apollo-client/pull/7065)
+
 - Shallow-merge `options.variables` when combining existing or default options with newly-provided options, so new variables do not completely overwrite existing variables. <br/>
   [@amannn](https://github.com/amannn) in [#6927](https://github.com/apollographql/apollo-client/pull/6927)
 

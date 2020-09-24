@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -63,6 +63,9 @@
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "subscriptions-transport-ws": {
       "optional": true
     }
   },

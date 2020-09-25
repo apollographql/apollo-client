@@ -1,4 +1,4 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
 import {
@@ -7,7 +7,7 @@ import {
   Reference,
 } from '../../utilities';
 import { FieldValueGetter } from './entityStore';
-import { KeyFieldsFunction, StorageType } from './policies';
+import { KeyFieldsFunction, StorageType, FieldMergeFunction } from './policies';
 import {
   Modifier,
   Modifiers,
@@ -65,7 +65,7 @@ export interface NormalizedCache {
 
   getStorage(
     idOrObj: string | StoreObject,
-    storeFieldName: string,
+    ...storeFieldNames: (string | number)[]
   ): StorageType;
 }
 
@@ -99,6 +99,17 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
+};
+
+export interface MergeInfo {
+  field: FieldNode;
+  typename: string | undefined;
+  merge: FieldMergeFunction;
+};
+
+export interface MergeTree {
+  info?: MergeInfo;
+  map: Map<string | number, MergeTree>;
 };
 
 export interface ReadMergeModifyContext {

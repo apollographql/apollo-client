@@ -3703,32 +3703,7 @@ describe("type policies", function () {
           Author: {
             keyFields: false,
             fields: {
-              books: {
-                merge(existing: any[], incoming: any[], {
-                  isReference,
-                }) {
-                  const merged = existing ? existing.slice(0) : [];
-                  const seen = new Set<string>();
-                  if (existing) {
-                    existing.forEach(book => {
-                      if (isReference(book)) {
-                        seen.add(book.__ref);
-                      }
-                    });
-                  }
-                  incoming.forEach(book => {
-                    if (isReference(book)) {
-                      if (!seen.has(book.__ref)) {
-                        merged.push(book);
-                        seen.add(book.__ref);
-                      }
-                    } else {
-                      merged.push(book);
-                    }
-                  });
-                  return merged;
-                },
-              },
+              books: booksMergePolicy(),
             },
           },
         },
@@ -3736,6 +3711,35 @@ describe("type policies", function () {
 
       testForceMerges(cache);
     });
+
+    function booksMergePolicy(): FieldPolicy<any[]> {
+      return {
+        merge(existing, incoming, {
+          isReference,
+        }) {
+          const merged = existing ? existing.slice(0) : [];
+          const seen = new Set<string>();
+          if (existing) {
+            existing.forEach(book => {
+              if (isReference(book)) {
+                seen.add(book.__ref);
+              }
+            });
+          }
+          incoming.forEach(book => {
+            if (isReference(book)) {
+              if (!seen.has(book.__ref)) {
+                merged.push(book);
+                seen.add(book.__ref);
+              }
+            } else {
+              merged.push(book);
+            }
+          });
+          return merged;
+        },
+      };
+    }
 
     function testForceMerges(cache: InMemoryCache) {
       const queryWithAuthorName = gql`
@@ -3808,6 +3812,7 @@ describe("type policies", function () {
               books: [{
                 __typename: "Book",
                 isbn: "1250758009",
+                title: "The Topeka School",
               }],
             },
           },
@@ -3917,7 +3922,7 @@ describe("type policies", function () {
     }
 
     // Same as previous test, except with merge:true for Book.author.
-    it("can force merging with merge: true", function () {
+    it("can force merging with merge:true field policy", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Book: {
@@ -3932,38 +3937,184 @@ describe("type policies", function () {
           Author: {
             keyFields: false,
             fields: {
-              books: {
-                merge(existing: any[], incoming: any[], {
-                  isReference,
-                }) {
-                  const merged = existing ? existing.slice(0) : [];
-                  const seen = new Set<string>();
-                  if (existing) {
-                    existing.forEach(book => {
-                      if (isReference(book)) {
-                        seen.add(book.__ref);
-                      }
-                    });
-                  }
-                  incoming.forEach(book => {
-                    if (isReference(book)) {
-                      if (!seen.has(book.__ref)) {
-                        merged.push(book);
-                        seen.add(book.__ref);
-                      }
-                    } else {
-                      merged.push(book);
-                    }
-                  });
-                  return merged;
-                },
-              },
+              books: booksMergePolicy(),
             },
           },
         },
       });
 
       testForceMerges(cache);
+    });
+
+    // Same as previous test, except configuring merge:true for the Author
+    // type instead of for the Book.author field.
+    it("can force merging with merge:true type policy", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            keyFields: false,
+            merge: true,
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+        },
+      });
+
+      testForceMerges(cache);
+    });
+
+    it("can force merging with inherited merge:true field policy", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Authored: {
+            fields: {
+              author: {
+                merge: true,
+              },
+            },
+          },
+
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            keyFields: false,
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+        },
+
+        possibleTypes: {
+          Authored: ["Book", "Destruction"],
+        },
+      });
+
+      testForceMerges(cache);
+    });
+
+    it("can force merging with inherited merge:true type policy", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+
+          Person: {
+            keyFields: false,
+            merge: true,
+          },
+        },
+
+        possibleTypes: {
+          Person: ["Author"],
+        },
+      });
+
+      testForceMerges(cache);
+    });
+
+    function checkAuthor<TData>(data: TData, canBeUndefined = false) {
+      if (data || !canBeUndefined) {
+        expect(data).toBeTruthy();
+        expect(typeof data).toBe("object");
+        expect((data as any).__typename).toBe("Author");
+      }
+      return data;
+    }
+
+    it("can force merging with inherited type policy merge function", function () {
+      let personMergeCount = 0;
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+
+          Person: {
+            keyFields: false,
+
+            merge(existing, incoming) {
+              checkAuthor(existing, true);
+              checkAuthor(incoming);
+              ++personMergeCount;
+              return { ...existing, ...incoming };
+            },
+          },
+        },
+
+        possibleTypes: {
+          Person: ["Author"],
+        },
+      });
+
+      testForceMerges(cache);
+
+      expect(personMergeCount).toBe(3);
+    });
+
+    it("can force merging with inherited field merge function", function () {
+      let authorMergeCount = 0;
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Authored: {
+            fields: {
+              author: {
+                merge(existing, incoming) {
+                  checkAuthor(existing, true);
+                  checkAuthor(incoming);
+                  ++authorMergeCount;
+                  return { ...existing, ...incoming };
+                },
+              },
+            },
+          },
+
+
+          Author: {
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+
+          Person: {
+            keyFields: false,
+          },
+        },
+
+        possibleTypes: {
+          Authored: ["Destiny", "Book"],
+          Person: ["Author"],
+        },
+      });
+
+      testForceMerges(cache);
+
+      expect(authorMergeCount).toBe(3);
     });
   });
 

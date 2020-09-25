@@ -1619,7 +1619,9 @@ describe('writing to the store', () => {
             foos: ["bar", "baz"],
           },
           currentTime: {
-            localeString: date.toLocaleString("en-US"),
+            localeString: date.toLocaleString("en-US", {
+              timeZone: "America/New_York",
+            }),
           },
         },
       });

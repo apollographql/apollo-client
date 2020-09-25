@@ -284,6 +284,15 @@ export class StoreWriter {
       }
 
       if (process.env.NODE_ENV !== "production") {
+        const hasSelectionSet = (storeFieldName: string) =>
+          fieldsWithSelectionSets.has(fieldNameFromStoreName(storeFieldName));
+        const fieldsWithSelectionSets = new Set<string>();
+        workSet.forEach(selection => {
+          if (isField(selection) && selection.selectionSet) {
+            fieldsWithSelectionSets.add(selection.name.value);
+          }
+        });
+
         const hasMergeFunction = (storeFieldName: string) => {
           const childTree = mergeTree.map.get(storeFieldName);
           return Boolean(childTree && childTree.info && childTree.info.merge);
@@ -291,8 +300,11 @@ export class StoreWriter {
 
         Object.keys(incomingFields).forEach(storeFieldName => {
           // If a merge function was defined for this field, trust that it
-          // did the right thing about (not) clobbering data.
-          if (!hasMergeFunction(storeFieldName)) {
+          // did the right thing about (not) clobbering data. If the field
+          // has no selection set, it's a scalar field, so it doesn't need
+          // a merge function (even if it's an object, like JSON data).
+          if (hasSelectionSet(storeFieldName) &&
+              !hasMergeFunction(storeFieldName)) {
             warnAboutDataLoss(
               entityRef,
               incomingFields,

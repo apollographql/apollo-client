@@ -15,6 +15,9 @@
 - Shallow-merge `options.variables` when combining existing or default options with newly-provided options, so new variables do not completely overwrite existing variables. <br/>
   [@amannn](https://github.com/amannn) in [#6927](https://github.com/apollographql/apollo-client/pull/6927)
 
+- Avoid displaying `Cache data may be lost...` warnings for scalar field values that happen to be objects, such as JSON data. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7075](https://github.com/apollographql/apollo-client/pull/7075)
+
 ## Apollo Client 3.2.1
 
 ## Bug Fixes

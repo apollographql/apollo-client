@@ -276,6 +276,8 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 
 Apollo Client does _not_ query your GraphQL server for any requested fields that are already available in the cache. If _all_ requested fields are available in the cache, Apollo Client doesn't query your server at all.
 
+Prioritizes minimizing the number of network requests sent by your application.
+
 This is the default fetch policy.
 </td>
 </tr>
@@ -289,6 +291,8 @@ This is the default fetch policy.
 <td>
 
 Apollo Client executes the query _only_ against the cache. It never queries your server in this case.
+
+A `cache-only` query throws an error if the cache does not contain data for all requested fields.
 </td>
 </tr>
 
@@ -300,7 +304,9 @@ Apollo Client executes the query _only_ against the cache. It never queries your
 </td>
 <td>
 
-Apollo Client executes the query against both the cache _and_ your GraphQL server. The query automatically updates if the result of the server-side query modifies cached fields.
+Apollo Client executes the full query against both the cache _and_ your GraphQL server. The query automatically updates if the result of the server-side query modifies cached fields.
+
+Provides a fast response while also helping to keep cached data consistent with server data.
 </td>
 </tr>
 
@@ -313,6 +319,8 @@ Apollo Client executes the query against both the cache _and_ your GraphQL serve
 <td>
 
 Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache.
+
+Prioritizes consistency with server data, but can't provide a near-instantaneous response when cached data is available.
 </td>
 </tr>
 

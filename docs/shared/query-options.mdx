@@ -4,7 +4,7 @@
 | `variables` | { [key: string]: any } | An object containing all of the variables your query needs to execute |
 | `pollInterval` | number | Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling). |
 | `notifyOnNetworkStatusChange` | boolean | Whether updates to the network status or network error should re-render your component. Defaults to false. |
-| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. Defaults to `cache-first`. |
+| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. For details, see [Configuring fetch logic](https://www.apollographql.com/docs/react/data/queries/#configuring-fetch-logic). |
 | `nextFetchPolicy` | FetchPolicy | Optional `FetchPolicy` to begin enforcing after the current request. Useful for switching back to `cache-first` after `cache-and-network` or `network-only`. |
 | `errorPolicy` | ErrorPolicy | How you want your component to handle network and GraphQL errors. Defaults to "none", which means we treat GraphQL errors as runtime errors. |
 | `ssr` | boolean | Pass in false to skip your query during server-side rendering. |
@@ -16,4 +16,3 @@
 | `partialRefetch` | boolean | If `true`, perform a query `refetch` if the query result is marked as being partial, and the returned data is reset to an empty Object by the Apollo Client `QueryManager` (due to a cache miss). The default value is `false` for backwards-compatibility's sake, but should be changed to true for most use-cases. |
 | `client` | ApolloClient | An `ApolloClient` instance. By default `useQuery` / `Query` uses the client passed down via context, but a different client can be passed in. |
 | `returnPartialData` | boolean | Opt into receiving partial results from the cache for queries that are not fully satisfied by the cache. false by default. |
-

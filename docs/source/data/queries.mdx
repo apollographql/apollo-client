@@ -245,6 +245,104 @@ function DelayedQuery() {
 
 > To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
 
+## Configuring fetch logic
+
+By default, the `useQuery` hook checks the Apollo Client cache to see if each field you requested is already available locally. If a field _is_ available locally, `useQuery` _omits_ that field in the query it sends to your GraphQL server. This `cache-first` policy is Apollo Client's default **fetch policy**.
+
+You can optionally specify a different fetch policy for a query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
+
+```js
+const { loading, error, data } = useQuery(GET_DOGS, {
+  fetchPolicy: "network-only"
+});
+```
+
+### Supported fetch policies
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+<td>
+
+###### `cache-first`
+</td>
+<td>
+
+Apollo Client does _not_ query your GraphQL server for any requested fields that are already available in the cache. If _all_ requested fields are available in the cache, Apollo Client doesn't query your server at all.
+
+This is the default fetch policy.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `cache-only`
+</td>
+<td>
+
+Apollo Client executes the query _only_ against the cache. It never queries your server in this case.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `cache-and-network`
+</td>
+<td>
+
+Apollo Client executes the query against both the cache _and_ your GraphQL server. The query automatically updates if the result of the server-side query modifies cached fields.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `network-only`
+</td>
+<td>
+
+Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `no-cache`
+</td>
+<td>
+
+Similar to `network-only`, except the query's result _is not_ stored in the cache.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `standby`
+</td>
+<td>
+
+Uses the same logic as `cache-first`, except this query does _not_ automatically update when underlying field values change. You can still _manually_ update this query with `refetch` and `updateQueries`.
+</td>
+</tr>
+</tbody>
+</table>
+
+
 ## `useQuery` API
 
 Supported options and result fields for the `useQuery` hook are listed below.

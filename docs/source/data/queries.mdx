@@ -247,9 +247,9 @@ function DelayedQuery() {
 
 ## Configuring fetch logic
 
-By default, the `useQuery` hook checks the Apollo Client cache to see if each field you requested is already available locally. If a field _is_ available locally, `useQuery` _omits_ that field in the query it sends to your GraphQL server. This `cache-first` policy is Apollo Client's default **fetch policy**.
+By default, the `useQuery` hook checks the Apollo Client cache to see if all the data you requested is already available locally. If all data _is_ available locally, `useQuery` returns that data and _doesn't_ query your GraphQL server. This `cache-first` policy is Apollo Client's default **fetch policy**.
 
-You can optionally specify a different fetch policy for a query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
+You can optionally specify a different fetch policy for a given query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
 
 ```js
 const { loading, error, data } = useQuery(GET_DOGS, {
@@ -274,7 +274,7 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 </td>
 <td>
 
-Apollo Client does _not_ query your GraphQL server for any requested fields that are already available in the cache. If _all_ requested fields are available in the cache, Apollo Client doesn't query your server at all.
+Apollo Client first executes the query against the cache. If _all_ requested data is present in the cache, that data is returned. Otherwise, Apollo Client executes the query against your GraphQL server and returns that data after caching it.
 
 Prioritizes minimizing the number of network requests sent by your application.
 

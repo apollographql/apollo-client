@@ -403,6 +403,12 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.setOptions(options, true);
     this.previousData.loading =
       this.previousData.result && this.previousData.result.loading || false;
+
+    // Ensure the returned result contains previous data as a separate
+    // property, to give developers the flexibility of leveraging previous
+    // data when new data is being loaded.
+    result.previousData = this.previousData.result?.data;
+
     this.previousData.result = result;
 
     // Any query errors that exist are now available in `result`, so we'll

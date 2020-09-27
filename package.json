@@ -53,7 +53,7 @@
     {
       "name": "apollo-client",
       "path": "./dist/apollo-client.cjs.min.js",
-      "maxSize": "25 kB"
+      "maxSize": "25.25 kB"
     }
   ],
   "peerDependencies": {

@@ -81,6 +81,7 @@ export interface QueryResult<TData = any, TVariables = OperationVariables>
   extends ObservableQueryFields<TData, TVariables> {
   client: ApolloClient<any>;
   data: TData | undefined;
+  previousData?: TData;
   error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;
@@ -125,6 +126,7 @@ type UnexecutedLazyFields = {
   networkStatus: NetworkStatus.ready;
   called: false;
   data: undefined;
+  previousData?: undefined;
 }
 
 type Impartial<T> = {

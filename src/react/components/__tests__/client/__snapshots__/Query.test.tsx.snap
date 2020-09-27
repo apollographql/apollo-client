@@ -26,6 +26,7 @@ Object {
   "fetchMore": [Function],
   "loading": true,
   "networkStatus": 1,
+  "previousData": undefined,
   "refetch": [Function],
   "startPolling": [Function],
   "stopPolling": [Function],

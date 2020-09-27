@@ -2226,4 +2226,82 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
   });
+
+  describe('Previous data', () => {
+    itAsync('should persist previous data when a query is re-run', (resolve, reject) => {
+      const query = gql`
+        query car {
+          car {
+            id
+            make
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          id: 1,
+          make: 'Venturi',
+          __typename: 'Car',
+        }
+      };
+
+      const data2 = {
+        car: {
+          id: 2,
+          make: 'Wiesmann',
+          __typename: 'Car',
+        }
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: data1 } },
+        { request: { query }, result: { data: data2 } }
+      ];
+
+      let renderCount = 0;
+      function App() {
+        const { loading, data, previousData, refetch } = useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            expect(previousData).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            expect(previousData).toBeUndefined();
+            setTimeout(refetch);
+            break;
+          case 3:
+            expect(loading).toBeTruthy();
+            expect(data).toEqual(data1);
+            expect(previousData).toEqual(data1);
+            break;
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data2);
+            expect(previousData).toEqual(data1);
+            break;
+          default: // Do nothing
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(4);
+      }).then(resolve, reject);
+    });
+  });
 });

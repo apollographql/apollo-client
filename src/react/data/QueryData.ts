@@ -38,7 +38,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     client?: ApolloClient<object>;
     query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
     observableQueryOptions?: {};
-    result?: QueryResult<TData, TVariables> | null;
+    result?: QueryResult<TData, TVariables>;
     loading?: boolean;
     options?: QueryDataOptions<TData, TVariables>;
     error?: ApolloError;
@@ -410,13 +410,19 @@ export class QueryData<TData, TVariables> extends OperationData {
     result.client = this.client;
     // Store options as this.previousOptions.
     this.setOptions(options, true);
-    this.previous.loading =
-      this.previous.result && this.previous.result.loading || false;
 
-    // Ensure the returned result contains previous data as a separate
-    // property, to give developers the flexibility of leveraging previous
-    // data when new data is being loaded.
-    result.previousData = this.previous.result?.data;
+    const previousResult = this.previous.result;
+
+    this.previous.loading =
+      previousResult && previousResult.loading || false;
+
+    // Ensure the returned result contains previousData as a separate
+    // property, to give developers the flexibility of leveraging outdated
+    // data while new data is loading from the network. Falling back to
+    // previousResult.previousData when previousResult.data is falsy here
+    // allows result.previousData to persist across multiple results.
+    result.previousData = previousResult &&
+      (previousResult.data || previousResult.previousData);
 
     this.previous.result = result;
 

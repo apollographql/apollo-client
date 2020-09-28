@@ -3,12 +3,15 @@ import { equal } from '@wry/equality';
 import { ApolloError } from '../../errors';
 
 import {
+  ApolloClient,
   NetworkStatus,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ObservableQuery,
   FetchMoreOptions,
-  UpdateQueryOptions
+  UpdateQueryOptions,
+  DocumentNode,
+  TypedDocumentNode
 } from '../../core';
 
 import {
@@ -18,7 +21,6 @@ import {
 import { DocumentType } from '../parser';
 import {
   QueryResult,
-  QueryPreviousData,
   QueryDataOptions,
   QueryTuple,
   QueryLazyOptions,
@@ -28,12 +30,19 @@ import { OperationData } from './OperationData';
 
 export class QueryData<TData, TVariables> extends OperationData {
   public onNewData: () => void;
-
-  private previous: QueryPreviousData<TData, TVariables> = {};
   private currentObservable?: ObservableQuery<TData, TVariables>;
   private currentSubscription?: ObservableSubscription;
   private runLazy: boolean = false;
   private lazyOptions?: QueryLazyOptions<TVariables>;
+  private previous: {
+    client?: ApolloClient<object>;
+    query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    observableQueryOptions?: {};
+    result?: QueryResult<TData, TVariables> | null;
+    loading?: boolean;
+    options?: QueryDataOptions<TData, TVariables>;
+    error?: ApolloError;
+  } = Object.create(null);
 
   constructor({
     options,

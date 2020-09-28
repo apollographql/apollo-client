@@ -3,7 +3,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { ApolloClient, NetworkStatus } from '../../../core';
+import { ApolloClient, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
@@ -2223,6 +2223,193 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
+  });
+
+  describe('Previous data', () => {
+    itAsync('should persist previous data when a query is re-run', (resolve, reject) => {
+      const query = gql`
+        query car {
+          car {
+            id
+            make
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          id: 1,
+          make: 'Venturi',
+          __typename: 'Car',
+        }
+      };
+
+      const data2 = {
+        car: {
+          id: 2,
+          make: 'Wiesmann',
+          __typename: 'Car',
+        }
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: data1 } },
+        { request: { query }, result: { data: data2 } }
+      ];
+
+      let renderCount = 0;
+      function App() {
+        const { loading, data, previousData, refetch } = useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            expect(previousData).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            expect(previousData).toBeUndefined();
+            setTimeout(refetch);
+            break;
+          case 3:
+            expect(loading).toBeTruthy();
+            expect(data).toEqual(data1);
+            expect(previousData).toEqual(data1);
+            break;
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data2);
+            expect(previousData).toEqual(data1);
+            break;
+          default: // Do nothing
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(4);
+      }).then(resolve, reject);
+    });
+
+    itAsync('should persist result.previousData across multiple results', (resolve, reject) => {
+      const query: TypedDocumentNode<{
+        car: {
+          id: string;
+          make: string;
+        };
+      }, {
+        vin?: string;
+      }> = gql`
+        query car($vin: String) {
+          car(vin: $vin) {
+            id
+            make
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          id: 1,
+          make: 'Venturi',
+          __typename: 'Car',
+        }
+      };
+
+      const data2 = {
+        car: {
+          id: 2,
+          make: 'Wiesmann',
+          __typename: 'Car',
+        }
+      };
+
+      const data3 = {
+        car: {
+          id: 3,
+          make: 'Beetle',
+          __typename: 'Car',
+        }
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: data1 } },
+        { request: { query }, result: { data: data2 } },
+        {
+          request: {
+            query,
+            variables: { vin: "ABCDEFG0123456789" },
+          },
+          result: { data: data3 },
+        },
+      ];
+
+      let renderCount = 0;
+      function App() {
+        const { loading, data, previousData, refetch } = useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBe(true);
+            expect(data).toBeUndefined();
+            expect(previousData).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBe(false);
+            expect(data).toEqual(data1);
+            expect(previousData).toBeUndefined();
+            setTimeout(refetch);
+            break;
+          case 3:
+            expect(loading).toBe(true);
+            expect(data).toEqual(data1);
+            expect(previousData).toEqual(data1);
+            // Interrupt the first refetch by refetching again with
+            // variables the cache has not seen before, thereby skipping
+            // data2 entirely.
+            refetch({
+              vin: "ABCDEFG0123456789",
+            });
+            break;
+          case 4:
+            expect(loading).toBe(true);
+            expect(data).toBeUndefined();
+            expect(previousData).toEqual(data1);
+            break;
+          case 5:
+            expect(loading).toBe(false);
+            expect(data).toEqual(data3);
+            expect(previousData).toEqual(data1);
+            break;
+          default: // Do nothing
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(5);
       }).then(resolve, reject);
     });
   });

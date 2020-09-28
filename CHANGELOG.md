@@ -18,6 +18,9 @@
 - Avoid displaying `Cache data may be lost...` warnings for scalar field values that happen to be objects, such as JSON data. <br/>
   [@benjamn](https://github.com/benjamn) in [#7075](https://github.com/apollographql/apollo-client/pull/7075)
 
+- In addition to the `result.data` property, `useQuery` and `useLazyQuery` will now provide a `result.previousData` property, which can be useful when a network request is pending and `result.data` is undefined, since `result.previousData` can be rendered instead of rendering an empty/loading state. <br/>
+  [@hwillson](https://github.com/hwillson) in [#7082](https://github.com/apollographql/apollo-client/pull/7082)
+
 ## Apollo Client 3.2.1
 
 ## Bug Fixes

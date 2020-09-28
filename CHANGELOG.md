@@ -18,7 +18,7 @@
 - Avoid displaying `Cache data may be lost...` warnings for scalar field values that happen to be objects, such as JSON data. <br/>
   [@benjamn](https://github.com/benjamn) in [#7075](https://github.com/apollographql/apollo-client/pull/7075)
 
-- Alongside their returned `data` property, `useQuery` and `useLazyQuery` now also return a `previousData` property. Before a new `data` value is set, its current value is stored in `previousData`. This allows more fine-grained control over component loading states, where you might want to leverage previous data until new data has fully loaded. <br/>
+- In addition to the `result.data` property, `useQuery` and `useLazyQuery` will now provide a `result.previousData` property, which can be useful when a network request is pending and `result.data` is undefined, since `result.previousData` can be rendered instead of rendering an empty/loading state. <br/>
   [@hwillson](https://github.com/hwillson) in [#7082](https://github.com/apollographql/apollo-client/pull/7082)
 
 ## Apollo Client 3.2.1

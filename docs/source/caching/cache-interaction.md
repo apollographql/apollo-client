@@ -68,7 +68,7 @@ Here's an example that fetches a particular item from a to-do list:
 
 ```js
 const todo = client.readFragment({
-  id: '5', // The value of the to-do item's unique identifier
+  id: 'Todo:5', // The value of the to-do item's unique identifier
   fragment: gql`
     fragment MyTodo on Todo {
       id

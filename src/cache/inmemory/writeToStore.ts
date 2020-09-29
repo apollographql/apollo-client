@@ -89,7 +89,7 @@ export class StoreWriter {
       ...variables,
     };
 
-    const objOrRef = this.processSelectionSet({
+    const ref = this.processSelectionSet({
       result: result || Object.create(null),
       dataId,
       selectionSet: operationDefinition.selectionSet,
@@ -105,14 +105,13 @@ export class StoreWriter {
       },
     });
 
-    const ref = isReference(objOrRef) ? objOrRef :
-      dataId && makeReference(dataId) || void 0;
-
-    if (ref) {
-      // Any IDs written explicitly to the cache (including ROOT_QUERY,
-      // most frequently) will be retained as reachable root IDs.
-      store.retain(ref.__ref);
+    if (!isReference(ref)) {
+      throw new InvariantError(`Could not identify object ${JSON.stringify(result)}`);
     }
+
+    // Any IDs written explicitly to the cache (including ROOT_QUERY,
+    // most frequently) will be retained as reachable root IDs.
+    store.retain(ref.__ref);
 
     return ref;
   }
@@ -246,7 +245,26 @@ export class StoreWriter {
           context.fragmentMap,
         );
 
-        if (fragment && policies.fragmentMatches(fragment, typename)) {
+        if (fragment &&
+            // By passing result and context.variables, we enable
+            // policies.fragmentMatches to bend the rules when typename is
+            // not a known subtype of the fragment type condition, but the
+            // result object contains all the keys requested by the
+            // fragment, which strongly suggests the fragment probably
+            // matched. This fuzzy matching behavior must be enabled by
+            // including a regular expression string (such as ".*" or
+            // "Prefix.*" or ".*Suffix") in the possibleTypes array for
+            // specific supertypes; otherwise, all matching remains exact.
+            // Fuzzy matches are remembered by the Policies object and
+            // later used when reading from the cache. Since there is no
+            // incoming result object to check when reading, reading does
+            // not involve the same fuzzy inference, so the StoreReader
+            // class calls policies.fragmentMatches without passing result
+            // or context.variables. The flexibility of fuzzy matching
+            // allows existing clients to accommodate previously unknown
+            // __typename strings produced by server/schema changes, which
+            // would otherwise be breaking changes.
+            policies.fragmentMatches(fragment, typename, result, context.variables)) {
           fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }

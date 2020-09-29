@@ -2,12 +2,13 @@ import gql from "graphql-tag";
 
 import { InMemoryCache } from "../inMemoryCache";
 import { ReactiveVar, makeVar } from "../reactiveVars";
-import { Reference, StoreObject, ApolloClient, NetworkStatus } from "../../../core";
+import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { itAsync } from '../../../utilities/testing/itAsync';
+import { FieldPolicy, StorageType } from "../policies";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -736,8 +737,8 @@ describe("type policies", function () {
       });
     });
 
-    it("can use stable storage in read functions", function () {
-      const storageSet = new Set<Record<string, any> | null>();
+    it("can use options.storage in read functions", function () {
+      const storageSet = new Set<Record<string, any>>();
 
       const cache = new InMemoryCache({
         typePolicies: {
@@ -745,8 +746,8 @@ describe("type policies", function () {
             fields: {
               result(existing, { args, storage }) {
                 storageSet.add(storage);
-                if (storage?.result) return storage.result;
-                return storage!.result = compute();
+                if (storage.result) return storage.result;
+                return storage.result = compute();
               },
             },
           },
@@ -840,9 +841,7 @@ describe("type policies", function () {
 
       // Clear the cached results.
       storageSet.forEach(storage => {
-        if (storage) {
-          delete storage.result;
-        }
+        delete storage.result;
       });
 
       const result3 = cache.readQuery({
@@ -965,16 +964,16 @@ describe("type policies", function () {
             fields: {
               result: {
                 read(_, { storage }) {
-                  if (!storage!.jobName) {
-                    storage!.jobName = makeVar(undefined);
+                  if (!storage.jobName) {
+                    storage.jobName = makeVar(undefined);
                   }
-                  return storage!.jobName();
+                  return storage.jobName();
                 },
                 merge(_, incoming: string, { storage }) {
-                  if (storage!.jobName) {
-                    storage!.jobName(incoming);
+                  if (storage.jobName) {
+                    storage.jobName(incoming);
                   } else {
-                    storage!.jobName = makeVar(incoming);
+                    storage.jobName = makeVar(incoming);
                   }
                 },
               },
@@ -1040,8 +1039,9 @@ describe("type policies", function () {
         return new MissingFieldError(
           `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
           ["jobs", jobNumber - 1, "result"],
-          expect.anything(),
-          expect.anything(),
+          expect.anything(), // query
+          false, // clientOnly
+          expect.anything(), // variables
         );
       }
 
@@ -1226,6 +1226,157 @@ describe("type policies", function () {
           result: "result for job 4",
         }],
       });
+    });
+
+    it("read, merge, and modify functions can access options.storage", function () {
+      const storageByFieldName = new Map<string, StorageType>();
+
+      function recordStorageOnce(fieldName: string, storage: StorageType) {
+        if (storageByFieldName.has(fieldName)) {
+          expect(storageByFieldName.get(fieldName)).toBe(storage);
+        } else {
+          storageByFieldName.set(fieldName, storage);
+        }
+      }
+
+      function makeFieldPolicy(): FieldPolicy<number> {
+        return {
+          read(existing = 0, { fieldName, storage }) {
+            storage.readCount = (storage.readCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return existing;
+          },
+          merge(existing = 0, incoming, { fieldName, storage }) {
+            storage.mergeCount = (storage.mergeCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return existing + incoming;
+          },
+        };
+      };
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              mergeRead: makeFieldPolicy(),
+              mergeModify: makeFieldPolicy(),
+              mergeReadModify: makeFieldPolicy(),
+            },
+          },
+        },
+      });
+
+      const query: TypedDocumentNode<{
+        mergeRead: number;
+        mergeModify: number;
+        mergeReadModify: number;
+      }> = gql`
+        query {
+          mergeRead
+          mergeModify
+          mergeReadModify
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          mergeRead: 1,
+          mergeModify: 10,
+          mergeReadModify: 100,
+        },
+      });
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(cache.readQuery({
+        query: gql`query { mergeRead mergeReadModify }`,
+      })).toEqual({
+        mergeRead: 1,
+        mergeReadModify: 100,
+      });
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+      });
+
+      expect(cache.modify({
+        fields: {
+          mergeModify(value, { fieldName, storage }) {
+            storage.modifyCount = (storage.modifyCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return value + 1;
+          },
+          mergeReadModify(value, { fieldName, storage }) {
+            storage.modifyCount = (storage.modifyCount|0) + 1;
+            recordStorageOnce(fieldName, storage);
+            return value + 1;
+          },
+        },
+      })).toBe(true);
+
+      expect(cache.extract()).toMatchSnapshot();
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+        modifyCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+        readCount: 1,
+        modifyCount: 1,
+      });
+
+      expect(cache.readQuery({ query })).toEqual({
+        mergeRead: 1,
+        mergeModify: 11,
+        mergeReadModify: 101,
+      });
+
+      expect(storageByFieldName.get("mergeRead")).toEqual({
+        mergeCount: 1,
+        readCount: 2,
+      });
+
+      expect(storageByFieldName.get("mergeModify")).toEqual({
+        mergeCount: 1,
+        modifyCount: 1,
+        readCount: 1,
+      });
+
+      expect(storageByFieldName.get("mergeReadModify")).toEqual({
+        mergeCount: 1,
+        readCount: 2,
+        modifyCount: 1,
+      });
+
+      expect(cache.extract()).toMatchSnapshot();
     });
 
     it("merge functions can deduplicate items using readField", function () {
@@ -2177,6 +2328,184 @@ describe("type policies", function () {
       });
     });
 
+    itAsync("can handle Relay-style pagination without args", (resolve, reject) => {
+      const cache = new InMemoryCache({
+        addTypename: false,
+        typePolicies: {
+          Query: {
+            fields: {
+              todos: relayStylePagination(),
+            },
+          },
+        },
+      });
+
+      const firstQuery = gql`
+        query TodoQuery {
+          todos {
+            totalCount
+          }
+        }
+      `
+
+      const secondQuery = gql`
+        query TodoQuery {
+          todos(after: $after, first: $first) {
+            pageInfo {
+              __typename
+              hasNextPage
+              endCursor
+            }
+            totalCount
+            edges {
+              __typename
+              id
+              node {
+                __typename
+                id
+                title
+              }
+            }
+          }
+        }
+      `
+
+      const thirdQuery = gql`
+        query TodoQuery {
+          todos {
+            totalCount
+            extraMetaData
+          }
+        }
+      `
+
+      const secondVariables = {
+        first: 1,
+      };
+
+      const secondEdges = [
+        {
+          __typename: "TodoEdge",
+          id: "edge1",
+          node: {
+            __typename: "Todo",
+            id: '1',
+            title: 'Fix the tests'
+          }
+        },
+      ];
+
+      const secondPageInfo = {
+        __typename: "PageInfo",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
+        hasNextPage: true,
+      };
+
+      const link = new MockLink([
+        {
+          request: {
+            query: firstQuery,
+          },
+          result: {
+            data: {
+              todos: {
+                totalCount: 1292
+              }
+            }
+          }
+        },
+        {
+          request: {
+            query: secondQuery,
+            variables: secondVariables,
+          },
+          result: {
+            data: {
+              todos: {
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
+                totalCount: 1292,
+              }
+            }
+          },
+        },
+        {
+          request: {
+            query: thirdQuery,
+          },
+          result: {
+            data: {
+              todos: {
+                totalCount: 1293,
+                extraMetaData: 'extra',
+              }
+            }
+          },
+        }
+      ]).setOnError(reject);
+
+      const client = new ApolloClient({ link, cache });
+
+      client.query({query: firstQuery}).then(result => {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            todos: {
+              totalCount: 1292
+            }
+          }
+        })
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            todos: {
+              wrappers: [],
+              pageInfo: {
+                "endCursor": "",
+                "hasNextPage": true,
+                "hasPreviousPage": false,
+                "startCursor": "",
+               },
+               totalCount: 1292
+             },
+          }
+        });
+
+        client.query({query: secondQuery, variables: secondVariables}).then(result => {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              todos: {
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
+                totalCount: 1292,
+              }
+            }
+          })
+
+          expect(cache.extract()).toMatchSnapshot()
+
+          client.query({query: thirdQuery}).then(result => {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                todos: {
+                  totalCount: 1293,
+                  extraMetaData: 'extra',
+                }
+              }
+            })
+            expect(cache.extract()).toMatchSnapshot()
+            resolve()
+          })
+        })
+      })
+    })
+
     itAsync("can handle Relay-style pagination", (resolve, reject) => {
       const cache = new InMemoryCache({
         addTypename: false,
@@ -2720,15 +3049,17 @@ describe("type policies", function () {
               // Note that Turrell's name has been lower-cased.
               snapshot.ROOT_QUERY!["search:james turrell"]
             ).toEqual({
-              edges: turrellEdges.slice(0, 1).map(edge => ({
-                ...edge,
+              wrappers: turrellEdges.slice(0, 1).map(edge => ({
                 // The relayStylePagination merge function updates the
                 // edge.cursor field of the first and last edge, even if
                 // the query did not request the edge.cursor field, if
                 // pageInfo.{start,end}Cursor are defined.
                 cursor: turrellPageInfo1.startCursor,
-                // Artist objects are normalized by HREF:
-                node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                edge: {
+                  ...edge,
+                  // Artist objects are normalized by HREF:
+                  node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                },
               })),
               pageInfo: turrellPageInfo1,
               totalCount: 13531,
@@ -2812,20 +3143,22 @@ describe("type policies", function () {
               // Note that Turrell's name has been lower-cased.
               snapshot.ROOT_QUERY!["search:james turrell"]
             ).toEqual({
-              edges: turrellEdges.map((edge, i) => ({
-                ...edge,
+              wrappers: turrellEdges.map((edge, i) => ({
                 // This time the cursors are different depending on which
                 // of the two edges we're considering.
                 cursor: [
                   turrellPageInfo2.startCursor,
                   turrellPageInfo2.endCursor,
                 ][i],
-                node: [
-                  // Artist objects are normalized by HREF:
-                  { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-                  // However, SearchableItem objects are not normalized.
-                  edge.node,
-                ][i],
+                edge: {
+                  ...edge,
+                  node: [
+                    // Artist objects are normalized by HREF:
+                    { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                    // However, SearchableItem objects are not normalized.
+                    edge.node,
+                  ][i],
+                },
               })),
               pageInfo: turrellPageInfo2,
               totalCount: 13531,

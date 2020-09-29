@@ -2326,6 +2326,19 @@ describe('writing to the store', () => {
     });
   });
 
+  it("should warn if it cannot identify the result object", () => {
+    const cache = new InMemoryCache;
+
+    expect(() => {
+      cache.writeFragment({
+        fragment: gql`fragment Count on Counter { count }`,
+        data: {
+          count: 1,
+        },
+      });
+    }).toThrowError(/Could not identify object/);
+  });
+
   it('user objects should be able to have { __typename: "Subscription" }', () => {
     const cache = new InMemoryCache({
       typePolicies: {

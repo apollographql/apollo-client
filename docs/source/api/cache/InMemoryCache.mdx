@@ -207,6 +207,7 @@ The first parameter of a modifier function is the current value of the field bei
 | `canRead` | `CanReadFunction` | Returns `true` for non-normalized `StoreObjects` and non-dangling `Reference`s, indicating that `readField(name, objOrRef)` has a chance of working. Useful for filtering out dangling references from lists. |
 | `isReference` | `boolean` | Utility to check if an object is a `{ __ref }` object. |
 | `DELETE` | `any` | Sentinel object that can be returned from a modifier function to delete the field being modified. |
+| `INVALIDATE` | `any` | Sentinel object that can be returned from a modifier function to invalidate the field, causing affected queries to rerun, without changing or deleting the field value. |
 
 `Modifier` functions should return the value that is to be written into the cache for the field being modified, or a `DELETE` sentinel to remove the field.
 

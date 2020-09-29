@@ -106,18 +106,32 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    const store = options.optimistic ? this.optimisticData : this.data;
-    if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
+    const {
+      // Since read returns data or null, without any additional metadata
+      // about whether/where there might have been missing fields, the
+      // default behavior cannot be returnPartialData = true (like it is
+      // for the diff method), since defaulting to true would violate the
+      // integrity of the T in the return type. However, partial data may
+      // be useful in some cases, so returnPartialData:true may be
+      // specified explicitly.
+      returnPartialData = false,
+    } = options;
+    try {
+      return this.storeReader.diffQueryAgainstStore<T>({
+        store: options.optimistic ? this.optimisticData : this.data,
+        query: options.query,
+        variables: options.variables,
+        rootId: options.rootId,
+        config: this.config,
+        returnPartialData,
+      }).result || null;
+    } catch {
+      // Intentionally swallow exceptions and return null, so that callers
+      // never need to worry about catching exceptions. If you need more
+      // information about what was incomplete, use cache.diff instead,
+      // and examine diffResult.missing.
       return null;
     }
-    return this.storeReader.diffQueryAgainstStore<T>({
-      store,
-      query: options.query,
-      variables: options.variables,
-      rootId: options.rootId,
-      config: this.config,
-      returnPartialData: false,
-    }).result || null;
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {

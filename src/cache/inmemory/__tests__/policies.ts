@@ -2193,17 +2193,27 @@ describe("type policies", function () {
 
       expect(secretReadAttempted).toBe(false);
 
-      expect(() => {
-        cache.readQuery({
-          query: gql`
-            query {
-              me {
-                secret
-              }
+      expect(cache.readQuery({
+        query: gql`
+          query {
+            me {
+              secret
             }
-          `
-        });
-      }).toThrowError("Can't find field 'secret' ");
+          }
+        `,
+      })).toBe(null);
+
+      expect(() => cache.diff({
+        optimistic: true,
+        returnPartialData: false,
+        query: gql`
+          query {
+            me {
+              secret
+            }
+          }
+        `,
+      })).toThrowError("Can't find field 'secret' ");
 
       expect(secretReadAttempted).toBe(true);
     });
@@ -3517,6 +3527,15 @@ describe("type policies", function () {
         });
       }
 
+      function diff(isbn = "156858217X") {
+        return cache.diff({
+          query,
+          variables: { isbn },
+          returnPartialData: false,
+          optimistic: true,
+        });
+      }
+
       expect(read()).toBe(null);
 
       cache.writeQuery({
@@ -3532,8 +3551,10 @@ describe("type policies", function () {
         },
       });
 
-      expect(read).toThrow(
-        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      expect(read()).toBe(null);
+
+      expect(diff).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/,
       );
 
       const stealThisData = {
@@ -3664,11 +3685,13 @@ describe("type policies", function () {
         },
       });
 
-      expect(() => read("0393354326")).toThrow(
+      expect(read("0393354326")).toBe(null);
+      expect(() => diff("0393354326")).toThrow(
         /Dangling reference to missing Book:{"isbn":"0393354326"} object/
       );
 
-      expect(() => read("156858217X")).toThrow(
+      expect(read("156858217X")).toBe(null);
+      expect(() => diff("156858217X")).toThrow(
         /Dangling reference to missing Book:{"isbn":"156858217X"} object/
       );
     });

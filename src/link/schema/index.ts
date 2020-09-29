@@ -1,4 +1,5 @@
 import { execute } from 'graphql/execution/execute';
+import { validate } from 'graphql/validation/validate';
 import { GraphQLSchema } from 'graphql/type/schema';
 
 import { ApolloLink, Operation, FetchResult } from '../core';
@@ -48,14 +49,21 @@ export class SchemaLink extends ApolloLink {
             ? this.context(operation)
             : this.context
         )
-      ).then(context => execute(
-        this.schema,
-        operation.query,
-        this.rootValue,
-        context,
-        operation.variables,
-        operation.operationName,
-      )).then(data => {
+      ).then(context => {
+        const validationErrors = validate(this.schema, operation.query);
+        if (validationErrors.length > 0) {
+          return { errors: validationErrors };
+        }
+
+        return execute(
+          this.schema,
+          operation.query,
+          this.rootValue,
+          context,
+          operation.variables,
+          operation.operationName,
+        )
+      }).then(data => {
         if (!observer.closed) {
           observer.next(data);
           observer.complete();

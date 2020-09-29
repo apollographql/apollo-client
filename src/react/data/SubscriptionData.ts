@@ -142,7 +142,7 @@ export class SubscriptionData<
   }
 
   private endSubscription() {
-    if (this.currentObservable.subscription) {
+    if (this.currentObservable.subscription && !this.isMounted) {
       this.currentObservable.subscription.unsubscribe();
       delete this.currentObservable.subscription;
     }

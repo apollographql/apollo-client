@@ -98,8 +98,10 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   public cleanup() {
     this.removeQuerySubscription();
-    delete this.currentObservable;
-    delete this.previousData.result;
+    if (!this.isMounted) {
+      delete this.currentObservable;
+      delete this.previousData.result;
+    }
   }
 
   public getOptions() {
@@ -447,7 +449,7 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   private removeQuerySubscription() {
-    if (this.currentSubscription) {
+    if (this.currentSubscription && !this.isMounted) {
       this.currentSubscription.unsubscribe();
       delete this.currentSubscription;
     }

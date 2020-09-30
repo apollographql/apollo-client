@@ -45,6 +45,8 @@ export namespace Cache {
   }
 
   export import DiffResult = DataProxy.DiffResult;
+  export import ReadQueryOptions = DataProxy.ReadQueryOptions;
+  export import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
   export import WriteQueryOptions = DataProxy.WriteQueryOptions;
   export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
   export import Fragment = DataProxy.Fragment;

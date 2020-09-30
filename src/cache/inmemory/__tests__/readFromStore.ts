@@ -1065,6 +1065,58 @@ describe('reading from the store', () => {
     });
   });
 
+  it("read functions for root query fields work with empty cache", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            uuid() {
+              return "8d573b9c-cfcf-4e3e-98dd-14d255af577e";
+            },
+            null() {
+              return null;
+            },
+          }
+        },
+      },
+    });
+
+    expect(cache.readQuery({
+      query: gql`query { uuid null }`,
+    })).toEqual({
+      uuid: "8d573b9c-cfcf-4e3e-98dd-14d255af577e",
+      null: null,
+    });
+
+    expect(cache.extract()).toEqual({});
+
+    expect(cache.readFragment({
+      id: "ROOT_QUERY",
+      fragment: gql`
+        fragment UUIDFragment on Query {
+          null
+          uuid
+        }
+      `,
+    })).toEqual({
+      uuid: "8d573b9c-cfcf-4e3e-98dd-14d255af577e",
+      null: null,
+    });
+
+    expect(cache.extract()).toEqual({});
+
+    expect(cache.readFragment({
+      id: "does not exist",
+      fragment: gql`
+        fragment F on Never {
+          whatever
+        }
+      `,
+    })).toBe(null);
+
+    expect(cache.extract()).toEqual({});
+  });
+
   it("custom read functions can map/filter dangling references", () => {
     const cache = new InMemoryCache({
       typePolicies: {

@@ -4,6 +4,12 @@
 
 (none yet)
 
+## Potentially breaking changes
+
+- Ensure `cache.readQuery` and `cache.readFragment` always return `TData | null`, instead of throwing `MissingFieldError` exceptions when missing fields are encountered. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7098](https://github.com/apollographql/apollo-client/pull/7098)
+  > Since this change converts prior exceptions to `null` returns, and since `null` was already a possible return value according to the `TData | null` return type, we are optimistic this change will be backwards compatible (as long as `null` was properly handled before), but **we need your beta feedback to be sure!**
+
 ## Improvements
 
 - Support inheritance of type and field policies, according to `possibleTypes`. <br/>
@@ -20,9 +26,6 @@
 
 - In addition to the `result.data` property, `useQuery` and `useLazyQuery` will now provide a `result.previousData` property, which can be useful when a network request is pending and `result.data` is undefined, since `result.previousData` can be rendered instead of rendering an empty/loading state. <br/>
   [@hwillson](https://github.com/hwillson) in [#7082](https://github.com/apollographql/apollo-client/pull/7082)
-
-- Ensure `cache.readQuery` and `cache.readFragment` always return `TData | null`, instead of throwing an exception when missing fields are encountered. <br/>
-  [@benjamn](https://github.com/benjamn) in [#7098](https://github.com/apollographql/apollo-client/pull/7098)
 
 ## Apollo Client 3.2.1
 

@@ -6,6 +6,7 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
+import { MissingFieldError } from '../core/types/common';
 import {
   addTypenameToDocument,
   StoreObject,
@@ -125,12 +126,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         config: this.config,
         returnPartialData,
       }).result || null;
-    } catch {
-      // Intentionally swallow exceptions and return null, so that callers
-      // never need to worry about catching exceptions. If you need more
-      // information about what was incomplete, use cache.diff instead,
-      // and examine diffResult.missing.
-      return null;
+    } catch (e) {
+      if (e instanceof MissingFieldError) {
+        // Swallow MissingFieldError and return null, so callers do not
+        // need to worry about catching "normal" exceptions resulting from
+        // incomplete cache data. Unexpected errors will be re-thrown. If
+        // you need more information about which fields were missing, use
+        // cache.diff instead, and examine diffResult.missing.
+        return null;
+      }
+      throw e;
     }
   }
 

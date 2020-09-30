@@ -557,6 +557,85 @@ describe('reading from the store', () => {
     }).toThrowError(/Can't find field 'missingField' on ROOT_QUERY object/);
   });
 
+  it('readQuery supports returnPartialData', () => {
+    const cache = new InMemoryCache;
+    const aQuery = gql`query { a }`;
+    const bQuery = gql`query { b }`;
+    const abQuery = gql`query { a b }`;
+
+    cache.writeQuery({
+      query: aQuery,
+      data: { a: 123 },
+    });
+
+    expect(cache.readQuery({ query: bQuery })).toBe(null);
+    expect(cache.readQuery({ query: abQuery })).toBe(null);
+
+    expect(cache.readQuery({
+      query: bQuery,
+      returnPartialData: true,
+    })).toEqual({});
+
+    expect(cache.readQuery({
+      query: abQuery,
+      returnPartialData: true,
+    })).toEqual({ a: 123 });
+  });
+
+  it('readFragment supports returnPartialData', () => {
+    const cache = new InMemoryCache;
+    const id = cache.identify({
+      __typename: "ABObject",
+      id: 321,
+    });
+
+    const aFragment = gql`fragment AFragment on ABObject { a }`;
+    const bFragment = gql`fragment BFragment on ABObject { b }`;
+    const abFragment = gql`fragment ABFragment on ABObject { a b }`;
+
+    expect(cache.readFragment({ id, fragment: aFragment })).toBe(null);
+    expect(cache.readFragment({ id, fragment: bFragment })).toBe(null);
+    expect(cache.readFragment({ id, fragment: abFragment })).toBe(null);
+
+    const ref = cache.writeFragment({
+      id,
+      fragment: aFragment,
+      data: {
+        __typename: "ABObject",
+        a: 123,
+      },
+    });
+    expect(isReference(ref)).toBe(true);
+    expect(ref!.__ref).toBe(id);
+
+    expect(cache.readFragment({
+      id,
+      fragment: bFragment,
+    })).toBe(null);
+
+    expect(cache.readFragment({
+      id,
+      fragment: abFragment,
+    })).toBe(null);
+
+    expect(cache.readFragment({
+      id,
+      fragment: bFragment,
+      returnPartialData: true,
+    })).toEqual({
+      __typename: "ABObject",
+    });
+
+    expect(cache.readFragment({
+      id,
+      fragment: abFragment,
+      returnPartialData: true,
+    })).toEqual({
+      __typename: "ABObject",
+      a: 123,
+    });
+  });
+
   it('distinguishes between missing @client and non-@client fields', () => {
     const query = gql`
       query {

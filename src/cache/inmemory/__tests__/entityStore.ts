@@ -1588,13 +1588,29 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(() => cache.readQuery({
-      query: queryWithAliases,
-    })).toThrow(/Dangling reference to missing ABCs:.* object/);
+    function diff(query: DocumentNode) {
+      return cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+      });
+    }
 
-    expect(() => cache.readQuery({
+    expect(cache.readQuery({
+      query: queryWithAliases,
+    })).toBe(null);
+
+    expect(() => diff(queryWithAliases)).toThrow(
+      /Dangling reference to missing ABCs:.* object/,
+    );
+
+    expect(cache.readQuery({
       query: queryWithoutAliases,
-    })).toThrow(/Dangling reference to missing ABCs:.* object/);
+    })).toBe(null);
+
+    expect(() => diff(queryWithoutAliases)).toThrow(
+      /Dangling reference to missing ABCs:.* object/,
+    );
   });
 
   it("gracefully handles eviction amid optimistic updates", () => {

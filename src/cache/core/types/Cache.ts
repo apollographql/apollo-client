@@ -9,6 +9,7 @@ export namespace Cache {
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
+    returnPartialData?: boolean;
   }
 
   export interface WriteOptions<TResult = any, TVariables = any>
@@ -19,7 +20,9 @@ export namespace Cache {
   }
 
   export interface DiffOptions extends ReadOptions {
-    returnPartialData?: boolean;
+    // The DiffOptions interface is currently just an alias for
+    // ReadOptions, though DiffOptions used to be responsible for
+    // declaring the returnPartialData option.
   }
 
   export interface WatchOptions extends ReadOptions {
@@ -42,6 +45,8 @@ export namespace Cache {
   }
 
   export import DiffResult = DataProxy.DiffResult;
+  export import ReadQueryOptions = DataProxy.ReadQueryOptions;
+  export import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
   export import WriteQueryOptions = DataProxy.WriteQueryOptions;
   export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
   export import Fragment = DataProxy.Fragment;

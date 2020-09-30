@@ -6,6 +6,7 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
+import { MissingFieldError } from '../core/types/common';
 import {
   addTypenameToDocument,
   StoreObject,
@@ -106,18 +107,36 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    const store = options.optimistic ? this.optimisticData : this.data;
-    if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
-      return null;
+    const {
+      // Since read returns data or null, without any additional metadata
+      // about whether/where there might have been missing fields, the
+      // default behavior cannot be returnPartialData = true (like it is
+      // for the diff method), since defaulting to true would violate the
+      // integrity of the T in the return type. However, partial data may
+      // be useful in some cases, so returnPartialData:true may be
+      // specified explicitly.
+      returnPartialData = false,
+    } = options;
+    try {
+      return this.storeReader.diffQueryAgainstStore<T>({
+        store: options.optimistic ? this.optimisticData : this.data,
+        query: options.query,
+        variables: options.variables,
+        rootId: options.rootId,
+        config: this.config,
+        returnPartialData,
+      }).result || null;
+    } catch (e) {
+      if (e instanceof MissingFieldError) {
+        // Swallow MissingFieldError and return null, so callers do not
+        // need to worry about catching "normal" exceptions resulting from
+        // incomplete cache data. Unexpected errors will be re-thrown. If
+        // you need more information about which fields were missing, use
+        // cache.diff instead, and examine diffResult.missing.
+        return null;
+      }
+      throw e;
     }
-    return this.storeReader.diffQueryAgainstStore<T>({
-      store,
-      query: options.query,
-      variables: options.variables,
-      rootId: options.rootId,
-      config: this.config,
-      returnPartialData: false,
-    }).result || null;
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {

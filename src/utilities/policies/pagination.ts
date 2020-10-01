@@ -118,16 +118,14 @@ export function relayStylePagination<TNode = Reference>(
     },
 
     merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
-      const incomingEdges = incoming.edges || [];
-      if (incomingEdges.length) {
-        incomingEdges.forEach(edge => {
-          if (isReference(edge)) {
-            // In case edge is a Reference, we read out its cursor field
-            // and store it as an extra property of the Reference object.
-            edge.cursor = readField<string>("cursor", edge);
-          }
-        });
-      }
+      const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
+        if (isReference(edge = { ...edge })) {
+          // In case edge is a Reference, we read out its cursor field and
+          // store it as an extra property of the Reference object.
+          edge.cursor = readField<string>("cursor", edge);
+        }
+        return edge;
+      }) : [];
 
       if (incoming.pageInfo) {
         // In case we did not request the cursor field for edges in this

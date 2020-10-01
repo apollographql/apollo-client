@@ -2,7 +2,8 @@
 
 ## Bug Fixes
 
-(none yet)
+- Update `@wry/equality` to consider undefined properties equivalent to missing properties. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7108](https://github.com/apollographql/apollo-client/pull/7108)
 
 ## Potentially breaking changes
 

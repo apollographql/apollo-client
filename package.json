@@ -73,7 +73,7 @@
     "@graphql-typed-document-node/core": "^3.0.0",
     "@types/zen-observable": "^0.8.0",
     "@wry/context": "^0.5.2",
-    "@wry/equality": "^0.2.0",
+    "@wry/equality": "^0.3.0",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-tag": "^2.11.0",
     "hoist-non-react-statics": "^3.3.2",

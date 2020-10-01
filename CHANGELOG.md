@@ -14,6 +14,10 @@
 - `HttpLink` will now automatically strip any unused `variables` before sending queries to the GraphQL server, since those queries are very likely to fail validation, according to the [All Variables Used](https://spec.graphql.org/draft/#sec-All-Variables-Used) rule in the GraphQL specification. If you depend on the preservation of unused variables, you can restore the previous behavior by passing `includeUnusedVariables: true` to the `HttpLink` constructor (which is typically passed as `options.link` to the `ApolloClient` constructor). <br/>
   [@benjamn](https://github.com/benjamn) in [#7127](https://github.com/apollographql/apollo-client/pull/7127)
 
+- Ensure `MockLink` (used by `MockedProvider`) returns mock configuration errors (e.g. `No more mocked responses for the query ...`) through the Link's `Observable`, instead of throwing them. These errors are now available through the `error` property of a result. <br/>
+  [@hwillson](https://github.com/hwillson) in [#7110](https://github.com/apollographql/apollo-client/pull/7110)
+  > Returning mock configuration errors through the Link's `Observable` was the default behavior in Apollo Client 2.x. We changed it for 3, but the change has been problematic for those looking to migrate from 2.x to 3. We've decided to change this back with the understanding that not many people want or are relying on `MockLink`'s throwing exception approach. If you want to change this functionality, you can define custom error handling through `MockLink.setOnError`.
+
 ## Improvements
 
 - Support inheritance of type and field policies, according to `possibleTypes`. <br/>

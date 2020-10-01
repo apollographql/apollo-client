@@ -31,6 +31,9 @@
 - Provide default empty cache object for root IDs like `ROOT_QUERY`, to avoid differences in behavior before/after `ROOT_QUERY` data has been written into `InMemoryCache`. <br/>
   [@benjamn](https://github.com/benjamn) in [#7100](https://github.com/apollographql/apollo-client/pull/7100)
 
+- The schema link package (`@apollo/client/link/schema`) will now validate incoming queries against its client-side schema, and return `errors` as a GraphQL server would. <br/>
+  [@amannn](https://github.com/amannn) in [#7094](https://github.com/apollographql/apollo-client/pull/7094)
+
 ## Apollo Client 3.2.2
 
 ## Bug Fixes

@@ -124,7 +124,7 @@ describe('mutation results', () => {
       link: mockSingleLink({
         request: { query: queryWithTypename } as any,
         result,
-      }, ...mockedResponses).setOnError(reject),
+      }, ...mockedResponses),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {

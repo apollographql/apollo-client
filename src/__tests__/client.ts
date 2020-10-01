@@ -1768,7 +1768,7 @@ describe('client', () => {
     });
 
     itAsync('fails if network request fails', (resolve, reject) => {
-      const link = mockSingleLink().setOnError(error => { throw error }); // no queries = no replies.
+      const link = mockSingleLink(); // no queries = no replies.
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -2028,7 +2028,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data },
         error: networkError,
-      }).setOnError(reject),
+      }),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -2475,7 +2475,7 @@ describe('client', () => {
       { request: { query }, result: { data } },
       { request: { query }, error: new Error('This is an error!') },
       { request: { query }, result: { data: dataTwo } }
-    ).setOnError(reject);
+    );
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),

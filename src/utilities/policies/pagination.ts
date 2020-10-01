@@ -41,21 +41,17 @@ export function offsetLimitPagination<T = Reference>(
   };
 }
 
+// Whether TEdge<TNode> is a normalized Reference or a non-normalized
+// object, it needs a .cursor property where the relayStylePagination
+// merge function can store cursor strings taken from pageInfo. Storing an
+// extra reference.cursor property should be safe, and is easier than
+// attempting to update the cursor field of the normalized StoreObject
+// that the reference refers to, or managing edge wrapper objects
+// (something I attempted in #7023, but abandoned because of #7088).
 type TEdge<TNode> = {
   cursor?: string;
   node: TNode;
-} | Reference;
-
-// This object is an internal structure that's slightly different from the
-// GraphQL response format for edges. Each actual edge gets wrapped in a
-// wrapper object that can safely store a cursor string (possibly inferred
-// from pageInfo), which makes things easier when the actual edge happens
-// to be a normalized Reference, since updating fields of an object behind
-// a Reference is tricky in a merge function.
-type TEdgeWrapper<TNode> = {
-  cursor?: string;
-  edge: TEdge<TNode>;
-};
+} | (Reference & { cursor?: string });
 
 type TPageInfo = {
   hasPreviousPage: boolean;
@@ -65,7 +61,7 @@ type TPageInfo = {
 };
 
 type TExistingRelay<TNode> = Readonly<{
-  wrappers: TEdgeWrapper<TNode>[];
+  edges: TEdge<TNode>[];
   pageInfo: TPageInfo;
 }>;
 
@@ -95,14 +91,14 @@ export function relayStylePagination<TNode = Reference>(
       const edges: TEdge<TNode>[] = [];
       let startCursor = "";
       let endCursor = "";
-      existing.wrappers.forEach(wrapper => {
+      existing.edges.forEach(edge => {
         // Edges themselves could be Reference objects, so it's important
-        // to use readField to access the wrapper.edge.node property.
-        if (canRead(readField("node", wrapper.edge))) {
-          edges.push(wrapper.edge);
-          if (wrapper.cursor) {
-            startCursor = startCursor || wrapper.cursor;
-            endCursor = wrapper.cursor;
+        // to use readField to access the edge.edge.node property.
+        if (canRead(readField("node", edge))) {
+          edges.push(edge);
+          if (edge.cursor) {
+            startCursor = startCursor || edge.cursor;
+            endCursor = edge.cursor;
           }
         }
       });
@@ -121,42 +117,44 @@ export function relayStylePagination<TNode = Reference>(
       };
     },
 
-    merge(existing = makeEmptyData(), incoming, { args, readField }) {
-      // Convert incoming.edges to an array of TEdgeWrapper objects, so
-      // that we can merge the incoming wrappers into existing.wrappers.
-      const incomingWrappers: TEdgeWrapper<TNode>[] =
-        incoming.edges ? incoming.edges.map(edge => ({
-          edge,
-          // In case edge is a Reference, we lift out its cursor field and
-          // store it in the TEdgeWrapper object.
-          cursor: readField<string>("cursor", edge),
-        })) : [];
+    merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
+      const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
+        if (isReference(edge = { ...edge })) {
+          // In case edge is a Reference, we read out its cursor field and
+          // store it as an extra property of the Reference object.
+          edge.cursor = readField<string>("cursor", edge);
+        }
+        return edge;
+      }) : [];
 
       if (incoming.pageInfo) {
         // In case we did not request the cursor field for edges in this
         // query, we can still infer some of those cursors from pageInfo.
         const { startCursor, endCursor } = incoming.pageInfo;
-        const firstWrapper = incomingWrappers[0];
-        if (firstWrapper && startCursor) {
-          firstWrapper.cursor = startCursor;
+        const firstEdge = incomingEdges[0];
+        if (firstEdge && startCursor) {
+          firstEdge.cursor = startCursor;
         }
-        const lastWrapper = incomingWrappers[incomingWrappers.length - 1];
-        if (lastWrapper && endCursor) {
-          lastWrapper.cursor = endCursor;
+        const lastEdge = incomingEdges[incomingEdges.length - 1];
+        if (lastEdge && endCursor) {
+          lastEdge.cursor = endCursor;
         }
       }
 
-      let prefix = existing.wrappers;
+      let prefix = existing.edges;
       let suffix: typeof prefix = [];
 
       if (args && args.after) {
-        const index = prefix.findIndex(wrapper => wrapper.cursor === args.after);
+        // This comparison does not need to use readField("cursor", edge),
+        // because we stored the cursor field of any Reference edges as an
+        // extra property of the Reference object.
+        const index = prefix.findIndex(edge => edge.cursor === args.after);
         if (index >= 0) {
           prefix = prefix.slice(0, index + 1);
           // suffix = []; // already true
         }
       } else if (args && args.before) {
-        const index = prefix.findIndex(wrapper => wrapper.cursor === args.before);
+        const index = prefix.findIndex(edge => edge.cursor === args.before);
         suffix = index < 0 ? prefix : prefix.slice(index);
         prefix = [];
       } else if (incoming.edges) {
@@ -166,20 +164,20 @@ export function relayStylePagination<TNode = Reference>(
         prefix = [];
       }
 
-      const wrappers = [
+      const edges = [
         ...prefix,
-        ...incomingWrappers,
+        ...incomingEdges,
         ...suffix,
       ];
 
-      const firstWrapper = wrappers[0];
-      const lastWrapper = wrappers[wrappers.length - 1];
+      const firstEdge = edges[0];
+      const lastEdge = edges[edges.length - 1];
 
       const pageInfo: TPageInfo = {
         ...incoming.pageInfo,
         ...existing.pageInfo,
-        startCursor: firstWrapper && firstWrapper.cursor || "",
-        endCursor: lastWrapper && lastWrapper.cursor || "",
+        startCursor: firstEdge && firstEdge.cursor || "",
+        endCursor: lastEdge && lastEdge.cursor || "",
       };
 
       if (incoming.pageInfo) {
@@ -199,7 +197,7 @@ export function relayStylePagination<TNode = Reference>(
       return {
         ...getExtras(existing),
         ...getExtras(incoming),
-        wrappers,
+        edges,
         pageInfo,
       };
     },
@@ -208,11 +206,11 @@ export function relayStylePagination<TNode = Reference>(
 
 // Returns any unrecognized properties of the given object.
 const getExtras = (obj: Record<string, any>) => __rest(obj, notExtras);
-const notExtras = ["edges", "wrappers", "pageInfo"];
+const notExtras = ["edges", "pageInfo"];
 
 function makeEmptyData(): TExistingRelay<any> {
   return {
-    wrappers: [],
+    edges: [],
     pageInfo: {
       hasPreviousPage: false,
       hasNextPage: true,

@@ -882,7 +882,7 @@ function keyArgsFnFromSpecifier(
 ): KeyArgsFunction {
   return (args, context) => {
     return args ? `${context.fieldName}:${
-      JSON.stringify(computeKeyObject(args, specifier))
+      JSON.stringify(computeKeyObject(args, specifier, false))
     }` : context.fieldName;
   };
 }
@@ -907,7 +907,7 @@ function keyFieldsFnFromSpecifier(
     }
 
     const keyObject = context.keyObject =
-      computeKeyObject(object, specifier, aliasMap);
+      computeKeyObject(object, specifier, true, aliasMap);
 
     return `${context.typename}:${JSON.stringify(keyObject)}`;
   };
@@ -959,6 +959,7 @@ function makeAliasMap(
 function computeKeyObject(
   response: Record<string, any>,
   specifier: KeySpecifier,
+  strict: boolean,
   aliasMap?: AliasMap,
 ): Record<string, any> {
   // The order of adding properties to keyObj affects its JSON serialization,
@@ -971,17 +972,17 @@ function computeKeyObject(
       if (typeof prevKey === "string") {
         const subsets = aliasMap && aliasMap.subsets;
         const subset = subsets && subsets[prevKey];
-        keyObj[prevKey] = computeKeyObject(response[prevKey], s, subset);
+        keyObj[prevKey] = computeKeyObject(response[prevKey], s, strict, subset);
       }
     } else {
       const aliases = aliasMap && aliasMap.aliases;
       const responseName = aliases && aliases[s] || s;
-      invariant(
-        hasOwn.call(response, responseName),
-        // TODO Make this appropriate for keyArgs as well
-        `Missing field '${responseName}' while computing key fields`,
-      );
-      keyObj[prevKey = s] = response[responseName];
+      if (hasOwn.call(response, responseName)) {
+        keyObj[prevKey = s] = response[responseName];
+      } else {
+        invariant(!strict, `Missing field '${responseName}' while computing key fields`);
+        prevKey = void 0;
+      }
     }
   });
   return keyObj;

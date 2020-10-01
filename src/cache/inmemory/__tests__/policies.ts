@@ -2461,7 +2461,7 @@ describe("type policies", function () {
           ROOT_QUERY: {
             __typename: "Query",
             todos: {
-              wrappers: [],
+              edges: [],
               pageInfo: {
                 "endCursor": "",
                 "hasNextPage": true,
@@ -3049,17 +3049,15 @@ describe("type policies", function () {
               // Note that Turrell's name has been lower-cased.
               snapshot.ROOT_QUERY!["search:james turrell"]
             ).toEqual({
-              wrappers: turrellEdges.slice(0, 1).map(edge => ({
+              edges: turrellEdges.slice(0, 1).map(edge => ({
+                ...edge,
                 // The relayStylePagination merge function updates the
                 // edge.cursor field of the first and last edge, even if
                 // the query did not request the edge.cursor field, if
                 // pageInfo.{start,end}Cursor are defined.
                 cursor: turrellPageInfo1.startCursor,
-                edge: {
-                  ...edge,
-                  // Artist objects are normalized by HREF:
-                  node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-                },
+                // Artist objects are normalized by HREF:
+                node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
               })),
               pageInfo: turrellPageInfo1,
               totalCount: 13531,
@@ -3143,22 +3141,20 @@ describe("type policies", function () {
               // Note that Turrell's name has been lower-cased.
               snapshot.ROOT_QUERY!["search:james turrell"]
             ).toEqual({
-              wrappers: turrellEdges.map((edge, i) => ({
+              edges: turrellEdges.map((edge, i) => ({
+                ...edge,
                 // This time the cursors are different depending on which
                 // of the two edges we're considering.
                 cursor: [
                   turrellPageInfo2.startCursor,
                   turrellPageInfo2.endCursor,
                 ][i],
-                edge: {
-                  ...edge,
-                  node: [
-                    // Artist objects are normalized by HREF:
-                    { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-                    // However, SearchableItem objects are not normalized.
-                    edge.node,
-                  ][i],
-                },
+                node: [
+                  // Artist objects are normalized by HREF:
+                  { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                  // However, SearchableItem objects are not normalized.
+                  edge.node,
+                ][i],
               })),
               pageInfo: turrellPageInfo2,
               totalCount: 13531,

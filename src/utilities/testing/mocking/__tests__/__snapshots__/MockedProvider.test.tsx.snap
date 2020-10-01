@@ -53,6 +53,8 @@ Object {
 }
 `;
 
+exports[`General use should pipe exceptions thrown in custom onError functions through the link chain 1`] = `[Error: oh no!]`;
+
 exports[`General use should return "Mocked response should contain" errors in response 1`] = `[Error: Mocked response should contain either result or error: {"query":"query GetUser($username: String!) {\\n  user(username: $username) {\\n    id\\n    __typename\\n  }\\n}\\n"}]`;
 
 exports[`General use should return "No more mocked responses" errors in response 1`] = `

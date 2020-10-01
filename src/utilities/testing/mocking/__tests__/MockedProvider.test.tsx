@@ -463,6 +463,31 @@ describe('General use', () => {
 
     return wait().then(resolve, reject);
   });
+
+  itAsync('should pipe exceptions thrown in custom onError functions through the link chain', (resolve, reject) => {
+    function Component({ ...variables }: Variables) {
+      const { loading, error } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        console.log(error);
+        expect(error).toMatchSnapshot();
+      }
+      return null;
+    }
+
+    const mockLink = new MockLink([]);
+    mockLink.setOnError(() => {
+      throw new Error('oh no!');
+    });
+    const link = ApolloLink.from([errorLink, mockLink]);
+
+    render(
+      <MockedProvider link={link}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    return wait().then(resolve, reject);
+  });
 });
 
 describe('@client testing', () => {

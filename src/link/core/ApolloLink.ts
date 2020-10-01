@@ -141,11 +141,13 @@ export class ApolloLink {
     throw new InvariantError('request is not implemented');
   }
 
-  protected onError(reason: any) {
-    throw reason;
+  protected onError(error: any, observer: ZenObservable.Observer<FetchResult>) {
+    observer.error!(error);
   }
 
-  public setOnError(fn: (reason: any) => any): this {
+  public setOnError(
+    fn: (error: any, observer?: ZenObservable.Observer<FetchResult>) => any
+  ): this {
     this.onError = fn;
     return this;
   }

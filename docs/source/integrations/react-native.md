@@ -7,7 +7,7 @@ You can use Apollo with React Native exactly as you would with React Web.
 To introduce Apollo to your app, install Apollo Client from npm and use it in your app as outlined in the [setup](../get-started/) article:
 
 ```bash
-npm install @apollo/client --save
+npm install graphql @apollo/client --save
 ```
 
 ```jsx
@@ -35,8 +35,7 @@ If you are new to using Apollo with React, you should probably read the [React g
 
 There are some Apollo examples written in React Native that you may wish to refer to:
 
-1. The ["Hello World" example](https://github.com/apollographql/frontpage-react-native-app) used at dev.apollodata.com.
-2. A [GitHub API Example](https://github.com/apollographql/GitHub-GraphQL-API-Example) built to work with GitHub's new GraphQL API.
+1. [The GraphQL Guide app](https://github.com/GraphQLGuide/guide-react-native)
 
 ## Apollo Dev Tools
 

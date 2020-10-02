@@ -34,6 +34,9 @@
 - The schema link package (`@apollo/client/link/schema`) will now validate incoming queries against its client-side schema, and return `errors` as a GraphQL server would. <br/>
   [@amannn](https://github.com/amannn) in [#7094](https://github.com/apollographql/apollo-client/pull/7094)
 
+- Allow optional arguments in `keyArgs: [...]` arrays for `InMemoryCache` field policies. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7109](https://github.com/apollographql/apollo-client/pull/7109)
+
 ## Apollo Client 3.2.2
 
 ## Bug Fixes

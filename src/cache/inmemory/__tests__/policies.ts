@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 
 import { InMemoryCache } from "../inMemoryCache";
 import { ReactiveVar, makeVar } from "../reactiveVars";
-import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode } from "../../../core";
+import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
@@ -740,6 +740,190 @@ describe("type policies", function () {
           }
         ],
       });
+    });
+
+    it("can include optional arguments in keyArgs", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Author: {
+            keyFields: ["name"],
+            fields: {
+              writings: {
+                keyArgs: ["a", "b", "type"]
+              },
+            },
+          },
+        },
+      });
+
+      const data = {
+        author: {
+          __typename: "Author",
+          name: "Nadia Eghbal",
+          writings: [{
+            __typename: "Book",
+            isbn: "0578675862",
+            title: "Working in Public: The Making and Maintenance of " +
+              "Open Source Software",
+          }],
+        },
+      };
+
+      function check<TData, TVars>(
+        query: DocumentNode | TypedDocumentNode<TData, TVars>,
+        variables?: TVars,
+      ) {
+        cache.writeQuery({ query, variables, data });
+        expect(cache.readQuery({ query, variables })).toEqual(data);
+      }
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(type: "Book") {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(type: "Book", b: 2, a: 1) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(b: 2, a: 1) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(b: 2) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(a: 3) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(unrelated: "oyez") {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query AuthorWritings ($type: String) {
+          author {
+            name
+            writings(b: 4, type: $type, unrelated: "oyez") {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `, { type: void 0 as any });
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      const storeFieldNames: string[] = [];
+
+      cache.modify({
+        id: cache.identify({
+          __typename: "Author",
+          name: "Nadia Eghbal",
+        }),
+
+        fields: {
+          writings(value, { storeFieldName }) {
+            storeFieldNames.push(storeFieldName);
+            expect(value).toEqual(data.author.writings);
+            return value;
+          },
+        },
+      })
+
+      expect(storeFieldNames.sort()).toEqual([
+        "writings",
+        'writings:{"a":1,"b":2,"type":"Book"}',
+        'writings:{"a":1,"b":2}',
+        'writings:{"a":3}',
+        'writings:{"b":2}',
+        'writings:{"b":4}',
+        'writings:{"type":"Book"}',
+        "writings:{}",
+      ]);
     });
 
     it("can return KeySpecifier arrays from keyArgs functions", function () {

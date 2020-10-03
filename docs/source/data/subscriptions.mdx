@@ -90,7 +90,7 @@ Import and initialize a `WebSocketLink` object in the same project file where yo
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:5000/`,
+  uri: 'ws://localhost:5000/graphql',
   options: {
     reconnect: true
   }
@@ -111,11 +111,11 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const httpLink = new HttpLink({
-  uri: 'http://localhost:3000/'
+  uri: 'http://localhost:3000/graphql'
 });
 
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:5000/`,
+  uri: 'ws://localhost:5000/graphql',
   options: {
     reconnect: true
   }
@@ -149,7 +149,7 @@ It is often necessary to authenticate a client before allowing it to receive sub
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:5000/`,
+  uri: 'ws://localhost:5000/graphql',
   options: {
     reconnect: true,
     connectionParams: {

@@ -1,4 +1,4 @@
-import { DefinitionNode } from 'graphql';
+import { DefinitionNode, VariableDefinitionNode } from 'graphql';
 import { visit } from 'graphql/language/visitor';
 
 import { ApolloLink } from '../core';
@@ -90,13 +90,14 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     if (body.variables && !includeUnusedVariables) {
       const unusedNames = new Set(Object.keys(body.variables));
       visit(operation.query, {
-        // This visit finds not only variable names used in field
-        // arguments but also top-level variable names declared by the
-        // query. Any mention of a variable within the query (including
-        // inside nested fragments) is enough to preserve the variable,
-        // in other words.
-        Variable(node) {
-          unusedNames.delete(node.name.value);
+        Variable(node, _key, parent) {
+          // A variable type definition at the top level of a query is not
+          // enough to silence server-side errors about the variable being
+          // unused, so variable definitions do not count as usage.
+          // https://spec.graphql.org/draft/#sec-All-Variables-Used
+          if (parent && (parent as VariableDefinitionNode).kind !== 'VariableDefinition') {
+            unusedNames.delete(node.name.value);
+          }
         },
       });
       if (unusedNames.size) {

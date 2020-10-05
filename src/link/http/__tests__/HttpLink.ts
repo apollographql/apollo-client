@@ -219,8 +219,14 @@ describe('HttpLink', () => {
       const link = createHttpLink({ uri: '/data' });
 
       const query = gql`
-        query PEOPLE ($declared: Int) {
-          people(surprise: $undeclared) {
+        query PEOPLE (
+          $declaredAndUsed: String,
+          $declaredButUnused: Int,
+        ) {
+          people(
+            surprise: $undeclared,
+            noSurprise: $declaredAndUsed,
+          ) {
             ... on Doctor {
               specialty(var: $usedByInlineFragment)
             }
@@ -234,7 +240,8 @@ describe('HttpLink', () => {
 
       const variables = {
         unused: 'strip',
-        declared: 'keep',
+        declaredButUnused: 'strip',
+        declaredAndUsed: 'keep',
         undeclared: 'keep',
         usedByInlineFragment: 'keep',
         usedByNamedFragment: 'keep',
@@ -251,7 +258,7 @@ describe('HttpLink', () => {
             operationName: "PEOPLE",
             query: print(query),
             variables: {
-              declared: 'keep',
+              declaredAndUsed: 'keep',
               undeclared: 'keep',
               usedByInlineFragment: 'keep',
               usedByNamedFragment: 'keep',

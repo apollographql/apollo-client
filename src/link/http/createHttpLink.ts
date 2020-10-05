@@ -1,4 +1,5 @@
 import { DefinitionNode } from 'graphql';
+import { visit } from 'graphql/language/visitor';
 
 import { ApolloLink } from '../core';
 import { Observable } from '../../utilities';
@@ -22,6 +23,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     fetch: fetcher,
     includeExtensions,
     useGETForQueries,
+    includeUnusedVariables = false,
     ...requestOptions
   } = linkOptions;
 
@@ -84,6 +86,29 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       linkConfig,
       contextConfig,
     );
+
+    if (body.variables && !includeUnusedVariables) {
+      const unusedNames = new Set(Object.keys(body.variables));
+      visit(operation.query, {
+        // This visit finds not only variable names used in field
+        // arguments but also top-level variable names declared by the
+        // query. Any mention of a variable within the query (including
+        // inside nested fragments) is enough to preserve the variable,
+        // in other words.
+        Variable(node) {
+          unusedNames.delete(node.name.value);
+        },
+      });
+      if (unusedNames.size) {
+        // Make a shallow copy of body.variables (with keys in the same
+        // order) and then delete unused variables from the copy.
+        const variables = { ...body.variables };
+        unusedNames.forEach(name => {
+          delete variables[name];
+        });
+        body.variables = variables;
+      }
+    }
 
     let controller: any;
     if (!(options as any).signal) {

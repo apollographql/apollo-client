@@ -103,11 +103,10 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       if (unusedNames.size) {
         // Make a shallow copy of body.variables (with keys in the same
         // order) and then delete unused variables from the copy.
-        const variables = { ...body.variables };
+        body.variables = { ...body.variables };
         unusedNames.forEach(name => {
-          delete variables[name];
+          delete body.variables![name];
         });
-        body.variables = variables;
       }
     }
 

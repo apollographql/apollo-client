@@ -107,6 +107,7 @@ describe('HttpLink', () => {
         uri: '/data',
         fetchOptions: { method: 'GET' },
         includeExtensions: true,
+        includeUnusedVariables: true,
       });
 
       execute(link, { query: sampleQuery, variables, extensions }).subscribe({
@@ -138,7 +139,7 @@ describe('HttpLink', () => {
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
-            '/data?foo=bar&query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%22params%22%3A%22stub%22%7D',
+            '/data?foo=bar&query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%7D',
           );
         }),
         error: error => done.fail(error),
@@ -164,7 +165,7 @@ describe('HttpLink', () => {
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
-            '/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%22params%22%3A%22stub%22%7D',
+            '/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%7D',
           );
         }),
       );
@@ -187,7 +188,7 @@ describe('HttpLink', () => {
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
-            '/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%22params%22%3A%22stub%22%7D',
+            '/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%7D',
           );
         }),
       );
@@ -212,6 +213,62 @@ describe('HttpLink', () => {
           expect(uri).toBe('/data');
         }),
       );
+    });
+
+    it('strips unused variables, respecting nested fragments', done => {
+      const link = createHttpLink({ uri: '/data' });
+
+      const query = gql`
+        query PEOPLE (
+          $declaredAndUsed: String,
+          $declaredButUnused: Int,
+        ) {
+          people(
+            surprise: $undeclared,
+            noSurprise: $declaredAndUsed,
+          ) {
+            ... on Doctor {
+              specialty(var: $usedByInlineFragment)
+            }
+            ...LawyerFragment
+          }
+        }
+        fragment LawyerFragment on Lawyer {
+          caseCount(var: $usedByNamedFragment)
+        }
+      `;
+
+      const variables = {
+        unused: 'strip',
+        declaredButUnused: 'strip',
+        declaredAndUsed: 'keep',
+        undeclared: 'keep',
+        usedByInlineFragment: 'keep',
+        usedByNamedFragment: 'keep',
+      };
+
+      execute(link, {
+        query,
+        variables,
+      }).subscribe({
+        next: makeCallback(done, () => {
+          const [uri, options] = fetchMock.lastCall()!;
+          const { method, body } = options!;
+          expect(JSON.parse(body as string)).toEqual({
+            operationName: "PEOPLE",
+            query: print(query),
+            variables: {
+              declaredAndUsed: 'keep',
+              undeclared: 'keep',
+              usedByInlineFragment: 'keep',
+              usedByNamedFragment: 'keep',
+            },
+          });
+          expect(method).toBe('POST');
+          expect(uri).toBe('/data');
+        }),
+        error: error => done.fail(error),
+      });
     });
 
     it('should add client awareness settings to request headers', done => {
@@ -277,6 +334,7 @@ describe('HttpLink', () => {
       const link = createHttpLink({
         uri: '/data',
         useGETForQueries: true,
+        includeUnusedVariables: true,
       });
 
       let b;
@@ -422,7 +480,7 @@ describe('HttpLink', () => {
           try {
             let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
             expect(body.query).toBe(print(sampleMutation));
-            expect(body.variables).toEqual(variables);
+            expect(body.variables).toEqual({});
             expect(body.context).not.toBeDefined();
             if (includeExtensions) {
               expect(body.extensions).toBeDefined();
@@ -1024,7 +1082,11 @@ describe('HttpLink', () => {
     });
     it("throws if the body can't be stringified", done => {
       fetch.mockReturnValueOnce(Promise.resolve({ data: {}, text }));
-      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+      const link = createHttpLink({
+        uri: 'data',
+        fetch: fetch as any,
+        includeUnusedVariables: true,
+      });
 
       let b;
       const a: any = { b };

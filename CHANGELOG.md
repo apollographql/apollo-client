@@ -1,9 +1,24 @@
+## Apollo Client 3.2.2
+
+## Bug Fixes
+
+- Undo `TEdgeWrapper` approach for `relayStylePagination`, introduced by [f41e9efc](https://github.com/apollographql/apollo-client/commit/f41e9efc9e061b80fe5019456c049a3c56661e87) in [#7023](https://github.com/apollographql/apollo-client/pull/7023), since it was an unintended breaking change for existing code that used `cache.modify` to interact with field data managed by `relayStylePagination`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7103](https://github.com/apollographql/apollo-client/pull/7103)
+
 ## Apollo Client 3.2.1
 
 ## Bug Fixes
 
 - Fix `relayStylePagination` to handle the possibility that edges might be normalized `Reference` objects (uncommon). <br/>
   [@anark](https://github.com/anark) and [@benjamn](https://github.com/benjamn) in [#7023](https://github.com/apollographql/apollo-client/pull/7023)
+
+- Disable "Missing cache result fields" warnings when `returnPartialData` is `true`.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#7055](https://github.com/apollographql/apollo-client/pull/7055)
+
+## Improvements
+
+- Mark `subscriptions-transport-ws` `peerDependency` as optional. <br/>
+  [@MasterOdin](https://github.com/MasterOdin) in [#7047](https://github.com/apollographql/apollo-client/pull/7047)
 
 ## Apollo Client 3.2.0
 

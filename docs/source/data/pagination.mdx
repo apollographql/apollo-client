@@ -2,11 +2,17 @@
 title: Pagination
 ---
 
-Often, you will have some views in your application where you need to display a list that contains too much data to be either fetched or displayed at once. Pagination is the most common solution to this problem, and Apollo Client has built-in functionality that makes it quite easy to do.
+Conceptually, a GraphQL server provides selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A single GraphQL client typically needs only a small subgraph out of this complete data graph, and uses GraphQL queries to fetch all and only the fields it needs.
 
-There are basically two ways of fetching paginated data: numbered pages, and cursors. There are also two ways for displaying paginated data: discrete pages, and infinite scrolling. For a more in-depth explanation of the difference and when you might want to use one vs. the other, we recommend that you read our blog post on the subject: [Understanding Pagination](https://medium.com/apollo-stack/understanding-pagination-rest-graphql-and-relay-b10f835549e7).
+In addition to answering queries for arbitrary subsets of entity fields, GraphQL servers often let clients avoid fetching entire lists of data at once, by allowing the lists to be split up into separate chunks or _pages_, which can be requested incrementally using field arguments like `offset`, `cursor`, and/or `limit`.
 
-In this article, we'll cover the technical details of using Apollo to implement both approaches.
+_Pagination_ is the term for this general technique of incrementally requesting large collections of data (usually lists) in smaller pages, using field arguments. Pagination comes in a number of different flavors: offset-based, cursor-based, page-number-based, forwards, backwards, displayed in discrete pages or via infinite scroll, and so on, each calling for a slightly different set of field arguments.
+
+Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the highly flexible `InMemoryCache` field policy API. Any tool that can handle so many different use cases will require some time to learn well, through hands-on experimentation in addition to reading the documentation. In time, if not right away, we think you will find the field policy API especially rewarding, because it allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, and reusable way, in one place, rather than reproducing custom field logic wherever the field is used across your application.
+
+You can get started by copying and pasting example code from this documentation page, but you will no doubt end up adapting and expanding your field policies to suit your specific needs. Whenever you need to apply similar logic elsewhere, remember that you can encapsulate shared policies in reusable policy-generating functions.
+
+In a way, the pagination pattern is a microcosm for GraphQL as a whole, since GraphQL can be described as a strongly-typed pagination (or treeification?) interface for graph-structured data. Since pagination pulls together so many different pieces of GraphQL, we hope this documentation makes those parts click together for you in new ways.
 
 ## Using `fetchMore`
 

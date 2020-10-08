@@ -12,7 +12,6 @@ export {
   UpdateQueryOptions,
 } from './ObservableQuery';
 export {
-  QueryBaseOptions,
   QueryOptions,
   WatchQueryOptions,
   MutationOptions,

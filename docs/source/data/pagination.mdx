@@ -2,17 +2,21 @@
 title: Pagination
 ---
 
-Conceptually, a GraphQL server provides selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A single GraphQL client typically needs only a small subgraph out of this complete data graph, and uses GraphQL queries to fetch all and only the fields it needs.
+A GraphQL server provides selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A typical GraphQL client needs only a small subgraph of this complete data graph, and uses GraphQL queries to fetch all and only the fields it needs.
 
-In addition to answering queries for arbitrary subsets of entity fields, GraphQL servers often let clients avoid fetching entire lists of data at once, by allowing the lists to be split up into separate chunks or _pages_, which can be requested incrementally using field arguments like `offset`, `cursor`, and/or `limit`.
+While requesting the specific fields your application needs is an important technique for preventing over-fetching, it's not the only way to reduce response size. A single list field can hold arbitrarily many elements, possibly infinitely many. If you need some of that data but not all of it, what can you do? Omitting the field from your query is not an option, but neither is requesting the entire list.
 
-_Pagination_ is the term for this general technique of incrementally requesting large collections of data (usually lists) in smaller pages, using field arguments. Pagination comes in a number of different flavors: offset-based, cursor-based, page-number-based, forwards, backwards, displayed in discrete pages or via infinite scroll, and so on, each calling for a slightly different set of field arguments.
+To solve this problem, GraphQL servers often let clients avoid fetching entire lists of data at once, by allowing the lists to be split up into separate chunks or _pages_, which can be requested incrementally using field arguments like `offset`, `cursor`, and/or `limit`.
 
-Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the highly flexible `InMemoryCache` field policy API. Any tool that can handle so many different use cases will require some time to learn well, through hands-on experimentation in addition to reading the documentation. In time, if not right away, we think you will find the field policy API especially rewarding, because it allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, and reusable way, in one place, rather than reproducing custom field logic wherever the field is used across your application.
+_Pagination_ is the term for this general technique of incrementally requesting large collections of data (usually lists) in smaller pages, using field arguments. Pagination comes in a number of different flavors: offset-based, cursor-based, page-number-based, forwards, backwards, displayed in discrete pages or via infinite scroll, and so on, each calling for a slightly different set of field arguments. As this diversity suggests, pagination is not an automatic feature of list-valued fields in GraphQL, but GraphQL server tools make pagination straightforward to set up, and so it has become a ubiquitous pattern.
 
-You can get started by copying and pasting example code from this documentation page, but you will no doubt end up adapting and expanding your field policies to suit your specific needs. Whenever you need to apply similar logic elsewhere, remember that you can encapsulate shared policies in reusable policy-generating functions.
+Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the highly flexible `InMemoryCache` field policy API, which  allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, reusable way, in one place, rather than reproducing custom field logic wherever the field is used across your application. You can get started by copying and pasting example code from this documentation, but you will no doubt end up adapting and expanding your field policies to suit your specific needs. Whenever you need to apply similar logic elsewhere, remember that you can encapsulate common policies in reusable policy-generating functions.
 
-In a way, the pagination pattern is a microcosm for GraphQL as a whole, since GraphQL can be described as a strongly-typed pagination (or treeification?) interface for graph-structured data. Since pagination pulls together so many different pieces of GraphQL, we hope this documentation makes those parts click together for you in new ways.
+In a way, the pagination pattern is a microcosm for GraphQL as a whole, since GraphQL can be described as a strongly-typed pagination interface for graph-structured data. Since pagination pulls together so many different pieces of GraphQL, we hope this documentation makes those parts click together for you in a fresh way.
+
+## Two kinds of `read` function
+
+TODO
 
 ## Using `fetchMore`
 

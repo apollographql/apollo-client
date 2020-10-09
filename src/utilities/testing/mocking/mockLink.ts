@@ -110,29 +110,35 @@ export class MockLink extends ApolloLink {
     }
 
     return new Observable(observer => {
-      let timer = setTimeout(
-        () => {
-          if (configError) {
-            try {
-              this.onError(configError, observer);
-            } catch (error) {
-              observer.error(error);
+      const timer = setTimeout(() => {
+        if (configError) {
+          try {
+            // The onError function can return false to indicate that
+            // configError need not be passed to observer.error. For
+            // example, the default implementation of onError calls
+            // observer.error(configError) and then returns false to
+            // prevent this extra (harmless) observer.error call.
+            if (this.onError(configError, observer) !== false) {
+              throw configError;
             }
-          } else if (response!.error) {
-            observer.error(response!.error);
+          } catch (error) {
+            observer.error(error);
+          }
+        } else if (response) {
+          if (response.error) {
+            observer.error(response.error);
           } else {
-            if (response!.result) {
+            if (response.result) {
               observer.next(
-                typeof response!.result === 'function'
-                  ? (response!.result as ResultFunction<FetchResult>)()
-                  : response!.result
+                typeof response.result === 'function'
+                  ? (response.result as ResultFunction<FetchResult>)()
+                  : response.result
               );
             }
             observer.complete();
           }
-        },
-        response?.delay || 0
-      );
+        }
+      }, response && response.delay || 0);
 
       return () => {
         clearTimeout(timer);

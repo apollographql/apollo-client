@@ -141,13 +141,25 @@ export class ApolloLink {
     throw new InvariantError('request is not implemented');
   }
 
-  protected onError(error: any, observer: ZenObservable.Observer<FetchResult>) {
-    observer.error!(error);
+  protected onError(
+    error: any,
+    observer: ZenObservable.Observer<FetchResult>,
+  ): false | void {
+    if (observer && observer.error) {
+      observer.error(error);
+      // Returning false indicates that observer.error does not need to be
+      // called again, since it was already called (on the previous line).
+      // Calling observer.error again would not cause any real problems,
+      // since only the first call matters, but custom onError functions
+      // might have other reasons for wanting to prevent the default
+      // behavior by returning false.
+      return false;
+    }
+    // Throw errors will be passed to observer.error.
+    throw error;
   }
 
-  public setOnError(
-    fn: (error: any, observer?: ZenObservable.Observer<FetchResult>) => any
-  ): this {
+  public setOnError(fn: ApolloLink["onError"]): this {
     this.onError = fn;
     return this;
   }

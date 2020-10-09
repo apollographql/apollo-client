@@ -12,11 +12,11 @@ To illustrate the migration process, we've also made this video that uses the ex
 * Apollo Client is now distributed as the `@apollo/client` package (previous versions are distributed as `apollo-client`).
 * The `@apollo/client` package includes both React hooks and GraphQL request handling, which previously required installing separate packages.
 * Apollo Client’s cache (`InMemoryCache`) is more flexible and performant. It now supports garbage collection, storage of both normalized and non-normalized data, and the customization of cached data with new `TypePolicy` and `FieldPolicy` APIs.
-* The update also includes numerous bug fixes and optimizations, as described in the [changelog](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md).
+* The update also includes numerous bug fixes and optimizations, as described in the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
 ## Installation
 
-> **WARNING:** Apollo Client 3.0 is a major-version release that includes **breaking changes**. If you are updating an existing application to use Apollo Client 3.0, please see the [changelog](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md) for details about these changes.
+> **WARNING:** Apollo Client 3.0 is a major-version release that includes **breaking changes**. If you are updating an existing application to use Apollo Client 3.0, please see the [changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md) for details about these changes.
 
 Install Apollo Client 3.0 with the following command:
 
@@ -29,6 +29,8 @@ If you’re installing Apollo Client 3.0 in a project that already uses an earli
 ## Updating imports
 
 The `@apollo/client` library includes functionality that previously required installing additional packages. As part of migrating to Apollo Client 3.0, follow the instructions below for each library your application currently uses.
+
+> :bulb: 🦾 :bulb: To simplify the process of converting your `import` declarations from older packages to `@apollo/client`, we provide an automated [transform](https://github.com/apollographql/apollo-client/tree/main/codemods/ac2-to-ac3) based on [`jscodeshift`](https://www.npmjs.com/package/jscodeshift). Note that this transform merely moves `import` specifiers between `import` declarations, without checking for proper usage of the imported values. Since the transform cannot take care of everything, pay close attention to any errors produced by TypeScript or your bundling tools, and be sure to verify all changes made by the transform. A more detailed list of caveats can be found in the [`README.md`](https://github.com/apollographql/apollo-client/tree/main/codemods/ac2-to-ac3#known-limitations).
 
 ### @apollo/react-hoc and @apollo/react-components
 

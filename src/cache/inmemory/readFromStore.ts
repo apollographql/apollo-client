@@ -1,8 +1,6 @@
 import {
   DocumentNode,
   FieldNode,
-  FragmentDefinitionNode,
-  InlineFragmentNode,
   SelectionSetNode,
 } from 'graphql';
 import { wrap, OptimisticWrapperFunction } from 'optimism';
@@ -10,7 +8,6 @@ import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   isField,
-  isInlineFragment,
   resultKeyNameFromField,
   Reference,
   isReference,
@@ -26,11 +23,11 @@ import {
   getQueryDefinition,
   maybeDeepFreeze,
   mergeDeepArray,
+  getFragmentFromSelection,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,
-  ReadQueryOptions,
   NormalizedCache,
   ReadMergeModifyContext,
 } from './types';
@@ -47,6 +44,7 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   path: (string | number)[];
+  clientOnly: boolean;
 };
 
 export type ExecResult<R = any> = {
@@ -62,6 +60,7 @@ function missingFromInvariant(
     err.message,
     context.path.slice(),
     context.query,
+    context.clientOnly,
     context.variables,
   );
 }
@@ -86,26 +85,6 @@ export interface StoreReaderConfig {
 export class StoreReader {
   constructor(private config: StoreReaderConfig) {
     this.config = { addTypename: true, ...config };
-  }
-
-  /**
-   * Resolves the result of a query solely from the store (i.e. never hits the server).
-   *
-   * @param {Store} store The {@link NormalizedCache} used by Apollo for the `data` portion of the
-   * store.
-   *
-   * @param {DocumentNode} query The query document to resolve from the data available in the store.
-   *
-   * @param {Object} [variables] A map from the name of a variable to its value. These variables can
-   * be referenced by the query document.
-   */
-  public readQueryFromStore<QueryType>(
-    options: ReadQueryOptions,
-  ): QueryType | undefined {
-    return this.diffQueryAgainstStore<QueryType>({
-      ...options,
-      returnPartialData: false,
-    }).result;
   }
 
   /**
@@ -140,6 +119,7 @@ export class StoreReader {
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         path: [],
+        clientOnly: false,
       },
     });
 
@@ -219,7 +199,7 @@ export class StoreReader {
       };
     }
 
-    const { fragmentMap, variables, policies, store } = context;
+    const { variables, policies, store } = context;
     const objectsToMerge: { [key: string]: any }[] = [];
     const finalResult: ExecResult = { result: null };
     const typename = store.getFieldValue<string>(objectOrReference, "__typename");
@@ -259,6 +239,20 @@ export class StoreReader {
 
         const resultName = resultKeyNameFromField(selection);
         context.path.push(resultName);
+
+        // If this field has an @client directive, then the field and
+        // everything beneath it is client-only, meaning it will never be
+        // sent to the server.
+        const wasClientOnly = context.clientOnly;
+        // Once we enter a client-only subtree of the query, we can avoid
+        // repeatedly checking selection.directives.
+        context.clientOnly = wasClientOnly || !!(
+          // We don't use the hasDirectives helper here, because it looks
+          // for directives anywhere inside the AST node, whereas we only
+          // care about directives directly attached to this field.
+          selection.directives &&
+          selection.directives.some(d => d.name.value === "client")
+        );
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
@@ -312,22 +306,17 @@ export class StoreReader {
           objectsToMerge.push({ [resultName]: fieldValue });
         }
 
+        context.clientOnly = wasClientOnly;
+
         invariant(context.path.pop() === resultName);
 
       } else {
-        let fragment: InlineFragmentNode | FragmentDefinitionNode;
+        const fragment = getFragmentFromSelection(
+          selection,
+          context.fragmentMap,
+        );
 
-        if (isInlineFragment(selection)) {
-          fragment = selection;
-        } else {
-          // This is a named fragment
-          invariant(
-            fragment = fragmentMap[selection.name.value],
-            `No fragment named ${selection.name.value}`,
-          );
-        }
-
-        if (policies.fragmentMatches(fragment, typename)) {
+        if (fragment && policies.fragmentMatches(fragment, typename)) {
           fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }

@@ -1,5 +1,6 @@
 import { useContext, useEffect, useReducer, useRef } from 'react';
 import { DocumentNode } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import {
   QueryHookOptions,
@@ -13,7 +14,7 @@ import { OperationVariables } from '../../../core';
 import { getApolloContext } from '../../context';
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
-  query: DocumentNode,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: QueryHookOptions<TData, TVariables>,
   lazy = false
 ) {

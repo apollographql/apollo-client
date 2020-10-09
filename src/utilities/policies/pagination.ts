@@ -1,3 +1,5 @@
+import { __rest } from "tslib";
+
 import { FieldPolicy, Reference } from '../../cache';
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
@@ -39,68 +41,123 @@ export function offsetLimitPagination<T = Reference>(
   };
 }
 
-type TInternalRelay<TNode> = Readonly<{
-  edges: Array<{
-    cursor: string;
-    node: TNode;
-  }>;
-  pageInfo: Readonly<{
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-    startCursor: string;
-    endCursor: string;
-  }>;
+// Whether TEdge<TNode> is a normalized Reference or a non-normalized
+// object, it needs a .cursor property where the relayStylePagination
+// merge function can store cursor strings taken from pageInfo. Storing an
+// extra reference.cursor property should be safe, and is easier than
+// attempting to update the cursor field of the normalized StoreObject
+// that the reference refers to, or managing edge wrapper objects
+// (something I attempted in #7023, but abandoned because of #7088).
+type TEdge<TNode> = {
+  cursor?: string;
+  node: TNode;
+} | (Reference & { cursor?: string });
+
+type TPageInfo = {
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+  startCursor: string;
+  endCursor: string;
+};
+
+type TExistingRelay<TNode> = Readonly<{
+  edges: TEdge<TNode>[];
+  pageInfo: TPageInfo;
 }>;
+
+type TIncomingRelay<TNode> = {
+  edges?: TEdge<TNode>[];
+  pageInfo?: TPageInfo;
+};
+
+type RelayFieldPolicy<TNode> = FieldPolicy<
+  TExistingRelay<TNode>,
+  TIncomingRelay<TNode>,
+  TIncomingRelay<TNode>
+>;
 
 // As proof of the flexibility of field policies, this function generates
 // one that handles Relay-style pagination, without Apollo Client knowing
 // anything about connections, edges, cursors, or pageInfo objects.
 export function relayStylePagination<TNode = Reference>(
   keyArgs: KeyArgs = false,
-): FieldPolicy<TInternalRelay<TNode>> {
+): RelayFieldPolicy<TNode> {
   return {
     keyArgs,
 
-    read(existing, { canRead }) {
+    read(existing, { canRead, readField }) {
       if (!existing) return;
-      const edges = existing.edges.filter(edge => canRead(edge.node));
+
+      const edges: TEdge<TNode>[] = [];
+      let startCursor = "";
+      let endCursor = "";
+      existing.edges.forEach(edge => {
+        // Edges themselves could be Reference objects, so it's important
+        // to use readField to access the edge.edge.node property.
+        if (canRead(readField("node", edge))) {
+          edges.push(edge);
+          if (edge.cursor) {
+            startCursor = startCursor || edge.cursor;
+            endCursor = edge.cursor;
+          }
+        }
+      });
+
       return {
         // Some implementations return additional Connection fields, such
         // as existing.totalCount. These fields are saved by the merge
         // function, so the read function should also preserve them.
-        ...existing,
+        ...getExtras(existing),
         edges,
         pageInfo: {
           ...existing.pageInfo,
-          startCursor: cursorFromEdge(edges, 0),
-          endCursor: cursorFromEdge(edges, -1),
+          startCursor,
+          endCursor,
         },
       };
     },
 
-    merge(existing = makeEmptyData(), incoming, { args }) {
-      if (!args) return existing; // TODO Maybe throw?
+    merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
+      const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
+        if (isReference(edge = { ...edge })) {
+          // In case edge is a Reference, we read out its cursor field and
+          // store it as an extra property of the Reference object.
+          edge.cursor = readField<string>("cursor", edge);
+        }
+        return edge;
+      }) : [];
 
-      const incomingEdges = incoming.edges.slice(0);
       if (incoming.pageInfo) {
-        updateCursor(incomingEdges, 0, incoming.pageInfo.startCursor);
-        updateCursor(incomingEdges, -1, incoming.pageInfo.endCursor);
+        // In case we did not request the cursor field for edges in this
+        // query, we can still infer some of those cursors from pageInfo.
+        const { startCursor, endCursor } = incoming.pageInfo;
+        const firstEdge = incomingEdges[0];
+        if (firstEdge && startCursor) {
+          firstEdge.cursor = startCursor;
+        }
+        const lastEdge = incomingEdges[incomingEdges.length - 1];
+        if (lastEdge && endCursor) {
+          lastEdge.cursor = endCursor;
+        }
       }
 
       let prefix = existing.edges;
       let suffix: typeof prefix = [];
 
-      if (args.after) {
+      if (args && args.after) {
+        // This comparison does not need to use readField("cursor", edge),
+        // because we stored the cursor field of any Reference edges as an
+        // extra property of the Reference object.
         const index = prefix.findIndex(edge => edge.cursor === args.after);
         if (index >= 0) {
           prefix = prefix.slice(0, index + 1);
           // suffix = []; // already true
         }
-      } else if (args.before) {
+      } else if (args && args.before) {
         const index = prefix.findIndex(edge => edge.cursor === args.before);
         suffix = index < 0 ? prefix : prefix.slice(index);
         prefix = [];
-      } else {
+      } else if (incoming.edges) {
         // If we have neither args.after nor args.before, the incoming
         // edges cannot be spliced into the existing edges, so they must
         // replace the existing edges. See #6592 for a motivating example.
@@ -113,25 +170,33 @@ export function relayStylePagination<TNode = Reference>(
         ...suffix,
       ];
 
-      const pageInfo = {
+      const firstEdge = edges[0];
+      const lastEdge = edges[edges.length - 1];
+
+      const pageInfo: TPageInfo = {
         ...incoming.pageInfo,
         ...existing.pageInfo,
-        startCursor: cursorFromEdge(edges, 0),
-        endCursor: cursorFromEdge(edges, -1),
+        startCursor: firstEdge && firstEdge.cursor || "",
+        endCursor: lastEdge && lastEdge.cursor || "",
       };
 
-      const updatePageInfo = (name: keyof TInternalRelay<TNode>["pageInfo"]) => {
-        const value = incoming.pageInfo[name];
-        if (value !== void 0) {
-          (pageInfo as any)[name] = value;
+      if (incoming.pageInfo) {
+        const { hasPreviousPage, hasNextPage } = incoming.pageInfo;
+        // Keep existing.pageInfo.has{Previous,Next}Page unless the
+        // placement of the incoming edges means incoming.hasPreviousPage
+        // or incoming.hasNextPage should become the new values for those
+        // properties in existing.pageInfo.
+        if (!prefix.length && hasPreviousPage !== void 0) {
+          pageInfo.hasPreviousPage = hasPreviousPage;
         }
-      };
-      if (!prefix.length) updatePageInfo("hasPreviousPage");
-      if (!suffix.length) updatePageInfo("hasNextPage");
+        if (!suffix.length && hasNextPage !== void 0) {
+          pageInfo.hasNextPage = hasNextPage;
+        }
+      }
 
       return {
-        ...existing,
-        ...incoming,
+        ...getExtras(existing),
+        ...getExtras(incoming),
         edges,
         pageInfo,
       };
@@ -139,7 +204,11 @@ export function relayStylePagination<TNode = Reference>(
   };
 }
 
-function makeEmptyData() {
+// Returns any unrecognized properties of the given object.
+const getExtras = (obj: Record<string, any>) => __rest(obj, notExtras);
+const notExtras = ["edges", "pageInfo"];
+
+function makeEmptyData(): TExistingRelay<any> {
   return {
     edges: [],
     pageInfo: {
@@ -149,25 +218,4 @@ function makeEmptyData() {
       endCursor: "",
     },
   };
-}
-
-function cursorFromEdge<TNode>(
-  edges: TInternalRelay<TNode>["edges"],
-  index: number,
-): string {
-  if (index < 0) index += edges.length;
-  const edge = edges[index];
-  return edge && edge.cursor || "";
-}
-
-function updateCursor<TNode>(
-  edges: TInternalRelay<TNode>["edges"],
-  index: number,
-  cursor: string | undefined,
-) {
-  if (index < 0) index += edges.length;
-  const edge = edges[index];
-  if (cursor && cursor !== edge.cursor) {
-    edges[index] = { ...edge, cursor };
-  }
 }

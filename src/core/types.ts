@@ -6,6 +6,8 @@ import { QueryInfo } from './QueryInfo';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';
 
+export { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
 export type OperationVariables = Record<string, any>;
@@ -17,7 +19,7 @@ export type PureQueryOptions = {
 };
 
 export type ApolloQueryResult<T> = {
-  data?: T;
+  data: T;
   errors?: ReadonlyArray<GraphQLError>;
   error?: ApolloError;
   loading: boolean;

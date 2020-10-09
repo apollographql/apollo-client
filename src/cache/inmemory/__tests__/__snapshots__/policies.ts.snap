@@ -765,3 +765,98 @@ Object {
   },
 }
 `;
+
+exports[`type policies field policies can handle Relay-style pagination without args 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__ref": "TodoEdge:edge1",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1292,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+  "TodoEdge:edge1": Object {
+    "__typename": "TodoEdge",
+    "id": "edge1",
+    "node": Object {
+      "__ref": "Todo:1",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination without args 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__ref": "TodoEdge:edge1",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        },
+      ],
+      "extraMetaData": "extra",
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1293,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+  "TodoEdge:edge1": Object {
+    "__typename": "TodoEdge",
+    "id": "edge1",
+    "node": Object {
+      "__ref": "Todo:1",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;

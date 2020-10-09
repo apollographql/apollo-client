@@ -13,13 +13,12 @@ import {
 } from '../../utilities';
 import { NormalizedCache, NormalizedCacheObject } from './types';
 import { hasOwn, fieldNameFromStoreName } from './helpers';
-import { Policies } from './policies';
+import { Policies, StorageType } from './policies';
 import { Cache } from '../core/types/Cache';
 import {
   SafeReadonly,
   Modifier,
   Modifiers,
-  ReadFieldFunction,
   ReadFieldOptions,
   ToReferenceFunction,
   CanReadFunction,
@@ -27,6 +26,7 @@ import {
 
 const DELETE: any = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
+const INVALIDATE: any = Object.create(null);
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
@@ -127,16 +127,23 @@ export abstract class EntityStore implements NormalizedCache {
       let needToMerge = false;
       let allDeleted = true;
 
-      const readField: ReadFieldFunction = <V = StoreValue>(
-        fieldNameOrOptions: string | ReadFieldOptions,
-        from?: StoreObject | Reference,
-      ) => this.policies.readField<V>(
-        typeof fieldNameOrOptions === "string" ? {
-          fieldName: fieldNameOrOptions,
-          from: from || makeReference(dataId),
-        } : fieldNameOrOptions,
-        { store: this },
-      );
+      const sharedDetails = {
+        DELETE,
+        INVALIDATE,
+        isReference,
+        toReference: this.toReference,
+        canRead: this.canRead,
+        readField: <V = StoreValue>(
+          fieldNameOrOptions: string | ReadFieldOptions,
+          from?: StoreObject | Reference,
+        ) => this.policies.readField<V>(
+          typeof fieldNameOrOptions === "string" ? {
+            fieldName: fieldNameOrOptions,
+            from: from || makeReference(dataId),
+          } : fieldNameOrOptions,
+          { store: this },
+        ),
+      };
 
       Object.keys(storeObject).forEach(storeFieldName => {
         const fieldName = fieldNameFromStoreName(storeFieldName);
@@ -148,19 +155,20 @@ export abstract class EntityStore implements NormalizedCache {
         if (modify) {
           let newValue = modify === delModifier ? DELETE :
             modify(maybeDeepFreeze(fieldValue), {
-              DELETE,
+              ...sharedDetails,
               fieldName,
               storeFieldName,
-              isReference,
-              toReference: this.toReference,
-              canRead: this.canRead,
-              readField,
+              storage: this.getStorage(dataId, storeFieldName),
             });
-          if (newValue === DELETE) newValue = void 0;
-          if (newValue !== fieldValue) {
-            changedFields[storeFieldName] = newValue;
-            needToMerge = true;
-            fieldValue = newValue;
+          if (newValue === INVALIDATE) {
+            this.group.dirty(dataId, storeFieldName);
+          } else {
+            if (newValue === DELETE) newValue = void 0;
+            if (newValue !== fieldValue) {
+              changedFields[storeFieldName] = newValue;
+              needToMerge = true;
+              fieldValue = newValue;
+            }
           }
         }
         if (fieldValue !== void 0) {
@@ -247,6 +255,11 @@ export abstract class EntityStore implements NormalizedCache {
       });
     }
   }
+
+  public abstract getStorage(
+    idOrObj: string | StoreObject,
+    storeFieldName: string,
+  ): StorageType;
 
   // Maps root entity IDs to the number of times they have been retained, minus
   // the number of times they have been released. Retained entities keep other
@@ -467,6 +480,14 @@ export namespace EntityStore {
       // Never remove the root layer.
       return this;
     }
+
+    public readonly storageTrie = new KeyTrie<StorageType>(canUseWeakMap);
+    public getStorage(
+      idOrObj: string | StoreObject,
+      storeFieldName: string,
+    ): StorageType {
+      return this.storageTrie.lookup(idOrObj, storeFieldName);
+    }
   }
 }
 
@@ -530,6 +551,13 @@ class Layer extends EntityStore {
       ...fromParent,
       ...super.findChildRefIds(dataId),
     } : fromParent;
+  }
+
+  public getStorage(
+    idOrObj: string | StoreObject,
+    storeFieldName: string,
+  ): StorageType {
+    return this.parent.getStorage(idOrObj, storeFieldName);
   }
 }
 

@@ -3172,6 +3172,96 @@ describe('@connection', () => {
       });
     });
 
+    itAsync('allows setting nextFetchPolicy in defaultOptions', (resolve, reject) => {
+      let networkCounter = 0;
+      let nextFetchPolicyCallCount = 0;
+
+      const client = new ApolloClient({
+        link: new ApolloLink(operation => new Observable(observer => {
+          observer.next({
+            data: {
+              count: networkCounter++,
+            },
+          });
+          observer.complete();
+        })),
+
+        cache: new InMemoryCache,
+
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy(fetchPolicy) {
+              expect(++nextFetchPolicyCallCount).toBe(1);
+              expect(this.query).toBe(query);
+              expect(fetchPolicy).toBe("cache-first");
+              // Usually options.nextFetchPolicy applies only once, but a
+              // nextFetchPolicy function can set this.nextFetchPolicy
+              // again to perform an additional transition.
+              this.nextFetchPolicy = fetchPolicy => {
+                ++nextFetchPolicyCallCount;
+                expect(fetchPolicy).toBe("cache-and-network");
+                return "cache-first";
+              };
+              return "cache-and-network";
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          count
+        }
+      `;
+
+      client.writeQuery({
+        query,
+        data: {
+          count: "initial",
+        },
+      });
+
+      const obs = client.watchQuery({ query });
+
+      subscribeAndCount(reject, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(nextFetchPolicyCallCount).toBe(1);
+          expect(result.data).toEqual({ count: "initial" });
+          // Refetching makes a copy of the current options, which
+          // includes options.nextFetchPolicy, so the inner
+          // nextFetchPolicy function ends up getting called twice.
+          obs.refetch();
+        } else if (handleCount === 2) {
+          expect(result.data).toEqual({ count: "initial" });
+          expect(nextFetchPolicyCallCount).toBe(2);
+        } else if (handleCount === 3) {
+          expect(result.data).toEqual({ count: 0 });
+          expect(nextFetchPolicyCallCount).toBe(2);
+          client.writeQuery({
+            query,
+            data: {
+              count: "secondary",
+            },
+          });
+        } else if (handleCount === 4) {
+          expect(result.data).toEqual({ count: "secondary" });
+          expect(nextFetchPolicyCallCount).toBe(3);
+        } else if (handleCount === 5) {
+          expect(result.data).toEqual({ count: 1 });
+          expect(nextFetchPolicyCallCount).toBe(3);
+          client.cache.evict({ fieldName: "count" });
+        } else if (handleCount === 6) {
+          expect(result.data).toEqual({ count: 2 });
+          expect(nextFetchPolicyCallCount).toBe(3);
+          expect(obs.options.fetchPolicy).toBe("cache-first");
+          expect(obs.options.nextFetchPolicy).toBeUndefined();
+          setTimeout(resolve, 50);
+        } else {
+          reject("too many results");
+        }
+      });
+    });
+
     itAsync('allows setting default options for query', (resolve, reject) => {
       const errors = [{ message: 'failure', name: 'failure' }];
       const link = mockSingleLink({

@@ -227,13 +227,13 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   private updateObservableQuery() {
-    if (this.getOptions().skip) return;
-
     // If we skipped initially, we may not have yet created the observable
     if (!this.currentObservable) {
       this.initializeObservableQuery();
       return;
     }
+
+    if (this.getOptions().skip) return;
 
     const newObservableQueryOptions = {
       ...this.prepareObservableQueryOptions(),
@@ -457,7 +457,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.currentObservable!.refetch(variables);
 
   private obsFetchMore = <K extends keyof TVariables>(
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K> &
+    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K, TData> &
       FetchMoreOptions<TData, TVariables>
   ) => this.currentObservable!.fetchMore(fetchMoreOptions);
 

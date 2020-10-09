@@ -14,6 +14,174 @@ Rather than attempting to standardize on one style of pagination to serve all us
 
 In a way, the pagination pattern is a microcosm for GraphQL as a whole, since GraphQL can be described as a strongly-typed pagination interface for graph-structured data. Since pagination pulls together so many different pieces of GraphQL, we hope this documentation makes those parts click together for you in a fresh way.
 
+## Combining pages with `merge` functions
+
+While it is possible to store individual pages of list data separately on the client, application code that consumes the data tends to be simpler if the client combines all the pages it has received so far into a single list, using field arguments to guide how new data is spliced together with existing data.
+
+Suppose your schema defines the following types:
+```gql
+extend type Query {
+  feed(
+    type: FeedType!,
+    offset: Int,
+    limit: Int,
+  ): [FeedItem!]
+}
+
+enum FeedType {
+  PERSONAL
+  PUBLIC
+}
+
+type FeedItem {
+  id: String!
+  # ...
+}
+```
+
+The query you use to fetch data for the `Query.feed` field might look something like this:
+```ts
+const FEED_QUERY = gql`
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    feed(type: $type, offset: $offset, limit: $limit) {
+      id
+      # ... other FeedItem fields
+    }
+  }
+`;
+```
+
+Without input from you, `InMemoryCache` has no way of knowing how to interpret these field arguments, so it must assume they are all important. In other words, if you write two consecutive pages into a cache that does not know about your pagination system, like so:
+```ts
+const cache = new InMemoryCache;
+
+cache.writeQuery({
+  query: FEED_QUERY,
+  variables: {
+    type: "PERSONAL",
+    offset: 0,
+    limit: 2,
+  },
+  data: {
+    feed: [
+      { __typename: "FeedItem", id: 1 },
+      { __typename: "FeedItem", id: 2 },
+    ]
+  }
+});
+
+cache.writeQuery({
+  query: FEED_QUERY,
+  variables: {
+    type: "PERSONAL",
+    offset: 2, // Changed!
+    limit: 2,
+  },
+  data: {
+    feed: [
+      { __typename: "FeedItem", id: 3 },
+      { __typename: "FeedItem", id: 4 },
+    ]
+  }
+});
+```
+the cache by default stores those two results separately, using keys derived from both the field name (`feed`) and the serialized arguments (`limit`, `offset`, and `type`):
+```js
+expect(cache.extract()).toEqual({
+  "FeedItem:1": { __typename: "FeedItem", id: 1 },
+  "FeedItem:2": { __typename: "FeedItem", id: 2 },
+  "FeedItem:3": { __typename: "FeedItem", id: 3 },
+  "FeedItem:4": { __typename: "FeedItem", id: 4 },
+  "ROOT_QUERY": {
+    __typename: "Query",
+    'feed({"limit":2,"offset":0,"type":"PERSONAL"})': [
+      { __ref: "FeedItem:1" },
+      { __ref: "FeedItem:2" },
+    ],
+    'feed({"limit":2,"offset":2,"type":"PERSONAL"})': [
+      { __ref: "FeedItem:3" },
+      { __ref: "FeedItem:4" },
+    ],
+  },
+});
+```
+A simplistic way to accumulate a single list instead of storing separate lists is to concatenate the results together, using a `merge` function for the `Query.feed` field:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          // Stop using limit and offset to differentiate field keys,
+          // but continue using type.
+          keyArgs: ["type"],
+          // If there is no existing value for this field, existing
+          // will be undefined.
+          merge(existing = [], incoming) {
+            return [...existing, ...incoming];
+          },
+        }
+      }
+    }
+  }
+})
+```
+Now that the cache has a strategy for combining incoming pages with existing data, its internal representation will be a bit more compact:
+```js
+expect(cache.extract()).toEqual({
+  "FeedItem:1": { __typename: "FeedItem", id: 1 },
+  "FeedItem:2": { __typename: "FeedItem", id: 2 },
+  "FeedItem:3": { __typename: "FeedItem", id: 3 },
+  "FeedItem:4": { __typename: "FeedItem", id: 4 },
+  "ROOT_QUERY": {
+    __typename: "Query",
+    'feed({"type":"PERSONAL"})': [
+      { __ref: "FeedItem:1" },
+      { __ref: "FeedItem:2" },
+      { __ref: "FeedItem:3" },
+      { __ref: "FeedItem:4" },
+    ],
+  },
+});
+```
+However, this simple strategy makes some risky assumptions about the order of the written pages, because it ignores the `offset` and `limit` arguments. In order to handle those arguments correctly, your `merge` function can use `options.args` to decide where to put the incoming data:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+          merge(existing, incoming, { args: { offset = 0 }}) {
+            const merged = existing ? existing.slice(0) : [];
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+        },
+      },
+    },
+  },
+});
+```
+This logic handles sequential page writes the same way the concatenation strategy would, but it can also tolerate repeated, overlapping, or out-of-order writes, without duplicating any list items.
+
+As we mentioned in the introduction above, common field policy patterns can be abstracted away into helper functions, such as the `offsetLimitPagination` function that `@apollo/client/utilities` provides:
+```js
+import { offsetLimitPagination } from "@apollo/client/utilities"
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: offsetLimitPagination(["type"]),
+      },
+    },
+  },
+});
+```
+
 ## Two kinds of `read` function
 
 TODO

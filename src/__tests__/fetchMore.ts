@@ -620,7 +620,7 @@ describe('fetchMore on an observable query', () => {
         request: { query, variables: variablesMore },
         error: fetchMoreError,
         delay: 5,
-      }).setOnError(reject);
+      });
 
       const client = new ApolloClient({
         link,
@@ -674,7 +674,7 @@ describe('fetchMore on an observable query', () => {
         request: { query, variables: variablesMore },
         error: fetchMoreError,
         delay: 5,
-      }).setOnError(reject);
+      });
 
       let calledFetchMore = false;
 

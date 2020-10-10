@@ -85,50 +85,60 @@ export class MockLink extends ApolloLink {
       }
     );
 
+    let configError: Error;
+
     if (!response || typeof responseIndex === 'undefined') {
-      this.onError(new Error(
+      configError = new Error(
         `No more mocked responses for the query: ${print(
           operation.query
         )}, variables: ${JSON.stringify(operation.variables)}`
-      ));
-      return null;
-    }
+      );
+    } else {
+      this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
-    this.mockedResponsesByKey[key].splice(responseIndex, 1);
+      const { newData } = response;
+      if (newData) {
+        response.result = newData();
+        this.mockedResponsesByKey[key].push(response);
+      }
 
-    const { newData } = response!;
-
-    if (newData) {
-      response!.result = newData();
-      this.mockedResponsesByKey[key].push(response!);
-    }
-
-    const { result, error, delay } = response!;
-
-    if (!result && !error) {
-      this.onError(new Error(
-        `Mocked response should contain either result or error: ${key}`
-      ));
+      if (!response.result && !response.error) {
+        configError = new Error(
+          `Mocked response should contain either result or error: ${key}`
+        );
+      }
     }
 
     return new Observable(observer => {
-      let timer = setTimeout(
-        () => {
-          if (error) {
+      const timer = setTimeout(() => {
+        if (configError) {
+          try {
+            // The onError function can return false to indicate that
+            // configError need not be passed to observer.error. For
+            // example, the default implementation of onError calls
+            // observer.error(configError) and then returns false to
+            // prevent this extra (harmless) observer.error call.
+            if (this.onError(configError, observer) !== false) {
+              throw configError;
+            }
+          } catch (error) {
             observer.error(error);
+          }
+        } else if (response) {
+          if (response.error) {
+            observer.error(response.error);
           } else {
-            if (result) {
+            if (response.result) {
               observer.next(
-                typeof result === 'function'
-                  ? (result as ResultFunction<FetchResult>)()
-                  : result
+                typeof response.result === 'function'
+                  ? (response.result as ResultFunction<FetchResult>)()
+                  : response.result
               );
             }
             observer.complete();
           }
-        },
-        delay ? delay : 0
-      );
+        }
+      }, response && response.delay || 0);
 
       return () => {
         clearTimeout(timer);

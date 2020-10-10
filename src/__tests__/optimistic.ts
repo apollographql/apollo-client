@@ -123,7 +123,7 @@ describe('optimistic mutation results', () => {
     const link = mockSingleLink({
       request: { query },
       result,
-    }, ...mockedResponses).setOnError(reject);
+    }, ...mockedResponses);
 
     const client = new ApolloClient({
       link,

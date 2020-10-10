@@ -1,3 +1,10 @@
+## Apollo Client 3.2.3
+
+## Improvements
+
+- Default `args.offset` to zero in `offsetLimitPagination`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7141](https://github.com/apollographql/apollo-client/pull/7141)
+
 ## Apollo Client 3.2.2
 
 ## Bug Fixes

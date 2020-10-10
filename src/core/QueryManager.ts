@@ -563,7 +563,7 @@ export class QueryManager<TStore> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
 
     this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery) {
+      if (observableQuery && observableQuery.hasObservers()) {
         const fetchPolicy = observableQuery.options.fetchPolicy;
 
         observableQuery.resetLastResults();

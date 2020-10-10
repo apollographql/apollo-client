@@ -468,7 +468,6 @@ describe('General use', () => {
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
-        console.log(error);
         expect(error).toMatchSnapshot();
       }
       return null;

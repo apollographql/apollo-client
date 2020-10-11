@@ -2,6 +2,7 @@ import { Slot } from "@wry/context";
 import { dep } from "optimism";
 import { InMemoryCache } from "./inMemoryCache";
 import { ApolloCache } from '../../core';
+import { isString } from "../../utilities/common/isString"
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;
@@ -27,9 +28,16 @@ function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
   items.forEach(callback);
 }
 
-export function makeVar<T>(value: T): ReactiveVar<T> {
-  const caches = new Set<ApolloCache<any>>();
-  const listeners = new Set<ReactiveListener<T>>();
+// makeVar overload signatures
+export function makeVar<T>(value: T): ReactiveVar<T>
+export function makeVar<T>(
+  value: T,
+  config: PersistenceConfig<T>
+): [ReactiveVar<T>, () => Promise<void>]
+
+export function makeVar<T>(value: T, config?: PersistenceConfig<T>) {
+  const caches = new Set<ApolloCache<any>>()
+  const listeners = new Set<ReactiveListener<T>>()
 
   const rv: ReactiveVar<T> = function (newValue) {
     if (arguments.length > 0) {
@@ -44,6 +52,15 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
         caches.forEach(broadcast);
         // Finally, notify any listeners added via rv.onNextChange.
         consumeAndIterate(listeners, listener => listener(value));
+        // Run persistence options
+        try {
+          config?.storage.setItem(
+            config.storageKey,
+            cleanValueToSetStorage(value)
+          );
+        } catch {
+          // pass
+        }
       }
     } else {
       // When reading from the variable, obtain the current cache from
@@ -64,7 +81,22 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     };
   };
 
-  return rv;
+  if (!config) return rv;
+
+  const restore = async () => {
+    // Set reactiveVar to previous value from storage,
+    // if there is no previous value, do nothing.
+    try {
+      const previousValue = await config.storage.getItem(config.storageKey)
+      if (previousValue) {
+        rv(isString(value) ? previousValue : JSON.parse(previousValue))
+      }
+    } catch {
+      // pass
+    }
+  }
+
+  return [rv, restore]
 }
 
 type Broadcastable = ApolloCache<any> & {
@@ -77,4 +109,20 @@ function broadcast(cache: Broadcastable) {
   if (cache.broadcastWatches) {
     cache.broadcastWatches();
   }
+}
+
+// Persistence utils
+
+export interface PersistentStorage {
+  getItem: (key: string) => Promise<void | any>;
+  setItem: (key: string, data: string) => Promise<void | any>;
+}
+
+export type PersistenceConfig<T> = {
+  storage: PersistentStorage;
+  storageKey: string;
+}
+
+function cleanValueToSetStorage(value: any): string {
+  return isString(value) ? value : JSON.stringify(value);
 }

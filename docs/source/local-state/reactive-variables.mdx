@@ -21,6 +21,28 @@ This code creates a reactive variable with an empty array as its initial value.
 
 > **Important:** The return value of `makeVar` is a _function_ that you call to read or modify your reactive variable's value.
 
+### Persistence options
+
+Optionally you can make a persistent reactive variable:
+
+```js
+import { makeVar } from "@apollo/client";
+import AsyncStorage from "@react-native-community/async-storage";
+
+const options = {
+  storage: AsyncStorage,
+  storageKey: "@cartItems"
+};
+
+const [cartItems, restoreCartItems] = makeVar([], options);
+
+// Restoring the variable before Apollo setup:
+// For example, you can run this inside componentDidMount
+// or useEffect hook, and render a loading screen while
+// it's not ready.
+await restoreCartItems();
+```
+
 ## Reading
 
 To read the value of your reactive variable, call the function returned by `makeVar` with zero arguments:

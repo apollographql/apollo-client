@@ -36,11 +36,27 @@ const options = {
 
 const [cartItems, restoreCartItems] = makeVar([], options);
 
-// Restoring the variable before Apollo setup:
-// For example, you can run this inside componentDidMount
-// or useEffect hook, and render a loading screen while
-// it's not ready.
-await restoreCartItems();
+// Example of restoring the variables
+function App() {
+  const [ready, setReady] = React.useState(false);
+
+  React.useEffect(() => {
+    const restoreReactiveVars = async () => {
+      await restoreCartItems()
+      // restore more variables here
+      setReady(true)
+    }
+    restoreReactiveVars()
+  }, [])
+
+  if (!ready) return <MyAppLoading />
+
+  return (
+    <ApolloProvider client={client}>
+      ...
+    </ApolloProvider>
+  )
+}
 ```
 
 ## Reading

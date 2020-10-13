@@ -5,6 +5,12 @@
 - Update the `optimism` npm dependency to version 0.13.0 in order to use the new `optimistic.forget` method to fix a potential `cache.watch` memory leak. <br/>
   [@benjamn](https://github.com/benjamn) in [#7157](https://github.com/apollographql/apollo-client/pull/7157)
 
+- Consider `cache.reset` a destructive method, like `cache.evict` and `cache.modify`. <br/>
+  [@joshjg](https://github.com/joshjg) in [#7150](https://github.com/apollographql/apollo-client/pull/7150)
+
+- Avoid refetching observerless queries with `reFetchObservableQueries`. <br/>
+  [@joshjg](https://github.com/joshjg) in [#7146](https://github.com/apollographql/apollo-client/pull/7146)
+
 ## Apollo Client 3.2.3
 
 ## Improvements

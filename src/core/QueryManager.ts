@@ -181,14 +181,14 @@ export class QueryManager<TStore> {
     );
 
     if (optimisticResponse) {
-      markMutationOptimistic<TStore, T>(optimisticResponse, {
+      this.markMutationOptimistic<T>(optimisticResponse, {
         mutationId,
         document: mutation,
         variables,
         errorPolicy,
         queryUpdatersById: generateUpdateQueriesInfo(),
         update: updateWithProxyFn,
-      }, this);
+      });
     }
 
     this.broadcastQueries();
@@ -320,6 +320,36 @@ export class QueryManager<TStore> {
         },
       });
     });
+  }
+
+  public markMutationOptimistic<TData>(
+    optimisticResponse: any,
+    mutation: {
+      mutationId: string;
+      document: DocumentNode;
+      variables?: OperationVariables;
+      errorPolicy: ErrorPolicy;
+      queryUpdatersById: Record<string, QueryWithUpdater>;
+      update?: (
+        cache: ApolloCache<TStore>,
+        result: FetchResult<TData>,
+      ) => void;
+    },
+  ) {
+    const data = typeof optimisticResponse === "function"
+      ? optimisticResponse(mutation.variables)
+      : optimisticResponse;
+
+    return this.cache.recordOptimisticTransaction(cache => {
+      try {
+        markMutationResult<TStore, TData>({
+          ...mutation,
+          result: { data },
+        }, this, cache);
+      } catch (error) {
+        invariant.error(error);
+      }
+    }, mutation.mutationId);
   }
 
   public fetchQuery<TData, TVars>(
@@ -1142,35 +1172,4 @@ export function markMutationResult<TStore, TData>(
       }
     }, /* non-optimistic transaction: */ null);
   }
-}
-
-export function markMutationOptimistic<TStore, TData>(
-  optimisticResponse: any,
-  mutation: {
-    mutationId: string;
-    document: DocumentNode;
-    variables: any;
-    errorPolicy: ErrorPolicy;
-    queryUpdatersById: Record<string, QueryWithUpdater>;
-    update?: (
-      cache: ApolloCache<TStore>,
-      result: FetchResult<TData>,
-    ) => void;
-  },
-  queryManager: QueryManager<TStore>
-) {
-  const data = typeof optimisticResponse === "function"
-    ? optimisticResponse(mutation.variables)
-    : optimisticResponse;
-
-  return queryManager.cache.recordOptimisticTransaction(cache => {
-    try {
-      markMutationResult({
-        ...mutation,
-        result: { data },
-      }, queryManager, cache);
-    } catch (error) {
-      invariant.error(error);
-    }
-  }, mutation.mutationId);
 }

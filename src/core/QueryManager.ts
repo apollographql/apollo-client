@@ -48,6 +48,8 @@ type QueryWithUpdater = {
   queryInfo: QueryInfo;
 };
 
+const noop = () => undefined;
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
@@ -73,7 +75,7 @@ export class QueryManager<TStore> {
     cache,
     link,
     queryDeduplication = false,
-    onBroadcast = () => undefined,
+    onBroadcast = noop,
     ssrMode = false,
     clientAwareness = {},
     localState,
@@ -252,7 +254,7 @@ export class QueryManager<TStore> {
         },
 
         error(err: Error) {
-          self.mutationStore.markMutationError(mutationId, err);
+          self.mutationStore.markMutationError(mutationId, self.onBroadcast === noop ? undefined : err);
           if (optimisticResponse) {
             self.cache.removeOptimistic(mutationId);
           }
@@ -266,7 +268,7 @@ export class QueryManager<TStore> {
 
         complete() {
           if (error) {
-            self.mutationStore.markMutationError(mutationId, error);
+            self.mutationStore.markMutationError(mutationId, self.onBroadcast === noop ? undefined : error);
           }
 
           if (optimisticResponse) {

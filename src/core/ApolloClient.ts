@@ -194,11 +194,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       typeof window !== 'undefined' &&
       !(window as any).__APOLLO_CLIENT__;
 
-    if (
-      typeof connectToDevTools === 'undefined'
-        ? defaultConnectToDevTools
-        : connectToDevTools && typeof window !== 'undefined'
-    ) {
+    const shouldConnectToDevTools = typeof connectToDevTools === 'undefined'
+      ? defaultConnectToDevTools
+      : connectToDevTools && typeof window !== 'undefined'
+
+    if (shouldConnectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
     }
 
@@ -253,7 +253,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       },
       localState: this.localState,
       assumeImmutableResults,
-      onBroadcast: () => {
+      onBroadcast: shouldConnectToDevTools ? () => {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             action: {},
@@ -264,7 +264,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
             dataWithOptimisticResults: this.cache.extract(true),
           });
         }
-      },
+      } : undefined,
     });
   }
 

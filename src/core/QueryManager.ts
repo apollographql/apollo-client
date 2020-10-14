@@ -35,18 +35,12 @@ import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
   OperationVariables,
-  MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
 
 import { QueryInfo, QueryStoreValue, shouldWriteResult } from './QueryInfo';
 
 const { hasOwnProperty } = Object.prototype;
-
-type QueryWithUpdater = {
-  updater: MutationQueryReducer<Object>;
-  queryInfo: QueryInfo;
-};
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -321,28 +315,13 @@ export class QueryManager<TStore> {
 
       const { updateQueries } = mutation;
       if (updateQueries) {
-        const queryUpdatersById: Record<string, QueryWithUpdater> = {};
-
         this.queries.forEach(({ observableQuery }, queryId) => {
-          if (observableQuery) {
-            const { queryName } = observableQuery;
-            if (queryName && hasOwnProperty.call(updateQueries, queryName)) {
-              queryUpdatersById[queryId] = {
-                updater: updateQueries[queryName],
-                queryInfo: this.queries.get(queryId)!,
-              };
-            }
+          const queryName = observableQuery && observableQuery.queryName;
+          if (!queryName || !hasOwnProperty.call(updateQueries, queryName)) {
+            return;
           }
-        });
-
-        Object.keys(queryUpdatersById).forEach(id => {
-          const {
-            updater,
-            queryInfo: {
-              document,
-              variables,
-            },
-          } = queryUpdatersById[id];
+          const updater = updateQueries[queryName];
+          const { document, variables } = this.queries.get(queryId)!;
 
           // Read the current query result from the store.
           const { result: currentQueryResult, complete } = cache.diff<TData>({

@@ -24,11 +24,14 @@ export class MutationStore {
     };
   }
 
-  public markMutationError(mutationId: string, error: Error) {
+  public markMutationError(mutationId: string, error?: Error) {
     const mutation = this.store[mutationId];
     if (mutation) {
       mutation.loading = false;
-      mutation.error = error;
+
+      if (error) {
+        mutation.error = error;
+      }
     }
   }
 

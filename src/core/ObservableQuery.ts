@@ -175,6 +175,8 @@ export class ObservableQuery<
           result.networkStatus = NetworkStatus.ready;
           result.loading = false;
         }
+        result.errors = diff.errors;
+        result.error = diff.error;
         delete result.partial;
       } else {
         result.partial = true;

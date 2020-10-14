@@ -121,7 +121,7 @@ export class QueryManager<TStore> {
     mutation,
     variables,
     optimisticResponse,
-    updateQueries: updateQueriesByName,
+    updateQueries,
     refetchQueries = [],
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
@@ -148,32 +148,6 @@ export class QueryManager<TStore> {
       variables = await this.localState.addExportedVariables(mutation, variables, context);
     }
 
-    // Create a map of update queries by id to the query instead of by name.
-    const generateUpdateQueriesInfo: () => {
-      [queryId: string]: QueryWithUpdater;
-    } = () => {
-      const ret: { [queryId: string]: QueryWithUpdater } = {};
-
-      if (updateQueriesByName) {
-        this.queries.forEach(({ observableQuery }, queryId) => {
-          if (observableQuery) {
-            const { queryName } = observableQuery;
-            if (
-              queryName &&
-              hasOwnProperty.call(updateQueriesByName, queryName)
-            ) {
-              ret[queryId] = {
-                updater: updateQueriesByName[queryName],
-                queryInfo: this.queries.get(queryId)!,
-              };
-            }
-          }
-        });
-      }
-
-      return ret;
-    };
-
     this.mutationStore.initMutation(
       mutationId,
       mutation,
@@ -186,7 +160,7 @@ export class QueryManager<TStore> {
         document: mutation,
         variables,
         errorPolicy,
-        queryUpdatersById: generateUpdateQueriesInfo(),
+        updateQueries,
         update: updateWithProxyFn,
       });
     }
@@ -226,7 +200,7 @@ export class QueryManager<TStore> {
                 document: mutation,
                 variables,
                 errorPolicy,
-                queryUpdatersById: generateUpdateQueriesInfo(),
+                updateQueries,
                 update: updateWithProxyFn,
               });
             } catch (e) {
@@ -329,7 +303,7 @@ export class QueryManager<TStore> {
       document: DocumentNode;
       variables?: OperationVariables;
       errorPolicy: ErrorPolicy;
-      queryUpdatersById: Record<string, QueryWithUpdater>;
+      updateQueries: MutationOptions<TData>["updateQueries"],
       update?: (
         cache: ApolloCache<TStore>,
         result: FetchResult<TData>,
@@ -345,8 +319,22 @@ export class QueryManager<TStore> {
         variables: mutation.variables,
       }];
 
-      const { queryUpdatersById } = mutation;
-      if (queryUpdatersById) {
+      const { updateQueries } = mutation;
+      if (updateQueries) {
+        const queryUpdatersById: Record<string, QueryWithUpdater> = {};
+
+        this.queries.forEach(({ observableQuery }, queryId) => {
+          if (observableQuery) {
+            const { queryName } = observableQuery;
+            if (queryName && hasOwnProperty.call(updateQueries, queryName)) {
+              queryUpdatersById[queryId] = {
+                updater: updateQueries[queryName],
+                queryInfo: this.queries.get(queryId)!,
+              };
+            }
+          }
+        });
+
         Object.keys(queryUpdatersById).forEach(id => {
           const {
             updater,
@@ -406,7 +394,7 @@ export class QueryManager<TStore> {
       document: DocumentNode;
       variables?: OperationVariables;
       errorPolicy: ErrorPolicy;
-      queryUpdatersById: Record<string, QueryWithUpdater>;
+      updateQueries: MutationOptions<TData>["updateQueries"],
       update?: (
         cache: ApolloCache<TStore>,
         result: FetchResult<TData>,

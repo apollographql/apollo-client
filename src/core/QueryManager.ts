@@ -21,7 +21,6 @@ import {
   ConcastSourcesIterable,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
-import { MutationStore } from './MutationStore';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -42,10 +41,16 @@ import { QueryInfo, QueryStoreValue, shouldWriteResult } from './QueryInfo';
 
 const { hasOwnProperty } = Object.prototype;
 
+interface MutationStoreValue {
+  mutation: DocumentNode;
+  variables: Record<string, any>;
+  loading: boolean;
+  error: Error | null;
+}
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
-  public mutationStore: MutationStore = new MutationStore();
   public readonly assumeImmutableResults: boolean;
   public readonly ssrMode: boolean;
 
@@ -54,6 +59,9 @@ export class QueryManager<TStore> {
   private localState: LocalState<TStore>;
 
   private onBroadcast?: () => void;
+  public mutationStore?: {
+    [mutationId: string]: MutationStoreValue;
+  };
 
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
@@ -85,11 +93,13 @@ export class QueryManager<TStore> {
     this.cache = cache;
     this.link = link;
     this.queryDeduplication = queryDeduplication;
-    this.onBroadcast = onBroadcast;
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = !!assumeImmutableResults;
+    if ((this.onBroadcast = onBroadcast)) {
+      this.mutationStore = Object.create(null);
+    }
   }
 
   /**
@@ -142,11 +152,14 @@ export class QueryManager<TStore> {
       variables = await this.localState.addExportedVariables(mutation, variables, context);
     }
 
-    this.mutationStore.initMutation(
-      mutationId,
-      mutation,
-      variables,
-    );
+    const mutationStoreValue =
+      this.mutationStore &&
+      (this.mutationStore[mutationId] = {
+        mutation,
+        variables,
+        loading: true,
+        error: null,
+      } as MutationStoreValue);
 
     if (optimisticResponse) {
       this.markMutationOptimistic<T>(optimisticResponse, {
@@ -184,7 +197,10 @@ export class QueryManager<TStore> {
             return;
           }
 
-          self.mutationStore.markMutationResult(mutationId);
+          if (mutationStoreValue) {
+            mutationStoreValue.loading = false;
+            mutationStoreValue.error = null;
+          }
 
           if (fetchPolicy !== 'no-cache') {
             try {
@@ -209,7 +225,10 @@ export class QueryManager<TStore> {
         },
 
         error(err: Error) {
-          self.mutationStore.markMutationError(mutationId, self.onBroadcast && err);
+          if (mutationStoreValue) {
+            mutationStoreValue.loading = false;
+            mutationStoreValue.error = err;
+          }
           if (optimisticResponse) {
             self.cache.removeOptimistic(mutationId);
           }
@@ -222,8 +241,9 @@ export class QueryManager<TStore> {
         },
 
         complete() {
-          if (error) {
-            self.mutationStore.markMutationError(mutationId, self.onBroadcast && error);
+          if (error && mutationStoreValue) {
+            mutationStoreValue.loading = false;
+            mutationStoreValue.error = error;
           }
 
           if (optimisticResponse) {
@@ -602,7 +622,9 @@ export class QueryManager<TStore> {
       }
     });
 
-    this.mutationStore.reset();
+    if (this.mutationStore) {
+      this.mutationStore = Object.create(null);
+    }
 
     // begin removing data from the store
     return this.cache.reset();

@@ -48,8 +48,6 @@ type QueryWithUpdater = {
   queryInfo: QueryInfo;
 };
 
-const noop = () => undefined;
-
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
@@ -61,7 +59,7 @@ export class QueryManager<TStore> {
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TStore>;
 
-  private onBroadcast: () => void;
+  private onBroadcast?: () => void;
 
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
@@ -75,7 +73,7 @@ export class QueryManager<TStore> {
     cache,
     link,
     queryDeduplication = false,
-    onBroadcast = noop,
+    onBroadcast,
     ssrMode = false,
     clientAwareness = {},
     localState,
@@ -254,7 +252,7 @@ export class QueryManager<TStore> {
         },
 
         error(err: Error) {
-          self.mutationStore.markMutationError(mutationId, self.onBroadcast === noop ? undefined : err);
+          self.mutationStore.markMutationError(mutationId, self.onBroadcast && err);
           if (optimisticResponse) {
             self.cache.removeOptimistic(mutationId);
           }
@@ -268,7 +266,7 @@ export class QueryManager<TStore> {
 
         complete() {
           if (error) {
-            self.mutationStore.markMutationError(mutationId, self.onBroadcast === noop ? undefined : error);
+            self.mutationStore.markMutationError(mutationId, self.onBroadcast && error);
           }
 
           if (optimisticResponse) {
@@ -672,7 +670,7 @@ export class QueryManager<TStore> {
   }
 
   public broadcastQueries() {
-    this.onBroadcast();
+    if (this.onBroadcast) this.onBroadcast();
     this.queries.forEach(info => info.notify());
   }
 

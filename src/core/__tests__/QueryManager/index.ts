@@ -461,7 +461,7 @@ describe('QueryManager', () => {
   });
 
   // Query should be aborted on last .unsubscribe()
-  itAsync('causes immediate link unsubscription if unsubscribed', (resolve, reject) => {
+  itAsync('causes link unsubscription if unsubscribed', (resolve, reject) => {
     const expResult = {
       data: {
         allPeople: {
@@ -520,9 +520,15 @@ describe('QueryManager', () => {
 
     subscription.unsubscribe();
 
-    expect(onRequestSubscribe).toHaveBeenCalledTimes(1)
-    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1)
-    resolve();
+    return new Promise(
+      // Unsubscribing from the link happens after a microtask
+      // (Promise.resolve().then) delay, so we need to wait at least that
+      // long before verifying onRequestUnsubscribe was called.
+      resolve => setTimeout(resolve, 0)
+    ).then(() => {
+      expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+      expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+    }).then(resolve, reject);
   });
 
   itAsync('supports interoperability with other Observable implementations like RxJS', (resolve, reject) => {

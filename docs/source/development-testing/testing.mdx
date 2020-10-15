@@ -445,9 +445,7 @@ export const cache = new ApolloClient({
 })
 ```
 
-You must configure your cache when testing a component which utilizes fragments in its queries, and pass it to the `<MockedProvider>`.
-
-`cache` here must be configured with `possibleTypes` and `typePolicies` just the same as it is for your application:
+You must configure your cache when testing a component which utilizes fragments in its queries, and pass it to the `<MockedProvider>` via the `cache={cache}` attribute, configured with `possibleTypes` and `typePolicies` just the same as in your application:
 ```jsx
 <MockedProvider cache={cache}>
   <DeleteButton />

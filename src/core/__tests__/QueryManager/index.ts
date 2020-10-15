@@ -16,7 +16,7 @@ import {
 // mocks
 import mockQueryManager from '../../../utilities/testing/mocking/mockQueryManager';
 import mockWatchQuery from '../../../utilities/testing/mocking/mockWatchQuery';
-import { MockApolloLink, mockSingleLink } from '../../../utilities/testing/mocking/mockLink';
+import { MockApolloLink, mockSingleLink, MockLink } from '../../../utilities/testing/mocking/mockLink';
 
 // core
 import { ApolloQueryResult } from '../../types';
@@ -458,6 +458,71 @@ describe('QueryManager', () => {
     });
 
     expect(subscription.unsubscribe).not.toThrow();
+  });
+
+  // Query should be aborted on last .unsubscribe()
+  itAsync('causes immediate link unsubscription if unsubscribed', (resolve, reject) => {
+    const expResult = {
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
+      },
+    };
+
+    const request = {
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      variables: undefined
+    };
+
+    const mockedResponse = {
+      request,
+      result: expResult
+    };
+
+    const onRequestSubscribe = jest.fn();
+    const onRequestUnsubscribe = jest.fn();
+
+    const mockedSingleLink = new MockLink([mockedResponse], {
+      addTypename: true,
+      onSubscribe: onRequestSubscribe,
+      onUnsubscribe: onRequestUnsubscribe
+    });
+
+    const mockedQueryManger = new QueryManager({
+      link: mockedSingleLink,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const observableQuery = mockedQueryManger.watchQuery({
+      query: request.query,
+      variables: request.variables,
+      notifyOnNetworkStatusChange: false
+    });
+
+    const subscription = observableQuery.subscribe({
+      next: wrap(reject, () => {
+        reject(new Error('Link subscriptions should have been cancelled'));
+      }),
+    });
+
+    subscription.unsubscribe();
+
+    expect(onRequestSubscribe).toHaveBeenCalledTimes(1)
+    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1)
+    resolve();
   });
 
   itAsync('supports interoperability with other Observable implementations like RxJS', (resolve, reject) => {

@@ -108,7 +108,7 @@ describe('General Mutation testing', () => {
 
     function mockClient(m: any) {
       return new ApolloClient({
-        link: new MockLink(m, false),
+        link: new MockLink(m, { addTypename: false }),
         cache: new Cache({ addTypename: false })
       });
     }

@@ -35,17 +35,25 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
   return JSON.stringify(requestKey);
 }
 
+interface MockLinkOptions {
+  addTypename?: boolean;
+  onSubscribe?: () => void;
+  onUnsubscribe?: () => void;
+}
+
 export class MockLink extends ApolloLink {
   public operation: Operation;
   public addTypename: Boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
+  private options: MockLinkOptions;
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse>,
-    addTypename: Boolean = true
+    options: MockLinkOptions = {}
   ) {
     super();
-    this.addTypename = addTypename;
+    this.options = options;
+    this.addTypename = options.addTypename ?? true;
     if (mockedResponses) {
       mockedResponses.forEach(mockedResponse => {
         this.addMockedResponse(mockedResponse);
@@ -109,7 +117,9 @@ export class MockLink extends ApolloLink {
       }
     }
 
-    return new Observable(observer => {
+    const requestObservable = new Observable<FetchResult>(observer => {
+      this.options.onSubscribe?.();
+
       const timer = setTimeout(() => {
         if (configError) {
           try {
@@ -141,9 +151,12 @@ export class MockLink extends ApolloLink {
       }, response && response.delay || 0);
 
       return () => {
+        this.options.onUnsubscribe?.();
         clearTimeout(timer);
       };
     });
+
+    return requestObservable;
   }
 
   private normalizeMockedResponse(
@@ -183,5 +196,5 @@ export function mockSingleLink(
     maybeTypename = true;
   }
 
-  return new MockLink(mocks, maybeTypename);
+  return new MockLink(mocks, { addTypename: maybeTypename });
 }

@@ -130,16 +130,19 @@ export class Concast<T> extends Observable<T> {
     observer: Observer<T>,
     quietly?: boolean,
   ) {
-    if (this.observers.delete(observer) &&
-        this.observers.size < 1) {
-      if (quietly) return;
-      if (this.sub) {
-        this.sub.unsubscribe();
-        // In case anyone happens to be listening to this.promise, after
-        // this.observers has become empty.
-        this.reject(new Error("Observable cancelled prematurely"));
+    if (this.observers.delete(observer)) {
+      --this.addCount;
+
+      if (this.addCount < 1) {
+        if (quietly) return;
+        if (this.sub) {
+          this.sub.unsubscribe();
+          // In case anyone happens to be listening to this.promise, after
+          // this.observers has become empty.
+          this.reject(new Error("Observable cancelled prematurely"));
+        }
+        this.sub = null;
       }
-      this.sub = null;
     }
   }
 
@@ -209,13 +212,12 @@ export class Concast<T> extends Observable<T> {
     const once = () => {
       if (!called) {
         called = true;
-        // If there have been no other (non-cleanup) observers added, pass
-        // true for the quietly argument, so the removal of the cleanup
+        // Pass true for the quietly argument, so the removal of the cleanup
         // observer does not call this.sub.unsubscribe. If a cleanup
         // observer is added and removed before any other observers
         // subscribe, we do not want to prevent other observers from
         // subscribing later.
-        this.removeObserver(observer, !this.addCount);
+        this.removeObserver(observer, true);
         callback();
       }
     }

@@ -32,10 +32,10 @@ function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
 export function makeVar<T>(value: T): ReactiveVar<T>
 export function makeVar<T>(
   value: T,
-  config: PersistenceConfig<T>
+  config: PersistenceConfig
 ): [ReactiveVar<T>, () => Promise<void>]
 
-export function makeVar<T>(value: T, config?: PersistenceConfig<T>) {
+export function makeVar<T>(value: T, config?: PersistenceConfig) {
   const caches = new Set<ApolloCache<any>>()
   const listeners = new Set<ReactiveListener<T>>()
 
@@ -118,7 +118,7 @@ export interface PersistentStorage {
   setItem: (key: string, data: string) => Promise<void | any>;
 }
 
-export type PersistenceConfig<T> = {
+export type PersistenceConfig = {
   storage: PersistentStorage;
   storageKey: string;
 }

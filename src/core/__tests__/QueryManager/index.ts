@@ -74,6 +74,8 @@ describe('QueryManager', () => {
       cache: new InMemoryCache({ addTypename: false, ...config }),
       clientAwareness,
       queryDeduplication,
+      // Enable client.queryManager.mutationStore tracking.
+      onBroadcast() {},
     });
   };
 
@@ -3265,7 +3267,7 @@ describe('QueryManager', () => {
         queryManager.cache.extract(),
       ).toEqual({});
       expect(queryManager.getQueryStore()).toEqual({});
-      expect(queryManager.mutationStore.getStore()).toEqual({});
+      expect(queryManager.mutationStore).toEqual({});
 
       resolve();
     });

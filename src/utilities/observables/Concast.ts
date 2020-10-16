@@ -92,7 +92,7 @@ export class Concast<T> extends Observable<T> {
     // source observable. It's tempting to do this step lazily in
     // addObserver, but this.promise can be accessed without calling
     // addObserver, so consumption needs to begin eagerly.
-    this.handlers.complete!();
+    this.handlers.complete();
   }
 
   private deliverLastMessage(observer: Observer<T>) {
@@ -131,15 +131,12 @@ export class Concast<T> extends Observable<T> {
     quietly?: boolean,
   ) {
     if (this.observers.delete(observer) &&
-        this.observers.size < 1) {
-      if (quietly) return;
-      if (this.sub) {
-        this.sub.unsubscribe();
-        // In case anyone happens to be listening to this.promise, after
-        // this.observers has become empty.
-        this.reject(new Error("Observable cancelled prematurely"));
-      }
-      this.sub = null;
+        --this.addCount < 1 &&
+        !quietly) {
+      // In case there are still any cleanup observers in this.observers,
+      // and no error or completion has been broadcast yet, make sure
+      // those observers receive an error that terminates them.
+      this.handlers.error(new Error("Observable cancelled prematurely"));
     }
   }
 
@@ -159,17 +156,21 @@ export class Concast<T> extends Observable<T> {
 
   // Bound handler functions that can be reused for every internal
   // subscription.
-  private handlers: Observer<T> = {
-    next: result => {
+  private handlers = {
+    next: (result: T) => {
       if (this.sub !== null) {
         this.latest = ["next", result];
         iterateObserversSafely(this.observers, "next", result);
       }
     },
 
-    error: error => {
-      if (this.sub !== null) {
-        if (this.sub) this.sub.unsubscribe();
+    error: (error: any) => {
+      const { sub } = this;
+      if (sub !== null) {
+        // Delay unsubscribing from the underlying subscription slightly,
+        // so that immediately subscribing another observer can keep the
+        // subscription active.
+        if (sub) Promise.resolve().then(() => sub.unsubscribe());
         this.sub = null;
         this.latest = ["error", error];
         this.reject(error);
@@ -209,13 +210,10 @@ export class Concast<T> extends Observable<T> {
     const once = () => {
       if (!called) {
         called = true;
-        // If there have been no other (non-cleanup) observers added, pass
-        // true for the quietly argument, so the removal of the cleanup
-        // observer does not call this.sub.unsubscribe. If a cleanup
-        // observer is added and removed before any other observers
-        // subscribe, we do not want to prevent other observers from
-        // subscribing later.
-        this.removeObserver(observer, !this.addCount);
+        // Removing a cleanup observer should not unsubscribe from the
+        // underlying Observable, so the only removeObserver behavior we
+        // need here is to delete observer from this.observers.
+        this.observers.delete(observer);
         callback();
       }
     }
@@ -236,7 +234,7 @@ export class Concast<T> extends Observable<T> {
   public cancel = (reason: any) => {
     this.reject(reason);
     this.sources = [];
-    this.handlers.complete!();
+    this.handlers.complete();
   }
 }
 

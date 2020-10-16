@@ -462,6 +462,91 @@ describe('QueryManager', () => {
     expect(subscription.unsubscribe).not.toThrow();
   });
 
+  // Query should be aborted on last .unsubscribe()
+  itAsync('causes link unsubscription if unsubscribed', (resolve, reject) => {
+    const expResult = {
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
+      },
+    };
+
+    const request = {
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      variables: undefined
+    };
+
+    const mockedResponse = {
+      request,
+      result: expResult
+    };
+
+    const onRequestSubscribe = jest.fn();
+    const onRequestUnsubscribe = jest.fn();
+
+    const mockedSingleLink = new ApolloLink(() => {
+      return new Observable(observer => {
+        onRequestSubscribe();
+
+        const timer = setTimeout(() => {
+          observer.next(mockedResponse.result);
+          observer.complete();
+        }, 0);
+
+        return () => {
+          onRequestUnsubscribe();
+          clearTimeout(timer);
+        };
+      });
+    });
+
+    const mockedQueryManger = new QueryManager({
+      link: mockedSingleLink,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const observableQuery = mockedQueryManger.watchQuery({
+      query: request.query,
+      variables: request.variables,
+      notifyOnNetworkStatusChange: false
+    });
+
+    const observerCallback = wrap(reject, () => {
+      reject(new Error('Link subscription should have been cancelled'));
+    });
+
+    const subscription = observableQuery.subscribe({
+      next: observerCallback,
+      error: observerCallback,
+      complete: observerCallback
+    });
+
+    subscription.unsubscribe();
+
+    return new Promise(
+      // Unsubscribing from the link happens after a microtask
+      // (Promise.resolve().then) delay, so we need to wait at least that
+      // long before verifying onRequestUnsubscribe was called.
+      resolve => setTimeout(resolve, 0)
+    ).then(() => {
+      expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+      expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+    }).then(resolve, reject);
+  });
+
   itAsync('supports interoperability with other Observable implementations like RxJS', (resolve, reject) => {
     const expResult = {
       data: {

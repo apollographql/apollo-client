@@ -2,18 +2,25 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
-import { Observable, ObservableSubscription } from '../utilities/observables/Observable';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { PossibleTypesMap } from '../cache/inmemory/types';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { WatchQueryOptions, FetchPolicy, WatchQueryFetchPolicy } from '../core/watchQueryOptions';
-import { ApolloError } from '../errors/ApolloError';
-import { ApolloClient } from '..';
-import subscribeAndCount from '../utilities/testing/subscribeAndCount';
-import { itAsync } from '../utilities/testing/itAsync';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { NetworkStatus, ObservableQuery } from '../core';
+import {
+  ApolloClient,
+  FetchPolicy,
+  WatchQueryFetchPolicy,
+  QueryOptions,
+  ObservableQuery,
+} from '../core';
+
+import { Observable, ObservableSubscription } from '../utilities';
+import { ApolloLink } from '../link/core';
+import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
+import { ApolloError } from '../errors';
+
+import {
+  itAsync,
+  stripSymbols,
+  subscribeAndCount,
+  mockSingleLink,
+} from '../testing';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -556,10 +563,7 @@ describe('client', () => {
     `;
 
     const errors: GraphQLError[] = [
-      {
-        name: 'test',
-        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
-      },
+      new GraphQLError('Syntax Error GraphQL request (8:9) Expected Name, found EOF')
     ];
 
     const link = mockSingleLink({
@@ -599,10 +603,7 @@ describe('client', () => {
     };
 
     const errors: GraphQLError[] = [
-      {
-        name: 'test',
-        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
-      },
+      new GraphQLError('Syntax Error GraphQL request (8:9) Expected Name, found EOF'),
     ];
 
     const link = ApolloLink.from([
@@ -1355,20 +1356,23 @@ describe('client', () => {
       },
     };
 
-    // we have two responses for identical queries, but only the first should be requested.
-    // the second one should never make it through to the network interface.
-    const link = mockSingleLink({
-      request: { query: queryDoc },
-      result: { data },
-      delay: 10,
-    }, {
-      request: { query: queryDoc },
-      result: { data: data2 },
-    }).setOnError(reject);
+    // we have two responses for identical queries, and both should be requested.
+    // the second one should make it through to the network interface.
+    const link = mockSingleLink(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    ).setOnError(reject);
+
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
-
       queryDeduplication: false,
     });
 
@@ -1423,6 +1427,103 @@ describe('client', () => {
     return Promise.all([q1, q2]).then(([result1, result2]) => {
       expect(result1.data).toEqual(result2.data);
     }).then(resolve, reject);
+  });
+
+  it('deduplicates queries if query context.queryDeduplication is set to true', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const link = mockSingleLink(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+      queryDeduplication: false,
+    });
+
+    // Both queries need to be deduplicated, otherwise only one gets tracked
+    const q1 = client.query({ query: queryDoc, context: { queryDeduplication: true } });
+    const q2 = client.query({ query: queryDoc, context: { queryDeduplication: true } });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      expect(stripSymbols(result1.data)).toEqual(data);
+      expect(stripSymbols(result2.data)).toEqual(data);
+    });
+  });
+
+  it('does not deduplicate queries if query context.queryDeduplication is set to false', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, and both should be requested.
+    // the second one should make it through to the network interface.
+    const link = mockSingleLink(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    // The first query gets tracked in the dedup logic, the second one ignores it and runs anyways
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc, context: { queryDeduplication: false } });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      expect(stripSymbols(result1.data)).toEqual(data);
+      expect(stripSymbols(result2.data)).toEqual(data2);
+    });
   });
 
   itAsync('unsubscribes from deduplicated observables only once', (resolve, reject) => {
@@ -1483,7 +1584,7 @@ describe('client', () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        client.query({ query, returnPartialData: true } as WatchQueryOptions);
+        client.query({ query, returnPartialData: true } as QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
 
@@ -1493,7 +1594,7 @@ describe('client', () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        client.query({ query, returnPartialData: true } as WatchQueryOptions);
+        client.query({ query, returnPartialData: true } as QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
   });
@@ -1607,7 +1708,12 @@ describe('client', () => {
         },
       });
 
-      checkCacheAndNetworkError(() => client.query({ query }));
+      checkCacheAndNetworkError(() => client.query({
+        query,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.query.fetchPolicy.
+        fetchPolicy: void 0,
+      }));
     });
 
     itAsync('fetches from cache first, then network', (resolve, reject) => {
@@ -1654,14 +1760,10 @@ describe('client', () => {
       });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toBe(undefined);
-          expect(result.loading).toBe(true);
-        } else if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(networkFetch);
-          expect(result.loading).toBe(false);
-          resolve();
-        }
+        expect(handleCount).toBe(1);
+        expect(stripSymbols(result.data)).toEqual(networkFetch);
+        expect(result.loading).toBe(false);
+        resolve();
       });
     });
 
@@ -1677,17 +1779,13 @@ describe('client', () => {
         fetchPolicy: 'cache-and-network',
       });
 
-      let count = 0;
       obs.subscribe({
-        next: result => {
-          expect(result.data).toBe(undefined);
-          expect(result.loading).toBe(true);
-          count++;
-        },
         error: e => {
-          expect(e.message).toMatch(/No more mocked responses/);
-          expect(count).toBe(1); // make sure next was called.
-          setTimeout(resolve, 100);
+          if (!/No more mocked responses/.test(e.message)) {
+            reject(e);
+          } else {
+            resolve();
+          }
         },
       });
     });
@@ -1755,7 +1853,7 @@ describe('client', () => {
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
+          obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
           });
@@ -1792,20 +1890,18 @@ describe('client', () => {
 
       const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
 
-      let handleCalled = false;
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(stripSymbols(result.data)).toEqual(data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
+          obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
             setTimeout(() => {
-              obs.setOptions({ fetchPolicy: 'cache-first' });
+              obs.setOptions({ query, fetchPolicy: 'cache-first' });
             }, 10);
           });
         }
         if (handleCount === 2) {
-          handleCalled = true;
           expect(stripSymbols(result.data)).toEqual(data2);
           resolve();
         }
@@ -1867,7 +1963,7 @@ describe('client', () => {
         cache: new InMemoryCache({ addTypename: false }),
       });
 
-      const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
+      const options: QueryOptions = { query, fetchPolicy: 'network-only' };
 
       // Run a query first to initialize the store
       return client
@@ -2014,8 +2110,8 @@ describe('client', () => {
       .mutate({ mutation, errorPolicy: 'all' })
       .then(result => {
         expect(result.errors).toBeDefined();
-        expect(result.errors.length).toBe(1);
-        expect(result.errors[0].message).toBe(errors[0].message);
+        expect(result.errors!.length).toBe(1);
+        expect(result.errors![0].message).toBe(errors[0].message);
         expect(result.data).toEqual(data);
         resolve();
       })
@@ -2122,6 +2218,8 @@ describe('client', () => {
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
+
+    // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'clearStore');
     await client.clearStore();
     expect(spy).toHaveBeenCalled();
@@ -2161,6 +2259,8 @@ describe('client', () => {
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
+
+    // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'clearStore');
     await client.resetStore();
     expect(spy).toHaveBeenCalled();
@@ -2196,7 +2296,7 @@ describe('client', () => {
   });
 
   it('resetStore waits until all onResetStore callbacks are called', async () => {
-    const delay = time => new Promise(r => setTimeout(r, time));
+    const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const client = new ApolloClient({
       link: ApolloLink.empty(),
@@ -2225,7 +2325,7 @@ describe('client', () => {
   });
 
   it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
-    const delay = time => new Promise(r => setTimeout(r, time));
+    const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const query = gql`
       query {
@@ -2252,12 +2352,10 @@ describe('client', () => {
       },
     };
 
-    let timesFired = 0;
     const link = ApolloLink.from([
       new ApolloLink(
         () =>
           new Observable(observer => {
-            timesFired += 1;
             observer.next({ data });
             observer.complete();
             return;
@@ -2298,7 +2396,7 @@ describe('client', () => {
       }
     });
 
-    const observable = client
+    client
       .watchQuery<any>({
         query,
         notifyOnNetworkStatusChange: false,
@@ -2321,53 +2419,11 @@ describe('client', () => {
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
+
+    // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'reFetchObservableQueries');
     await client.reFetchObservableQueries();
     expect(spy).toHaveBeenCalled();
-  });
-
-  it('should enable dev tools logging', () => {
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
-    };
-
-    // it('with self-made store', () => {
-    //   const link = mockSingleLink(reject, {
-    //     request: { query: cloneDeep(query) },
-    //     result: { data },
-    //   });
-    //
-    //   const client = new ApolloClient({
-    //     link,
-    //     cache: new InMemoryCache({ addTypename: false }),
-    //   });
-    //
-    //   const log: any[] = [];
-    //   client.__actionHookForDevTools((entry: any) => {
-    //     log.push(entry);
-    //   });
-    //
-    //   return client.query({ query }).then(() => {
-    //     expect(log.length).toBe(2);
-    //     expect(log[1].state.queries['0'].loading).toBe(false);
-    //   });
-    // });
   });
 
   itAsync('should propagate errors from network interface to observers', (resolve, reject) => {
@@ -2396,7 +2452,7 @@ describe('client', () => {
 
     handle.subscribe({
       error(error) {
-        expect(error.message).toBe('Network error: Uh oh!');
+        expect(error.message).toBe('Uh oh!');
         resolve();
       },
     });
@@ -2489,9 +2545,9 @@ describe('client', () => {
           reject(e);
         }
       },
-      error(error) {
+      error(error: Error) {
         expect(count++).toBe(2);
-        expect(error.message).toBe('Network error: This is an error!');
+        expect(error.message).toBe('This is an error!');
 
         subscription.unsubscribe();
 
@@ -2528,10 +2584,7 @@ describe('client', () => {
       }
     `;
     const errors: GraphQLError[] = [
-      {
-        name: 'test',
-        message: 'Cannot query field "foo" on type "Post".',
-      },
+        new GraphQLError('Cannot query field "foo" on type "Post".')
     ];
     const link = mockSingleLink({
       request: { query },
@@ -2544,7 +2597,7 @@ describe('client', () => {
 
     return client.query({ query }).catch(err => {
       expect(err.message).toBe(
-        'GraphQL error: Cannot query field "foo" on type "Post".',
+        'Cannot query field "foo" on type "Post".',
       );
     }).then(resolve, reject);
   });
@@ -2875,6 +2928,8 @@ describe('@connection', () => {
   });
 
   itAsync('should broadcast changes for reactive variables', async (resolve, reject) => {
+    const aVar = makeVar(123);
+    const bVar = makeVar("asdf");
     const cache: InMemoryCache = new InMemoryCache({
       typePolicies: {
         Query: {
@@ -2890,9 +2945,6 @@ describe('@connection', () => {
       },
     });
 
-    const aVar = cache.makeVar(123);
-    const bVar = cache.makeVar("asdf");
-
     const client = new ApolloClient({ cache });
 
     const obsQueries = new Set<ObservableQuery<any>>();
@@ -2901,7 +2953,7 @@ describe('@connection', () => {
       query: DocumentNode,
       fetchPolicy: WatchQueryFetchPolicy = "cache-first",
     ): any[] {
-      const results = [];
+      const results: any[] = [];
       const obsQuery = client.watchQuery({
         query,
         fetchPolicy,
@@ -2973,7 +3025,7 @@ describe('@connection', () => {
     expect(checkLastResult(abResults, a456bOyez)).toBe(a456bOyez);
 
     // Now invalidate the ROOT_QUERY.a field.
-    client.cache.evict("ROOT_QUERY", "a");
+    client.cache.evict({ fieldName: "a" });
     await wait();
 
     // The results are structurally the same, but the result objects have
@@ -3000,12 +3052,14 @@ describe('@connection', () => {
     checkLastResult(aResults, a456);
     checkLastResult(bResults, bOyez);
     checkLastResult(abResults, a456bOyez);
-    const cSee = checkLastResult(cResults, { c: "see" });
+    checkLastResult(cResults, { c: "see" });
 
-    cache.modify("ROOT_QUERY", {
-      c(value) {
-        expect(value).toBe("see");
-        return "saw";
+    cache.modify({
+      fields: {
+        c(value) {
+          expect(value).toBe("see");
+          return "saw";
+        },
       },
     });
     await wait();
@@ -3013,9 +3067,9 @@ describe('@connection', () => {
     checkLastResult(aResults, a456);
     checkLastResult(bResults, bOyez);
     checkLastResult(abResults, a456bOyez);
-    const cSaw = checkLastResult(cResults, { c: "saw" });
+    checkLastResult(cResults, { c: "saw" });
 
-    client.cache.evict("ROOT_QUERY", "c");
+    client.cache.evict({ fieldName: "c" });
     await wait();
 
     checkLastResult(aResults, a456);
@@ -3100,7 +3154,12 @@ describe('@connection', () => {
         data: initialData,
       });
 
-      const obs = client.watchQuery({ query });
+      const obs = client.watchQuery({
+        query,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.watchQuery.fetchPolicy.
+        fetchPolicy: void 0,
+      });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         const resultData = stripSymbols(result.data);
@@ -3158,7 +3217,12 @@ describe('@connection', () => {
         },
       });
 
-      return client.mutate({ mutation }).then(result => {
+      return client.mutate({
+        mutation,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.mutate.variables.
+        variables: void 0,
+      }).then(result => {
         expect(result.data).toEqual(data);
       }).then(resolve, reject);
     });

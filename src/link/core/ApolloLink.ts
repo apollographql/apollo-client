@@ -1,6 +1,6 @@
 import { InvariantError, invariant } from 'ts-invariant';
 
-import { Observable } from '../../utilities/observables/Observable';
+import { Observable } from '../../utilities';
 import {
   NextLink,
   Operation,
@@ -8,9 +8,11 @@ import {
   FetchResult,
   GraphQLRequest
 } from './types';
-import { validateOperation } from '../utils/validateOperation';
-import { createOperation } from '../utils/createOperation';
-import { transformOperation } from '../utils/transformOperation';
+import {
+  validateOperation,
+  createOperation,
+  transformOperation,
+} from '../utils';
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
@@ -37,7 +39,7 @@ export class ApolloLink {
     return new ApolloLink(() => Observable.of());
   }
 
-  public static from(links: ApolloLink[]): ApolloLink {
+  public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
     return links.map(toLink).reduce((x, y) => x.concat(y)) as ApolloLink;
   }

@@ -1,13 +1,14 @@
 import gql from 'graphql-tag';
 
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../utilities/testing/stripSymbols';
-import { itAsync } from '../../utilities/testing/itAsync';
-import { ApolloClient } from '../..';
-import subscribeAndCount from '../../utilities/testing/subscribeAndCount';
-import { mockSingleLink } from '../../utilities/testing/mocking/mockLink';
-import { NetworkStatus } from '../networkStatus';
+import { ApolloClient, NetworkStatus } from '../../core';
+import { ApolloLink } from '../../link/core';
+import { InMemoryCache } from '../../cache';
+import {
+  stripSymbols,
+  subscribeAndCount,
+  itAsync,
+  mockSingleLink,
+} from '../../testing';
 
 const query = gql`
   query {
@@ -168,11 +169,8 @@ describe('network-only', () => {
   });
 
   itAsync('updates the cache on a mutation', (resolve, reject) => {
-    let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
-      called++;
       return forward(operation).map(result => {
-        called++;
         return result;
       });
     });
@@ -302,11 +300,8 @@ describe('no-cache', () => {
   });
 
   itAsync('does not update the cache on a mutation', (resolve, reject) => {
-    let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
-      called++;
       return forward(operation).map(result => {
-        called++;
         return result;
       });
     });
@@ -327,6 +322,120 @@ describe('no-cache', () => {
         });
       })
       .then(resolve, reject);
+  });
+});
+
+describe('cache-first', () => {
+  itAsync.skip('does not trigger network request during optimistic update', (resolve, reject) => {
+    const results: any[] = [];
+    const client = new ApolloClient({
+      link: new ApolloLink((operation, forward) => {
+        return forward(operation).map(result => {
+          results.push(result);
+          return result;
+        });
+      }).concat(createMutationLink(reject)),
+      cache: new InMemoryCache,
+    });
+
+    let inOptimisticTransaction = false;
+
+    subscribeAndCount(reject, client.watchQuery({
+      query,
+      fetchPolicy: "cache-and-network",
+      returnPartialData: true,
+    }), (count, { data, loading, networkStatus }) => {
+      if (count === 1) {
+        expect(results.length).toBe(0);
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.loading);
+        expect(data).toEqual({});
+      } else if (count === 2) {
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Author",
+            id: 1,
+            firstName: "John",
+            lastName: "Smith",
+          },
+        });
+
+        inOptimisticTransaction = true;
+        client.cache.recordOptimisticTransaction(cache => {
+          cache.writeQuery({
+            query,
+            data: {
+              author: {
+                __typename: "Bogus",
+              },
+            },
+          });
+        }, "bogus");
+
+      } else if (count === 3) {
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Bogus",
+          },
+        });
+
+        setTimeout(() => {
+          inOptimisticTransaction = false;
+          client.cache.removeOptimistic("bogus");
+        }, 100);
+
+      } else if (count === 4) {
+        // A network request should not be triggered until after the bogus
+        // optimistic transaction has been removed.
+        expect(inOptimisticTransaction).toBe(false);
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Author",
+            id: 1,
+            firstName: "John",
+            lastName: "Smith",
+          },
+        });
+
+        client.cache.writeQuery({
+          query,
+          data: {
+            author: {
+              __typename: "Author",
+              id: 2,
+              firstName: "Chinua",
+              lastName: "Achebe",
+            },
+          },
+        });
+
+      } else if (count === 5) {
+        expect(inOptimisticTransaction).toBe(false);
+        expect(results.length).toBe(1);
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          author: {
+            __typename: "Author",
+            id: 2,
+            firstName: "Chinua",
+            lastName: "Achebe",
+          },
+        });
+        setTimeout(resolve, 100);
+      } else {
+        reject(new Error("unreached"));
+      }
+    });
   });
 });
 
@@ -375,62 +484,50 @@ describe('cache-and-network', function() {
     subscribeAndCount(reject, observable, (count, result) => {
       if (count === 1) {
         expect(result).toEqual({
-          data: void 0,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          stale: true,
-        });
-      } else if (count === 2) {
-        expect(result).toEqual({
           data: dataWithId(1),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.setVariables({ id: '2' });
-      } else if (count === 3) {
+      } else if (count === 2) {
         expect(result).toEqual({
-          data: dataWithId(1),
+          data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
-          stale: false,
+          partial: true,
         });
-      } else if (count === 4) {
+      } else if (count === 3) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.refetch();
-      } else if (count === 5) {
+      } else if (count === 4) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: true,
           networkStatus: NetworkStatus.refetch,
-          stale: false,
         });
-      } else if (count === 6) {
+      } else if (count === 5) {
         expect(result).toEqual({
           data: dataWithId(2),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         return observable.refetch({ id: '3' });
-      } else if (count === 7) {
+      } else if (count === 6) {
         expect(result).toEqual({
-          data: dataWithId(2),
+          data: {},
           loading: true,
           networkStatus: NetworkStatus.setVariables,
-          stale: false,
+          partial: true,
         });
-      } else if (count === 8) {
+      } else if (count === 7) {
         expect(result).toEqual({
           data: dataWithId(3),
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stale: false,
         });
         resolve();
       }

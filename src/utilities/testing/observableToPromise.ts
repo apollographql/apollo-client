@@ -74,7 +74,7 @@ export function observableToPromiseAndSubscription(
         queue = queue.then(() => {
           const errorCb = errorCallbacks[errorIndex++];
           if (errorCb) return errorCb(error);
-          reject(new Error(`Observable 'error' method called more than ${errorCallbacks.length} times`));
+          reject(error);
         }).then(
           tryToResolve,
           reject,

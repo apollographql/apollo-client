@@ -4,5 +4,8 @@
   "editor.rulers": [80],
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "typescript.tsdk": "../node_modules/typescript/lib"
+  "typescript.tsdk": "../node_modules/typescript/lib",
+  "cSpell.enableFiletypes": [
+    "mdx"
+  ]
 }

@@ -3,11 +3,9 @@ title: Testing React components
 description: Peace of mind when using Apollo Client with React in production
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Running tests against code meant for production has long been a best practice. It provides additional security for the code that's already written, and prevents accidental regressions in the future. Components utilizing React with Apollo Client are no exception.
 
-Although Apollo Client's React integration has a lot going on under the hood, the library provides multiple tools for testing that simplify those abstractions, and allows complete focus on the component logic. These testing utilities have long been used to test React functoinality with Apollo Client itself, so they will be supported long-term.
+Although Apollo Client's React integration has a lot going on under the hood, the library provides multiple tools for testing that simplify those abstractions, and allows complete focus on the component logic. These testing utilities have long been used to test React functionality with Apollo Client itself, so they will be supported long-term.
 
 ## An introduction
 
@@ -19,16 +17,13 @@ This guide will explain step-by-step how to test Apollo Client React code. The f
 
 Consider the component below, which makes a basic query, and displays its results:
 
-<MultiCodeBlock>
-<div data-language="hooks-js">
-
 ```jsx
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
 
 // Make sure the query is also exported -- not just the component
 export const GET_DOG_QUERY = gql`
-  query getDog($name: String) {
+  query GetDog($name: String) {
     dog(name: $name) {
       id
       name
@@ -52,44 +47,6 @@ export function Dog({ name }) {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-import React from 'react';
-import { gql } from "@apollo/client";
-import { Query } from '@apollo/react-components';
-
-// Make sure the query is also exported -- not just the component
-export const GET_DOG_QUERY = gql`
-  query getDog($name: String) {
-    dog(name: $name) {
-      id
-      name
-      breed
-    }
-  }
-`;
-
-export const Dog = ({ name }) => (
-  <Query query={GET_DOG_QUERY} variables={{ name }}>
-    {({ loading, error, data }) => {
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p>Error!</p>;
-
-      return (
-        <p>
-          {data.dog.name} is a {data.dog.breed}
-        </p>
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 Given this component, let's try to render it inside a test, just to make sure there are no render errors:
 
@@ -218,8 +175,6 @@ This shows a basic example test that tests the loading state of a component by c
 Loading state, while important, isn't the only thing to test. To test the final state of the component after receiving data, we can just wait for it to update and test the final state.
 
 ```jsx
-const wait = require('waait');
-
 it('should render dog', async () => {
   const dogMock = {
     request: {
@@ -237,16 +192,16 @@ it('should render dog', async () => {
     </MockedProvider>,
   );
 
-  await wait(0); // wait for response
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   const p = component.root.findByType('p');
   expect(p.children).toContain('Buck is a poodle');
 });
 ```
 
-Here, you can see the `await wait(0)` line. This is a utility function from the [`waait`](https://npm.im/waait) npm package. It delays until the next "tick" of the event loop, and allows time for that `Promise` returned from `MockedProvider` to be fulfilled. After that `Promise` resolves (or rejects), the component can be checked to ensure it displays the correct information — in this case, "Buck is a poodle".
+The Promise below `renderer.create` delays until the next "tick" of the event loop, and allows time for that `Promise` returned from `MockedProvider` to be fulfilled. After that `Promise` resolves (or rejects), the component can be checked to ensure it displays the correct information — in this case, "Buck is a poodle".
 
-For more complex UI with heavy calculations, or delays added into its render logic, the `wait(0)` will not be long enough. In these cases, you could either increase the wait time or use a package like [`wait-for-expect`](https://npm.im/wait-for-expect) to delay until the render has happened. The risk of using a package like this everywhere by default is that _every_ test could take up to five seconds to execute (or longer if the default timeout has been increased).
+For more complex UI with heavy calculations, or delays added into its render logic, you may want to increase the wait time. You could also use a package like [`wait-for-expect`](https://npm.im/wait-for-expect) to delay until the render has happened. The risk of using a package like this everywhere by default is that _every_ test could take up to five seconds to execute (or longer if the default timeout has been increased).
 
 ## Testing error states
 
@@ -272,7 +227,7 @@ it('should show error UI', async () => {
     </MockedProvider>,
   );
 
-  await wait(0); // wait for response
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   const tree = component.toJSON();
   expect(tree.children).toContain('Error!');
@@ -297,9 +252,6 @@ const dogMock = {
 `useMutation` based components are tested very similarly to `useQuery` components. The only key difference is how the operation is fired. With `useQuery` the query is fired when the wrapping component _mounts_, whereas with `useMutation` the mutation is fired manually, usually after some user interaction like pressing a button.
 
 Consider this component that calls a mutation:
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 export const DELETE_DOG_MUTATION = gql`
@@ -326,40 +278,6 @@ export function DeleteButton() {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-export const DELETE_DOG_MUTATION = gql`
-  mutation deleteDog($name: String!) {
-    deleteDog(name: $name) {
-      id
-      name
-      breed
-    }
-  }
-`;
-
-export const DeleteButton = () => (
-  <Mutation mutation={DELETE_DOG_MUTATION}>
-    {(mutate, { loading, error, data }) => {
-      if (loading) return <p>Loading...</p>;
-      if (error) return <p>Error!</p>;
-      if (data) return <p>Deleted!</p>;
-
-      return (
-        <button onClick={() => mutate({ variables: { name: 'Buck' } })}>
-          Click me to Delete Buck!
-        </button>
-      );
-    }}
-  </Mutation>
-);
-```
-
-</div>
-</MultiCodeBlock>
 
 Testing an initial render for this component looks identical to testing our `useQuery` based component.
 
@@ -436,7 +354,7 @@ it('should delete and give visual feedback', async () => {
   const button = component.root.findByType('button');
   button.props.onClick(); // fires the mutation
 
-  await wait(0);
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   const tree = component.toJSON();
   expect(tree.children).toContain('Deleted!');
@@ -472,7 +390,7 @@ it('should delete and give visual feedback', async () => {
   const button = component.root.findByType('button');
   button.props.onClick(); // fires the mutation
 
-  await wait(0);
+  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
 
   expect(deleteMutationCalled).toBe(true);
 

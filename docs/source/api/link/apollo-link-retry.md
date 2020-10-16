@@ -5,12 +5,12 @@ description: Attempt an operation multiple times if it fails due to network or s
 
 ## Overview
 
-`@apollo/link-retry` can be used to retry an operation a certain amount of times. This comes in handy when dealing with unreliable communication situations, where you would rather wait longer than explicitly fail an operation. `@apollo/link-retry` provides exponential backoff, and jitters delays between attempts by default. It does not (currently) handle retries for GraphQL errors in the response, only for network errors.
+`@apollo/client/link/retry` can be used to retry an operation a certain amount of times. This comes in handy when dealing with unreliable communication situations, where you would rather wait longer than explicitly fail an operation. `@apollo/client/link/retry` provides exponential backoff, and jitters delays between attempts by default. It does not (currently) handle retries for GraphQL errors in the response, only for network errors.
 
 An example use case is to hold on to a request while a network connection is offline, and retry until it comes back online.
 
 ```js
-import { RetryLink } from "@apollo/link-retry";
+import { RetryLink } from "@apollo/client/link/retry";
 
 const link = new RetryLink();
 ```
@@ -67,7 +67,7 @@ Instead of the options object, you may pass a function for `delay` and/or `attem
 The `attempts` function should return a boolean indicating whether the response should be retried. If yes, the `delay` function is then called, and should return the number of milliseconds to delay by.
 
 ```js
-import { RetryLink } from "@apollo/link-retry";
+import { RetryLink } from "@apollo/client/link/retry";
 
 const link = new RetryLink({
   attempts: (count, operation, error) => {

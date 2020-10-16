@@ -49,7 +49,7 @@ To use it, provided that you [already have babel-macros installed](https://githu
 import gql from 'graphql-tag';
 
 const query = gql`
-  query {
+  query HelloWorld {
     hello {
       world
     }
@@ -63,7 +63,7 @@ to this:
 import gql from 'graphql-tag.macro'; // <-- Use the macro
 
 const query = gql`
-  query {
+  query HelloWorld {
     hello {
       world
     }
@@ -132,7 +132,7 @@ const fragments = {
 };
 
 const query = gql`
-  query {
+  query HelloWorld {
     hello {
       world
       ...HelloStuff

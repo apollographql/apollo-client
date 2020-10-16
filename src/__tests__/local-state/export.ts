@@ -1,11 +1,11 @@
 import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
 
-import { Observable } from '../../utilities/observables/Observable';
-import { itAsync } from '../../utilities/testing/itAsync';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { ApolloClient } from '../..';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
+import { Observable } from '../../utilities';
+import { itAsync } from '../../testing';
+import { ApolloLink } from '../../link/core';
+import { ApolloClient } from '../../core';
+import { InMemoryCache } from '../../cache';
 
 describe('@client @export tests', () => {
   it(

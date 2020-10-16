@@ -1,7 +1,7 @@
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode } from 'graphql';
 
-import { ApolloCache } from '../cache/core/cache';
-import { FetchResult } from '../link/core/types';
+import { ApolloCache } from '../cache';
+import { FetchResult } from '../link/core';
 import { MutationQueryReducersMap } from './types';
 import { PureQueryOptions, OperationVariables } from './types';
 
@@ -108,9 +108,13 @@ export interface WatchQueryOptions<TVariables = OperationVariables>
   extends QueryBaseOptions<TVariables>,
     ModifiableWatchQueryOptions<TVariables> {
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query
+   * Specifies the {@link FetchPolicy} to be used for this query.
    */
   fetchPolicy?: WatchQueryFetchPolicy;
+  /**
+   * Specifies the {@link FetchPolicy} to be used after this query has completed.
+   */
+  nextFetchPolicy?: WatchQueryFetchPolicy;
 }
 
 export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
@@ -140,6 +144,7 @@ export type SubscribeToMoreOptions<
   variables?: TSubscriptionVariables;
   updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
+  context?: Record<string, any>;
 };
 
 export interface SubscriptionOptions<TVariables = OperationVariables> {
@@ -159,6 +164,11 @@ export interface SubscriptionOptions<TVariables = OperationVariables> {
    * Specifies the {@link FetchPolicy} to be used for this subscription.
    */
   fetchPolicy?: FetchPolicy;
+
+  /**
+   * Context object to be passed through the link execution chain.
+   */
+  context?: Record<string, any>;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
@@ -193,7 +203,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: ExecutionResult<T>) => RefetchQueryDescription)
+    | ((result: FetchResult<T>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**
@@ -261,9 +271,12 @@ export interface MutationOptions<
   context?: any;
 
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query
+   * Specifies the {@link FetchPolicy} to be used for this query. Mutations only
+   * support a 'no-cache' fetchPolicy. If you don't want to disable the cache,
+   * remove your fetchPolicy setting to proceed with the default mutation
+   * behavior.
    */
-  fetchPolicy?: FetchPolicy;
+  fetchPolicy?: Extract<FetchPolicy, 'no-cache'>;
 }
 
 // Add a level of indirection for `typedoc`.

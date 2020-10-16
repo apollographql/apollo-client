@@ -5,7 +5,7 @@
 | `error` | ApolloError | A runtime error with `graphQLErrors` and `networkError` properties |
 | `variables` | { [key: string]: any } | An object containing the variables the query was called with |
 | `networkStatus` | NetworkStatus | A number from 1-8 corresponding to the detailed state of your network request. Includes information about refetching and polling status. Used in conjunction with the `notifyOnNetworkStatusChange` prop. |
-| `refetch` | (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt; | A function that allows you to refetch the query and optionally pass in new variables |
+| `refetch` | (variables?: Partial&lt;TVariables&gt;) => Promise&lt;ApolloQueryResult&gt; | A function that allows you to refetch the query and optionally pass in new variables |
 | `fetchMore` | ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt; | A function that enables [pagination](/features/pagination/) for your query |
 | `startPolling` | (interval: number) => void | This function sets up an interval in ms and fetches the query each time the specified interval passes. |
 | `stopPolling` | () => void | This function stops the query from polling. |

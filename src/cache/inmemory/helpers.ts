@@ -6,9 +6,12 @@ import {
   isReference,
   StoreValue,
   StoreObject,
-  isField
-} from '../../utilities/graphql/storeUtils';
-import { DeepMerger, ReconcilerFunction } from '../../utilities/common/mergeDeep';
+  isField,
+  DeepMerger,
+  ReconcilerFunction,
+} from '../../utilities';
+
+export const hasOwn = Object.prototype.hasOwnProperty;
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,
@@ -34,6 +37,15 @@ export interface FieldValueToBeMerged {
   __field: FieldNode;
   __typename: string;
   __value: StoreValue;
+}
+
+export function storeValueIsStoreObject(
+  value: StoreValue,
+): value is StoreObject {
+  return value !== null &&
+    typeof value === "object" &&
+    !isReference(value) &&
+    !Array.isArray(value);
 }
 
 export function isFieldValueToBeMerged(

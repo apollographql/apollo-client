@@ -1,27 +1,27 @@
 import { print } from 'graphql/language/printer';
-import stringify from 'fast-json-stable-stringify';
 import { equal } from '@wry/equality';
+import { invariant } from 'ts-invariant';
 
-import { Observable } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
 import {
+  ApolloLink,
   Operation,
   GraphQLRequest,
   FetchResult,
-} from '../../../link/core/types';
+} from '../../../link/core';
+
 import {
+  Observable,
   addTypenameToDocument,
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
-} from '../../../utilities/graphql/transform';
-import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import invariant from 'ts-invariant';
+  cloneDeep,
+} from '../../../utilities';
 
 export type ResultFunction<T> = () => T;
 
-export interface MockedResponse {
+export interface MockedResponse<TData = Record<string, any>> {
   request: GraphQLRequest;
-  result?: FetchResult | ResultFunction<FetchResult>;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
   error?: Error;
   delay?: number;
   newData?: ResultFunction<FetchResult>;
@@ -77,16 +77,11 @@ export class MockLink extends ApolloLink {
       (res, index) => {
         const requestVariables = operation.variables || {};
         const mockedResponseVariables = res.request.variables || {};
-        if (
-          !equal(
-            stringify(requestVariables),
-            stringify(mockedResponseVariables)
-          )
-        ) {
-          return false;
+        if (equal(requestVariables, mockedResponseVariables)) {
+          responseIndex = index;
+          return true;
         }
-        responseIndex = index;
-        return true;
+        return false;
       }
     );
 
@@ -96,9 +91,8 @@ export class MockLink extends ApolloLink {
           operation.query
         )}, variables: ${JSON.stringify(operation.variables)}`
       ));
+      return null;
     }
-
-    invariant(response, "mocked response is required");
 
     this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
@@ -159,7 +153,7 @@ export class MockLink extends ApolloLink {
   }
 }
 
-interface MockApolloLink extends ApolloLink {
+export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
 }
 

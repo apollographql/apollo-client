@@ -16,7 +16,7 @@ const query = gql`
 
 describe('selectHttpOptionsAndBody', () => {
   it('includeQuery allows the query to be ignored', () => {
-    const { options, body } = selectHttpOptionsAndBody(
+    const { body } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
       { http: { includeQuery: false } },
     );
@@ -25,7 +25,7 @@ describe('selectHttpOptionsAndBody', () => {
 
   it('includeExtensions allows the extensions to be added', () => {
     const extensions = { yo: 'what up' };
-    const { options, body } = selectHttpOptionsAndBody(
+    const { body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
       { http: { includeExtensions: true } },
     );

@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "devDependencies": {
+    "jscodeshift": "^0.10.0"
+  }
+}

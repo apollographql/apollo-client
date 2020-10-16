@@ -16,7 +16,7 @@ import {
 // mocks
 import mockQueryManager from '../../../utilities/testing/mocking/mockQueryManager';
 import mockWatchQuery from '../../../utilities/testing/mocking/mockWatchQuery';
-import { MockApolloLink, mockSingleLink, MockLink } from '../../../utilities/testing/mocking/mockLink';
+import { MockApolloLink, mockSingleLink } from '../../../utilities/testing/mocking/mockLink';
 
 // core
 import { ApolloQueryResult } from '../../types';
@@ -495,10 +495,20 @@ describe('QueryManager', () => {
     const onRequestSubscribe = jest.fn();
     const onRequestUnsubscribe = jest.fn();
 
-    const mockedSingleLink = new MockLink([mockedResponse], {
-      addTypename: true,
-      onSubscribe: onRequestSubscribe,
-      onUnsubscribe: onRequestUnsubscribe
+    const mockedSingleLink = new ApolloLink(() => {
+      return new Observable(observer => {
+        onRequestSubscribe();
+
+        const timer = setTimeout(() => {
+          observer.next(mockedResponse.result);
+          observer.complete();
+        }, 0);
+
+        return () => {
+          onRequestUnsubscribe();
+          clearTimeout(timer);
+        };
+      });
     });
 
     const mockedQueryManger = new QueryManager({
@@ -512,10 +522,14 @@ describe('QueryManager', () => {
       notifyOnNetworkStatusChange: false
     });
 
+    const observerCallback = wrap(reject, () => {
+      reject(new Error('Link subscription should have been cancelled'));
+    });
+
     const subscription = observableQuery.subscribe({
-      next: wrap(reject, () => {
-        reject(new Error('Link subscriptions should have been cancelled'));
-      }),
+      next: observerCallback,
+      error: observerCallback,
+      complete: observerCallback
     });
 
     subscription.unsubscribe();

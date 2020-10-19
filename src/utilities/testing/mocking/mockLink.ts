@@ -1,4 +1,4 @@
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql';
 import { equal } from '@wry/equality';
 import { invariant } from 'ts-invariant';
 

@@ -89,7 +89,7 @@ const CommentsPageWithMutations = () => (
               // Add our comment from the mutation to the end.
               const comments = [...data.comments, submitComment];
               // Write our data back to the cache.
-              store.writeQuery({ query: CommentAppQuery, { comments }  });
+              store.writeQuery({ query: CommentAppQuery, data: { comments } });
             }
           })
         }

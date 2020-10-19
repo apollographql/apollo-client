@@ -1,5 +1,4 @@
-import { execute } from 'graphql/execution/execute';
-import { GraphQLSchema } from 'graphql/type/schema';
+import { execute, GraphQLSchema } from 'graphql';
 
 import { ApolloLink, Operation, FetchResult } from '../core';
 import { Observable } from '../../utilities';

@@ -1,4 +1,4 @@
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql';
 
 import { Operation } from '../core';
 

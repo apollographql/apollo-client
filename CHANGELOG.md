@@ -50,6 +50,16 @@
 - Allow optional arguments in `keyArgs: [...]` arrays for `InMemoryCache` field policies. <br/>
   [@benjamn](https://github.com/benjamn) in [#7109](https://github.com/apollographql/apollo-client/pull/7109)
 
+## Apollo Client 3.2.5
+
+## Improvements
+
+- Move `terser` dependency from `dependencies` to `devDependencies`. <br/>
+  [@SimenB](https://github.com/SimenB) in [#7188](https://github.com/apollographql/apollo-client/pull/7188)
+
+- Avoid all sub-package imports from the `graphql` npm package. <br/>
+  [@stoically](https://github.com/stoically) in [#7185](https://github.com/apollographql/apollo-client/pull/7185)
+
 ## Apollo Client 3.2.4
 
 ## Improvements

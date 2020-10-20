@@ -352,11 +352,126 @@ Because `fetchMore` requires some extra work to update the original variables if
 
 However, now that you understand your options, there's nothing wrong with moving read-time pagination logic out of your application code and into your field `read` functions. Both kinds of `read` functions have their uses, and both can be made to work with `fetchMore`.
 
+## Using list element IDs as cursors
+
+Since numeric offsets within paginated lists can be unreliable, a common improvement is to identify the beginning of a page using some unique identifier that belongs to each element of the list.
+
+If the list represents a set of elements without duplicates, this identifier could simply be the unique ID of each object, allowing additional pages to be requested using the ID of the last object in the list, together with some `limit` argument. With this approach, the requested `cursor` ID should not appear in the new page, since it identifies the item just before the beginning of the page.
+
+Since the elements of the list could be normalized `Reference` objects, you will probably want to use the `options.readField` helper function to read the `id` field in your `merge` and/or `read` functions:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+
+          merge(existing, incoming, {
+            args: { cursor },
+            readField,
+          }) {
+            const merged = existing ? existing.slice(0) : [];
+            let offset = offsetFromCursor(merged, cursor, readField);
+            // If we couldn't find the cursor, default to appending to
+            // the end of the list, so we don't lose any data.
+            if (offset < 0) offset = merged.length;
+            // Now that we have a reliable offset, the rest of this logic
+            // is the same as in offsetLimitPagination.
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+
+          // If you always want to return the whole list, you can omit
+          // this read function.
+          read(existing, {
+            args: { cursor, limit = existing.length },
+            readField,
+          }) {
+            if (existing) {
+              let offset = offsetFromCursor(existing, cursor, readField);
+              // If we couldn't find the cursor, default to reading the
+              // entire list.
+              if (offset < 0) offset = 0;
+              return existing.slice(offset, offset + limit);
+            }
+          },
+        },
+      },
+    },
+  },
+});
+
+function offsetFromCursor(items, cursor, readField) {
+  // Search from the back of the list because the cursor we're
+  // looking for is typically the ID of the last item.
+  for (let i = items.length - 1; i >= 0; --i) {
+    const item = items[i];
+    // Using readField works for both non-normalized objects
+    // (returning item.id) and normalized references (returning
+    // the id field from the referenced entity object), so it's
+    // a good idea to use readField when you're not sure what
+    // kind of elements you're dealing with.
+    if (readField("id", item) === cursor) {
+      // Add one because the cursor identifies the item just
+      // before the first item in the page we care about.
+      return i + 1;
+    }
+  }
+  // Report that the cursor could not be found.
+  return -1;
+}
+```
+
+Since items can be removed from, added to, or moved around within the list without altering their `id` fields, this pagination strategy tends to be more resilient to list mutations than the offset-based strategy we saw above.
+
+However, this strategy works best when your `merge` function always appends new pages to the existing data, since it doesn't take any precautions to avoid overwriting elements if the `cursor` falls somewhere in the middle of the existing data.
+
 ## Cursor-based
 
-Since numeric offsets within paginated lists can be unreliable, a common improvement is to identify the beginning of a page using some unique identifier that belongs to each element of the list. If the list represents a set of elements without duplicates, this identifier could simply be the unique ID of each object, allowing additional pages to be requested using the ID of the last object in the list, together with some `limit` number.
+More generally, any unique identifier that allows indexing into the list can be used as a _cursor_. In cases where the list could have duplicates, or is sorted or filtered according to some criteria, the cursor may need to encode not just a position within the list but also the sorting/filtering logic that produced the list. In such situations, since the cursor does not logically belong to the elements of the list, the cursor may be returned separately from the list:
 
-More generally, any unique identifier that allows indexing into the list can be used as a _cursor_. In cases where the list could have duplicates, or is sorted or filtered according to some criteria, the cursor may need to encode not just a position within the list but also the sorting/filtering logic that produced the list.
+```jsx
+const MORE_COMMENTS_QUERY = gql`
+  query MoreComments($cursor: String) {
+    moreComments(cursor: $cursor) {
+      cursor # corresponds to the end of the list
+      comments {
+        author
+        text
+      }
+    }
+  }
+`;
+```
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+          merge(existing, incoming, {
+            args: { cursor, limit },
+          }) {
+            const merged = existing ? existing.slice(0) : [];
+
+            merged.findIndex()
+
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+        },
+      },
+    },
+  },
+});
+```
 
 In cursor-based pagination, a "cursor" is used to keep track of where in the data set the next items should be fetched from. Sometimes the cursor can be quite simple and just refer to the ID of the last object fetched, but in some cases — for example lists sorted according to some criteria — the cursor needs to encode the sorting criteria in addition to the ID of the last object fetched.
 

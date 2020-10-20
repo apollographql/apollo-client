@@ -550,18 +550,16 @@ Now there's less ambiguity about where the `cursor` comes from, because it is ex
 
 ## Relay-style cursor pagination
 
-Relay, another popular GraphQL client, is opinionated about the input and output of paginated queries, so people sometimes build their server's pagination model around Relay's needs. If you have a server that is designed to work with the [Relay Cursor Connections](https://facebook.github.io/relay/graphql/connections.htm) spec, you can also call that server from Apollo Client with no problems.
+The `InMemoryCache` field policy API allows for any conceivable style of pagination, even though some of the simpler approaches have known drawbacks.
 
-Using Relay-style cursors is very similar to basic cursor-based pagination.  The main difference is in the format of the query response which affects where you get the cursor.
+If you were designing a GraphQL client without the flexibility that `read` and `merge` functions provide, you would most likely attempt to standardize around a one-size-fits-all style of pagination that you felt was sophisticated enough to support most use cases. That's the path Relay, another popular GraphQL client, has chosen with their [Cursor Connections Specification](https://facebook.github.io/relay/graphql/connections.htm). As a consequence, a number of public GraphQL APIs have adopted the Relay connection specification to be maximally compatible with Relay clients.
 
-Relay provides a `pageInfo` object on the returned cursor connection which contains the cursor of the first and last items returned as the properties `startCursor` and `endCursor` respectively.  This object also contains a boolean property `hasNextPage` which can be used to determine if there are more results available.
-
-The following example specifies a request of 10 items at a time and that results should start after the provided `cursor`.  If `null` is passed for the cursor relay will ignore it and provide results starting from the beginning of the data set which allows the use of the same query for both initial and subsequent requests.
+Using Relay-style connections is similar to basic cursor-based pagination, but differs in the format of the query response, which affects the way cursors are managed. In addition to `connection.edges`, which is a list of `{ cursor, node }` objects, where each `edge.node` is a list item, Relay provides a `connection.pageInfo` object which gives the cursors of the first and last items in `connection.edges` as `connection.pageInfo.startCursor` and `connection.pageInfo.endCursor`, respectively. The `pageInfo` object also contains the boolean properties `hasPreviousPage` and `hasNextPage`, which can be used to determine if there are more results available (both forwards and backwards):
 
 ```jsx
 const COMMENTS_QUERY = gql`
   query Comments($cursor: String) {
-    Comments(first: 10, after: $cursor) {
+    comments(first: 10, after: $cursor) {
       edges {
         node {
           author
@@ -577,42 +575,52 @@ const COMMENTS_QUERY = gql`
 `;
 
 function CommentsWithData() {
-  const { data: { Comments: comments }, loading, fetchMore } = useQuery(
-    COMMENTS_QUERY
-  );
+  const {
+    data,
+    loading,
+    fetchMore,
+  } = useQuery(COMMENTS_QUERY);
+
+  if (loading) return <Loading/>;
+
+  const nodes = data.comments.edges.map(edge => edge.node);
 
   return (
     <Comments
-      entries={comments || []}
-      onLoadMore={() =>
-        fetchMore({
-          variables: {
-            cursor: comments.pageInfo.endCursor
-          },
-          updateQuery: (previousResult, { fetchMoreResult }) => {
-            const newEdges = fetchMoreResult.comments.edges;
-            const pageInfo = fetchMoreResult.comments.pageInfo;
-
-            return newEdges.length
-              ? {
-                  // Put the new comments at the end of the list and update `pageInfo`
-                  // so we have the new `endCursor` and `hasNextPage` values
-                  comments: {
-                    __typename: previousResult.comments.__typename,
-                    edges: [...previousResult.comments.edges, ...newEdges],
-                    pageInfo
-                  }
-                }
-              : previousResult;
-          }
-        })
-      }
+      entries={nodes}
+      onLoadMore={() => fetchMore({
+        variables: {
+          cursor: data.comments.pageInfo.endCursor,
+        },
+      })}
     />
   );
 }
 ```
 
+Fortunately, Relay-style pagination can be implemented in Apollo Client using `merge` and `read` functions, which means all the thorny details of connections and `edges` and `pageInfo` can be abstracted away, into a single, reusable helper function:
+
+```js
+import { relayStylePagination } from "@apollo/client/utilities";
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        comments: relayStylePagination(),
+      },
+    },
+  },
+});
+```
+
+Whenever you need to consume a Relay pagination API using Apollo Client, `relayStylePagination` is a great tool to try first, even if you end up copy/pasting its code and making changes to suit your specific needs.
+
+Note that the `relayStylePagination` function generates a field policy with a `read` function that simply returns all available data, ignoring `args`, which makes `relayStylePagination` easier to use with `fetchMore`. This is the second kind of `read` function described in [Two kinds of `read` function](#two-kinds-of-read-function) above. There's nothing stopping you from adapting this `read` function to use `args` to return individual pages, as long as you remember to update the variables of your original query after calling `fetchMore`.
+
 ## The `@connection` directive
+
+TODO(benjamn) Rewrite this section to recommend `keyArgs` instead.
 
 When using paginated queries, results from accumulated queries can be hard to find in the store, as the parameters passed to the query are used to determine the default store key but are usually not known outside the piece of code that executes the query. This is problematic for imperative store updates, as there is no stable store key for updates to target. To direct Apollo Client to use a stable store key for paginated queries, you can use the optional `@connection` directive to specify a store key for parts of your queries. For example, if we wanted to have a stable store key for the feed query earlier, we could adjust our query to use the `@connection` directive:
 

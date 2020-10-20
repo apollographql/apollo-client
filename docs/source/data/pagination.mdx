@@ -429,6 +429,47 @@ Since items can be removed from, added to, or moved around within the list witho
 
 However, this strategy works best when your `merge` function always appends new pages to the existing data, since it doesn't take any precautions to avoid overwriting elements if the `cursor` falls somewhere in the middle of the existing data.
 
+## Using a map to store unique items
+
+If your paginated field logically represents a _set_ of unique items, you can store it internally using a much more convenient data structure than an array.
+
+In fact, your `merge` function can return internal data in any format you like, as long as your `read` function cooperates by turning that internal representation back into a list:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+
+          // While args.cursor may still be important for requesting
+          // a given page, it no longer has any role to play in the
+          // merge function.
+          merge(existing, incoming, { readField }) {
+            const merged = { ...existing };
+            incoming.forEach(item => {
+              merged[readField("id", item)] = item;
+            });
+            return merged;
+          },
+
+          // Return all items stored so far, to avoid ambiguities
+          // about the order of the items.
+          read(existing) {
+            return existing && Object.values(existing);
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+With this internal representation, you no longer have to worry about incoming items overwriting unrelated existing items, because an assignment to the map can only replace an item with the same `id` field.
+
+However, this approach leaves an important question unanswered, or answered only implicitly: what `cursor` should we use when requesting the _next_ page? Thanks to the predictable ordering of JavaScript object keys by insertion order, you should be able to use the `id` field of the last element returned by the `read` function as the `cursor` for the next request, though you're not alone if relying on this behavior makes you nervous. In the next section we'll see a slightly different approach that makes the next `cursor` more explicit.
+
 ## Cursor-based
 
 More generally, any unique identifier that allows indexing into the list can be used as a _cursor_. In cases where the list could have duplicates, or is sorted or filtered according to some criteria, the cursor may need to encode not just a position within the list but also the sorting/filtering logic that produced the list. In such situations, since the cursor does not logically belong to the elements of the list, the cursor may be returned separately from the list:

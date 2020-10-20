@@ -630,8 +630,13 @@ const FEED_QUERY = gql`
       key: "feed",
       filter: ["type"]
     ) {
-      id
-      # ...
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
     }
   }
 `;
@@ -641,8 +646,13 @@ in Apollo Client, you would use the following query:
 const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
     feed(type: $type, offset: $offset, limit: $limit) {
-      id
-      # ...
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
     }
   }
 `;
@@ -674,6 +684,7 @@ const cache = new InMemoryCache({
   },
 })
 ```
+In the unlikely event that a `keyArgs` array is insufficient to capture the identity of a field, remember that you can pass a function for `keyArgs`, which allows you to serialize the `args` object however you want.
 
 ## Which arguments belong in `keyArgs`?
 

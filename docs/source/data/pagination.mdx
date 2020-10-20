@@ -620,22 +620,61 @@ Note that the `relayStylePagination` function generates a field policy with a `r
 
 ## The `@connection` directive
 
-TODO(benjamn) Rewrite this section to recommend `keyArgs` instead.
+The `@connection` directive is another Relay-inspired convention that Apollo Client supports, though we now recommend `keyArgs` instead, because you can achieve the same effect with a single `keyArgs` configuration, whereas the `@connection` directive needs to be repeated in every query you send to your server.
 
-When using paginated queries, results from accumulated queries can be hard to find in the store, as the parameters passed to the query are used to determine the default store key but are usually not known outside the piece of code that executes the query. This is problematic for imperative store updates, as there is no stable store key for updates to target. To direct Apollo Client to use a stable store key for paginated queries, you can use the optional `@connection` directive to specify a store key for parts of your queries. For example, if we wanted to have a stable store key for the feed query earlier, we could adjust our query to use the `@connection` directive:
-
+In other words, whereas Relay encourages the following `@connection(...)` directive for `Query.feed` queries:
 ```js
 const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-    currentUser {
-      login
-    }
-    feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed", filter: ["type"]) {
+    feed(type: $type, offset: $offset, limit: $limit) @connection(
+      key: "feed",
+      filter: ["type"]
+    ) {
       id
       # ...
     }
   }
 `;
 ```
+in Apollo Client, you would use the following query:
+```js
+const FEED_QUERY = gql`
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    feed(type: $type, offset: $offset, limit: $limit) {
+      id
+      # ...
+    }
+  }
+`;
+```
+and simply configure `keyArgs` in your `Query.feed` field policy:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+          // ...
+        },
+      },
+    },
+  },
+})
+```
+Although `keyArgs` (and `@connection`) are useful for more than just paginated fields, it's worth noting that `relayStylePagination` configures `keyArgs: false` by default. You can reconfigure this `keyArgs` behavior by passing an alternate value to `relayStylePagination`:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: relayStylePagination(["type"]),
+      },
+    },
+  },
+})
+```
 
-This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use for imperative store updates. In this example, we also use the `@connection` directive's optional `filter` argument, which allows us to include some arguments of the query in the store key. In this case, we want to include the `type` query argument in the store key, which results in multiple store values that accumulate pages from each type of feed.
+## Which arguments belong in `keyArgs`?
+
+TODO

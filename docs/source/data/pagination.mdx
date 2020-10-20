@@ -10,9 +10,9 @@ To solve this problem, GraphQL servers often let clients avoid fetching entire l
 
 _Pagination_ is the term for this general technique of incrementally requesting large collections of data (usually lists) in smaller pages, using field arguments. Pagination comes in a number of different flavors: offset-based, cursor-based, page-number-based, forwards, backwards, displayed in discrete pages or via infinite scroll, and so on, each calling for a slightly different set of field arguments. As this diversity suggests, pagination is not an automatic feature of list-valued fields in GraphQL, but GraphQL server tools make pagination straightforward to set up, and so it has become a ubiquitous pattern.
 
-Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the flexible `InMemoryCache` field policy API, which  allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, reusable way, in one place, rather than reproducing custom field logic wherever the field is used throughout your application. You can get started by copying and pasting example code from this documentation, but you will no doubt end up adapting and expanding your field policies to suit your specific needs. Whenever you need to apply similar logic elsewhere, remember that you can encapsulate common policies in reusable policy-generating functions.
+Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the flexible `InMemoryCache` field policy API, which  allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, reusable way, in one place, rather than reproducing custom field logic wherever the field is used throughout your application.
 
-In a way, the pagination pattern is a microcosm for GraphQL as a whole, since GraphQL can be described as a strongly-typed pagination interface for graph-structured data. Since pagination pulls together so many different pieces of GraphQL, we hope this documentation makes those parts click together for you in a fresh way.
+You can get started by copying and pasting example code from this documentation, but you will no doubt end up adapting and expanding your field policies to suit your specific needs. Whenever you need to apply similar logic elsewhere, remember that you can encapsulate common policies in reusable policy-generating functions.
 
 ## Combining pages with `merge` functions
 
@@ -249,8 +249,6 @@ const cache = new InMemoryCache({
 This style of `read` function, which takes responsibility for re-paginating your data based on the field arguments, essentially inverts the behavior of the `merge` function, so your application can query different pages using different arguments. **However, this is not the only way to write a `read` function!**
 
 Another reasonable approach to writing a `read` function for a paginated field like `Query.feed` is to _ignore_ the `offset` and `limit` arguments, and always return the entire list, so your application code can take responsibility for slicing the list into pages, depending on how you want to display the data in different parts of the application.
-
-> Remember that the performance motivations for paginating network data do not apply here, because it's so much cheaper to fetch a large array from memory than from the network, and this "entire list" is still probably much shorter than what's available from the server, since it represents only the data your GraphQL client received so far.
 
 If you adopt this second approach, you may discover you don't even need a `read` function, because you no longer need to examine the `args` or slice the `existing` data before returning it. That's why the `offsetLimitPagination` helper we mentioned above is implemented without a `read` function.
 

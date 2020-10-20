@@ -354,6 +354,10 @@ However, now that you understand your options, there's nothing wrong with moving
 
 ## Cursor-based
 
+Since numeric offsets within paginated lists can be unreliable, a common improvement is to identify the beginning of a page using some unique identifier that belongs to each element of the list. If the list represents a set of elements without duplicates, this identifier could simply be the unique ID of each object, allowing additional pages to be requested using the ID of the last object in the list, together with some `limit` number.
+
+More generally, any unique identifier that allows indexing into the list can be used as a _cursor_. In cases where the list could have duplicates, or is sorted or filtered according to some criteria, the cursor may need to encode not just a position within the list but also the sorting/filtering logic that produced the list.
+
 In cursor-based pagination, a "cursor" is used to keep track of where in the data set the next items should be fetched from. Sometimes the cursor can be quite simple and just refer to the ID of the last object fetched, but in some cases — for example lists sorted according to some criteria — the cursor needs to encode the sorting criteria in addition to the ID of the last object fetched.
 
 Implementing cursor-based pagination on the client isn't all that different from offset-based pagination, but instead of using an absolute offset, we keep a reference to the last object fetched and information about the sort order used.

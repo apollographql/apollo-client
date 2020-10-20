@@ -470,62 +470,17 @@ With this internal representation, you no longer have to worry about incoming it
 
 However, this approach leaves an important question unanswered, or answered only implicitly: what `cursor` should we use when requesting the _next_ page? Thanks to the predictable ordering of JavaScript object keys by insertion order, you should be able to use the `id` field of the last element returned by the `read` function as the `cursor` for the next request, though you're not alone if relying on this behavior makes you nervous. In the next section we'll see a slightly different approach that makes the next `cursor` more explicit.
 
-## Cursor-based
+## Separating cursors from items
 
-More generally, any unique identifier that allows indexing into the list can be used as a _cursor_. In cases where the list could have duplicates, or is sorted or filtered according to some criteria, the cursor may need to encode not just a position within the list but also the sorting/filtering logic that produced the list. In such situations, since the cursor does not logically belong to the elements of the list, the cursor may be returned separately from the list:
-
-```jsx
-const MORE_COMMENTS_QUERY = gql`
-  query MoreComments($cursor: String) {
-    moreComments(cursor: $cursor) {
-      cursor # corresponds to the end of the list
-      comments {
-        author
-        text
-      }
-    }
-  }
-`;
-```
-
-```js
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        feed: {
-          keyArgs: ["type"],
-          merge(existing, incoming, {
-            args: { cursor, limit },
-          }) {
-            const merged = existing ? existing.slice(0) : [];
-
-            merged.findIndex()
-
-            for (let i = 0; i < incoming.length; ++i) {
-              merged[offset + i] = incoming[i];
-            }
-            return merged;
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-In cursor-based pagination, a "cursor" is used to keep track of where in the data set the next items should be fetched from. Sometimes the cursor can be quite simple and just refer to the ID of the last object fetched, but in some cases — for example lists sorted according to some criteria — the cursor needs to encode the sorting criteria in addition to the ID of the last object fetched.
-
-Implementing cursor-based pagination on the client isn't all that different from offset-based pagination, but instead of using an absolute offset, we keep a reference to the last object fetched and information about the sort order used.
-
-In the example below, we use a `fetchMore` query to continuously load new comments, which will be prepended to the list. The cursor to be used in the `fetchMore` query is provided in the initial server response, and is updated whenever more data is fetched.
+Pagination cursors are often derived from ID fields of list items, but not always. In cases where the list could have duplicates, or is sorted or filtered according to some criteria, the cursor may need to encode not just a position within the list but also the sorting/filtering logic that produced the list. In such situations, since the cursor does not logically belong to the elements of the list, the cursor may be returned separately from the list:
 
 ```jsx
 const MORE_COMMENTS_QUERY = gql`
-  query MoreComments($cursor: String) {
-    moreComments(cursor: $cursor) {
+  query MoreComments($cursor: String, $limit: Int!) {
+    moreComments(cursor: $cursor, limit: $limit) {
       cursor
       comments {
+        id
         author
         text
       }
@@ -534,41 +489,64 @@ const MORE_COMMENTS_QUERY = gql`
 `;
 
 function CommentsWithData() {
-  const { data: { moreComments: {comments, cursor} }, loading, fetchMore } = useQuery(
-    MORE_COMMENTS_QUERY
-  );
+  const {
+    data,
+    loading,
+    fetchMore,
+  } = useQuery(MORE_COMMENTS_QUERY, {
+    variables: { limit: 10 },
+  });
+
+  if (loading) return <Loading/>;
 
   return (
     <Comments
-      entries={comments || []}
-      onLoadMore={() =>
-        fetchMore({
-          // note this is a different query than the one used in the
-          // Query component
-          query: MORE_COMMENTS_QUERY,
-          variables: { cursor: cursor },
-          updateQuery: (previousResult, { fetchMoreResult }) => {
-            const previousEntry = previousResult.entry;
-            const newComments = fetchMoreResult.moreComments.comments;
-            const newCursor = fetchMoreResult.moreComments.cursor;
-
-            return {
-              // By returning `cursor` here, we update the `fetchMore` function
-              // to the new cursor.
-              cursor: newCursor,
-              entry: {
-                // Put the new comments in the front of the list
-                comments: [...newComments, ...previousEntry.comments]
-              },
-              __typename: previousEntry.__typename
-            };
-          }
-        })
-      }
+      entries={data.moreComments.comments || []}
+      onLoadMore={() => fetchMore({
+        variables: {
+          cursor: data.moreComments.cursor,
+        },
+      })}
     />
   );
 }
 ```
+
+To demonstrate the flexibility of the field policy system, here's an implementation of the `Query.moreComments` field that uses a map internally:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        moreComments: {
+          merge(existing, incoming, { readField }) {
+            const comments = existing ? { ...existing.comments } : {};
+            incoming.comments.forEach(comment => {
+              comments[readField("id", comment)] = comment;
+            });
+            return {
+              cursor: incoming.cursor,
+              comments,
+            };
+          },
+
+          read(existing) {
+            if (existing) {
+              return {
+                cursor: existing.cursor,
+                comments: Object.values(existing.comments),
+              };
+            }
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Now there's less ambiguity about where the `cursor` comes from, because it is explicitly stored and returned as part of the query.
 
 ## Relay-style cursor pagination
 

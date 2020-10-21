@@ -688,4 +688,47 @@ In the unlikely event that a `keyArgs` array is insufficient to capture the iden
 
 ## Which arguments belong in `keyArgs`?
 
-TODO
+Throughout this discussion, we've seen a number of possible `keyArgs` configurations, ranging from including all arguments by default, to completely disabling argument-based field identification using `keyArgs: false`.
+
+To understand which arguments belong in `keyArgs` (if any), it's helpful to consider those two extremes first (including all arguments in the field key, or none of them), because those are the most common cases. Building on that understanding, we can then discuss the consequences of moving an individual argument into or out of `keyArgs`.
+
+If you include all arguments in the field key, as the cache does by default, then every different combination of argument values will correspond to a different storage location for internal field data. In other words, if you change any argument values, the field key will be different, so the field value will be stored in a different location. In your `read` and `merge` functions, this internal field data is provided by the `existing` parameter, which will be undefined when a particular combination of arguments has never been seen before. With this approach, the cache can reuse field values only if the arguments exactly match, which significantly reduces the hit rate of the cache, but also keeps the cache from inappropriately reusing field values when differences in arguments actually matter.
+
+On the other hand, if you configure your field with `keyArgs: false`, the field key will always be just the field name, without any extra characters appended to it. Because your `read` and `merge` functions have access to the field arguments via `options.args`, you can in principle keep your internal data separated according to those arguments, simulating the behavior of `keyArgs` without actually using `keyArgs`. Your `read` function then gets to decide whether an existing field value can be reused, based on the runtime argument values and whatever internal data have previously been stored for the field.
+
+For example, we could have used `keyArgs: false` instead of `keyArgs: ["type"]` for our `Query.feed` field policy:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: false,
+
+          read(existing = {}, { args: { type, offset, limit }}) {
+            return existing[type] &&
+              existing[type].slice(offset, offset + limit);
+          },
+
+          merge(existing = {}, incoming, { args: { type, offset = 0 }}) {
+            const merged = existing[type] ? existing[type].slice(0) : [];
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return existing[type] = merged;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Instead of a single array, `existing` is now a map from `type` to array, so the same field value can store multiple feed arrays, separated by `type`. However, this manual separation is logically equivalent to what would happen if you moved the `type` argument into `keyArgs` (using `keyArgs: ["type"]`, as above), so the extra effort is probably unnecessary.
+
+Assuming feeds with different `type` values are independent, and our `read` function does not need simultaneous access to multiple feeds of different types, we can safely shift the responsibility for handling the `type` argument from the `read` and `merge` functions back to `keyArgs`, and simplify `read` and `merge` to handle only one feed at a time.
+
+In short, if the logic for storing and retrieving field data is the same for different values of a given argument (like `type`), and those field values are logically independent from one another, then you probably should move that argument into `keyFields`, to save yourself from having to deal with it in your `read` and `merge` functions.
+
+By contrast, arguments that limit, filter, sort, or otherwise reprocess existing field data usually do not belong in `keyArgs`, because putting them in `keyArgs` fragments the internal data, so you cannot use a different argument value to retrieve a different view of the same data, without making a network request.

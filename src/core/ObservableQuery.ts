@@ -624,7 +624,9 @@ once, rather than every time you call fetchMore.`);
     return this.observers.size > 0;
   }
 
-  public tearDownQuery() {
+  private tearDownQuery() {
+    if (this.isTornDown) return;
+
     const { queryManager } = this;
 
     if (this.reobserver) {

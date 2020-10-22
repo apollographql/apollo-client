@@ -472,7 +472,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       this.currentSubscription.unsubscribe();
       delete this.currentSubscription;
     } else if (this.currentObservable && this.getOptions().skip) {
-      this.currentObservable.tearDownQuery();
+      this.currentObservable["tearDownQuery"]();
     }
   }
 

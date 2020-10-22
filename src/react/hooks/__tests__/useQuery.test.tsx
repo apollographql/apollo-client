@@ -2225,6 +2225,30 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
+
+    it('should tear down the query if `skip` is `true`', () => {
+      const client = new ApolloClient({
+        link: new ApolloLink(),
+        cache: new InMemoryCache()
+      });
+
+      const Component = () => {
+        useQuery(CAR_QUERY, { skip: true });
+        return null;
+      };
+
+      const app = render(
+        <ApolloProvider client={client}>
+          <Component />
+        </ApolloProvider>
+      );
+
+      expect(client['queryManager']['queries'].size).toBe(1);
+
+      app.unmount();
+
+      expect(client['queryManager']['queries'].size).toBe(0);
+    });
   });
 
   describe('Previous data', () => {

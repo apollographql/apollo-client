@@ -625,6 +625,8 @@ once, rather than every time you call fetchMore.`);
   }
 
   private tearDownQuery() {
+    if (this.isTornDown) return;
+
     const { queryManager } = this;
 
     if (this.reobserver) {

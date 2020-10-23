@@ -8,7 +8,7 @@ describe('relayStylePagination', () => {
 
     const merge = policy.merge;
     // The merge function should exist, make TS aware
-    if (merge == null || typeof merge ===  'boolean') {
+    if (typeof merge !== 'function') {
       throw new Error('Expecting merge function');
     }
 
@@ -24,7 +24,7 @@ describe('relayStylePagination', () => {
       readField: () => undefined,
       canRead: () => false,
       mergeObjects: (existing, _incoming) => existing,
-    }
+    };
     it('should maintain endCursor and startCursor with empty edges', () => {
       const incoming: Parameters<typeof merge>[1] = {
         pageInfo: {
@@ -33,7 +33,7 @@ describe('relayStylePagination', () => {
           startCursor: 'abc',
           endCursor: 'xyz',
         }
-      }
+      };
       const result = merge(undefined, incoming, options);
       expect(result).toEqual({
         edges: [],
@@ -43,8 +43,7 @@ describe('relayStylePagination', () => {
           startCursor: 'abc',
           endCursor: 'xyz'
         }
-      })
-    })
-
+      });
+    });
   })
 });

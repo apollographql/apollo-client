@@ -3,7 +3,7 @@ import {
   FragmentDefinitionNode,
   SelectionSetNode,
   FieldNode,
-} from "graphql";
+} from 'graphql';
 
 import { KeyTrie } from 'optimism';
 import { invariant, InvariantError } from 'ts-invariant';

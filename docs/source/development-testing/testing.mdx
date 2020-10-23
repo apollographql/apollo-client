@@ -401,6 +401,57 @@ it('should delete and give visual feedback', async () => {
 
 For the sake of simplicity, the error case for mutations hasn't been shown here, but testing `useMutation` errors is exactly the same as testing `useQuery` errors: just add an `error` to the mock, fire the mutation, and check the UI for error messages.
 
+## A note on fragment usage, `typePolicies`, and `possibleTypes`
+
+When using fragments with polymorphic types such as the following:
+```jsx
+// "Dog" supertype can be of type "ShibeInu"
+const ShibeFragment = gql`
+  fragment ShibeInuFields on Dog {
+    ... on ShibeInu {
+      tail {
+        isCurly
+      }
+    }
+  }
+`;
+
+export const GET_DOG_QUERY = gql`
+  query GetDog($name: String) {
+    dog(name: $name) {
+      id
+      name
+      breed
+
+      ...ShibeInuFields
+    }
+  }
+
+  ${ShibeFragment}
+`;
+
+export const cache = new ApolloClient({
+  cache: new InMemoryCache({
+    possibleTypes: {
+      Dog: ['ShibeInu']
+    },
+    // suppose you want you key fields for "Dog" to not be simply "id"
+    typePolicies: {
+      keyFields: {
+        Dog: ['name', 'breed']
+      }
+    }
+  })
+})
+```
+
+You must configure your cache when testing a component which utilizes fragments in its queries, and pass it to the `<MockedProvider>` via the `cache={cache}` attribute, configured with `possibleTypes` and `typePolicies` just the same as in your application:
+```jsx
+<MockedProvider cache={cache}>
+  <DeleteButton />
+</MockedProvider>,
+```
+
 Testing UI components isn't a simple issue, but hopefully these tools will create confidence when testing components that are dependent on data.
 
 For a working example showing how to test components, check out this project on CodeSandbox:

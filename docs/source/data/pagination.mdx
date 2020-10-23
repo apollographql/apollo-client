@@ -2,58 +2,113 @@
 title: Pagination
 ---
 
-GraphQL servers provide selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A typical GraphQL client needs only a small subgraph of this complete data graph, and uses GraphQL queries to fetch all and only the fields it needs.
+GraphQL enables you to request exactly the fields you need from your data graph, which helps keep network responses small and fast. However, even a query that fetches just one or two fields can still return a large and slow response, especially if you query a field that contains a list.
 
-While requesting the specific fields your application needs is an important technique for preventing over-fetching, it's not the only way to reduce response size. A single list field can hold arbitrarily many elements, possibly infinitely many. If you need some of that data but not all of it, what can you do? Omitting the field from your query is not an option, but neither is requesting the entire list.
+Consider this schema:
 
-### The general solution
-
-To solve this problem, GraphQL servers often let clients avoid fetching entire lists of data at once, by allowing the lists to be split up into separate chunks or _pages_, which can be requested incrementally using field arguments like `offset`, `cursor`, and/or `limit`.
-
-_Pagination_ is the term for this general technique of incrementally requesting large collections of data (usually lists) in smaller pages, using field arguments. Pagination comes in a number of different flavors: offset-based, cursor-based, page-number-based, forwards, backwards, displayed in discrete pages or via infinite scroll, and so on, each calling for a slightly different set of field arguments. As this diversity suggests, pagination is not a built-in feature of list-valued fields in GraphQL, but GraphQL server tools make pagination straightforward to set up, and so it has become a ubiquitous pattern.
-
-### The Apollo Client approach
-
-Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the flexible `InMemoryCache` field policy API, which  allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, reusable way, in one place, rather than reproducing custom field logic wherever the field is used throughout your application.
-
-You can get started by copying and pasting example code from this documentation, but you will no doubt end up adapting and expanding your field policies to suit your specific needs. Whenever you need to apply similar logic elsewhere, remember that you can encapsulate common policies in reusable policy-generating functions.
-
-## Combining pages with `merge` functions
-
-While it is possible to store individual pages of list data separately on the client, application code that consumes the data tends to be simpler if the client combines all the pages it has received so far into a single list, using field arguments to guide how new data is spliced together with existing data.
-
-Suppose your schema defines the following types:
 ```graphql
-extend type Query {
-  feed(
-    type: FeedType!,
-    offset: Int,
-    limit: Int,
-  ): [FeedItem!]
+type Query {
+  books: [Book] // highlight-line
 }
 
-enum FeedType {
-  PERSONAL
-  PUBLIC
+type Book {
+  title: String!
+  author: String!
+}
+```
+
+If this represents the data graph for a bookstore, `Query.books` might return thousands or even millions of `Book` objects in a single response! To prevent this, a GraphQL server can **paginate** the results of fields that contain a list.
+
+With pagination, a single query fetches only a portion (or "page") of a particular list. In addition to returning that page, the server returns the client's current position in the list. This enables the client to fetch the _next_ page of results with a followup query.
+
+There are many strategies for pagination: offset-based, cursor-based, page-number-based, and so on. Because different strategies can be useful in different situations, GraphQL does not define a canonical pagination strategy.
+
+Apollo Client provides flexible APIs that help you merge results from a paginated list, regardless of which pagination strategy the list uses. You can even define your pagination logic once and reuse it for every list that uses the same strategy.
+
+## The `fetchMore` function
+
+Pagination always involves sending a followup query to your GraphQL server to obtain additional results. To help with this, the response of Apollo Client's `useQuery` hook response includes a [`fetchMore` function](../caching/advanced-topics/#incremental-loading-fetchmore).
+
+You can call `fetchMore` to execute a followup query that's identical in structure to the original query, while also providing a new set of `variables`. This enables you to update the query's `offset` or `cursor` to fetch the next page of results.
+
+This function is used in several examples below.
+
+## Merging paginated results
+
+Consider the following schema for a message feed application that uses offset-based pagination:
+
+```graphql
+# Server-side schema definitions
+extend type Query {
+  feed(offset: Int, limit: Int): [FeedItem!]
 }
 
 type FeedItem {
   id: String!
-  # ...
+  message: String!
 }
 ```
 
-The query you use to fetch data for the `Query.feed` field might look something like this:
+In this data graph, `Query.feed` returns a list of `FeedItem`s. It also takes two optional arguments: `offset` and `limit`.
+
+* `offset` indicates the position in the list where the server should start when creating the response.
+* `limit` indicates the maximum number of feed items the server should include in the response.
+
+The query your client uses to fetch a list of `FeedItem`s then looks like this:
+
 ```ts
+// Client-side query definition
 const FEED_QUERY = gql`
-  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-    feed(type: $type, offset: $offset, limit: $limit) {
+  query Feed($offset: Int, $limit: Int) {
+    feed(offset: $offset, limit: $limit) {
       id
-      # ... other FeedItem fields
+      message
     }
   }
 `;
 ```
+
+Let's say you execute this query _without_ arguments, and the server responds with a list of 20 feed items. You can then execute the query _again_, providing `21` as the value of `$offset`. This time, the server's response begins with the 21st item in the list.
+
+By default in this case, Apollo Client caches the results of the two queries _separately_. This means that if your app has a UI with an endless scroll, the feed items returned by the second query _won't_ automatically appear below the items returned by the first query. With pagination, this usually isn't what you want.
+
+Apollo Client keeps these results separate because even though the queries have the exact same _structure_, they have different values for an _argument_ (i.e., `$offset`). Apollo Client doesn't know that `$offset` represents a position within a single, larger list. To fix this, you can define a **field policy** for the `Query.feed` field.
+
+### Defining a field policy
+
+A field policy tells the Apollo Client cache how to treat data for a paritcular field in your schema. You define field policies in the options you provide to the constructor of `InMemoryCache`.
+
+Here's an example field policy definition for the `Query.feed` field:
+
+```js{5-15}
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          // Don't store separate results based on 
+          // any of this field's argument values.
+          keyArgs: [],
+          
+          // Combine the incoming list items with the
+          // existing list items.
+          merge(existing = [], incoming) {
+            return [...existing, ...incoming];
+          },
+        }
+      }
+    }
+  }
+})
+```
+
+This field policy defines a list of **`keyArgs`**, along with a **`merge` function**. Both of these are crucial for handling pagination:
+
+* `keyArgs` lists each argument that causes the cache to store a _separate_ result based on that argument's value. In this case, the cache shouldn't store a separate result based on _either_ of its arguments, so the list is empty.
+  * For more information, see [Specifying key arguments](../caching/cache-field-behavior/#specifying-key-arguments).
+* A `merge` function tells the Apollo Client cache how to combine incoming data with existing cached data for a particular field. Without this function, a followup query _overwrites_ an existing cached value by default.
+  * For more information, see [The `merge` function](../caching/cache-field-behavior/#the-merge-function).
+
 
 Without input from you, `InMemoryCache` has no way of knowing how to interpret these field arguments, so it must assume they are all important. For example, imagine writing two consecutive pages into a cache that does not know about your pagination system:
 ```ts
@@ -62,7 +117,6 @@ const cache = new InMemoryCache;
 cache.writeQuery({
   query: FEED_QUERY,
   variables: {
-    type: "PERSONAL",
     offset: 0,
     limit: 2,
   },
@@ -77,7 +131,6 @@ cache.writeQuery({
 cache.writeQuery({
   query: FEED_QUERY,
   variables: {
-    type: "PERSONAL",
     offset: 2, // Changed!
     limit: 2,
   },
@@ -263,14 +316,6 @@ If you adopt this second approach, you may discover you don't even need a `read`
 > When you provide both a `merge` function and `read` function, `keyArgs: false` will be assumed by default (though it can be overridden to something else, like `keyArgs: ["type"]`). However, if you provide only a `merge` function (or only a `read` function), you should specify `keyArgs` explicitly, to override the default behavior of considering all arguments relevant.
 
 Which approach is right for your application? While the answer may vary from field to field, the tradeoffs between these two approaches should become clearer once we introduce Apollo Client's primary pagination API: `fetchMore`.
-
-## Using `fetchMore`
-
-In Apollo, the easiest way to request additional pages of paginated data is a function called [`fetchMore`](../caching/advanced-topics/#incremental-loading-fetchmore), which is a method of the `ObservableQuery` class returned by `client.watchQuery`, and is also included in the object returned by the `useQuery` Hook.
-
-In the `options` you pass to `fetchMore`, you specify the new `options.variables` and (optionally) an `options.query` to be used when fetching the additional data. If no `options.query` is specified, the original query passed to `client.watchQuery` or `useQuery` will be reused.
-
-In Apollo Client 2, you would also provide an `options.updateQuery` function, which was responsible for merging fetched pages with existing data in the cache. In Apollo Client 3, custom `merge` functions allow this logic to be specified in a central location, rather than duplicated everywhere you call `fetchMore`.
 
 ## Using numeric offsets to identify pages
 

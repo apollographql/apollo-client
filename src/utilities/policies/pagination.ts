@@ -184,8 +184,8 @@ export function relayStylePagination<TNode = Reference>(
       const pageInfo: TPageInfo = {
         ...incoming.pageInfo,
         ...existing.pageInfo,
-        startCursor: firstEdge && firstEdge.cursor || "",
-        endCursor: lastEdge && lastEdge.cursor || "",
+        startCursor: firstEdge?.cursor ?? incoming.pageInfo?.startCursor ?? '',
+        endCursor: lastEdge?.cursor ?? incoming.pageInfo?.endCursor ?? '',
       };
 
       if (incoming.pageInfo) {

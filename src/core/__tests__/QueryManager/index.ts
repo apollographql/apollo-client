@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
+import { setVerbosity } from 'ts-invariant';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
@@ -5411,9 +5412,11 @@ describe('QueryManager', () => {
   describe('missing cache field warnings', () => {
     const originalWarn = console.warn;
     let warnCount = 0;
+    let verbosity: ReturnType<typeof setVerbosity>;
 
     beforeEach(() => {
       warnCount = 0;
+      verbosity = setVerbosity("warn");
       console.warn = (...args: any[]) => {
         warnCount += 1;
       };
@@ -5421,6 +5424,7 @@ describe('QueryManager', () => {
 
     afterEach(() => {
       console.warn = originalWarn;
+      setVerbosity(verbosity);
     });
 
     function validateWarnings(

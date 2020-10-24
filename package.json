@@ -120,7 +120,7 @@
     "rxjs": "6.6.3",
     "subscriptions-transport-ws": "^0.9.17",
     "terser": "^5.2.0",
-    "ts-jest": "26.4.1",
+    "ts-jest": "26.4.2",
     "ts-node": "8.10.2",
     "tsc-watch": "3.0.1",
     "typescript": "3.9.7",

@@ -9,9 +9,8 @@ import {
   ArgumentNode,
   ValueNode,
   ASTNode,
+  visit,
 } from 'graphql';
-
-import { visit } from 'graphql/language/visitor';
 
 import { invariant } from 'ts-invariant';
 

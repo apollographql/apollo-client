@@ -55,3 +55,7 @@ console.log(cartItems());
 As their name suggests, reactive variables can trigger reactive changes in your application. Whenever you modify the value of a reactive variable, queries that depend on that variable refresh, and your application's UI updates accordingly.
 
 For more information, see [Storing local state in reactive variables](./managing-state-with-field-policies/#storing-local-state-in-reactive-variables).
+
+## Example application
+
+[This example to-do list application](https://github.com/apollographql/ac3-state-management-examples/tree/master/apollo-local-state) uses reactive variables to track both the current list of to-do items and the filter that determines which items to display. See [`cache.tsx`](https://github.com/apollographql/ac3-state-management-examples/blob/master/apollo-local-state/src/cache.tsx) in particular.

@@ -86,7 +86,7 @@ const cache = new InMemoryCache({
     Person: {
       fields: {
         userId() {
-          return localStorage.loggedInUserId;
+          return localStorage.getItem("loggedInUserId");
         },
       },
     },

@@ -84,6 +84,15 @@ export {
 
 /* Supporting */
 
+// The verbosity of invariant.{log,warn,error} can be controlled globally
+// (for anyone using the same ts-invariant package) by passing "log",
+// "warn", "error", or "silent" to setVerbosity. By default, Apollo Client
+// displays warnings and errors, but hides invariant.log statements. Note
+// that all invariant.* logging is hidden in production.
+import { setVerbosity } from "ts-invariant";
+export { setVerbosity as setLogVerbosity }
+setVerbosity("warn");
+
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.
 // Due to the way the `graphql-tag` library is setup, certain bundlers

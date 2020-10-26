@@ -1,0 +1,116 @@
+## Which arguments belong in `keyArgs`?
+
+Throughout this section of documentation, you'll find a number of possible `keyArgs` configurations, ranging from including all arguments by default, to completely disabling argument-based field identification using `keyArgs: false`.
+
+To understand which arguments belong in `keyArgs` (if any), it's helpful to consider those two extremes first (including all arguments in the field key, or none of them), because those are the most common cases. Building on that understanding, we can then discuss the consequences of moving an individual argument into or out of `keyArgs`.
+
+If you include all arguments in the field key, as `InMemoryCache` does by default, then every different combination of argument values will correspond to a different storage location for internal field data. In other words, if you change any argument values, the field key will be different, so the field value will be stored in a different location. In your `read` and `merge` functions, this internal field data is provided by the `existing` parameter, which will be undefined when a particular combination of arguments has never been seen before. With this approach, the cache can reuse field values only if the arguments exactly match, which significantly reduces the hit rate of the cache, but also keeps the cache from inappropriately reusing field values when differences in arguments actually matter.
+
+On the other hand, if you configure your field with `keyArgs: false`, the field key will always be just the field name, without any extra characters appended to it. Because your `read` and `merge` functions have access to the field arguments via `options.args`, you could keep your internal data separated according to those arguments, simulating the behavior of `keyArgs` without actually using `keyArgs`. Your `read` function then gets to decide whether an existing field value can be reused, based on the runtime argument values and whatever internal data have previously been stored for the field.
+
+For example, we could have used `keyArgs: false` instead of `keyArgs: ["type"]` for our `Query.feed` field policy:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: false,
+
+          read(existing = {}, { args: { type, offset, limit }}) {
+            return existing[type] &&
+              existing[type].slice(offset, offset + limit);
+          },
+
+          merge(existing = {}, incoming, { args: { type, offset = 0 }}) {
+            const merged = existing[type] ? existing[type].slice(0) : [];
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            existing[type] = merged;
+            return existing;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Instead of a single array, `existing` is now a map from `type`s to feeds, allowing a single field value to store multiple feed arrays, separated by `type`. However, this manual separation is logically equivalent to what would happen if you moved the `type` argument into `keyArgs` (using `keyArgs: ["type"]`, as above), so the extra effort is probably unnecessary.
+
+Assuming feeds with different `type` values are independent, and our `read` function does not need simultaneous access to multiple feeds of different types, we can safely shift the responsibility for handling the `type` argument from the `read` and `merge` functions back to `keyArgs`, and simplify `read` and `merge` to handle only one feed at a time.
+
+In short, if the logic for storing and retrieving field data is the same for different values of a given argument (like `type`), and those field values are logically independent from one another, then you probably should move that argument into `keyArgs`, to save yourself from having to deal with it in your `read` and `merge` functions.
+
+By contrast, arguments that limit, filter, sort, or otherwise reprocess existing field data usually do not belong in `keyArgs`, because putting them in `keyArgs` fragments the internal data, so you cannot use a different argument value to retrieve a different view of the same data, without making a network request.
+
+As a general rule, `read` and `merge` functions can do almost anything with your field data, but there might be a less powerful tool (like `keyArgs`) that allows you to simplify (or avoid writing) custom `read` or `merge` functions. Whenever you have a choice between two capable tools, prefer the one that minimizes the total complexity of your code, while still providing the behavior you desire.
+
+## The `@connection` directive
+
+The `@connection` directive is a Relay-inspired convention that Apollo Client supports, though we now recommend `keyArgs` instead, because you can achieve the same effect with a single `keyArgs` configuration, whereas the `@connection` directive needs to be repeated in every query you send to your server.
+
+In other words, whereas Relay encourages the following `@connection(...)` directive for `Query.feed` queries:
+```js
+const FEED_QUERY = gql`
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    feed(type: $type, offset: $offset, limit: $limit) @connection(
+      key: "feed",
+      filter: ["type"]
+    ) {
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+`;
+```
+in Apollo Client, you would use the following query:
+```js
+const FEED_QUERY = gql`
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    feed(type: $type, offset: $offset, limit: $limit) {
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+`;
+```
+and instead configure `keyArgs` in your `Query.feed` field policy:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+        },
+      },
+    },
+  },
+})
+```
+Although `keyArgs` (and `@connection`) are useful for more than just paginated fields, it's worth noting that `relayStylePagination` configures `keyArgs: false` by default. You can reconfigure this `keyArgs` behavior by passing an alternate value to `relayStylePagination`:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: relayStylePagination(["type"]),
+      },
+    },
+  },
+})
+```
+In the unlikely event that a `keyArgs` array is insufficient to capture the identity of a field, remember that you can pass a function for `keyArgs`, which allows you to serialize the `args` object however you want.

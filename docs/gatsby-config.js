@@ -50,7 +50,8 @@ module.exports = {
             'pagination/overview',
             'pagination/core-api',
             'pagination/offset-based',
-            'pagination/cursor-based'
+            'pagination/cursor-based',
+            'pagination/key-args'
           ],
           'Local State': [
             'local-state/local-state-management',

@@ -3,7 +3,7 @@ title: Pagination Overview
 sidebar_title: Overview
 ---
 
-GraphQL servers provide selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A typical GraphQL client needs only a small subgraph of this complete data graph, and uses GraphQL queries to fetch only the fields it needs.
+A GraphQL server provides selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A typical GraphQL client needs only a small subgraph of this complete data graph, and uses GraphQL queries to fetch only the fields it needs.
 
 While requesting the specific fields your application needs is an important technique for preventing over-fetching, it's not the only way to reduce response size. A single list field can hold arbitrarily many elements, possibly infinitely many. If you need some of that data but not all of it, what can you do? Omitting the field from your query is not an option, but neither is requesting the entire list.
 

@@ -1,3 +1,5 @@
+# This lib is not ready for production! Use it on your own risk.
+
 # <a href="https://www.apollographql.com/"><img src="https://user-images.githubusercontent.com/841294/53402609-b97a2180-39ba-11e9-8100-812bab86357c.png" height="100" alt="Apollo Client"></a>
 
 ## Apollo Client

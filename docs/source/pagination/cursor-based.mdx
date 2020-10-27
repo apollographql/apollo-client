@@ -1,0 +1,273 @@
+---
+title: 'Cursor-based pagination'
+sidebar_title: 'Cursor-based'
+---
+
+> We recommend reading [Core pagination API](./core-api) before learning about considerations specific to cursor-based pagination.
+
+## Using list element IDs as cursors
+
+Since numeric offsets within paginated lists can be unreliable, a common improvement is to identify the beginning of a page using some unique identifier that belongs to each element of the list.
+
+If the list represents a set of elements without duplicates, this identifier could simply be the unique ID of each object, allowing additional pages to be requested using the ID of the last object in the list, together with some `limit` argument. With this approach, the requested `cursor` ID should not appear in the new page, since it identifies the item just before the beginning of the page.
+
+Since the elements of the list could be normalized `Reference` objects, you will probably want to use the `options.readField` helper function to read the `id` field in your `merge` and/or `read` functions:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+
+          merge(existing, incoming, {
+            args: { cursor },
+            readField,
+          }) {
+            const merged = existing ? existing.slice(0) : [];
+            let offset = offsetFromCursor(merged, cursor, readField);
+            // If we couldn't find the cursor, default to appending to
+            // the end of the list, so we don't lose any data.
+            if (offset < 0) offset = merged.length;
+            // Now that we have a reliable offset, the rest of this logic
+            // is the same as in offsetLimitPagination.
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+
+          // If you always want to return the whole list, you can omit
+          // this read function.
+          read(existing, {
+            args: { cursor, limit = existing.length },
+            readField,
+          }) {
+            if (existing) {
+              let offset = offsetFromCursor(existing, cursor, readField);
+              // If we couldn't find the cursor, default to reading the
+              // entire list.
+              if (offset < 0) offset = 0;
+              return existing.slice(offset, offset + limit);
+            }
+          },
+        },
+      },
+    },
+  },
+});
+
+function offsetFromCursor(items, cursor, readField) {
+  // Search from the back of the list because the cursor we're
+  // looking for is typically the ID of the last item.
+  for (let i = items.length - 1; i >= 0; --i) {
+    const item = items[i];
+    // Using readField works for both non-normalized objects
+    // (returning item.id) and normalized references (returning
+    // the id field from the referenced entity object), so it's
+    // a good idea to use readField when you're not sure what
+    // kind of elements you're dealing with.
+    if (readField("id", item) === cursor) {
+      // Add one because the cursor identifies the item just
+      // before the first item in the page we care about.
+      return i + 1;
+    }
+  }
+  // Report that the cursor could not be found.
+  return -1;
+}
+```
+
+Since items can be removed from, added to, or moved around within the list without altering their `id` fields, this pagination strategy tends to be more resilient to list mutations than the `offset`-based strategy we saw above.
+
+However, this strategy works best when your `merge` function always appends new pages to the existing data, since it doesn't take any precautions to avoid overwriting elements if the `cursor` falls somewhere in the middle of the existing data.
+
+## Using a map to store unique items
+
+If your paginated field logically represents a _set_ of unique items, you can store it internally using a more convenient data structure than an array.
+
+In fact, your `merge` function can return internal data in any format you like, as long as your `read` function cooperates by turning that internal representation back into a list:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"],
+
+          // While args.cursor may still be important for requesting
+          // a given page, it no longer has any role to play in the
+          // merge function.
+          merge(existing, incoming, { readField }) {
+            const merged = { ...existing };
+            incoming.forEach(item => {
+              merged[readField("id", item)] = item;
+            });
+            return merged;
+          },
+
+          // Return all items stored so far, to avoid ambiguities
+          // about the order of the items.
+          read(existing) {
+            return existing && Object.values(existing);
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+With this internal representation, you no longer have to worry about incoming items overwriting unrelated existing items, because an assignment to the map can only replace an item with the same `id` field.
+
+However, this approach leaves an important question unanswered: what `cursor` should we use when requesting the _next_ page? Thanks to the predictable ordering of JavaScript object keys by insertion order, you should be able to use the `id` field of the last element returned by the `read` function as the `cursor` for the next request&mdash;though you're not alone if relying on this behavior makes you nervous. In the next section we'll see a slightly different approach that makes the next `cursor` more explicit.
+
+## Keeping cursors separate from items
+
+Pagination cursors are often derived from ID fields of list items, but not always. In cases where the list could have duplicates, or is sorted or filtered according to some criteria, the cursor may need to encode not just a position within the list but also the sorting/filtering logic that produced the list. In such situations, since the cursor does not logically belong to the elements of the list, the cursor may be returned separately from the list:
+
+```jsx
+const MORE_COMMENTS_QUERY = gql`
+  query MoreComments($cursor: String, $limit: Int!) {
+    moreComments(cursor: $cursor, limit: $limit) {
+      cursor
+      comments {
+        id
+        author
+        text
+      }
+    }
+  }
+`;
+
+function CommentsWithData() {
+  const {
+    data,
+    loading,
+    fetchMore,
+  } = useQuery(MORE_COMMENTS_QUERY, {
+    variables: { limit: 10 },
+  });
+
+  if (loading) return <Loading/>;
+
+  return (
+    <Comments
+      entries={data.moreComments.comments || []}
+      onLoadMore={() => fetchMore({
+        variables: {
+          cursor: data.moreComments.cursor,
+        },
+      })}
+    />
+  );
+}
+```
+
+To demonstrate the flexibility of the field policy system, here's an implementation of the `Query.moreComments` field that uses a map internally, but returns an array of unique `comments`:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        moreComments: {
+          merge(existing, incoming, { readField }) {
+            const comments = existing ? { ...existing.comments } : {};
+            incoming.comments.forEach(comment => {
+              comments[readField("id", comment)] = comment;
+            });
+            return {
+              cursor: incoming.cursor,
+              comments,
+            };
+          },
+
+          read(existing) {
+            if (existing) {
+              return {
+                cursor: existing.cursor,
+                comments: Object.values(existing.comments),
+              };
+            }
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Now there's less ambiguity about where the next `cursor` comes from, because it is explicitly stored and returned as part of the query.
+
+## Relay-style cursor pagination
+
+The `InMemoryCache` field policy API allows for any conceivable style of pagination, even though some of the simpler approaches have known drawbacks.
+
+If you were designing a GraphQL client without the flexibility that `read` and `merge` functions provide, you would most likely attempt to standardize around a one-size-fits-all style of pagination that you felt was sophisticated enough to support most use cases. That's the path Relay, another popular GraphQL client, has chosen with their [Cursor Connections Specification](https://facebook.github.io/relay/graphql/connections.htm). As a consequence, a number of public GraphQL APIs have adopted the Relay connection specification to be maximally compatible with Relay clients.
+
+Using Relay-style connections is similar to cursor-based pagination, but differs in the format of the query response, which affects the way cursors are managed. In addition to `connection.edges`, which is a list of `{ cursor, node }` objects, where each `edge.node` is a list item, Relay provides a `connection.pageInfo` object which gives the cursors of the first and last items in `connection.edges` as `connection.pageInfo.startCursor` and `connection.pageInfo.endCursor`, respectively. The `pageInfo` object also contains the boolean properties `hasPreviousPage` and `hasNextPage`, which can be used to determine if there are more results available (both forwards and backwards):
+
+```jsx
+const COMMENTS_QUERY = gql`
+  query Comments($cursor: String) {
+    comments(first: 10, after: $cursor) {
+      edges {
+        node {
+          author
+          text
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+`;
+
+function CommentsWithData() {
+  const {
+    data,
+    loading,
+    fetchMore,
+  } = useQuery(COMMENTS_QUERY);
+
+  if (loading) return <Loading/>;
+
+  const nodes = data.comments.edges.map(edge => edge.node);
+
+  return (
+    <Comments
+      entries={nodes}
+      onLoadMore={() => fetchMore({
+        variables: {
+          cursor: data.comments.pageInfo.endCursor,
+        },
+      })}
+    />
+  );
+}
+```
+
+Fortunately, Relay-style pagination can be implemented in Apollo Client using `merge` and `read` functions, which means all the thorny details of connections and `edges` and `pageInfo` can be abstracted away, into a single, reusable helper function:
+
+```js
+import { relayStylePagination } from "@apollo/client/utilities";
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        comments: relayStylePagination(),
+      },
+    },
+  },
+});
+```
+
+Whenever you need to consume a Relay pagination API using Apollo Client, `relayStylePagination` is a great tool to try first, even if you end up copy/pasting its code and making changes to suit your specific needs.
+
+Note that the `relayStylePagination` function generates a field policy with a `read` function that simply returns all available data, ignoring `args`, which makes `relayStylePagination` easier to use with `fetchMore`. This is the second kind of `read` function described in [Two kinds of `read` function](./core-api/#two-kinds-of-read-function). There's nothing stopping you from adapting this `read` function to use `args` to return individual pages, as long as you remember to update the variables of your original query after calling `fetchMore`.

@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "gatsby": "2.24.85",
-    "gatsby-theme-apollo-docs": "4.5.3",
+    "gatsby-theme-apollo-docs": "4.5.5",
     "ink": "^2.7.1",
-    "react": "16.14.0",
-    "react-dom": "16.14.0",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
     "webpack-virtual-modules": "^0.2.2"
   },
   "devDependencies": {

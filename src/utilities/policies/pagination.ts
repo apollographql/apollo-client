@@ -1,6 +1,7 @@
 import { __rest } from "tslib";
 
 import { FieldPolicy, Reference } from '../../cache';
+import { mergeDeep } from '../common/mergeDeep';
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
@@ -136,16 +137,35 @@ export function relayStylePagination<TNode = Reference>(
       }) : [];
 
       if (incoming.pageInfo) {
-        // In case we did not request the cursor field for edges in this
-        // query, we can still infer some of those cursors from pageInfo.
-        const { startCursor, endCursor } = incoming.pageInfo;
+        const { pageInfo } = incoming;
+        const { startCursor, endCursor } = pageInfo;
         const firstEdge = incomingEdges[0];
+        const lastEdge = incomingEdges[incomingEdges.length - 1];
+        // In case we did not request the cursor field for edges in this
+        // query, we can still infer cursors from pageInfo.
         if (firstEdge && startCursor) {
           firstEdge.cursor = startCursor;
         }
-        const lastEdge = incomingEdges[incomingEdges.length - 1];
         if (lastEdge && endCursor) {
           lastEdge.cursor = endCursor;
+        }
+        // Cursors can also come from edges, so we default
+        // pageInfo.{start,end}Cursor to {first,last}Edge.cursor.
+        const firstCursor = firstEdge && firstEdge.cursor;
+        if (firstCursor && !startCursor) {
+          incoming = mergeDeep(incoming, {
+            pageInfo: {
+              startCursor: firstCursor,
+            },
+          });
+        }
+        const lastCursor = lastEdge && lastEdge.cursor;
+        if (lastCursor && !endCursor) {
+          incoming = mergeDeep(incoming, {
+            pageInfo: {
+              endCursor: lastCursor,
+            },
+          });
         }
       }
 
@@ -178,27 +198,35 @@ export function relayStylePagination<TNode = Reference>(
         ...suffix,
       ];
 
-      const firstEdge = edges[0];
-      const lastEdge = edges[edges.length - 1];
-
       const pageInfo: TPageInfo = {
+        // The ordering of these two ...spreads may be surprising, but it
+        // makes sense because we want to combine PageInfo properties with a
+        // preference for existing values, *unless* the existing values are
+        // overridden by the logic below, which is permitted only when the
+        // incoming page falls at the beginning or end of the data.
         ...incoming.pageInfo,
         ...existing.pageInfo,
-        startCursor: firstEdge && firstEdge.cursor || "",
-        endCursor: lastEdge && lastEdge.cursor || "",
       };
 
       if (incoming.pageInfo) {
-        const { hasPreviousPage, hasNextPage } = incoming.pageInfo;
+        const {
+          hasPreviousPage, hasNextPage,
+          startCursor, endCursor,
+        } = incoming.pageInfo;
         // Keep existing.pageInfo.has{Previous,Next}Page unless the
         // placement of the incoming edges means incoming.hasPreviousPage
         // or incoming.hasNextPage should become the new values for those
-        // properties in existing.pageInfo.
-        if (!prefix.length && hasPreviousPage !== void 0) {
-          pageInfo.hasPreviousPage = hasPreviousPage;
+        // properties in existing.pageInfo. Note that these updates are
+        // only permitted when the beginning or end of the incoming page
+        // coincides with the beginning or end of the existing data, as
+        // determined using prefix.length and suffix.length.
+        if (!prefix.length) {
+          if (void 0 !== hasPreviousPage) pageInfo.hasPreviousPage = hasPreviousPage;
+          if (void 0 !== startCursor) pageInfo.startCursor = startCursor;
         }
-        if (!suffix.length && hasNextPage !== void 0) {
-          pageInfo.hasNextPage = hasNextPage;
+        if (!suffix.length) {
+          if (void 0 !== hasNextPage) pageInfo.hasNextPage = hasNextPage;
+          if (void 0 !== endCursor) pageInfo.endCursor = endCursor;
         }
       }
 

@@ -5,7 +5,7 @@ description: State containers integrated into Apollo Client's reactivity model
 
 New in Apollo Client 3, **reactive variables** are a useful mechanism for storing local state outside of the Apollo Client cache. Because they're separate from the cache, reactive variables can store data of any type and structure, and you can interact with them anywhere in your application without using GraphQL syntax.
 
-**Most importantly, modifying a reactive variable automatically triggers an update of every active query that depends on that variable.** A query depends on a reactive variable if any of the query's requested fields defines a [`read` function](../caching/cache-field-behavior/#the-read-function) that reads the variable's value.
+**Most importantly, modifying a reactive variable triggers an update of every active query that depends on that variable, as well an update of the react state associated with any variable values returned from the `useReactiveVar` React hook.** A query depends on a reactive variable if any of the query's requested fields defines a [`read` function](../caching/cache-field-behavior/#the-read-function) that reads the variable's value.
 
 ## Creating
 
@@ -14,7 +14,7 @@ Create a reactive variable with the `makeVar` method, like so:
 ```js
 import { makeVar } from '@apollo/client';
 
-const cartItems = makeVar([]);
+const cartItemsVar = makeVar([]);
 ```
 
 This code creates a reactive variable with an empty array as its initial value. 
@@ -26,10 +26,10 @@ This code creates a reactive variable with an empty array as its initial value.
 To read the value of your reactive variable, call the function returned by `makeVar` with zero arguments:
 
 ```js
-const cartItems = makeVar([]);
+const cartItemsVar = makeVar([]);
 
 // Output: []
-console.log(cartItems());
+console.log(cartItemsVar());
 ```
 
 ## Modifying
@@ -37,17 +37,17 @@ console.log(cartItems());
 To modify the value of your reactive variable, call the function returned by `makeVar` with one argument (the variable's new value):
 
 ```js
-const cartItems = makeVar([]);
+const cartItemsVar = makeVar([]);
 
-cartItems([100, 101, 102]);
+cartItemsVar([100, 101, 102]);
 
 // Output: [100, 101, 102]
-console.log(cartItems());
+console.log(cartItemsVar());
 
-cartItems([456]);
+cartItemsVar([456]);
 
 // Output: [456]
-console.log(cartItems());
+console.log(cartItemsVar());
 ```
 
 ## Reacting

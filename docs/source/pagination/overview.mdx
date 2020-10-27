@@ -1,0 +1,18 @@
+---
+title: Pagination Overview
+sidebar_title: Overview
+---
+
+A GraphQL server provides selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A typical GraphQL client needs only a small subgraph of this complete data graph, and uses GraphQL queries to fetch only the fields it needs.
+
+While requesting the specific fields your application needs is an important technique for preventing over-fetching, it's not the only way to reduce response size. A single list field can hold arbitrarily many elements, possibly infinitely many. If you need some of that data but not all of it, what can you do? Omitting the field from your query is not an option, but neither is requesting the entire list.
+
+### The general solution
+
+To solve this problem, GraphQL servers often let clients avoid fetching entire lists of data at once, by allowing the lists to be split up into separate chunks or _pages_, which can be requested incrementally using field arguments like `offset`, `cursor`, and/or `limit`.
+
+**Pagination** is the term for this general technique of incrementally requesting large collections of data (usually lists) in smaller pages, using field arguments. Pagination comes in a number of different flavors: offset-based, cursor-based, page-number-based, forwards, backwards, displayed in discrete pages or via infinite scroll, and so on, each calling for a slightly different set of field arguments. As this diversity suggests, pagination is not a built-in feature of list-valued fields in GraphQL, but GraphQL server tools make pagination straightforward to set up, and so it has become a ubiquitous pattern.
+
+### The Apollo Client approach
+
+Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the flexible `InMemoryCache` field policy API, which allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, reusable way, in one place, rather than reproducing custom field logic wherever the field is used throughout your application.

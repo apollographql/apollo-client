@@ -11,6 +11,8 @@ In the `options` you pass to `fetchMore`, you specify the new `options.variables
 
 In Apollo Client 2, you would also provide an `options.updateQuery` function, which was responsible for merging fetched pages with existing data in the cache. In Apollo Client 3, custom `merge` functions allow this logic to be specified in a central location, rather than duplicated everywhere you call `fetchMore`.
 
+Examples of `fetchMore` usage can be found on subsequent pages of this documentation: [Offset-based pagination](./offset-based) and [Cursor-based pagination](./cursor-based). The rest of this page covers the field policy configuration API that allows `fetchMore` to avoid worrying about internal details.
+
 ## Combining pages with `merge` functions
 
 > The example below uses offset-based pagination, but this article applies to all pagination strategies.

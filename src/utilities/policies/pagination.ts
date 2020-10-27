@@ -136,16 +136,27 @@ export function relayStylePagination<TNode = Reference>(
       }) : [];
 
       if (incoming.pageInfo) {
-        // In case we did not request the cursor field for edges in this
-        // query, we can still infer some of those cursors from pageInfo.
-        const { startCursor, endCursor } = incoming.pageInfo;
+        const { pageInfo } = incoming;
+        const { startCursor, endCursor } = pageInfo;
         const firstEdge = incomingEdges[0];
+        const lastEdge = incomingEdges[incomingEdges.length - 1];
+        // In case we did not request the cursor field for edges in this
+        // query, we can still infer cursors from pageInfo.
         if (firstEdge && startCursor) {
           firstEdge.cursor = startCursor;
         }
-        const lastEdge = incomingEdges[incomingEdges.length - 1];
         if (lastEdge && endCursor) {
           lastEdge.cursor = endCursor;
+        }
+        // Cursors can also come from edges, so we default
+        // pageInfo.{start,end}Cursor to {first,last}Edge.cursor.
+        const firstCursor = firstEdge && firstEdge.cursor;
+        if (firstCursor && !startCursor) {
+          pageInfo.startCursor = firstCursor;
+        }
+        const lastCursor = lastEdge && lastEdge.cursor;
+        if (lastCursor && !endCursor) {
+          pageInfo.endCursor = lastCursor;
         }
       }
 

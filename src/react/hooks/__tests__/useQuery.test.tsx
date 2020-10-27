@@ -2247,7 +2247,9 @@ describe('useQuery Hook', () => {
 
       app.unmount();
 
-      expect(client['queryManager']['queries'].size).toBe(0);
+      return wait(() => {
+        expect(client['queryManager']['queries'].size).toBe(0);
+      });
     });
   });
 

@@ -5,23 +5,25 @@ sidebar_title: keyArgs
 
 > We recommend reading [Core pagination API](./core-api) before learning about considerations specific to the `keyArgs` configuration.
 
-In GraphQL, a single field within a single object can have many different values at any given time, determined by factors such as the identity of the field's enclosing object, the name of the field, the time of the request, and the names and values of any arguments that were passed to the field as part of the request.
+In GraphQL, a single field within a single object may store multiple different values at once, corresponding to different combinations of field arguments passed to the field in a given request. This multiplicity of field values requires the cache to store the values separately, so that they can be retrieved separately in the future.
 
-In addition to `merge` and `read` functions, `InMemoryCache` field policies can contain a configuration called [`keyArgs`](../caching/cache-field-behavior#specifying-key-arguments), which specifies an array of argument names whose values should be serialized and appended to the field name to create a distinct storage key for a particular value of the field to be stored in the cache.
-
-> In the unlikely event that a `keyArgs` array is insufficient to specify the storage key, you can alternatively pass a function for `keyArgs`, which allows you to sanitize and serialize the `args` object however you like.
+There are many ways this storage could be structured, but `InMemoryCache` represents each entity object as a `StoreObject`, which is an ordinary JavaScript object with string keys generated from the name of the field plus the serialized arguments (if any), rather than using just the name of the field. Fields without arguments are keyed by their field names alone.
 
 By default, `InMemoryCache` incorporates _all_ field arguments into the storage key for each field, so a single field can simultaneously hold as many different values as the number of unique combinations of arguments. This default strategy sacrifices the hit rate of the cache in order to avoid reusing field values inappropriately when any of the arguments are not the same.
 
-However, in many cases, you may realize that your field values are more reusable than this default strategy assumes, and some or all of the arguments are not actually relevant to the storage identity of the field. A `keyArgs: ["type"]` field policy configuration means `type` is the only argument the cache should consider (in addition to the field name and the identity of the enclosing object) when accessing values for this field. A `keyArgs: false` configuration for a given field disables the whole system of differentiating field values by arguments, so the field's value will be identified only by its enclosing object and the name of the field, without any serialized arguments appended to it.
+However, in many cases, you may realize that your field values are more reusable than this default strategy assumes, and some or all of the arguments are not actually relevant to the storage identity of the field. Fortunately, this system is configurable.
 
-This article provides specific technical guidance on choosing `keyArgs`, especially when working with paginated fields and field policies.
+In addition to `merge` and `read` functions, `InMemoryCache` field policies can contain a configuration called [`keyArgs`](../caching/cache-field-behavior#specifying-key-arguments), which specifies an array of argument names whose values should be serialized and appended to the field name to create a distinct storage key for a particular value of the field to be stored in the cache.
+
+A `keyArgs: ["type"]` field policy configuration means `type` is the only argument the cache should consider (in addition to the field name and the identity of the enclosing object) when accessing values for this field. A `keyArgs: false` configuration disables the whole system of differentiating field values by arguments, so the field's value will be identified only by the field's name (within some `StoreObject`), without any serialized arguments appended to it.
+
+> In the unlikely event that a `keyArgs` array is insufficient to specify the storage key, you can alternatively pass a function for `keyArgs`, which allows you to sanitize and serialize the `args` object however you like.
+
+This article provides specific technical guidance on choosing appropriate `keyArgs` configurations, especially when working with paginated fields and field policies.
 
 ## Which arguments belong in `keyArgs`?
 
-Throughout this section of documentation, you'll find a number of possible `keyArgs` configurations, ranging from including all arguments by default, to completely disabling argument-based field identification using `keyArgs: false`.
-
-To understand which arguments belong in `keyArgs` (if any), it's helpful to consider those two extremes first (including all arguments in the field key, or none of them), because those are the most common cases. Building on that understanding, we can then discuss the consequences of moving an individual argument into or out of `keyArgs`.
+Throughout this area of the documentation, you'll find a number of possible `keyArgs` configurations, ranging from including all arguments by default, to completely disabling argument-based field identification using `keyArgs: false`. To understand which arguments belong in `keyArgs` (if any), it's helpful to consider those two extremes first&mdash;including all arguments in the field key, or none of them&mdash;because those are the most common cases. Building on that understanding, we can then discuss the consequences of moving an individual argument into or out of `keyArgs`.
 
 If you include all arguments in the field key, as `InMemoryCache` does by default, then every different combination of argument values will correspond to a different storage location for internal field data. In other words, if you change any argument values, the field key will be different, so the field value will be stored in a different location. In your `read` and `merge` functions, this internal field data is provided by the `existing` parameter, which will be undefined when a particular combination of arguments has never been seen before. With this approach, the cache can reuse field values only if the arguments exactly match, which significantly reduces the hit rate of the cache, but also keeps the cache from inappropriately reusing field values when differences in arguments actually matter.
 
@@ -57,13 +59,11 @@ const cache = new InMemoryCache({
 });
 ```
 
-Instead of a single array, `existing` is now a map from `type`s to feeds, allowing a single field value to store multiple feed arrays, separated by `type`. However, this manual separation is logically equivalent to what would happen if you moved the `type` argument into `keyArgs` (using `keyArgs: ["type"]`, as above), so the extra effort is probably unnecessary.
-
-Assuming feeds with different `type` values have different data, and assuming our `read` function does not need simultaneous access to multiple feeds of different types, we can safely shift the responsibility for handling the `type` argument from the `read` and `merge` functions back to `keyArgs`, and simplify `read` and `merge` to handle only one feed at a time.
+Instead of a single array, `existing` is now a map from `type`s to feeds, allowing a single field value to store multiple feed arrays, separated by `type`. However, this manual separation is logically equivalent to what would happen if you moved the `type` argument into `keyArgs` (using `keyArgs: ["type"]`, as above), so the extra effort is probably unnecessary. Assuming feeds with different `type` values have different data, and assuming our `read` function does not need simultaneous access to multiple feeds of different types, we can safely shift the responsibility for handling the `type` argument from the `read` and `merge` functions back to `keyArgs`, and simplify `read` and `merge` to handle only one feed at a time.
 
 In short, if the logic for storing and retrieving field data is the same for different values of a given argument (like `type`), and those field values are logically independent from one another, then you probably should move that argument into `keyArgs`, to save yourself from having to deal with it in your `read` and `merge` functions.
 
-By contrast, arguments that limit, filter, sort, or otherwise reprocess existing field data usually do not belong in `keyArgs`, because putting them in `keyArgs` fragments the internal data, so you cannot use different arguments to retrieve different views of the same data, without making a additional network requests.
+By contrast, arguments that limit, filter, sort, or otherwise reprocess existing field data usually do not belong in `keyArgs`, because putting them in `keyArgs` makes field storage keys more diverse, reducing cache hit rate and limiting your ability to use different arguments to retrieve different views of the same data (without making a additional network requests).
 
 As a general rule, `read` and `merge` functions can do almost anything with your field data, but there might be a less powerful tool (like `keyArgs`) that allows you to simplify (or avoid writing) custom `read` or `merge` functions. Whenever you have a choice between two capable tools, you should prefer the one that minimizes the total complexity of your code, which often favors a more limited, declarative API like `keyArgs`, over the unlimited power of functions like `merge` or `read`.
 

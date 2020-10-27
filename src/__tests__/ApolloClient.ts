@@ -2287,6 +2287,26 @@ describe('ApolloClient', () => {
 
       client.stop();
     });
+
+    it('should be able to set all default query options', () => {
+      new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          query: {
+            query: {kind: 'Document', definitions: []},
+            variables: {foo: 'bar'},
+            errorPolicy: 'none',
+            context: null,
+            fetchPolicy: 'cache-first',
+            pollInterval: 100,
+            notifyOnNetworkStatusChange: true,
+            returnPartialData: true,
+            partialRefetch: true,
+          },
+        },
+      });
+    });
   });
 
   describe('clearStore', () => {

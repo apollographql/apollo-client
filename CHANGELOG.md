@@ -24,6 +24,9 @@
 - Unsubscribing the last observer from an `ObservableQuery` will once again unsubscribe from the underlying network `Observable` in all cases, as in Apollo Client 2.x, allowing network requests to be cancelled by unsubscribing. <br/>
   [@javier-garcia-meteologica](https://github.com/javier-garcia-meteologica) in [#7165](https://github.com/apollographql/apollo-client/pull/7165) and [#7170](https://github.com/apollographql/apollo-client/pull/7170).
 
+- The independent `QueryBaseOptions` and `ModifiableWatchQueryOptions` interface supertypes have been eliminated, and their fields are now defined by `QueryOptions`. <br/>
+  [@DCtheTall](https://github.com/DCtheTall) in [#7136](https://github.com/apollographql/apollo-client/pull/7136)
+
 ## Improvements
 
 - Support inheritance of type and field policies, according to `possibleTypes`. <br/>

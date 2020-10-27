@@ -1,6 +1,7 @@
 import { __rest } from "tslib";
 
 import { FieldPolicy, Reference } from '../../cache';
+import { mergeDeep } from '../common/mergeDeep';
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
@@ -152,11 +153,19 @@ export function relayStylePagination<TNode = Reference>(
         // pageInfo.{start,end}Cursor to {first,last}Edge.cursor.
         const firstCursor = firstEdge && firstEdge.cursor;
         if (firstCursor && !startCursor) {
-          pageInfo.startCursor = firstCursor;
+          incoming = mergeDeep(incoming, {
+            pageInfo: {
+              startCursor: firstCursor,
+            },
+          });
         }
         const lastCursor = lastEdge && lastEdge.cursor;
         if (lastCursor && !endCursor) {
-          pageInfo.endCursor = lastCursor;
+          incoming = mergeDeep(incoming, {
+            pageInfo: {
+              endCursor: lastCursor,
+            },
+          });
         }
       }
 

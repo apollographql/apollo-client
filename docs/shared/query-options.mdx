@@ -4,7 +4,7 @@
 | `variables` | { [key: string]: any } | An object containing all of the variables your query needs to execute |
 | `pollInterval` | number | Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling). |
 | `notifyOnNetworkStatusChange` | boolean | Whether updates to the network status or network error should re-render your component. Defaults to false. |
-| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. For details, see [Configuring fetch logic](https://www.apollographql.com/docs/react/data/queries/#configuring-fetch-logic). |
+| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. For details, see [Setting a fetch policy](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy). |
 | `nextFetchPolicy` | FetchPolicy | Optional `FetchPolicy` to begin enforcing after the current request. Useful for switching back to `cache-first` after `cache-and-network` or `network-only`. |
 | `errorPolicy` | ErrorPolicy | How you want your component to handle network and GraphQL errors. Defaults to "none", which means we treat GraphQL errors as runtime errors. |
 | `ssr` | boolean | Pass in false to skip your query during server-side rendering. |

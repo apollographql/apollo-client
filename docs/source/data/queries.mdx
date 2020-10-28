@@ -200,6 +200,8 @@ function DogPhoto({ breed }) {
 
 The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/main/src/core/networkStatus.ts).
 
+> To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
+
 ## Inspecting error states
 
 You can customize your query error handling by providing the `errorPolicy`
@@ -239,9 +241,7 @@ function DelayedQuery() {
 }
 ```
 
-> To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
-
-## Configuring fetch logic
+## Setting a fetch policy
 
 By default, the `useQuery` hook checks the Apollo Client cache to see if all the data you requested is already available locally. If all data _is_ available locally, `useQuery` returns that data and _doesn't_ query your GraphQL server. This `cache-first` policy is Apollo Client's default **fetch policy**.
 

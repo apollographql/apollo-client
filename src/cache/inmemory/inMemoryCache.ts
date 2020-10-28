@@ -181,6 +181,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
     return () => {
       this.watches.delete(watch);
+      this.watchDep.dirty(watch);
+      // Remove this watch from the LRU cache managed by the
+      // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory
+      // leaks involving the closure of watch.callback.
+      this.maybeBroadcastWatch.forget(watch);
     };
   }
 

@@ -81,6 +81,7 @@ export class QueryInfo {
       destructiveMethodCounts.set(cache, 0);
       wrapDestructiveCacheMethod(cache, "evict");
       wrapDestructiveCacheMethod(cache, "modify");
+      wrapDestructiveCacheMethod(cache, "reset");
     }
   }
 

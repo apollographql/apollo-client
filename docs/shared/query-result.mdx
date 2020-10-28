@@ -9,7 +9,7 @@
 | `fetchMore` | ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt; | A function that enables [pagination](/features/pagination/) for your query |
 | `startPolling` | (interval: number) => void | This function sets up an interval in ms and fetches the query each time the specified interval passes. |
 | `stopPolling` | () => void | This function stops the query from polling. |
-| `subscribeToMore` | (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void | A function that sets up a [subscription](/advanced/subscriptions/). `subscribeToMore` returns a function that you can use to unsubscribe. |
+| `subscribeToMore` | (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void | A function that sets up a [subscription](/data/subscriptions/). `subscribeToMore` returns a function that you can use to unsubscribe. |
 | `updateQuery` | (previousResult: TData, options: { variables: TVariables }) => TData | A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription |
 | `client` | ApolloClient | Your `ApolloClient` instance. Useful for manually firing queries or writing data to the cache. |
 | `called` | boolean | A boolean indicating if the query function has been called, used by `useLazyQuery` (not set for `useQuery` / `Query`). |

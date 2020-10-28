@@ -7,8 +7,9 @@ import {
   FragmentDefinitionNode,
   FieldNode,
   ASTNode,
+  visit,
+  BREAK,
 } from 'graphql';
-import { visit, BREAK } from 'graphql/language/visitor';
 import { invariant } from 'ts-invariant';
 
 import { ApolloCache } from '../cache';

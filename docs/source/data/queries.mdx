@@ -224,7 +224,7 @@ function DelayedQuery() {
 
   if (loading) return <p>Loading ...</p>;
 
-  if (data && data.dog) {
+  if (data && data.dog && dog !== data.dog) {
     setDog(data.dog);
   }
 

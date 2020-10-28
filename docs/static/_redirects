@@ -3,6 +3,9 @@
 # Redirect all 3.0 beta docs to root
 /docs/react/v3.0-beta/* /docs/react/:splat
 
+# Split out pagination article
+/docs/react/data/pagination/ /docs/react/pagination/overview/
+
 # Remove 'Recompose patterns' article
 /docs/react/development-testing/recompose/ /docs/react/
 

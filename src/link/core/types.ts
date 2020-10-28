@@ -1,5 +1,4 @@
-import { DocumentNode } from 'graphql/language/ast';
-import { ExecutionResult } from 'graphql/execution/execute';
+import { DocumentNode, ExecutionResult } from 'graphql';
 export { DocumentNode };
 
 import { Observable } from '../../utilities';

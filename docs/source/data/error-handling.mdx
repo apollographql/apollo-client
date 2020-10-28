@@ -72,10 +72,13 @@ const link = onError(({ graphQLErrors, networkError }) => {
 
 Error Link takes a function that is called in the event of an error. This function is called with an object containing the following keys:
 
-- `operation`: The Operation that errored
-- `response`: The response from the server
-- `graphQLErrors`: An array of errors from the GraphQL endpoint
-- `networkError`: any error during the link execution or server response
+| Option | Description |
+| - | - |
+| `operation` | The Operation that errored |
+| `response` | The result returned from lower down in the link chain |
+| `graphQLErrors` | An array of errors from the GraphQL endpoint |
+| `networkError` | Any error during the link execution or server response, that wasn't delivered as part of the `errors` field in the GraphQL result |
+| `forward` | A reference to the next link in the chain. Calling `return forward(operation)` in the callback will retry the request, returning a new observable for the upstream link to subscribe to. |
 
 #### Ignoring errors
 

@@ -620,6 +620,10 @@ once, rather than every time you call fetchMore.`);
     },
   };
 
+  public hasObservers() {
+    return this.observers.size > 0;
+  }
+
   private tearDownQuery() {
     const { queryManager } = this;
 

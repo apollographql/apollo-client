@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql';
 
 import { Observable } from '../../../utilities/observables/Observable';
 import { FetchResult, Operation, NextLink, GraphQLRequest } from '../types';

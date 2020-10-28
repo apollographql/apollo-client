@@ -89,7 +89,7 @@ const CommentsPageWithMutations = () => (
               // Add our comment from the mutation to the end.
               const comments = [...data.comments, submitComment];
               // Write our data back to the cache.
-              store.writeQuery({ query: CommentAppQuery, { comments }  });
+              store.writeQuery({ query: CommentAppQuery, data: { comments } });
             }
           })
         }
@@ -344,7 +344,7 @@ If you would like to learn more about server side rendering, please check out ou
 
 ## Cache persistence
 
-If you would like to persist and rehydrate your Apollo Cache from a storage provider like `AsyncStorage` or `localStorage`, you can use [`apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist). `apollo-cache-persist` works with all Apollo caches, including `InMemoryCache` & `Hermes`, and a variety of different [storage providers](https://github.com/apollographql/apollo-cache-persist#storage-providers).
+If you would like to persist and rehydrate your Apollo Cache from a storage provider like `AsyncStorage` or `localStorage`, you can use [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist). `apollo3-cache-persist` works with all Apollo caches, including `InMemoryCache` & `Hermes`, and a variety of different [storage providers](https://github.com/apollographql/apollo-cache-persist#storage-providers).
 
 To get started, simply pass your Apollo Cache and a storage provider to `persistCache`. By default, the contents of your Apollo Cache will be immediately restored asynchronously, and persisted upon every write to the cache with a short configurable debounce interval.
 
@@ -353,7 +353,7 @@ To get started, simply pass your Apollo Cache and a storage provider to `persist
 ```js
 import { AsyncStorage } from 'react-native';
 import { InMemoryCache } from '@apollo/client';
-import { persistCache } from 'apollo-cache-persist';
+import { persistCache } from 'apollo3-cache-persist';
 
 const cache = new InMemoryCache();
 
@@ -365,4 +365,4 @@ persistCache({
 })
 ```
 
-For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo-cache-persist`](https://github.com/apollographql/apollo-cache-persist).
+For more advanced usage, such as persisting the cache when the app is in the background, and additional configuration options, please check the [README of `apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist).

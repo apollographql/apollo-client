@@ -86,7 +86,7 @@ const cache = new InMemoryCache({
     Person: {
       fields: {
         userId() {
-          return localStorage.loggedInUserId;
+          return localStorage.getItem("loggedInUserId");
         },
       },
     },
@@ -356,7 +356,7 @@ Now that you've hidden the details behind a reusable abstraction, it no longer m
 
 ### Handling pagination
 
-When a field holds an array, it's often useful to [paginate](/data/pagination/) that array's results, because the total result set can be arbitrarily large.
+When a field holds an array, it's often useful to [paginate](../pagination/overview/) that array's results, because the total result set can be arbitrarily large.
 
 Typically, a query includes pagination arguments that specify:
 

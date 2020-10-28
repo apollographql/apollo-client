@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
-import { DocumentNode, GraphQLError } from 'graphql';
-import { getIntrospectionQuery } from 'graphql/utilities';
+import { DocumentNode, GraphQLError, getIntrospectionQuery } from 'graphql';
 
 import { Observable } from '../../utilities';
 import { ApolloLink } from '../../link/core';

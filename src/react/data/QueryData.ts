@@ -63,6 +63,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     const { skip, query } = this.getOptions();
     if (skip || query !== this.previous.query) {
       this.removeQuerySubscription();
+      this.removeObservable(!skip);
       this.previous.query = query;
     }
 
@@ -107,7 +108,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   public cleanup() {
     this.removeQuerySubscription();
-    delete this.currentObservable;
+    this.removeObservable(true);
     delete this.previous.result;
   }
 
@@ -471,8 +472,15 @@ export class QueryData<TData, TVariables> extends OperationData {
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
       delete this.currentSubscription;
-    } else if (this.currentObservable && this.getOptions().skip) {
+    }
+  }
+
+  private removeObservable(andDelete: boolean) {
+    if (this.currentObservable) {
       this.currentObservable["tearDownQuery"]();
+      if (andDelete) {
+        delete this.currentObservable;
+      }
     }
   }
 

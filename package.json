@@ -93,7 +93,7 @@
     "@types/glob": "7.1.3",
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/jest": "26.0.15",
-    "@types/lodash": "4.14.162",
+    "@types/lodash": "4.14.164",
     "@types/node": "14.14.3",
     "@types/react": "16.9.53",
     "@types/react-dom": "16.9.8",

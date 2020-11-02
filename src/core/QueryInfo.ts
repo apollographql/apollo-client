@@ -70,6 +70,7 @@ export class QueryInfo {
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
+  destroyed = false
 
   constructor(private cache: ApolloCache<any>) {
     // Track how often cache.evict is called, since we want eviction to
@@ -82,6 +83,14 @@ export class QueryInfo {
       wrapDestructiveCacheMethod(cache, "evict");
       wrapDestructiveCacheMethod(cache, "modify");
       wrapDestructiveCacheMethod(cache, "reset");
+    }
+  }
+
+  public destroy() {
+    if (!this.destroyed) {
+      this.destroyed = true
+      this.cancel()
+      this.subscriptions.forEach(x => x.unsubscribe())
     }
   }
 
@@ -357,9 +366,14 @@ export class QueryInfo {
             optimistic: true,
           });
 
-          // Any time we're about to update this.diff, we need to make
-          // sure we've started watching the cache.
-          this.updateWatch(options.variables);
+          // Results are asynchronous. If the query manager removes a query
+          // before getting results, we probably want to update the cache with
+          // and then get garbage collected.
+          if (!this.destroyed) {
+            // Any time we're about to update this.diff, we need to make
+            // sure we've started watching the cache.
+            this.updateWatch(options.variables);
+          }
 
           // If we're allowed to write to the cache, and we can read a
           // complete result from the cache, update result.data to be the

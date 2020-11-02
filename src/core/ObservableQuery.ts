@@ -635,6 +635,7 @@ once, rather than every time you call fetchMore.`);
     }
 
     this.isTornDown = true;
+    this.options.context = undefined;
 
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());

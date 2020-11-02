@@ -1,18 +1,36 @@
 ---
-title: Pagination Overview
+title: Pagination overview
 sidebar_title: Overview
 ---
 
-A GraphQL server provides selective access to a sprawling graph of data that GraphQL clients might request, containing countless entity objects and their fields. A typical GraphQL client needs only a small subgraph of this complete data graph, and uses GraphQL queries to fetch only the fields it needs.
+GraphQL enables you to fetch exactly the fields you need from your data graph, with no unnecessary overhead. This helps keep network responses small and fast.
 
-While requesting the specific fields your application needs is an important technique for preventing over-fetching, it's not the only way to reduce response size. A single list field can hold arbitrarily many elements, possibly infinitely many. If you need some of that data but not all of it, what can you do? Omitting the field from your query is not an option, but neither is requesting the entire list.
+However, GraphQL doesn't automatically _guarantee_ small responses. This is especially apparent when you query a field that contains a **list**. A list can contain infinitely many elements, which can result in an enormous response from a seemingly small query like this one:
 
-### The general solution
+```graphql
+query GetBookTitles {
+  books {
+    title
+  }
+}
+```
 
-To solve this problem, GraphQL servers often let clients avoid fetching entire lists of data at once, by allowing the lists to be split up into separate chunks or _pages_, which can be requested incrementally using field arguments like `offset`, `cursor`, and/or `limit`.
+If your data graph includes thousands or millions of books, this query probably returns _much_ more data than you need. To resolve this issue, GraphQL servers can **paginate** their list fields.
 
-**Pagination** is the term for this general technique of incrementally requesting large collections of data (usually lists) in smaller pages, using field arguments. Pagination comes in a number of different flavors: offset-based, cursor-based, page-number-based, forwards, backwards, displayed in discrete pages or via infinite scroll, and so on, each calling for a slightly different set of field arguments. As this diversity suggests, pagination is not a built-in feature of list-valued fields in GraphQL, but GraphQL server tools make pagination straightforward to set up, and so it has become a ubiquitous pattern.
+When a client queries a paginated list field, the server returns only a portion (or "page") of the list's elements. The client's query includes arguments that indicate _which_ page the server should return:
 
-### The Apollo Client approach
+```mermaid
+sequenceDiagram;
+  Client app->>GraphQL server: query GetBookTitles(offset=0 limit=20)
+  GraphQL server->>Client app: Returns the first 20 list elements
+  Client app->>GraphQL server: query GetBookTitles(offset=20 limit=10)
+  GraphQL server->>Client app: Returns the next 10 list elements
+```
 
-Rather than attempting to standardize on one style of pagination to serve all use cases, Apollo Client enables any and all such patterns through the flexible `InMemoryCache` field policy API, which allows you to configure the client-side behavior of fields across your graph in a consistent, declarative, reusable way, in one place, rather than reproducing custom field logic wherever the field is used throughout your application.
+This diagram shows **offset-based** pagination, in which a client requests a page based on an absolute index in the list (`offset`) and the maximum number of elements to return (`limit`).
+
+There are many different pagination strategies a server can use for a particular list field: offset-based, cursor-based, page-number-based, forwards, backwards, and so on. Each strategy requires a slightly different set of arguments. Because these strategies can each be useful in different situations, neither Apollo nor the GraphQL specification prescribes a canonical pagination strategy.
+
+## The Apollo Client approach
+
+Instead of recommending a particular pagination strategy, Apollo Client provides flexible cache APIs that help you merge results from a paginated list field, regardless of which pagination strategy your GraphQL server uses. And because you can represent these custom pagination strategies with stateless functions, you can reuse a single function for every list field that uses the same strategy.

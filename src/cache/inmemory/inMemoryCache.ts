@@ -20,7 +20,7 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
-import { makeVar } from './reactiveVars';
+import { makeVar, forgetCache } from './reactiveVars';
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
@@ -199,7 +199,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.maybeBroadcastWatch(watch);
     }
     return () => {
-      this.watches.delete(watch);
+      // Once we remove the last watch from this.watches, cache.broadcastWatches
+      // no longer does anything, so we preemptively tell the reactive variable
+      // system to exclude this cache from future broadcasts.
+      if (this.watches.delete(watch) && !this.watches.size) {
+        forgetCache(this);
+      }
       this.watchDep.dirty(watch);
       // Remove this watch from the LRU cache managed by the
       // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory

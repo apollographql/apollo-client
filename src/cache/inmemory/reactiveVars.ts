@@ -6,6 +6,7 @@ import { ApolloCache } from '../../core';
 export interface ReactiveVar<T> {
   (newValue?: T): T;
   onNextChange(listener: ReactiveListener<T>): () => void;
+  forgetCache(cache: ApolloCache<any>): boolean;
 }
 
 export type ReactiveListener<T> = (value: T) => any;
@@ -25,6 +26,16 @@ function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
   set.forEach(item => items.push(item));
   set.clear();
   items.forEach(callback);
+}
+
+const varsByCache = new WeakMap<ApolloCache<any>, Set<ReactiveVar<any>>>();
+
+export function forgetCache(cache: ApolloCache<any>) {
+  const vars = varsByCache.get(cache);
+  if (vars) {
+    consumeAndIterate(vars, rv => rv.forgetCache(cache));
+    varsByCache.delete(cache);
+  }
 }
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
@@ -50,7 +61,12 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       // context via cacheSlot. This isn't entirely foolproof, but it's
       // the same system that powers varDep.
       const cache = cacheSlot.getValue();
-      if (cache) caches.add(cache);
+      if (cache) {
+        caches.add(cache);
+        let vars = varsByCache.get(cache)!;
+        if (!vars) varsByCache.set(cache, vars = new Set);
+        vars.add(rv);
+      }
       varDep(rv);
     }
 
@@ -63,6 +79,8 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       listeners.delete(listener);
     };
   };
+
+  rv.forgetCache = cache => caches.delete(cache);
 
   return rv;
 }

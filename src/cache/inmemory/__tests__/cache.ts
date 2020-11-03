@@ -2595,6 +2595,57 @@ describe("ReactiveVar and makeVar", () => {
     });
   });
 
+  it("should forget cache once all watches are cancelled", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(false);
+    const spy = jest.spyOn(nameVar, "forgetCache");
+
+    const diffs: Cache.DiffResult<any>[] = [];
+    const watch = () => cache.watch({
+      query,
+      optimistic: true,
+      immediate: true,
+      callback(diff) {
+        diffs.push(diff);
+      },
+    });
+
+    const unwatchers = [
+      watch(),
+      watch(),
+      watch(),
+      watch(),
+      watch(),
+    ];
+
+    expect(diffs.length).toBe(5);
+
+    expect(cache["watches"].size).toBe(5);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.pop()!();
+    expect(cache["watches"].size).toBe(4);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.shift()!();
+    expect(cache["watches"].size).toBe(3);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.pop()!();
+    expect(cache["watches"].size).toBe(2);
+    expect(spy).not.toBeCalled();
+
+    expect(diffs.length).toBe(5);
+    unwatchers.push(watch());
+    expect(diffs.length).toBe(6);
+
+    expect(unwatchers.length).toBe(3);
+    unwatchers.forEach(unwatch => unwatch());
+
+    expect(cache["watches"].size).toBe(0);
+    expect(spy).toBeCalledTimes(1);
+    expect(spy).toBeCalledWith(cache);
+  });
+
   it("should broadcast only once for multiple reads of same variable", () => {
     const nameVar = makeVar("Ben");
     const cache = new InMemoryCache({

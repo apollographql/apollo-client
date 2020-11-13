@@ -14,7 +14,7 @@ import SubscriptionResult from '../../../shared/subscription-result.mdx';
 
 Apollo Client >= 3 includes React hooks functionality out of the box. You don't need to install any additional packages.
 
-## `ApolloProvider`
+## The `ApolloProvider` component
 
 The `ApolloProvider` component leverages [React's Context API](https://reactjs.org/docs/context.html) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client` package.
 
@@ -30,7 +30,12 @@ import { ApolloProvider } from '@apollo/client';
 
 ### Example
 
-```jsx
+```jsx{7-9}
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  uri: "http://localhost:4000/graphql"
+});
+
 ReactDOM.render(
   <ApolloProvider client={client}>
     <MyRootComponent />
@@ -39,7 +44,7 @@ ReactDOM.render(
 );
 ```
 
-## `ApolloConsumer`
+## The `ApolloConsumer` component
 
 One way to access the configured Apollo Client instance directly is to create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function will be called with your `ApolloClient` instance as its only argument. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [React Context API](https://reactjs.org/docs/context.html).
 

@@ -56,7 +56,7 @@ const TodoAppWithData = withTodoAppQuery(TodoApp);
 export default TodoAppWithData;
 ```
 
-The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](./hooks/#apolloprovider) component higher up in your tree to provide an [`ApolloClient`](../core/ApolloClient/) instance that will be used to fetch your data.
+The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](./hooks/#the-apolloprovider-component) component higher up in your tree to provide an [`ApolloClient`](../core/ApolloClient/) instance that will be used to fetch your data.
 
 The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](../../data/queries/), a [mutation](../../data/mutations/), or a [subscription](../../data/subscriptions/). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
@@ -1067,7 +1067,7 @@ A simple enhancer which provides direct access to your [`ApolloClient`](../core/
 
 If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphqlquery-configcomponent) the answer is that most of the time you will want to use `graphql()`. `graphql()` provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
 
-This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](./hooks/#apolloprovider) component higher up in your tree to actually provide the client.
+This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](./hooks/#the-apolloprovider-component) component higher up in your tree to actually provide the client.
 
 **Example:**
 

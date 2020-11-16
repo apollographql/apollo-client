@@ -287,6 +287,11 @@ export abstract class EntityStore implements NormalizedCache {
     Object.keys(this.rootIds).forEach(ids.add, ids);
     if (this instanceof Layer) {
       this.parent.getRootIdSet(ids);
+    } else {
+      // Official singleton IDs like ROOT_QUERY and ROOT_MUTATION are
+      // always considered roots for garbage collection, regardless of
+      // their retainment counts in this.rootIds.
+      Object.keys(this.policies.rootTypenamesById).forEach(ids.add, ids);
     }
     return ids;
   }

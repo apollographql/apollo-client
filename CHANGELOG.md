@@ -1,3 +1,10 @@
+## Apollo Client 3.2.6
+
+## Bug Fixes
+
+- Always consider singleton IDs like `ROOT_QUERY` and `ROOT_MUTATION` to be root IDs during `cache.gc` garbage collection, regardless of whether they have been retained or released. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7333](https://github.com/apollographql/apollo-client/pull/7333)
+
 ## Apollo Client 3.2.5
 
 ## Improvements

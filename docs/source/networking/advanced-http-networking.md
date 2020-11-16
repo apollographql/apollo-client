@@ -104,6 +104,68 @@ const client = new ApolloClient({
 
 In this example, the user is logged out of the application if the server returns a `401` code (unauthorized).
 
+To manipulate the response data, you can use `forward(operation).map`:  
+
+```js
+import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from '@apollo/client';
+
+const httpLink = new HttpLink({ uri: '/graphql' });
+
+const mutatorLink = new ApolloLink((operation, forward) => {
+  return forward(operation).map(response => {
+    response.data.date = new Date();
+    return response;
+  });
+});
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: mutatorLink.concat(httpLink),
+});
+```
+
+In the above example, the `mutatorLink` adds a `date` field to each response. This is a simple manipulation of 
+the response object, there exist some manipulations that require asynchronous invocation. Currently,
+passing an `async` function to `forward(operation).map` is not supported. Instead, the utility `asyncMap`
+can be used to pass an `async` function.
+
+```js
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ApolloLink
+} from "@apollo/client";
+import { asyncMap } from "@apollo/client/utilities";
+
+import { usdToEur } from './currency';
+
+const httpLink = new HttpLink({
+  uri: "https://graphql.anilist.co/"
+});
+
+const usdToEurLink = new ApolloLink((operation, forward) => {
+  return asyncMap(forward(operation), async (response) => {
+    let data = response.data;
+    if (data.price && data.currency === "USD") {
+      data.price = await usdToEur(data.price);
+      data.currency = "EUR";
+    }
+    return response;
+  });
+});
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: usdToEurLink.concat(httpLink)
+});
+```
+
+The `usdToEurLink` converts a USD price to a EUR price, and would normally fetch the conversion
+rate by querying a third-party API. In turn, this kind of procedure is often asynchronous and would
+require the usage of `asyncMap`. It is important to note that it might not be possible to add
+additional fields to the response object.
+
 ## The `HttpLink` object
 
 Apollo Client uses `HttpLink` to send GraphQL operations to a server over HTTP. The link supports both POST and GET requests, and it can modify HTTP options on a per-query basis. This comes in handy when implementing authentication, persisted queries, dynamic URIs, and other granular updates.

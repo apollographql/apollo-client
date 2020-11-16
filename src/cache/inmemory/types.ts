@@ -74,6 +74,15 @@ export interface NormalizedCache {
  * a flattened representation of query result trees.
  */
 export interface NormalizedCacheObject {
+  __META?: {
+    // Well-known singleton IDs like ROOT_QUERY and ROOT_MUTATION are
+    // always considered to be root IDs during cache.gc garbage
+    // collection, but other IDs can become roots if they are written
+    // directly with cache.writeFragment or retained explicitly with
+    // cache.retain. When such IDs exist, we include them in the __META
+    // section so that they can survive cache.{extract,restore}.
+    extraRootIds: string[];
+  };
   [dataId: string]: StoreObject | undefined;
 }
 

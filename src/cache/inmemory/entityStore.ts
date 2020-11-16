@@ -253,6 +253,20 @@ export abstract class EntityStore implements NormalizedCache {
     this.replace(null);
   }
 
+  public extract(): NormalizedCacheObject {
+    const obj = this.toObject();
+    const extraRootIds: string[] = [];
+    this.getRootIdSet().forEach(id => {
+      if (!hasOwn.call(this.policies.rootTypenamesById, id)) {
+        extraRootIds.push(id);
+      }
+    });
+    if (extraRootIds.length) {
+      obj.__META = { extraRootIds: extraRootIds.sort() };
+    }
+    return obj;
+  }
+
   public replace(newData: NormalizedCacheObject | null): void {
     Object.keys(this.data).forEach(dataId => {
       if (!(newData && hasOwn.call(newData, dataId))) {
@@ -260,9 +274,13 @@ export abstract class EntityStore implements NormalizedCache {
       }
     });
     if (newData) {
-      Object.keys(newData).forEach(dataId => {
-        this.merge(dataId, newData[dataId] as StoreObject);
+      const { __META, ...rest } = newData;
+      Object.keys(rest).forEach(dataId => {
+        this.merge(dataId, rest[dataId] as StoreObject);
       });
+      if (__META) {
+        __META.extraRootIds.forEach(this.retain, this);
+      }
     }
   }
 

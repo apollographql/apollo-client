@@ -5,6 +5,14 @@
 - Always consider singleton IDs like `ROOT_QUERY` and `ROOT_MUTATION` to be root IDs during `cache.gc` garbage collection, regardless of whether they have been retained or released. <br/>
   [@benjamn](https://github.com/benjamn) in [#7333](https://github.com/apollographql/apollo-client/pull/7333)
 
+## Improvements
+
+- Handle older `react-apollo` package in `codemods/ac2-to-ac3/imports.js` migration script. <br/>
+  [@tm1000](https://github.com/tm1000) in [#7216](https://github.com/apollographql/apollo-client/pull/7216)
+
+- Ensure `relayStylePagination` preserves `pageInfo.{start,end}Cursor` if `edges` is missing or empty. <br/>
+  [@beaucollins](https://github.com/beaucollins) in [#7224](https://github.com/apollographql/apollo-client/pull/7224)
+
 ## Apollo Client 3.2.5
 
 ## Improvements

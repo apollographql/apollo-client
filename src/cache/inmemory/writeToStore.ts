@@ -109,8 +109,11 @@ export class StoreWriter {
       throw new InvariantError(`Could not identify object ${JSON.stringify(result)}`);
     }
 
-    // Any IDs written explicitly to the cache (including ROOT_QUERY,
-    // most frequently) will be retained as reachable root IDs.
+    // Any IDs written explicitly to the cache will be retained as
+    // reachable root IDs for garbage collection purposes. Although this
+    // logic includes root IDs like ROOT_QUERY and ROOT_MUTATION, their
+    // retainment counts are effectively ignored because cache.gc() always
+    // includes them in its root ID set.
     store.retain(ref.__ref);
 
     return ref;

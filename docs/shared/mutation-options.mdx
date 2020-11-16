@@ -9,5 +9,6 @@
 | `awaitRefetchQueries` | boolean | Queries refetched as part of `refetchQueries` are handled asynchronously, and are not waited on before the mutation is completed (resolved). Setting this to `true` will make sure refetched queries are completed before the mutation is considered done. `false` by default. |
 | `onCompleted` | (data: TData) => void | A callback executed once your mutation successfully completes |
 | `onError` | (error: ApolloError) => void | A callback executed in the event of an error. |
+| `errorPolicy` | ErrorPolicy | How you want your component to handle network and GraphQL errors. Defaults to "none", which means we treat GraphQL errors as runtime errors. |
 | `context` | Record&lt;string, any&gt; | Shared context between your component and your network interface (Apollo Link). |
 | `client` | ApolloClient | An `ApolloClient` instance. By default `useMutation` / `Mutation` uses the client passed down via context, but a different client can be passed in. |

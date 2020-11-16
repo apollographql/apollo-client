@@ -140,9 +140,7 @@ import { asyncMap } from "@apollo/client/utilities";
 
 import { usdToEur } from './currency';
 
-const httpLink = new HttpLink({
-  uri: "https://graphql.anilist.co/"
-});
+const httpLink = new HttpLink({ uri: '/graphql' });
 
 const usdToEurLink = new ApolloLink((operation, forward) => {
   return asyncMap(forward(operation), async (response) => {

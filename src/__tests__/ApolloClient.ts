@@ -1108,6 +1108,9 @@ describe('ApolloClient', () => {
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
+        __META: {
+          extraRootIds: ['foo'],
+        },
         foo: {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,

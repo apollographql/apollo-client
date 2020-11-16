@@ -213,7 +213,14 @@ describe('EntityStore', () => {
       'Book:9781451673319',
     ]);
 
+    const rayMeta = {
+      extraRootIds: [
+        "Author:Ray Bradbury",
+      ],
+    };
+
     expect(cache.extract()).toEqual({
+      __META: rayMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -305,7 +312,14 @@ describe('EntityStore', () => {
       });
     }, "ray books");
 
+    const rayMeta = {
+      extraRootIds: [
+        "Author:Ray Bradbury",
+      ],
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: rayMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -535,7 +549,15 @@ describe('EntityStore', () => {
     // Berwald's optimistically-added author.books field.
     expect(cache.gc()).toEqual([]);
 
+    const juliBookMeta = {
+      extraRootIds: [
+        "Author:Juli Berwald",
+        "Book:0735211280",
+      ],
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: juliBookMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -572,14 +594,26 @@ describe('EntityStore', () => {
       },
     });
 
+    const juliMeta = {
+      extraRootIds: [
+        "Author:Juli Berwald",
+      ],
+    };
+
     // A non-optimistic snapshot will not have the extra books field.
-    expect(cache.extract(false)).toEqual(snapshotWithBothBooksAndAuthors);
+    expect(cache.extract(false)).toEqual({
+      ...snapshotWithBothBooksAndAuthors,
+      __META: juliMeta,
+    });
 
     cache.removeOptimistic("juli books");
 
     // The optimistic books field is gone now that we've removed the optimistic
     // layer that added it.
-    expect(cache.extract(true)).toEqual(snapshotWithBothBooksAndAuthors);
+    expect(cache.extract(true)).toEqual({
+      ...snapshotWithBothBooksAndAuthors,
+      __META: juliMeta,
+    });
 
     // The Spineless book is no longer retained or kept alive by any other root
     // IDs, so it can finally be collected.
@@ -681,7 +715,16 @@ describe('EntityStore', () => {
       },
     };
 
-    expect(cache.extract(true)).toEqual(snapshotWithBothNames);
+    const cuckooMeta = {
+      extraRootIds: [
+        "Book:031648637X",
+      ],
+    };
+
+    expect(cache.extract(true)).toEqual({
+      ...snapshotWithBothNames,
+      __META: cuckooMeta,
+    });
 
     expect(cache.gc()).toEqual([]);
 
@@ -695,7 +738,14 @@ describe('EntityStore', () => {
 
     cache.removeOptimistic("real name");
 
+    const robertMeta = {
+      extraRootIds: [
+        "Author:Robert Galbraith",
+      ],
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: robertMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -725,7 +775,17 @@ describe('EntityStore', () => {
       },
     });
 
+    const cuckooRobertMeta = {
+      ...cuckooMeta,
+      ...robertMeta,
+      extraRootIds: [
+        ...cuckooMeta.extraRootIds,
+        ...robertMeta.extraRootIds,
+      ].sort(),
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: cuckooRobertMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -777,6 +837,7 @@ describe('EntityStore', () => {
     expect(cache.evict({})).toBe(true);
 
     expect(cache.extract(true)).toEqual({
+      __META: cuckooMeta,
       "Book:031648637X": {
         __typename: "Book",
         author: {
@@ -2038,8 +2099,15 @@ describe('EntityStore', () => {
       },
     });
 
+    const cuckooMeta = {
+      extraRootIds: [
+        'Book:{"isbn":"031648637X"}',
+      ],
+    };
+
     expect(cache.extract()).toEqual({
       ...threeBookSnapshot,
+      __META: cuckooMeta,
       // This book was added as a side effect of the read function.
       'Book:{"isbn":"031648637X"}': {
         __typename: "Book",
@@ -2088,6 +2156,7 @@ describe('EntityStore', () => {
 
     expect(cache.extract()).toEqual({
       ...threeBookSnapshot,
+      __META: cuckooMeta,
       // This book was added as a side effect of the read function.
       'Book:{"isbn":"031648637X"}': {
         __typename: "Book",

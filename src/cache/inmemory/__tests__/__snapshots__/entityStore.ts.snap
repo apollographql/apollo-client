@@ -19,5 +19,24 @@ Object {
       "__ref": "Book:1982156945",
     },
   },
+  "__META": Object {
+    "extraRootIds": Array [
+      "Author:Allie Brosh",
+    ],
+  },
+}
+`;
+
+exports[`EntityStore ignores retainment count for ROOT_QUERY 2`] = `
+Object {
+  "Author:Allie Brosh": Object {
+    "__typename": "Author",
+    "name": "Allie Brosh",
+  },
+  "__META": Object {
+    "extraRootIds": Array [
+      "Author:Allie Brosh",
+    ],
+  },
 }
 `;

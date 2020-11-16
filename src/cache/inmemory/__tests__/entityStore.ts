@@ -880,6 +880,13 @@ describe('EntityStore', () => {
       },
     });
 
+    const allieId = cache.identify({
+      __typename: "Author",
+      name: "Allie Brosh",
+    })!;
+    expect(allieId).toBe("Author:Allie Brosh");
+    expect(cache.retain(allieId)).toBe(1);
+
     const snapshot = cache.extract();
     expect(snapshot).toMatchSnapshot();
 
@@ -900,8 +907,15 @@ describe('EntityStore', () => {
     })).toBe(true);
 
     expect(cache2.gc().sort()).toEqual([
-      "Author:Allie Brosh",
       "Book:1982156945",
+    ]);
+
+    expect(cache2.extract()).toMatchSnapshot();
+
+    expect(cache2.release(allieId)).toBe(0);
+
+    expect(cache2.gc().sort()).toEqual([
+      "Author:Allie Brosh",
     ]);
 
     expect(cache2.extract()).toEqual({});

@@ -801,6 +801,51 @@ describe('EntityStore', () => {
     ]);
   });
 
+  it("ignores retainment count for ROOT_QUERY", () => {
+    const { cache, query } = newBookAuthorCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: {
+          __typename: "Book",
+          isbn: "1982156945",
+          title: "Solutions and Other Problems",
+          author: {
+            __typename: "Author",
+            name: "Allie Brosh",
+          },
+        },
+      },
+    });
+
+    const snapshot = cache.extract();
+    expect(snapshot).toMatchSnapshot();
+
+    expect(cache.gc()).toEqual([]);
+
+    const cache2 = newBookAuthorCache().cache;
+    cache2.restore(snapshot);
+
+    expect(cache2.extract()).toEqual(snapshot);
+
+    expect(cache2.gc()).toEqual([]);
+
+    // Evicting the whole ROOT_QUERY object is probably a terrible idea in
+    // any real application, but it's worthwhile to test that eviction is
+    // stronger than retainment.
+    expect(cache2.evict({
+      id: "ROOT_QUERY",
+    })).toBe(true);
+
+    expect(cache2.gc().sort()).toEqual([
+      "Author:Allie Brosh",
+      "Book:1982156945",
+    ]);
+
+    expect(cache2.extract()).toEqual({});
+  });
+
   it("allows evicting specific fields", () => {
     const query: DocumentNode = gql`
       query {

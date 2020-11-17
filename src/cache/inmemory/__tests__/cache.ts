@@ -621,7 +621,12 @@ describe('Cache', () => {
         data: bothNamesData,
       });
 
+      const meta123 = {
+        extraRootIds: ["Person:123"],
+      };
+
       expect(cache.extract()).toEqual({
+        __META: meta123,
         "Person:123": {
           __typename: "Person",
           id: 123,
@@ -646,6 +651,7 @@ describe('Cache', () => {
       });
 
       expect(cache.extract()).toEqual({
+        __META: meta123,
         "Person:123": {
           __typename: "Person",
           id: 123,
@@ -681,6 +687,7 @@ describe('Cache', () => {
       });
 
       expect(cache.extract()).toEqual({
+        __META: meta123,
         "Person:123": {
           __typename: "Person",
           id: 123,
@@ -738,6 +745,9 @@ describe('Cache', () => {
 
       expect(cache.extract(false)).toEqual({});
       expect(cache.extract(true)).toEqual({
+        __META: {
+          extraRootIds: ["Person:321"],
+        },
         "Person:321": {
           __typename: "Person",
           id: 321,
@@ -1304,6 +1314,9 @@ describe('Cache', () => {
         });
 
         expect((proxy as InMemoryCache).extract()).toEqual({
+          __META: {
+            extraRootIds: ["foo"],
+          },
           foo: {
             __typename: 'Foo',
             'field({"literal":true,"value":42})': 1,

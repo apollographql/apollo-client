@@ -1405,7 +1405,14 @@ describe("type policies", function () {
 
       // Nothing should have changed in the cache itself as a result of
       // writing a result for job #2.
-      expect(cache.extract()).toEqual(snapshot1);
+      expect(cache.extract()).toEqual({
+        ...snapshot1,
+        __META: {
+          extraRootIds: [
+            'Job:{"name":"Job #2"}',
+          ],
+        },
+      });
 
       expect(cache.diff({
         query,
@@ -1458,7 +1465,14 @@ describe("type policies", function () {
         },
       };
 
-      expect(cache.extract()).toEqual(snapshot2);
+      expect(cache.extract()).toEqual({
+        ...snapshot2,
+        __META: {
+          extraRootIds: [
+            'Job:{"name":"Job #2"}',
+          ],
+        },
+      });
 
       expect(cache.diff({
         query,
@@ -3774,6 +3788,11 @@ describe("type policies", function () {
       });
 
       expect(cache.extract()).toEqual({
+        __META: {
+          extraRootIds: [
+            'Book:{"isbn":"156858217X"}',
+          ],
+        },
         ROOT_QUERY: {
           __typename: "Query",
           'book:{"isbn":"0393354326"}': {

@@ -2,6 +2,11 @@
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
   },
@@ -17,6 +22,11 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 2`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
     "j": 8,
@@ -36,6 +46,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 3`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -56,6 +72,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 4`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -76,6 +98,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 5`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -96,6 +124,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 6`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -116,6 +150,11 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
   },
@@ -131,6 +170,11 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 2`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
     "j": 8,
@@ -150,6 +194,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 3`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -170,6 +220,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 4`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -190,6 +246,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 5`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -210,6 +272,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 6`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -305,6 +373,11 @@ Object {
     "book({\\"isbn\\":\\"0262133210\\"})": Object {
       "__ref": "Book:{\\"isbn\\":\\"0262133210\\"}",
     },
+  },
+  "__META": Object {
+    "extraRootIds": Array [
+      "Book:{\\"isbn\\":\\"0262510871\\"}",
+    ],
   },
 }
 `;

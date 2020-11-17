@@ -103,7 +103,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public extract(optimistic: boolean = false): NormalizedCacheObject {
-    return (optimistic ? this.optimisticData : this.data).toObject();
+    return (optimistic ? this.optimisticData : this.data).extract();
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {

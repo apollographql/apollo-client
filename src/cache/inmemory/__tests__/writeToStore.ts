@@ -2327,7 +2327,14 @@ describe('writing to the store', () => {
       broadcast: false,
     });
 
+    const counterMeta = {
+      extraRootIds: [
+        "Counter:{}",
+      ],
+    };
+
     expect(cache.extract()).toEqual({
+      __META: counterMeta,
       ROOT_QUERY: {
         __typename: "Query",
         counter: { __ref: "Counter:{}" },
@@ -2347,6 +2354,7 @@ describe('writing to the store', () => {
     })).toBe(true);
 
     expect(cache.extract()).toEqual({
+      __META: counterMeta,
       ROOT_QUERY: {
         __typename: "Query",
         counter: { __ref: "Counter:{}" },

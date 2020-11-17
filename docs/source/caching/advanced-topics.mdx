@@ -19,7 +19,7 @@ Operations that use this fetch policy don't write their result to the cache, and
 
 ## Rerunning queries after a mutation
 
-In certain cases, writing an `update` function to [update the cache after a mutation](./mutations/#updating-the-cache-after-a-mutation) can be complex, or even impossible if the mutation doesn't return modified fields.
+In certain cases, writing an `update` function to [update the cache after a mutation](../data/mutations/#updating-the-cache-after-a-mutation) can be complex, or even impossible if the mutation doesn't return modified fields.
 
 In these cases, you can provide a `refetchQueries` option to the `useMutation` hook to automatically rerun certain queries after the mutation completes.
 

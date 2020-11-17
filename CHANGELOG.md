@@ -64,12 +64,31 @@
 - Allow optional arguments in `keyArgs: [...]` arrays for `InMemoryCache` field policies. <br/>
   [@benjamn](https://github.com/benjamn) in [#7109](https://github.com/apollographql/apollo-client/pull/7109)
 
+## Apollo Client 3.2.7
+
+## Bug Fixes
+
+- Revert updating `symbol-observable` from version 2.x to version 3, which caused TypeScript errors with some `@types/node` versions, especially in Angular applications. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7340](https://github.com/apollographql/apollo-client/pull/7340)
+
 ## Apollo Client 3.2.6
 
 ## Bug Fixes
 
 - Always consider singleton IDs like `ROOT_QUERY` and `ROOT_MUTATION` to be root IDs during `cache.gc` garbage collection, regardless of whether they have been retained or released. <br/>
   [@benjamn](https://github.com/benjamn) in [#7333](https://github.com/apollographql/apollo-client/pull/7333)
+
+- Use optional chaining syntax (`this.currentObservable?.refetch`) in React `refetch` wrapper function to avoid crashing when an unmounted component is accidentally refetched. <br/>
+  [@tm1000](https://github.com/tm1000) in [#6314](https://github.com/apollographql/apollo-client/pull/6314) and
+  [@linmic](https://github.com/linmic) in [#7186](https://github.com/apollographql/apollo-client/pull/7186)
+
+## Improvements
+
+- Handle older `react-apollo` package in `codemods/ac2-to-ac3/imports.js` migration script. <br/>
+  [@tm1000](https://github.com/tm1000) in [#7216](https://github.com/apollographql/apollo-client/pull/7216)
+
+- Ensure `relayStylePagination` preserves `pageInfo.{start,end}Cursor` if `edges` is missing or empty. <br/>
+  [@beaucollins](https://github.com/beaucollins) in [#7224](https://github.com/apollographql/apollo-client/pull/7224)
 
 ## Apollo Client 3.2.5
 

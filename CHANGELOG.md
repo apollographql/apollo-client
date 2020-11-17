@@ -1,3 +1,10 @@
+## Apollo Client 3.2.7
+
+## Bug Fixes
+
+- Revert updating `symbol-observable` from version 2.x to version 3, which caused TypeScript errors with some `@types/node` versions, especially in Angular applications. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7340](https://github.com/apollographql/apollo-client/pull/7340)
+
 ## Apollo Client 3.2.6
 
 ## Bug Fixes

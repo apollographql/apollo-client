@@ -64,6 +64,9 @@
 - Allow optional arguments in `keyArgs: [...]` arrays for `InMemoryCache` field policies. <br/>
   [@benjamn](https://github.com/benjamn) in [#7109](https://github.com/apollographql/apollo-client/pull/7109)
 
+- Avoid registering `QueryPromise` when `skip` is `true` during server-side rendering. <br/>
+  [@izumin5210](https://github.com/izumin5210) in [#7310](https://github.com/apollographql/apollo-client/pull/7310)
+
 ## Apollo Client 3.2.7
 
 ## Bug Fixes

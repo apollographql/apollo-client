@@ -3,21 +3,36 @@ title: Advanced topics on caching
 sidebar_title: Advanced topics
 ---
 
-Here are some common situations where you would need to access the cache directly. If you're manipulating the cache in an interesting way and would like your example to be featured, please send in a pull request!
+This article describes special cases and considerations when using the Apollo Client cache.
 
 ## Bypassing the cache
 
-Sometimes it makes sense to not use the cache for a specific operation. This can be done using the `no-cache` `fetchPolicy`. The `no-cache` policy does not write to the cache with the response. This may be useful for sensitive data like passwords that you don’t want to keep in the cache.
+Sometimes you _shouldn't_ use the cache for a particular GraphQL operation. For example, a query's response might be a token that's only used once. In cases like this, use [the `no-cache` fetch policy](../data/queries/#setting-a-fetch-policy):
 
-## Updating after a mutation
+```js
+const { loading, error, data } = useQuery(GET_DOGS, {
+  fetchPolicy: "no-cache" // highlight-line
+});
+```
 
-In some cases, just using `dataIdFromObject` is not enough for your application UI to update correctly. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that to which you can't assign an object identifier, Apollo Client cannot update existing queries for you. Read on to learn about the other tools at your disposal.
+Operations that use this fetch policy don't write their result to the cache, and they also don't check the cache for data before sending a request to your server.
 
-`refetchQueries` is the simplest way of updating the cache. With `refetchQueries` you can specify one or more queries that you want to run after a mutation is completed in order to refetch the parts of the store that may have been affected by the mutation:
+## Rerunning queries after a mutation
+
+In certain cases, writing an `update` function to [update the cache after a mutation](../data/mutations/#updating-the-cache-after-a-mutation) can be complex, or even impossible if the mutation doesn't return modified fields.
+
+In these cases, you can provide a `refetchQueries` option to the `useMutation` hook to automatically rerun certain queries after the mutation completes.
+
+> Note that although `refetchQueries` can be faster to implement than an `update` function, it also requires additional network requests that are usually undesirable. For more information, see [this blog post](https://www.apollographql.com/blog/when-to-use-refetch-queries-in-apollo-client/).
+
+Here's an example of using `refetchQueries` to execute a query that's specified inline:
 
 ```javascript
-mutate({
-  //... insert comment mutation
+useMutation(
+  // ... Mutation definition ...
+
+  // Mutation options
+  {
   refetchQueries: [{
     query: gql`
       query UpdateCache($repoName: String!) {
@@ -36,12 +51,16 @@ mutate({
     `,
     variables: { repoName: 'apollographql/apollo-client' },
   }],
-})
+});
 ```
 
-Please note that if you call `refetchQueries` with an array of strings, then Apollo Client will look for any previously called queries that have the same names as the provided strings. It will then refetch those queries with their current variables.
+The `refetchQueries` option is an array where each element is one of the following:
 
-A very common way of using `refetchQueries` is to import queries defined for other components to make sure that those components will be updated:
+* An object with a `query` field that specifies the query to execute, along with a `variables` field if applicable (shown above)
+* The name of a query you've previously executed, as a string (e.g., `GetComments`)
+  * _Queries you list by name are executed with their most recently provided set of variables._
+
+You can also import and provide queries that are defined in other components to make sure those components are updated:
 
 ```javascript
 import RepoCommentsQuery from '../queries/RepoCommentsQuery';
@@ -53,50 +72,6 @@ mutate({
     variables: { repoFullName: 'apollographql/apollo-client' },
   }],
 })
-```
-
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](../api/react/hooks/#usemutation).
-
-```jsx
-import CommentAppQuery from '../queries/CommentAppQuery';
-
-const SUBMIT_COMMENT_MUTATION = gql`
-  mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
-    submitComment(
-      repoFullName: $repoFullName
-      commentContent: $commentContent
-    ) {
-      postedBy {
-        login
-        html_url
-      }
-      createdAt
-      content
-    }
-  }
-`;
-
-const CommentsPageWithMutations = () => (
-  <Mutation mutation={SUBMIT_COMMENT_MUTATION}>
-    {mutate => {
-      <AddComment
-        submit={({ repoFullName, commentContent }) =>
-          mutate({
-            variables: { repoFullName, commentContent },
-            update: (store, { data: { submitComment } }) => {
-              // Read the data from our cache for this query.
-              const data = store.readQuery({ query: CommentAppQuery });
-              // Add our comment from the mutation to the end.
-              const comments = [...data.comments, submitComment];
-              // Write our data back to the cache.
-              store.writeQuery({ query: CommentAppQuery, data: { comments } });
-            }
-          })
-        }
-      />;
-    }}
-  </Mutation>
-);
 ```
 
 ## Incremental loading: `fetchMore`

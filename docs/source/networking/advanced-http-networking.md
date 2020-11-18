@@ -80,7 +80,7 @@ In the example above, the `authMiddleware` link sets each request's `Authorizati
 
 ## Customizing response logic
 
-You can also use Apollo Link to customize Apollo Client's behavior whenever it receives a response from a request.
+You can use Apollo Link to customize Apollo Client's behavior whenever it receives a response from a request.
 
 The following example demonstrates using [`@apollo/client/link/error`](../api/link/apollo-link-error/) to handle network errors that are included in a response:
 
@@ -103,6 +103,64 @@ const client = new ApolloClient({
 ```
 
 In this example, the user is logged out of the application if the server returns a `401` code (unauthorized).
+
+### Modifying response data
+
+You can create a custom link that adds, edits, or removes fields from `response.data`. To do so, you call `map` on the result of the link's `forward(operation)` call. In the `map` function, make any desired changes to `response.data` and then return it:
+
+```js
+import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from '@apollo/client';
+
+const httpLink = new HttpLink({ uri: '/graphql' });
+
+const addDateLink = new ApolloLink((operation, forward) => {
+  return forward(operation).map(response => {
+    response.data.date = new Date();
+    return response;
+  });
+});
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: addDateLink.concat(httpLink),
+});
+```
+
+In the above example, `addDateLink` adds a `date` field to the top level of each response.
+
+Note that `forward(operation).map(func)` _doesn't_ support asynchronous execution of the `func` mapping function. If you need to make asynchronous modifications, use the `asyncMap` function from `@apollo/client/utilities`, like so:
+
+```js
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ApolloLink
+} from "@apollo/client";
+import { asyncMap } from "@apollo/client/utilities";
+
+import { usdToEur } from './currency';
+
+const httpLink = new HttpLink({ uri: '/graphql' });
+
+const usdToEurLink = new ApolloLink((operation, forward) => {
+  return asyncMap(forward(operation), async (response) => {
+    let data = response.data;
+    if (data.price && data.currency === "USD") {
+      data.price = await usdToEur(data.price);
+      data.currency = "EUR";
+    }
+    return response;
+  });
+});
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: usdToEurLink.concat(httpLink)
+});
+```
+
+In the example above, `usdToEurLink` uses `asyncMap` to convert the response object's `price` field from USD to EUR using an external API.
 
 ## The `HttpLink` object
 

@@ -80,7 +80,7 @@ In the example above, the `authMiddleware` link sets each request's `Authorizati
 
 ## Customizing response logic
 
-You can also use Apollo Link to customize Apollo Client's behavior whenever it receives a response from a request.
+You can use Apollo Link to customize Apollo Client's behavior whenever it receives a response from a request.
 
 The following example demonstrates using [`@apollo/client/link/error`](../api/link/apollo-link-error/) to handle network errors that are included in a response:
 
@@ -104,14 +104,16 @@ const client = new ApolloClient({
 
 In this example, the user is logged out of the application if the server returns a `401` code (unauthorized).
 
-To manipulate the response data, you can use `forward(operation).map`:  
+### Modifying response data
+
+You can create a custom link that adds, edits, or removes fields from `response.data`. To do so, you call `map` on the result of the link's `forward(operation)` call. In the `map` function, make any desired changes to `response.data` and then return it:
 
 ```js
 import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from '@apollo/client';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 
-const mutatorLink = new ApolloLink((operation, forward) => {
+const addDateLink = new ApolloLink((operation, forward) => {
   return forward(operation).map(response => {
     response.data.date = new Date();
     return response;
@@ -120,14 +122,13 @@ const mutatorLink = new ApolloLink((operation, forward) => {
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: mutatorLink.concat(httpLink),
+  link: addDateLink.concat(httpLink),
 });
 ```
 
-In the above example, the `mutatorLink` adds a `date` field to each response. This is a simple manipulation of 
-the response object, there exist some manipulations that require asynchronous invocation. Currently,
-passing an `async` function to `forward(operation).map` is not supported. Instead, the utility `asyncMap`
-can be used to pass an `async` function.
+In the above example, `addDateLink` adds a `date` field to the top level of each response.
+
+Note that `forward(operation).map(func)` _doesn't_ support asynchronous execution of the `func` mapping function. If you need to make asynchronous modifications, use the `asyncMap` function from `@apollo/client/utilities`, like so:
 
 ```js
 import {
@@ -159,10 +160,7 @@ const client = new ApolloClient({
 });
 ```
 
-The `usdToEurLink` converts a USD price to a EUR price, and would normally fetch the conversion
-rate by querying a third-party API. In turn, this kind of procedure is often asynchronous and would
-require the usage of `asyncMap`. It is important to note that it might not be possible to add
-additional fields to the response object.
+In the example above, `usdToEurLink` uses `asyncMap` to convert the response object's `price` field from USD to EUR using an external API.
 
 ## The `HttpLink` object
 

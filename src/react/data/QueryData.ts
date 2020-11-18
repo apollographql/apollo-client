@@ -152,7 +152,8 @@ export class QueryData<TData, TVariables> extends OperationData {
   };
 
   private getExecuteSsrResult() {
-    const ssrDisabled = this.getOptions().ssr === false;
+    const { ssr, skip } = this.getOptions();
+    const ssrDisabled = ssr === false || skip;
     const fetchDisabled = this.refreshClient().client.disableNetworkFetches;
 
     const ssrLoading = {

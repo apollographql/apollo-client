@@ -70,6 +70,7 @@ export class QueryInfo {
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
+  stopped = false;
 
   constructor(private cache: ApolloCache<any>) {
     // Track how often cache.evict is called, since we want eviction to
@@ -220,13 +221,19 @@ export class QueryInfo {
   }
 
   public stop() {
-    this.cancel();
-    // Revert back to the no-op version of cancel inherited from
-    // QueryInfo.prototype.
-    delete this.cancel;
+    if (!this.stopped) {
+      this.stopped = true;
 
-    const oq = this.observableQuery;
-    if (oq) oq.stopPolling();
+      this.cancel();
+      // Revert back to the no-op version of cancel inherited from
+      // QueryInfo.prototype.
+      delete this.cancel;
+
+      this.subscriptions.forEach(sub => sub.unsubscribe());
+
+      const oq = this.observableQuery;
+      if (oq) oq.stopPolling();
+    }
   }
 
   // This method is a no-op by default, until/unless overridden by the
@@ -357,9 +364,14 @@ export class QueryInfo {
             optimistic: true,
           });
 
-          // Any time we're about to update this.diff, we need to make
-          // sure we've started watching the cache.
-          this.updateWatch(options.variables);
+          // In case the QueryManager stops this QueryInfo before its
+          // results are delivered, it's important to avoid restarting the
+          // cache watch when markResult is called.
+          if (!this.stopped) {
+            // Any time we're about to update this.diff, we need to make
+            // sure we've started watching the cache.
+            this.updateWatch(options.variables);
+          }
 
           // If we're allowed to write to the cache, and we can read a
           // complete result from the cache, update result.data to be the

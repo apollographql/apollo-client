@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.2.5",
+  "version": "3.2.7",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -79,7 +79,7 @@
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.13.0",
     "prop-types": "^15.7.2",
-    "symbol-observable": "^3.0.0",
+    "symbol-observable": "^2.0.0",
     "ts-invariant": "^0.5.0",
     "tslib": "^1.10.0",
     "zen-observable": "^0.8.14"
@@ -94,7 +94,7 @@
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/jest": "26.0.15",
     "@types/lodash": "4.14.165",
-    "@types/node": "14.14.6",
+    "@types/node": "14.14.7",
     "@types/react": "16.9.56",
     "@types/react-dom": "16.9.9",
     "@types/recompose": "^0.30.7",

@@ -128,7 +128,7 @@ const client = new ApolloClient({
 
 In the above example, `addDateLink` adds a `date` field to the top level of each response.
 
-Note that `forward(operation).map` _doesn't_ support asynchronous execution. If you need to make asynchronous modifications, use the `asyncMap` function from `@apollo/client/utilities`, like so:
+Note that `forward(operation).map(func)` _doesn't_ support asynchronous execution of the `func` mapping function. If you need to make asynchronous modifications, use the `asyncMap` function from `@apollo/client/utilities`, like so:
 
 ```js
 import {

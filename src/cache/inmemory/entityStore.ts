@@ -95,7 +95,8 @@ export abstract class EntityStore implements NormalizedCache {
 
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
-    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming);
+    const merged: StoreObject =
+      new DeepMerger(storeObjectReconciler).merge(existing, incoming);
     // Even if merged === existing, existing may have come from a lower
     // layer, so we always need to set this.data[dataId] on this level.
     this.data[dataId] = merged;
@@ -103,15 +104,33 @@ export abstract class EntityStore implements NormalizedCache {
       delete this.refs[dataId];
       if (this.group.caching) {
         const fieldsToDirty: Record<string, 1> = Object.create(null);
+
         // If we added a new StoreObject where there was previously none, dirty
         // anything that depended on the existence of this dataId, such as the
         // EntityStore#has method.
         if (!existing) fieldsToDirty.__exists = 1;
+
         // Now invalidate dependents who called getFieldValue for any fields
         // that are changing as a result of this merge.
         Object.keys(incoming).forEach(storeFieldName => {
           if (!existing || existing[storeFieldName] !== merged[storeFieldName]) {
-            fieldsToDirty[fieldNameFromStoreName(storeFieldName)] = 1;
+            // Always dirty the full storeFieldName, which may include
+            // serialized arguments following the fieldName prefix.
+            fieldsToDirty[storeFieldName] = 1;
+
+            // Also dirty fieldNameFromStoreName(storeFieldName) if it's
+            // different from storeFieldName and this field does not have
+            // keyArgs configured, because that means the cache can't make
+            // any assumptions about how field values with the same field
+            // name but different arguments might be interrelated, so it
+            // must err on the side of invalidating all field values that
+            // share the same short fieldName, regardless of arguments.
+            const fieldName = fieldNameFromStoreName(storeFieldName);
+            if (fieldName !== storeFieldName &&
+                !this.policies.hasKeyArgs(merged.__typename, fieldName)) {
+              fieldsToDirty[fieldName] = 1;
+            }
+
             // If merged[storeFieldName] has become undefined, and this is the
             // Root layer, actually delete the property from the merged object,
             // which is guaranteed to have been created fresh in this method.
@@ -120,6 +139,7 @@ export abstract class EntityStore implements NormalizedCache {
             }
           }
         });
+
         Object.keys(fieldsToDirty).forEach(
           fieldName => this.group.dirty(dataId, fieldName));
       }
@@ -456,6 +476,15 @@ class CacheGroup {
   public depend(dataId: string, storeFieldName: string) {
     if (this.d) {
       this.d(makeDepKey(dataId, storeFieldName));
+      const fieldName = fieldNameFromStoreName(storeFieldName);
+      if (fieldName !== storeFieldName) {
+        // Fields with arguments that contribute extra identifying
+        // information to the fieldName (thus forming the storeFieldName)
+        // depend not only on the full storeFieldName but also on the
+        // short fieldName, so the field can be invalidated using either
+        // level of specificity.
+        this.d(makeDepKey(dataId, fieldName));
+      }
     }
   }
 
@@ -474,7 +503,7 @@ function makeDepKey(dataId: string, storeFieldName: string) {
   // Since field names cannot have '#' characters in them, this method
   // of joining the field name and the ID should be unambiguous, and much
   // cheaper than JSON.stringify([dataId, fieldName]).
-  return fieldNameFromStoreName(storeFieldName) + '#' + dataId;
+  return storeFieldName + '#' + dataId;
 }
 
 export namespace EntityStore {

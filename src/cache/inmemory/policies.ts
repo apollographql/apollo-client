@@ -646,6 +646,11 @@ export class Policies {
     return false;
   }
 
+  public hasKeyArgs(typename: string | undefined, fieldName: string) {
+    const policy = this.getFieldPolicy(typename, fieldName, false);
+    return !!(policy && policy.keyFn);
+  }
+
   public getStoreFieldName(fieldSpec: FieldSpecifier): string {
     const { typename, fieldName } = fieldSpec;
     const policy = this.getFieldPolicy(typename, fieldName, false);

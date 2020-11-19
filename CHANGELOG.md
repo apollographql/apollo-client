@@ -67,6 +67,9 @@
 - Avoid registering `QueryPromise` when `skip` is `true` during server-side rendering. <br/>
   [@izumin5210](https://github.com/izumin5210) in [#7310](https://github.com/apollographql/apollo-client/pull/7310)
 
+- Cancel `queryInfo.notifyTimeout` in `QueryInfo#markResult` to prevent unnecessary network requests when using a `FetchPolicy` of `cache-and-network` or `network-only` in a React component with multiple `useQuery` calls. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7347](https://github.com/apollographql/apollo-client/pull/7347)
+
 ## Apollo Client 3.2.7
 
 ## Bug Fixes

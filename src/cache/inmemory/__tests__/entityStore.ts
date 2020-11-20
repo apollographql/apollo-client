@@ -2308,6 +2308,10 @@ describe('EntityStore', () => {
             },
           },
         },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
       },
     });
 
@@ -2404,12 +2408,55 @@ describe('EntityStore', () => {
       "1449373321",
     ]);
 
+    const theEndResult = cache.readQuery({
+      query,
+      variables: {
+        isbn: "1982103558",
+      },
+    });
+
+    expect(theEndResult).toEqual(theEndData);
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
+
+    expect(cache.readQuery({
+      query,
+      variables: {
+        isbn: "1449373321",
+      },
+    })).toBe(diffs[0].result);
+
     expect(cache.readQuery({
       query,
       variables: {
         isbn: "1982103558",
       },
-    })).toEqual(theEndData);
+    })).toBe(theEndResult);
+
+    // Still no additional reads, because both books are cached.
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
+
+    // Evicting the 1982103558 Book should not invalidate the 1449373321
+    // Book, leaving diffs and isbnsWeHaveRead unchanged.
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Book",
+        isbn: "1982103558",
+      }),
+    })).toBe(true);
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: ddiaData,
+      },
+    ]);
 
     expect(isbnsWeHaveRead).toEqual([
       "1449373321",

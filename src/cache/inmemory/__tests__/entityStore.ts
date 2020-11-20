@@ -2443,7 +2443,7 @@ describe('EntityStore', () => {
     ]);
 
     // Evicting the 1982103558 Book should not invalidate the 1449373321
-    // Book, leaving diffs and isbnsWeHaveRead unchanged.
+    // Book, so diffs and isbnsWeHaveRead should remain unchanged.
     expect(cache.evict({
       id: cache.identify({
         __typename: "Book",

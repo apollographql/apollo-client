@@ -2056,7 +2056,6 @@ describe("InMemoryCache#modify", () => {
     cache.modify({
       fields: {
         comments(comments: Reference[], { readField }) {
-          debugger;
           expect(Object.isFrozen(comments)).toBe(true);
           expect(comments.length).toBe(3);
           const filtered = comments.filter(comment => {
@@ -2756,6 +2755,133 @@ describe("ReactiveVar and makeVar", () => {
         },
       },
     ]);
+  });
+
+  it('should broadcast to manually added caches', () => {
+    const rv = makeVar(0);
+    const cache = new InMemoryCache;
+    const query = gql`query { value }`;
+    const diffs: Cache.DiffResult<any>[] = [];
+    const watch: Cache.WatchOptions = {
+      query,
+      optimistic: true,
+      callback(diff) {
+        diffs.push(diff);
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        value: "oyez",
+      },
+    });
+
+    const cancel = cache.watch(watch);
+
+    // This should not trigger a broadcast, since we haven't associated
+    // this cache with rv yet.
+    rv(rv() + 1);
+    expect(diffs).toEqual([]);
+
+    // The rv.attachCache method returns rv, for chaining.
+    rv.attachCache(cache)(rv() + 1);
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+    ]);
+
+    cache.writeQuery({
+      query,
+      broadcast: false,
+      data: {
+        value: "oyez, oyez",
+      },
+    });
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+    ]);
+
+    rv(rv() + 1);
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez",
+        },
+      },
+    ]);
+
+    expect(rv.forgetCache(cache)).toBe(true);
+
+    cache.writeQuery({
+      query,
+      broadcast: false,
+      data: {
+        value: "oyez, oyez, oyez",
+      },
+    });
+
+    // Since we called rv.forgetCache(cache) above, updating rv here
+    // should not trigger a broadcast.
+    rv(rv() + 1);
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez",
+        },
+      },
+    ]);
+
+    cache["broadcastWatches"]();
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez, oyez",
+        },
+      },
+    ]);
+
+    cancel();
+
+    expect(rv()).toBe(4);
   });
 });
 

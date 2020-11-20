@@ -70,6 +70,9 @@
 - Cancel `queryInfo.notifyTimeout` in `QueryInfo#markResult` to prevent unnecessary network requests when using a `FetchPolicy` of `cache-and-network` or `network-only` in a React component with multiple `useQuery` calls. <br/>
   [@benjamn](https://github.com/benjamn) in [#7347](https://github.com/apollographql/apollo-client/pull/7347)
 
+- `ApolloCache` objects (including `InMemoryCache`) may now be associated with or disassociated from individual reactive variables by calling `reactiveVar.attachCache(cache)` and/or `reactiveVar.forgetCache(cache)`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7350](https://github.com/apollographql/apollo-client/pull/7350)
+
 ## Apollo Client 3.2.7
 
 ## Bug Fixes

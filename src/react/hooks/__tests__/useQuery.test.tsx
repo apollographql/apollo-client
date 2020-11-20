@@ -3,7 +3,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { ApolloClient, NetworkStatus, TypedDocumentNode } from '../../../core';
+import { ApolloClient, NetworkStatus, TypedDocumentNode, WatchQueryFetchPolicy } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
@@ -2438,5 +2438,155 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(5);
       }).then(resolve, reject);
     });
+  });
+
+  describe("multiple useQuery calls per component", () => {
+    type ABFields = {
+      id: number;
+      name: string;
+    };
+
+    const aQuery: TypedDocumentNode<{
+      a: ABFields;
+    }> = gql`query A { a { id name }}`;
+
+    const bQuery: TypedDocumentNode<{
+      b: ABFields;
+    }> = gql`query B { b { id name }}`;
+
+    const aData = {
+      a: {
+        __typename: "A",
+        id: 65,
+        name: "ay",
+      },
+    };
+
+    const bData = {
+      b: {
+        __typename: "B",
+        id: 66,
+        name: "bee",
+      },
+    };
+
+    function makeClient() {
+      return new ApolloClient({
+        cache: new InMemoryCache,
+        link: new ApolloLink(operation => new Observable(observer => {
+          switch (operation.operationName) {
+            case "A":
+              observer.next({ data: aData });
+              break;
+            case "B":
+              observer.next({ data: bData });
+              break;
+          }
+          observer.complete();
+        })),
+      });
+    }
+
+    function check(
+      aFetchPolicy: WatchQueryFetchPolicy,
+      bFetchPolicy: WatchQueryFetchPolicy,
+    ) {
+      return (
+        resolve: (result: any) => any,
+        reject: (reason: any) => any,
+      ) => {
+        let renderCount = 0;
+
+        function App() {
+          const a = useQuery(aQuery, {
+            fetchPolicy: aFetchPolicy,
+          });
+
+          const b = useQuery(bQuery, {
+            fetchPolicy: bFetchPolicy,
+          });
+
+          switch (++renderCount) {
+            case 1:
+              expect(a.loading).toBe(true);
+              expect(b.loading).toBe(true);
+              expect(a.data).toBeUndefined();
+              expect(b.data).toBeUndefined();
+              break;
+            case 2:
+              expect(a.loading).toBe(false);
+              expect(b.loading).toBe(true);
+              expect(a.data).toEqual(aData);
+              expect(b.data).toBeUndefined();
+              break;
+            case 3:
+              expect(a.loading).toBe(false);
+              expect(b.loading).toBe(false);
+              expect(a.data).toEqual(aData);
+              expect(b.data).toEqual(bData);
+              break;
+            default:
+              reject("too many renders: " + renderCount);
+          }
+
+          return null;
+        }
+
+        render(
+          <ApolloProvider client={makeClient()}>
+            <App/>
+          </ApolloProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3);
+        }).then(resolve, reject);
+      };
+    }
+
+    itAsync("cache-first for both", check(
+      "cache-first",
+      "cache-first",
+    ));
+
+    itAsync("cache-first first, cache-and-network second", check(
+      "cache-first",
+      "cache-and-network",
+    ));
+
+    itAsync("cache-first first, network-only second", check(
+      "cache-first",
+      "network-only",
+    ));
+
+    itAsync("cache-and-network for both", check(
+      "cache-and-network",
+      "cache-and-network",
+    ));
+
+    itAsync("cache-and-network first, cache-first second", check(
+      "cache-and-network",
+      "cache-first",
+    ));
+
+    itAsync("cache-and-network first, network-only second", check(
+      "cache-and-network",
+      "network-only",
+    ));
+
+    itAsync("network-only for both", check(
+      "network-only",
+      "network-only",
+    ));
+
+    itAsync("network-only first, cache-first second", check(
+      "network-only",
+      "cache-first",
+    ));
+
+    itAsync("network-only first, cache-and-network second", check(
+      "network-only",
+      "cache-and-network",
+    ));
   });
 });

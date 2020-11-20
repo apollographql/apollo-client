@@ -627,22 +627,25 @@ once, rather than every time you call fetchMore.`);
   private tearDownQuery() {
     if (this.isTornDown) return;
 
-    const { queryManager } = this;
-
     if (this.reobserver) {
       this.reobserver.stop();
       delete this.reobserver;
     }
 
-    this.isTornDown = true;
+    // Since the user-provided context object can retain arbitrarily large
+    // amounts of memory, we delete it when the ObservableQuery is torn
+    // down, to avoid the possibility of memory leaks.
+    delete this.options.context;
 
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();
 
-    queryManager.stopQuery(this.queryId);
+    this.queryManager.stopQuery(this.queryId);
 
     this.observers.clear();
+
+    this.isTornDown = true;
   }
 }
 

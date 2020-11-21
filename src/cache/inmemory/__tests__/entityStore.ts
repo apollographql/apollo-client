@@ -4,6 +4,7 @@ import { InMemoryCache } from '../inMemoryCache';
 import { DocumentNode } from 'graphql';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
+import { Cache } from '../../core/types/Cache';
 import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
 import { MissingFieldError } from '../..';
 
@@ -2276,5 +2277,190 @@ describe('EntityStore', () => {
       title: "Kindred",
       favorited: false,
     }});
+  });
+
+  it("should not over-invalidate fields with keyArgs", () => {
+    const isbnsWeHaveRead: string[] = [];
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            book: {
+              // The presence of this keyArgs configuration permits the
+              // cache to track result caching dependencies at the level
+              // of individual Books, so writing one Book does not
+              // invalidate other Books with different ISBNs. If the cache
+              // doesn't know which arguments are "important," it can't
+              // make any assumptions about the relationships between
+              // field values with the same field name but different
+              // arguments, so it has to err on the side of invalidating
+              // all Query.book data whenever any Book is written.
+              keyArgs: ["isbn"],
+
+              read(book, { args, toReference }) {
+                isbnsWeHaveRead.push(args!.isbn);
+                return book || toReference({
+                  __typename: "Book",
+                  isbn: args!.isbn,
+                });
+              },
+            },
+          },
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+      },
+    });
+
+    const query = gql`
+      query Book($isbn: string) {
+        book(isbn: $isbn) {
+          title
+          isbn
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    const diffs: Cache.DiffResult<any>[] = [];
+    cache.watch({
+      query,
+      optimistic: true,
+      variables: {
+        isbn: "1449373321",
+      },
+      callback(diff) {
+        diffs.push(diff);
+      },
+    });
+
+    const ddiaData = {
+      book: {
+        __typename: "Book",
+        isbn: "1449373321",
+        title: "Designing Data-Intensive Applications",
+        author: {
+          __typename: "Author",
+          name: "Martin Kleppmann",
+        },
+      },
+    };
+
+    expect(isbnsWeHaveRead).toEqual([]);
+
+    cache.writeQuery({
+      query,
+      variables: {
+        isbn: "1449373321",
+      },
+      data: ddiaData,
+    });
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+    ]);
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: ddiaData,
+      },
+    ]);
+
+    const theEndData = {
+      book: {
+        __typename: "Book",
+        isbn: "1982103558",
+        title: "The End of Everything",
+        author: {
+          __typename: "Author",
+          name: "Katie Mack",
+        },
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      variables: {
+        isbn: "1982103558",
+      },
+      data: theEndData,
+    });
+
+    // This list does not include the book we just wrote, because the
+    // cache.watch we started above only depends on the Query.book field
+    // value corresponding to the 1449373321 ISBN.
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: ddiaData,
+      },
+    ]);
+
+    // Likewise, this list is unchanged, because we did not need to read
+    // the 1449373321 Book again after writing the 1982103558 data.
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+    ]);
+
+    const theEndResult = cache.readQuery({
+      query,
+      variables: {
+        isbn: "1982103558",
+      },
+    });
+
+    expect(theEndResult).toEqual(theEndData);
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
+
+    expect(cache.readQuery({
+      query,
+      variables: {
+        isbn: "1449373321",
+      },
+    })).toBe(diffs[0].result);
+
+    expect(cache.readQuery({
+      query,
+      variables: {
+        isbn: "1982103558",
+      },
+    })).toBe(theEndResult);
+
+    // Still no additional reads, because both books are cached.
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
+
+    // Evicting the 1982103558 Book should not invalidate the 1449373321
+    // Book, so diffs and isbnsWeHaveRead should remain unchanged.
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Book",
+        isbn: "1982103558",
+      }),
+    })).toBe(true);
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: ddiaData,
+      },
+    ]);
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
   });
 });

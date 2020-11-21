@@ -96,7 +96,7 @@
     "@types/lodash": "4.14.165",
     "@types/node": "14.14.9",
     "@types/react": "17.0.0",
-    "@types/react-dom": "16.9.10",
+    "@types/react-dom": "17.0.0",
     "@types/recompose": "^0.30.7",
     "bundlesize": "0.18.0",
     "cross-fetch": "3.0.6",

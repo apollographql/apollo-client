@@ -50,19 +50,19 @@ export function offsetLimitPagination<T = Reference>(
   };
 }
 
-// Whether TEdge<TNode> is a normalized Reference or a non-normalized
+// Whether TRelayEdge<TNode> is a normalized Reference or a non-normalized
 // object, it needs a .cursor property where the relayStylePagination
 // merge function can store cursor strings taken from pageInfo. Storing an
 // extra reference.cursor property should be safe, and is easier than
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-export type TEdge<TNode> = {
+export type TRelayEdge<TNode> = {
   cursor?: string;
   node: TNode;
 } | (Reference & { cursor?: string });
 
-export type TPageInfo = {
+export type TRelayPageInfo = {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
   startCursor: string;
@@ -70,13 +70,13 @@ export type TPageInfo = {
 };
 
 export type TExistingRelay<TNode> = Readonly<{
-  edges: TEdge<TNode>[];
-  pageInfo: TPageInfo;
+  edges: TRelayEdge<TNode>[];
+  pageInfo: TRelayPageInfo;
 }>;
 
 export type TIncomingRelay<TNode> = {
-  edges?: TEdge<TNode>[];
-  pageInfo?: TPageInfo;
+  edges?: TRelayEdge<TNode>[];
+  pageInfo?: TRelayPageInfo;
 };
 
 export type RelayFieldPolicy<TNode> = FieldPolicy<
@@ -97,7 +97,7 @@ export function relayStylePagination<TNode = Reference>(
     read(existing, { canRead, readField }) {
       if (!existing) return;
 
-      const edges: TEdge<TNode>[] = [];
+      const edges: TRelayEdge<TNode>[] = [];
       let startCursor = "";
       let endCursor = "";
       existing.edges.forEach(edge => {
@@ -198,7 +198,7 @@ export function relayStylePagination<TNode = Reference>(
         ...suffix,
       ];
 
-      const pageInfo: TPageInfo = {
+      const pageInfo: TRelayPageInfo = {
         // The ordering of these two ...spreads may be surprising, but it
         // makes sense because we want to combine PageInfo properties with a
         // preference for existing values, *unless* the existing values are

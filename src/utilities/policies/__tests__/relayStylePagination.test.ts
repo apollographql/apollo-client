@@ -1,5 +1,5 @@
 import { FieldFunctionOptions, InMemoryCache, isReference, makeReference } from '../../../core';
-import { relayStylePagination, TPageInfo } from '../pagination';
+import { relayStylePagination, TRelayPageInfo } from '../pagination';
 
 describe('relayStylePagination', () => {
   const policy = relayStylePagination();
@@ -114,7 +114,7 @@ describe('relayStylePagination', () => {
             startCursor: 'alpha',
             endCursor: 'alpha',
             extra: "existing.pageInfo.extra",
-          } as TPageInfo,
+          } as TRelayPageInfo,
         },
         {
           edges: incomingEdges,
@@ -124,7 +124,7 @@ describe('relayStylePagination', () => {
             startCursor: incomingEdges[0].cursor,
             endCursor: incomingEdges[incomingEdges.length - 1].cursor,
             extra: "incoming.pageInfo.extra",
-          } as TPageInfo,
+          } as TRelayPageInfo,
         },
         {
           ...options,

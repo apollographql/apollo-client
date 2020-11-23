@@ -70,16 +70,16 @@ Whenever your GraphQL server _does_ push data to a subscribing client, that data
 
 ## Setting up the transport
 
-Because subscriptions maintain a persistent connection, they can't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the community-maintained [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) library.
+Because subscriptions maintain a persistent connection, they can't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the community-maintained [`graphql-ws`](https://github.com/enisdenjo/graphql-ws) library.
 
 ### 1. Install required libraries
 
 **Apollo Link** is a collection of libraries that help you customize Apollo Client's network communication. One of these libraries is `@apollo/client/link/ws`, which enables communication over WebSocket.
 
-Install both `@apollo/client/link/ws` and `subscriptions-transport-ws` in your project, like so:
+Install both `@apollo/client/link/ws` and `graphql-ws` in your project, like so:
 
 ```bash
-npm install @apollo/client subscriptions-transport-ws
+npm install @apollo/client graphql-ws
 ```
 
 ### 2. Initialize a `WebSocketLink`

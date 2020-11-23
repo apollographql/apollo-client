@@ -1728,8 +1728,8 @@ describe("InMemoryCache#modify", () => {
     })).toBe(false); // Nothing actually modified.
 
     const resultAfterAuthorInvalidation = read();
-    expect(resultAfterAuthorInvalidation).not.toBe(initialResult);
     expect(resultAfterAuthorInvalidation).toEqual(initialResult);
+    expect(resultAfterAuthorInvalidation).toBe(initialResult);
 
     expect(cache.modify({
       id: cache.identify({
@@ -1743,8 +1743,8 @@ describe("InMemoryCache#modify", () => {
     })).toBe(false); // Nothing actually modified.
 
     const resultAfterBookInvalidation = read();
-    expect(resultAfterBookInvalidation).not.toBe(resultAfterAuthorInvalidation);
     expect(resultAfterBookInvalidation).toEqual(resultAfterAuthorInvalidation);
+    expect(resultAfterBookInvalidation).toBe(resultAfterAuthorInvalidation);
     expect(resultAfterBookInvalidation.currentlyReading.author).toEqual({
       __typename: "Author",
       name: "Maria Dahvana Headley",
@@ -2591,9 +2591,8 @@ describe("ReactiveVar and makeVar", () => {
     });
 
     const result2 = cache.readQuery({ query });
-    // Without resultCaching, equivalent results will not be ===.
-    expect(result2).not.toBe(result1);
     expect(result2).toEqual(result1);
+    expect(result2).toBe(result1);
 
     expect(nameVar()).toBe("Ben");
     expect(nameVar("Hugh")).toBe("Hugh");

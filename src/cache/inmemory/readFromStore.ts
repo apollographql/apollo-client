@@ -36,6 +36,7 @@ import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
+import { Canon } from './canon';
 
 export type VariableMap = { [name: string]: any };
 
@@ -324,11 +325,7 @@ export class StoreReader {
 
     // Perform a single merge at the end so that we can avoid making more
     // defensive shallow copies than necessary.
-    finalResult.result = mergeDeepArray(objectsToMerge);
-
-    if (process.env.NODE_ENV !== 'production') {
-      Object.freeze(finalResult.result);
-    }
+    finalResult.result = this.canon.admit(mergeDeepArray(objectsToMerge));
 
     // Store this result with its selection set so that we can quickly
     // recognize it again in the StoreReader#isFresh method.
@@ -336,6 +333,8 @@ export class StoreReader {
 
     return finalResult;
   }
+
+  private canon = new Canon;
 
   private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
@@ -377,7 +376,7 @@ export class StoreReader {
       array = array.filter(context.store.canRead);
     }
 
-    array = array.map((item, i) => {
+    array = this.canon.admit(array.map((item, i) => {
       // null value in array
       if (item === null) {
         return null;
@@ -410,11 +409,7 @@ export class StoreReader {
       invariant(context.path.pop() === i);
 
       return item;
-    });
-
-    if (process.env.NODE_ENV !== 'production') {
-      Object.freeze(array);
-    }
+    }));
 
     return { result: array, missing };
   }

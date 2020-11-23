@@ -12,7 +12,10 @@ import {
   shouldInclude,
 } from '../../utilities';
 
-export const hasOwn = Object.prototype.hasOwnProperty;
+export const {
+  hasOwnProperty: hasOwn,
+  toString: objToStr,
+} = Object.prototype;
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,

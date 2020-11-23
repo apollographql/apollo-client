@@ -57,29 +57,29 @@ export function offsetLimitPagination<T = Reference>(
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-type TEdge<TNode> = {
+export type TEdge<TNode> = {
   cursor?: string;
   node: TNode;
 } | (Reference & { cursor?: string });
 
-type TPageInfo = {
+export type TPageInfo = {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
   startCursor: string;
   endCursor: string;
 };
 
-type TExistingRelay<TNode> = Readonly<{
+export type TExistingRelay<TNode> = Readonly<{
   edges: TEdge<TNode>[];
   pageInfo: TPageInfo;
 }>;
 
-type TIncomingRelay<TNode> = {
+export type TIncomingRelay<TNode> = {
   edges?: TEdge<TNode>[];
   pageInfo?: TPageInfo;
 };
 
-type RelayFieldPolicy<TNode> = FieldPolicy<
+export type RelayFieldPolicy<TNode> = FieldPolicy<
   TExistingRelay<TNode>,
   TIncomingRelay<TNode>,
   TIncomingRelay<TNode>
@@ -212,7 +212,15 @@ export function relayStylePagination<TNode = Reference>(
         const {
           hasPreviousPage, hasNextPage,
           startCursor, endCursor,
+          ...extras
         } = incoming.pageInfo;
+
+        // If incoming.pageInfo had any extra non-standard properties,
+        // assume they should take precedence over any existing properties
+        // of the same name, regardless of where this page falls with
+        // respect to the existing data.
+        Object.assign(pageInfo, extras);
+
         // Keep existing.pageInfo.has{Previous,Next}Page unless the
         // placement of the incoming edges means incoming.hasPreviousPage
         // or incoming.hasNextPage should become the new values for those

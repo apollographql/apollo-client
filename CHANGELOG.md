@@ -1,4 +1,4 @@
-## Apollo Client 3.3.0 (not yet released)
+## Apollo Client 3.3.0
 
 ## Bug Fixes
 
@@ -8,11 +8,17 @@
 - Prevent memory leaks involving unused `onBroadcast` function closure created in `ApolloClient` constructor. <br/>
   [@kamilkisiela](https://github.com/kamilkisiela) in [#7161](https://github.com/apollographql/apollo-client/pull/7161)
 
+- Provide default empty cache object for root IDs like `ROOT_QUERY`, to avoid differences in behavior before/after `ROOT_QUERY` data has been written into `InMemoryCache`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7100](https://github.com/apollographql/apollo-client/pull/7100)
+
+- Cancel `queryInfo.notifyTimeout` in `QueryInfo#markResult` to prevent unnecessary network requests when using a `FetchPolicy` of `cache-and-network` or `network-only` in a React component with multiple `useQuery` calls. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7347](https://github.com/apollographql/apollo-client/pull/7347)
+
 ## Potentially breaking changes
 
 - Ensure `cache.readQuery` and `cache.readFragment` always return `TData | null`, instead of throwing `MissingFieldError` exceptions when missing fields are encountered. <br/>
   [@benjamn](https://github.com/benjamn) in [#7098](https://github.com/apollographql/apollo-client/pull/7098)
-  > Since this change converts prior exceptions to `null` returns, and since `null` was already a possible return value according to the `TData | null` return type, we are optimistic this change will be backwards compatible (as long as `null` was properly handled before), but **we need your beta feedback to be sure!**
+  > Since this change converts prior exceptions to `null` returns, and since `null` was already a possible return value according to the `TData | null` return type, we are confident this change will be backwards compatible (as long as `null` was properly handled before).
 
 - `HttpLink` will now automatically strip any unused `variables` before sending queries to the GraphQL server, since those queries are very likely to fail validation, according to the [All Variables Used](https://spec.graphql.org/draft/#sec-All-Variables-Used) rule in the GraphQL specification. If you depend on the preservation of unused variables, you can restore the previous behavior by passing `includeUnusedVariables: true` to the `HttpLink` constructor (which is typically passed as `options.link` to the `ApolloClient` constructor). <br/>
   [@benjamn](https://github.com/benjamn) in [#7127](https://github.com/apollographql/apollo-client/pull/7127)
@@ -26,6 +32,17 @@
 
 - The independent `QueryBaseOptions` and `ModifiableWatchQueryOptions` interface supertypes have been eliminated, and their fields are now defined by `QueryOptions`. <br/>
   [@DCtheTall](https://github.com/DCtheTall) in [#7136](https://github.com/apollographql/apollo-client/pull/7136)
+
+- Internally, Apollo Client now avoids nested imports from the `graphql` package, importing everything from the top-level package instead. For example,
+  ```ts
+  import { visit } from "graphql/language/visitor"
+  ```
+  is now just
+  ```ts
+  import { visit } from "graphql"
+  ```
+  Since the `graphql` package uses `.mjs` modules, your bundler may need to be configured to recognize `.mjs` files as ECMAScript modules rather than CommonJS modules. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7185](https://github.com/apollographql/apollo-client/pull/7185)
 
 ## Improvements
 
@@ -46,6 +63,9 @@
   Remember that all logs, warnings, and errors are hidden in production. <br/>
   [@benjamn](https://github.com/benjamn) in [#7226](https://github.com/apollographql/apollo-client/pull/7226)
 
+- Modifying `InMemoryCache` fields that have `keyArgs` configured will now invalidate only the field value with matching key arguments, rather than invalidating all field values that share the same field name. If `keyArgs` has not been configured, the cache must err on the side of invalidating by field name, as before. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7351](https://github.com/apollographql/apollo-client/pull/7351)
+
 - Shallow-merge `options.variables` when combining existing or default options with newly-provided options, so new variables do not completely overwrite existing variables. <br/>
   [@amannn](https://github.com/amannn) in [#6927](https://github.com/apollographql/apollo-client/pull/6927)
 
@@ -54,9 +74,6 @@
 
 - In addition to the `result.data` property, `useQuery` and `useLazyQuery` will now provide a `result.previousData` property, which can be useful when a network request is pending and `result.data` is undefined, since `result.previousData` can be rendered instead of rendering an empty/loading state. <br/>
   [@hwillson](https://github.com/hwillson) in [#7082](https://github.com/apollographql/apollo-client/pull/7082)
-
-- Provide default empty cache object for root IDs like `ROOT_QUERY`, to avoid differences in behavior before/after `ROOT_QUERY` data has been written into `InMemoryCache`. <br/>
-  [@benjamn](https://github.com/benjamn) in [#7100](https://github.com/apollographql/apollo-client/pull/7100)
 
 - The schema link package (`@apollo/client/link/schema`) will now validate incoming queries against its client-side schema, and return `errors` as a GraphQL server would. <br/>
   [@amannn](https://github.com/amannn) in [#7094](https://github.com/apollographql/apollo-client/pull/7094)
@@ -67,14 +84,8 @@
 - Avoid registering `QueryPromise` when `skip` is `true` during server-side rendering. <br/>
   [@izumin5210](https://github.com/izumin5210) in [#7310](https://github.com/apollographql/apollo-client/pull/7310)
 
-- Cancel `queryInfo.notifyTimeout` in `QueryInfo#markResult` to prevent unnecessary network requests when using a `FetchPolicy` of `cache-and-network` or `network-only` in a React component with multiple `useQuery` calls. <br/>
-  [@benjamn](https://github.com/benjamn) in [#7347](https://github.com/apollographql/apollo-client/pull/7347)
-
 - `ApolloCache` objects (including `InMemoryCache`) may now be associated with or disassociated from individual reactive variables by calling `reactiveVar.attachCache(cache)` and/or `reactiveVar.forgetCache(cache)`. <br/>
   [@benjamn](https://github.com/benjamn) in [#7350](https://github.com/apollographql/apollo-client/pull/7350)
-
-- Modifying `InMemoryCache` fields that have `keyArgs` configured will now invalidate only the field value with matching key arguments, rather than invalidating all field values that share the same field name. If `keyArgs` has not been configured, the cache must err on the side of invalidating by field name, as before. <br/>
-  [@benjamn](https://github.com/benjamn) in [#7351](https://github.com/apollographql/apollo-client/pull/7351)
 
 ## Apollo Client 3.2.7
 

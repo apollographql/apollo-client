@@ -75,7 +75,7 @@
 - In addition to the `result.data` property, `useQuery` and `useLazyQuery` will now provide a `result.previousData` property, which can be useful when a network request is pending and `result.data` is undefined, since `result.previousData` can be rendered instead of rendering an empty/loading state. <br/>
   [@hwillson](https://github.com/hwillson) in [#7082](https://github.com/apollographql/apollo-client/pull/7082)
 
-- The schema link package (`@apollo/client/link/schema`) will now validate incoming queries against its client-side schema, and return `errors` as a GraphQL server would. <br/>
+- Passing `validate: true` to the `SchemaLink` constructor will enable validation of incoming queries against the local schema before execution, returning validation errors in `result.errors`, just like a non-local GraphQL endpoint typically would. <br/>
   [@amannn](https://github.com/amannn) in [#7094](https://github.com/apollographql/apollo-client/pull/7094)
 
 - Allow optional arguments in `keyArgs: [...]` arrays for `InMemoryCache` field policies. <br/>

@@ -65,17 +65,19 @@ describe('SchemaLink', () => {
   });
 
   it('calls error when fetch fails', done => {
-    const schema = makeExecutableSchema({
-      typeDefs,
-      resolvers: {
-        Query: {
-          sampleQuery() {
-            throw new Error('Unauthorized');
+    const link = new SchemaLink({
+      validate: true,
+      schema: makeExecutableSchema({
+        typeDefs,
+        resolvers: {
+          Query: {
+            sampleQuery() {
+              throw new Error('Unauthorized');
+            }
           }
         }
-      }
+      }),
     });
-    const link = new SchemaLink({ schema });
     const observable = execute(link, {
       query: sampleQuery,
     });
@@ -199,8 +201,12 @@ describe('SchemaLink', () => {
   });
 
   it('reports errors for unknown queries', done => {
-    const schema = makeExecutableSchema({typeDefs})
-    const link = new SchemaLink({ schema });
+    const link = new SchemaLink({
+      validate: true,
+      schema: makeExecutableSchema({
+        typeDefs,
+      }),
+    });
     const observable = execute(link, {
       query: gql`
         query {

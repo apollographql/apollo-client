@@ -24,6 +24,12 @@ export namespace SchemaLink {
      * A context to provide to resolvers declared within the schema.
      */
     context?: ResolverContext | ResolverContextFunction;
+
+    /**
+     * Validate incoming queries against the given schema, returning
+     * validation errors as a GraphQL server would.
+     */
+    validate?: boolean;
   }
 }
 
@@ -31,12 +37,14 @@ export class SchemaLink extends ApolloLink {
   public schema: SchemaLink.Options["schema"];
   public rootValue: SchemaLink.Options["rootValue"];
   public context: SchemaLink.Options["context"];
+  public validate: boolean;
 
   constructor(options: SchemaLink.Options) {
     super();
     this.schema = options.schema;
     this.rootValue = options.rootValue;
     this.context = options.context;
+    this.validate = !!options.validate;
   }
 
   public request(operation: Operation): Observable<FetchResult> {
@@ -48,9 +56,11 @@ export class SchemaLink extends ApolloLink {
             : this.context
         )
       ).then(context => {
-        const validationErrors = validate(this.schema, operation.query);
-        if (validationErrors.length > 0) {
-          return { errors: validationErrors };
+        if (this.validate) {
+          const validationErrors = validate(this.schema, operation.query);
+          if (validationErrors.length > 0) {
+            return { errors: validationErrors };
+          }
         }
 
         return execute(

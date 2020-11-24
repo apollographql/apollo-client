@@ -1,27 +1,33 @@
 ---
 title: Testing React components
-description: Peace of mind when using Apollo Client with React in production
+description: Using MockedProvider and associated APIs
 ---
 
-Running tests against code meant for production has long been a best practice. It provides additional security for the code that's already written, and prevents accidental regressions in the future. Components utilizing React with Apollo Client are no exception.
+import {
+  ExpansionPanel,
+} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
-Although Apollo Client's React integration has a lot going on under the hood, the library provides multiple tools for testing that simplify those abstractions, and allows complete focus on the component logic. These testing utilities have long been used to test React functionality with Apollo Client itself, so they will be supported long-term.
+This article describes best practices for testing React components that use Apollo Client.
 
-## An introduction
+The examples below use [Jest](https://facebook.github.io/jest/docs/en/tutorial-react.html), but the concepts are applicable to any testing framework. For simplicity, the examples use React's [test renderer](https://reactjs.org/docs/test-renderer.html) instead of tools like [Enzyme](https://github.com/airbnb/enzyme) or [react-testing-library](https://github.com/kentcdodds/react-testing-library).
 
-Apollo Client's React integration relies on [React's context](https://reactjs.org/docs/context.html) to pass the `ApolloClient` instance through the React component tree. In addition, Apollo Client makes network requests in order to fetch data. This behavior affects how tests should be written for components that use Apollo Client with React.
+## The `MockedProvider` component
 
-This guide will explain step-by-step how to test Apollo Client React code. The following examples use the [Jest](https://facebook.github.io/jest/docs/en/tutorial-react.html) testing framework, but most concepts should be reusable with other libraries. These examples aim to use as simple of a toolset as possible, so React's [test renderer](https://reactjs.org/docs/test-renderer.html) will be used in place of React-specific tools like [Enzyme](https://github.com/airbnb/enzyme) and [react-testing-library](https://github.com/kentcdodds/react-testing-library).
+Every test for a React component that uses Apollo Client must make Apollo Client available on [React's context](https://reactjs.org/docs/context.html). In application code, you achieve this by wrapping your component tree with the `ApolloProvider` component. In your tests, you use the `MockedProvider` component instead.
 
-> **Note:** As of Apollo Client 3, all testing utilities can now be imported from `@apollo/client/testing`.
+The `MockedProvider` component enables you to define mock responses for individual queries that are executed in your test. This means your test _doesn't_ need to communicate with a GraphQL server, which removes an external dependency and therefore improves the test's reliability.
 
-Consider the component below, which makes a basic query, and displays its results:
+### Example
 
-```jsx
+Let's say we want to test the following `Dog` component, which executes a basic query and displays its results:
+
+<ExpansionPanel title="Click to expand 🐶">
+
+```jsx:title=dog.jsx
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
 
-// Make sure the query is also exported -- not just the component
+// Make sure that both the query and the component are exported
 export const GET_DOG_QUERY = gql`
   query GetDog($name: String) {
     dog(name: $name) {
@@ -48,48 +54,71 @@ export function Dog({ name }) {
 }
 ```
 
-Given this component, let's try to render it inside a test, just to make sure there are no render errors:
+</ExpansionPanel>
 
-```jsx
-// Broken because it's missing Apollo Client in the context
-it('should render without error', () => {
-  renderer.create(<Dog name="Buck" />);
-});
-```
+A basic rendering test for the component looks like this (minus mocked responses):
 
-This test would produce an error because Apollo Client isn't available on the context for the `useQuery` Hook to consume.
+```jsx:title=dog.test.js
+import { MockedProvider } from '@apollo/client/testing';
+import { GET_DOG_QUERY, Dog } from './dog';
 
-In order to fix this we could wrap the component in an `ApolloProvider` and pass an instance of Apollo Client to the `client` prop. However, this will cause the tests to run against an actual backend which makes the tests very unpredictable for the following reasons:
+const mocks = []; // We'll fill this in next
 
-- The server could be down.
-- There may be no network connection.
-- The results are not guaranteed to be the same for every query.
-
-```jsx
-// Not predictable
 it('renders without error', () => {
   renderer.create(
-    <ApolloProvider client={client}>
+    <MockedProvider mocks={mocks} addTypename={false}>
       <Dog name="Buck" />
-    </ApolloProvider>,
+    </MockedProvider>,
   );
 });
 ```
 
-## `MockedProvider`
+#### Defining mocked responses
 
-The `@apollo/client` package exports a `MockedProvider` component which simplifies the testing of React components by mocking calls to the GraphQL endpoint.  This allows the tests to be run in isolation and provides consistent results on every run by removing the dependence on remote data.
+The `mocks` prop of `MockedProvider` is an array of objects, each of which defines the mock response for a single operation. Let's define a mocked response for `GET_DOG_QUERY` when it's passed the `name` `Buck`:
 
-By using this `MockedProvider` component, it's possible to specify the exact results that should be returned for a certain query using the `mocks` prop.
+```jsx:title=dog.test.js
+const mocks = [
+  {
+    request: {
+      query: GET_DOG_QUERY,
+      variables: {
+        name: 'Buck',
+      },
+    },
+    result: {
+      data: {
+        dog: { id: '1', name: 'Buck', breed: 'bulldog' },
+      },
+    },
+  },
+];
+```
 
-Here's an example of a test for the above `Dog` component using `MockedProvider`, which shows how to define the mocked response for `GET_DOG_QUERY`:
+Each mock object defines a `request` field (indicating the shape and variables of the operation to match against) and a `result` field (indicating the shape of the response to return for that operation).
+
+> **Your test must execute an operation that _exactly_ matches a mock's shape _and_ variables to receive the associated mocked response.**
+
+Alternatively, the `result` field can be a function that returns a mocked response after performing arbitrary logic:
 
 ```jsx
-// dog.test.js
+result: () => {
+  // ...arbitrary logic...
 
+  return {
+    data: {
+      dog: { id: '1', name: 'Buck', breed: 'bulldog' },
+    },
+  }
+},
+```
+
+Combining our code above, we get the following complete test:
+
+<ExpansionPanel title="Click to expand 🐶">
+
+```jsx:title=dog.test.js
 import { MockedProvider } from '@apollo/client/testing';
-
-// The component AND the query need to be exported
 import { GET_DOG_QUERY, Dog } from './dog';
 
 const mocks = [
@@ -117,31 +146,7 @@ it('renders without error', () => {
 });
 ```
 
-The `mocks` array takes objects with specific `request`s and their associated `result`s.  When the provider receives a `GET_DOG_QUERY` with matching `variables`, it returns the corresponding object from the `result` key. A `result` may alternatively be a function returning the object:
-
-```js
-const mocks = [
-  {
-    request: {
-      query: GET_DOG_QUERY,
-      variables: {
-        name: 'Buck',
-      },
-    },
-    result: () => {
-      // do something, such as recording that this function has been called
-      // ...
-      return {
-        data: {
-          dog: { id: '1', name: 'Buck', breed: 'bulldog' },
-        },
-      }
-    },
-  },
-];
-```
-
-> **Your mock request's variables object must exactly match the query variables sent from your component.**
+</ExpansionPanel>
 
 ### `addTypename`
 

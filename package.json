@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.2.8",
+  "version": "3.3.0",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -48,13 +48,13 @@
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
     "bundlesize": "npm run build && bundlesize",
     "predeploy": "npm run build",
-    "deploy": "cd dist && npm publish"
+    "deploy": "cd dist && npm publish --tag next"
   },
   "bundlesize": [
     {
       "name": "apollo-client",
       "path": "./dist/apollo-client.cjs.min.js",
-      "maxSize": "24.75 kB"
+      "maxSize": "25.5 kB"
     }
   ],
   "peerDependencies": {
@@ -74,14 +74,14 @@
     "@graphql-typed-document-node/core": "^3.0.0",
     "@types/zen-observable": "^0.8.0",
     "@wry/context": "^0.5.2",
-    "@wry/equality": "^0.2.0",
+    "@wry/equality": "^0.3.0",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-tag": "^2.11.0",
     "hoist-non-react-statics": "^3.3.2",
-    "optimism": "^0.13.0",
+    "optimism": "^0.13.1",
     "prop-types": "^15.7.2",
     "symbol-observable": "^2.0.0",
-    "ts-invariant": "^0.5.0",
+    "ts-invariant": "^0.5.1",
     "tslib": "^1.10.0",
     "zen-observable": "^0.8.14"
   },

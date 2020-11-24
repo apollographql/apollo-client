@@ -1582,6 +1582,72 @@ describe('writing to the store', () => {
     });
   });
 
+  describe('"Cache data maybe lost..." warnings', () => {
+    const { warn } = console;
+    let warnings: any[][] = [];
+
+    beforeEach(() => {
+      warnings.length = 0;
+      console.warn = (...args: any[]) => {
+        warnings.push(args);
+      };
+    });
+
+    afterEach(() => {
+      console.warn = warn;
+    });
+
+    it("should not warn when scalar fields are updated", () => {
+      const cache = new InMemoryCache;
+
+      const query = gql`
+        query {
+          someJSON
+          currentTime(tz: "UTC-5")
+        }
+      `;
+
+      expect(warnings).toEqual([]);
+
+      const date = new Date(1601053713081);
+
+      cache.writeQuery({
+        query,
+        data: {
+          someJSON: {
+            oyez: 3,
+            foos: ["bar", "baz"],
+          },
+          currentTime: {
+            localeString: date.toLocaleString("en-US", {
+              timeZone: "America/New_York",
+            }),
+          },
+        },
+      });
+
+      expect(cache.extract()).toMatchSnapshot();
+      expect(warnings).toEqual([]);
+
+      cache.writeQuery({
+        query,
+        data: {
+          someJSON: {
+            qwer: "upper",
+            asdf: "middle",
+            zxcv: "lower",
+          },
+          currentTime: {
+            msSinceEpoch: date.getTime(),
+          },
+        },
+      });
+
+      expect(cache.extract()).toMatchSnapshot();
+      expect(warnings).toEqual([]);
+    });
+  });
+
   describe('writeResultToStore shape checking', () => {
     const query = gql`
       query {
@@ -2261,7 +2327,14 @@ describe('writing to the store', () => {
       broadcast: false,
     });
 
+    const counterMeta = {
+      extraRootIds: [
+        "Counter:{}",
+      ],
+    };
+
     expect(cache.extract()).toEqual({
+      __META: counterMeta,
       ROOT_QUERY: {
         __typename: "Query",
         counter: { __ref: "Counter:{}" },
@@ -2281,6 +2354,7 @@ describe('writing to the store', () => {
     })).toBe(true);
 
     expect(cache.extract()).toEqual({
+      __META: counterMeta,
       ROOT_QUERY: {
         __typename: "Query",
         counter: { __ref: "Counter:{}" },

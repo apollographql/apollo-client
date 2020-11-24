@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 
 import { InMemoryCache } from "../inMemoryCache";
 import { ReactiveVar, makeVar } from "../reactiveVars";
-import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode } from "../../../core";
+import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
@@ -318,6 +318,134 @@ describe("type policies", function () {
     })).toBe("MotionPicture::3993d4118143");
   });
 
+  it("support inheritance", function () {
+    const cache = new InMemoryCache({
+      possibleTypes: {
+        Reptile: ["Snake", "Turtle"],
+        Snake: ["Python", "Viper", "Cobra"],
+        Viper: ["Cottonmouth"],
+      },
+
+      typePolicies: {
+        Reptile: {
+          keyFields: ["tagId"],
+
+          fields: {
+            scientificName: {
+              merge(_, incoming) {
+                // Normalize all scientific names to lower case.
+                return incoming.toLowerCase();
+              },
+            },
+          },
+        },
+
+        Snake: {
+          fields: {
+            // Default to a truthy non-boolean value if we don't know
+            // whether this snake is venomous.
+            venomous(status = "unknown") {
+              return status;
+            },
+          },
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{
+      reptiles: Record<string, any>[];
+    }> = gql`
+      query {
+        reptiles {
+          tagId
+          scientificName
+          ... on Snake {
+            venomous
+          }
+        }
+      }
+    `;
+
+    const reptiles = [
+      {
+        __typename: "Turtle",
+        tagId: "RedEaredSlider42",
+        scientificName: "Trachemys scripta elegans",
+      },
+      {
+        __typename: "Python",
+        tagId: "BigHug4U",
+        scientificName: "Malayopython reticulatus",
+        venomous: false,
+      },
+      {
+        __typename: "Cobra",
+        tagId: "Egypt30BC",
+        scientificName: "Naja haje",
+        venomous: true,
+      },
+      {
+        __typename: "Cottonmouth",
+        tagId: "CM420",
+        scientificName: "Agkistrodon piscivorus",
+        venomous: true,
+      },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { reptiles },
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+
+    const result1 = cache.readQuery({ query })!;
+    expect(result1).toEqual({
+      reptiles: reptiles.map(reptile => ({
+        ...reptile,
+        scientificName: reptile.scientificName.toLowerCase(),
+      })),
+    });
+
+    const cmId = cache.identify({
+      __typename: "Cottonmouth",
+      tagId: "CM420",
+    });
+
+    expect(cache.evict({
+      id: cmId,
+      fieldName: "venomous",
+    })).toBe(true);
+
+    const result2 = cache.readQuery({ query })!;
+
+    result2.reptiles.forEach((reptile, i) => {
+      if (reptile.__typename === "Cottonmouth") {
+        expect(reptile).not.toBe(result1.reptiles[i]);
+        expect(reptile).not.toEqual(result1.reptiles[i]);
+        expect(reptile).toEqual({
+          __typename: "Cottonmouth",
+          tagId: "CM420",
+          // This name has been normalized to lower case.
+          scientificName: "agkistrodon piscivorus",
+          // Venomosity status has been set to a default value.
+          venomous: "unknown",
+        });
+      } else {
+        expect(reptile).toBe(result1.reptiles[i]);
+      }
+    });
+
+    cache.policies.addPossibleTypes({
+      Viper: ["DeathAdder"],
+    });
+
+    expect(cache.identify({
+      __typename: "DeathAdder",
+      tagId: "LethalAbacus666",
+    })).toBe('DeathAdder:{"tagId":"LethalAbacus666"}');
+  });
+
   describe("field policies", function () {
     it("can filter key arguments", function () {
       const cache = new InMemoryCache({
@@ -612,6 +740,190 @@ describe("type policies", function () {
           }
         ],
       });
+    });
+
+    it("can include optional arguments in keyArgs", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Author: {
+            keyFields: ["name"],
+            fields: {
+              writings: {
+                keyArgs: ["a", "b", "type"]
+              },
+            },
+          },
+        },
+      });
+
+      const data = {
+        author: {
+          __typename: "Author",
+          name: "Nadia Eghbal",
+          writings: [{
+            __typename: "Book",
+            isbn: "0578675862",
+            title: "Working in Public: The Making and Maintenance of " +
+              "Open Source Software",
+          }],
+        },
+      };
+
+      function check<TData, TVars>(
+        query: DocumentNode | TypedDocumentNode<TData, TVars>,
+        variables?: TVars,
+      ) {
+        cache.writeQuery({ query, variables, data });
+        expect(cache.readQuery({ query, variables })).toEqual(data);
+      }
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(type: "Book") {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(type: "Book", b: 2, a: 1) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(b: 2, a: 1) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(b: 2) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(a: 3) {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings(unrelated: "oyez") {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query AuthorWritings ($type: String) {
+          author {
+            name
+            writings(b: 4, type: $type, unrelated: "oyez") {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `, { type: void 0 as any });
+      expect(cache.extract()).toMatchSnapshot();
+
+      check(gql`
+        query {
+          author {
+            name
+            writings {
+              ... on Book {
+                title
+                isbn
+              }
+            }
+          }
+        }
+      `);
+      expect(cache.extract()).toMatchSnapshot();
+
+      const storeFieldNames: string[] = [];
+
+      cache.modify({
+        id: cache.identify({
+          __typename: "Author",
+          name: "Nadia Eghbal",
+        }),
+
+        fields: {
+          writings(value, { storeFieldName }) {
+            storeFieldNames.push(storeFieldName);
+            expect(value).toEqual(data.author.writings);
+            return value;
+          },
+        },
+      })
+
+      expect(storeFieldNames.sort()).toEqual([
+        "writings",
+        'writings:{"a":1,"b":2,"type":"Book"}',
+        'writings:{"a":1,"b":2}',
+        'writings:{"a":3}',
+        'writings:{"b":2}',
+        'writings:{"b":4}',
+        'writings:{"type":"Book"}',
+        "writings:{}",
+      ]);
     });
 
     it("can return KeySpecifier arrays from keyArgs functions", function () {
@@ -1093,7 +1405,14 @@ describe("type policies", function () {
 
       // Nothing should have changed in the cache itself as a result of
       // writing a result for job #2.
-      expect(cache.extract()).toEqual(snapshot1);
+      expect(cache.extract()).toEqual({
+        ...snapshot1,
+        __META: {
+          extraRootIds: [
+            'Job:{"name":"Job #2"}',
+          ],
+        },
+      });
 
       expect(cache.diff({
         query,
@@ -1146,7 +1465,14 @@ describe("type policies", function () {
         },
       };
 
-      expect(cache.extract()).toEqual(snapshot2);
+      expect(cache.extract()).toEqual({
+        ...snapshot2,
+        __META: {
+          extraRootIds: [
+            'Job:{"name":"Job #2"}',
+          ],
+        },
+      });
 
       expect(cache.diff({
         query,
@@ -2065,17 +2391,27 @@ describe("type policies", function () {
 
       expect(secretReadAttempted).toBe(false);
 
-      expect(() => {
-        cache.readQuery({
-          query: gql`
-            query {
-              me {
-                secret
-              }
+      expect(cache.readQuery({
+        query: gql`
+          query {
+            me {
+              secret
             }
-          `
-        });
-      }).toThrowError("Can't find field 'secret' ");
+          }
+        `,
+      })).toBe(null);
+
+      expect(() => cache.diff({
+        optimistic: true,
+        returnPartialData: false,
+        query: gql`
+          query {
+            me {
+              secret
+            }
+          }
+        `,
+      })).toThrowError("Can't find field 'secret' ");
 
       expect(secretReadAttempted).toBe(true);
     });
@@ -3385,6 +3721,15 @@ describe("type policies", function () {
         });
       }
 
+      function diff(isbn = "156858217X") {
+        return cache.diff({
+          query,
+          variables: { isbn },
+          returnPartialData: false,
+          optimistic: true,
+        });
+      }
+
       expect(read()).toBe(null);
 
       cache.writeQuery({
@@ -3400,8 +3745,10 @@ describe("type policies", function () {
         },
       });
 
-      expect(read).toThrow(
-        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
+      expect(read()).toBe(null);
+
+      expect(diff).toThrow(
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/,
       );
 
       const stealThisData = {
@@ -3441,6 +3788,11 @@ describe("type policies", function () {
       });
 
       expect(cache.extract()).toEqual({
+        __META: {
+          extraRootIds: [
+            'Book:{"isbn":"156858217X"}',
+          ],
+        },
         ROOT_QUERY: {
           __typename: "Query",
           'book:{"isbn":"0393354326"}': {
@@ -3532,11 +3884,13 @@ describe("type policies", function () {
         },
       });
 
-      expect(() => read("0393354326")).toThrow(
+      expect(read("0393354326")).toBe(null);
+      expect(() => diff("0393354326")).toThrow(
         /Dangling reference to missing Book:{"isbn":"0393354326"} object/
       );
 
-      expect(() => read("156858217X")).toThrow(
+      expect(read("156858217X")).toBe(null);
+      expect(() => diff("156858217X")).toThrow(
         /Dangling reference to missing Book:{"isbn":"156858217X"} object/
       );
     });
@@ -3571,32 +3925,7 @@ describe("type policies", function () {
           Author: {
             keyFields: false,
             fields: {
-              books: {
-                merge(existing: any[], incoming: any[], {
-                  isReference,
-                }) {
-                  const merged = existing ? existing.slice(0) : [];
-                  const seen = new Set<string>();
-                  if (existing) {
-                    existing.forEach(book => {
-                      if (isReference(book)) {
-                        seen.add(book.__ref);
-                      }
-                    });
-                  }
-                  incoming.forEach(book => {
-                    if (isReference(book)) {
-                      if (!seen.has(book.__ref)) {
-                        merged.push(book);
-                        seen.add(book.__ref);
-                      }
-                    } else {
-                      merged.push(book);
-                    }
-                  });
-                  return merged;
-                },
-              },
+              books: booksMergePolicy(),
             },
           },
         },
@@ -3604,6 +3933,35 @@ describe("type policies", function () {
 
       testForceMerges(cache);
     });
+
+    function booksMergePolicy(): FieldPolicy<any[]> {
+      return {
+        merge(existing, incoming, {
+          isReference,
+        }) {
+          const merged = existing ? existing.slice(0) : [];
+          const seen = new Set<string>();
+          if (existing) {
+            existing.forEach(book => {
+              if (isReference(book)) {
+                seen.add(book.__ref);
+              }
+            });
+          }
+          incoming.forEach(book => {
+            if (isReference(book)) {
+              if (!seen.has(book.__ref)) {
+                merged.push(book);
+                seen.add(book.__ref);
+              }
+            } else {
+              merged.push(book);
+            }
+          });
+          return merged;
+        },
+      };
+    }
 
     function testForceMerges(cache: InMemoryCache) {
       const queryWithAuthorName = gql`
@@ -3676,6 +4034,7 @@ describe("type policies", function () {
               books: [{
                 __typename: "Book",
                 isbn: "1250758009",
+                title: "The Topeka School",
               }],
             },
           },
@@ -3785,7 +4144,7 @@ describe("type policies", function () {
     }
 
     // Same as previous test, except with merge:true for Book.author.
-    it("can force merging with merge: true", function () {
+    it("can force merging with merge:true field policy", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Book: {
@@ -3800,38 +4159,184 @@ describe("type policies", function () {
           Author: {
             keyFields: false,
             fields: {
-              books: {
-                merge(existing: any[], incoming: any[], {
-                  isReference,
-                }) {
-                  const merged = existing ? existing.slice(0) : [];
-                  const seen = new Set<string>();
-                  if (existing) {
-                    existing.forEach(book => {
-                      if (isReference(book)) {
-                        seen.add(book.__ref);
-                      }
-                    });
-                  }
-                  incoming.forEach(book => {
-                    if (isReference(book)) {
-                      if (!seen.has(book.__ref)) {
-                        merged.push(book);
-                        seen.add(book.__ref);
-                      }
-                    } else {
-                      merged.push(book);
-                    }
-                  });
-                  return merged;
-                },
-              },
+              books: booksMergePolicy(),
             },
           },
         },
       });
 
       testForceMerges(cache);
+    });
+
+    // Same as previous test, except configuring merge:true for the Author
+    // type instead of for the Book.author field.
+    it("can force merging with merge:true type policy", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            keyFields: false,
+            merge: true,
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+        },
+      });
+
+      testForceMerges(cache);
+    });
+
+    it("can force merging with inherited merge:true field policy", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Authored: {
+            fields: {
+              author: {
+                merge: true,
+              },
+            },
+          },
+
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            keyFields: false,
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+        },
+
+        possibleTypes: {
+          Authored: ["Book", "Destruction"],
+        },
+      });
+
+      testForceMerges(cache);
+    });
+
+    it("can force merging with inherited merge:true type policy", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+
+          Person: {
+            keyFields: false,
+            merge: true,
+          },
+        },
+
+        possibleTypes: {
+          Person: ["Author"],
+        },
+      });
+
+      testForceMerges(cache);
+    });
+
+    function checkAuthor<TData>(data: TData, canBeUndefined = false) {
+      if (data || !canBeUndefined) {
+        expect(data).toBeTruthy();
+        expect(typeof data).toBe("object");
+        expect((data as any).__typename).toBe("Author");
+      }
+      return data;
+    }
+
+    it("can force merging with inherited type policy merge function", function () {
+      let personMergeCount = 0;
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Author: {
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+
+          Person: {
+            keyFields: false,
+
+            merge(existing, incoming) {
+              checkAuthor(existing, true);
+              checkAuthor(incoming);
+              ++personMergeCount;
+              return { ...existing, ...incoming };
+            },
+          },
+        },
+
+        possibleTypes: {
+          Person: ["Author"],
+        },
+      });
+
+      testForceMerges(cache);
+
+      expect(personMergeCount).toBe(3);
+    });
+
+    it("can force merging with inherited field merge function", function () {
+      let authorMergeCount = 0;
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Book: {
+            keyFields: ["isbn"],
+          },
+
+          Authored: {
+            fields: {
+              author: {
+                merge(existing, incoming) {
+                  checkAuthor(existing, true);
+                  checkAuthor(incoming);
+                  ++authorMergeCount;
+                  return { ...existing, ...incoming };
+                },
+              },
+            },
+          },
+
+
+          Author: {
+            fields: {
+              books: booksMergePolicy(),
+            },
+          },
+
+          Person: {
+            keyFields: false,
+          },
+        },
+
+        possibleTypes: {
+          Authored: ["Destiny", "Book"],
+          Person: ["Author"],
+        },
+      });
+
+      testForceMerges(cache);
+
+      expect(authorMergeCount).toBe(3);
     });
   });
 

@@ -1108,6 +1108,9 @@ describe('ApolloClient', () => {
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
+        __META: {
+          extraRootIds: ['foo'],
+        },
         foo: {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
@@ -2286,6 +2289,26 @@ describe('ApolloClient', () => {
       );
 
       client.stop();
+    });
+
+    it('should be able to set all default query options', () => {
+      new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          query: {
+            query: {kind: 'Document', definitions: []},
+            variables: {foo: 'bar'},
+            errorPolicy: 'none',
+            context: null,
+            fetchPolicy: 'cache-first',
+            pollInterval: 100,
+            notifyOnNetworkStatusChange: true,
+            returnPartialData: true,
+            partialRefetch: true,
+          },
+        },
+      });
     });
   });
 

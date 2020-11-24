@@ -20,7 +20,7 @@ export namespace DataProxy {
     /**
      * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
      * root query object. This property makes writeQuery capable of writing data
-     * to any object in the cache, which renders writeFragment mostly useless.
+     * to any object in the cache.
      */
     id?: string;
   }
@@ -52,6 +52,36 @@ export namespace DataProxy {
      * Any variables that your GraphQL fragments depend on.
      */
     variables?: TVariables;
+  }
+
+  export interface ReadQueryOptions<TData, TVariables>
+    extends Query<TVariables, TData> {
+    /**
+     * Whether to return incomplete data rather than null.
+     * Defaults to false.
+     */
+    returnPartialData?: boolean;
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted. Defaults to false.
+     */
+    optimistic?: boolean;
+  }
+
+  export interface ReadFragmentOptions<TData, TVariables>
+    extends Fragment<TVariables, TData> {
+    /**
+     * Whether to return incomplete data rather than null.
+     * Defaults to false.
+     */
+    returnPartialData?: boolean;
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted. Defaults to false.
+     */
+    optimistic?: boolean;
   }
 
   export interface WriteQueryOptions<TData, TVariables>
@@ -97,7 +127,7 @@ export interface DataProxy {
    * Reads a GraphQL query from the root query id.
    */
   readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables, QueryType>,
+    options: DataProxy.ReadQueryOptions<QueryType, TVariables>,
     optimistic?: boolean,
   ): QueryType | null;
 
@@ -107,7 +137,7 @@ export interface DataProxy {
    * provided to select the correct fragment.
    */
   readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables, FragmentType>,
+    options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic?: boolean,
   ): FragmentType | null;
 

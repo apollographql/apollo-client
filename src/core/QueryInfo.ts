@@ -49,6 +49,13 @@ function wrapDestructiveCacheMethod(
   }
 }
 
+function cancelNotifyTimeout(info: QueryInfo) {
+  if (info["notifyTimeout"]) {
+    clearTimeout(info["notifyTimeout"]);
+    info["notifyTimeout"] = void 0;
+  }
+}
+
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
 // this.queries Map. QueryInfo objects store the latest results and errors
@@ -191,10 +198,7 @@ export class QueryInfo {
   }
 
   notify() {
-    if (this.notifyTimeout) {
-      clearTimeout(this.notifyTimeout);
-      this.notifyTimeout = void 0;
-    }
+    cancelNotifyTimeout(this);
 
     if (this.shouldNotify()) {
       this.listeners.forEach(listener => listener(this));
@@ -291,6 +295,11 @@ export class QueryInfo {
     allowCacheWrite: boolean,
   ) {
     this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+
+    // If there is a pending notify timeout, cancel it because we are
+    // about to update this.diff to hold the latest data, and we can
+    // assume the data will be broadcast through some other mechanism.
+    cancelNotifyTimeout(this);
 
     if (options.fetchPolicy === 'no-cache') {
       this.diff = { result: result.data, complete: true };
@@ -398,6 +407,8 @@ export class QueryInfo {
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
+
+    cancelNotifyTimeout(this);
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

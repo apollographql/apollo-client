@@ -19,9 +19,11 @@ All code samples below assume that you have initialized an instance of  `ApolloC
 
 The `readQuery` method enables you to run a GraphQL query directly on your cache.
 
-* If your cache contains all of the data necessary to fulfill a specified query, `readQuery` returns a data object in the shape of that query, just like a GraphQL server does.
+* If your cache contains all of the data necessary to fulfill the specified query, `readQuery` returns a data object in the shape of that query, just like a GraphQL server does.
 
-* If your cache _doesn't_ contain all of the data necessary to fulfill a specified query, `readQuery` throws an error. It _never_ attempts to fetch data from a remote server.
+* If your cache does not contain all of the data necessary to fulfill the specified query, `readQuery` returns `null`, without attempting to fetch data from a remote server.
+
+> Prior to Apollo Client 3.3, `readQuery` would throw `MissingFieldError` exceptions to report missing fields. Beginning with Apollo Client 3.3, `readQuery` always returns `null` to indicate fields were missing.
 
 Pass `readQuery` a GraphQL query string like so:
 
@@ -81,12 +83,9 @@ const todo = client.readFragment({
 
 The first argument, `id`, is the value of the unique identifier for the object you want to read from the cache. By default, this is the value of the object's `id` field, but you can [customize this behavior](./cache-configuration/#generating-unique-identifiers).
 
-In the example above:
+In the example above, `readFragment` returns `null` if no `Todo` object with an `id` of `5` exists in the cache, or if the object exists but is missing the `text` or `completed` fields.
 
-* If a `Todo` object with an `id` of `5` is _not_ in the cache,
-`readFragment` returns `null`.
-* If the `Todo` object _is_ in the cache but it's
-missing either a `text` or `completed` field, `readFragment` throws an error.
+> Prior to Apollo Client 3.3, `readFragment` would throw `MissingFieldError` exceptions to report missing fields, and return `null` only when reading a fragment from a nonexistent ID. Beginning with Apollo Client 3.3, `readFragment` always returns `null` to indicate insufficient data (missing ID or missing fields), instead of throwing a `MissingFieldError`.
 
 ## `writeQuery` and `writeFragment`
 

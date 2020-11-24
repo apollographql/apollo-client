@@ -21,7 +21,6 @@ import {
   ConcastSourcesIterable,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
-import { MutationStore } from './MutationStore';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -35,7 +34,6 @@ import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
   OperationVariables,
-  MutationQueryReducer,
 } from './types';
 import { LocalState } from './LocalState';
 
@@ -43,15 +41,16 @@ import { QueryInfo, QueryStoreValue, shouldWriteResult } from './QueryInfo';
 
 const { hasOwnProperty } = Object.prototype;
 
-type QueryWithUpdater = {
-  updater: MutationQueryReducer<Object>;
-  queryInfo: QueryInfo;
-};
+interface MutationStoreValue {
+  mutation: DocumentNode;
+  variables: Record<string, any>;
+  loading: boolean;
+  error: Error | null;
+}
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
-  public mutationStore: MutationStore = new MutationStore();
   public readonly assumeImmutableResults: boolean;
   public readonly ssrMode: boolean;
 
@@ -59,7 +58,10 @@ export class QueryManager<TStore> {
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TStore>;
 
-  private onBroadcast: () => void;
+  private onBroadcast?: () => void;
+  public mutationStore?: {
+    [mutationId: string]: MutationStoreValue;
+  };
 
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
@@ -73,7 +75,7 @@ export class QueryManager<TStore> {
     cache,
     link,
     queryDeduplication = false,
-    onBroadcast = () => undefined,
+    onBroadcast,
     ssrMode = false,
     clientAwareness = {},
     localState,
@@ -91,11 +93,13 @@ export class QueryManager<TStore> {
     this.cache = cache;
     this.link = link;
     this.queryDeduplication = queryDeduplication;
-    this.onBroadcast = onBroadcast;
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = !!assumeImmutableResults;
+    if ((this.onBroadcast = onBroadcast)) {
+      this.mutationStore = Object.create(null);
+    }
   }
 
   /**
@@ -121,7 +125,7 @@ export class QueryManager<TStore> {
     mutation,
     variables,
     optimisticResponse,
-    updateQueries: updateQueriesByName,
+    updateQueries,
     refetchQueries = [],
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
@@ -148,58 +152,24 @@ export class QueryManager<TStore> {
       variables = await this.localState.addExportedVariables(mutation, variables, context);
     }
 
-    // Create a map of update queries by id to the query instead of by name.
-    const generateUpdateQueriesInfo: () => {
-      [queryId: string]: QueryWithUpdater;
-    } = () => {
-      const ret: { [queryId: string]: QueryWithUpdater } = {};
-
-      if (updateQueriesByName) {
-        this.queries.forEach(({ observableQuery }, queryId) => {
-          if (observableQuery) {
-            const { queryName } = observableQuery;
-            if (
-              queryName &&
-              hasOwnProperty.call(updateQueriesByName, queryName)
-            ) {
-              ret[queryId] = {
-                updater: updateQueriesByName[queryName],
-                queryInfo: this.queries.get(queryId)!,
-              };
-            }
-          }
-        });
-      }
-
-      return ret;
-    };
-
-    this.mutationStore.initMutation(
-      mutationId,
-      mutation,
-      variables,
-    );
+    const mutationStoreValue =
+      this.mutationStore &&
+      (this.mutationStore[mutationId] = {
+        mutation,
+        variables,
+        loading: true,
+        error: null,
+      } as MutationStoreValue);
 
     if (optimisticResponse) {
-      const optimistic = typeof optimisticResponse === 'function'
-        ? optimisticResponse(variables)
-        : optimisticResponse;
-
-      this.cache.recordOptimisticTransaction(cache => {
-        try {
-          markMutationResult({
-            mutationId: mutationId,
-            result: { data: optimistic },
-            document: mutation,
-            variables: variables,
-            errorPolicy,
-            queryUpdatersById: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
-          }, cache);
-        } catch (error) {
-          invariant.error(error);
-        }
-      }, mutationId);
+      this.markMutationOptimistic<T>(optimisticResponse, {
+        mutationId,
+        document: mutation,
+        variables,
+        errorPolicy,
+        updateQueries,
+        update: updateWithProxyFn,
+      });
     }
 
     this.broadcastQueries();
@@ -227,19 +197,22 @@ export class QueryManager<TStore> {
             return;
           }
 
-          self.mutationStore.markMutationResult(mutationId);
+          if (mutationStoreValue) {
+            mutationStoreValue.loading = false;
+            mutationStoreValue.error = null;
+          }
 
           if (fetchPolicy !== 'no-cache') {
             try {
-              markMutationResult({
+              self.markMutationResult<T>({
                 mutationId,
                 result,
                 document: mutation,
                 variables,
                 errorPolicy,
-                queryUpdatersById: generateUpdateQueriesInfo(),
+                updateQueries,
                 update: updateWithProxyFn,
-              }, self.cache);
+              });
             } catch (e) {
               error = new ApolloError({
                 networkError: e,
@@ -252,7 +225,10 @@ export class QueryManager<TStore> {
         },
 
         error(err: Error) {
-          self.mutationStore.markMutationError(mutationId, err);
+          if (mutationStoreValue) {
+            mutationStoreValue.loading = false;
+            mutationStoreValue.error = err;
+          }
           if (optimisticResponse) {
             self.cache.removeOptimistic(mutationId);
           }
@@ -265,8 +241,9 @@ export class QueryManager<TStore> {
         },
 
         complete() {
-          if (error) {
-            self.mutationStore.markMutationError(mutationId, error);
+          if (error && mutationStoreValue) {
+            mutationStoreValue.loading = false;
+            mutationStoreValue.error = error;
           }
 
           if (optimisticResponse) {
@@ -331,6 +308,112 @@ export class QueryManager<TStore> {
         },
       });
     });
+  }
+
+  public markMutationResult<TData>(
+    mutation: {
+      mutationId: string;
+      result: FetchResult<TData>;
+      document: DocumentNode;
+      variables?: OperationVariables;
+      errorPolicy: ErrorPolicy;
+      updateQueries: MutationOptions<TData>["updateQueries"],
+      update?: (
+        cache: ApolloCache<TStore>,
+        result: FetchResult<TData>,
+      ) => void;
+    },
+    cache = this.cache,
+  ) {
+    if (shouldWriteResult(mutation.result, mutation.errorPolicy)) {
+      const cacheWrites: Cache.WriteOptions[] = [{
+        result: mutation.result.data,
+        dataId: 'ROOT_MUTATION',
+        query: mutation.document,
+        variables: mutation.variables,
+      }];
+
+      const { updateQueries } = mutation;
+      if (updateQueries) {
+        this.queries.forEach(({ observableQuery }, queryId) => {
+          const queryName = observableQuery && observableQuery.queryName;
+          if (!queryName || !hasOwnProperty.call(updateQueries, queryName)) {
+            return;
+          }
+          const updater = updateQueries[queryName];
+          const { document, variables } = this.queries.get(queryId)!;
+
+          // Read the current query result from the store.
+          const { result: currentQueryResult, complete } = cache.diff<TData>({
+            query: document!,
+            variables,
+            returnPartialData: true,
+            optimistic: false,
+          });
+
+          if (complete && currentQueryResult) {
+            // Run our reducer using the current query result and the mutation result.
+            const nextQueryResult = updater(currentQueryResult, {
+              mutationResult: mutation.result,
+              queryName: document && getOperationName(document) || void 0,
+              queryVariables: variables!,
+            });
+
+            // Write the modified result back into the store if we got a new result.
+            if (nextQueryResult) {
+              cacheWrites.push({
+                result: nextQueryResult,
+                dataId: 'ROOT_QUERY',
+                query: document!,
+                variables,
+              });
+            }
+          }
+        });
+      }
+
+      cache.performTransaction(c => {
+        cacheWrites.forEach(write => c.write(write));
+
+        // If the mutation has some writes associated with it then we need to
+        // apply those writes to the store by running this reducer again with a
+        // write action.
+        const { update } = mutation;
+        if (update) {
+          update(c, mutation.result);
+        }
+      }, /* non-optimistic transaction: */ null);
+    }
+  }
+
+  public markMutationOptimistic<TData>(
+    optimisticResponse: any,
+    mutation: {
+      mutationId: string;
+      document: DocumentNode;
+      variables?: OperationVariables;
+      errorPolicy: ErrorPolicy;
+      updateQueries: MutationOptions<TData>["updateQueries"],
+      update?: (
+        cache: ApolloCache<TStore>,
+        result: FetchResult<TData>,
+      ) => void;
+    },
+  ) {
+    const data = typeof optimisticResponse === "function"
+      ? optimisticResponse(mutation.variables)
+      : optimisticResponse;
+
+    return this.cache.recordOptimisticTransaction(cache => {
+      try {
+        this.markMutationResult<TData>({
+          ...mutation,
+          result: { data },
+        }, cache);
+      } catch (error) {
+        invariant.error(error);
+      }
+    }, mutation.mutationId);
   }
 
   public fetchQuery<TData, TVars>(
@@ -539,7 +622,9 @@ export class QueryManager<TStore> {
       }
     });
 
-    this.mutationStore.reset();
+    if (this.mutationStore) {
+      this.mutationStore = Object.create(null);
+    }
 
     // begin removing data from the store
     return this.cache.reset();
@@ -670,7 +755,7 @@ export class QueryManager<TStore> {
   }
 
   public broadcastQueries() {
-    this.onBroadcast();
+    if (this.onBroadcast) this.onBroadcast();
     this.queries.forEach(info => info.notify());
   }
 
@@ -1073,82 +1158,5 @@ export class QueryManager<TStore> {
       ...newContext,
       clientAwareness: this.clientAwareness,
     };
-  }
-}
-
-function markMutationResult<TStore, TData>(
-  mutation: {
-    mutationId: string;
-    result: FetchResult<TData>;
-    document: DocumentNode;
-    variables: any;
-    errorPolicy: ErrorPolicy;
-    queryUpdatersById: Record<string, QueryWithUpdater>;
-    update:
-      ((cache: ApolloCache<TStore>, mutationResult: Object) => void) |
-      undefined;
-  },
-  cache: ApolloCache<TStore>,
-) {
-  // Incorporate the result from this mutation into the store
-  if (shouldWriteResult(mutation.result, mutation.errorPolicy)) {
-    const cacheWrites: Cache.WriteOptions[] = [{
-      result: mutation.result.data,
-      dataId: 'ROOT_MUTATION',
-      query: mutation.document,
-      variables: mutation.variables,
-    }];
-
-    const { queryUpdatersById } = mutation;
-    if (queryUpdatersById) {
-      Object.keys(queryUpdatersById).forEach(id => {
-        const {
-          updater,
-          queryInfo: {
-            document,
-            variables,
-          },
-        } = queryUpdatersById[id];
-
-        // Read the current query result from the store.
-        const { result: currentQueryResult, complete } = cache.diff<TData>({
-          query: document!,
-          variables,
-          returnPartialData: true,
-          optimistic: false,
-        });
-
-        if (complete && currentQueryResult) {
-          // Run our reducer using the current query result and the mutation result.
-          const nextQueryResult = updater(currentQueryResult, {
-            mutationResult: mutation.result,
-            queryName: getOperationName(document!) || undefined,
-            queryVariables: variables!,
-          });
-
-          // Write the modified result back into the store if we got a new result.
-          if (nextQueryResult) {
-            cacheWrites.push({
-              result: nextQueryResult,
-              dataId: 'ROOT_QUERY',
-              query: document!,
-              variables,
-            });
-          }
-        }
-      });
-    }
-
-    cache.performTransaction(c => {
-      cacheWrites.forEach(write => c.write(write));
-
-      // If the mutation has some writes associated with it then we need to
-      // apply those writes to the store by running this reducer again with a
-      // write action.
-      const { update } = mutation;
-      if (update) {
-        update(c, mutation.result);
-      }
-    }, /* non-optimistic transaction: */ null);
   }
 }

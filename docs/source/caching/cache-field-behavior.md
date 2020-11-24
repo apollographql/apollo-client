@@ -269,6 +269,33 @@ const cache = new InMemoryCache({
 
 In summary, the `Book.author` policy above allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
 
+#### Configuring `merge` functions for types rather than fields
+
+Beginning with Apollo Client 3.3, you can avoid having to configure `merge` functions for lots of different fields that might hold an `Author` object, and instead put the `merge` configuration in the `Author` type policy:
+
+```ts{13}
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        // No longer necessary!
+        // author: {
+        //   merge: true,
+        // },
+      },
+    },
+
+    Author: {
+      merge: true,
+    },
+  },
+});
+```
+
+These configurations have the same behavior, but putting the `merge: true` in the `Author` type policy is shorter and easier to maintain, especially when `Author` objects could appear in lots of different fields besides `Book.author`.
+
+Remember that mergeable objects will only be merged with existing objects occupying the same field of the same parent object, and only when the `__typename` of the objects is the same. If you really need to work around these rules, you can write a custom `merge` function to do whatever you want, but `merge: true` follows these rules.
+
 ### Merging arrays of non-normalized objects
 
 Once you're comfortable with the ideas and recommendations from the previous section, consider what happens when a `Book` can have multiple authors:

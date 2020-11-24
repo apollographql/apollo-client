@@ -104,13 +104,14 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * @param optimistic
    */
   public readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables, QueryType>,
-    optimistic: boolean = false,
+    options: Cache.ReadQueryOptions<QueryType, TVariables>,
+    optimistic = !!options.optimistic,
   ): QueryType | null {
     return this.read({
       rootId: options.id || 'ROOT_QUERY',
       query: options.query,
       variables: options.variables,
+      returnPartialData: options.returnPartialData,
       optimistic,
     });
   }
@@ -120,13 +121,14 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   private getFragmentDoc = wrap(getFragmentQueryDocument);
 
   public readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables, FragmentType>,
-    optimistic: boolean = false,
+    options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
+    optimistic = !!options.optimistic,
   ): FragmentType | null {
     return this.read({
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
+      returnPartialData: options.returnPartialData,
       optimistic,
     });
   }

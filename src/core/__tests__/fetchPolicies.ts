@@ -65,14 +65,14 @@ const createLink = (reject: (reason: any) => any) =>
     result: { data: result },
   }).setOnError(reject);
 
-const createFailureLink = (reject: (reason: any) => any) =>
+const createFailureLink = () =>
   mockSingleLink({
     request: { query },
     error: new Error('query failed'),
   }, {
     request: { query },
     result: { data: result },
-  }).setOnError(reject);
+  });
 
 const createMutationLink = (reject: (reason: any) => any) =>
   // fetch the data
@@ -149,7 +149,7 @@ describe('network-only', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createFailureLink(reject)),
+      link: inspector.concat(createFailureLink()),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -280,7 +280,7 @@ describe('no-cache', () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createFailureLink(reject)),
+      link: inspector.concat(createFailureLink()),
       cache: new InMemoryCache({ addTypename: false }),
     });
 

@@ -3,12 +3,15 @@ import { equal } from '@wry/equality';
 import { ApolloError } from '../../errors';
 
 import {
+  ApolloClient,
   NetworkStatus,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ObservableQuery,
   FetchMoreOptions,
-  UpdateQueryOptions
+  UpdateQueryOptions,
+  DocumentNode,
+  TypedDocumentNode
 } from '../../core';
 
 import {
@@ -18,7 +21,6 @@ import {
 import { DocumentType } from '../parser';
 import {
   QueryResult,
-  QueryPreviousData,
   QueryDataOptions,
   QueryTuple,
   QueryLazyOptions,
@@ -28,12 +30,19 @@ import { OperationData } from './OperationData';
 
 export class QueryData<TData, TVariables> extends OperationData {
   public onNewData: () => void;
-
-  private previousData: QueryPreviousData<TData, TVariables> = {};
   private currentObservable?: ObservableQuery<TData, TVariables>;
   private currentSubscription?: ObservableSubscription;
   private runLazy: boolean = false;
   private lazyOptions?: QueryLazyOptions<TVariables>;
+  private previous: {
+    client?: ApolloClient<object>;
+    query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    observableQueryOptions?: {};
+    result?: QueryResult<TData, TVariables>;
+    loading?: boolean;
+    options?: QueryDataOptions<TData, TVariables>;
+    error?: ApolloError;
+  } = Object.create(null);
 
   constructor({
     options,
@@ -52,9 +61,10 @@ export class QueryData<TData, TVariables> extends OperationData {
     this.refreshClient();
 
     const { skip, query } = this.getOptions();
-    if (skip || query !== this.previousData.query) {
+    if (skip || query !== this.previous.query) {
       this.removeQuerySubscription();
-      this.previousData.query = query;
+      this.removeObservable(!skip);
+      this.previous.query = query;
     }
 
     this.updateObservableQuery();
@@ -98,8 +108,8 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   public cleanup() {
     this.removeQuerySubscription();
-    delete this.currentObservable;
-    delete this.previousData.result;
+    this.removeObservable(true);
+    delete this.previous.result;
   }
 
   public getOptions() {
@@ -142,7 +152,8 @@ export class QueryData<TData, TVariables> extends OperationData {
   };
 
   private getExecuteSsrResult() {
-    const ssrDisabled = this.getOptions().ssr === false;
+    const { ssr, skip } = this.getOptions();
+    const ssrDisabled = ssr === false || skip;
     const fetchDisabled = this.refreshClient().client.disableNetworkFetches;
 
     const ssrLoading = {
@@ -158,7 +169,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
     if (ssrDisabled && (this.ssrInitiated() || fetchDisabled)) {
-      this.previousData.result = ssrLoading;
+      this.previous.result = ssrLoading;
       return ssrLoading;
     }
 
@@ -209,7 +220,7 @@ export class QueryData<TData, TVariables> extends OperationData {
     if (!this.currentObservable) {
       const observableQueryOptions = this.prepareObservableQueryOptions();
 
-      this.previousData.observableQueryOptions = {
+      this.previous.observableQueryOptions = {
         ...observableQueryOptions,
         children: null
       };
@@ -243,10 +254,10 @@ export class QueryData<TData, TVariables> extends OperationData {
     if (
       !equal(
         newObservableQueryOptions,
-        this.previousData.observableQueryOptions
+        this.previous.observableQueryOptions
       )
     ) {
-      this.previousData.observableQueryOptions = newObservableQueryOptions;
+      this.previous.observableQueryOptions = newObservableQueryOptions;
       this.currentObservable
         .setOptions(newObservableQueryOptions)
         // The error will be passed to the child container, so we don't
@@ -268,7 +279,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
     this.currentSubscription = this.currentObservable!.subscribe({
       next: ({ loading, networkStatus, data }) => {
-        const previousResult = this.previousData.result;
+        const previousResult = this.previous.result;
 
         // Make sure we're not attempting to re-render similar results
         if (
@@ -286,12 +297,12 @@ export class QueryData<TData, TVariables> extends OperationData {
         this.resubscribeToQuery();
         if (!error.hasOwnProperty('graphQLErrors')) throw error;
 
-        const previousResult = this.previousData.result;
+        const previousResult = this.previous.result;
         if (
           (previousResult && previousResult.loading) ||
-          !equal(error, this.previousData.error)
+          !equal(error, this.previous.error)
         ) {
-          this.previousData.error = error;
+          this.previous.error = error;
           onNewData();
         }
       }
@@ -401,9 +412,21 @@ export class QueryData<TData, TVariables> extends OperationData {
     result.client = this.client;
     // Store options as this.previousOptions.
     this.setOptions(options, true);
-    this.previousData.loading =
-      this.previousData.result && this.previousData.result.loading || false;
-    this.previousData.result = result;
+
+    const previousResult = this.previous.result;
+
+    this.previous.loading =
+      previousResult && previousResult.loading || false;
+
+    // Ensure the returned result contains previousData as a separate
+    // property, to give developers the flexibility of leveraging outdated
+    // data while new data is loading from the network. Falling back to
+    // previousResult.previousData when previousResult.data is falsy here
+    // allows result.previousData to persist across multiple results.
+    result.previousData = previousResult &&
+      (previousResult.data || previousResult.previousData);
+
+    this.previous.result = result;
 
     // Any query errors that exist are now available in `result`, so we'll
     // remove the original errors from the `ObservableQuery` query store to
@@ -415,9 +438,9 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   private handleErrorOrCompleted() {
-    if (!this.currentObservable || !this.previousData.result) return;
+    if (!this.currentObservable || !this.previous.result) return;
 
-    const { data, loading, error } = this.previousData.result;
+    const { data, loading, error } = this.previous.result;
 
     if (!loading) {
       const {
@@ -431,7 +454,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       // No changes, so we won't call onError/onCompleted.
       if (
         this.previousOptions &&
-        !this.previousData.loading &&
+        !this.previous.loading &&
         equal(this.previousOptions.query, query) &&
         equal(this.previousOptions.variables, variables)
       ) {
@@ -450,6 +473,15 @@ export class QueryData<TData, TVariables> extends OperationData {
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
       delete this.currentSubscription;
+    }
+  }
+
+  private removeObservable(andDelete: boolean) {
+    if (this.currentObservable) {
+      this.currentObservable["tearDownQuery"]();
+      if (andDelete) {
+        delete this.currentObservable;
+      }
     }
   }
 

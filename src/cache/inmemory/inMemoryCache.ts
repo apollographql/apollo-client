@@ -6,6 +6,7 @@ import { dep, wrap } from 'optimism';
 
 import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
+import { MissingFieldError } from '../core/types/common';
 import {
   addTypenameToDocument,
   StoreObject,
@@ -19,7 +20,7 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
-import { makeVar } from './reactiveVars';
+import { makeVar, forgetCache } from './reactiveVars';
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
@@ -102,22 +103,40 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public extract(optimistic: boolean = false): NormalizedCacheObject {
-    return (optimistic ? this.optimisticData : this.data).toObject();
+    return (optimistic ? this.optimisticData : this.data).extract();
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    const store = options.optimistic ? this.optimisticData : this.data;
-    if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
-      return null;
+    const {
+      // Since read returns data or null, without any additional metadata
+      // about whether/where there might have been missing fields, the
+      // default behavior cannot be returnPartialData = true (like it is
+      // for the diff method), since defaulting to true would violate the
+      // integrity of the T in the return type. However, partial data may
+      // be useful in some cases, so returnPartialData:true may be
+      // specified explicitly.
+      returnPartialData = false,
+    } = options;
+    try {
+      return this.storeReader.diffQueryAgainstStore<T>({
+        store: options.optimistic ? this.optimisticData : this.data,
+        query: options.query,
+        variables: options.variables,
+        rootId: options.rootId,
+        config: this.config,
+        returnPartialData,
+      }).result || null;
+    } catch (e) {
+      if (e instanceof MissingFieldError) {
+        // Swallow MissingFieldError and return null, so callers do not
+        // need to worry about catching "normal" exceptions resulting from
+        // incomplete cache data. Unexpected errors will be re-thrown. If
+        // you need more information about which fields were missing, use
+        // cache.diff instead, and examine diffResult.missing.
+        return null;
+      }
+      throw e;
     }
-    return this.storeReader.diffQueryAgainstStore<T>({
-      store,
-      query: options.query,
-      variables: options.variables,
-      rootId: options.rootId,
-      config: this.config,
-      returnPartialData: false,
-    }).result || null;
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {
@@ -180,7 +199,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.maybeBroadcastWatch(watch);
     }
     return () => {
-      this.watches.delete(watch);
+      // Once we remove the last watch from this.watches, cache.broadcastWatches
+      // no longer does anything, so we preemptively tell the reactive variable
+      // system to exclude this cache from future broadcasts.
+      if (this.watches.delete(watch) && !this.watches.size) {
+        forgetCache(this);
+      }
       this.watchDep.dirty(watch);
       // Remove this watch from the LRU cache managed by the
       // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory

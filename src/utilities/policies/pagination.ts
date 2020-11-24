@@ -50,36 +50,36 @@ export function offsetLimitPagination<T = Reference>(
   };
 }
 
-// Whether TEdge<TNode> is a normalized Reference or a non-normalized
+// Whether TRelayEdge<TNode> is a normalized Reference or a non-normalized
 // object, it needs a .cursor property where the relayStylePagination
 // merge function can store cursor strings taken from pageInfo. Storing an
 // extra reference.cursor property should be safe, and is easier than
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-type TEdge<TNode> = {
+export type TRelayEdge<TNode> = {
   cursor?: string;
   node: TNode;
 } | (Reference & { cursor?: string });
 
-type TPageInfo = {
+export type TRelayPageInfo = {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
   startCursor: string;
   endCursor: string;
 };
 
-type TExistingRelay<TNode> = Readonly<{
-  edges: TEdge<TNode>[];
-  pageInfo: TPageInfo;
+export type TExistingRelay<TNode> = Readonly<{
+  edges: TRelayEdge<TNode>[];
+  pageInfo: TRelayPageInfo;
 }>;
 
-type TIncomingRelay<TNode> = {
-  edges?: TEdge<TNode>[];
-  pageInfo?: TPageInfo;
+export type TIncomingRelay<TNode> = {
+  edges?: TRelayEdge<TNode>[];
+  pageInfo?: TRelayPageInfo;
 };
 
-type RelayFieldPolicy<TNode> = FieldPolicy<
+export type RelayFieldPolicy<TNode> = FieldPolicy<
   TExistingRelay<TNode>,
   TIncomingRelay<TNode>,
   TIncomingRelay<TNode>
@@ -97,7 +97,7 @@ export function relayStylePagination<TNode = Reference>(
     read(existing, { canRead, readField }) {
       if (!existing) return;
 
-      const edges: TEdge<TNode>[] = [];
+      const edges: TRelayEdge<TNode>[] = [];
       let startCursor = "";
       let endCursor = "";
       existing.edges.forEach(edge => {
@@ -198,7 +198,7 @@ export function relayStylePagination<TNode = Reference>(
         ...suffix,
       ];
 
-      const pageInfo: TPageInfo = {
+      const pageInfo: TRelayPageInfo = {
         // The ordering of these two ...spreads may be surprising, but it
         // makes sense because we want to combine PageInfo properties with a
         // preference for existing values, *unless* the existing values are
@@ -212,7 +212,15 @@ export function relayStylePagination<TNode = Reference>(
         const {
           hasPreviousPage, hasNextPage,
           startCursor, endCursor,
+          ...extras
         } = incoming.pageInfo;
+
+        // If incoming.pageInfo had any extra non-standard properties,
+        // assume they should take precedence over any existing properties
+        // of the same name, regardless of where this page falls with
+        // respect to the existing data.
+        Object.assign(pageInfo, extras);
+
         // Keep existing.pageInfo.has{Previous,Next}Page unless the
         // placement of the incoming edges means incoming.hasPreviousPage
         // or incoming.hasNextPage should become the new values for those

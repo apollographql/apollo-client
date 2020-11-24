@@ -25,8 +25,6 @@ type Query {
 const schema = makeExecutableSchema({ typeDefs });
 
 describe('SchemaLink', () => {
-  const mockError = { throws: new TypeError('mock me') };
-
   it('raises warning if called with concat', () => {
     const link = new SchemaLink({ schema });
     const _warn = console.warn;
@@ -56,7 +54,9 @@ describe('SchemaLink', () => {
     });
     observable.subscribe({
       next,
-      error: error => expect(false),
+      error: () => {
+        throw new Error('Received error')
+      },
       complete: () => {
         expect(next).toHaveBeenCalledTimes(1);
         done();
@@ -65,23 +65,28 @@ describe('SchemaLink', () => {
   });
 
   it('calls error when fetch fails', done => {
-    const badSchema = makeExecutableSchema({ typeDefs });
-
-    const link = new SchemaLink({ schema: badSchema });
+    const link = new SchemaLink({
+      validate: true,
+      schema: makeExecutableSchema({
+        typeDefs,
+        resolvers: {
+          Query: {
+            sampleQuery() {
+              throw new Error('Unauthorized');
+            }
+          }
+        }
+      }),
+    });
     const observable = execute(link, {
       query: sampleQuery,
     });
-    observable.subscribe(
-      result => expect(false),
-      error => {
-        expect(error).toEqual(mockError.throws);
-        done();
-      },
-      () => {
-        expect(false);
-        done();
-      },
-    );
+    observable.subscribe(result => {
+      expect(result.errors).toBeTruthy()
+      expect(result.errors!.length).toBe(1)
+      expect(result.errors![0].message).toMatch(/Unauthorized/)
+      done();
+    });
   });
 
   it('supports query which is executed synchronously', done => {
@@ -101,7 +106,9 @@ describe('SchemaLink', () => {
     });
     observable.subscribe(
       next,
-      error => expect(false),
+      () => {
+        throw new Error('Received error')
+      },
       () => {
         expect(next).toHaveBeenCalledTimes(1);
         done();
@@ -191,5 +198,27 @@ describe('SchemaLink', () => {
         }
       },
     );
+  });
+
+  it('reports errors for unknown queries', done => {
+    const link = new SchemaLink({
+      validate: true,
+      schema: makeExecutableSchema({
+        typeDefs,
+      }),
+    });
+    const observable = execute(link, {
+      query: gql`
+        query {
+          unknown
+        }
+      `
+    });
+    observable.subscribe(result => {
+      expect(result.errors).toBeTruthy()
+      expect(result.errors!.length).toBe(1)
+      expect(result.errors![0].message).toMatch(/Cannot query field "unknown"/)
+      done();
+    });
   });
 });

@@ -79,13 +79,24 @@ export abstract class EntityStore implements NormalizedCache {
     // should not rely on this dependency, since the contents could change
     // without the object being added or removed.
     if (dependOnExistence) this.group.depend(dataId, "__exists");
-    return hasOwn.call(this.data, dataId) ? this.data[dataId] :
-      this instanceof Layer ? this.parent.lookup(dataId, dependOnExistence) : void 0;
+
+    if (hasOwn.call(this.data, dataId)) {
+      return this.data[dataId];
+    }
+
+    if (this instanceof Layer) {
+      return this.parent.lookup(dataId, dependOnExistence);
+    }
+
+    if (this.policies.rootTypenamesById[dataId]) {
+      return Object.create(null);
+    }
   }
 
   public merge(dataId: string, incoming: StoreObject): void {
     const existing = this.lookup(dataId);
-    const merged = new DeepMerger(storeObjectReconciler).merge(existing, incoming);
+    const merged: StoreObject =
+      new DeepMerger(storeObjectReconciler).merge(existing, incoming);
     // Even if merged === existing, existing may have come from a lower
     // layer, so we always need to set this.data[dataId] on this level.
     this.data[dataId] = merged;
@@ -93,15 +104,33 @@ export abstract class EntityStore implements NormalizedCache {
       delete this.refs[dataId];
       if (this.group.caching) {
         const fieldsToDirty: Record<string, 1> = Object.create(null);
+
         // If we added a new StoreObject where there was previously none, dirty
         // anything that depended on the existence of this dataId, such as the
         // EntityStore#has method.
         if (!existing) fieldsToDirty.__exists = 1;
+
         // Now invalidate dependents who called getFieldValue for any fields
         // that are changing as a result of this merge.
         Object.keys(incoming).forEach(storeFieldName => {
           if (!existing || existing[storeFieldName] !== merged[storeFieldName]) {
-            fieldsToDirty[fieldNameFromStoreName(storeFieldName)] = 1;
+            // Always dirty the full storeFieldName, which may include
+            // serialized arguments following the fieldName prefix.
+            fieldsToDirty[storeFieldName] = 1;
+
+            // Also dirty fieldNameFromStoreName(storeFieldName) if it's
+            // different from storeFieldName and this field does not have
+            // keyArgs configured, because that means the cache can't make
+            // any assumptions about how field values with the same field
+            // name but different arguments might be interrelated, so it
+            // must err on the side of invalidating all field values that
+            // share the same short fieldName, regardless of arguments.
+            const fieldName = fieldNameFromStoreName(storeFieldName);
+            if (fieldName !== storeFieldName &&
+                !this.policies.hasKeyArgs(merged.__typename, fieldName)) {
+              fieldsToDirty[fieldName] = 1;
+            }
+
             // If merged[storeFieldName] has become undefined, and this is the
             // Root layer, actually delete the property from the merged object,
             // which is guaranteed to have been created fresh in this method.
@@ -110,6 +139,7 @@ export abstract class EntityStore implements NormalizedCache {
             }
           }
         });
+
         Object.keys(fieldsToDirty).forEach(
           fieldName => this.group.dirty(dataId, fieldName));
       }
@@ -243,6 +273,20 @@ export abstract class EntityStore implements NormalizedCache {
     this.replace(null);
   }
 
+  public extract(): NormalizedCacheObject {
+    const obj = this.toObject();
+    const extraRootIds: string[] = [];
+    this.getRootIdSet().forEach(id => {
+      if (!hasOwn.call(this.policies.rootTypenamesById, id)) {
+        extraRootIds.push(id);
+      }
+    });
+    if (extraRootIds.length) {
+      obj.__META = { extraRootIds: extraRootIds.sort() };
+    }
+    return obj;
+  }
+
   public replace(newData: NormalizedCacheObject | null): void {
     Object.keys(this.data).forEach(dataId => {
       if (!(newData && hasOwn.call(newData, dataId))) {
@@ -250,15 +294,19 @@ export abstract class EntityStore implements NormalizedCache {
       }
     });
     if (newData) {
-      Object.keys(newData).forEach(dataId => {
-        this.merge(dataId, newData[dataId] as StoreObject);
+      const { __META, ...rest } = newData;
+      Object.keys(rest).forEach(dataId => {
+        this.merge(dataId, rest[dataId] as StoreObject);
       });
+      if (__META) {
+        __META.extraRootIds.forEach(this.retain, this);
+      }
     }
   }
 
   public abstract getStorage(
     idOrObj: string | StoreObject,
-    storeFieldName: string,
+    ...storeFieldNames: (string | number)[]
   ): StorageType;
 
   // Maps root entity IDs to the number of times they have been retained, minus
@@ -358,7 +406,7 @@ export abstract class EntityStore implements NormalizedCache {
   // Bound function that can be passed around to provide easy access to fields
   // of Reference objects as well as ordinary objects.
   public getFieldValue = <T = StoreValue>(
-    objectOrReference: StoreObject | Reference,
+    objectOrReference: StoreObject | Reference | undefined,
     storeFieldName: string,
   ) => maybeDeepFreeze(
     isReference(objectOrReference)
@@ -428,6 +476,15 @@ class CacheGroup {
   public depend(dataId: string, storeFieldName: string) {
     if (this.d) {
       this.d(makeDepKey(dataId, storeFieldName));
+      const fieldName = fieldNameFromStoreName(storeFieldName);
+      if (fieldName !== storeFieldName) {
+        // Fields with arguments that contribute extra identifying
+        // information to the fieldName (thus forming the storeFieldName)
+        // depend not only on the full storeFieldName but also on the
+        // short fieldName, so the field can be invalidated using either
+        // level of specificity.
+        this.d(makeDepKey(dataId, fieldName));
+      }
     }
   }
 
@@ -446,7 +503,7 @@ function makeDepKey(dataId: string, storeFieldName: string) {
   // Since field names cannot have '#' characters in them, this method
   // of joining the field name and the ID should be unambiguous, and much
   // cheaper than JSON.stringify([dataId, fieldName]).
-  return fieldNameFromStoreName(storeFieldName) + '#' + dataId;
+  return storeFieldName + '#' + dataId;
 }
 
 export namespace EntityStore {
@@ -487,11 +544,8 @@ export namespace EntityStore {
     }
 
     public readonly storageTrie = new KeyTrie<StorageType>(canUseWeakMap);
-    public getStorage(
-      idOrObj: string | StoreObject,
-      storeFieldName: string,
-    ): StorageType {
-      return this.storageTrie.lookup(idOrObj, storeFieldName);
+    public getStorage(): StorageType {
+      return this.storageTrie.lookupArray(arguments);
     }
   }
 }
@@ -558,11 +612,10 @@ class Layer extends EntityStore {
     } : fromParent;
   }
 
-  public getStorage(
-    idOrObj: string | StoreObject,
-    storeFieldName: string,
-  ): StorageType {
-    return this.parent.getStorage(idOrObj, storeFieldName);
+  public getStorage(): StorageType {
+    let p: EntityStore = this.parent;
+    while ((p as Layer).parent) p = (p as Layer).parent;
+    return p.getStorage.apply(p, arguments);
   }
 }
 

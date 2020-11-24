@@ -1768,7 +1768,7 @@ describe('client', () => {
     });
 
     itAsync('fails if network request fails', (resolve, reject) => {
-      const link = mockSingleLink().setOnError(error => { throw error }); // no queries = no replies.
+      const link = mockSingleLink(); // no queries = no replies.
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -2028,7 +2028,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data },
         error: networkError,
-      }).setOnError(reject),
+      }),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -2475,7 +2475,7 @@ describe('client', () => {
       { request: { query }, result: { data } },
       { request: { query }, error: new Error('This is an error!') },
       { request: { query }, result: { data: dataTwo } }
-    ).setOnError(reject);
+    );
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -2971,10 +2971,6 @@ describe('@connection', () => {
     const bResults = watch(gql`{ b }`);
     const abResults = watch(gql`{ a b }`);
 
-    function wait(time = 10) {
-      return new Promise(resolve => setTimeout(resolve, 10));
-    }
-
     await wait();
 
     function checkLastResult(
@@ -3110,6 +3106,102 @@ describe('@connection', () => {
     ]);
 
     subs.forEach(sub => sub.unsubscribe());
+
+    resolve();
+  });
+
+  function wait(time = 10) {
+    return new Promise(resolve => setTimeout(resolve, time));
+  }
+
+  itAsync('should call forgetCache for reactive vars when stopped', async (resolve, reject) => {
+    const aVar = makeVar(123);
+    const bVar = makeVar("asdf");
+    const aSpy = jest.spyOn(aVar, "forgetCache");
+    const bSpy = jest.spyOn(bVar, "forgetCache");
+    const cache: InMemoryCache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            a() {
+              return aVar();
+            },
+            b() {
+              return bVar();
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({ cache });
+
+    const obsQueries = new Set<ObservableQuery<any>>();
+    const subs = new Set<ObservableSubscription>();
+    function watch(
+      query: DocumentNode,
+      fetchPolicy: WatchQueryFetchPolicy = "cache-first",
+    ): any[] {
+      const results: any[] = [];
+      const obsQuery = client.watchQuery({
+        query,
+        fetchPolicy,
+      });
+      obsQueries.add(obsQuery);
+      subs.add(obsQuery.subscribe({
+        next(result) {
+          results.push(result.data);
+        },
+      }));
+      return results;
+    }
+
+    const aQuery = gql`{ a }`;
+    const bQuery = gql`{ b }`;
+    const abQuery = gql`{ a b }`;
+
+    const aResults = watch(aQuery);
+    const bResults = watch(bQuery);
+
+    expect(cache["watches"].size).toBe(2);
+
+    expect(aResults).toEqual([]);
+    expect(bResults).toEqual([]);
+
+    expect(aSpy).not.toBeCalled();
+    expect(bSpy).not.toBeCalled();
+
+    subs.forEach(sub => sub.unsubscribe());
+
+    expect(aSpy).toBeCalledTimes(1);
+    expect(aSpy).toBeCalledWith(cache);
+    expect(bSpy).toBeCalledTimes(1);
+    expect(bSpy).toBeCalledWith(cache);
+
+    expect(aResults).toEqual([]);
+    expect(bResults).toEqual([]);
+
+    expect(cache["watches"].size).toBe(0);
+    const abResults = watch(abQuery);
+    expect(abResults).toEqual([]);
+    expect(cache["watches"].size).toBe(1);
+
+    await wait();
+
+    expect(aResults).toEqual([]);
+    expect(bResults).toEqual([]);
+    expect(abResults).toEqual([
+      { a: 123, b: "asdf" }
+    ]);
+
+    client.stop();
+
+    await wait();
+
+    expect(aSpy).toBeCalledTimes(2);
+    expect(aSpy).toBeCalledWith(cache);
+    expect(bSpy).toBeCalledTimes(2);
+    expect(bSpy).toBeCalledWith(cache);
 
     resolve();
   });

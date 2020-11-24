@@ -30,9 +30,9 @@ import {
 } from './LocalState';
 
 export interface DefaultOptions {
-  watchQuery?: Partial<WatchQueryOptions>;
-  query?: Partial<QueryOptions>;
-  mutate?: Partial<MutationOptions>;
+  watchQuery?: Partial<WatchQueryOptions<any, any>>;
+  query?: Partial<QueryOptions<any, any>>;
+  mutate?: Partial<MutationOptions<any, any>>;
 }
 
 let hasSuggestedDevtools = false;
@@ -55,6 +55,25 @@ export type ApolloClientOptions<TCacheShape> = {
   name?: string;
   version?: string;
 };
+
+type OptionsUnion<TData, TVariables> =
+  | WatchQueryOptions<TVariables, TData>
+  | QueryOptions<TVariables, TData>
+  | MutationOptions<TData, TVariables>;
+
+export function mergeOptions<
+  TOptions extends OptionsUnion<any, any>
+>(
+  defaults: Partial<TOptions>,
+  options: TOptions,
+): TOptions {
+  return compact(defaults, options, options.variables && {
+    variables: {
+      ...defaults.variables,
+      ...options.variables,
+    },
+  });
+}
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -121,7 +140,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache,
       ssrMode = false,
       ssrForceFetchDelay = 0,
-      connectToDevTools,
+      connectToDevTools =
+        // Expose the client instance as window.__APOLLO_CLIENT__ and call
+        // onBroadcast in queryManager.broadcastQueries to enable browser
+        // devtools, but disable them by default in production.
+        typeof window === 'object' &&
+        !(window as any).__APOLLO_CLIENT__ &&
+        process.env.NODE_ENV !== 'production',
       queryDeduplication = true,
       defaultOptions,
       assumeImmutableResults = false,
@@ -168,18 +193,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.resetStore = this.resetStore.bind(this);
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
-    // Attach the client instance to window to let us be found by chrome devtools, but only in
-    // development mode
-    const defaultConnectToDevTools =
-      process.env.NODE_ENV !== 'production' &&
-      typeof window !== 'undefined' &&
-      !(window as any).__APOLLO_CLIENT__;
-
-    if (
-      typeof connectToDevTools === 'undefined'
-        ? defaultConnectToDevTools
-        : connectToDevTools && typeof window !== 'undefined'
-    ) {
+    if (connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
     }
 
@@ -234,18 +248,18 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       },
       localState: this.localState,
       assumeImmutableResults,
-      onBroadcast: () => {
+      onBroadcast: connectToDevTools ? () => {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             action: {},
             state: {
               queries: this.queryManager.getQueryStore(),
-              mutations: this.queryManager.mutationStore.getStore(),
+              mutations: this.queryManager.mutationStore || {},
             },
             dataWithOptimisticResults: this.cache.extract(true),
           });
         }
-      },
+      } : void 0,
     });
   }
 
@@ -280,7 +294,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
-      options = compact(this.defaultOptions.watchQuery, options);
+      options = mergeOptions(this.defaultOptions.watchQuery, options);
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
@@ -308,7 +322,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: QueryOptions<TVariables, T>,
   ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
-      options = compact(this.defaultOptions.query, options);
+      options = mergeOptions(this.defaultOptions.query, options);
     }
 
     invariant(
@@ -337,7 +351,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: MutationOptions<T, TVariables>,
   ): Promise<FetchResult<T>> {
     if (this.defaultOptions.mutate) {
-      options = compact(this.defaultOptions.mutate, options);
+      options = mergeOptions(this.defaultOptions.mutate, options);
     }
     return this.queryManager.mutate<T>(options);
   }

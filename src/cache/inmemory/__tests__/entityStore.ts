@@ -4,6 +4,7 @@ import { InMemoryCache } from '../inMemoryCache';
 import { DocumentNode } from 'graphql';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
+import { Cache } from '../../core/types/Cache';
 import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
 import { MissingFieldError } from '../..';
 
@@ -213,7 +214,14 @@ describe('EntityStore', () => {
       'Book:9781451673319',
     ]);
 
+    const rayMeta = {
+      extraRootIds: [
+        "Author:Ray Bradbury",
+      ],
+    };
+
     expect(cache.extract()).toEqual({
+      __META: rayMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -305,7 +313,14 @@ describe('EntityStore', () => {
       });
     }, "ray books");
 
+    const rayMeta = {
+      extraRootIds: [
+        "Author:Ray Bradbury",
+      ],
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: rayMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -535,7 +550,15 @@ describe('EntityStore', () => {
     // Berwald's optimistically-added author.books field.
     expect(cache.gc()).toEqual([]);
 
+    const juliBookMeta = {
+      extraRootIds: [
+        "Author:Juli Berwald",
+        "Book:0735211280",
+      ],
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: juliBookMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -572,14 +595,26 @@ describe('EntityStore', () => {
       },
     });
 
+    const juliMeta = {
+      extraRootIds: [
+        "Author:Juli Berwald",
+      ],
+    };
+
     // A non-optimistic snapshot will not have the extra books field.
-    expect(cache.extract(false)).toEqual(snapshotWithBothBooksAndAuthors);
+    expect(cache.extract(false)).toEqual({
+      ...snapshotWithBothBooksAndAuthors,
+      __META: juliMeta,
+    });
 
     cache.removeOptimistic("juli books");
 
     // The optimistic books field is gone now that we've removed the optimistic
     // layer that added it.
-    expect(cache.extract(true)).toEqual(snapshotWithBothBooksAndAuthors);
+    expect(cache.extract(true)).toEqual({
+      ...snapshotWithBothBooksAndAuthors,
+      __META: juliMeta,
+    });
 
     // The Spineless book is no longer retained or kept alive by any other root
     // IDs, so it can finally be collected.
@@ -681,7 +716,16 @@ describe('EntityStore', () => {
       },
     };
 
-    expect(cache.extract(true)).toEqual(snapshotWithBothNames);
+    const cuckooMeta = {
+      extraRootIds: [
+        "Book:031648637X",
+      ],
+    };
+
+    expect(cache.extract(true)).toEqual({
+      ...snapshotWithBothNames,
+      __META: cuckooMeta,
+    });
 
     expect(cache.gc()).toEqual([]);
 
@@ -695,7 +739,14 @@ describe('EntityStore', () => {
 
     cache.removeOptimistic("real name");
 
+    const robertMeta = {
+      extraRootIds: [
+        "Author:Robert Galbraith",
+      ],
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: robertMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -725,7 +776,17 @@ describe('EntityStore', () => {
       },
     });
 
+    const cuckooRobertMeta = {
+      ...cuckooMeta,
+      ...robertMeta,
+      extraRootIds: [
+        ...cuckooMeta.extraRootIds,
+        ...robertMeta.extraRootIds,
+      ].sort(),
+    };
+
     expect(cache.extract(true)).toEqual({
+      __META: cuckooRobertMeta,
       ROOT_QUERY: {
         __typename: "Query",
         book: {
@@ -777,6 +838,7 @@ describe('EntityStore', () => {
     expect(cache.evict({})).toBe(true);
 
     expect(cache.extract(true)).toEqual({
+      __META: cuckooMeta,
       "Book:031648637X": {
         __typename: "Book",
         author: {
@@ -819,6 +881,13 @@ describe('EntityStore', () => {
       },
     });
 
+    const allieId = cache.identify({
+      __typename: "Author",
+      name: "Allie Brosh",
+    })!;
+    expect(allieId).toBe("Author:Allie Brosh");
+    expect(cache.retain(allieId)).toBe(1);
+
     const snapshot = cache.extract();
     expect(snapshot).toMatchSnapshot();
 
@@ -839,8 +908,15 @@ describe('EntityStore', () => {
     })).toBe(true);
 
     expect(cache2.gc().sort()).toEqual([
-      "Author:Allie Brosh",
       "Book:1982156945",
+    ]);
+
+    expect(cache2.extract()).toMatchSnapshot();
+
+    expect(cache2.release(allieId)).toBe(0);
+
+    expect(cache2.gc().sort()).toEqual([
+      "Author:Allie Brosh",
     ]);
 
     expect(cache2.extract()).toEqual({});
@@ -1633,13 +1709,29 @@ describe('EntityStore', () => {
       },
     });
 
-    expect(() => cache.readQuery({
-      query: queryWithAliases,
-    })).toThrow(/Dangling reference to missing ABCs:.* object/);
+    function diff(query: DocumentNode) {
+      return cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+      });
+    }
 
-    expect(() => cache.readQuery({
+    expect(cache.readQuery({
+      query: queryWithAliases,
+    })).toBe(null);
+
+    expect(() => diff(queryWithAliases)).toThrow(
+      /Dangling reference to missing ABCs:.* object/,
+    );
+
+    expect(cache.readQuery({
       query: queryWithoutAliases,
-    })).toThrow(/Dangling reference to missing ABCs:.* object/);
+    })).toBe(null);
+
+    expect(() => diff(queryWithoutAliases)).toThrow(
+      /Dangling reference to missing ABCs:.* object/,
+    );
   });
 
   it("gracefully handles eviction amid optimistic updates", () => {
@@ -2022,8 +2114,15 @@ describe('EntityStore', () => {
       },
     });
 
+    const cuckooMeta = {
+      extraRootIds: [
+        'Book:{"isbn":"031648637X"}',
+      ],
+    };
+
     expect(cache.extract()).toEqual({
       ...threeBookSnapshot,
+      __META: cuckooMeta,
       // This book was added as a side effect of the read function.
       'Book:{"isbn":"031648637X"}': {
         __typename: "Book",
@@ -2072,6 +2171,7 @@ describe('EntityStore', () => {
 
     expect(cache.extract()).toEqual({
       ...threeBookSnapshot,
+      __META: cuckooMeta,
       // This book was added as a side effect of the read function.
       'Book:{"isbn":"031648637X"}': {
         __typename: "Book",
@@ -2177,5 +2277,190 @@ describe('EntityStore', () => {
       title: "Kindred",
       favorited: false,
     }});
+  });
+
+  it("should not over-invalidate fields with keyArgs", () => {
+    const isbnsWeHaveRead: string[] = [];
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            book: {
+              // The presence of this keyArgs configuration permits the
+              // cache to track result caching dependencies at the level
+              // of individual Books, so writing one Book does not
+              // invalidate other Books with different ISBNs. If the cache
+              // doesn't know which arguments are "important," it can't
+              // make any assumptions about the relationships between
+              // field values with the same field name but different
+              // arguments, so it has to err on the side of invalidating
+              // all Query.book data whenever any Book is written.
+              keyArgs: ["isbn"],
+
+              read(book, { args, toReference }) {
+                isbnsWeHaveRead.push(args!.isbn);
+                return book || toReference({
+                  __typename: "Book",
+                  isbn: args!.isbn,
+                });
+              },
+            },
+          },
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+      },
+    });
+
+    const query = gql`
+      query Book($isbn: string) {
+        book(isbn: $isbn) {
+          title
+          isbn
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    const diffs: Cache.DiffResult<any>[] = [];
+    cache.watch({
+      query,
+      optimistic: true,
+      variables: {
+        isbn: "1449373321",
+      },
+      callback(diff) {
+        diffs.push(diff);
+      },
+    });
+
+    const ddiaData = {
+      book: {
+        __typename: "Book",
+        isbn: "1449373321",
+        title: "Designing Data-Intensive Applications",
+        author: {
+          __typename: "Author",
+          name: "Martin Kleppmann",
+        },
+      },
+    };
+
+    expect(isbnsWeHaveRead).toEqual([]);
+
+    cache.writeQuery({
+      query,
+      variables: {
+        isbn: "1449373321",
+      },
+      data: ddiaData,
+    });
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+    ]);
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: ddiaData,
+      },
+    ]);
+
+    const theEndData = {
+      book: {
+        __typename: "Book",
+        isbn: "1982103558",
+        title: "The End of Everything",
+        author: {
+          __typename: "Author",
+          name: "Katie Mack",
+        },
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      variables: {
+        isbn: "1982103558",
+      },
+      data: theEndData,
+    });
+
+    // This list does not include the book we just wrote, because the
+    // cache.watch we started above only depends on the Query.book field
+    // value corresponding to the 1449373321 ISBN.
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: ddiaData,
+      },
+    ]);
+
+    // Likewise, this list is unchanged, because we did not need to read
+    // the 1449373321 Book again after writing the 1982103558 data.
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+    ]);
+
+    const theEndResult = cache.readQuery({
+      query,
+      variables: {
+        isbn: "1982103558",
+      },
+    });
+
+    expect(theEndResult).toEqual(theEndData);
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
+
+    expect(cache.readQuery({
+      query,
+      variables: {
+        isbn: "1449373321",
+      },
+    })).toBe(diffs[0].result);
+
+    expect(cache.readQuery({
+      query,
+      variables: {
+        isbn: "1982103558",
+      },
+    })).toBe(theEndResult);
+
+    // Still no additional reads, because both books are cached.
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
+
+    // Evicting the 1982103558 Book should not invalidate the 1449373321
+    // Book, so diffs and isbnsWeHaveRead should remain unchanged.
+    expect(cache.evict({
+      id: cache.identify({
+        __typename: "Book",
+        isbn: "1982103558",
+      }),
+    })).toBe(true);
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: ddiaData,
+      },
+    ]);
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+    ]);
   });
 });

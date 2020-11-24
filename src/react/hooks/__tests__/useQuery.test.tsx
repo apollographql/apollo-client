@@ -3,7 +3,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { ApolloClient, NetworkStatus } from '../../../core';
+import { ApolloClient, NetworkStatus, TypedDocumentNode, WatchQueryFetchPolicy } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
@@ -2225,5 +2225,368 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
+
+    it('should tear down the query if `skip` is `true`', () => {
+      const client = new ApolloClient({
+        link: new ApolloLink(),
+        cache: new InMemoryCache()
+      });
+
+      const Component = () => {
+        useQuery(CAR_QUERY, { skip: true });
+        return null;
+      };
+
+      const app = render(
+        <ApolloProvider client={client}>
+          <Component />
+        </ApolloProvider>
+      );
+
+      expect(client['queryManager']['queries'].size).toBe(1);
+
+      app.unmount();
+
+      return wait(() => {
+        expect(client['queryManager']['queries'].size).toBe(0);
+      });
+    });
+  });
+
+  describe('Previous data', () => {
+    itAsync('should persist previous data when a query is re-run', (resolve, reject) => {
+      const query = gql`
+        query car {
+          car {
+            id
+            make
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          id: 1,
+          make: 'Venturi',
+          __typename: 'Car',
+        }
+      };
+
+      const data2 = {
+        car: {
+          id: 2,
+          make: 'Wiesmann',
+          __typename: 'Car',
+        }
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: data1 } },
+        { request: { query }, result: { data: data2 } }
+      ];
+
+      let renderCount = 0;
+      function App() {
+        const { loading, data, previousData, refetch } = useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            expect(previousData).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            expect(previousData).toBeUndefined();
+            setTimeout(refetch);
+            break;
+          case 3:
+            expect(loading).toBeTruthy();
+            expect(data).toEqual(data1);
+            expect(previousData).toEqual(data1);
+            break;
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data2);
+            expect(previousData).toEqual(data1);
+            break;
+          default: // Do nothing
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(4);
+      }).then(resolve, reject);
+    });
+
+    itAsync('should persist result.previousData across multiple results', (resolve, reject) => {
+      const query: TypedDocumentNode<{
+        car: {
+          id: string;
+          make: string;
+        };
+      }, {
+        vin?: string;
+      }> = gql`
+        query car($vin: String) {
+          car(vin: $vin) {
+            id
+            make
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          id: 1,
+          make: 'Venturi',
+          __typename: 'Car',
+        }
+      };
+
+      const data2 = {
+        car: {
+          id: 2,
+          make: 'Wiesmann',
+          __typename: 'Car',
+        }
+      };
+
+      const data3 = {
+        car: {
+          id: 3,
+          make: 'Beetle',
+          __typename: 'Car',
+        }
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: data1 } },
+        { request: { query }, result: { data: data2 } },
+        {
+          request: {
+            query,
+            variables: { vin: "ABCDEFG0123456789" },
+          },
+          result: { data: data3 },
+        },
+      ];
+
+      let renderCount = 0;
+      function App() {
+        const { loading, data, previousData, refetch } = useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBe(true);
+            expect(data).toBeUndefined();
+            expect(previousData).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBe(false);
+            expect(data).toEqual(data1);
+            expect(previousData).toBeUndefined();
+            setTimeout(refetch);
+            break;
+          case 3:
+            expect(loading).toBe(true);
+            expect(data).toEqual(data1);
+            expect(previousData).toEqual(data1);
+            // Interrupt the first refetch by refetching again with
+            // variables the cache has not seen before, thereby skipping
+            // data2 entirely.
+            refetch({
+              vin: "ABCDEFG0123456789",
+            });
+            break;
+          case 4:
+            expect(loading).toBe(true);
+            expect(data).toBeUndefined();
+            expect(previousData).toEqual(data1);
+            break;
+          case 5:
+            expect(loading).toBe(false);
+            expect(data).toEqual(data3);
+            expect(previousData).toEqual(data1);
+            break;
+          default: // Do nothing
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(5);
+      }).then(resolve, reject);
+    });
+  });
+
+  describe("multiple useQuery calls per component", () => {
+    type ABFields = {
+      id: number;
+      name: string;
+    };
+
+    const aQuery: TypedDocumentNode<{
+      a: ABFields;
+    }> = gql`query A { a { id name }}`;
+
+    const bQuery: TypedDocumentNode<{
+      b: ABFields;
+    }> = gql`query B { b { id name }}`;
+
+    const aData = {
+      a: {
+        __typename: "A",
+        id: 65,
+        name: "ay",
+      },
+    };
+
+    const bData = {
+      b: {
+        __typename: "B",
+        id: 66,
+        name: "bee",
+      },
+    };
+
+    function makeClient() {
+      return new ApolloClient({
+        cache: new InMemoryCache,
+        link: new ApolloLink(operation => new Observable(observer => {
+          switch (operation.operationName) {
+            case "A":
+              observer.next({ data: aData });
+              break;
+            case "B":
+              observer.next({ data: bData });
+              break;
+          }
+          observer.complete();
+        })),
+      });
+    }
+
+    function check(
+      aFetchPolicy: WatchQueryFetchPolicy,
+      bFetchPolicy: WatchQueryFetchPolicy,
+    ) {
+      return (
+        resolve: (result: any) => any,
+        reject: (reason: any) => any,
+      ) => {
+        let renderCount = 0;
+
+        function App() {
+          const a = useQuery(aQuery, {
+            fetchPolicy: aFetchPolicy,
+          });
+
+          const b = useQuery(bQuery, {
+            fetchPolicy: bFetchPolicy,
+          });
+
+          switch (++renderCount) {
+            case 1:
+              expect(a.loading).toBe(true);
+              expect(b.loading).toBe(true);
+              expect(a.data).toBeUndefined();
+              expect(b.data).toBeUndefined();
+              break;
+            case 2:
+              expect(a.loading).toBe(false);
+              expect(b.loading).toBe(true);
+              expect(a.data).toEqual(aData);
+              expect(b.data).toBeUndefined();
+              break;
+            case 3:
+              expect(a.loading).toBe(false);
+              expect(b.loading).toBe(false);
+              expect(a.data).toEqual(aData);
+              expect(b.data).toEqual(bData);
+              break;
+            default:
+              reject("too many renders: " + renderCount);
+          }
+
+          return null;
+        }
+
+        render(
+          <ApolloProvider client={makeClient()}>
+            <App/>
+          </ApolloProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(3);
+        }).then(resolve, reject);
+      };
+    }
+
+    itAsync("cache-first for both", check(
+      "cache-first",
+      "cache-first",
+    ));
+
+    itAsync("cache-first first, cache-and-network second", check(
+      "cache-first",
+      "cache-and-network",
+    ));
+
+    itAsync("cache-first first, network-only second", check(
+      "cache-first",
+      "network-only",
+    ));
+
+    itAsync("cache-and-network for both", check(
+      "cache-and-network",
+      "cache-and-network",
+    ));
+
+    itAsync("cache-and-network first, cache-first second", check(
+      "cache-and-network",
+      "cache-first",
+    ));
+
+    itAsync("cache-and-network first, network-only second", check(
+      "cache-and-network",
+      "network-only",
+    ));
+
+    itAsync("network-only for both", check(
+      "network-only",
+      "network-only",
+    ));
+
+    itAsync("network-only first, cache-first second", check(
+      "network-only",
+      "cache-first",
+    ));
+
+    itAsync("network-only first, cache-and-network second", check(
+      "network-only",
+      "cache-and-network",
+    ));
   });
 });

@@ -87,6 +87,13 @@
 - `ApolloCache` objects (including `InMemoryCache`) may now be associated with or disassociated from individual reactive variables by calling `reactiveVar.attachCache(cache)` and/or `reactiveVar.forgetCache(cache)`. <br/>
   [@benjamn](https://github.com/benjamn) in [#7350](https://github.com/apollographql/apollo-client/pull/7350)
 
+## Apollo Client 3.2.9
+
+## Bug Fixes
+
+- Revert back to `default`-importing `React` internally, rather than using a namespace import. <br/>
+  [@benjamn](https://github.com/benjamn) in [113475b1](https://github.com/apollographql/apollo-client/commit/113475b163a19a40a67465c11e8e6f48a1de7e76)
+
 ## Apollo Client 3.2.8
 
 ## Bug Fixes

@@ -18,7 +18,7 @@ module.exports = {
         checkLinksOptions: {
           exceptions: [
             '/api/core/ApolloClient/',
-            '/v2.6/api/apollo-client/',
+            '/v2/api/apollo-client/',
           ],
         },
         sidebarCategories: {

@@ -14,6 +14,7 @@ export default function transformer(file, api) {
 
   renameOrCreateApolloClientImport();
 
+  moveSpecifiersToApolloClient('react-apollo');
   moveSpecifiersToApolloClient('@apollo/react-hooks');
   moveSpecifiersToApolloClient('apollo-cache-inmemory');
   moveSpecifiersToApolloClient('apollo-link');

@@ -123,7 +123,7 @@ describe('optimistic mutation results', () => {
     const link = mockSingleLink({
       request: { query },
       result,
-    }, ...mockedResponses).setOnError(reject);
+    }, ...mockedResponses);
 
     const client = new ApolloClient({
       link,
@@ -147,6 +147,8 @@ describe('optimistic mutation results', () => {
           return null;
         },
       }),
+      // Enable client.queryManager.mutationStore tracking.
+      connectToDevTools: true,
     });
 
     const obsHandle = client.watchQuery({ query });
@@ -377,9 +379,9 @@ describe('optimistic mutation results', () => {
             );
 
             // @ts-ignore
-            const latestState = queryManager.mutationStore;
-            expect(latestState.get('1').loading).toBe(false);
-            expect(latestState.get('2').loading).toBe(true);
+            const latestState = queryManager.mutationStore!;
+            expect(latestState[1].loading).toBe(false);
+            expect(latestState[2].loading).toBe(true);
 
             return res;
           });
@@ -397,17 +399,17 @@ describe('optimistic mutation results', () => {
             );
 
             // @ts-ignore
-            const latestState = queryManager.mutationStore;
-            expect(latestState.get('1').loading).toBe(false);
-            expect(latestState.get('2').loading).toBe(false);
+            const latestState = queryManager.mutationStore!;
+            expect(latestState[1].loading).toBe(false);
+            expect(latestState[2].loading).toBe(false);
 
             return res;
           });
 
         // @ts-ignore
-        const mutationsState = queryManager.mutationStore;
-        expect(mutationsState.get('1').loading).toBe(true);
-        expect(mutationsState.get('2').loading).toBe(true);
+        const mutationsState = queryManager.mutationStore!;
+        expect(mutationsState[1].loading).toBe(true);
+        expect(mutationsState[2].loading).toBe(true);
 
         checkBothMutationsAreApplied(
           'Optimistically generated',
@@ -621,9 +623,9 @@ describe('optimistic mutation results', () => {
             );
 
             // @ts-ignore
-            const latestState = client.queryManager.mutationStore;
-            expect(latestState.get('1').loading).toBe(false);
-            expect(latestState.get('2').loading).toBe(true);
+            const latestState = client.queryManager.mutationStore!;
+            expect(latestState[1].loading).toBe(false);
+            expect(latestState[2].loading).toBe(true);
 
             return res;
           });
@@ -641,17 +643,17 @@ describe('optimistic mutation results', () => {
             );
 
             // @ts-ignore
-            const latestState = client.queryManager.mutationStore;
-            expect(latestState.get('1').loading).toBe(false);
-            expect(latestState.get('2').loading).toBe(false);
+            const latestState = client.queryManager.mutationStore!;
+            expect(latestState[1].loading).toBe(false);
+            expect(latestState[2].loading).toBe(false);
 
             return res;
           });
 
         // @ts-ignore
-        const mutationsState = client.queryManager.mutationStore;
-        expect(mutationsState.get('1').loading).toBe(true);
-        expect(mutationsState.get('2').loading).toBe(true);
+        const mutationsState = client.queryManager.mutationStore!;
+        expect(mutationsState[1].loading).toBe(true);
+        expect(mutationsState[2].loading).toBe(true);
 
         checkBothMutationsAreApplied(
           'Optimistically generated',

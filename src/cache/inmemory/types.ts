@@ -1,4 +1,4 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
 import {
@@ -7,7 +7,7 @@ import {
   Reference,
 } from '../../utilities';
 import { FieldValueGetter } from './entityStore';
-import { KeyFieldsFunction, StorageType } from './policies';
+import { KeyFieldsFunction, StorageType, FieldMergeFunction } from './policies';
 import {
   Modifier,
   Modifiers,
@@ -65,7 +65,7 @@ export interface NormalizedCache {
 
   getStorage(
     idOrObj: string | StoreObject,
-    storeFieldName: string,
+    ...storeFieldNames: (string | number)[]
   ): StorageType;
 }
 
@@ -74,6 +74,15 @@ export interface NormalizedCache {
  * a flattened representation of query result trees.
  */
 export interface NormalizedCacheObject {
+  __META?: {
+    // Well-known singleton IDs like ROOT_QUERY and ROOT_MUTATION are
+    // always considered to be root IDs during cache.gc garbage
+    // collection, but other IDs can become roots if they are written
+    // directly with cache.writeFragment or retained explicitly with
+    // cache.retain. When such IDs exist, we include them in the __META
+    // section so that they can survive cache.{extract,restore}.
+    extraRootIds: string[];
+  };
   [dataId: string]: StoreObject | undefined;
 }
 
@@ -99,6 +108,17 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
+};
+
+export interface MergeInfo {
+  field: FieldNode;
+  typename: string | undefined;
+  merge: FieldMergeFunction;
+};
+
+export interface MergeTree {
+  info?: MergeInfo;
+  map: Map<string | number, MergeTree>;
 };
 
 export interface ReadMergeModifyContext {

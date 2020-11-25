@@ -161,6 +161,12 @@ Object {
 
 exports[`ApolloClient write then read will write data locally which will then be read back 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "d": 8,
@@ -205,6 +211,11 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -221,6 +232,11 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 2`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -241,6 +257,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 3`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -261,6 +283,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 4`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -281,6 +309,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 5`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -301,6 +335,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 6`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,

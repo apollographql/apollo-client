@@ -49,6 +49,13 @@ function wrapDestructiveCacheMethod(
   }
 }
 
+function cancelNotifyTimeout(info: QueryInfo) {
+  if (info["notifyTimeout"]) {
+    clearTimeout(info["notifyTimeout"]);
+    info["notifyTimeout"] = void 0;
+  }
+}
+
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
 // this.queries Map. QueryInfo objects store the latest results and errors
@@ -70,6 +77,7 @@ export class QueryInfo {
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
+  stopped = false;
 
   constructor(private cache: ApolloCache<any>) {
     // Track how often cache.evict is called, since we want eviction to
@@ -81,6 +89,7 @@ export class QueryInfo {
       destructiveMethodCounts.set(cache, 0);
       wrapDestructiveCacheMethod(cache, "evict");
       wrapDestructiveCacheMethod(cache, "modify");
+      wrapDestructiveCacheMethod(cache, "reset");
     }
   }
 
@@ -189,10 +198,7 @@ export class QueryInfo {
   }
 
   notify() {
-    if (this.notifyTimeout) {
-      clearTimeout(this.notifyTimeout);
-      this.notifyTimeout = void 0;
-    }
+    cancelNotifyTimeout(this);
 
     if (this.shouldNotify()) {
       this.listeners.forEach(listener => listener(this));
@@ -219,13 +225,19 @@ export class QueryInfo {
   }
 
   public stop() {
-    this.cancel();
-    // Revert back to the no-op version of cancel inherited from
-    // QueryInfo.prototype.
-    delete this.cancel;
+    if (!this.stopped) {
+      this.stopped = true;
 
-    const oq = this.observableQuery;
-    if (oq) oq.stopPolling();
+      this.cancel();
+      // Revert back to the no-op version of cancel inherited from
+      // QueryInfo.prototype.
+      delete this.cancel;
+
+      this.subscriptions.forEach(sub => sub.unsubscribe());
+
+      const oq = this.observableQuery;
+      if (oq) oq.stopPolling();
+    }
   }
 
   // This method is a no-op by default, until/unless overridden by the
@@ -283,6 +295,11 @@ export class QueryInfo {
     allowCacheWrite: boolean,
   ) {
     this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+
+    // If there is a pending notify timeout, cancel it because we are
+    // about to update this.diff to hold the latest data, and we can
+    // assume the data will be broadcast through some other mechanism.
+    cancelNotifyTimeout(this);
 
     if (options.fetchPolicy === 'no-cache') {
       this.diff = { result: result.data, complete: true };
@@ -356,9 +373,14 @@ export class QueryInfo {
             optimistic: true,
           });
 
-          // Any time we're about to update this.diff, we need to make
-          // sure we've started watching the cache.
-          this.updateWatch(options.variables);
+          // In case the QueryManager stops this QueryInfo before its
+          // results are delivered, it's important to avoid restarting the
+          // cache watch when markResult is called.
+          if (!this.stopped) {
+            // Any time we're about to update this.diff, we need to make
+            // sure we've started watching the cache.
+            this.updateWatch(options.variables);
+          }
 
           // If we're allowed to write to the cache, and we can read a
           // complete result from the cache, update result.data to be the
@@ -385,6 +407,8 @@ export class QueryInfo {
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
+
+    cancelNotifyTimeout(this);
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

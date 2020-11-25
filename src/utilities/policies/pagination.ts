@@ -1,6 +1,7 @@
 import { __rest } from "tslib";
 
 import { FieldPolicy, Reference } from '../../cache';
+import { mergeDeep } from '../common/mergeDeep';
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
@@ -31,46 +32,54 @@ export function offsetLimitPagination<T = Reference>(
     keyArgs,
     merge(existing, incoming, { args }) {
       const merged = existing ? existing.slice(0) : [];
-      const start = args ? args.offset : merged.length;
-      const end = start + incoming.length;
-      for (let i = start; i < end; ++i) {
-        merged[i] = incoming[i - start];
+      if (args) {
+        // Assume an offset of 0 if args.offset omitted.
+        const { offset = 0 } = args;
+        for (let i = 0; i < incoming.length; ++i) {
+          merged[offset + i] = incoming[i];
+        }
+      } else {
+        // It's unusual (probably a mistake) for a paginated field not
+        // to receive any arguments, so you might prefer to throw an
+        // exception here, instead of recovering by appending incoming
+        // onto the existing array.
+        merged.push.apply(merged, incoming);
       }
       return merged;
     },
   };
 }
 
-// Whether TEdge<TNode> is a normalized Reference or a non-normalized
+// Whether TRelayEdge<TNode> is a normalized Reference or a non-normalized
 // object, it needs a .cursor property where the relayStylePagination
 // merge function can store cursor strings taken from pageInfo. Storing an
 // extra reference.cursor property should be safe, and is easier than
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-type TEdge<TNode> = {
+export type TRelayEdge<TNode> = {
   cursor?: string;
   node: TNode;
 } | (Reference & { cursor?: string });
 
-type TPageInfo = {
+export type TRelayPageInfo = {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
   startCursor: string;
   endCursor: string;
 };
 
-type TExistingRelay<TNode> = Readonly<{
-  edges: TEdge<TNode>[];
-  pageInfo: TPageInfo;
+export type TExistingRelay<TNode> = Readonly<{
+  edges: TRelayEdge<TNode>[];
+  pageInfo: TRelayPageInfo;
 }>;
 
-type TIncomingRelay<TNode> = {
-  edges?: TEdge<TNode>[];
-  pageInfo?: TPageInfo;
+export type TIncomingRelay<TNode> = {
+  edges?: TRelayEdge<TNode>[];
+  pageInfo?: TRelayPageInfo;
 };
 
-type RelayFieldPolicy<TNode> = FieldPolicy<
+export type RelayFieldPolicy<TNode> = FieldPolicy<
   TExistingRelay<TNode>,
   TIncomingRelay<TNode>,
   TIncomingRelay<TNode>
@@ -88,7 +97,7 @@ export function relayStylePagination<TNode = Reference>(
     read(existing, { canRead, readField }) {
       if (!existing) return;
 
-      const edges: TEdge<TNode>[] = [];
+      const edges: TRelayEdge<TNode>[] = [];
       let startCursor = "";
       let endCursor = "";
       existing.edges.forEach(edge => {
@@ -128,16 +137,35 @@ export function relayStylePagination<TNode = Reference>(
       }) : [];
 
       if (incoming.pageInfo) {
-        // In case we did not request the cursor field for edges in this
-        // query, we can still infer some of those cursors from pageInfo.
-        const { startCursor, endCursor } = incoming.pageInfo;
+        const { pageInfo } = incoming;
+        const { startCursor, endCursor } = pageInfo;
         const firstEdge = incomingEdges[0];
+        const lastEdge = incomingEdges[incomingEdges.length - 1];
+        // In case we did not request the cursor field for edges in this
+        // query, we can still infer cursors from pageInfo.
         if (firstEdge && startCursor) {
           firstEdge.cursor = startCursor;
         }
-        const lastEdge = incomingEdges[incomingEdges.length - 1];
         if (lastEdge && endCursor) {
           lastEdge.cursor = endCursor;
+        }
+        // Cursors can also come from edges, so we default
+        // pageInfo.{start,end}Cursor to {first,last}Edge.cursor.
+        const firstCursor = firstEdge && firstEdge.cursor;
+        if (firstCursor && !startCursor) {
+          incoming = mergeDeep(incoming, {
+            pageInfo: {
+              startCursor: firstCursor,
+            },
+          });
+        }
+        const lastCursor = lastEdge && lastEdge.cursor;
+        if (lastCursor && !endCursor) {
+          incoming = mergeDeep(incoming, {
+            pageInfo: {
+              endCursor: lastCursor,
+            },
+          });
         }
       }
 
@@ -170,27 +198,43 @@ export function relayStylePagination<TNode = Reference>(
         ...suffix,
       ];
 
-      const firstEdge = edges[0];
-      const lastEdge = edges[edges.length - 1];
-
-      const pageInfo: TPageInfo = {
+      const pageInfo: TRelayPageInfo = {
+        // The ordering of these two ...spreads may be surprising, but it
+        // makes sense because we want to combine PageInfo properties with a
+        // preference for existing values, *unless* the existing values are
+        // overridden by the logic below, which is permitted only when the
+        // incoming page falls at the beginning or end of the data.
         ...incoming.pageInfo,
         ...existing.pageInfo,
-        startCursor: firstEdge && firstEdge.cursor || "",
-        endCursor: lastEdge && lastEdge.cursor || "",
       };
 
       if (incoming.pageInfo) {
-        const { hasPreviousPage, hasNextPage } = incoming.pageInfo;
+        const {
+          hasPreviousPage, hasNextPage,
+          startCursor, endCursor,
+          ...extras
+        } = incoming.pageInfo;
+
+        // If incoming.pageInfo had any extra non-standard properties,
+        // assume they should take precedence over any existing properties
+        // of the same name, regardless of where this page falls with
+        // respect to the existing data.
+        Object.assign(pageInfo, extras);
+
         // Keep existing.pageInfo.has{Previous,Next}Page unless the
         // placement of the incoming edges means incoming.hasPreviousPage
         // or incoming.hasNextPage should become the new values for those
-        // properties in existing.pageInfo.
-        if (!prefix.length && hasPreviousPage !== void 0) {
-          pageInfo.hasPreviousPage = hasPreviousPage;
+        // properties in existing.pageInfo. Note that these updates are
+        // only permitted when the beginning or end of the incoming page
+        // coincides with the beginning or end of the existing data, as
+        // determined using prefix.length and suffix.length.
+        if (!prefix.length) {
+          if (void 0 !== hasPreviousPage) pageInfo.hasPreviousPage = hasPreviousPage;
+          if (void 0 !== startCursor) pageInfo.startCursor = startCursor;
         }
-        if (!suffix.length && hasNextPage !== void 0) {
-          pageInfo.hasNextPage = hasNextPage;
+        if (!suffix.length) {
+          if (void 0 !== hasNextPage) pageInfo.hasNextPage = hasNextPage;
+          if (void 0 !== endCursor) pageInfo.endCursor = endCursor;
         }
       }
 

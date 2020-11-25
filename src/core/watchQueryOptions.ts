@@ -33,9 +33,9 @@ export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
 export type ErrorPolicy = 'none' | 'ignore' | 'all';
 
 /**
- * Common options shared across all query interfaces.
+ * Query options.
  */
-export interface QueryBaseOptions<TVariables = OperationVariables, TData = any> {
+export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /**
    * A GraphQL document that consists of a single query to be sent down to the
    * server.
@@ -59,24 +59,12 @@ export interface QueryBaseOptions<TVariables = OperationVariables, TData = any> 
    * Context to be passed to link execution chain
    */
   context?: any;
-}
 
-/**
- * Query options.
- */
-export interface QueryOptions<TVariables = OperationVariables, TData = any>
-  extends QueryBaseOptions<TVariables, TData> {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query
    */
   fetchPolicy?: FetchPolicy;
-}
 
-/**
- * We can change these options to an ObservableQuery
- */
-export interface ModifiableWatchQueryOptions<TVariables = OperationVariables, TData = any>
-  extends QueryBaseOptions<TVariables, TData> {
   /**
    * The time interval (in milliseconds) on which this query should be
    * refetched from the server.
@@ -106,8 +94,7 @@ export interface ModifiableWatchQueryOptions<TVariables = OperationVariables, TD
  * Watched query options.
  */
 export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
-  extends QueryBaseOptions<TVariables, TData>,
-    ModifiableWatchQueryOptions<TVariables, TData> {
+  extends Omit<QueryOptions<TVariables, TData>, 'fetchPolicy'> {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query.
    */

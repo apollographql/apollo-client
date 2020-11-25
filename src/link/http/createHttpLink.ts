@@ -1,4 +1,5 @@
-import { DefinitionNode } from 'graphql';
+import { DefinitionNode, VariableDefinitionNode } from 'graphql';
+import { visit } from 'graphql/language/visitor';
 
 import { ApolloLink } from '../core';
 import { Observable } from '../../utilities';
@@ -22,6 +23,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     fetch: fetcher,
     includeExtensions,
     useGETForQueries,
+    includeUnusedVariables = false,
     ...requestOptions
   } = linkOptions;
 
@@ -84,6 +86,29 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       linkConfig,
       contextConfig,
     );
+
+    if (body.variables && !includeUnusedVariables) {
+      const unusedNames = new Set(Object.keys(body.variables));
+      visit(operation.query, {
+        Variable(node, _key, parent) {
+          // A variable type definition at the top level of a query is not
+          // enough to silence server-side errors about the variable being
+          // unused, so variable definitions do not count as usage.
+          // https://spec.graphql.org/draft/#sec-All-Variables-Used
+          if (parent && (parent as VariableDefinitionNode).kind !== 'VariableDefinition') {
+            unusedNames.delete(node.name.value);
+          }
+        },
+      });
+      if (unusedNames.size) {
+        // Make a shallow copy of body.variables (with keys in the same
+        // order) and then delete unused variables from the copy.
+        body.variables = { ...body.variables };
+        unusedNames.forEach(name => {
+          delete body.variables![name];
+        });
+      }
+    }
 
     let controller: any;
     if (!(options as any).signal) {

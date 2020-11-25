@@ -4,5 +4,5 @@
 | `variables` | { [key: string]: any } | An object containing all of the variables your subscription needs to execute |
 | `shouldResubscribe` | boolean | Determines if your subscription should be unsubscribed and subscribed again |
 | `onSubscriptionData` | (options: OnSubscriptionDataOptions&lt;TData&gt;) => any | Allows the registration of a callback function, that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`. |
-| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. For details, see [Configuring fetch logic](https://www.apollographql.com/docs/react/data/queries/#configuring-fetch-logic). |
+| `fetchPolicy` | FetchPolicy | How you want your component to interact with the Apollo cache. For details, see [Setting a fetch policy](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy). |
 | `client` | ApolloClient | An `ApolloClient` instance. By default `useSubscription` / `Subscription` uses the client passed down via context, but a different client can be passed in. |

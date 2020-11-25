@@ -36,7 +36,6 @@ module.exports = {
             'data/queries',
             'data/mutations',
             'data/subscriptions',
-            'data/pagination',
             'data/fragments',
             'data/error-handling',
           ],
@@ -46,6 +45,13 @@ module.exports = {
             'caching/garbage-collection',
             'caching/cache-field-behavior',
             'caching/advanced-topics'
+          ],
+          Pagination: [
+            'pagination/overview',
+            'pagination/core-api',
+            'pagination/offset-based',
+            'pagination/cursor-based',
+            'pagination/key-args'
           ],
           'Local State': [
             'local-state/local-state-management',

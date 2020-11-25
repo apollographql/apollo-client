@@ -56,7 +56,7 @@ const TodoAppWithData = withTodoAppQuery(TodoApp);
 export default TodoAppWithData;
 ```
 
-The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](./hooks/#apolloprovider) component higher up in your tree to provide an [`ApolloClient`](../core/ApolloClient/) instance that will be used to fetch your data.
+The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](./hooks/#the-apolloprovider-component) component higher up in your tree to provide an [`ApolloClient`](../core/ApolloClient/) instance that will be used to fetch your data.
 
 The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](../../data/queries/), a [mutation](../../data/mutations/), or a [subscription](../../data/subscriptions/). Go to the appropriate API documentation for more information about the functionality and available options for each type.
 
@@ -436,7 +436,7 @@ export default graphql(gql`query MyComponentQuery  { ... }`)(MyComponent);
 
 ### `data.fetchMore(options)`
 
-The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](../../data/pagination/) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
+The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination documentation](../../pagination/overview/).
 
 `data.fetchMore` returns a promise that resolves once the query executed to fetch more data has resolved.
 
@@ -444,7 +444,7 @@ The `data.fetchMore` function takes a single `options` object argument. The `opt
 
 - `[query]`: This is an optional GraphQL document created with the `gql` GraphQL tag. If you specify a `query` then that query will be fetched when you call `data.fetchMore`. If you do not specify a `query`, then the query from your `graphql()` HOC will be used.
 - `[variables]`: The optional variables you may provide that will be used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`).
-- `updateQuery(previousResult, { fetchMoreResult, variables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `variables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `variables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination](../../data/pagination/) recipe which has a full example.
+- `updateQuery(previousResult, { fetchMoreResult, variables })`: This is the required function you define that will actually update your paginated list. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties, `fetchMoreResult` and `variables`. `fetchMoreResult` is the data returned by the new fetch that used the `query` and `variables` options from `data.fetchMore`. `variables` are the variables that were used when fetching more data. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. See an example of this below, and also make sure to read the [pagination documentation](../../pagination/overview/).
 
 **Example:**
 
@@ -660,7 +660,7 @@ export default graphql(
 
 The fetch policy is an option that allows you to specify how you want your component to interact with the Apollo Client cache. By default, your component will try to read from the cache first, and if the full data for your query is in the cache then Apollo simply returns the data from the cache. If the full data for your query is _not_ in the cache then Apollo will execute your request using your network interface. By changing this option you can change this behavior.
 
-For a list of supported fetch policies, see [Configuring fetch logic](../../data/queries/#configuring-fetch-logic).
+For a list of supported fetch policies, see [Setting a fetch policy](../../data/queries/#setting-a-fetch-policy).
 
 **Example:**
 
@@ -897,7 +897,7 @@ In order to change the data in your store call methods on your `DataProxy` insta
 
 To read the data from the store that you are changing, make sure to use methods on your `DataProxy` like [`readQuery`](../../caching/cache-interaction/#readquery) and [`readFragment`](../../caching/cache-interaction/#readfragment).
 
-For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../../caching/advanced-topics/#updating-after-a-mutation).
+For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../../data/mutations/#making-all-other-cache-updates).
 
 **Example:**
 
@@ -1067,7 +1067,7 @@ A simple enhancer which provides direct access to your [`ApolloClient`](../core/
 
 If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphqlquery-configcomponent) the answer is that most of the time you will want to use `graphql()`. `graphql()` provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
 
-This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](./hooks/#apolloprovider) component higher up in your tree to actually provide the client.
+This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](./hooks/#the-apolloprovider-component) component higher up in your tree to actually provide the client.
 
 **Example:**
 

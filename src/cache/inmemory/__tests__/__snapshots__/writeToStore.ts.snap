@@ -1,5 +1,39 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
+      "localeString": "9/25/2020, 1:08:33 PM",
+    },
+    "someJSON": Object {
+      "foos": Array [
+        "bar",
+        "baz",
+      ],
+      "oyez": 3,
+    },
+  },
+}
+`;
+
+exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
+      "msSinceEpoch": 1601053713081,
+    },
+    "someJSON": Object {
+      "asdf": "middle",
+      "qwer": "upper",
+      "zxcv": "lower",
+    },
+  },
+}
+`;
+
 exports[`writing to the store user objects should be able to have { __typename: "Mutation" } 1`] = `
 Object {
   "Gene:{\\"id\\":\\"SLC45A2\\"}": Object {

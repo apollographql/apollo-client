@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
+import { setVerbosity } from 'ts-invariant';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
@@ -74,6 +75,8 @@ describe('QueryManager', () => {
       cache: new InMemoryCache({ addTypename: false, ...config }),
       clientAwareness,
       queryDeduplication,
+      // Enable client.queryManager.mutationStore tracking.
+      onBroadcast() {},
     });
   };
 
@@ -458,6 +461,91 @@ describe('QueryManager', () => {
     });
 
     expect(subscription.unsubscribe).not.toThrow();
+  });
+
+  // Query should be aborted on last .unsubscribe()
+  itAsync('causes link unsubscription if unsubscribed', (resolve, reject) => {
+    const expResult = {
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
+      },
+    };
+
+    const request = {
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      variables: undefined
+    };
+
+    const mockedResponse = {
+      request,
+      result: expResult
+    };
+
+    const onRequestSubscribe = jest.fn();
+    const onRequestUnsubscribe = jest.fn();
+
+    const mockedSingleLink = new ApolloLink(() => {
+      return new Observable(observer => {
+        onRequestSubscribe();
+
+        const timer = setTimeout(() => {
+          observer.next(mockedResponse.result);
+          observer.complete();
+        }, 0);
+
+        return () => {
+          onRequestUnsubscribe();
+          clearTimeout(timer);
+        };
+      });
+    });
+
+    const mockedQueryManger = new QueryManager({
+      link: mockedSingleLink,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const observableQuery = mockedQueryManger.watchQuery({
+      query: request.query,
+      variables: request.variables,
+      notifyOnNetworkStatusChange: false
+    });
+
+    const observerCallback = wrap(reject, () => {
+      reject(new Error('Link subscription should have been cancelled'));
+    });
+
+    const subscription = observableQuery.subscribe({
+      next: observerCallback,
+      error: observerCallback,
+      complete: observerCallback
+    });
+
+    subscription.unsubscribe();
+
+    return new Promise(
+      // Unsubscribing from the link happens after a microtask
+      // (Promise.resolve().then) delay, so we need to wait at least that
+      // long before verifying onRequestUnsubscribe was called.
+      resolve => setTimeout(resolve, 0)
+    ).then(() => {
+      expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+      expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+    }).then(resolve, reject);
   });
 
   itAsync('supports interoperability with other Observable implementations like RxJS', (resolve, reject) => {
@@ -3265,7 +3353,7 @@ describe('QueryManager', () => {
         queryManager.cache.extract(),
       ).toEqual({});
       expect(queryManager.getQueryStore()).toEqual({});
-      expect(queryManager.mutationStore.getStore()).toEqual({});
+      expect(queryManager.mutationStore).toEqual({});
 
       resolve();
     });
@@ -3506,9 +3594,18 @@ describe('QueryManager', () => {
           }
         }
       `;
-
-      const queryManager = mockQueryManager(reject);
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = mockQueryManager(reject, {
+        request: { query },
+        result: { data }
+      });
       const obs = queryManager.watchQuery<any>({ query });
+      obs.subscribe({});
       obs.refetch = resolve as any;
 
       queryManager.resetStore();
@@ -3536,6 +3633,7 @@ describe('QueryManager', () => {
       let refetchCount = 0;
 
       const obs = queryManager.watchQuery(options);
+      obs.subscribe({});
       obs.refetch = () => {
         ++refetchCount;
         return null as never;
@@ -3566,6 +3664,41 @@ describe('QueryManager', () => {
       const options = {
         query,
         fetchPolicy: "standby",
+      } as WatchQueryOptions;
+
+      let refetchCount = 0;
+
+      const obs = queryManager.watchQuery(options);
+      obs.subscribe({});
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
+
+      queryManager.resetStore();
+
+      setTimeout(() => {
+        expect(refetchCount).toEqual(0);
+        resolve();
+      }, 50);
+    });
+
+    itAsync('should not call refetch on a non-subscribed Observable if the store is reset', (resolve, reject) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const queryManager = createQueryManager({
+        link: mockSingleLink().setOnError(reject),
+      });
+
+      const options = {
+        query,
       } as WatchQueryOptions;
 
       let refetchCount = 0;
@@ -3906,10 +4039,19 @@ describe('QueryManager', () => {
           }
         }
       `;
-
-      const queryManager = mockQueryManager(reject);
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = mockQueryManager(reject, {
+        request: { query },
+        result: { data },
+      });
 
       const obs = queryManager.watchQuery({ query });
+      obs.subscribe({});
       obs.refetch = resolve as any;
 
       queryManager.reFetchObservableQueries();
@@ -3937,6 +4079,7 @@ describe('QueryManager', () => {
       let refetchCount = 0;
 
       const obs = queryManager.watchQuery(options);
+      obs.subscribe({});
       obs.refetch = () => {
         ++refetchCount;
         return null as never;
@@ -3972,6 +4115,7 @@ describe('QueryManager', () => {
       let refetchCount = 0;
 
       const obs = queryManager.watchQuery(options);
+      obs.subscribe({});
       obs.refetch = () => {
         ++refetchCount;
         return null as never;
@@ -4007,6 +4151,7 @@ describe('QueryManager', () => {
       let refetchCount = 0;
 
       const obs = queryManager.watchQuery(options);
+      obs.subscribe({});
       obs.refetch = () => {
         ++refetchCount;
         return null as never;
@@ -4017,6 +4162,40 @@ describe('QueryManager', () => {
 
       setTimeout(() => {
         expect(refetchCount).toEqual(1);
+        resolve();
+      }, 50);
+    });
+
+    itAsync('should not call refetch on a non-subscribed Observable', (resolve, reject) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const queryManager = createQueryManager({
+        link: mockSingleLink().setOnError(reject),
+      });
+
+      const options = {
+        query
+      } as WatchQueryOptions;
+
+      let refetchCount = 0;
+
+      const obs = queryManager.watchQuery(options);
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
+
+      queryManager.reFetchObservableQueries();
+
+      setTimeout(() => {
+        expect(refetchCount).toEqual(0);
         resolve();
       }, 50);
     });
@@ -5233,9 +5412,11 @@ describe('QueryManager', () => {
   describe('missing cache field warnings', () => {
     const originalWarn = console.warn;
     let warnCount = 0;
+    let verbosity: ReturnType<typeof setVerbosity>;
 
     beforeEach(() => {
       warnCount = 0;
+      verbosity = setVerbosity("warn");
       console.warn = (...args: any[]) => {
         warnCount += 1;
       };
@@ -5243,6 +5424,7 @@ describe('QueryManager', () => {
 
     afterEach(() => {
       console.warn = originalWarn;
+      setVerbosity(verbosity);
     });
 
     function validateWarnings(

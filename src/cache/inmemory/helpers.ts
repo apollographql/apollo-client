@@ -1,4 +1,4 @@
-import { FieldNode, SelectionSetNode } from 'graphql';
+import { SelectionSetNode } from 'graphql';
 
 import { NormalizedCache } from './types';
 import {
@@ -8,7 +8,6 @@ import {
   StoreObject,
   isField,
   DeepMerger,
-  ReconcilerFunction,
   resultKeyNameFromField,
   shouldInclude,
 } from '../../utilities';
@@ -57,17 +56,6 @@ export function selectionSetMatchesResult(
   return false;
 }
 
-// Invoking merge functions needs to happen after processSelectionSet has
-// finished, but requires information that is more readily available
-// during processSelectionSet, so processSelectionSet embeds special
-// objects of the following shape within its result tree, which then must
-// be removed by calling Policies#applyMerges.
-export interface FieldValueToBeMerged {
-  __field: FieldNode;
-  __typename: string;
-  __value: StoreValue;
-}
-
 export function storeValueIsStoreObject(
   value: StoreValue,
 ): value is StoreObject {
@@ -77,47 +65,6 @@ export function storeValueIsStoreObject(
     !Array.isArray(value);
 }
 
-export function isFieldValueToBeMerged(
-  value: any,
-): value is FieldValueToBeMerged {
-  const field = value && value.__field;
-  return field && isField(field);
-}
-
 export function makeProcessedFieldsMerger() {
-  // A DeepMerger that merges arrays and objects structurally, but otherwise
-  // prefers incoming scalar values over existing values. Provides special
-  // treatment for FieldValueToBeMerged objects. Used to accumulate fields
-  // when processing a single selection set.
-  return new DeepMerger(reconcileProcessedFields);
-}
-
-const reconcileProcessedFields: ReconcilerFunction<[]> = function (
-  existingObject,
-  incomingObject,
-  property,
-) {
-  const existing = existingObject[property];
-  const incoming = incomingObject[property];
-
-  if (isFieldValueToBeMerged(existing)) {
-    existing.__value = this.merge(
-      existing.__value,
-      isFieldValueToBeMerged(incoming)
-        // TODO Check compatibility of __field and __typename properties?
-        ? incoming.__value
-        : incoming,
-    );
-    return existing;
-  }
-
-  if (isFieldValueToBeMerged(incoming)) {
-    incoming.__value = this.merge(
-      existing,
-      incoming.__value,
-    );
-    return incoming;
-  }
-
-  return this.merge(existing, incoming);
+  return new DeepMerger;
 }

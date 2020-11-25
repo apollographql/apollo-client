@@ -621,7 +621,12 @@ describe('Cache', () => {
         data: bothNamesData,
       });
 
+      const meta123 = {
+        extraRootIds: ["Person:123"],
+      };
+
       expect(cache.extract()).toEqual({
+        __META: meta123,
         "Person:123": {
           __typename: "Person",
           id: 123,
@@ -646,6 +651,7 @@ describe('Cache', () => {
       });
 
       expect(cache.extract()).toEqual({
+        __META: meta123,
         "Person:123": {
           __typename: "Person",
           id: 123,
@@ -681,6 +687,7 @@ describe('Cache', () => {
       });
 
       expect(cache.extract()).toEqual({
+        __META: meta123,
         "Person:123": {
           __typename: "Person",
           id: 123,
@@ -738,6 +745,9 @@ describe('Cache', () => {
 
       expect(cache.extract(false)).toEqual({});
       expect(cache.extract(true)).toEqual({
+        __META: {
+          extraRootIds: ["Person:321"],
+        },
         "Person:321": {
           __typename: "Person",
           id: 321,
@@ -1304,6 +1314,9 @@ describe('Cache', () => {
         });
 
         expect((proxy as InMemoryCache).extract()).toEqual({
+          __META: {
+            extraRootIds: ["foo"],
+          },
           foo: {
             __typename: 'Foo',
             'field({"literal":true,"value":42})': 1,
@@ -2043,7 +2056,6 @@ describe("InMemoryCache#modify", () => {
     cache.modify({
       fields: {
         comments(comments: Reference[], { readField }) {
-          debugger;
           expect(Object.isFrozen(comments)).toBe(true);
           expect(comments.length).toBe(3);
           const filtered = comments.filter(comment => {
@@ -2595,6 +2607,57 @@ describe("ReactiveVar and makeVar", () => {
     });
   });
 
+  it("should forget cache once all watches are cancelled", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(false);
+    const spy = jest.spyOn(nameVar, "forgetCache");
+
+    const diffs: Cache.DiffResult<any>[] = [];
+    const watch = () => cache.watch({
+      query,
+      optimistic: true,
+      immediate: true,
+      callback(diff) {
+        diffs.push(diff);
+      },
+    });
+
+    const unwatchers = [
+      watch(),
+      watch(),
+      watch(),
+      watch(),
+      watch(),
+    ];
+
+    expect(diffs.length).toBe(5);
+
+    expect(cache["watches"].size).toBe(5);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.pop()!();
+    expect(cache["watches"].size).toBe(4);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.shift()!();
+    expect(cache["watches"].size).toBe(3);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.pop()!();
+    expect(cache["watches"].size).toBe(2);
+    expect(spy).not.toBeCalled();
+
+    expect(diffs.length).toBe(5);
+    unwatchers.push(watch());
+    expect(diffs.length).toBe(6);
+
+    expect(unwatchers.length).toBe(3);
+    unwatchers.forEach(unwatch => unwatch());
+
+    expect(cache["watches"].size).toBe(0);
+    expect(spy).toBeCalledTimes(1);
+    expect(spy).toBeCalledWith(cache);
+  });
+
   it("should broadcast only once for multiple reads of same variable", () => {
     const nameVar = makeVar("Ben");
     const cache = new InMemoryCache({
@@ -2692,6 +2755,133 @@ describe("ReactiveVar and makeVar", () => {
         },
       },
     ]);
+  });
+
+  it('should broadcast to manually added caches', () => {
+    const rv = makeVar(0);
+    const cache = new InMemoryCache;
+    const query = gql`query { value }`;
+    const diffs: Cache.DiffResult<any>[] = [];
+    const watch: Cache.WatchOptions = {
+      query,
+      optimistic: true,
+      callback(diff) {
+        diffs.push(diff);
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        value: "oyez",
+      },
+    });
+
+    const cancel = cache.watch(watch);
+
+    // This should not trigger a broadcast, since we haven't associated
+    // this cache with rv yet.
+    rv(rv() + 1);
+    expect(diffs).toEqual([]);
+
+    // The rv.attachCache method returns rv, for chaining.
+    rv.attachCache(cache)(rv() + 1);
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+    ]);
+
+    cache.writeQuery({
+      query,
+      broadcast: false,
+      data: {
+        value: "oyez, oyez",
+      },
+    });
+
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+    ]);
+
+    rv(rv() + 1);
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez",
+        },
+      },
+    ]);
+
+    expect(rv.forgetCache(cache)).toBe(true);
+
+    cache.writeQuery({
+      query,
+      broadcast: false,
+      data: {
+        value: "oyez, oyez, oyez",
+      },
+    });
+
+    // Since we called rv.forgetCache(cache) above, updating rv here
+    // should not trigger a broadcast.
+    rv(rv() + 1);
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez",
+        },
+      },
+    ]);
+
+    cache["broadcastWatches"]();
+    expect(diffs).toEqual([
+      {
+        complete: true,
+        result: {
+          value: "oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez",
+        },
+      },
+      {
+        complete: true,
+        result: {
+          value: "oyez, oyez, oyez",
+        },
+      },
+    ]);
+
+    cancel();
+
+    expect(rv()).toBe(4);
   });
 });
 

@@ -13,16 +13,12 @@ module.exports = {
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: '3',
         versions: {
-          '2.6': 'version-2.6',
-          '2.5': 'version-2.5',
-          '2.4': 'version-2.4',
+          '2': 'version-2.6',
         },
         checkLinksOptions: {
           exceptions: [
             '/api/core/ApolloClient/',
-            '/v2.6/api/apollo-client/',
-            '/v2.5/api/apollo-client/',
-            '/v2.4/api/apollo-client/',
+            '/v2/api/apollo-client/',
           ],
         },
         sidebarCategories: {

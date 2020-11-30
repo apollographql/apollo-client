@@ -3,6 +3,11 @@
 # Redirect all 3.0 beta docs to root
 /docs/react/v3.0-beta/* /docs/react/:splat
 
+# Redirect 2.x docs to v2
+/docs/react/v2.4/* /docs/react/v2/
+/docs/react/v2.5/* /docs/react/v2/
+/docs/react/v2.6/* /docs/react/v2/:splat
+
 # Split out pagination article
 /docs/react/data/pagination/ /docs/react/pagination/overview/
 

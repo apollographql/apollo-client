@@ -1,3 +1,14 @@
+## Apollo Client 3.4.0 (not yet released)
+
+## Bug fixes
+TBD
+
+## Improvements
+TBD
+
+## Documentation
+TBD
+
 ## Apollo Client 3.3.2
 
 > ⚠️ **Note:** This version of `@apollo/client` contains no behavioral changes since version 3.3.1

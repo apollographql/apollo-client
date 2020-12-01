@@ -1,24 +1,23 @@
 import { ReactNode } from 'react';
 import { DocumentNode } from 'graphql';
 
-import { Observable } from '../../utilities/observables/Observable';
-import { FetchResult } from '../../link/core/types';
-import { ApolloClient } from '../../ApolloClient';
+import { Observable } from '../../utilities';
+import { FetchResult } from '../../link/core';
+import { ApolloClient } from '../../core';
+import { ApolloError } from '../../errors';
 import {
   ApolloQueryResult,
-  PureQueryOptions,
-  OperationVariables
-} from '../../core/types';
-import { ApolloError } from '../../errors/ApolloError';
-import {
-  FetchPolicy,
-  WatchQueryFetchPolicy,
   ErrorPolicy,
+  FetchMoreOptions,
   FetchMoreQueryOptions,
+  FetchPolicy,
   MutationUpdaterFn,
-} from '../../core/watchQueryOptions';
-import { FetchMoreOptions, ObservableQuery } from '../../core/ObservableQuery';
-import { NetworkStatus } from '../../core/networkStatus';
+  NetworkStatus,
+  ObservableQuery,
+  OperationVariables,
+  PureQueryOptions,
+  WatchQueryFetchPolicy,
+} from '../../core';
 
 /* Common types */
 
@@ -34,6 +33,7 @@ export interface BaseQueryOptions<TVariables = OperationVariables> {
   ssr?: boolean;
   variables?: TVariables;
   fetchPolicy?: WatchQueryFetchPolicy;
+  nextFetchPolicy?: WatchQueryFetchPolicy;
   errorPolicy?: ErrorPolicy;
   pollInterval?: number;
   client?: ApolloClient<any>;
@@ -176,7 +176,7 @@ export interface MutationFunctionOptions<
   TVariables = OperationVariables
 > {
   variables?: TVariables;
-  optimisticResponse?: TData | ((vars: TVariables | {}) => TData);
+  optimisticResponse?: TData | ((vars: TVariables) => TData);
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
   update?: MutationUpdaterFn<TData>;
@@ -189,7 +189,7 @@ export interface MutationResult<TData = any> {
   error?: ApolloError;
   loading: boolean;
   called: boolean;
-  client?: ApolloClient<object>;
+  client: ApolloClient<object>;
 }
 
 export declare type MutationFunction<

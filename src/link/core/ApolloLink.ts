@@ -1,6 +1,6 @@
 import { InvariantError, invariant } from 'ts-invariant';
 
-import { Observable } from '../../utilities/observables/Observable';
+import { Observable } from '../../utilities';
 import {
   NextLink,
   Operation,
@@ -8,9 +8,11 @@ import {
   FetchResult,
   GraphQLRequest
 } from './types';
-import { validateOperation } from '../utils/validateOperation';
-import { createOperation } from '../utils/createOperation';
-import { transformOperation } from '../utils/transformOperation';
+import {
+  validateOperation,
+  createOperation,
+  transformOperation,
+} from '../utils';
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;

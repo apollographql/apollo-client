@@ -3,14 +3,12 @@ import { render, fireEvent, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
+import { ApolloClient } from '../../../../core';
+import { ApolloProvider } from '../../../context';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
-import { itAsync } from '../../../../utilities/testing/itAsync';
 
 describe('[queries] observableQuery', () => {
   // observableQuery
@@ -323,9 +321,6 @@ describe('[queries] observableQuery', () => {
               expect(stripSymbols(allPeople)).toEqual(data.allPeople);
               break;
             case 3:
-              expect(loading).toBe(true);
-              break;
-            case 4:
               expect(loading).toBe(false);
               expect(stripSymbols(allPeople)).toEqual(data.allPeople);
               break;

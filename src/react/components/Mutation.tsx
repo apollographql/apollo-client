@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 
-import { OperationVariables } from '../../core/types';
+import { OperationVariables } from '../../core';
 import { MutationComponentOptions } from './types';
-import { useMutation } from '../hooks/useMutation';
+import { useMutation } from '../hooks';
 
 export function Mutation<TData = any, TVariables = OperationVariables>(
   props: MutationComponentOptions<TData, TVariables>

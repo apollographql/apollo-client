@@ -1,14 +1,18 @@
 import gql from 'graphql-tag';
 
-import { Observable } from '../utilities/observables/Observable';
-import { makeReference } from '../core';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { HttpLink } from '../link/http/HttpLink';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { ApolloClient } from '../';
-import { DefaultOptions } from '../ApolloClient';
-import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
+import {
+  ApolloClient,
+  DefaultOptions,
+  FetchPolicy,
+  QueryOptions,
+  makeReference,
+} from '../core';
+
+import { Observable } from '../utilities';
+import { ApolloLink } from '../link/core';
+import { HttpLink } from '../link/http';
+import { InMemoryCache } from '../cache';
+import { stripSymbols } from '../testing';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -675,9 +679,7 @@ describe('ApolloClient', () => {
                 d: {
                   // Silence "Cache data may be lost..."  warnings by
                   // unconditionally favoring the incoming data.
-                  merge(_, incoming) {
-                    return incoming;
-                  },
+                  merge: false,
                 },
               },
             },
@@ -1192,9 +1194,7 @@ describe('ApolloClient', () => {
                     // Deliberately silence "Cache data may be lost..."
                     // warnings by preferring the incoming data, rather
                     // than (say) concatenating the arrays together.
-                    merge(_, incoming) {
-                      return incoming;
-                    },
+                    merge: false,
                   },
                 },
               },

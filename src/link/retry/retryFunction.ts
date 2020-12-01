@@ -1,4 +1,4 @@
-import { Operation } from '../core/types';
+import { Operation } from '../core';
 
 /**
  * Advanced mode: a function that determines both whether a particular

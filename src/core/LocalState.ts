@@ -29,7 +29,7 @@ import {
   resultKeyNameFromField,
   shouldInclude,
 } from '../utilities';
-import { ApolloClient } from '../core';
+import { ApolloClient } from './ApolloClient';
 import { Resolvers, OperationVariables } from './types';
 import { FetchResult } from '../link/core';
 import { cacheSlot } from '../cache';

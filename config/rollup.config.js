@@ -7,30 +7,15 @@ const entryPoints = require('./entryPoints');
 
 const distDir = './dist';
 
-const externalPackages = new Set([
-  '@wry/context',
-  '@wry/equality',
-  'fast-json-stable-stringify',
-  'graphql-tag',
-  'graphql/execution/execute',
-  'graphql/language/printer',
-  'graphql/language/visitor',
-  'hoist-non-react-statics',
-  'optimism',
-  'prop-types',
-  'react',
-  'subscriptions-transport-ws',
-  'symbol-observable',
-  'ts-invariant',
-  'tslib',
-  'zen-observable',
-]);
+function isExternal(id) {
+  return !(id.startsWith("./") || id.startsWith("../"));
+}
 
 function prepareCJS(input, output) {
   return {
     input,
     external(id) {
-      return externalPackages.has(id);
+      return isExternal(id);
     },
     output: {
       file: output,
@@ -77,8 +62,7 @@ function prepareBundle({
   return {
     input: `${dir}/index.js`,
     external(id, parentId) {
-      return externalPackages.has(id) ||
-        entryPoints.check(id, parentId);
+      return isExternal(id) || entryPoints.check(id, parentId);
     },
     output: {
       file: `${dir}/${bundleName}.cjs.js`,

@@ -1,18 +1,17 @@
-import { ApolloLink } from '../core/ApolloLink';
-import { Operation, FetchResult } from '../core/types';
-import { Observable } from '../../utilities/observables/Observable';
-import { fromError } from '../utils/fromError';
-import { serializeFetchParameter } from '../http/serializeFetchParameter';
-import { selectURI } from '../http/selectURI';
-import { parseAndCheckHttpResponse } from '../http/parseAndCheckHttpResponse';
-import { checkFetcher } from '../http/checkFetcher';
+import { ApolloLink, Operation, FetchResult } from '../core';
+import { Observable } from '../../utilities';
+import { fromError } from '../utils';
 import {
+  serializeFetchParameter,
+  selectURI,
+  parseAndCheckHttpResponse,
+  checkFetcher,
   selectHttpOptionsAndBody,
   fallbackHttpConfig,
-  HttpOptions
-} from '../http/selectHttpOptionsAndBody';
-import { createSignalIfSupported } from '../http/createSignalIfSupported';
-import { BatchLink } from '../batch/batchLink';
+  HttpOptions,
+  createSignalIfSupported,
+} from '../http';
+import { BatchLink } from '../batch';
 
 export namespace BatchHttpLink {
   export interface Options extends HttpOptions {

@@ -135,9 +135,7 @@ describe('optimistic mutation results', () => {
                 // Deliberately silence "Cache data may be lost..."
                 // warnings by favoring the incoming data, rather than
                 // (say) concatenating the arrays together.
-                merge(_, incoming) {
-                  return incoming;
-                },
+                merge: false,
               },
             },
           },

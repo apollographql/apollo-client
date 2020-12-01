@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import { parser, DocumentType } from '../parser/parser';
+import { parser, DocumentType } from '../parser';
 import { withQuery } from './query-hoc';
 import { withMutation } from './mutation-hoc';
 import { withSubscription } from './subscription-hoc';

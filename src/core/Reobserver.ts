@@ -1,7 +1,7 @@
 import { WatchQueryOptions } from './watchQueryOptions';
 import { NetworkStatus } from './networkStatus';
 import { ApolloQueryResult } from './types';
-import { Observer, Concast } from '../utilities';
+import { Observer, Concast, compact } from '../utilities';
 import { invariant } from 'ts-invariant';
 
 // Given that QueryManager#fetchQueryObservable returns only a single
@@ -67,15 +67,8 @@ export class Reobserver<TData, TVars> {
   }
 
   public updateOptions(newOptions: Partial<WatchQueryOptions<TVars>>) {
-    Object.keys(newOptions).forEach(key => {
-      const value = (newOptions as any)[key];
-      if (value !== void 0) {
-        (this.options as any)[key] = value;
-      }
-    });
-
+    Object.assign(this.options, compact(newOptions));
     this.updatePolling();
-
     return this;
   }
 

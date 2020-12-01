@@ -4,12 +4,12 @@ import ReactDOM from 'react-dom/server';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../ApolloClient';
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { InMemoryCache as Cache } from '../../../../cache/inmemory/inMemoryCache';
-import { mockSingleLink } from '../../../../utilities/testing/mocking/mockLink';
-import { Query } from '../../../components/Query';
-import { getDataFromTree, getMarkupFromTree } from '../../../ssr/getDataFromTree';
+import { ApolloClient } from '../../../../core';
+import { ApolloProvider } from '../../../context';
+import { InMemoryCache as Cache } from '../../../../cache';
+import { mockSingleLink } from '../../../../testing';
+import { Query } from '../../../components';
+import { getDataFromTree, getMarkupFromTree } from '../../../ssr';
 import { graphql } from '../../graphql';
 import { ChildProps, DataValue } from '../../types';
 

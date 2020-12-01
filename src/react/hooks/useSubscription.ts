@@ -2,9 +2,9 @@ import { useContext, useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 
 import { SubscriptionHookOptions } from '../types/types';
-import { SubscriptionData } from '../data/SubscriptionData';
-import { OperationVariables } from '../../core/types';
-import { getApolloContext } from '../context/ApolloContext';
+import { SubscriptionData } from '../data';
+import { OperationVariables } from '../../core';
+import { getApolloContext } from '../context';
 
 export function useSubscription<TData = any, TVariables = OperationVariables>(
   subscription: DocumentNode,

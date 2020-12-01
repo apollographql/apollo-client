@@ -4,6 +4,7 @@ import { invariant, InvariantError } from 'ts-invariant';
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
 import { ApolloCache, DataProxy } from '../cache';
 import { Observable, compact } from '../utilities';
+import { isProduction } from '../utilities/common/environment';
 import { version } from '../version';
 import { HttpLink, UriFunction } from '../link/http';
 

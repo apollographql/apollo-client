@@ -143,7 +143,7 @@ export class ApolloLink {
 
   protected onError(
     error: any,
-    observer: ZenObservable.Observer<FetchResult>,
+    observer?: ZenObservable.Observer<FetchResult>,
   ): false | void {
     if (observer && observer.error) {
       observer.error(error);

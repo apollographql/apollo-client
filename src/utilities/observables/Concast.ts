@@ -243,11 +243,23 @@ export class Concast<T> extends Observable<T> {
 // Those methods assume (perhaps unwisely?) that they can call the
 // subtype's constructor with an observer registration function, but the
 // Concast constructor uses a different signature. Defining this
-// Symbol.species getter function on the Concast constructor function is
-// a hint to generic Observable code to use the default constructor
-// instead of trying to do `new Concast(observer => ...)`.
-if (typeof Symbol === "function" && Symbol.species) {
-  Object.defineProperty(Concast, Symbol.species, {
-    value: Observable,
-  });
+// Symbol.species property on the Concast constructor function is a hint
+// to generic Observable code to use the default constructor instead of
+// trying to do `new Concast(observer => ...)`.
+function setSpecies(key: symbol | string) {
+  if (key) {
+    // Object.defineProperty is necessary because Concast[Symbol.species]
+    // is a getter by default in modern JS environments, so we can't
+    // assign to it with a normal assignment expression.
+    Object.defineProperty(Concast, key, {
+      value: Observable,
+    });
+  }
 }
+if (typeof Symbol === "function" && Symbol.species) {
+  setSpecies(Symbol.species);
+}
+// The "@@species" string is used as a fake Symbol.species value in some
+// polyfill systems (including the SymbolSpecies variable used by
+// zen-observable), so we might as well make sure we set it as well.
+setSpecies("@@species");

@@ -1,3 +1,10 @@
+## Apollo Client 3.3.4
+
+## Improvements
+
+- Update `ts-invariant` to avoid potential [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)-violating `Function` fallback, thanks to [a clever new `globalThis` polyfill technique](https://mathiasbynens.be/notes/globalthis). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7414](https://github.com/apollographql/apollo-client/pull/7414)
+
 ## Apollo Client 3.3.3
 
 ## Bug fixes

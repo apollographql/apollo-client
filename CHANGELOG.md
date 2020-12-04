@@ -9,6 +9,20 @@ TBD
 ## Documentation
 TBD
 
+## Apollo Client 3.3.4
+
+## Improvements
+
+- Update `ts-invariant` to avoid potential [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)-violating `Function` fallback, thanks to [a clever new `globalThis` polyfill technique](https://mathiasbynens.be/notes/globalthis). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7414](https://github.com/apollographql/apollo-client/pull/7414)
+
+## Apollo Client 3.3.3
+
+## Bug fixes
+
+- Make the `observer` parameter of `ApolloLink#onError` optional, fixing an unnecessary breaking change for any code that called `onError` directly. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7407](https://github.com/apollographql/apollo-client/pull/7407)
+
 ## Apollo Client 3.3.2
 
 > ⚠️ **Note:** This version of `@apollo/client` contains no behavioral changes since version 3.3.1

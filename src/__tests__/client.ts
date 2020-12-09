@@ -2426,7 +2426,7 @@ describe('client', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('has a reFetchQueries method which calls QueryManager', async () => {
+  it('has a refetchQueries method which calls QueryManager', async () => {
     // TODO(dannycochran)
     const client = new ApolloClient({
       link: ApolloLink.empty(),
@@ -2434,8 +2434,8 @@ describe('client', () => {
     });
 
     // @ts-ignore
-    const spy = jest.spyOn(client.queryManager, 'reFetchQueries');
-    await client.reFetchQueries(['Author1']);
+    const spy = jest.spyOn(client.queryManager, 'refetchQueries');
+    await client.refetchQueries(['Author1']);
     expect(spy).toHaveBeenCalled();
   });
 

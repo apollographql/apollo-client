@@ -520,19 +520,19 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Refetches specified active queries. Similar to "reFetchObservableQueries()" but with a specific list of queries.
    *
-   * `reFetchQueries()` is useful for use cases to imperatively refresh a selection of queries.
+   * `refetchQueries()` is useful for use cases to imperatively refresh a selection of queries.
    *
-   * It is important to remember that `reFetchQueries()` *will* refetch specified active
+   * It is important to remember that `refetchQueries()` *will* refetch specified active
    * queries. This means that any components that might be mounted will execute
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
-  public reFetchQueries(
+  public refetchQueries(
     queries: RefetchQueryDescription,
   ): Promise<ApolloQueryResult<any>[]> {
-    return Promise.all(this.queryManager.reFetchQueries(queries));
+    return Promise.all(this.queryManager.refetchQueries(queries));
   }
 
   /**

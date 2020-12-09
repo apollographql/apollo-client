@@ -264,7 +264,7 @@ export class QueryManager<TStore> {
             refetchQueries = refetchQueries(storeResult!);
           }
 
-          const refetchQueryPromises = self.reFetchQueries(refetchQueries);
+          const refetchQueryPromises = self.refetchQueries(refetchQueries);
 
           Promise.all(
             awaitRefetchQueries ? refetchQueryPromises : [],
@@ -997,7 +997,7 @@ export class QueryManager<TStore> {
     return concast;
   }
 
-  public reFetchQueries(queries: RefetchQueryDescription):
+  public refetchQueries(queries: RefetchQueryDescription):
     Promise<ApolloQueryResult<any>>[] {
     const self = this;
     const refetchQueryPromises: Promise<ApolloQueryResult<any>>[] = [];

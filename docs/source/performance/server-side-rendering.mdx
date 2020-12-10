@@ -128,6 +128,8 @@ app.listen(basePort, () => console.log(
 
 So far, whenever this example server receives a request, it first initializes Apollo Client and then creates a React tree that's wrapped with the `ApolloProvider` and `StaticRouter` components. The contents of that tree depend on the request's path and the `StaticRouter`'s defined routes.
 
+> It's important to create an _entirely new instance_ of Apollo Client for each request. Otherwise, your response to a request might include sensitive cached query results from a _previous_ request.
+
 ### Executing queries with `getDataFromTree`
 
 Because our app uses Apollo Client, some of the components in the React tree probably execute a GraphQL query with the `useQuery` hook. We can instruct Apollo Client to execute _all_ of the queries required by the tree's components with the `getDataFromTree` function.
@@ -143,10 +145,7 @@ The following code replaces the `TODO` comment within the `app.use` call in the 
 import { getDataFromTree } from "@apollo/client/react/ssr";
 
 // Replace the TODO with this
-getDataFromTree(App).then(() => {
-  // The Promise has resolved and we're ready to render the app
-  const content = ReactDOM.renderToString(App);
-
+getDataFromTree(App).then((content) => {
   // Extract the entirety of the Apollo Client cache's current state
   const initialState = client.extract();
 
@@ -178,6 +177,8 @@ export function Html({ content, state }) {
 ```
 
 This results in the rendered React tree being added as a child of the `root` `div`, and the initial cache state is assigned to the `__APOLLO_STATE__` global object.
+
+> The `replace` call in this example escapes the `<` character to prevent cross-site scripting attacks that are possible via the presence of `</script>` in a string literal.
 
 ### Rehydrating the client-side cache
 

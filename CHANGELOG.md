@@ -1,12 +1,12 @@
 ## Apollo Client 3.4.0 (not yet released)
 
-## Bug fixes
+### Bug fixes
 TBD
 
-## Improvements
+### Improvements
 TBD
 
-## Documentation
+### Documentation
 TBD
 
 ## Apollo Client 3.3.4

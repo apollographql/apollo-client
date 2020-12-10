@@ -33,7 +33,8 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "tsc",
-    "postbuild": "npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run resolve",
+    "postbuild": "npm run version && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run resolve",
+    "version": "node config/version.js",
     "invariants": "ts-node-script config/processInvariants.ts",
     "sourcemaps": "ts-node-script config/rewriteSourceMaps.ts",
     "rollup": "rollup -c ./config/rollup.config.js",

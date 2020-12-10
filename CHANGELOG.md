@@ -9,6 +9,13 @@ TBD
 ### Documentation
 TBD
 
+## Apollo Client 3.3.5
+
+### Improvements
+
+- Restore `client.version` property, reflecting the current `@apollo/client` version from `package.json`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7448](https://github.com/apollographql/apollo-client/pull/7448)
+
 ## Apollo Client 3.3.4
 
 ### Improvements

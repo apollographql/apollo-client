@@ -188,7 +188,7 @@ In your client-side initialization of Apollo Client, you can rehydrate the cache
 
 ```js
 const client = new ApolloClient({
-  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
+  cache: new InMemoryCache().restore(JSON.parse(window.__APOLLO_STATE__)),
   uri: 'https://example.com/graphql'
 });
 ```
@@ -201,7 +201,7 @@ If some of your initial queries use the `network-only` or `cache-and-network` [f
 
 ```js
 const client = new ApolloClient({
-  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
+  cache: new InMemoryCache().restore(JSON.parse(window.__APOLLO_STATE__)),
   link,
   ssrForceFetchDelay: 100, // in milliseconds
 });

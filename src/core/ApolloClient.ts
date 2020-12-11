@@ -193,7 +193,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.resetStore = this.resetStore.bind(this);
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
-    if (connectToDevTools) {
+    if (connectToDevTools && typeof window === 'object') {
       (window as any).__APOLLO_CLIENT__ = this;
     }
 

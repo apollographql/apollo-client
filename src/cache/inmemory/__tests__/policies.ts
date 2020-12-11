@@ -4872,6 +4872,12 @@ describe("type policies", function () {
       }
     });
 
+    expect(cache.readQuery({
+      query: gql`query { __typename }`,
+    })).toEqual({
+      __typename: "RootQuery",
+    });
+
     const ALL_ITEMS = gql`
       query Items {
         __typename
@@ -4919,6 +4925,50 @@ describe("type policies", function () {
         makeItem(2),
         makeItem(3),
       ],
+    });
+  });
+
+  it("can configure {query,mutation,subscription}Type:true", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        RootQuery: {
+          queryType: true,
+        },
+        RootMutation: {
+          mutationType: true,
+        },
+        RootSubscription: {
+          subscriptionType: true,
+        },
+      }
+    });
+
+    expect(cache.readQuery({
+      query: gql`query { __typename }`,
+    })).toEqual({
+      __typename: "RootQuery",
+    });
+
+    expect(cache.readFragment({
+      id: "ROOT_MUTATION",
+      fragment: gql`
+        fragment MutationTypename on RootMutation {
+          __typename
+        }
+      `,
+    })).toEqual({
+      __typename: "RootMutation",
+    });
+
+    expect(cache.readFragment({
+      id: "ROOT_SUBSCRIPTION",
+      fragment: gql`
+        fragment SubscriptionTypename on RootSubscription {
+          __typename
+        }
+      `,
+    })).toEqual({
+      __typename: "RootSubscription",
     });
   });
 });

@@ -99,7 +99,7 @@ For example, the following call to `writeFragment` _locally_ updates the `comple
 
 ```js
 client.writeFragment({
-  id: '5',
+  id: 'Todo:5',
   fragment: gql`
     fragment MyTodo on Todo {
       completed

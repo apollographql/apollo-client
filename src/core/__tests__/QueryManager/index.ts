@@ -4243,6 +4243,97 @@ describe('QueryManager', () => {
     });
   });
 
+  describe('refetching specified queries', () => {
+    itAsync('returns a promise resolving when all queries have been refetched', (resolve, reject) => {
+      const query = gql`
+        query GetAuthor {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const dataChanged = {
+        author: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const query2 = gql`
+        query GetAuthor2 {
+          author2 {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data2 = {
+        author2: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const data2Changed = {
+        author2: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: { data },
+        }, {
+          request: { query: query2 },
+          result: { data: data2 },
+        }, {
+          request: { query },
+          result: { data: dataChanged },
+        }, {
+          request: { query: query2 },
+          result: { data: data2Changed },
+        }).setOnError(reject),
+      });
+
+      const observable = queryManager.watchQuery<any>({ query });
+      const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+      return Promise.all([
+        observableToPromise({ observable }, result =>
+          expect(stripSymbols(result.data)).toEqual(data),
+        ),
+        observableToPromise({ observable: observable2 }, result =>
+          expect(stripSymbols(result.data)).toEqual(data2),
+        ),
+      ]).then(() => {
+        observable.subscribe({ next: () => null });
+        observable2.subscribe({ next: () => null });
+
+        return Promise.all(queryManager.refetchQueries(['GetAuthor', 'GetAuthor2'])).then(() => {
+          const result = getCurrentQueryResult(observable);
+          expect(result.partial).toBe(false);
+          expect(stripSymbols(result.data)).toEqual(dataChanged);
+
+          const result2 = getCurrentQueryResult(observable2);
+          expect(result2.partial).toBe(false);
+          expect(stripSymbols(result2.data)).toEqual(data2Changed);
+        });
+      }).then(resolve, reject);
+    });
+  });
+
   describe('loading state', () => {
     itAsync('should be passed as false if we are not watching a query', (resolve, reject) => {
       const query = gql`

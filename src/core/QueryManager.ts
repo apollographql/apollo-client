@@ -28,6 +28,7 @@ import {
   MutationOptions,
   WatchQueryFetchPolicy,
   ErrorPolicy,
+  RefetchQueryDescription,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -263,34 +264,7 @@ export class QueryManager<TStore> {
             refetchQueries = refetchQueries(storeResult!);
           }
 
-          const refetchQueryPromises: Promise<
-            ApolloQueryResult<any>[] | ApolloQueryResult<{}>
-          >[] = [];
-
-          if (isNonEmptyArray(refetchQueries)) {
-            refetchQueries.forEach(refetchQuery => {
-              if (typeof refetchQuery === 'string') {
-                self.queries.forEach(({ observableQuery }) => {
-                  if (observableQuery &&
-                      observableQuery.queryName === refetchQuery) {
-                    refetchQueryPromises.push(observableQuery.refetch());
-                  }
-                });
-              } else {
-                const queryOptions: QueryOptions = {
-                  query: refetchQuery.query,
-                  variables: refetchQuery.variables,
-                  fetchPolicy: 'network-only',
-                };
-
-                if (refetchQuery.context) {
-                  queryOptions.context = refetchQuery.context;
-                }
-
-                refetchQueryPromises.push(self.query(queryOptions));
-              }
-            });
-          }
+          const refetchQueryPromises = self.refetchQueries(refetchQueries);
 
           Promise.all(
             awaitRefetchQueries ? refetchQueryPromises : [],
@@ -1021,6 +995,39 @@ export class QueryManager<TStore> {
     });
 
     return concast;
+  }
+
+  public refetchQueries(queries: RefetchQueryDescription):
+    Promise<ApolloQueryResult<any>>[] {
+    const self = this;
+    const refetchQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+
+    if (isNonEmptyArray(queries)) {
+      queries.forEach(refetchQuery => {
+        if (typeof refetchQuery === 'string') {
+          self.queries.forEach(({ observableQuery }) => {
+            if (observableQuery &&
+                observableQuery.queryName === refetchQuery) {
+              refetchQueryPromises.push(observableQuery.refetch());
+            }
+          });
+        } else {
+          const queryOptions: QueryOptions = {
+            query: refetchQuery.query,
+            variables: refetchQuery.variables,
+            fetchPolicy: 'network-only',
+          };
+
+          if (refetchQuery.context) {
+            queryOptions.context = refetchQuery.context;
+          }
+
+          refetchQueryPromises.push(self.query(queryOptions));
+        }
+      });
+    }
+
+    return refetchQueryPromises;
   }
 
   private fetchQueryByPolicy<TData, TVars>(

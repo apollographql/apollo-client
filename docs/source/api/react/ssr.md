@@ -26,7 +26,7 @@ The `getDataFromTree` function takes your React tree, determines which queries a
 
 ### Example
 
-Refer to the [Using `getDataFromTree`](../../performance/server-side-rendering/#using-getdatafromtree) section of the docs.
+See [Executing queries with `getDataFromTree`](../../performance/server-side-rendering/#executing-queries-with-getdatafromtree).
 
 ## `renderToStringWithData`
 
@@ -41,7 +41,3 @@ The `renderToStringWithData` function is similar to `getDataFromTree`, but uses 
 ### Result
 
 `renderToStringWithData` returns a promise (`Promise<string>`) which resolves when the data is ready in your Apollo Client store. The result is generated using [`ReactDOMServer.renderToString`](https://reactjs.org/docs/react-dom-server.html#rendertostring) under the hood.
-
-### Example
-
-Refer to the [Using `renderToStringWithData`](../../performance/server-side-rendering/#using-rendertostringwithdata) section of the docs.

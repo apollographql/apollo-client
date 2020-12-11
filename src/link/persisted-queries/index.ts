@@ -186,6 +186,7 @@ export const createPersistedQueryLink = (
                 includeQuery: true,
                 includeExtensions: supportsPersistedQueries,
               },
+              method: 'POST'
             });
             if (setFetchOptions) {
               operation.setContext({ fetchOptions: originalFetchOptions });

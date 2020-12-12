@@ -299,24 +299,6 @@ export default withApollo(Foo);
 If you want to clear the store but don't want to refetch active queries, use
 `client.clearStore()` instead of `client.resetStore()`.
 
-## Server side rendering
-
-First, you will need to initialize an `InMemoryCache` on the server and create an instance of `ApolloClient`. In the initial serialized HTML payload from the server, you should include a script tag that extracts the data from the cache. (The `.replace()` is necessary to prevent script injection attacks)
-
-```js
-`<script>
-  window.__APOLLO_STATE__=${JSON.stringify(cache.extract()).replace(/</g, '\\u003c')}
-</script>`
-```
-
-On the client, you can rehydrate the cache using the initial data passed from the server:
-
-```js
-cache: new Cache().restore(window.__APOLLO_STATE__)
-```
-
-If you would like to learn more about server side rendering, please check out our more in depth guide [here](../performance/server-side-rendering/).
-
 ## Cache persistence
 
 If you would like to persist and rehydrate your Apollo Cache from a storage provider like `AsyncStorage` or `localStorage`, you can use [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist). `apollo3-cache-persist` works with all Apollo caches, including `InMemoryCache` & `Hermes`, and a variety of different [storage providers](https://github.com/apollographql/apollo-cache-persist#storage-providers).

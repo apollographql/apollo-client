@@ -1,7 +1,7 @@
 const { compilerOptions } = require("../tsconfig.json");
 
 module.exports = {
-  rootDir: '..',
+  rootDir: '../src',
   transform: {
     '.(ts|tsx)': 'ts-jest',
   },
@@ -16,10 +16,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   testURL: 'http://localhost',
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/dist/'
-  ],
-  modulePathIgnorePatterns: ['/dist/'],
-  setupFiles: ['<rootDir>/src/config/jest/setup.ts'],
+  setupFiles: ['<rootDir>/config/jest/setup.ts'],
 };

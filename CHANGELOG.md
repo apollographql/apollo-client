@@ -9,6 +9,24 @@ TBD
 ### Documentation
 TBD
 
+## Apollo Client 3.3.6
+
+### Bug Fixes
+
+- Immediately apply `queryType: true`, `mutationType: true`, and `subscriptionType: true` type policies, rather than waiting for the first time the policy is used, fixing a [regression](https://github.com/apollographql/apollo-client/issues/7443) introduced by [#7065](https://github.com/apollographql/apollo-client/pull/7065). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7463](https://github.com/apollographql/apollo-client/pull/7463)
+
+- Check that `window` is defined even when `connectToDevTools` is `true`. <br/>
+  [@yasupeke](https://github.com/yasupeke) in [#7434](https://github.com/apollographql/apollo-client/pull/7434)
+
+### Improvements
+
+- Replace stray `console.debug` (undefined in React Native) with `invariant.log`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7454](https://github.com/apollographql/apollo-client/pull/7454)
+
+- Suggest Firefox Apollo DevTools as well as the Chrome extension. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7461](https://github.com/apollographql/apollo-client/pull/7461)
+
 ## Apollo Client 3.3.5
 
 ### Improvements

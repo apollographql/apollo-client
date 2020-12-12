@@ -4,7 +4,9 @@
 TBD
 
 ### Improvements
-TBD
+
+- Support `client.refetchQueries` as an imperative way to refetch queries, without having to pass `options.refetchQueries` to `client.mutate`. <br/>
+  [@dannycochran](https://github.com/dannycochran) in [#7431](https://github.com/apollographql/apollo-client/pull/7431)
 
 ### Documentation
 TBD

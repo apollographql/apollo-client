@@ -108,9 +108,9 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
   ) => WatchQueryFetchPolicy);
 }
 
-export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables, TData = any> {
+export interface FetchMoreQueryOptions<TVariables, TData = any> {
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  variables?: Pick<TVariables, K>;
+  variables?: Partial<TVariables>;
   context?: any;
 }
 

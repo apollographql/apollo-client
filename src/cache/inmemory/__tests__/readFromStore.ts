@@ -2,13 +2,19 @@ import { assign, omit } from 'lodash';
 import gql from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
+import { InMemoryCache } from '../inMemoryCache';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
-import { makeReference, InMemoryCache, Reference, isReference } from '../../../core';
 import { Cache } from '../../core/types/Cache';
 import { MissingFieldError } from '../../core/types/common';
 import { defaultNormalizedCacheFactory, readQueryFromStore } from './helpers';
 import { withError } from './diffAgainstStore';
+import {
+  makeReference,
+  Reference,
+  isReference,
+  TypedDocumentNode,
+} from '../../../core';
 
 describe('reading from the store', () => {
   const reader = new StoreReader({
@@ -1826,5 +1832,101 @@ describe('reading from the store', () => {
         name: "Apollo",
       },
     });
+  });
+
+  it("returns === results for different queries", function () {
+    const cache = new InMemoryCache;
+
+    const aQuery: TypedDocumentNode<{
+      a: string[];
+    }> = gql`query { a }`;
+
+    const abQuery: TypedDocumentNode<{
+      a: string[];
+      b: {
+        c: string;
+        d: string;
+      };
+    }> = gql`query { a b { c d } }`;
+
+    const bQuery: TypedDocumentNode<{
+      b: {
+        c: string;
+        d: string;
+      };
+    }> = gql`query { b { d c } }`;
+
+    const abData1 = {
+      a: ["a", "y"],
+      b: {
+        c: "see",
+        d: "dee",
+      },
+    };
+
+    cache.writeQuery({
+      query: abQuery,
+      data: abData1,
+    });
+
+    function read<Data, Vars>(query: TypedDocumentNode<Data, Vars>) {
+      return cache.readQuery({ query })!;
+    }
+
+    const aResult1 = read(aQuery);
+    const abResult1 = read(abQuery);
+    const bResult1 = read(bQuery);
+
+    expect(aResult1.a).toBe(abResult1.a);
+    expect(abResult1).toEqual(abData1);
+    expect(aResult1).toEqual({ a: abData1.a });
+    expect(bResult1).toEqual({ b: abData1.b });
+    expect(abResult1.b).toBe(bResult1.b);
+
+    const aData2 = {
+      a: "ayy".split(""),
+    };
+
+    cache.writeQuery({
+      query: aQuery,
+      data: aData2,
+    });
+
+    const aResult2 = read(aQuery);
+    const abResult2 = read(abQuery);
+    const bResult2 = read(bQuery);
+
+    expect(aResult2).toEqual(aData2);
+    expect(abResult2).toEqual({ ...abData1, ...aData2 });
+    expect(aResult2.a).toBe(abResult2.a);
+    expect(bResult2).toBe(bResult1);
+    expect(abResult2.b).toBe(bResult2.b);
+    expect(abResult2.b).toBe(bResult1.b);
+
+    const bData3 = {
+      b: {
+        d: "D",
+        c: "C",
+      },
+    };
+
+    cache.writeQuery({
+      query: bQuery,
+      data: bData3,
+    });
+
+    const aResult3 = read(aQuery);
+    const abResult3 = read(abQuery);
+    const bResult3 = read(bQuery);
+
+    expect(aResult3).toBe(aResult2);
+    expect(bResult3).toEqual(bData3);
+    expect(bResult3).not.toBe(bData3);
+    expect(abResult3).toEqual({
+      ...abResult2,
+      ...bData3,
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
   });
 });

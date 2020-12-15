@@ -2,6 +2,10 @@ import { KeyTrie } from "optimism";
 import { canUseWeakMap } from "../../utilities";
 import { objToStr } from "./helpers";
 
+class Pass<T> {
+  constructor(public readonly value: T) {}
+}
+
 // When we say an object is "canonical" in programming, we mean it has been
 // admitted into some abstract "canon" of official/blessed objects. This
 // Canon class is a representation of such a collection, with the property
@@ -32,10 +36,21 @@ export class Canon {
     keys?: SortedKeysInfo;
   }>(canUseWeakMap);
 
+  // Make the ObjectCanon assume this value has already been
+  // canonicalized.
+  public pass<T>(value: T): Pass<T>;
+  public pass(value: any) {
+    return new Pass(value);
+  }
+
   // Returns the canonical version of value.
   public admit<T>(value: T): T;
   public admit(value: any) {
     if (value && typeof value === "object") {
+      if (value instanceof Pass) {
+        return value.value;
+      }
+
       switch (objToStr.call(value)) {
         case "[object Array]": {
           if (this.known.has(value)) return value;

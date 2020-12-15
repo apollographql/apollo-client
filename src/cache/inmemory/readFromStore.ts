@@ -21,7 +21,6 @@ import {
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-  maybeDeepFreeze,
   mergeDeepArray,
   getFragmentFromSelection,
 } from '../../utilities';
@@ -280,17 +279,10 @@ export class StoreReader {
 
         } else if (!selection.selectionSet) {
           // If the field does not have a selection set, then we handle it
-          // as a scalar value. However, that value should not contain any
-          // Reference objects, and should be frozen in development, if it
-          // happens to be an object that is mutable.
-          if (process.env.NODE_ENV !== 'production') {
-            assertSelectionSetForIdValue(
-              context.store,
-              selection,
-              fieldValue,
-            );
-            maybeDeepFreeze(fieldValue);
-          }
+          // as a scalar value. To keep this.canon from canonicalizing
+          // this value, we use this.canon.pass to wrap fieldValue in a
+          // Pass object that this.canon.admit will later unwrap as-is.
+          fieldValue = this.canon.pass(fieldValue);
 
         } else if (fieldValue != null) {
           // In this case, because we know the field has a selection set,

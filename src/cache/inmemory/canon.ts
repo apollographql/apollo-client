@@ -6,30 +6,67 @@ class Pass<T> {
   constructor(public readonly value: T) {}
 }
 
-// When we say an object is "canonical" in programming, we mean it has been
-// admitted into some abstract "canon" of official/blessed objects. This
-// Canon class is a representation of such a collection, with the property
-// that canon.admit(value1) === canon.admit(value2) if value1 and value2 are
-// deeply equal to each other. The canonicalization process involves looking
-// at every property in the provided object tree, so it takes the same order
-// of time as deep equality checking (linear time), but already-admitted
-// objects are returned immediately from canon.admit, so ensuring subtrees
-// have already been canonized tends to speed up canonicalization. Of
-// course, since canonized objects may be shared widely between unrelated
-// consumers, it's important to regard them as immutable. No detection of
-// cycles is needed by the StoreReader class right now, so we don't bother
-// keeping track of objects we've already seen during the recursion of the
-// admit method. Objects whose internal class name is neither Array nor
-// Object can be included in the value tree, but they will not be replaced
-// with a canonical version (to put it another way, they are assumed to be
-// canonical already). We can easily add additional cases to the switch
+// When programmers talk about the "canonical form" of an object, they
+// usually have the following meaning in mind, which I've copied from
+// https://en.wiktionary.org/wiki/canonical_form:
+//
+// 1. A standard or normal presentation of a mathematical entity [or
+//    object]. A canonical form is an element of a set of representatives
+//    of equivalence classes of forms such that there is a function or
+//    procedure which projects every element of each equivalence class
+//    onto that one element, the canonical form of that equivalence
+//    class. The canonical form is expected to be simpler than the rest of
+//    the forms in some way.
+//
+// That's a long-winded way of saying any two objects that have the same
+// canonical form may be considered equivalent, even if they are !==,
+// which usually means the objects are structurally equivalent (deeply
+// equal), but don't necessarily use the same memory.
+//
+// Like a literary or musical canon, this Canon class represents a
+// collection of unique canonical items (JavaScript objects), with the
+// important property that canon.admit(a) === canon.admit(b) if a and b
+// are deeply equal to each other. In terms of the definition above, the
+// canon.admit method is the "function or procedure which projects every"
+// object "onto that one element, the canonical form."
+//
+// In the worst case, the canonicalization process may involve looking at
+// every property in the provided object tree, so it takes the same order
+// of time as deep equality checking. Fortunately, already-canonicalized
+// objects are returned immediately from canon.admit, so the presence of
+// canonical subtrees tends to speed up canonicalization.
+//
+// Since consumers of canonical objects can check for deep equality in
+// constant time, canonicalizing cache results can massively improve the
+// performance of application code that skips re-rendering unchanged
+// results, such as "pure" UI components in a framework like React.
+//
+// Of course, since canonical objects may be shared widely between
+// unrelated consumers, it's important to think of them as immutable, even
+// though they are not actually frozen with Object.freeze in production,
+// due to the extra performance overhead that comes with frozen objects.
+//
+// Custom scalar objects whose internal class name is neither Array nor
+// Object can be included safely in the admitted tree, but they will not
+// be replaced with a canonical version (to put it another way, they are
+// assumed to be canonical already).
+//
+// If we ignore custom objects, no detection of cycles or repeated object
+// references is currently required by the StoreReader class, since
+// GraphQL result objects are JSON-serializable trees (and thus contain
+// neither cycles nor repeated subtrees), so we can avoid the complexity
+// of keeping track of objects we've already seen during the recursion of
+// the admit method.
+//
+// In the future, we may consider adding additional cases to the switch
 // statement to handle other common object types, such as "[object Date]"
 // objects, as needed.
 export class Canon {
-  // All known objects this Canon has admitted.
+  // Set of all canonical objects this Canon has admitted, allowing
+  // canon.admit to return previously-canonicalized objects immediately.
   private known = new (canUseWeakMap ? WeakSet : Set)<object>();
 
-  // Efficient storage/lookup structure for admitting objects.
+  // Efficient storage/lookup structure for canonical objects.
   private pool = new KeyTrie<{
     array?: any[];
     object?: Record<string, any>;
@@ -61,6 +98,9 @@ export class Canon {
           const node = this.pool.lookupArray(array);
           if (!node.array) {
             this.known.add(node.array = array);
+            // Since canonical arrays may be shared widely between
+            // unrelated consumers, it's important to regard them as
+            // immutable, even if they are not frozen in production.
             if (process.env.NODE_ENV !== "production") {
               Object.freeze(array);
             }
@@ -92,6 +132,9 @@ export class Canon {
             keys.sorted.forEach((key, i) => {
               obj[key] = array[i + 2];
             });
+            // Since canonical objects may be shared widely between
+            // unrelated consumers, it's important to regard them as
+            // immutable, even if they are not frozen in production.
             if (process.env.NODE_ENV !== "production") {
               Object.freeze(obj);
             }

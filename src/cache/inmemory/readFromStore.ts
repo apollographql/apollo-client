@@ -35,7 +35,7 @@ import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
-import { Canon } from './canon';
+import { ObjectCanon } from './object-canon';
 
 export type VariableMap = { [name: string]: any };
 
@@ -326,7 +326,7 @@ export class StoreReader {
     return finalResult;
   }
 
-  private canon = new Canon;
+  private canon = new ObjectCanon;
 
   private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 

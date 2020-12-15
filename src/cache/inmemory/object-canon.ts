@@ -23,7 +23,7 @@ class Pass<T> {
 // which usually means the objects are structurally equivalent (deeply
 // equal), but don't necessarily use the same memory.
 //
-// Like a literary or musical canon, this Canon class represents a
+// Like a literary or musical canon, this ObjectCanon class represents a
 // collection of unique canonical items (JavaScript objects), with the
 // important property that canon.admit(a) === canon.admit(b) if a and b
 // are deeply equal to each other. In terms of the definition above, the
@@ -61,8 +61,8 @@ class Pass<T> {
 // In the future, we may consider adding additional cases to the switch
 // statement to handle other common object types, such as "[object Date]"
 // objects, as needed.
-export class Canon {
-  // Set of all canonical objects this Canon has admitted, allowing
+export class ObjectCanon {
+  // Set of all canonical objects this ObjectCanon has admitted, allowing
   // canon.admit to return previously-canonicalized objects immediately.
   private known = new (canUseWeakMap ? WeakSet : Set)<object>();
 

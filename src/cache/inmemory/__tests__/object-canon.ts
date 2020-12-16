@@ -76,6 +76,38 @@ describe("ObjectCanon", () => {
     check(2);
 
     expect(canon.admit(customs)).toBe(admitted);
+
+    function checkProto(proto: null | object) {
+      const a = Object.create(proto);
+      const b = Object.create(proto, {
+        visible: {
+          value: "bee",
+          enumerable: true,
+        },
+        hidden: {
+          value: "invisibee",
+          enumerable: false,
+        },
+      });
+
+      const admitted = canon.admit({ a, b });
+
+      expect(admitted.a).toEqual(a);
+      expect(admitted.a).not.toBe(a);
+
+      expect(admitted.b).toEqual(b);
+      expect(admitted.b).not.toBe(b);
+
+      expect(Object.getPrototypeOf(admitted.a)).toBe(proto);
+      expect(Object.getPrototypeOf(admitted.b)).toBe(proto);
+
+      expect(admitted.b.visible).toBe("bee");
+      expect(admitted.b.hidden).toBeUndefined();
+    }
+    checkProto(null);
+    checkProto({});
+    checkProto([1,2,3]);
+    checkProto(() => "fun");
   });
 
   it("unwraps Pass wrappers as-is", () => {

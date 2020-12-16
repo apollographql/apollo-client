@@ -5,7 +5,7 @@ import {
   FieldNode,
 } from 'graphql';
 
-import { KeyTrie } from 'optimism';
+import { Trie } from '@wry/trie';
 import { invariant, InvariantError } from 'ts-invariant';
 
 import {
@@ -915,7 +915,7 @@ function keyArgsFnFromSpecifier(
 function keyFieldsFnFromSpecifier(
   specifier: KeySpecifier,
 ): KeyFieldsFunction {
-  const trie = new KeyTrie<{
+  const trie = new Trie<{
     aliasMap?: AliasMap;
   }>(canUseWeakMap);
 

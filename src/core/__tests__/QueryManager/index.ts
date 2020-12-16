@@ -902,10 +902,7 @@ describe('QueryManager', () => {
               break;
             case 2:
               expect(stripSymbols(result.data)).toEqual(data3);
-              expect(result.data).not.toBe(firstResultData);
-              expect(result.data.b).toEqual(firstResultData.b);
-              expect(result.data.d).not.toBe(firstResultData.d);
-              expect(result.data.d.f).toEqual(firstResultData.d.f);
+              expect(result.data).toBe(firstResultData);
               resolve();
               break;
             default:

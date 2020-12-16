@@ -21,7 +21,6 @@ import {
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-  maybeDeepFreeze,
   mergeDeepArray,
   getFragmentFromSelection,
 } from '../../utilities';
@@ -36,6 +35,7 @@ import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
+import { ObjectCanon } from './object-canon';
 
 export type VariableMap = { [name: string]: any };
 
@@ -279,17 +279,10 @@ export class StoreReader {
 
         } else if (!selection.selectionSet) {
           // If the field does not have a selection set, then we handle it
-          // as a scalar value. However, that value should not contain any
-          // Reference objects, and should be frozen in development, if it
-          // happens to be an object that is mutable.
-          if (process.env.NODE_ENV !== 'production') {
-            assertSelectionSetForIdValue(
-              context.store,
-              selection,
-              fieldValue,
-            );
-            maybeDeepFreeze(fieldValue);
-          }
+          // as a scalar value. To keep this.canon from canonicalizing
+          // this value, we use this.canon.pass to wrap fieldValue in a
+          // Pass object that this.canon.admit will later unwrap as-is.
+          fieldValue = this.canon.pass(fieldValue);
 
         } else if (fieldValue != null) {
           // In this case, because we know the field has a selection set,
@@ -324,11 +317,7 @@ export class StoreReader {
 
     // Perform a single merge at the end so that we can avoid making more
     // defensive shallow copies than necessary.
-    finalResult.result = mergeDeepArray(objectsToMerge);
-
-    if (process.env.NODE_ENV !== 'production') {
-      Object.freeze(finalResult.result);
-    }
+    finalResult.result = this.canon.admit(mergeDeepArray(objectsToMerge));
 
     // Store this result with its selection set so that we can quickly
     // recognize it again in the StoreReader#isFresh method.
@@ -336,6 +325,8 @@ export class StoreReader {
 
     return finalResult;
   }
+
+  private canon = new ObjectCanon;
 
   private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
@@ -377,7 +368,7 @@ export class StoreReader {
       array = array.filter(context.store.canRead);
     }
 
-    array = array.map((item, i) => {
+    array = this.canon.admit(array.map((item, i) => {
       // null value in array
       if (item === null) {
         return null;
@@ -410,11 +401,7 @@ export class StoreReader {
       invariant(context.path.pop() === i);
 
       return item;
-    });
-
-    if (process.env.NODE_ENV !== 'production') {
-      Object.freeze(array);
-    }
+    }));
 
     return { result: array, missing };
   }

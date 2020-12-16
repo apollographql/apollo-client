@@ -4692,19 +4692,8 @@ describe("type policies", function () {
     });
 
     const thirdFirstBookResult = readFirstBookResult();
-
-    // A change in VW's books field triggers rereading of result objects
-    // that previously involved her books field.
-    expect(thirdFirstBookResult).not.toBe(secondFirstBookResult);
-
-    // However, since the new Book was not the earliest published, the
-    // second and third results are structurally the same.
     expect(thirdFirstBookResult).toEqual(secondFirstBookResult);
-
-    // In fact, the original author.firstBook object has been reused!
-    expect(thirdFirstBookResult.author.firstBook).toBe(
-      secondFirstBookResult.author.firstBook,
-    );
+    expect(thirdFirstBookResult).toBe(secondFirstBookResult);
   });
 
   it("readField can read fields with arguments", function () {

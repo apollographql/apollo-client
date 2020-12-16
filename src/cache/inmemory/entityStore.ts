@@ -1,5 +1,6 @@
-import { dep, OptimisticDependencyFunction, KeyTrie } from 'optimism';
+import { dep, OptimisticDependencyFunction } from 'optimism';
 import { equal } from '@wry/equality';
+import { Trie } from '@wry/trie';
 
 import {
   isReference,
@@ -496,7 +497,7 @@ class CacheGroup {
 
   // Used by the EntityStore#makeCacheKey method to compute cache keys
   // specific to this CacheGroup.
-  public readonly keyMaker = new KeyTrie<object>(canUseWeakMap);
+  public readonly keyMaker = new Trie<object>(canUseWeakMap);
 }
 
 function makeDepKey(dataId: string, storeFieldName: string) {
@@ -543,7 +544,7 @@ export namespace EntityStore {
       return this;
     }
 
-    public readonly storageTrie = new KeyTrie<StorageType>(canUseWeakMap);
+    public readonly storageTrie = new Trie<StorageType>(canUseWeakMap);
     public getStorage(): StorageType {
       return this.storageTrie.lookupArray(arguments);
     }

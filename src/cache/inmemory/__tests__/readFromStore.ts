@@ -2,13 +2,19 @@ import { assign, omit } from 'lodash';
 import gql from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
+import { InMemoryCache } from '../inMemoryCache';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
-import { makeReference, InMemoryCache, Reference, isReference } from '../../../core';
 import { Cache } from '../../core/types/Cache';
 import { MissingFieldError } from '../../core/types/common';
 import { defaultNormalizedCacheFactory, readQueryFromStore } from './helpers';
 import { withError } from './diffAgainstStore';
+import {
+  makeReference,
+  Reference,
+  isReference,
+  TypedDocumentNode,
+} from '../../../core';
 
 describe('reading from the store', () => {
   const reader = new StoreReader({
@@ -1826,5 +1832,149 @@ describe('reading from the store', () => {
         name: "Apollo",
       },
     });
+  });
+
+  it("returns === results for different queries", function () {
+    const cache = new InMemoryCache;
+
+    const aQuery: TypedDocumentNode<{
+      a: string[];
+    }> = gql`query { a }`;
+
+    const abQuery: TypedDocumentNode<{
+      a: string[];
+      b: {
+        c: string;
+        d: string;
+      };
+    }> = gql`query { a b { c d } }`;
+
+    const bQuery: TypedDocumentNode<{
+      b: {
+        c: string;
+        d: string;
+      };
+    }> = gql`query { b { d c } }`;
+
+    const abData1 = {
+      a: ["a", "y"],
+      b: {
+        c: "see",
+        d: "dee",
+      },
+    };
+
+    cache.writeQuery({
+      query: abQuery,
+      data: abData1,
+    });
+
+    function read<Data, Vars>(query: TypedDocumentNode<Data, Vars>) {
+      return cache.readQuery({ query })!;
+    }
+
+    const aResult1 = read(aQuery);
+    const abResult1 = read(abQuery);
+    const bResult1 = read(bQuery);
+
+    expect(aResult1.a).toBe(abResult1.a);
+    expect(abResult1).toEqual(abData1);
+    expect(aResult1).toEqual({ a: abData1.a });
+    expect(bResult1).toEqual({ b: abData1.b });
+    expect(abResult1.b).toBe(bResult1.b);
+
+    const aData2 = {
+      a: "ayy".split(""),
+    };
+
+    cache.writeQuery({
+      query: aQuery,
+      data: aData2,
+    });
+
+    const aResult2 = read(aQuery);
+    const abResult2 = read(abQuery);
+    const bResult2 = read(bQuery);
+
+    expect(aResult2).toEqual(aData2);
+    expect(abResult2).toEqual({ ...abData1, ...aData2 });
+    expect(aResult2.a).toBe(abResult2.a);
+    expect(bResult2).toBe(bResult1);
+    expect(abResult2.b).toBe(bResult2.b);
+    expect(abResult2.b).toBe(bResult1.b);
+
+    const bData3 = {
+      b: {
+        d: "D",
+        c: "C",
+      },
+    };
+
+    cache.writeQuery({
+      query: bQuery,
+      data: bData3,
+    });
+
+    const aResult3 = read(aQuery);
+    const abResult3 = read(abQuery);
+    const bResult3 = read(bQuery);
+
+    expect(aResult3).toBe(aResult2);
+    expect(bResult3).toEqual(bData3);
+    expect(bResult3).not.toBe(bData3);
+    expect(abResult3).toEqual({
+      ...abResult2,
+      ...bData3,
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+  });
+
+  it("does not canonicalize custom scalar objects", function () {
+    const now = new Date;
+    const abc = { a: 1, b: 2, c: 3 };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            now() {
+              return now;
+            },
+
+            abc() {
+              return abc;
+            },
+          },
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{
+      now: typeof now;
+      abc: typeof abc;
+    }> = gql`query { now abc }`;
+
+    const result1 = cache.readQuery({ query })!;
+    const result2 = cache.readQuery({ query })!;
+
+    expect(result1).toBe(result2);
+    expect(result1.now).toBeInstanceOf(Date);
+
+    // We already know result1.now === result2.now, but it's also
+    // important that it be the very same (===) Date object that was
+    // returned from the read function for the Query.now field, not a
+    // canonicalized version.
+    expect(result1.now).toBe(now);
+    expect(result2.now).toBe(now);
+
+    // The Query.abc field returns a "normal" object, but we know from the
+    // structure of the query that it's a scalar object, so it will not be
+    // canonicalized.
+    expect(result1.abc).toEqual(abc);
+    expect(result2.abc).toEqual(abc);
+    expect(result1.abc).toBe(result2.abc);
+    expect(result1.abc).toBe(abc);
+    expect(result2.abc).toBe(abc);
   });
 });

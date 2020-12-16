@@ -6,6 +6,10 @@ class Pass<T> {
   constructor(public readonly value: T) {}
 }
 
+function isObjectOrArray(value: any): boolean {
+  return !!value && typeof value === "object";
+}
+
 // When programmers talk about the "canonical form" of an object, they
 // usually have the following meaning in mind, which I've copied from
 // https://en.wiktionary.org/wiki/canonical_form:
@@ -75,15 +79,17 @@ export class ObjectCanon {
 
   // Make the ObjectCanon assume this value has already been
   // canonicalized.
-  public pass<T>(value: T): Pass<T>;
+  public pass<T>(value: T): T extends object ? Pass<T> : T;
   public pass(value: any) {
-    return new Pass(value);
+    return isObjectOrArray(value) ? new Pass(value) : value;
   }
 
   // Returns the canonical version of value.
   public admit<T>(value: T): T;
   public admit(value: any) {
-    if (value && typeof value === "object") {
+    if (isObjectOrArray(value)) {
+      // If value is a Pass object returned by canon.pass, unwrap it
+      // as-is, without canonicalizing its value.
       if (value instanceof Pass) {
         return value.value;
       }

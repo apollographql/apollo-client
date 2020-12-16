@@ -120,6 +120,7 @@ export class ObjectCanon {
           const array = [proto];
           const keys = this.sortedKeys(value);
           array.push(keys.json);
+          const firstValueIndex = array.length;
           keys.sorted.forEach(key => {
             array.push(this.admit(value[key]));
           });
@@ -136,7 +137,7 @@ export class ObjectCanon {
             const obj = node.object = Object.create(proto);
             this.known.add(obj);
             keys.sorted.forEach((key, i) => {
-              obj[key] = array[i + 2];
+              obj[key] = array[firstValueIndex + i];
             });
             // Since canonical objects may be shared widely between
             // unrelated consumers, it's important to regard them as

@@ -1,4 +1,4 @@
-import { KeyTrie } from "optimism";
+import { Trie } from "@wry/trie";
 import { canUseWeakMap } from "../../utilities";
 import { objToStr } from "./helpers";
 
@@ -71,7 +71,7 @@ export class ObjectCanon {
   private known = new (canUseWeakMap ? WeakSet : Set)<object>();
 
   // Efficient storage/lookup structure for canonical objects.
-  private pool = new KeyTrie<{
+  private pool = new Trie<{
     array?: any[];
     object?: Record<string, any>;
     keys?: SortedKeysInfo;
@@ -98,7 +98,7 @@ export class ObjectCanon {
         case "[object Array]": {
           if (this.known.has(value)) return value;
           const array: any[] = value.map(this.admit, this);
-          // Arrays are looked up in the KeyTrie using their recursively
+          // Arrays are looked up in the Trie using their recursively
           // canonicalized elements, and the known version of the array is
           // preserved as node.array.
           const node = this.pool.lookupArray(array);
@@ -123,9 +123,9 @@ export class ObjectCanon {
           keys.sorted.forEach(key => {
             array.push(this.admit(value[key]));
           });
-          // Objects are looked up in the KeyTrie by their prototype
-          // (which is *not* recursively canonicalized), followed by a
-          // JSON representation of their (sorted) keys, followed by the
+          // Objects are looked up in the Trie by their prototype (which
+          // is *not* recursively canonicalized), followed by a JSON
+          // representation of their (sorted) keys, followed by the
           // sequence of recursively canonicalized values corresponding to
           // those keys. To keep the final results unambiguous with other
           // sequences (such as arrays that just happen to contain [proto,
@@ -154,7 +154,7 @@ export class ObjectCanon {
 
   // It's worthwhile to cache the sorting of arrays of strings, since the
   // same initial unsorted arrays tend to be encountered many times.
-  // Fortunately, we can reuse the KeyTrie machinery to look up the sorted
+  // Fortunately, we can reuse the Trie machinery to look up the sorted
   // arrays in linear time (which is faster than sorting large arrays).
   private sortedKeys(obj: object) {
     const keys = Object.keys(obj);

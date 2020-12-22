@@ -78,11 +78,16 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       listeners.delete(listener);
     };
   };
-  rv.onChange = (listener) =>
-    rv.onNextChange((...args) => {
+  rv.onChange = (listener) => {
+    let removeListener;
+    const persistentListener = (...args) => {
       listener(...args);
-      rv.onChange(listener);
-    });
+      removeListener = rv.onNextChange(persistentListener);
+    };
+
+    removeListener = rv.onNextChange(persistentListener);
+    return () => removeListener();
+  };
 
   const attach = rv.attachCache = cache => {
     caches.add(cache);

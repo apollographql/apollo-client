@@ -6,6 +6,7 @@ import { ApolloCache } from '../../core';
 export interface ReactiveVar<T> {
   (newValue?: T): T;
   onNextChange(listener: ReactiveListener<T>): () => void;
+  onChange(listener: ReactiveListener<T>): () => void;
   attachCache(cache: ApolloCache<any>): this;
   forgetCache(cache: ApolloCache<any>): boolean;
 }

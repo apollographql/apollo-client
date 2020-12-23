@@ -1,11 +1,12 @@
 import { Slot } from "@wry/context";
 import { dep } from "optimism";
 import { InMemoryCache } from "./inMemoryCache";
-import { ApolloCache } from '../../core';
+import { ApolloCache } from "../../core";
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;
   onNextChange(listener: ReactiveListener<T>): () => void;
+  onChange(listener: ReactiveListener<T>): () => void;
   attachCache(cache: ApolloCache<any>): this;
   forgetCache(cache: ApolloCache<any>): boolean;
 }
@@ -22,11 +23,17 @@ export const cacheSlot = new Slot<ApolloCache<any>>();
 // to the set while we're iterating over it, so it's important to commit
 // to the original elements of the set before we begin iterating. See
 // iterateObserversSafely for another example of this pattern.
-function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
+function iterateListeners<T>(
+  set: Set<T>,
+  callback: (item: T) => any,
+  consume?: boolean
+) {
   if (set.size) {
     const items: T[] = [];
-    set.forEach(item => items.push(item));
-    set.clear();
+    set.forEach((item) => items.push(item));
+    if (consume) {
+      set.clear();
+    }
     items.forEach(callback);
   }
 }
@@ -36,7 +43,7 @@ const varsByCache = new WeakMap<ApolloCache<any>, Set<ReactiveVar<any>>>();
 export function forgetCache(cache: ApolloCache<any>) {
   const vars = varsByCache.get(cache);
   if (vars) {
-    consumeAndIterate(vars, rv => rv.forgetCache(cache));
+    iterateListeners(vars, (rv) => rv.forgetCache(cache), true);
     varsByCache.delete(cache);
   }
 }
@@ -57,7 +64,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
         // from this variable.
         caches.forEach(broadcast);
         // Finally, notify any listeners added via rv.onNextChange.
-        consumeAndIterate(listeners, listener => listener(value));
+        iterateListeners(listeners, (listener) => listener(value));
       }
     } else {
       // When reading from the variable, obtain the current cache from
@@ -71,11 +78,21 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     return value;
   };
 
-  rv.onNextChange = listener => {
+  rv.onChange = (listener) => {
     listeners.add(listener);
     return () => {
       listeners.delete(listener);
     };
+  };
+
+  rv.onNextChange = (listener: ReactiveListener<T>) => {
+    const selfDeletingListener = (value: T) => {
+      // First delete, then execute, so that the listener can add itself again
+      listeners.delete(selfDeletingListener);
+      listener(value);
+    };
+
+    return rv.onChange(selfDeletingListener);
   };
 
   const attach = rv.attachCache = cache => {

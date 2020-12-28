@@ -36,7 +36,7 @@ const generateErrorMessage = (err: ApolloError) => {
 export class ApolloError extends Error {
   public message: string;
   public graphQLErrors: ReadonlyArray<GraphQLError>;
-  public networkError: Error | ServerParseError | ServerError | null;
+  public networkError: Error & ServerParseError & ServerError | null;
 
   // An object that can be used to provide some additional information
   // about an error, e.g. specifying the type of error this is. Used
@@ -53,7 +53,7 @@ export class ApolloError extends Error {
     extraInfo,
   }: {
     graphQLErrors?: ReadonlyArray<GraphQLError>;
-    networkError?: Error | ServerParseError | ServerError | null;
+    networkError?: Error & ServerParseError & ServerError | null;
     errorMessage?: string;
     extraInfo?: any;
   }) {

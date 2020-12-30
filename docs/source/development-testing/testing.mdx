@@ -196,7 +196,9 @@ it('should render dog', async () => {
     </MockedProvider>,
   );
 
-  await new Promise(resolve => setTimeout(resolve, 0)); // highlight-line
+  await TestRenderer.act(async () => { // highlight-line
+    await new Promise(resolve => setTimeout(resolve, 0)); // highlight-line
+  }); // highlight-line
 
   const p = component.root.findByType('p');
   expect(p.children.join('')).toContain('Buck is a poodle');
@@ -234,7 +236,9 @@ it('should show error UI', async () => {
     </MockedProvider>,
   );
 
-  await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
+  await TestRenderer.act(async () => {
+    await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
+  });
 
   const tree = component.toJSON();
   expect(tree.children).toContain('An error occurred');

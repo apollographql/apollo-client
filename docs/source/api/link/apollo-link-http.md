@@ -4,120 +4,321 @@ sidebar_title: HTTP
 description: Get GraphQL results over a network using HTTP fetch.
 ---
 
-`HttpLink` is a terminating link that sends a GraphQL operation to a remote endpoint over HTTP. It's the most commonly used link.
+> We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
 
-`HttpLink` supports both POST and GET requests, and you can configure HTTP options on a per-operation basis. This can use these options for authentication, persisted queries, dynamic URIs, and other granular updates.
+`HttpLink` is a terminating link that sends a GraphQL operation to a remote endpoint over HTTP. Apollo Client uses `HttpLink` by default when you provide the `uri` option to the `ApolloClient` constructor.
+
+`HttpLink` supports both POST and GET requests, and you can configure HTTP options on a per-operation basis. You can use these options for authentication, persisted queries, dynamic URIs, and other granular updates.
 
 ## Usage
 
-Import and initialize this link in just two lines:
+Import the `createHttpLink` function and initialize a link like so:
 
 ```js
-import { createHttpLink } from "apollo-link-http";
+import { createHttpLink } from '@apollo/client';
 
-const link = createHttpLink({ uri: "/graphql" });
-```
-
-## Options
-
-HTTP Link takes an object with some options on it to customize the behavior of the link. If your server supports it, the HTTP link can also send over metadata about the request in the extensions field. To enable this, pass `includeExtensions` as true. The options you can pass are outlined below:
-
-* `uri`: the URI key is a string endpoint or function resolving to an endpoint -- will default to "/graphql" if not specified
-* `includeExtensions`: allow passing the extensions field to your graphql server, defaults to false
-* `fetch`: a `fetch` compatible API for making a request
-* `headers`: an object representing values to be sent as headers on the request
-* `credentials`: a string representing the credentials policy you want for the fetch call. Possible values are: `omit`, `include` and `same-origin`
-* `fetchOptions`: any overrides of the fetch options argument to pass to the fetch call
-* `useGETForQueries`: set to `true` to use the HTTP `GET` method for queries (but not for mutations)
-
-## Fetch polyfill
-
-The HTTP Link relies on having `fetch` present in your runtime environment. If you are running on react-native, or modern browsers, this should be no problem. If you are targeting an environment without `fetch` such as older browsers or the server, you will need to pass your own `fetch` to the link through the options. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for running in Node.
-
-## Context
-
-The Http Link uses the `headers` field on the context to allow passing headers to the HTTP request. It also supports the `credentials` field for defining credentials policy, `uri` for changing the endpoint dynamically, and `fetchOptions` to allow generic fetch overrides (i.e. `method: "GET"`). These options will override the same key if passed when creating the the link.
-
-Note that if you set `fetchOptions.method` to `GET`, the http link will follow the [standard GraphQL HTTP GET encoding](http://graphql.org/learn/serving-over-http/#get-request): the query, variables, operation name, and extensions will be passed as query parameters rather than in the HTTP request body. If you want mutations to continue to be sent as non-idempotent `POST` requests, set the top-level `useGETForQueries` option to `true` instead of setting `fetchOptions.method` to `GET`.
-
-This link also attaches the response from the `fetch` operation on the context as `response` so you can access it from within another link.
-
-* `headers`: an object representing values to be sent as headers on the request
-* `credentials`: a string representing the credentials policy you want for the fetch call. Possible values are: `omit`, `include` and `same-origin`
-* `uri`: a string of the endpoint you want to fetch from
-* `fetchOptions`: any overrides of the fetch options argument to pass to the fetch call
-* `response`: this is the raw response from the fetch request after it is made.
-* `http`: this is an object to control fine grained aspects of the http link itself, such as persisted queries (see below)
-
-### Persisted queries
-
-The http link supports an advanced GraphQL feature called persisted queries. This allows you to not send the stringified query over the wire, but instead send some kind of identifier of the query. To support this you need to attach the id somewhere to the extensions field and pass the following options to the context:
-
-```js
-operation.setContext({
-  http: {
-    includeExtensions: true,
-    includeQuery: false,
-  }
-})
-```
-
-The `http` object on context currently supports two keys:
-
-* `includeExtensions`: Send the extensions object for this request.
-* `includeQuery`: Don't send the `query` field for this request.
-
-One way to use persisted queries is with [apollo-link-persisted-queries](https://github.com/apollographql/apollo-link-persisted-queries) and [Apollo Engine](https://www.apollographql.com/docs/engine/auto-persisted-queries.html).
-
-### Passing context per query
-
-Apollo Client supports passing context separately for every query, so you can do things like pass a special header for a single query invocation if you need to.
-
-```js
-import { createHttpLink } from "apollo-link-http";
-import ApolloClient from "apollo-client";
-import { InMemoryCache } from "apollo-cache-inmemory";
-
-const client = new ApolloClient({
-  link: createHttpLink({ uri: "/graphql" }),
-  cache: new InMemoryCache()
-});
-
-// a query with apollo-client
-client.query({
-  query: MY_QUERY,
-  context: {
-    // example of setting the headers with context per operation
-    headers: {
-      special: "Special header value"
-    }
-  }
+const link = createHttpLink({
+  uri: "http://localhost:4000/graphql"
+  // Additional options
 });
 ```
 
-## Errors
+## `createHttpLink` options
 
-The Http Link draws a distinction between client, server and GraphQL errors. Server errors can occur in three different scenarios: parse, network and data errors. [`apollo-link-error`](./apollo-link-error) provides an [interface](./apollo-link-error#callback) for handling these errors. This list describes the scenarios that cause different errors:
+The `createHttpLink` function takes an options object that can include the fields below. Note that you can also override some of these options on a per-operation basis using the [operation context](#context-options).
 
-* _Client parse error_: the request body is not-serializable due to circular references for example
-* _Server parse error_: the response from the server cannot be parsed ([response.json()](https://developer.mozilla.org/en-US/docs/Web/API/Body/json))
-* _Server network error_: the response has a status of >= 300
-* _Server data error_: the parse request does not contain `data` or `errors`
-* _GraphQL error_: an objects in the `errors` array for a 200 level status
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
 
-Since many server implementations can return a valid GraphQL result on a server network error, the thrown `Error` object contains the parsed server result. A server data error also receives the parsed result.
+<tbody>
+<tr>
+<td>
 
-The table below provides a summary of error, `Observable` method called by the HTTP link, and type of error thrown for each failure:
+###### `uri`
 
-| Error          | Callback | Error Type         |
-| -------------- | :------: | ------------------ |
-| Client Parse   | `error`  | `ClientParseError` |
-| Server Parse   | `error`  | `ServerParseError` |
-| Server Network | `error`  | `ServerError`      |
-| Server Data    | `error`  | `ServerError`      |
-| GraphQL Error  |  `next`  | `Object`           |
+`String` or `Function`
+</td>
+<td>
 
-All error types inherit the `name`, `message`, and nullable `stack` properties from the generic javascript [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error).
+The URL of the GraphQL endpoint to send requests to. Can also be a function that accepts an `Operation` object and returns the string URL to use for that operation.
+
+The default value is `/graphql`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `includeExtensions`
+
+`Boolean`
+</td>
+<td>
+
+If true, includes the `extensions` field in operations sent to your GraphQL endpoint.
+
+The default value is `false`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `fetch`
+
+`Function`
+</td>
+<td>
+
+A function to use instead of calling the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) directly when sending HTTP requests to your GraphQL endpoint. The function must conform to the signature of `fetch`.
+
+By default, the Fetch API is used unless it isn't available in your runtime environment.
+
+See [Customizing `fetch`](#customizing-fetch).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `headers`
+
+`Object`
+</td>
+
+<td>
+
+An object representing headers to include in every HTTP request, such as `{Authentication: 'Bearer abc123'}`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `credentials`
+
+`String`
+</td>
+
+<td>
+
+The credentials policy to use for each `fetch` call. Can be `omit`, `include`, or `same-origin`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `fetchOptions`
+
+`Object`
+</td>
+
+<td>
+
+An object containing options to use for each call to `fetch`. If a particular option is not included in this object, the default value of that option is used.
+
+Note that if you set `fetchOptions.method` to `GET`, `HttpLink` follows [standard GraphQL HTTP GET encoding](http://graphql.org/learn/serving-over-http/#get-request).
+
+[See available options](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `useGETForQueries`
+
+`Boolean`
+</td>
+
+<td>
+
+If `true`, the link uses an HTTP GET request when sending query operations to your GraphQL endpoint. Mutation operations continue to use `POST` requests. If you want _all_ operations to use `GET` requests, set [`fetchOptions.method`](#fetchoptions) instead.
+
+The default value is `false`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+## Context options
+
+`HttpLink` checks the [current operation's `context`](./introduction/#managing-context) for certain values before sending its request to your GraphQL endpoint. Previous links in the link chain can set these values to customize the behavior of `HttpLink` for each operation.
+
+> Some of these values can also be provided as [options to `createHttpLink`](#createhttplink-options). If a value is provided to both, the value in the `context` takes precedence.
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `uri`
+
+`String` or `Function`
+</td>
+<td>
+
+The URL of the GraphQL endpoint to send requests to. Can also be a function that accepts an `Operation` object and returns the string URL to use for that operation.
+
+The default value is `/graphql`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `headers`
+
+`Object`
+</td>
+
+<td>
+
+An object representing headers to include in the HTTP request, such as `{Authentication: 'Bearer abc123'}`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `credentials`
+
+`String`
+</td>
+
+<td>
+
+The credentials policy to use for this `fetch` call. Can be `omit`, `include`, or `same-origin`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `fetchOptions`
+
+`Object`
+</td>
+
+<td>
+
+An object containing options to use for this call to `fetch`. If a particular option is not included in this object, the default value of that option is used.
+
+Note that if you set `fetchOptions.method` to `GET`, `HttpLink` follows [standard GraphQL HTTP GET encoding](http://graphql.org/learn/serving-over-http/#get-request).
+
+[See available options](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `http`
+
+`Object`
+</td>
+<td>
+
+An object that configures advanced `HttpLink` functionality, such as support for persisted queries. Options are listed in [`http` option fields](#http-option-fields).
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### `http` option fields
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `includeExtensions`
+
+`Boolean`
+</td>
+<td>
+
+If true, includes the `extensions` field in operations sent to your GraphQL endpoint.
+
+The default value is `false`.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `includeQuery`
+
+`Boolean`
+</td>
+<td>
+
+If `false`, the GraphQL query string is _not_ included in the request. Set this option if you're sending a request that uses a [persisted query](#working-with-persisted-queries).
+
+The default value is `true`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+## Operation results
+
+After your GraphQL endpoint (successfully) responds with the result of the sent operation, `HttpLink` sets it as the `response` field of the operation `context`. This enables each previous link in your link chain to interact with the response before it's returned.
+
+
+## Handling errors
+
+`HttpLink` distinguishes between client errors, server errors, and GraphQL errors.
+You can add the [Error link](./apollo-link-error) to your link chain to handle these errors via a [callback](./apollo-link-error#callback).
+
+The following types of errors can occur:
+
+| Error          | Description | Callback | Error Type         |
+| -------------- | ------------| :------: | ------------------ |
+| Client Parse   | The request body is not serializable, for example due to a circular reference. |`error`  | `ClientParseError` |
+| Server Parse   | The server's response cannot be parsed ([response.json()](https://developer.mozilla.org/en-US/docs/Web/API/Body/json)) | `error`  | `ServerParseError` |
+| Server Network | The server responded with a non-2xx HTTP code. | `error`  | `ServerError`      |
+| Server Data    | The server's response didn't contain `data` or `errors`. | `error`  | `ServerError`      |
+| GraphQL Error  | Resolving the GraphQL operation resulted in at least one error, which is present in the `errors` field. |  `next`  | `Object`           |
+
+Because many server implementations can return a valid GraphQL result on a server network error, the thrown `Error` object contains the parsed server result. A server data error also receives the parsed result.
+
+All error types inherit the `name`, `message`, and nullable `stack` properties from the generic javascript [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error):
 
 ```js
 //type ClientParseError
@@ -140,11 +341,15 @@ All error types inherit the `name`, `message`, and nullable `stack` properties f
 };
 ```
 
-## Custom fetching
+## Customizing `fetch`
 
-You can use the `fetch` option when creating an http-link to do a lot of custom networking. This is useful if you want to modify the request based on the calculated headers  or calculate the uri based on the operation:
+You can provide the [`fetch` option](#fetch) to `createHttpLink` to enable many custom networking needs. For example, you can modify the request based on calculated headers or calculate the endpoint URI based on the operation's details.
+
+If you're targeting an environment that doesn't provide the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) (such as older browsers or the server) you can provide a different implementation of `fetch`. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for running in Node.
 
 ### Custom auth
+
+This example adds a custom `Authorization` header to every request before calling `fetch`:
 
 ```js
 const customFetch = (uri, options) => {
@@ -162,6 +367,8 @@ const link = createHttpLink({ fetch: customFetch });
 
 ### Dynamic URI
 
+This example customizes the endpoint URL's query parameters before calling `fetch`:
+
 ```js
 const customFetch = (uri, options) => {
   const { operationName } = JSON.parse(options.body);
@@ -171,138 +378,17 @@ const customFetch = (uri, options) => {
 const link = createHttpLink({ fetch: customFetch });
 ```
 
-## Upgrade: Apollo Client 1.0
+## Working with persisted queries
 
-If you previously used either `apollo-fetch` or `apollo-client`'s `createNetworkInterface`, you will need to change the way `use` and `useAfter` are implemented in your app. Both can be implemented by writing a custom link. It's important to note that regardless of whether you're adding middleware or afterware, your Http link will always be last in the chain since it's a terminating link.
+`HttpLink` supports an advanced GraphQL feature called **persisted queries** (also supported by [Apollo Server](https://www.apollographql.com/docs/apollo-server/performance/apq/)). This feature enables you to cache query strings on your GraphQL server and then only send an _identifier_ for that query when you want to execute it again later. This feature can reduce request sizes dramatically for large query strings.
 
-#### Middleware
-
-_Before_
+To support persisted queries, you attach the query's identifier to the operation's `extensions` field and set the following [context options](#context-options):
 
 ```js
-// before
-import ApolloClient, { createNetworkInterface } from "apollo-client";
-
-const networkInterface = createNetworkInterface({ uri: "/graphql" });
-
-networkInterface.use([
-  {
-    applyMiddleware(req, next) {
-      if (!req.options.headers) {
-        req.options.headers = {}; // Create the header object if needed.
-      }
-      req.options.headers["authorization"] = localStorage.getItem("token")
-        ? localStorage.getItem("token")
-        : null;
-      next();
-    }
+operation.setContext({
+  http: {
+    includeExtensions: true,
+    includeQuery: false,
   }
-]);
-```
-
-_After_
-
-```js
-import { ApolloLink } from "apollo-link";
-import { createHttpLink } from "apollo-link-http";
-
-const httpLink = createHttpLink({ uri: "/graphql" });
-const middlewareLink = new ApolloLink((operation, forward) => {
-  operation.setContext({
-    headers: {
-      authorization: localStorage.getItem("token") || null
-    }
-  });
-  return forward(operation);
-});
-
-// use with apollo-client
-const link = middlewareLink.concat(httpLink);
-```
-
-#### Afterware (error)
-
-_Before_
-
-```js
-import ApolloClient, { createNetworkInterface } from "apollo-client";
-import { logout } from "./logout";
-
-const networkInterface = createNetworkInterface({ uri: "/graphql" });
-
-networkInterface.useAfter([
-  {
-    applyAfterware({ response }, next) {
-      if (response.statusCode === 401) {
-        logout();
-      }
-      next();
-    }
-  }
-]);
-```
-
-_After_
-
-```js
-import { ApolloLink } from "apollo-link";
-import { createHttpLink } from "apollo-link-http";
-import { onError } from "apollo-link-error";
-
-import { logout } from "./logout";
-
-const httpLink = createHttpLink({ uri: "/graphql" });
-const errorLink = onError(({ networkError }) => {
-  if (networkError.statusCode === 401) {
-    logout();
-  }
-});
-
-// use with apollo-client
-const link = errorLink.concat(httpLink);
-```
-
-#### Afterware (data manipulation)
-
-_Before_
-
-```js
-import ApolloClient, { createNetworkInterface } from "apollo-client";
-
-const networkInterface = createNetworkInterface({ uri: "/graphql" });
-
-networkInterface.useAfter([
-  {
-    applyAfterware({ response }, next) {
-      if (response.data.user.lastLoginDate) {
-        response.data.user.lastLoginDate = new Date(
-          response.data.user.lastLoginDate
-        );
-      }
-      next();
-    }
-  }
-]);
-```
-
-_After_
-
-```js
-import { ApolloLink } from "apollo-link";
-import { createHttpLink } from "apollo-link-http";
-
-const httpLink = createHttpLink({ uri: "/graphql" });
-const addDatesLink = new ApolloLink((operation, forward) => {
-  return forward(operation).map(response => {
-    if (response.data.user.lastLoginDate) {
-      response.data.user.lastLoginDate = new Date(
-        response.data.user.lastLoginDate
-      );
-    }
-    return response;
-  });
-});
-
-// use with apollo-client
-const link = addDatesLink.concat(httpLink);
+})
 ```

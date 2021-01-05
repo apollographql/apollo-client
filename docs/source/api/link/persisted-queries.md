@@ -1,5 +1,6 @@
 ---
 title: Persisted Queries Link
+sidebar_title: Persisted Queries
 description: Replace full queries with generated ID's to reduce bandwidth.
 ---
 

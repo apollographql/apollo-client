@@ -153,7 +153,7 @@ export class QueryData<TData, TVariables> extends OperationData {
 
   private getExecuteSsrResult() {
     const { ssr, skip } = this.getOptions();
-    const ssrDisabled = ssr === false || skip;
+    const ssrDisabled = ssr === false;
     const fetchDisabled = this.refreshClient().client.disableNetworkFetches;
 
     const ssrLoading = {
@@ -175,11 +175,15 @@ export class QueryData<TData, TVariables> extends OperationData {
 
     let result;
     if (this.ssrInitiated()) {
-      result =
-        this.context.renderPromises!.addQueryPromise(
-          this,
-          this.getQueryResult
-        ) || ssrLoading;
+      if (skip) {
+        result = this.getQueryResult();
+      } else {
+        result =
+          this.context.renderPromises!.addQueryPromise(
+            this,
+            this.getQueryResult
+          ) || ssrLoading;
+      };
     }
 
     return result;

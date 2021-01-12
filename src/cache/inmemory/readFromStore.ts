@@ -189,7 +189,7 @@ export class StoreReader {
         !context.policies.rootTypenamesById[objectOrReference.__ref] &&
         !context.store.has(objectOrReference.__ref)) {
       return {
-        result: {},
+        result: this.canon.empty,
         missing: [missingFromInvariant(
           new InvariantError(
             `Dangling reference to missing ${objectOrReference.__ref} object`

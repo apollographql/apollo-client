@@ -172,6 +172,9 @@ export class ObjectCanon {
   // Arrays that contain the same elements in a different order can share
   // the same SortedKeysInfo object, to save memory.
   private keysByJSON = new Map<string, SortedKeysInfo>();
+
+  // This has to come last because it depends on keysByJSON.
+  public readonly empty = this.admit({});
 }
 
 type SortedKeysInfo = {

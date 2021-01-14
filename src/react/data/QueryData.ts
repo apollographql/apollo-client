@@ -337,7 +337,7 @@ export class QueryData<TData, TVariables> extends OperationData {
   }
 
   private getQueryResult = (): QueryResult<TData, TVariables> => {
-    let result: any = this.observableQueryFields();
+    let result = this.observableQueryFields() as QueryResult<TData, TVariables>;
     const options = this.getOptions();
 
     // When skipping a query (ie. we're not querying for data but still want
@@ -356,7 +356,8 @@ export class QueryData<TData, TVariables> extends OperationData {
         data: undefined,
         error: undefined,
         loading: false,
-        called: true
+        networkStatus: NetworkStatus.ready,
+        called: true,
       };
     } else if (this.currentObservable) {
       // Fetch the current result (if any) from the store.

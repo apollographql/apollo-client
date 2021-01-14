@@ -170,11 +170,16 @@ describe('useQuery Hook SSR', () => {
   it('should skip SSR tree rendering if `skip` option is `true`', async () => {
     let renderCount = 0;
     const Component = () => {
-      const { loading, networkStatus } = useQuery(CAR_QUERY, { skip: true });
+      const {
+        loading,
+        networkStatus,
+        data,
+      } = useQuery(CAR_QUERY, { skip: true });
       renderCount += 1;
 
       expect(loading).toBeFalsy();
-      expect(networkStatus).toBeUndefined();
+      expect(networkStatus).toBe(7);
+      expect(data).toBeUndefined();
 
       return null;
     };
@@ -185,8 +190,9 @@ describe('useQuery Hook SSR', () => {
       </MockedProvider>
     );
 
-    return renderToStringWithData(app).then((result) => {
+    return renderToStringWithData(app).then(result => {
       expect(renderCount).toBe(1);
+      expect(result).toBe('');
     });
   });
 });

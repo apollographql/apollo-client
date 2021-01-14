@@ -8,6 +8,11 @@
 - Avoid duplicate `useReactiveVar` listeners when rendering in `React.StrictMode`. <br/>
   [@jcreighton](https://github.com/jcreighton) in [#7581](https://github.com/apollographql/apollo-client/pull/7581)
 
+### Improvements
+
+- Set `displayName` on `ApolloContext` objects for easier debugging. <br/>
+  [@dulmandakh](https://github.com/dulmandakh) in [#7550](https://github.com/apollographql/apollo-client/pull/7550)
+
 ## Apollo Client 3.3.6
 
 ### Bug Fixes

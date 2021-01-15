@@ -484,6 +484,9 @@ export class QueryData<TData, TVariables> extends OperationData {
   private removeObservable(andDelete: boolean) {
     if (this.currentObservable) {
       this.currentObservable["tearDownQuery"]();
+      // this.currentObservable.options.context is deleted in tearDownQuery(),
+      // so we also delete the context from this.previous.observableQueryOptions
+      delete this.previous.observableQueryOptions.context;
       if (andDelete) {
         delete this.currentObservable;
       }

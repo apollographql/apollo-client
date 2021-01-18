@@ -4,23 +4,35 @@ sidebar_title: 'HOC (deprecated)'
 description: Deprecated React Apollo HOC API
 ---
 
-> **NOTE:** React Apollo's higher order components have been deprecated. They will continue to receive bug fixes until March 2020, after which they will no longer be maintained by Apollo.
+> **Note:** Official support for React Apollo higher order components ended in March 2020. This library is still included in the `@apollo/client` package, but it no longer receives feature updates or bug fixes.
 
 ## Installation
 
+The HOC library is included in the core `@apollo/client` package:
+
 ```
-npm install @apollo/react-hoc
+npm install @apollo/client
 ```
+
+You then import the library's symbols from `@apollo/client/react/hoc`.
 
 ## `graphql(query, [config])(component)`
 
 ```js
-import { graphql } from '@apollo/react-hoc';
+import { graphql } from '@apollo/client/react/hoc';
 ```
 
-The `graphql()` function is the most important thing exported by the `@apollo/react-hoc` package. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql()` function returns a function which will “enhance” any component with reactive GraphQL capabilities. This follows the React [higher-order component](https://facebook.github.io/react/docs/higher-order-components.html) pattern which is also used by [`react-redux`’s `connect`](https://github.com/reduxjs/react-redux/blob/master/docs/api/connect.md) function.
+The `graphql()` function is the core of Apollo's HOC API. Use this function to  create higher-order components that can execute queries and update reactively based on the data in your Apollo store.
 
-The `graphql()` function may be used like this:
+The `graphql()` function returns a function that "enhances" any component with reactive GraphQL capabilities. This follows the React [higher-order component](https://reactjs.org/docs/higher-order-components.html) pattern that's also used by [`react-redux`’s `connect`](https://github.com/reduxjs/react-redux/blob/master/docs/api/connect.md) function.
+
+The `graphql()` function can only provide access to your GraphQL data if there is an [`<ApolloProvider/>`](./hooks/#the-apolloprovider-component) component higher up in your tree to provide an [`ApolloClient`](../core/ApolloClient/) instance that's used to fetch your data.
+
+The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](../../data/queries/), a [mutation](../../data/mutations/), or a [subscription](../../data/subscriptions/). See the appropriate API documentation for more information about the functionality and available options for each type.
+
+### Examples
+
+You can use the `graphql()` function like this:
 
 ```js
 function TodoApp({ data: { todos } }) {
@@ -43,7 +55,7 @@ export default graphql(gql`
 `)(TodoApp);
 ```
 
-You may also define an intermediate function and hook up your component with the `graphql()` function like this:
+You can also define an intermediate function and hook up your component with the `graphql()` function like this:
 
 ```js
 // Create our enhancer function.
@@ -56,11 +68,9 @@ const TodoAppWithData = withTodoAppQuery(TodoApp);
 export default TodoAppWithData;
 ```
 
-The `graphql()` function will only be able to provide access to your GraphQL data if there is a [`<ApolloProvider/>`](./hooks/#the-apolloprovider-component) component higher up in your tree to provide an [`ApolloClient`](../core/ApolloClient/) instance that will be used to fetch your data.
+### The `config` object
 
-The behavior of your component enhanced with the `graphql()` function will be different depending on if your GraphQL operation is a [query](../../data/queries/), a [mutation](../../data/mutations/), or a [subscription](../../data/subscriptions/). Go to the appropriate API documentation for more information about the functionality and available options for each type.
-
-Before we look into the specific behaviors of each operation, let us look at the `config` object. The `config` object is the second argument you pass into the `graphql()` function, after your GraphQL document. The config is optional and allows you to add some custom behavior to your higher order component.
+Before we look into the specific behaviors of each operation, let's look at the `config` object. The `config` object is the second argument you pass into the `graphql()` function, after your GraphQL document. The config is optional and allows you to add some custom behavior to your higher order component.
 
 ```js
 export default graphql(
@@ -71,7 +81,7 @@ export default graphql(
 
 Lets go through all of the properties that may live on your `config` object.
 
-### `config.options`
+#### `config.options`
 
 `config.options` is an object or a function that allows you to define the specific behavior your component should use in handling your GraphQL data.
 
@@ -79,7 +89,7 @@ The specific options available for configuration depend on the operation you pas
 
 You can define `config.options` as a plain object, or you can compute your options from a function that takes the component’s props as an argument.
 
-**Example:**
+##### Example
 
 ```js
 export default graphql(gql`query MyQuery { ... }`, {
@@ -97,17 +107,17 @@ export default graphql(gql`query MyQuery { ... }`, {
 })(MyComponent);
 ```
 
-### `config.props`
+#### `config.props`
 
 The `config.props` property allows you to define a map function that takes the `props` (and optionally `lastProps`) added by the `graphql()` function ([`props.data`](#propsdata) for queries and [`props.mutate`](#propsmutate) for mutations) and allows you to compute a new `props` (and optionally `lastProps`) object that will be provided to the component that `graphql()` is wrapping.
 
 The function you define behaves almost exactly like [`mapProps` from Recompose](https://github.com/acdlite/recompose/blob/2e71fdf4270cc8022a6574aaf00731bfc25dcae6/docs/API.md#mapprops) providing the same benefits without the need for another library.
 
-`config.props` is most useful when you want to abstract away complex functions calls into a simple prop that you can pass down to your component.
+`config.props` is most useful when you want to abstract away complex function calls into a simple prop that you can pass down to your component.
 
 Another benefit of `config.props` is that it also allows you to decouple your pure UI components from your GraphQL and Apollo concerns. You can write your pure UI components in one file and then keep the logic required for them to interact with the store in a completely different place in your project. You can accomplish this by your pure UI components only asking for the props needed to render and `config.props` can contain the logic to provide exactly the props your pure component needs from the data provided by your GraphQL API.
 
-**Example:**
+##### Example
 
 This example uses [`props.data.fetchMore`](#datafetchmoreoptions).
 
@@ -150,15 +160,15 @@ export default graphql(gql`query MyQuery { ... }`, {
 })(MyComponent);
 ```
 
-### `config.skip`
+#### `config.skip`
 
-If `config.skip` is true then all of the React Apollo code will be skipped _entirely_. It will be as if the `graphql()` function were a simple identity function. Your component will behave as if the `graphql()` function were not there at all.
+If `config.skip` is `true`, then all of the React Apollo code is skipped _entirely_. Your component behaves as if the `graphql()` function isn't there at all.
 
-Instead of passing a boolean to `config.skip`, you may also pass a function to `config.skip`. The function will take your components props and should return a boolean. If the boolean returns true then the skip behavior will go into effect.
+You can also pass a function to `config.skip`. If you do, the function takes your component's props and should return a boolean. If the function returns `true`, then the skip behavior goes into effect.
 
 `config.skip` is especially useful if you want to use a different query based on some prop. You can see this in an example below.
 
-**Example:**
+##### Example
 
 ```js
 export default graphql(gql`query MyQuery { ... }`, {
@@ -181,11 +191,11 @@ function MyComponent({ data }) {
 }
 ```
 
-### `config.name`
+#### `config.name`
 
-This property allows you to configure the name of the prop that gets passed down to your component. By default if the GraphQL document you pass into `graphql()` is a query then your prop will be named [`data`](#propsdata). If you pass a mutation then your prop will be named [`mutate`](#propsmutate). While appropriate these default names collide when you are trying to use multiple queries or mutations with the same component. To avoid collisions you may use `config.name` to provide the prop from each query or mutation HOC a new name.
+This property allows you to configure the name of the prop that gets passed down to your component. By default, if the GraphQL document you pass into `graphql()` is a query, then your prop is named [`data`](#propsdata). If you pass a mutation, then your prop will be named [`mutate`](#propsmutate). These default names collide when you use multiple queries or mutations with the same component. To avoid collisions, use `config.name` to specify a different name.
 
-**Example:**
+##### Example
 
 This example uses the [`compose`](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
@@ -207,15 +217,13 @@ function MyComponent(props) {
 }
 ```
 
-### `config.withRef`
+#### `config.withRef`
 
-By setting `config.withRef` to true you will be able to get the instance of your wrapped component from your higher-order GraphQL component using a `getWrappedInstance` method available on the instance of your higher-order GraphQL component.
+By setting `config.withRef` to `true`, you can get the instance of your wrapped component from your higher-order GraphQL component using a `getWrappedInstance` method available on the instance of your higher-order GraphQL component.
 
-You may want to set this to true when you want to call functions or get access to properties that are defined on your wrapped component’s class instance.
+You might want to set this to `true` when you want to call functions or access properties that are defined on your wrapped component’s class instance.
 
-Below you can see an example of this behavior.
-
-**Example:**
+##### Example
 
 This example uses the [React `ref` feature](https://facebook.github.io/react/docs/refs-and-the-dom.html).
 
@@ -250,13 +258,14 @@ class MyContainerComponent extends Component {
 }
 ```
 
-### `config.alias`
+#### `config.alias`
 
-By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more than one higher order component and you look at the [React Devtools](https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434).
+Use this property to configure the name of your higher order component wrapper. For example, if you set `config.alias` to `'withCurrentUser'`, your wrapper component display name becomes `withCurrentUser(${WrappedComponent.displayName})` instead of `Apollo(${WrappedComponent.displayName})`.
 
-To configure the name of your higher order component wrapper, you may use the `config.alias` property. So for example, if you set `config.alias` to `'withCurrentUser'` your wrapper component display name would be `withCurrentUser(${WrappedComponent.displayName})` instead of `Apollo(${WrappedComponent.displayName})`.
+The default display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This pattern is used by most React libraries that make use of higher order components. However, this might get confusing when you are using more than one higher order component and you look at the [React Devtools](https://camo.githubusercontent.com/42385f70ef638c48310ce01a675ceceb4d4b84a9/68747470733a2f2f64337676366c703535716a6171632e636c6f756466726f6e742e6e65742f6974656d732f30543361333532443366325330423049314e31662f53637265656e25323053686f74253230323031372d30312d3132253230617425323031362e33372e30302e706e673f582d436c6f75644170702d56697369746f722d49643d626536623231313261633434616130636135386432623562616265373336323626763d3236623964363434).
 
-**Example:**
+
+##### Example
 
 This example uses the [`compose`](https://github.com/acdlite/recompose/blob/master/docs/API.md#compose) function to use multiple `graphql()` HOCs together.
 
@@ -271,7 +280,7 @@ export default compose(
 
 ### `props.data`
 
-The higher-order component created when using `graphql()` will feed a `data` prop into your component. Like so:
+The higher-order component created with `graphql()` feeds a `data` prop into your component. Like so:
 
 ```js
 render() {
@@ -1060,12 +1069,12 @@ export default graphql(
 ## `withApollo(component)`
 
 ```js
-import { withApollo } from '@apollo/react-hoc';
+import { withApollo } from '@apollo/client/react/hoc';
 ```
 
-A simple enhancer which provides direct access to your [`ApolloClient`](../core/ApolloClient/) instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of `ApolloClient` as a `client` prop.
+An enhancer that provides direct access to your [`ApolloClient`](../core/ApolloClient/) instance. This is useful if you want to do custom logic with Apollo, such as executing one-off queries. By calling this function with the component you want to enhance, `withApollo()` creates a new component that passes an instance of `ApolloClient` as a `client` prop.
 
-If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphqlquery-configcomponent) the answer is that most of the time you will want to use `graphql()`. `graphql()` provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
+Most of the time you want to use `graphql()` instead of `withApollo()`. `graphql()` provides helpful features for working with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of these features.
 
 This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](./hooks/#the-apolloprovider-component) component higher up in your tree to actually provide the client.
 

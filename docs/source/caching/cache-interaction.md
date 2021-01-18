@@ -99,7 +99,7 @@ For example, the following call to `writeFragment` _locally_ updates the `comple
 
 ```js
 client.writeFragment({
-  id: '5',
+  id: 'Todo:5',
   fragment: gql`
     fragment MyTodo on Todo {
       completed
@@ -280,6 +280,7 @@ For example:
 const [addComment] = useMutation(ADD_COMMENT, {
   update(cache, { data: { addComment } }) {
     cache.modify({
+      id: cache.identify(myPost),
       fields: {
         comments(existingCommentRefs = [], { readField }) {
           const newCommentRef = cache.writeFragment({

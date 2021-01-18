@@ -53,7 +53,7 @@ const mocks = {
 };
 
 const schema = makeExecutableSchema({ typeDefs });
-addMockFunctionsToSchema({
+const schemaWithMocks = addMockFunctionsToSchema({
   schema,
   mocks
 });
@@ -62,7 +62,7 @@ const apolloCache = new InMemoryCache(window.__APOLLO_STATE__);
 
 const graphqlClient = new ApolloClient({
   cache: apolloCache,
-  link: new SchemaLink({ schema })
+  link: new SchemaLink({ schema: schemaWithMocks })
 });
 ```
 

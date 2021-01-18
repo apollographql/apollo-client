@@ -1,3 +1,36 @@
+## Apollo Client 3.3.7
+
+### Bug Fixes
+
+- Fix a regression due to [#7310](https://github.com/apollographql/apollo-client/pull/7310) that caused `loading` always to be `true` for `skip: true` results during server-side rendering. <br/>
+  [@rgrove](https://github.com/rgrove) in [#7567](https://github.com/apollographql/apollo-client/pull/7567)
+
+- Avoid duplicate `useReactiveVar` listeners when rendering in `React.StrictMode`. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7581](https://github.com/apollographql/apollo-client/pull/7581)
+
+### Improvements
+
+- Set `displayName` on `ApolloContext` objects for easier debugging. <br/>
+  [@dulmandakh](https://github.com/dulmandakh) in [#7550](https://github.com/apollographql/apollo-client/pull/7550)
+
+## Apollo Client 3.3.6
+
+### Bug Fixes
+
+- Immediately apply `queryType: true`, `mutationType: true`, and `subscriptionType: true` type policies, rather than waiting for the first time the policy is used, fixing a [regression](https://github.com/apollographql/apollo-client/issues/7443) introduced by [#7065](https://github.com/apollographql/apollo-client/pull/7065). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7463](https://github.com/apollographql/apollo-client/pull/7463)
+
+- Check that `window` is defined even when `connectToDevTools` is `true`. <br/>
+  [@yasupeke](https://github.com/yasupeke) in [#7434](https://github.com/apollographql/apollo-client/pull/7434)
+
+### Improvements
+
+- Replace stray `console.debug` (undefined in React Native) with `invariant.log`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7454](https://github.com/apollographql/apollo-client/pull/7454)
+
+- Suggest Firefox Apollo DevTools as well as the Chrome extension. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7461](https://github.com/apollographql/apollo-client/pull/7461)
+
 ## Apollo Client 3.3.5
 
 ### Improvements

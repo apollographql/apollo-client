@@ -74,7 +74,6 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.0.0",
-    "@types/zen-observable": "^0.8.0",
     "@wry/context": "^0.5.2",
     "@wry/equality": "^0.3.0",
     "@wry/trie": "^0.2.1",
@@ -86,7 +85,7 @@
     "symbol-observable": "^2.0.0",
     "ts-invariant": "^0.6.0",
     "tslib": "^1.10.0",
-    "zen-observable": "^0.8.14"
+    "zen-observable-ts": "^1.0.0-beta.4"
   },
   "devDependencies": {
     "@babel/parser": "7.12.11",

@@ -1,11 +1,17 @@
-import Observable from 'zen-observable';
+import {
+  Observable,
+  Observer,
+  Subscription as ObservableSubscription,
+} from 'zen-observable-ts';
 
 // This simplified polyfill attempts to follow the ECMAScript Observable
 // proposal (https://github.com/zenparsing/es-observable)
 import 'symbol-observable';
 
-export type ObservableSubscription = ZenObservable.Subscription;
-export type Observer<T> = ZenObservable.Observer<T>;
+export type {
+  Observer,
+  ObservableSubscription,
+};
 
 // Use global module augmentation to add RxJS interop functionality. By
 // using this approach (instead of subclassing `Observable` and adding an
@@ -18,4 +24,5 @@ declare global {
   }
 }
 (Observable.prototype as any)['@@observable'] = function () { return this; };
+
 export { Observable };

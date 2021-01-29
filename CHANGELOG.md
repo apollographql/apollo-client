@@ -11,6 +11,9 @@ TBD
 - Support `client.refetchQueries` as an imperative way to refetch queries, without having to pass `options.refetchQueries` to `client.mutate`. <br/>
   [@dannycochran](https://github.com/dannycochran) in [#7431](https://github.com/apollographql/apollo-client/pull/7431)
 
+- When `@apollo/client` is imported as CommonJS (for example, in Node.js), the global `process` variable is now shadowed with a stripped-down object that includes only `process.env.NODE_ENV` (since that's all Apollo Client needs), eliminating the significant performance penalty of repeatedly accessing `process.env` at runtime. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7627](https://github.com/apollographql/apollo-client/pull/7627)
+
 ### Documentation
 TBD
 

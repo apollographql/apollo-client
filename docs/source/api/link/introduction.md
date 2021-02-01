@@ -34,6 +34,7 @@ Each link should represent either a self-contained modification to a GraphQL ope
  1. The first link might log the details of the operation for debugging purposes.
  2. The second link might add an HTTP header to the outgoing operation request for authentication purposes.
  3. The final (terminating) link sends the operation to its destination (usually a GraphQL server over HTTP).
+ 4. The server's response is passed back through each link in reverse order, enabling links to [modify the response](#handling-a-response) or take other actions before the data is cached.
 
 By default, Apollo Client uses Apollo Link's `HttpLink` to send GraphQL operations to a remote server over HTTP. Apollo Client takes care of creating this default link, and it covers many use cases without requiring additional customization.
 
@@ -86,6 +87,64 @@ The `Operation` object includes the following fields:
 When a link's request handler is done executing its logic, it should return a call to the `forward` function that's passed to it (unless it's the chain's [terminating link](#the-terminating-link)). Calling the `forward` function passes execution along to the next link in the chain.
 
 The `forward` function's return type is an `Observable` provided by the [`zen-observable`](https://github.com/zenparsing/zen-observable) library. See the `zen-observable` documentation for details.
+
+### Handling a response
+
+When your GraphQL server responds with an operation result, that result is passed back through each link in your link chain before it's cached:
+
+```mermaid
+flowchart LR
+  subgraph Apollo Client
+  operation(GraphQL operation)
+  link1(Link)
+  link2(Link)
+  link3(Terminating Link)
+  operation--Initiated-->link1
+  link1-->link2
+  link2-->link3
+  link3-->link2
+  link2-->link1
+  link1--Completed-->operation
+  end
+  server(GraphQL server)
+  link3--Request-->server
+  server--Response-->link3
+  class server secondary;
+```
+
+Each link can execute logic while the result is being passed back by modifying their request handler's `return` statement, like so:
+
+```js{4-8}
+// BEFORE (NO INTERACTION)
+return forward(operation);
+
+// AFTER
+return forward(operation).map((data) => {
+  // ...modify result as desired here...
+  return data;
+});
+```
+
+Whatever the function provided to `map` returns is passed to the next link up the chain.
+
+You can also perform logic here that has nothing to do with the result. This request handler uses the [request context](#managing-context) to estimate the round-trip time for each operation:
+
+```js
+import { ApolloLink } from '@apollo/client';
+
+const roundTripLink = new ApolloLink((operation, forward) => {
+  // Called before operation is sent to server
+  operation.setContext({ start: new Date() });
+
+  return forward(operation).map((data) => {
+    // Called after server responds
+    const time = new Date() - operation.getContext().start;
+    console.log(`Operation ${operation.operationName} took ${time} to complete`);
+    return data;
+  });
+});
+```
+
 
 ## Composing a link chain
 
@@ -291,7 +350,7 @@ This stateful link maintains a counter called `operationCount` as an instance va
 
 ## Managing context
 
-As an operation moves down your link chain, it maintains a `context` that each link can read and modify. This allows links to pass metadata down the chain that _other_ links use in their execution logic.
+As an operation moves along your link chain, it maintains a `context` that each link can read and modify. This allows links to pass metadata along the chain that _other_ links use in their execution logic.
 
 * Obtain the current context object by calling `operation.getContext()`.
 * Modify the context object and then write it back with `operation.setContext(newContext)` or `operation.setContext((prevContext) => newContext)`.

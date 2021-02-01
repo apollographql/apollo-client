@@ -12,20 +12,20 @@ description: Get GraphQL results over a network using HTTP fetch.
 
 ## Usage
 
-Import the `createHttpLink` function and initialize a link like so:
+Import the `HttpLink` class and initialize a link like so:
 
 ```js
-import { createHttpLink } from '@apollo/client';
+import { HttpLink } from '@apollo/client';
 
-const link = createHttpLink({
+const link = new HttpLink({
   uri: "http://localhost:4000/graphql"
   // Additional options
 });
 ```
 
-## `createHttpLink` options
+## `HttpLink` constructor options
 
-The `createHttpLink` function takes an options object that can include the fields below. Note that you can also override some of these options on a per-operation basis using the [operation context](#context-options).
+The `HttpLink` constructor takes an options object that can include the fields below. Note that you can also override some of these options on a per-operation basis using the [operation context](#context-options).
 
 <table class="field-table">
   <thead>
@@ -159,7 +159,7 @@ The default value is `false`.
 
 `HttpLink` checks the [current operation's `context`](./introduction/#managing-context) for certain values before sending its request to your GraphQL endpoint. Previous links in the link chain can set these values to customize the behavior of `HttpLink` for each operation.
 
-> Some of these values can also be provided as [options to `createHttpLink`](#createhttplink-options). If a value is provided to both, the value in the `context` takes precedence.
+> Some of these values can also be provided as options to [the `HttpLink` constructor](#httplink-constructor-options). If a value is provided to both, the value in the `context` takes precedence.
 
 <table class="field-table">
   <thead>
@@ -343,7 +343,7 @@ All error types inherit the `name`, `message`, and nullable `stack` properties f
 
 ## Customizing `fetch`
 
-You can provide the [`fetch` option](#fetch) to `createHttpLink` to enable many custom networking needs. For example, you can modify the request based on calculated headers or calculate the endpoint URI based on the operation's details.
+You can provide the [`fetch` option](#fetch) to the `HttpLink` constructor to enable many custom networking needs. For example, you can modify the request based on calculated headers or calculate the endpoint URI based on the operation's details.
 
 If you're targeting an environment that doesn't provide the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) (such as older browsers or the server) you can provide a different implementation of `fetch`. We recommend [`unfetch`](https://github.com/developit/unfetch) for older browsers and [`node-fetch`](https://github.com/bitinn/node-fetch) for running in Node.
 
@@ -362,7 +362,7 @@ const customFetch = (uri, options) => {
   return fetch(uri, options);
 };
 
-const link = createHttpLink({ fetch: customFetch });
+const link = new HttpLink({ fetch: customFetch });
 ```
 
 ### Dynamic URI
@@ -375,7 +375,7 @@ const customFetch = (uri, options) => {
   return fetch(`${uri}/graph/graphql?opname=${operationName}`, options);
 };
 
-const link = createHttpLink({ fetch: customFetch });
+const link = new HttpLink({ fetch: customFetch });
 ```
 
 ## Working with persisted queries

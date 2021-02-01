@@ -270,6 +270,10 @@ export class QueryInfo {
     dmCount: number | undefined;
   };
 
+  public resetLastWrite() {
+    this.lastWrite = void 0;
+  }
+
   private shouldWrite(
     result: FetchResult<any>,
     variables: WatchQueryOptions["variables"],

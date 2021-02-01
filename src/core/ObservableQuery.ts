@@ -247,6 +247,8 @@ export class ObservableQuery<
       } as TVariables;
     }
 
+    this.queryInfo.resetLastWrite();
+
     return this.newReobserver(false).reobserve(
       reobserveOptions,
       NetworkStatus.refetch,

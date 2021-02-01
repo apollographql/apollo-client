@@ -93,6 +93,11 @@ export namespace DataProxy {
      * Whether to notify query watchers (default: true).
      */
     broadcast?: boolean;
+    /**
+     * When true, ignore existing field data rather than merging it with
+     * incoming data (default: false).
+     */
+    overwrite?: boolean;
   }
 
   export interface WriteQueryOptions<TData, TVariables>

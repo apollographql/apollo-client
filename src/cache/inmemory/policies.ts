@@ -46,6 +46,7 @@ import {
   ReadFieldOptions,
   CanReadFunction,
 } from '../core/types/common';
+import { WriteContext } from './writeToStore';
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -784,7 +785,7 @@ export class Policies {
     existing: StoreValue,
     incoming: StoreValue,
     { field, typename, merge }: MergeInfo,
-    context: ReadMergeModifyContext,
+    context: WriteContext,
     storage?: StorageType,
   ) {
     if (merge === mergeTrueFn) {
@@ -800,6 +801,14 @@ export class Policies {
     if (merge === mergeFalseFn) {
       // Likewise for mergeFalseFn, whose implementation is even simpler.
       return incoming;
+    }
+
+    // If cache.writeQuery or cache.writeFragment was called with
+    // options.overwrite set to true, we still call merge functions, but
+    // the existing data is always undefined, so the merge function will
+    // not attempt to combine the incoming data with the existing data.
+    if (context.overwrite) {
+      existing = void 0;
     }
 
     return merge(existing, incoming, makeFieldFunctionOptions(

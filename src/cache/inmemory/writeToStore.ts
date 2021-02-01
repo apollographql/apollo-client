@@ -36,6 +36,8 @@ export interface WriteContext extends ReadMergeModifyContext {
   readonly fragmentMap?: FragmentMap;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
+  // If true, merge functions will be called with undefined existing data.
+  overwrite: boolean;
 };
 
 interface ProcessSelectionSetOptions {
@@ -57,6 +59,7 @@ export class StoreWriter {
     result,
     dataId,
     variables,
+    overwrite,
   }: Cache.WriteOptions): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
     const merger = makeProcessedFieldsMerger();
@@ -80,6 +83,7 @@ export class StoreWriter {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        overwrite: !!overwrite,
       },
     });
 
@@ -264,7 +268,7 @@ export class StoreWriter {
         incomingFields = this.applyMerges(mergeTree, entityRef, incomingFields, context);
       }
 
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env.NODE_ENV !== "production" && !context.overwrite) {
         const hasSelectionSet = (storeFieldName: string) =>
           fieldsWithSelectionSets.has(fieldNameFromStoreName(storeFieldName));
         const fieldsWithSelectionSets = new Set<string>();
@@ -338,7 +342,7 @@ export class StoreWriter {
     mergeTree: MergeTree,
     existing: StoreValue,
     incoming: T,
-    context: ReadMergeModifyContext,
+    context: WriteContext,
     getStorageArgs?: Parameters<EntityStore["getStorage"]>,
   ): T {
     if (mergeTree.map.size && !isReference(incoming)) {

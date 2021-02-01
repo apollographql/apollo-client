@@ -166,7 +166,7 @@ In the example above, we set the `addTypename` prop of `MockedProvider` to `fals
 
 We _don't_ want to automatically add `__typename` to `GET_DOG_QUERY` in our test, because then it won't match the shape of the query that our mock is expecting.
 
-Unless you explicitly configure your mocks to expect a `__typename` field, always set `addTypename` to `false` in your tests.
+Unless you explicitly configure your mocks to expect a `__typename` field, always set `addTypename` to `true` in your tests.
 
 ## Testing the "loading" state
 

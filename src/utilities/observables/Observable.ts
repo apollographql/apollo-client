@@ -2,6 +2,7 @@ import {
   Observable,
   Observer,
   Subscription as ObservableSubscription,
+  Subscriber,
 } from 'zen-observable-ts';
 
 // This simplified polyfill attempts to follow the ECMAScript Observable
@@ -11,6 +12,7 @@ import 'symbol-observable';
 export type {
   Observer,
   ObservableSubscription,
+  Subscriber,
 };
 
 // Use global module augmentation to add RxJS interop functionality. By

@@ -287,7 +287,7 @@ The default value is `false`.
 </td>
 <td>
 
-If `false`, the GraphQL query string is _not_ included in the request. Set this option if you're sending a request that uses a [persisted query](#working-with-persisted-queries).
+If `false`, the GraphQL query string is _not_ included in the request. Set this option if you're sending a request that uses a [persisted query](./persisted-queries/).
 
 The default value is `true`.
 </td>
@@ -376,19 +376,4 @@ const customFetch = (uri, options) => {
 };
 
 const link = new HttpLink({ fetch: customFetch });
-```
-
-## Working with persisted queries
-
-`HttpLink` supports an advanced GraphQL feature called **persisted queries** (also supported by [Apollo Server](https://www.apollographql.com/docs/apollo-server/performance/apq/)). This feature enables you to cache query strings on your GraphQL server and then only send an _identifier_ for that query when you want to execute it again later. This feature can reduce request sizes dramatically for large query strings.
-
-To support persisted queries, you attach the query's identifier to the operation's `extensions` field and set the following [context options](#context-options):
-
-```js
-operation.setContext({
-  http: {
-    includeExtensions: true,
-    includeQuery: false,
-  }
-})
 ```

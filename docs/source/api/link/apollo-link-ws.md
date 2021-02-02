@@ -1,5 +1,6 @@
 ---
 title: WebSocket Link
+sidebar_title: WebSocket
 description: Send GraphQL operations over a WebSocket. Works with GraphQL Subscriptions.
 ---
 

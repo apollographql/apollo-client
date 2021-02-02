@@ -2,43 +2,18 @@ import {
   Observable,
   Observer,
   Subscription as ObservableSubscription,
+  Subscriber,
 } from 'zen-observable-ts';
 
 // This simplified polyfill attempts to follow the ECMAScript Observable
 // proposal (https://github.com/zenparsing/es-observable)
 import 'symbol-observable';
 
-export type Subscriber<T> = ZenObservable.Subscriber<T>;
 export type {
   Observer,
   ObservableSubscription,
+  Subscriber,
 };
-
-Observable.call = function<T>(
-  this: typeof Observable,
-  obs: Observable<T>,
-  sub: ZenObservable.Subscriber<T>,
-): Observable<T> {
-  return construct(this, obs, sub);
-};
-
-Observable.apply = function<T>(
-  this: typeof Observable,
-  obs: Observable<T>,
-  args: [ZenObservable.Subscriber<T>],
-): Observable<T> {
-  return construct(this, obs, args[0]);
-}
-
-function construct<T>(
-  Super: typeof Observable,
-  self: Observable<T>,
-  subscriber: ZenObservable.Subscriber<T>,
-): Observable<T> {
-  return typeof Reflect === 'object'
-    ? Reflect.construct(Super, [subscriber], self.constructor)
-    : Function.prototype.call.call(Super, self, subscriber);
-}
 
 // Use global module augmentation to add RxJS interop functionality. By
 // using this approach (instead of subclassing `Observable` and adding an

@@ -41,7 +41,7 @@ describe('Observable', () => {
 
     it('simulating super(sub) with Observable.call(this, sub)', () => {
       function SubclassWithSuperCall<T>(sub: Subscriber<T>) {
-        const self = Observable.call(this, sub);
+        const self = Observable.call(this, sub) || this;
         self.sub = sub;
         return self;
       }
@@ -50,7 +50,7 @@ describe('Observable', () => {
 
     it('simulating super(sub) with Observable.apply(this, arguments)', () => {
       function SubclassWithSuperApplyArgs<T>(_sub: Subscriber<T>) {
-        const self = Observable.apply(this, arguments);
+        const self = Observable.apply(this, arguments) || this;
         self.sub = _sub;
         return self;
       }
@@ -59,7 +59,7 @@ describe('Observable', () => {
 
     it('simulating super(sub) with Observable.apply(this, [sub])', () => {
       function SubclassWithSuperApplyArray<T>(...args: [Subscriber<T>]) {
-        const self = Observable.apply(this, args);
+        const self = Observable.apply(this, args) || this;
         self.sub = args[0];
         return self;
       }

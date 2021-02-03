@@ -1,5 +1,6 @@
 ---
 title: Retry Link
+sidebar_title: Retry
 description: Attempt an operation multiple times if it fails due to network or server errors.
 ---
 

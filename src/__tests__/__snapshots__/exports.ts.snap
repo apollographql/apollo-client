@@ -63,10 +63,13 @@ exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
   "ApolloCache",
   "Cache",
+  "EntityStore",
   "InMemoryCache",
   "MissingFieldError",
+  "Policies",
   "cacheSlot",
   "defaultDataIdFromObject",
+  "fieldNameFromStoreName",
   "isReference",
   "makeReference",
   "makeVar",

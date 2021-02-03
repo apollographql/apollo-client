@@ -13,10 +13,11 @@ export namespace Cache {
   }
 
   export interface WriteOptions<TResult = any, TVariables = any>
-    extends DataProxy.Query<TVariables, TResult> {
+    extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
+            Omit<DataProxy.WriteOptions<TResult>, "data">
+  {
     dataId?: string;
     result: TResult;
-    broadcast?: boolean;
   }
 
   export interface DiffOptions extends ReadOptions {

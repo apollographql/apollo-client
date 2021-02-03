@@ -1,4 +1,4 @@
-import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
+import { SelectionSetNode, FieldNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
@@ -27,6 +27,7 @@ import { makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObj
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 import { EntityStore } from './entityStore';
+import { Cache } from '../../core';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -45,41 +46,18 @@ interface ProcessSelectionSetOptions {
   mergeTree: MergeTree;
 }
 
-export interface WriteToStoreOptions {
-  query: DocumentNode;
-  result: Object;
-  dataId?: string;
-  store: NormalizedCache;
-  variables?: Object;
-}
-
 export class StoreWriter {
   constructor(
     public readonly cache: InMemoryCache,
     private reader?: StoreReader,
   ) {}
 
-  /**
-   * Writes the result of a query to the store.
-   *
-   * @param result The result object returned for the query document.
-   *
-   * @param query The query document whose result we are writing to the store.
-   *
-   * @param store The {@link NormalizedCache} used by Apollo for the `data` portion of the store.
-   *
-   * @param variables A map from the name of a variable to its value. These variables can be
-   * referenced by the query document.
-   *
-   * @return A `Reference` to the written object.
-   */
-  public writeToStore({
+  public writeToStore(store: NormalizedCache, {
     query,
     result,
     dataId,
-    store,
     variables,
-  }: WriteToStoreOptions): Reference | undefined {
+  }: Cache.WriteOptions): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
     const merger = makeProcessedFieldsMerger();
 

@@ -31,8 +31,9 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
 ) {
   const context = useContext(getApolloContext());
   const mounted = useMounted();
-  const [tick, forceUpdateUnsafe] = useReducer(x => x + 1, 0);
-  const forceUpdate = () => mounted.current ? forceUpdateUnsafe() : undefined;
+  const [tick, forceUpdate] = useReducer(x => x + 1, 0);
+  // This function checks if the component is mounting before force updating.
+  const forceUpdateClient = () => mounted.current ? forceUpdate() : undefined;
   const updatedOptions = options ? { ...options, query } : { query };
 
   const queryDataRef = useRef<QueryData<TData, TVariables>>();
@@ -47,7 +48,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
           // force a re-render to make sure the new data is displayed. We can't
           // force that re-render if we're already rendering however so to be
           // safe we'll trigger the re-render in a microtask.
-          Promise.resolve().then(forceUpdate);
+          Promise.resolve().then(forceUpdateClient);
         } else {
           // If we're rendering on the server side we can force an update at
           // any point.

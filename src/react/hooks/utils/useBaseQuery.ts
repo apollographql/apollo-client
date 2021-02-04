@@ -1,4 +1,4 @@
-import { useContext, useEffect, useReducer, useRef } from 'react';
+import { useContext, useEffect, useReducer, useRef, RefObject } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -13,13 +13,27 @@ import { useDeepMemo } from './useDeepMemo';
 import { OperationVariables } from '../../../core';
 import { getApolloContext } from '../../context';
 
+const useMounted = (): RefObject<boolean> => {
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    }
+  }, []);
+  return mounted;
+}
+
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: QueryHookOptions<TData, TVariables>,
   lazy = false
 ) {
   const context = useContext(getApolloContext());
+  const mounted = useMounted();
   const [tick, forceUpdate] = useReducer(x => x + 1, 0);
+  // Use on client to check mounting before force updating.
+  const forceUpdateClient = () => mounted.current ? forceUpdate() : undefined;
   const updatedOptions = options ? { ...options, query } : { query };
 
   const queryDataRef = useRef<QueryData<TData, TVariables>>();
@@ -34,7 +48,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
           // force a re-render to make sure the new data is displayed. We can't
           // force that re-render if we're already rendering however so to be
           // safe we'll trigger the re-render in a microtask.
-          Promise.resolve().then(forceUpdate);
+          Promise.resolve().then(forceUpdateClient);
         } else {
           // If we're rendering on the server side we can force an update at
           // any point.

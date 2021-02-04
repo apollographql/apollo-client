@@ -32,7 +32,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   const context = useContext(getApolloContext());
   const mounted = useMounted();
   const [tick, forceUpdate] = useReducer(x => x + 1, 0);
-  // This function checks if the component is mounting before force updating.
+  // Use on client to check mounting before force updating.
   const forceUpdateClient = () => mounted.current ? forceUpdate() : undefined;
   const updatedOptions = options ? { ...options, query } : { query };
 

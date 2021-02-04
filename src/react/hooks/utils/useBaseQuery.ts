@@ -14,14 +14,14 @@ import { OperationVariables } from '../../../core';
 import { getApolloContext } from '../../context';
 
 const useMounted = (): RefObject<boolean> => {
-  const mounted = useRef(false)
+  const mounted = useRef(false);
   useEffect(() => {
-    mounted.current = true
+    mounted.current = true;
     return () => {
-      mounted.current = false
+      mounted.current = false;
     }
-  }, [])
-  return mounted
+  }, []);
+  return mounted;
 }
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(

@@ -18,5 +18,15 @@ export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
   //   const mute = rv.onNextChange(setValue);
   //   return () => mute();
   // }, [value])
+
+  // We check the variable's value in this useEffect and schedule an update if
+  // the value has changed. This check occurs once, on the initial render, to avoid
+  // a useEffect higher in the component tree changing a variable's value
+  // before the above useEffect can set the onNextChange handler. Note that React
+  // will not schedule an update if setState is called with the same value as before.
+  useEffect(() => {
+    setValue(rv())
+  }, []);
+
   return value;
 }

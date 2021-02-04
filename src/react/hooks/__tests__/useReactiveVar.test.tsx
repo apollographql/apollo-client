@@ -169,4 +169,72 @@ describe("useReactiveVar Hook", () => {
       console.error = error;
     }).then(resolve, reject);
   });
+
+  describe("useEffect", () => {
+    itAsync("works if updated higher in the component tree", async (resolve, reject) => {
+      const counterVar = makeVar(0);
+
+      function ComponentOne() {
+        const count = useReactiveVar(counterVar);
+
+        useEffect(() => {
+          counterVar(1);
+        }, []);
+
+        return (<div>{count}</div>);
+      }
+
+      function ComponentTwo() {
+        const count = useReactiveVar(counterVar);
+
+        return (<div>{count}</div>);
+      }
+
+      const { getAllByText } = render(
+        <>
+          <ComponentOne />
+          <ComponentTwo />
+        </>
+      );
+
+      await wait(() => {
+        expect(getAllByText("1")).toHaveLength(2);
+      });
+
+      resolve();
+    });
+
+    itAsync("works if updated lower in the component tree", async (resolve, reject) => {
+      const counterVar = makeVar(0);
+
+      function ComponentOne() {
+        const count = useReactiveVar(counterVar);
+
+        return (<div>{count}</div>);
+      }
+
+      function ComponentTwo() {
+        const count = useReactiveVar(counterVar);
+
+        useEffect(() => {
+          counterVar(1);
+        }, []);
+
+        return (<div>{count}</div>);
+      }
+
+      const { getAllByText } = render(
+        <>
+          <ComponentOne />
+          <ComponentTwo />
+        </>
+      );
+
+      await wait(() => {
+        expect(getAllByText("1")).toHaveLength(2);
+      });
+
+      resolve();
+    });
+  });
 });

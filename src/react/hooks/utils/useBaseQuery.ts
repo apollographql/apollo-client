@@ -30,9 +30,9 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   lazy = false
 ) {
   const context = useContext(getApolloContext());
-  const mounted = useMounted()
+  const mounted = useMounted();
   const [tick, forceUpdateUnsafe] = useReducer(x => x + 1, 0);
-  const forceUpdate = () => mounted.current ? forceUpdateUnsafe() : undefined
+  const forceUpdate = () => mounted.current ? forceUpdateUnsafe() : undefined;
   const updatedOptions = options ? { ...options, query } : { query };
 
   const queryDataRef = useRef<QueryData<TData, TVariables>>();

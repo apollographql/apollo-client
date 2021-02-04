@@ -1,4 +1,4 @@
-import { useContext, useEffect, useReducer, useRef } from 'react';
+import { useContext, useEffect, useReducer, useRef, RefObject } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -13,13 +13,26 @@ import { useDeepMemo } from './useDeepMemo';
 import { OperationVariables } from '../../../core';
 import { getApolloContext } from '../../context';
 
+const useMounted = (): RefObject<boolean> => {
+  const mounted = useRef(false)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+  return mounted
+}
+
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: QueryHookOptions<TData, TVariables>,
   lazy = false
 ) {
   const context = useContext(getApolloContext());
-  const [tick, forceUpdate] = useReducer(x => x + 1, 0);
+  const mounted = useMounted()
+  const [tick, forceUpdateUnsafe] = useReducer(x => x + 1, 0);
+  const forceUpdate = () => mounted.current ? forceUpdateUnsafe() : undefined
   const updatedOptions = options ? { ...options, query } : { query };
 
   const queryDataRef = useRef<QueryData<TData, TVariables>>();

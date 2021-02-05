@@ -326,6 +326,7 @@ Array [
   "compact",
   "concatPagination",
   "createFragmentMap",
+  "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
   "getFragmentDefinition",

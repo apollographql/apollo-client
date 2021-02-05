@@ -10,6 +10,7 @@ import {
   ObservableSubscription,
   iterateObserversSafely,
   isNonEmptyArray,
+  fixObservableSubclass,
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
@@ -648,6 +649,10 @@ once, rather than every time you call fetchMore.`);
     this.isTornDown = true;
   }
 }
+
+// Necessary because the ObservableQuery constructor has a different
+// signature than the Observable constructor.
+fixObservableSubclass(ObservableQuery);
 
 function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
   invariant.error('Unhandled error', error.message, error.stack);

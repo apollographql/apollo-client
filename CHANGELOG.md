@@ -5,6 +5,9 @@
 - Catch updates in `useReactiveVar` with an additional check. <br/>
   [@jcreighton](https://github.com/jcreighton) in [#7652](https://github.com/apollographql/apollo-client/pull/7652)
 
+- Reactivate forgotten reactive variables whenever `InMemoryCache` acquires its first watcher. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7657](https://github.com/apollographql/apollo-client/pull/7657)
+
 ## Apollo Client 3.3.7
 
 ### Bug Fixes

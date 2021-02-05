@@ -1,5 +1,6 @@
 import { Observable, Observer, ObservableSubscription } from "./Observable";
 import { iterateObserversSafely } from "./iteration";
+import { fixObservableSubclass } from "./subclassing";
 
 type MaybeAsync<T> = T | PromiseLike<T>;
 
@@ -238,24 +239,6 @@ export class Concast<T> extends Observable<T> {
   }
 }
 
-// Generic implementations of Observable.prototype methods like map and
-// filter need to know how to create a new Observable from a Concast.
-// Those methods assume (perhaps unwisely?) that they can call the
-// subtype's constructor with an observer registration function, but the
-// Concast constructor uses a different signature. Defining this
-// Symbol.species property on the Concast constructor function is a hint
-// to generic Observable code to use the default constructor instead of
-// trying to do `new Concast(observer => ...)`.
-function setSpecies(key: symbol | string) {
-  // Object.defineProperty is necessary because Concast[Symbol.species]
-  // is a getter by default in modern JS environments, so we can't
-  // assign to it with a normal assignment expression.
-  Object.defineProperty(Concast, key, { value: Observable });
-}
-if (typeof Symbol === "function" && Symbol.species) {
-  setSpecies(Symbol.species);
-}
-// The "@@species" string is used as a fake Symbol.species value in some
-// polyfill systems (including the SymbolSpecies variable used by
-// zen-observable), so we should set it as well, to be safe.
-setSpecies("@@species");
+// Necessary because the Concast constructor has a different signature
+// than the Observable constructor.
+fixObservableSubclass(Concast);

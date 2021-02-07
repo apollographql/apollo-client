@@ -125,7 +125,7 @@
     "terser": "^5.2.0",
     "ts-jest": "26.4.4",
     "ts-node": "8.10.2",
-    "tsc-watch": "3.0.1",
+    "tsc-watch": "4.2.9",
     "typescript": "3.9.7",
     "wait-for-observables": "^1.0.3"
   },

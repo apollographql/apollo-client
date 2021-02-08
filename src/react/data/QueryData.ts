@@ -28,7 +28,9 @@ import {
 } from '../types/types';
 import { OperationData } from './OperationData';
 
-export class QueryData<TData, TVariables> extends OperationData {
+export class QueryData<TData, TVariables> extends OperationData<
+  QueryDataOptions<TData, TVariables>
+> {
   public onNewData: () => void;
   private currentObservable?: ObservableQuery<TData, TVariables>;
   private currentSubscription?: ObservableSubscription;
@@ -119,7 +121,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       options.variables = {
         ...options.variables,
         ...this.lazyOptions.variables
-      };
+      } as TVariables;
       options.context = {
         ...options.context,
         ...this.lazyOptions.context
@@ -467,7 +469,7 @@ export class QueryData<TData, TVariables> extends OperationData {
       }
 
       if (onCompleted && !error && !skip) {
-        onCompleted(data);
+        onCompleted(data as TData);
       } else if (onError && error) {
         onError(error);
       }

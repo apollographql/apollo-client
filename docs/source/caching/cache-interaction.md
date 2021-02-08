@@ -193,7 +193,7 @@ When you define a modifier function for a field that contains a scalar, an enum,
 
 A modifier function can optionally take a second parameter, which is an object that contains several helpful utilities.
 
-A couple of these utilities (the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-functions).
+A couple of these utilities (the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-function-api).
 
 ### Example: Removing an item from a list
 
@@ -280,6 +280,7 @@ For example:
 const [addComment] = useMutation(ADD_COMMENT, {
   update(cache, { data: { addComment } }) {
     cache.modify({
+      id: cache.identify(myPost),
       fields: {
         comments(existingCommentRefs = [], { readField }) {
           const newCommentRef = cache.writeFragment({

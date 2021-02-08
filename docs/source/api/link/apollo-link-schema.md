@@ -1,5 +1,6 @@
 ---
 title: Schema Link
+sidebar_title: Schema
 description: Assists with mocking and server-side rendering
 ---
 
@@ -53,7 +54,7 @@ const mocks = {
 };
 
 const schema = makeExecutableSchema({ typeDefs });
-addMockFunctionsToSchema({
+const schemaWithMocks = addMockFunctionsToSchema({
   schema,
   mocks
 });
@@ -62,7 +63,7 @@ const apolloCache = new InMemoryCache(window.__APOLLO_STATE__);
 
 const graphqlClient = new ApolloClient({
   cache: apolloCache,
-  link: new SchemaLink({ schema })
+  link: new SchemaLink({ schema: schemaWithMocks })
 });
 ```
 

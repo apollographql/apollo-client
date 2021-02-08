@@ -13,16 +13,12 @@ module.exports = {
         githubRepo: 'apollographql/apollo-client',
         defaultVersion: '3',
         versions: {
-          '2.6': 'version-2.6',
-          '2.5': 'version-2.5',
-          '2.4': 'version-2.4',
+          '2': 'version-2.6',
         },
         checkLinksOptions: {
           exceptions: [
             '/api/core/ApolloClient/',
-            '/v2.6/api/apollo-client/',
-            '/v2.5/api/apollo-client/',
-            '/v2.4/api/apollo-client/',
+            '/v2/api/apollo-client/',
           ],
         },
         sidebarCategories: {
@@ -102,14 +98,15 @@ module.exports = {
           ],
           'API - Link': [
             'api/link/introduction',
+            'api/link/apollo-link-http',
             'api/link/apollo-link-batch-http',
             'api/link/apollo-link-context',
             'api/link/apollo-link-error',
+            'api/link/persisted-queries',
             'api/link/apollo-link-rest',
             'api/link/apollo-link-retry',
             'api/link/apollo-link-schema',
-            'api/link/apollo-link-ws',
-            'api/link/persisted-queries'
+            'api/link/apollo-link-ws'
           ],
         },
       },

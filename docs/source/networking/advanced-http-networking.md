@@ -162,6 +162,8 @@ const client = new ApolloClient({
 
 In the example above, `usdToEurLink` uses `asyncMap` to convert the response object's `price` field from USD to EUR using an external API.
 
+While this technique can be useful for modifying _existing_ fields (or adding additional objects to lists within `data`), adding _new_ fields to `data` won't work in most cases, because the operation document cannot be safely modified within the `ApolloLink` request pipeline.
+
 ## The `HttpLink` object
 
 Apollo Client uses `HttpLink` to send GraphQL operations to a server over HTTP. The link supports both POST and GET requests, and it can modify HTTP options on a per-query basis. This comes in handy when implementing authentication, persisted queries, dynamic URIs, and other granular updates.

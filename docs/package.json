@@ -7,12 +7,11 @@
     "types": "cd .. && typedoc --json ./docs/src/gatsby-theme-apollo-docs/docs.json --ignoreCompilerErrors ./src/index.ts"
   },
   "dependencies": {
-    "gatsby": "2.27.0",
-    "gatsby-theme-apollo-docs": "4.5.11",
-    "ink": "^2.7.1",
+    "gatsby": "2.29.3",
+    "gatsby-theme-apollo-docs": "4.5.12",
     "react": "17.0.1",
     "react-dom": "17.0.1",
-    "webpack-virtual-modules": "^0.2.2"
+    "webpack-virtual-modules": "^0.4.0"
   },
   "devDependencies": {
     "typedoc": "0.15.8",

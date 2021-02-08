@@ -7,7 +7,7 @@
     "graphql": "^15.0.0",
     "react": "file:../../../../node_modules/react",
     "react-dom": "file:../../../../node_modules/react-dom",
-    "react-scripts": "4.0.0"
+    "react-scripts": "4.0.1"
   },
   "scripts": {
     "start": "npx react-scripts start",

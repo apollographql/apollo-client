@@ -193,7 +193,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.resetStore = this.resetStore.bind(this);
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
-    if (connectToDevTools) {
+    if (connectToDevTools && typeof window === 'object') {
       (window as any).__APOLLO_CLIENT__ = this;
     }
 
@@ -205,25 +205,25 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       if (
         typeof window !== 'undefined' &&
         window.document &&
-        window.top === window.self
+        window.top === window.self &&
+        !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__
       ) {
-        // First check if devtools is not installed
-        if (
-          typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
-        ) {
-          // Only for Chrome
-          if (
-            window.navigator &&
-            window.navigator.userAgent &&
-            window.navigator.userAgent.indexOf('Chrome') > -1
-          ) {
-            // tslint:disable-next-line
-            console.debug(
-              'Download the Apollo DevTools ' +
-                'for a better development experience: ' +
-                'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm',
-            );
+        const nav = window.navigator;
+        const ua = nav && nav.userAgent;
+        let url: string | undefined;
+        if (typeof ua === "string") {
+          if (ua.indexOf("Chrome/") > -1) {
+            url = "https://chrome.google.com/webstore/detail/" +
+              "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
+          } else if (ua.indexOf("Firefox/") > -1) {
+            url = "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
           }
+        }
+        if (url) {
+          invariant.log(
+            "Download the Apollo DevTools for a better development " +
+              "experience: " + url
+          );
         }
       }
     }

@@ -358,7 +358,31 @@ export class Policies {
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const incoming = typePolicies[typename];
+      const {
+        queryType,
+        mutationType,
+        subscriptionType,
+        ...incoming
+      } = typePolicies[typename];
+
+      // Though {query,mutation,subscription}Type configurations are rare,
+      // it's important to call setRootTypename as early as possible,
+      // since these configurations should apply consistently for the
+      // entire lifetime of the cache. Also, since only one __typename can
+      // qualify as one of these root types, these three properties cannot
+      // be inherited, unlike the rest of the incoming properties. That
+      // restriction is convenient, because the purpose of this.toBeAdded
+      // is to delay the processing of type/field policies until the first
+      // time they're used, allowing policies to be added in any order as
+      // long as all relevant policies (including policies for supertypes)
+      // have been added by the time a given policy is used for the first
+      // time. In other words, since inheritance doesn't matter for these
+      // properties, there's also no need to delay their processing using
+      // the this.toBeAdded queue.
+      if (queryType) this.setRootTypename("Query", typename);
+      if (mutationType) this.setRootTypename("Mutation", typename);
+      if (subscriptionType) this.setRootTypename("Subscription", typename);
+
       if (hasOwn.call(this.toBeAdded, typename)) {
         this.toBeAdded[typename].push(incoming);
       } else {
@@ -389,10 +413,6 @@ export class Policies {
     // Type policies can define merge functions, as an alternative to
     // using field policies to merge child objects.
     setMerge(existing, incoming.merge);
-
-    if (incoming.queryType) this.setRootTypename("Query", typename);
-    if (incoming.mutationType) this.setRootTypename("Mutation", typename);
-    if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
 
     existing.keyFn =
       // Pass false to disable normalization for this typename.

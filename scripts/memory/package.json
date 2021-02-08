@@ -1,0 +1,15 @@
+{
+  "name": "apollo-client-memory-tests",
+  "private": true,
+  "scripts": {
+    "preinstall": "cd ../.. && npm i && npm run build",
+    "test": "mocha --exit --expose-gc tests.js"
+  },
+  "dependencies": {
+    "@apollo/client": "file:../../dist",
+    "graphql": "^15.5.0"
+  },
+  "devDependencies": {
+    "mocha": "^8.2.1"
+  }
+}

@@ -1,3 +1,10 @@
+## Apollo Client 3.3.9
+
+### Bug Fixes
+
+- Prevent reactive variables from retaining otherwise unreachable `InMemoryCache` objects. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7661](https://github.com/apollographql/apollo-client/pull/7661)
+
 ## Apollo Client 3.3.8
 
 ### Bug Fixes

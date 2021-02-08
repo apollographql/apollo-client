@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "preinstall": "cd ../.. && npm i && npm run build",
-    "test": "mocha --expose-gc tests.js"
+    "test": "mocha --exit --expose-gc tests.js"
   },
   "dependencies": {
     "@apollo/client": "file:../../dist",

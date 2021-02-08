@@ -7,10 +7,16 @@ const {
 } = require("@apollo/client/core");
 
 function itAsync(message, testFn) {
+  const start = Date.now();
   let timeout;
   (function pollGC() {
     gc(); // enabled by --expose-gc
-    timeout = setTimeout(pollGC, 100);
+    // Passing --exit to mocha should cause the process to exit after
+    // tests pass/fail/timeout, but (in case that fails) we also set a
+    // hard limit of 10 seconds for GC polling.
+    if (Date.now() < start + 10000) {
+      timeout = setTimeout(pollGC, 100);
+    }
   })();
   return it(message, () => new Promise(testFn).finally(() => {
     clearTimeout(timeout);

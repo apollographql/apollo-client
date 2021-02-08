@@ -6,18 +6,23 @@ const {
   makeVar,
 } = require("@apollo/client/core");
 
-describe("garbage collection", () => {
-  it("should collect client.cache after client.stop() called", done => {
-    let timeout;
-    (function pollGC() {
-      gc(); // enabled by --expose-gc
-      timeout = setTimeout(pollGC, 100);
-    })();
+function itAsync(message, testFn) {
+  let timeout;
+  (function pollGC() {
+    gc(); // enabled by --expose-gc
+    timeout = setTimeout(pollGC, 100);
+  })();
+  return it(message, () => new Promise(testFn).finally(() => {
+    clearTimeout(timeout);
+  }));
+}
 
+describe("garbage collection", () => {
+  itAsync("should collect client.cache after client.stop() called", resolve => {
     const registry = new FinalizationRegistry(key => {
       clearTimeout(timeout);
       assert.strictEqual(key, "client.cache");
-      done();
+      resolve();
     });
 
     const localVar = makeVar(123);

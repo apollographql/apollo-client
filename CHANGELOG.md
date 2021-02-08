@@ -1,3 +1,31 @@
+## Apollo Client 3.3.8
+
+### Bug Fixes
+
+- Catch updates in `useReactiveVar` with an additional check. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7652](https://github.com/apollographql/apollo-client/pull/7652)
+
+- Reactivate forgotten reactive variables whenever `InMemoryCache` acquires its first watcher. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7657](https://github.com/apollographql/apollo-client/pull/7657)
+
+- Backport `Symbol.species` fix for `Concast` and `ObservableQuery` from [`release-3.4`](https://github.com/apollographql/apollo-client/pull/7399), fixing subscriptions in React Native Android when the Hermes JavaScript engine is enabled (among other benefits). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7403](https://github.com/apollographql/apollo-client/pull/7403) and [#7660](https://github.com/apollographql/apollo-client/pull/7660)
+
+## Apollo Client 3.3.7
+
+### Bug Fixes
+
+- Fix a regression due to [#7310](https://github.com/apollographql/apollo-client/pull/7310) that caused `loading` always to be `true` for `skip: true` results during server-side rendering. <br/>
+  [@rgrove](https://github.com/rgrove) in [#7567](https://github.com/apollographql/apollo-client/pull/7567)
+
+- Avoid duplicate `useReactiveVar` listeners when rendering in `React.StrictMode`. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7581](https://github.com/apollographql/apollo-client/pull/7581)
+
+### Improvements
+
+- Set `displayName` on `ApolloContext` objects for easier debugging. <br/>
+  [@dulmandakh](https://github.com/dulmandakh) in [#7550](https://github.com/apollographql/apollo-client/pull/7550)
+
 ## Apollo Client 3.3.6
 
 ### Bug Fixes

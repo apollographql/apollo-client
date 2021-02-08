@@ -1,5 +1,6 @@
-import { Observable, Observer, ObservableSubscription } from "./Observable";
+import { Observable, Observer, ObservableSubscription, Subscriber } from "./Observable";
 import { iterateObserversSafely } from "./iteration";
+import { fixObservableSubclass } from "./subclassing";
 
 type MaybeAsync<T> = T | PromiseLike<T>;
 
@@ -55,7 +56,7 @@ export class Concast<T> extends Observable<T> {
 
   // Not only can the individual elements of the iterable be promises, but
   // also the iterable itself can be wrapped in a promise.
-  constructor(sources: MaybeAsync<ConcastSourcesIterable<T>>) {
+  constructor(sources: MaybeAsync<ConcastSourcesIterable<T>> | Subscriber<T>) {
     super(observer => {
       this.addObserver(observer);
       return () => this.removeObserver(observer);
@@ -65,6 +66,13 @@ export class Concast<T> extends Observable<T> {
     // acceptable to pay no attention to this.promise if you're consuming
     // the results through the normal observable API.
     this.promise.catch(_ => {});
+
+    // If someone accidentally tries to create a Concast using a subscriber
+    // function, recover by creating an Observable from that subscriber and
+    // using it as the source.
+    if (typeof sources === "function") {
+      sources = [new Observable(sources)];
+    }
 
     if (isPromiseLike(sources)) {
       sources.then(
@@ -143,7 +151,7 @@ export class Concast<T> extends Observable<T> {
   // Any Concast object can be trivially converted to a Promise, without
   // having to create a new wrapper Observable. This promise provides an
   // easy way to observe the final state of the Concast.
-  private resolve: (result?: T) => void;
+  private resolve: (result?: T | PromiseLike<T>) => void;
   private reject: (reason: any) => void;
   public readonly promise = new Promise<T>((resolve, reject) => {
     this.resolve = resolve;
@@ -238,16 +246,6 @@ export class Concast<T> extends Observable<T> {
   }
 }
 
-// Generic implementations of Observable.prototype methods like map and
-// filter need to know how to create a new Observable from a Concast.
-// Those methods assume (perhaps unwisely?) that they can call the
-// subtype's constructor with an observer registration function, but the
-// Concast constructor uses a different signature. Defining this
-// Symbol.species getter function on the Concast constructor function is
-// a hint to generic Observable code to use the default constructor
-// instead of trying to do `new Concast(observer => ...)`.
-if (typeof Symbol === "function" && Symbol.species) {
-  Object.defineProperty(Concast, Symbol.species, {
-    value: Observable,
-  });
-}
+// Necessary because the Concast constructor has a different signature
+// than the Observable constructor.
+fixObservableSubclass(Concast);

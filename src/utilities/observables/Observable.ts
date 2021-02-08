@@ -6,6 +6,7 @@ import 'symbol-observable';
 
 export type ObservableSubscription = ZenObservable.Subscription;
 export type Observer<T> = ZenObservable.Observer<T>;
+export type Subscriber<T> = ZenObservable.Subscriber<T>;
 
 // Use global module augmentation to add RxJS interop functionality. By
 // using this approach (instead of subclassing `Observable` and adding an

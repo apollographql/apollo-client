@@ -1,15 +1,137 @@
 ---
-title: InMemoryCache
-description: InMemoryCache API reference
+title: class InMemoryCache
+description: API reference
+api_reference: true
 ---
+
+Methods of the `InMemoryCache` class (the cache used by almost every instance of [`ApolloClient`](../core/ApolloClient/)) are documented here.
 
 ## `readQuery`
 
-Run GraphQL queries directly against the cache.
+Executes a GraphQL query directly against the cache and returns its result (or `null` if the query cannot be fulfilled):
 
-For usage instructions, refer to [Interacting with cached data: `readQuery`](../../caching/cache-interaction/#readquery).
+```js
+const { todo } = cache.readQuery({
+  query: gql`
+    query ReadTodo {
+      todo(id: 5) {
+        id
+        text
+        completed
+      }
+    }
+  `,
+});
+```
 
-### Method
+For usage instructions, see [Interacting with cached data: `readQuery`](../../caching/cache-interaction/#readquery).
+
+Accepts the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `options`
+
+`Object`
+</td>
+<td>
+
+**Required.** Provides configuration options for the query, including the actual query to execute.
+
+Supported fields are listed below.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `optimistic`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, `readQuery` returns optimistic results.
+
+The default value is `false`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `query`
+
+`DocumentNode`
+</td>
+<td>
+
+**Required.** The GraphQL query to execute, created by wrapping a query string in the `gql` template literal.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `variables`
+
+`Object`
+</td>
+<td>
+
+A map of any GraphQL variable names and values required by `query`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `id`
+
+`String`
+</td>
+<td>
+
+The root `id` to use for the query.
+
+The default value is `ROOT_QUERY`, which is the ID of the root query object.
+
+By specifying the ID of another cached object, you can query arbitrary cached data without conforming to the structure of your schema's supported queries. This enables `readQuery` to behave similarly to [`readFragment`](#readfragment).
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/core/cache.ts
 readQuery<QueryType, TVariables = any>(
@@ -18,33 +140,104 @@ readQuery<QueryType, TVariables = any>(
 ): QueryType | null
 ```
 
-### Input
-
-#### `options`
-
-| Option | Type | Description |
-| - | - | - |
-| `query` | `DocumentNode` | The GraphQL query shape to be used constructed using the `gql` template string tag from `graphql-tag`. The query will be used to determine the shape of the data to be read. |
-| `variables?` | `TVariables` | Any variables that the GraphQL query may depend on. |
-| `id?` | `string` | The root `id` to be used. Defaults to `ROOT_QUERY`, which is the ID of the root query object. |
-
-#### `optimistic`
-
-| Type | Description |
-| - | - |
-| `boolean` | Set to `true` to allow `readQuery` to return optimistic results. Is `false` by default. |
-
-### Output
-
-Query result data object (optionally typed by `QueryType`) or `null` if no matching data can be found.
 
 ## `writeQuery`
 
-Write data in the shape of the provided GraphQL query, into the cache.
+Writes data to the cache in the shape of a provided GraphQL query. Returns a `Reference` to the written object or `undefined` if the write failed.
 
-For usage instructions, refer to [Interacting with cached data: `writeQuery`](../../caching/cache-interaction/#writequery-and-writefragment).
+For usage instructions, see [Interacting with cached data: `writeQuery`](../../caching/cache-interaction/#writequery-and-writefragment).
 
-### Method
+Takes an `options` object as a parameter. Supported fields of this object are described below.
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `query`
+
+`DocumentNode`
+</td>
+<td>
+
+**Required.** The GraphQL query that defines the shape of the data to write. Created by wrapping a query string in the `gql` template literal.
+</td>
+</tr>
+
+<tr class="required">
+<td>
+
+###### `data`
+
+`Object`
+</td>
+<td>
+
+**Required.** The data to write to the cache. This object's fields must conform to the shape defined by `query`.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `variables`
+
+`Object`
+</td>
+<td>
+
+A map of any GraphQL variable names and values required by `query`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `id`
+
+`String`
+</td>
+<td>
+
+The `id` of the root object to use with the query.
+
+The default value is `ROOT_QUERY`, which is the ID of the root query object.
+
+By specifying the ID of another cached object, you can modify arbitrary cached data without conforming to the structure of your schema's supported queries. This enables `writeQuery` to behave similarly to [`writeFragment`](#writefragment).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `broadcast`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+
+The default value is `true`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/core/cache.ts
 writeQuery<TData = any, TVariables = any>(
@@ -52,29 +245,146 @@ writeQuery<TData = any, TVariables = any>(
 ): Reference | undefined
 ```
 
-### Input
-
-#### `options`
-
-| Option | Type | Description |
-| - | - | - |
-| `query` | `DocumentNode` | The GraphQL query shape to be used constructed using the `gql` template string tag from `graphql-tag`. The query will be used to determine the shape of the data to be written. |
-| `variables?` | `TVariables` | Any variables that the GraphQL query may depend on. |
-| `id?` | `string` | The root `id` to be used. Defaults to `ROOT_QUERY`, which is the ID of the root query object. This property makes `writeQuery` capable of writing data to any object in the cache, which renders `writeFragment` mostly useless. |
-| `data` | `TData` | The data you will be writing to the cache. |
-| `broadcast?` | `boolean` | Whether to notify query watchers (default: true). |
-
-### Output
-
-Returns a `Reference` to the written object, or `undefined` if the write failed.
-
 ## `readFragment`
 
-Read data from the cache in the shape of the provided GraphQL fragment.
+Reads data from the cache in the shape of a provided GraphQL fragment:
 
-For usage instructions, refer to [Interacting with cached data: `readFragment`](../../caching/cache-interaction/#readfragment).
+```js
+const todo = cache.readFragment({
+  id: '5', // The value of the to-do item's unique identifier
+  fragment: gql`
+    fragment MyTodo on Todo {
+      id
+      text
+      completed
+    }
+  `,
+});
+```
 
-### Method
+ Returns the requested data or `null` if data is not available in the cache.
+
+For usage instructions, see [Interacting with cached data: `readFragment`](../../caching/cache-interaction/#readfragment).
+
+Accepts the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `options`
+
+`Object`
+</td>
+<td>
+
+**Required.** Provides configuration options, including the actual fragment to use.
+
+Supported fields are listed below.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `optimistic`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, `readFragment` returns optimistic results.
+
+The default value is `false`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `id`
+
+`String`
+</td>
+<td>
+
+**Required.** The ID of the cached object that this call is reading a fragment of.
+
+If the cache does not contain an object with the specified ID, `readFragment` returns `null`.
+</td>
+</tr>
+
+<tr class="required">
+<td>
+
+###### `fragment`
+
+`DocumentNode`
+</td>
+<td>
+
+**Required.** A GraphQL document created with the `gql` template literal tag that includes the fragment to read.
+
+If the document includes more than one fragment, you must also provide [`fragmentName`](#fragmentname) to indicate which to use.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `fragmentName`
+`String`
+</td>
+<td>
+
+The name of the fragment defined in the `fragment` document to use in the call.
+
+You don't need to provide this value if the `fragment` document includes only one fragment.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `variables`
+
+`Object`
+</td>
+<td>
+
+A map of any GraphQL variable names and values required by `fragment`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/core/cache.ts
 readFragment<FragmentType, TVariables = any>(
@@ -83,34 +393,122 @@ readFragment<FragmentType, TVariables = any>(
 ): FragmentType | null
 ```
 
-### Input
-
-#### `options`
-
-| Option | Type | Description |
-| - | - | - |
-| `id?` | `string` | The root `id` to be used. If a value with your id does not exist in the cache, `null` will be returned. |
-| `fragment` | `DocumentNode` | A GraphQL document created using the `gql` template string tag from `graphql-tag` with one or more fragments which will be used to determine the shape of data to read. If you provide more than one fragment in this document then you must also specify `fragmentName` to select a single fragment. |
-| `fragmentName?` | `string` |  The name of the fragment in your GraphQL document to be used. If you do not provide a `fragmentName` and there is only one fragment in your `fragment` document, then that fragment will be used. |
-| `variables?` | `TVariables` | Any variables that your GraphQL fragments depend on. |
-
-#### `optimistic`
-
-| Type | Description |
-| - | - |
-| `boolean` | Set to `true` to allow `readFragment` to return optimistic results. Is `false` by default. |
-
-### Output
-
-Fragment result data object (optionally typed by `FragmentType`) or `null` if no matching data can be found.
-
 ## `writeFragment`
 
-Write data in the shape of the provided GraphQL fragment, into the cache.
+Writes data to the cache in the shape of the provided GraphQL fragment. Returns a `Reference` to the written object or `undefined` if the write failed.
 
-For usage instructions, refer to [Interacting with cached data: `writeFragment`](../../caching/cache-interaction/#writequery-and-writefragment).
+For usage instructions, see [Interacting with cached data: `writeFragment`](../../caching/cache-interaction/#writequery-and-writefragment).
 
-### Method
+Takes an `options` object as a parameter. Supported fields of this object are described below.
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `id`
+
+`String`
+</td>
+<td>
+
+**Required.** The ID of the cached object that this call is writing a fragment to.
+
+If the cache does not contain an object with the specified ID, `writeFragment` returns `null`.
+</td>
+</tr>
+
+
+<tr class="required">
+<td>
+
+###### `fragment`
+
+`DocumentNode`
+</td>
+<td>
+
+**Required.** A GraphQL document created with the `gql` template literal tag that includes the fragment to write.
+
+If the document includes more than one fragment, you must also provide [`fragmentName`](#fragmentname) to indicate which to use.
+</td>
+</tr>
+
+
+<tr class="required">
+<td>
+
+###### `data`
+
+`Object`
+</td>
+<td>
+
+**Required.** The data to write to the cache. This object's fields must conform to the shape defined by `fragment`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `fragmentName`
+
+`String`
+</td>
+<td>
+
+The name of the fragment defined in the `fragment` document to use in the call.
+
+You don't need to provide this value if the `fragment` document includes only one fragment.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `variables`
+
+`Object`
+</td>
+<td>
+
+A map of any GraphQL variable names and values required by `fragment`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `broadcast`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+
+The default value is `true`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+### Signature
 
 ```ts:title=src/cache/core/cache.ts
 writeFragment<TData = any, TVariables = any>(
@@ -118,208 +516,483 @@ writeFragment<TData = any, TVariables = any>(
 ): Reference | undefined
 ```
 
-### Input
-
-#### `options`
-
-| Option | Type | Description |
-| - | - | - |
-| `id?` | `string` | The root `id` to be used. |
-| `fragment` | `DocumentNode` | A GraphQL document created using the `gql` template string tag from `graphql-tag` with one or more fragments which will be used to determine the shape of data to write. If you provide more than one fragment in this document then you must also specify `fragmentName` to select a single fragment. |
-| `fragmentName?` | `string` |  The name of the fragment in your GraphQL document to be used. If you do not provide a `fragmentName` and there is only one fragment in your `fragment` document, then that fragment will be used. |
-| `variables?` | `TVariables` | Any variables that your GraphQL fragments depend on. |
-| `data` | `TData` | The data you will be writing to the cache. |
-| `broadcast?` | `boolean` | Whether to notify query watchers (default: true). |
-
-### Output
-
-Returns a `Reference` to the written object, or `undefined` if the write failed.
-
 ## `identify`
 
-Returns the canonical ID for a given cache object or reference.
+Returns the canonical ID for a specified cached object.
 
-For usage instructions, refer to [Interacting with cached data: Identify cached entities](../../caching/cache-interaction/#obtaining-an-objects-custom-id).
+You can provide either an object or an object _reference_ to this function:
 
-### Method
+* If you provide an object, `identify` returns the object's string-based ID (e.g., `Car:1`).
+* If you provide a reference, `identify` return the reference's `__ref` ID string.
+
+For usage instructions, see [Interacting with cached data: Identify cached entities](../../caching/cache-interaction/#obtaining-an-objects-custom-id).
+
+Accepts the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `object`
+
+`StoreObject` or `Reference`
+</td>
+<td>
+
+**Required.** The cached object (or object reference) to obtain the canonical ID for.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/inmemory/inMemoryCache.ts
 identify(object: StoreObject | Reference): string | undefined
 ```
 
-### Input
-
-#### `object`
-
-| Type | Description |
-| - | - |
-| `StoreObject` \| `Reference` | Either a cache object (an object with a `__typename` and any primary key fields required to identify entities of that type) or a `Reference` (an object with a `__ref` property). |
-
-### Output
-
-If `object` is a `StoreObject`, `identify` will return its string based ID (e.g. `Car:1`). If `object` a `Reference` object, `identify` will return its `__ref` ID string.
-
 ## `modify`
 
-Takes an entity ID and an object mapping field names to modifier functions. For the specified entity, each field modifier function is called with the current value or references of the field, and should return a new value for the field to be written into the cache.
+Modifies one or more field values of a cached object. Must provide a **modifier function** for each field to modify. A modifier function takes a cached field's current value and returns the value that should replace it.
+
+Returns `true` if the cache was modified successfully and `false` otherwise.
 
 For usage instructions, see [`cache.modify`](../../caching/cache-interaction/#cachemodify).
 
-### Method
+Takes an `options` object as a parameter. Supported fields of this object are described below.
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `id`
+
+`String`
+</td>
+<td>
+
+**Required.** The ID of the cached object to modify.
+</td>
+</tr>
+
+
+<tr class="required">
+<td>
+
+###### `fields`
+
+`Object`
+</td>
+<td>
+
+**Required.** A map that specifies the modifier function to call for each modified field.
+
+See [Modifier function API](#modifier-function-api) below.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `optimistic`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, also modifies the optimistically cached values for included fields.
+
+The default value is `false`. 
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `broadcast`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+
+The default value is `true`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+#### Modifier function API
+
+A modifier function takes a cached field's current value and returns the value that should replace it, or the [`DELETE` sentinel object](#delete) to delete the field entirely.
+
+The first parameter passed to a modifier function is the current cached value of the field being modified.
+
+The second parameter is a helper object that contains the following utilities:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `fieldName`
+
+`String`
+</td>
+<td>
+
+The name of the field being modified.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `storeFieldName`
+
+`String`
+</td>
+<td>
+
+The full key for the field used internally, including serialized key arguments.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `readField`
+
+`Function`
+</td>
+<td>
+
+A helper function for reading other fields within the current object.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `canRead`
+
+`Function`
+</td>
+<td>
+
+A helper function that returns `true` for non-normalized `StoreObject`s and non-dangling `Reference`s. This indicates that `readField(name, objOrRef)` has a chance of working.
+
+Useful for filtering dangling references out of lists.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `isReference`
+
+`Function`
+</td>
+<td>
+
+A helper function that returns `true` if a particular object is a reference to a cached entity.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `DELETE`
+
+`Object`
+</td>
+<td>
+
+A sentinel object that you can return from a modifier function to indicate that the field should be deleted entirely.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/inmemory/inMemoryCache.ts
 modify(options: Cache.ModifyOptions): boolean
 ```
 
-### Input
-
-#### `options`
-
-| Option | Type | Description |
-| - | - | - |
-| `id?` | `string` | ID of the cache object to be modified. |
-| `fields` | `Modifiers` \| `Modifier<any>` | Map of field names to one or more `Modifier` functions, that are to be run for each field, returning a new value for the field that is then written into the cache. The `Modifier` function API is explained below. |
-| `optimistic?` | `boolean` | Set to `true` to modify optimistic data. Is `false` by default. |
-| `broadcast?` | `boolean` | Whether to notify query watchers (default: true). |
-
-##### `Modifier` functions
-
-E.g. A `Modifier` function for an `author` field:
-
-```ts
-// ...
-fields: {
-  author(author: Reference, { readField }) {
-    // ...
-    return author;
-  }
-}
-// ...
-```
-
-The first parameter of a modifier function is the current value of the field being modified (`author` in the example above). The second parameter is a helper object that contains several utilities:
-
-| Property | Type | Description |
-| - | - | - |
-| `fieldName` | `string` | The name of the field being modified. |
-| `storeFieldName` | `string` | The full field key used internally, including serialized key arguments. |
-| `readField` | `ReadFieldFunction` | A helper function for reading other fields within the current object. |
-| `canRead` | `CanReadFunction` | Returns `true` for non-normalized `StoreObjects` and non-dangling `Reference`s, indicating that `readField(name, objOrRef)` has a chance of working. Useful for filtering out dangling references from lists. |
-| `isReference` | `boolean` | Utility to check if an object is a `{ __ref }` object. |
-| `DELETE` | `any` | Sentinel object that can be returned from a modifier function to delete the field being modified. |
-| `INVALIDATE` | `any` | Sentinel object that can be returned from a modifier function to invalidate the field, causing affected queries to rerun, without changing or deleting the field value. |
-
-`Modifier` functions should return the value that is to be written into the cache for the field being modified, or a `DELETE` sentinel to remove the field.
-
-### Output
-
-`cache.modify` returns `true` if the cache was modified successfully, `false` otherwise.
-
 ## `gc`
 
-Request the garbage collection of unreachable normalized entities.
+Performs garbage collection of unreachable normalized objects in the cache:
+
+```js
+cache.gc();
+```
+
+Returns an array containing the IDs of all objects removed from the cache.
 
 For usage instructions, see [`cache.gc`](../../caching/garbage-collection/#cachegc).
 
-### Method
+### Signature
 
 ```ts:title=src/cache/inmemory/inMemoryCache.ts
 gc()
 ```
 
-### Input
-
-None
-
-### Output
-
-Returns an array of ID strings that were removed from the cache, if any.
-
 ## `evict`
 
-Remove whole objects from the cache by passing `options.id`, or specific fields by passing `options.field` and/or `options.args`. If no `options.args` are provided, all fields matching `options.field` (even those with arguments) will be removed.
+Either removes a normalized object from the cache or removes a specific field from a normalized object in the cache:
 
-For usage instructions, see [`cache.evict](../../caching/garbage-collection/#cacheevict).
+```js
+cache.evict({ id: 'my-object-id', fieldName: 'myFieldName' });
+```
 
-### Method
+Returns `true` if data was removed from the cache, `false` otherwise.
+
+For usage instructions, see [`cache.evict`](../../caching/garbage-collection/#cacheevict).
+
+Takes an `options` object as a parameter. Supported fields of this object are described below.
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `id`
+
+`String`
+</td>
+<td>
+
+**Required.** The ID of the cached object to remove (or remove a field from).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `fieldName`
+
+`String`
+</td>
+<td>
+
+The name of the field to remove from the cached object.
+
+Omit this option if you are removing the entire object.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `args`
+
+`Record<string, any>`
+</td>
+<td>
+
+If provided with `fieldName`, only instances of the field with the specified arguments are removed from the cache.
+
+Otherwise, all instances of the field are removed for the cached object.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `broadcast`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, automatically refresh all active queries that depend on at least one field that's removed by this call.
+
+The default value is `true`.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/inmemory/inMemoryCache.ts
 evict(options: Cache.EvictOptions): boolean
 ```
 
-### Input
-
-#### `options`
-
-| Option | Type | Description |
-| - | - | - |
-| `id?` | `string` | ID of object to remove from the cache. |
-| `fieldName?` | `string` | Specific field of an object to remove from the cache. |
-| `args?` | `Record<string, any>` | Ensure only fields with these arguments are removed from the cache. |
-| `broadcast?` | `boolean` | Whether to notify query watchers (default: true). |
-
-### Output
-
-Returns `true` if any data was removed from the cache, `false` otherwise.
-
 ## `extract`
 
-Get a serialized representation of the cache's current state.
+Retruns a serialized representation of the cache's current contents as a `NormalizedCacheObject`.
 
-### Method
+Accepts the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `optimistic`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, optimistic data is included in the serialization.
+
+The default value is `false`.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/inmemory/inMemoryCache.ts
 extract(optimistic: boolean = false): NormalizedCacheObject
 ```
 
-### Input
-
-| Param | Type | Description |
-| - | - | - |
-| `optimistic` | `boolean` | Set to `true` to include optimistic data in the extract. Is `false` by default. |
-
-### Output
-
-Returns a serialized representation of all cache contents (`NormalizedCacheObject`).
-
 ## `restore`
 
-Replaces existing state in the cache (if any).
+Restores the cache's state from a serialized `NormalizedCacheObject` (such as one returned by [`extract`](#extract)). This removes all existing data from the cache.
 
-### Method
+Returns the `InMemoryCache` instance it's called on.
+
+Accepts the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr class="required">
+<td>
+
+###### `data`
+
+`NormalizedCacheObject`
+</td>
+<td>
+
+**Required.** The serialization to restore the cache from.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/inmemory/inMemoryCache.ts
 restore(data: NormalizedCacheObject): this
 ```
 
-### Input
-
-| Param | Type | Description |
-| - | - | - |
-| `data` | `NormalizedCacheObject` | New cache state that will overwrite the existing cache state. |
-
-### Output
-
-Returns the current `InMemoryCache` instance.
-
 ## `makeVar`
 
-Create/update/read reactive variables.
+Creates a reactive variable with an optional initial value:
 
-For usage instructions, refer to [Local state: Reactive variables](../../local-state/reactive-variables/).
+```js
+const cartItems = makeVar([]);
+```
 
-### Method
+Returns the reactive variable function you use to read or modify the variable's value.
+
+For usage instructions, see [Reactive variables](../../local-state/reactive-variables/).
+
+Accepts the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `value`
+
+Any
+</td>
+<td>
+
+The reactive variable's initial value.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Signature
 
 ```ts:title=src/cache/inmemory/inMemoryCache.ts
 makeVar<T>(value: T): ReactiveVar<T>
 ```
-
-### Input
-
-| Param | Type | Description |
-| - | - | - |
-| `value` | `T` | New or updated value of the reactive variable. |
-
-### Output
-
-Returns a reactive variable function. Calling the function will return the value of the current reactive variable.

@@ -35,10 +35,20 @@ const varsByCache = new WeakMap<ApolloCache<any>, Set<ReactiveVar<any>>>();
 
 export function forgetCache(cache: ApolloCache<any>) {
   const vars = varsByCache.get(cache);
-  if (vars) {
-    consumeAndIterate(vars, rv => rv.forgetCache(cache));
-    varsByCache.delete(cache);
-  }
+  if (vars) vars.forEach(rv => rv.forgetCache(cache));
+}
+
+// Calling forgetCache(cache) serves to silence broadcasts and allows the
+// cache to be garbage collected. However, the varsByCache WeakMap
+// preserves the set of reactive variables that were previously associated
+// with this cache, which makes it possible to "recall" the cache at a
+// later time, by reattaching it to those variables. If the cache has been
+// garbage collected in the meantime, because it is no longer reachable,
+// you won't be able to call recallCache(cache), and the cache will
+// automatically disappear from the varsByCache WeakMap.
+export function recallCache(cache: ApolloCache<any>) {
+  const vars = varsByCache.get(cache);
+  if (vars) vars.forEach(rv => rv.attachCache(cache));
 }
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
@@ -86,14 +96,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     return rv;
   };
 
-  rv.forgetCache = cache => {
-    const deleted = caches.delete(cache);
-    if (deleted) {
-      const vars = varsByCache.get(cache);
-      if (vars) vars.delete(rv);
-    }
-    return deleted;
-  };
+  rv.forgetCache = cache => caches.delete(cache);
 
   return rv;
 }

@@ -4,7 +4,7 @@ const {
   InMemoryCache,
   gql,
   makeVar,
-} = require("@apollo/client");
+} = require("@apollo/client/core");
 
 describe("garbage collection", () => {
   it("should collect client.cache after client.stop() called", done => {

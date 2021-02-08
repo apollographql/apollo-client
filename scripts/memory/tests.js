@@ -17,13 +17,35 @@ function itAsync(message, testFn) {
   }));
 }
 
+const registries = [];
+function makeRegistry(callback, reject) {
+  assert.strictEqual(typeof callback, "function");
+  assert.strictEqual(typeof reject, "function");
+
+  const registry = new FinalizationRegistry(key => {
+    try {
+      callback(key);
+    } catch (error) {
+      // Exceptions thrown in FinalizationRegistry callbacks can be tricky
+      // for test frameworks to catch, without some help.
+      reject(error);
+    }
+  });
+
+  // If the registry object itself gets garbage collected before the
+  // callback fires, the callback might never be called:
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry#notes_on_cleanup_callbacks
+  registries.push(registry);
+
+  return registry;
+}
+
 describe("garbage collection", () => {
-  itAsync("should collect client.cache after client.stop() called", resolve => {
-    const registry = new FinalizationRegistry(key => {
-      clearTimeout(timeout);
+  itAsync("should collect client.cache after client.stop()", (resolve, reject) => {
+    const registry = makeRegistry(key => {
       assert.strictEqual(key, "client.cache");
       resolve();
-    });
+    }, reject);
 
     const localVar = makeVar(123);
 

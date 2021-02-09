@@ -1,12 +1,9 @@
 import gql from 'graphql-tag';
 
-import {
-  mockObservableLink,
-  MockedSubscription
-} from '../utilities/testing/mocking/mockSubscriptionLink';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { ApolloClient } from '../';
+import { ApolloClient } from '../core';
+import { InMemoryCache } from '../cache';
 import { QueryManager } from '../core/QueryManager';
+import { mockObservableLink } from '../testing';
 
 describe('GraphQL Subscriptions', () => {
   const results = [
@@ -16,26 +13,9 @@ describe('GraphQL Subscriptions', () => {
     'Amanda Liu',
   ].map(name => ({ result: { data: { user: { name } } }, delay: 10 }));
 
-  let sub1: MockedSubscription;
   let options: any;
   let defaultOptions: any;
-  let defaultSub1: MockedSubscription;
   beforeEach(() => {
-    sub1 = {
-      request: {
-        query: gql`
-          subscription UserInfo($name: String) {
-            user(name: $name) {
-              name
-            }
-          }
-        `,
-        variables: {
-          name: 'Changping Chen',
-        },
-      },
-    };
-
     options = {
       query: gql`
         subscription UserInfo($name: String) {
@@ -47,21 +27,9 @@ describe('GraphQL Subscriptions', () => {
       variables: {
         name: 'Changping Chen',
       },
-    };
-
-    defaultSub1 = {
-      request: {
-        query: gql`
-          subscription UserInfo($name: String = "Changping Chen") {
-            user(name: $name) {
-              name
-            }
-          }
-        `,
-        variables: {
-          name: 'Changping Chen',
-        },
-      },
+      context: {
+        someVar: 'Some value'
+      }
     };
 
     defaultOptions = {
@@ -76,7 +44,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should start a subscription on network interface and unsubscribe', done => {
-    const link = mockObservableLink(defaultSub1);
+    const link = mockObservableLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
@@ -102,7 +70,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should subscribe with default values', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
@@ -128,7 +96,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should multiplex subscriptions', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     const queryManager = new QueryManager({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -165,7 +133,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should receive multiple results for a subscription', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     let numResults = 0;
     const queryManager = new QueryManager({
       link,
@@ -189,7 +157,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should not cache subscription data if a `no-cache` fetch policy is used', done => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     const cache = new InMemoryCache({ addTypename: false });
     const client = new ApolloClient({
       link,
@@ -211,7 +179,7 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should throw an error if the result has errors on it', () => {
-    const link = mockObservableLink(sub1);
+    const link = mockObservableLink();
     const queryManager = new QueryManager({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -250,7 +218,7 @@ describe('GraphQL Subscriptions', () => {
               },
             ],
             path: ['result'],
-          },
+          } as any,
         ],
       },
     };
@@ -274,5 +242,24 @@ describe('GraphQL Subscriptions', () => {
       });
       setTimeout(() => link.simulateComplete(), 100);
     });
+  });
+
+  it('should pass a context object through the link execution chain', done => {
+    const link = mockObservableLink();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    client.subscribe(options).subscribe({
+      next() {
+        expect(link.operation.getContext().someVar).toEqual(
+          options.context.someVar
+        );
+        done();
+      },
+    });
+
+    link.simulateResult(results[0]);
   });
 });

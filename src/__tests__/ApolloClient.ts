@@ -1,14 +1,19 @@
 import gql from 'graphql-tag';
 
-import { Observable } from '../utilities/observables/Observable';
-import { makeReference } from '../core';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { HttpLink } from '../link/http/HttpLink';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { ApolloClient } from '../';
-import { DefaultOptions } from '../ApolloClient';
-import { FetchPolicy, QueryOptions } from '../core/watchQueryOptions';
+import {
+  ApolloClient,
+  DefaultOptions,
+  FetchPolicy,
+  QueryOptions,
+  makeReference,
+} from '../core';
+
+import { Observable } from '../utilities';
+import { ApolloLink } from '../link/core';
+import { HttpLink } from '../link/http';
+import { InMemoryCache } from '../cache';
+import { stripSymbols } from '../testing';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -16,7 +21,7 @@ describe('ApolloClient', () => {
 
     beforeEach(() => {
       oldFetch = window.fetch;
-      window.fetch = () => null;
+      window.fetch = () => null as any;
     })
 
     afterEach(() => {
@@ -668,7 +673,19 @@ describe('ApolloClient', () => {
     it('will write some deeply nested data to the store', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                d: {
+                  // Silence "Cache data may be lost..."  warnings by
+                  // unconditionally favoring the incoming data.
+                  merge: false,
+                },
+              },
+            },
+          },
+        }),
       });
 
       client.writeQuery({
@@ -1091,6 +1108,9 @@ describe('ApolloClient', () => {
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
+        __META: {
+          extraRootIds: ['foo'],
+        },
         foo: {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
@@ -1171,11 +1191,22 @@ describe('ApolloClient', () => {
         return new ApolloClient({
           link,
           cache: new InMemoryCache({
+            typePolicies: {
+              Person: {
+                fields: {
+                  friends: {
+                    // Deliberately silence "Cache data may be lost..."
+                    // warnings by preferring the incoming data, rather
+                    // than (say) concatenating the arrays together.
+                    merge: false,
+                  },
+                },
+              },
+            },
             dataIdFromObject: result => {
               if (result.id && result.__typename) {
                 return result.__typename + result.id;
               }
-              return null;
             },
             addTypename: true,
           }),
@@ -1183,6 +1214,22 @@ describe('ApolloClient', () => {
       }
 
       describe('using writeQuery', () => {
+        it('with TypedDocumentNode', async () => {
+          const client = newClient();
+
+          // This is defined manually for the purpose of the test, but
+          // eventually this could be generated with graphql-code-generator
+          const typedQuery: TypedDocumentNode<Data, { testVar: string }> = query;
+
+          // The result and variables are being typed automatically, based on the query object we pass,
+          // and type inference is done based on the TypeDocumentNode object.
+          const result = await client.query({ query: typedQuery, variables: { testVar: 'foo' } });
+
+          // Just try to access it, if something will break, TS will throw an error
+          // during the test
+          result.data?.people.friends[0].id;
+        });
+
         it('with a replacement of nested array (wq)', done => {
           let count = 0;
           const client = newClient();
@@ -1202,7 +1249,7 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(readData)).toEqual(data);
 
                 // modify readData and writeQuery
-                const bestFriends = readData.people.friends.filter(
+                const bestFriends = readData!.people.friends.filter(
                   x => x.type === 'best',
                 );
                 // this should re call next
@@ -1254,7 +1301,7 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(readData)).toEqual(data);
 
                 // modify readData and writeQuery
-                const friends = readData.people.friends;
+                const friends = readData!.people.friends;
                 friends[0].type = 'okayest';
                 friends[1].type = 'okayest';
 
@@ -1290,13 +1337,13 @@ describe('ApolloClient', () => {
                   type: 'okayest',
                 };
                 const nextFriends = stripSymbols(
-                  nextResult.data.people.friends,
+                  nextResult.data!.people.friends,
                 );
                 expect(nextFriends[0]).toEqual(expectation0);
                 expect(nextFriends[1]).toEqual(expectation1);
 
                 const readFriends = stripSymbols(
-                  client.readQuery<Data>({ query }).people.friends,
+                  client.readQuery<Data>({ query })!.people.friends,
                 );
                 expect(readFriends[0]).toEqual(expectation0);
                 expect(readFriends[1]).toEqual(expectation1);
@@ -1319,12 +1366,12 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
-                const bestFriends = result.data.people.friends.filter(
+                const bestFriends = result.data!.people.friends.filter(
                   x => x.type === 'best',
                 );
                 // this should re call next
                 client.writeFragment({
-                  id: `Person${result.data.people.id}`,
+                  id: `Person${result.data!.people.id}`,
                   fragment: gql`
                     fragment bestFriends on Person {
                       friends {
@@ -1349,7 +1396,7 @@ describe('ApolloClient', () => {
               }
 
               if (count === 2) {
-                expect(stripSymbols(result.data.people.friends)).toEqual([
+                expect(stripSymbols(result.data!.people.friends)).toEqual([
                   bestFriend,
                 ]);
                 done();
@@ -1370,11 +1417,11 @@ describe('ApolloClient', () => {
                 expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
                   data,
                 );
-                const friends = result.data.people.friends;
+                const friends = result.data!.people.friends;
 
                 // this should re call next
                 client.writeFragment({
-                  id: `Person${result.data.people.id}`,
+                  id: `Person${result.data!.people.id}`,
                   fragment: gql`
                     fragment bestFriends on Person {
                       friends {
@@ -1403,7 +1450,7 @@ describe('ApolloClient', () => {
               }
 
               if (count === 2) {
-                const nextFriends = stripSymbols(result.data.people.friends);
+                const nextFriends = stripSymbols(result.data!.people.friends);
                 expect(nextFriends[0]).toEqual({
                   ...bestFriend,
                   type: 'okayest',
@@ -2216,8 +2263,11 @@ describe('ApolloClient', () => {
           }
         `,
       };
-      const _query = client.queryManager!.query;
-      client.queryManager!.query = options => {
+
+      // @ts-ignore
+      const queryManager = client.queryManager;
+      const _query = queryManager.query;
+      queryManager.query = options => {
         queryOptions = options;
         return _query(options);
       };
@@ -2239,6 +2289,26 @@ describe('ApolloClient', () => {
       );
 
       client.stop();
+    });
+
+    it('should be able to set all default query options', () => {
+      new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          query: {
+            query: {kind: 'Document', definitions: []},
+            variables: {foo: 'bar'},
+            errorPolicy: 'none',
+            context: null,
+            fetchPolicy: 'cache-first',
+            pollInterval: 100,
+            notifyOnNetworkStatusChange: true,
+            returnPartialData: true,
+            partialRefetch: true,
+          },
+        },
+      });
     });
   });
 
@@ -2269,6 +2339,35 @@ describe('ApolloClient', () => {
 
       await client.clearStore();
       expect((client.cache as any).data.data).toEqual({});
+    });
+  });
+
+  describe('setLink', () => {
+    it('should override default link with newly set link', async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache()
+      });
+      expect(client.link).toBeDefined();
+
+      const newLink = new ApolloLink(operation => {
+        return new Observable(observer => {
+          observer.next({
+            data: {
+              widgets: [
+                { name: 'Widget 1'},
+                { name: 'Widget 2' }
+              ]
+            }
+          });
+          observer.complete();
+        });
+      });
+
+      client.setLink(newLink);
+
+      const { data } = await client.query({ query: gql`{ widgets }` });
+      expect(data.widgets).toBeDefined();
+      expect(data.widgets.length).toBe(2);
     });
   });
 });

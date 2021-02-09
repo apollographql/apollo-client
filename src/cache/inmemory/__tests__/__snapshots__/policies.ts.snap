@@ -1,0 +1,1279 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`type policies can alter the root query __typename 1`] = `
+Object {
+  "Query:0": Object {
+    "__typename": "Query",
+    "id": 0,
+  },
+  "Query:1": Object {
+    "__typename": "Query",
+    "id": 1,
+  },
+  "Query:2": Object {
+    "__typename": "Query",
+    "id": 2,
+  },
+  "Query:3": Object {
+    "__typename": "Query",
+    "id": 3,
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "RootQuery",
+    "items": Array [
+      Object {
+        "id": 0,
+        "query": Object {
+          "__ref": "Query:0",
+        },
+      },
+      Object {
+        "id": 1,
+        "query": Object {
+          "__ref": "Query:1",
+        },
+      },
+      Object {
+        "id": 2,
+        "query": Object {
+          "__ref": "Query:2",
+        },
+      },
+      Object {
+        "id": 3,
+        "query": Object {
+          "__ref": "Query:3",
+        },
+      },
+    ],
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 1`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 1292,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 2`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjU=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 1292,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 3`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjU=",
+        "hasNextPage": true,
+        "hasPreviousPage": true,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjE=",
+      },
+      "totalCount": 1292,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 4`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjU=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 1292,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 5`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjY=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+            "displayLabel": "Basquiat: The Unknown Notebooks",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjY=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 1292,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 6`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/james-turrell\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, born 1943, Los Angeles, California",
+    "displayLabel": "James Turrell",
+    "href": "/artist/james-turrell",
+  },
+  "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, 1960-1988, New York, New York, based in New York, New York",
+    "displayLabel": "Jean-Michel Basquiat",
+    "href": "/artist/jean-michel-basquiat",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjY=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+            "displayLabel": "Basquiat: The Unknown Notebooks",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjY=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 1292,
+    },
+    "search:james turrell": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/james-turrell\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 13531,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 7`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/james-turrell\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, born 1943, Los Angeles, California",
+    "displayLabel": "James Turrell",
+    "href": "/artist/james-turrell",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjY=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+            "displayLabel": "Basquiat: The Unknown Notebooks",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjY=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 1292,
+    },
+    "search:james turrell": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/james-turrell\\"}",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 13531,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination 8`] = `
+Object {
+  "Artist:{\\"href\\":\\"/artist/james-turrell\\"}": Object {
+    "__typename": "Artist",
+    "bio": "American, born 1943, Los Angeles, California",
+    "displayLabel": "James Turrell",
+    "href": "/artist/james-turrell",
+  },
+  "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}": Object {
+    "__typename": "Artist",
+    "bio": "",
+    "displayLabel": "Reminiscent of Basquiat",
+    "href": "/artist/reminiscent-of-basquiat",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "search:basquiat": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjE=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Damien Hirst, James Rosenquist, David Salle, Andy Warhol, Jeff Koons, Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, David Wojnarowicz, Taylor Mead, William S. Burroughs, Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+            "displayLabel": "ephemera BASQUIAT",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+            "displayLabel": "Jean-Michel Basquiat | Xerox",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjM=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Banksy, SEEN, JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
+            "displayLabel": "STREET ART: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat, Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, Kurar, and LARS at Artrust",
+            "displayLabel": "STREET ART 2: From Basquiat to Banksy",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjU=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/reminiscent-of-basquiat\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjY=",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "description": "Past show featuring works by Jean-Michel Basquiat at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+            "displayLabel": "Basquiat: The Unknown Notebooks",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjY=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 1292,
+    },
+    "search:james turrell": Object {
+      "edges": Array [
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+          "node": Object {
+            "__ref": "Artist:{\\"href\\":\\"/artist/james-turrell\\"}",
+          },
+        },
+        Object {
+          "__typename": "SearchableEdge",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjEx",
+          "node": Object {
+            "__typename": "SearchableItem",
+            "displayLabel": "James Turrell: Light knows when we’re looking",
+          },
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjEx",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+      },
+      "totalCount": 13531,
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination without args 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__ref": "TodoEdge:edge1",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1292,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+  "TodoEdge:edge1": Object {
+    "__typename": "TodoEdge",
+    "id": "edge1",
+    "node": Object {
+      "__ref": "Todo:1",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination without args 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__ref": "TodoEdge:edge1",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        },
+      ],
+      "extraMetaData": "extra",
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1293,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+  "TodoEdge:edge1": Object {
+    "__typename": "TodoEdge",
+    "id": "edge1",
+    "node": Object {
+      "__ref": "Todo:1",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 1`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 2`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 3`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 4`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 5`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 6`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 7`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":4}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in keyArgs 8`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":4}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;
+
+exports[`type policies support inheritance 1`] = `
+Object {
+  "Cobra:{\\"tagId\\":\\"Egypt30BC\\"}": Object {
+    "__typename": "Cobra",
+    "scientificName": "naja haje",
+    "tagId": "Egypt30BC",
+    "venomous": true,
+  },
+  "Cottonmouth:{\\"tagId\\":\\"CM420\\"}": Object {
+    "__typename": "Cottonmouth",
+    "scientificName": "agkistrodon piscivorus",
+    "tagId": "CM420",
+    "venomous": true,
+  },
+  "Python:{\\"tagId\\":\\"BigHug4U\\"}": Object {
+    "__typename": "Python",
+    "scientificName": "malayopython reticulatus",
+    "tagId": "BigHug4U",
+    "venomous": false,
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "reptiles": Array [
+      Object {
+        "__ref": "Turtle:{\\"tagId\\":\\"RedEaredSlider42\\"}",
+      },
+      Object {
+        "__ref": "Python:{\\"tagId\\":\\"BigHug4U\\"}",
+      },
+      Object {
+        "__ref": "Cobra:{\\"tagId\\":\\"Egypt30BC\\"}",
+      },
+      Object {
+        "__ref": "Cottonmouth:{\\"tagId\\":\\"CM420\\"}",
+      },
+    ],
+  },
+  "Turtle:{\\"tagId\\":\\"RedEaredSlider42\\"}": Object {
+    "__typename": "Turtle",
+    "scientificName": "trachemys scripta elegans",
+    "tagId": "RedEaredSlider42",
+  },
+}
+`;

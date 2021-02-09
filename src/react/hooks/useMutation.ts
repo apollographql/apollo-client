@@ -1,16 +1,16 @@
+import { useContext, useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { MutationHookOptions, MutationTuple } from '../types/types';
-import { MutationData } from '../data/MutationData';
-import { OperationVariables } from '../../core/types';
-import { getApolloContext } from '../context/ApolloContext';
-import { requireReactLazily } from '../react';
+import { MutationData } from '../data';
+import { OperationVariables } from '../../core';
+import { getApolloContext } from '../context';
 
 export function useMutation<TData = any, TVariables = OperationVariables>(
-  mutation: DocumentNode,
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: MutationHookOptions<TData, TVariables>
 ): MutationTuple<TData, TVariables> {
-  const { useContext, useState, useRef, useEffect } = requireReactLazily();
   const context = useContext(getApolloContext());
   const [result, setResult] = useState({ called: false, loading: false });
   const updatedOptions = options ? { ...options, mutation } : { mutation };

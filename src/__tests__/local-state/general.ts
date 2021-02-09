@@ -1,15 +1,12 @@
 import gql from 'graphql-tag';
-import { DocumentNode, GraphQLError } from 'graphql';
-import { getIntrospectionQuery } from 'graphql/utilities';
+import { DocumentNode, GraphQLError, getIntrospectionQuery } from 'graphql';
 
-import { Observable } from '../../utilities/observables/Observable';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { Operation } from '../../link/core/types';
-import { ApolloClient } from '../..';
-import { ApolloCache } from '../../cache/core/cache';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
-import { hasDirectives } from '../../utilities/graphql/directives';
-import { itAsync } from '../../utilities/testing/itAsync';
+import { Observable } from '../../utilities';
+import { ApolloLink } from '../../link/core';
+import { Operation } from '../../link/core';
+import { ApolloClient } from '../../core';
+import { ApolloCache, InMemoryCache } from '../../cache';
+import { itAsync } from '../../testing';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {
@@ -422,7 +419,6 @@ describe('Cache manipulation', () => {
           },
           loading: false,
           networkStatus: 7,
-          stale: false,
         });
 
         if (selectedItemId !== 123) {
@@ -436,6 +432,99 @@ describe('Cache manipulation', () => {
             ],
           });
         } else {
+          resolve();
+        }
+      },
+    });
+  });
+
+  itAsync("should rerun @client(always: true) fields on entity update", (resolve, reject) => {
+    const query = gql`
+      query GetClientData($id: ID) {
+        clientEntity(id: $id) @client(always: true) {
+          id
+          title
+          titleLength @client(always: true)
+        }
+      }
+    `;
+
+    const mutation = gql`
+      mutation AddOrUpdate {
+        addOrUpdate(id: $id, title: $title) @client
+      }
+    `;
+
+    const fragment = gql`
+    fragment ClientDataFragment on ClientData {
+      id
+      title
+    }
+    `
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(() => Observable.of({ data: { } })),
+      resolvers: {
+        ClientData: {
+          titleLength(data) {
+            return data.title.length
+          }
+        },
+        Query: {
+          clientEntity(_root, {id}, {cache}) {
+            return cache.readFragment({
+              id: cache.identify({id, __typename: "ClientData"}),
+              fragment,
+            });
+          },
+        },
+        Mutation: {
+          addOrUpdate(_root, {id, title}, {cache}) {
+            return cache.writeFragment({
+              id: cache.identify({id, __typename: "ClientData"}),
+              fragment,
+              data: {id, title, __typename: "ClientData"},
+            });
+          },
+        }
+      },
+    });
+
+    const entityId = 1;
+    const shortTitle = "Short";
+    const longerTitle = "A little longer";
+    client.mutate({
+      mutation,
+      variables: {
+        id: entityId,
+        title: shortTitle,
+      },
+    });
+    let mutated = false;
+    client.watchQuery({ query, variables: {id: entityId}}).subscribe({
+      next(result) {
+        if (!mutated) {
+          expect(result.data.clientEntity).toEqual({
+            id: entityId,
+            title: shortTitle,
+            titleLength: shortTitle.length,
+            __typename: "ClientData",
+          });
+          client.mutate({
+            mutation,
+            variables: {
+              id: entityId,
+              title: longerTitle,
+            }
+          });
+          mutated = true;
+        } else if (mutated) {
+          expect(result.data.clientEntity).toEqual({
+            id: entityId,
+            title: longerTitle,
+            titleLength: longerTitle.length,
+            __typename: "ClientData",
+          });
           resolve();
         }
       },

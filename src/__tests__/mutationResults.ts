@@ -1,12 +1,12 @@
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
+import { GraphQLError } from 'graphql';
 
-import { Observable, Subscription } from '../utilities/observables/Observable';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { ApolloClient } from '..';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { itAsync } from '../utilities/testing/itAsync';
+import { ApolloClient } from '../core';
+import { InMemoryCache } from '../cache';
+import { ApolloLink } from '../link/core';
+import { Observable, ObservableSubscription as Subscription } from '../utilities';
+import { itAsync, subscribeAndCount, mockSingleLink } from '../testing';
 
 describe('mutation results', () => {
   const query = gql`
@@ -124,7 +124,7 @@ describe('mutation results', () => {
       link: mockSingleLink({
         request: { query: queryWithTypename } as any,
         result,
-      }, ...mockedResponses).setOnError(reject),
+      }, ...mockedResponses),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
@@ -288,7 +288,7 @@ describe('mutation results', () => {
       next: result => {
         if (count === 0) {
           client.mutate({ mutation, variables: { signature: '1234' } });
-          expect(result.data.mini.cover).toBe('image');
+          expect(result.data!.mini.cover).toBe('image');
 
           setTimeout(() => {
             if (count === 0)
@@ -298,7 +298,7 @@ describe('mutation results', () => {
           }, 250);
         }
         if (count === 1) {
-          expect(result.data.mini.cover).toBe('image2');
+          expect(result.data!.mini.cover).toBe('image2');
           resolve();
         }
         count++;
@@ -307,10 +307,102 @@ describe('mutation results', () => {
     });
   });
 
+  itAsync("should write results to cache according to errorPolicy", async (resolve, reject) => {
+    const expectedFakeError = new GraphQLError("expected/fake error");
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Person: {
+            keyFields: ["name"],
+          },
+        },
+      }),
+
+      link: new ApolloLink(operation => new Observable(observer => {
+        observer.next({
+          errors: [
+            expectedFakeError,
+          ],
+          data: {
+            newPerson: {
+              __typename: "Person",
+              name: operation.variables.newName,
+            },
+          },
+        });
+        observer.complete();
+      })).setOnError(reject),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await client.mutate({
+      mutation,
+      variables: {
+        newName: "Hugh Willson",
+      },
+    }).then(() => {
+      reject("should have thrown for default errorPolicy");
+    }, error => {
+      expect(error.message).toBe(expectedFakeError.message);
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    const ignoreErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "ignore",
+      variables: {
+        newName: "Jenn Creighton",
+      },
+    });
+
+    expect(ignoreErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Jenn Creighton",
+        },
+      },
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    const allErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "all",
+      variables: {
+        newName: "Ellen Shapiro",
+      },
+    });
+
+    expect(allErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Ellen Shapiro",
+        },
+      },
+      errors: [
+        expectedFakeError,
+      ],
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    resolve();
+  });
+
   itAsync("should warn when the result fields don't match the query fields", (resolve, reject) => {
     let handle: any;
     let subscriptionHandle: Subscription;
-    let counter = 0;
 
     const queryTodos = gql`
       query todos {
@@ -375,7 +467,6 @@ describe('mutation results', () => {
         handle = client.watchQuery({ query: queryTodos });
         subscriptionHandle = handle.subscribe({
           next(res: any) {
-            counter++;
             resolve(res);
           },
         });
@@ -655,12 +746,6 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -686,9 +771,10 @@ describe('mutation results', () => {
         },
       })).then(() => {
         subscriptionHandle.unsubscribe();
-        expect(errors).toHaveLength(1);
-        expect(errors[0].message).toBe(`Hello... It's me.`);
-        console.error = oldError;
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
       }).then(resolve, reject);
     });
   });
@@ -763,28 +849,23 @@ describe('mutation results', () => {
     // Cancel the query right away!
     firstSubs.unsubscribe();
 
-    let yieldCount = 0;
-    watchedQuery.subscribe({
-      next: ({ data }: any) => {
-        yieldCount += 1;
-        if (yieldCount === 1) {
-          expect(data.echo).toBe('b');
-          client.mutate({
-            mutation: resetMutation,
-            updateQueries: {
-              Echo: () => {
-                return { echo: '0' };
-              },
+    subscribeAndCount(reject, watchedQuery, (count, result) => {
+      if (count === 1) {
+        expect(result.data).toEqual({ echo: "a" });
+      } else if (count === 2) {
+        expect(result.data).toEqual({ echo: "b" });
+        client.mutate({
+          mutation: resetMutation,
+          updateQueries: {
+            Echo: () => {
+              return { echo: "0" };
             },
-          });
-        } else if (yieldCount === 2) {
-          expect(data.echo).toBe('0');
-          resolve();
-        }
-      },
-      error: () => {
-        // Do nothing, but quash unhandled error
-      },
+          },
+        });
+      } else if (count === 3) {
+        expect(result.data).toEqual({ echo: "0" });
+        resolve();
+      }
     });
 
     watchedQuery.refetch(variables2);
@@ -1295,12 +1376,6 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -1324,9 +1399,10 @@ describe('mutation results', () => {
         },
       })).then(() => {
         subscriptionHandle.unsubscribe();
-        expect(errors).toHaveLength(1);
-        expect(errors[0].message).toBe(`Hello... It's me.`);
-        console.error = oldError;
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
       }).then(resolve, reject);
     });
 
@@ -1360,8 +1436,8 @@ describe('mutation results', () => {
       client.mutate<{ foo: { bar: string; }; }>({
         mutation: mutation,
       }).then(result => {
-        // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'."
-        if (result.data.foo.bar) {
+        // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'.", even without `!` operator
+        if (result.data!.foo.bar) {
           resolve();
         }
       }, reject);

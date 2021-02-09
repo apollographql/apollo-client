@@ -2,8 +2,8 @@ import { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 import { invariant } from 'ts-invariant';
 
-import { ApolloClient } from '../../ApolloClient';
-import { DocumentType, parser, operationName } from '../parser/parser';
+import { ApolloClient } from '../../core';
+import { DocumentType, parser, operationName } from '../parser';
 import { CommonOptions } from '../types/types';
 
 export abstract class OperationData<TOptions = any> {
@@ -12,7 +12,7 @@ export abstract class OperationData<TOptions = any> {
     TOptions
   >;
   public context: any = {};
-  public client: ApolloClient<object> | undefined;
+  public client: ApolloClient<object>;
 
   private options: CommonOptions<TOptions> = {} as CommonOptions<TOptions>;
 

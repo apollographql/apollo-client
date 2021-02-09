@@ -4,11 +4,15 @@ import './fixPolyfills';
 import { DocumentNode } from 'graphql';
 import { dep, wrap } from 'optimism';
 
-import { ApolloCache, Transaction } from '../core/cache';
+import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
-import { Modifier, Modifiers } from '../core/types/common';
-import { addTypenameToDocument } from '../../utilities/graphql/transform';
-import { StoreObject }  from '../../utilities/graphql/storeUtils';
+import { MissingFieldError } from '../core/types/common';
+import {
+  addTypenameToDocument,
+  StoreObject,
+  Reference,
+  isReference,
+} from '../../utilities';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
@@ -16,12 +20,14 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
+import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
   Policies,
   TypePolicies,
 } from './policies';
+import { hasOwn } from './helpers';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
@@ -53,12 +59,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // cache.policies.addPossibletypes.
   public readonly policies: Policies;
 
+  public readonly makeVar = makeVar;
+
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
+      cache: this,
       dataIdFromObject: this.config.dataIdFromObject,
       possibleTypes: this.config.possibleTypes,
       typePolicies: this.config.typePolicies,
@@ -79,40 +88,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = this.data;
 
-    this.storeWriter = new StoreWriter({
-      policies: this.policies,
-    });
-
-    this.storeReader = new StoreReader({
-      addTypename: this.addTypename,
-      policies: this.policies,
-    });
-
-    const cache = this;
-    const { maybeBroadcastWatch } = cache;
-    this.maybeBroadcastWatch = wrap((c: Cache.WatchOptions) => {
-      return maybeBroadcastWatch.call(this, c);
-    }, {
-      makeCacheKey(c: Cache.WatchOptions) {
-        // Return a cache key (thus enabling result caching) only if we're
-        // currently using a data store that can track cache dependencies.
-        const store = c.optimistic ? cache.optimisticData : cache.data;
-        if (supportsResultCaching(store)) {
-          const { optimistic, rootId, variables } = c;
-          return store.makeCacheKey(
-            c.query,
-            // Different watches can have the same query, optimistic
-            // status, rootId, and variables, but if their callbacks are
-            // different, the (identical) result needs to be delivered to
-            // each distinct callback. The easiest way to achieve that
-            // separation is to include c.callback in the cache key for
-            // maybeBroadcastWatch calls. See issue #5733.
-            c.callback,
-            JSON.stringify({ optimistic, rootId, variables }),
-          );
-        }
-      }
-    });
+    this.storeWriter = new StoreWriter(
+      this,
+      this.storeReader = new StoreReader({
+        cache: this,
+        addTypename: this.addTypename,
+      }),
+    );
   }
 
   public restore(data: NormalizedCacheObject): this {
@@ -121,46 +103,83 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public extract(optimistic: boolean = false): NormalizedCacheObject {
-    return (optimistic ? this.optimisticData : this.data).toObject();
+    return (optimistic ? this.optimisticData : this.data).extract();
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
-    const store = options.optimistic ? this.optimisticData : this.data;
-    if (typeof options.rootId === 'string' && !store.has(options.rootId)) {
-      return null;
+    const {
+      // Since read returns data or null, without any additional metadata
+      // about whether/where there might have been missing fields, the
+      // default behavior cannot be returnPartialData = true (like it is
+      // for the diff method), since defaulting to true would violate the
+      // integrity of the T in the return type. However, partial data may
+      // be useful in some cases, so returnPartialData:true may be
+      // specified explicitly.
+      returnPartialData = false,
+    } = options;
+    try {
+      return this.storeReader.diffQueryAgainstStore<T>({
+        store: options.optimistic ? this.optimisticData : this.data,
+        query: options.query,
+        variables: options.variables,
+        rootId: options.rootId,
+        config: this.config,
+        returnPartialData,
+      }).result || null;
+    } catch (e) {
+      if (e instanceof MissingFieldError) {
+        // Swallow MissingFieldError and return null, so callers do not
+        // need to worry about catching "normal" exceptions resulting from
+        // incomplete cache data. Unexpected errors will be re-thrown. If
+        // you need more information about which fields were missing, use
+        // cache.diff instead, and examine diffResult.missing.
+        return null;
+      }
+      throw e;
     }
-    return this.storeReader.readQueryFromStore({
-      store,
-      query: options.query,
-      variables: options.variables,
-      rootId: options.rootId,
-      config: this.config,
-    }) || null;
   }
 
-  public write(options: Cache.WriteOptions): void {
-    this.storeWriter.writeQueryToStore({
-      store: this.data,
-      query: options.query,
-      result: options.result,
-      dataId: options.dataId,
-      variables: options.variables,
-    });
-
-    this.broadcastWatches();
+  public write(options: Cache.WriteOptions): Reference | undefined {
+    try {
+      ++this.txCount;
+      return this.storeWriter.writeToStore({
+        store: this.data,
+        query: options.query,
+        result: options.result,
+        dataId: options.dataId,
+        variables: options.variables,
+      });
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
+    }
   }
 
-  public modify(
-    dataId: string,
-    modifiers: Modifier<any> | Modifiers,
-    optimistic = false,
-  ): boolean {
-    const store = optimistic ? this.optimisticData : this.data;
-    if (store.modify(dataId, modifiers)) {
-      this.broadcastWatches();
-      return true;
+  public modify(options: Cache.ModifyOptions): boolean {
+    if (hasOwn.call(options, "id") && !options.id) {
+      // To my knowledge, TypeScript does not currently provide a way to
+      // enforce that an optional property?:type must *not* be undefined
+      // when present. That ability would be useful here, because we want
+      // options.id to default to ROOT_QUERY only when no options.id was
+      // provided. If the caller attempts to pass options.id with a
+      // falsy/undefined value (perhaps because cache.identify failed), we
+      // should not assume the goal was to modify the ROOT_QUERY object.
+      // We could throw, but it seems natural to return false to indicate
+      // that nothing was modified.
+      return false;
     }
-    return false;
+    const store = options.optimistic // Defaults to false.
+      ? this.optimisticData
+      : this.data;
+    try {
+      ++this.txCount;
+      return store.modify(options.id || "ROOT_QUERY", options.fields);
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
+    }
   }
 
   public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
@@ -175,12 +194,35 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public watch(watch: Cache.WatchOptions): () => void {
+    if (!this.watches.size) {
+      // In case we previously called forgetCache(this) because
+      // this.watches became empty (see below), reattach this cache to any
+      // reactive variables on which it previously depended. It might seem
+      // paradoxical that we're able to recall something we supposedly
+      // forgot, but the point of calling forgetCache(this) is to silence
+      // useless broadcasts while this.watches is empty, and to allow the
+      // cache to be garbage collected. If, however, we manage to call
+      // recallCache(this) here, this cache object must not have been
+      // garbage collected yet, and should resume receiving updates from
+      // reactive variables, now that it has a watcher to notify.
+      recallCache(this);
+    }
     this.watches.add(watch);
     if (watch.immediate) {
       this.maybeBroadcastWatch(watch);
     }
     return () => {
-      this.watches.delete(watch);
+      // Once we remove the last watch from this.watches, cache.broadcastWatches
+      // no longer does anything, so we preemptively tell the reactive variable
+      // system to exclude this cache from future broadcasts.
+      if (this.watches.delete(watch) && !this.watches.size) {
+        forgetCache(this);
+      }
+      this.watchDep.dirty(watch);
+      // Remove this watch from the LRU cache managed by the
+      // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory
+      // leaks involving the closure of watch.callback.
+      this.maybeBroadcastWatch.forget(watch);
     };
   }
 
@@ -214,14 +256,33 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // the object must contain a __typename and any primary key fields required
   // to identify entities of that type. If you pass a query result object, be
   // sure that none of the primary key fields have been renamed by aliasing.
-  public identify(object: StoreObject): string | undefined {
-    return this.policies.identify(object)[0];
+  // If you pass a Reference object, its __ref ID string will be returned.
+  public identify(object: StoreObject | Reference): string | undefined {
+    return isReference(object) ? object.__ref :
+      this.policies.identify(object)[0];
   }
 
-  public evict(dataId: string, fieldName?: string): boolean {
-    const evicted = this.optimisticData.evict(dataId, fieldName);
-    this.broadcastWatches();
-    return evicted;
+  public evict(options: Cache.EvictOptions): boolean {
+    if (!options.id) {
+      if (hasOwn.call(options, "id")) {
+        // See comment in modify method about why we return false when
+        // options.id exists but is falsy/undefined.
+        return false;
+      }
+      options = { ...options, id: "ROOT_QUERY" };
+    }
+    try {
+      // It's unlikely that the eviction will end up invoking any other
+      // cache update operations while it's running, but {in,de}crementing
+      // this.txCount still seems like a good idea, for uniformity with
+      // the other update methods.
+      ++this.txCount;
+      return this.optimisticData.evict(options);
+    } finally {
+      if (!--this.txCount && options.broadcast !== false) {
+        this.broadcastWatches();
+      }
+    }
   }
 
   public reset(): Promise<void> {
@@ -243,10 +304,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public performTransaction(
     transaction: (cache: InMemoryCache) => any,
-    // This parameter is not part of the performTransaction signature inherited
-    // from the ApolloCache abstract class, but it's useful because it saves us
-    // from duplicating this implementation in recordOptimisticTransaction.
-    optimisticId?: string,
+    optimisticId?: string | null,
   ) {
     const perform = (layer?: EntityStore) => {
       const { data, optimisticData } = this;
@@ -263,26 +321,29 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     };
 
+    let fromOptimisticTransaction = false;
+
     if (typeof optimisticId === 'string') {
       // Note that there can be multiple layers with the same optimisticId.
       // When removeOptimistic(id) is called for that id, all matching layers
       // will be removed, and the remaining layers will be reapplied.
       this.optimisticData = this.optimisticData.addLayer(optimisticId, perform);
+      fromOptimisticTransaction = true;
+    } else if (optimisticId === null) {
+      // Ensure both this.data and this.optimisticData refer to the root
+      // (non-optimistic) layer of the cache during the transaction. Note
+      // that this.data could be a Layer if we are currently executing an
+      // optimistic transaction function, but otherwise will always be an
+      // EntityStore.Root instance.
+      perform(this.data);
     } else {
-      // If we don't have an optimisticId, perform the transaction anyway. Note
-      // that this.optimisticData.addLayer calls perform, too.
+      // Otherwise, leave this.data and this.optimisticData unchanged and
+      // run the transaction with broadcast batching.
       perform();
     }
 
     // This broadcast does nothing if this.txCount > 0.
-    this.broadcastWatches();
-  }
-
-  public recordOptimisticTransaction(
-    transaction: Transaction<NormalizedCacheObject>,
-    id: string,
-  ) {
-    return this.performTransaction(transaction, id);
+    this.broadcastWatches(fromOptimisticTransaction);
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
@@ -301,43 +362,78 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return document;
   }
 
-  protected broadcastWatches() {
+  protected broadcastWatches(fromOptimisticTransaction?: boolean) {
     if (!this.txCount) {
-      this.watches.forEach(c => this.maybeBroadcastWatch(c));
+      this.watches.forEach(c => this.maybeBroadcastWatch(c, fromOptimisticTransaction));
     }
   }
 
-  // This method is wrapped in the constructor so that it will be called only
-  // if the data that would be broadcast has changed.
-  private maybeBroadcastWatch(c: Cache.WatchOptions) {
-    c.callback(
-      this.diff({
-        query: c.query,
-        variables: c.variables,
-        optimistic: c.optimistic,
-      }),
-    );
-  }
-
-  private varDep = dep<ReactiveVar<any>>();
-
-  public makeVar<T>(value: T): ReactiveVar<T> {
-    const cache = this;
-    return function rv(newValue) {
-      if (arguments.length > 0) {
-        if (value !== newValue) {
-          value = newValue!;
-          cache.varDep.dirty(rv);
-          // In order to perform several ReactiveVar updates without
-          // broadcasting each time, use cache.performTransaction.
-          cache.broadcastWatches();
-        }
-      } else {
-        cache.varDep(rv);
+  private maybeBroadcastWatch = wrap((
+    c: Cache.WatchOptions,
+    fromOptimisticTransaction?: boolean,
+  ) => {
+    return this.broadcastWatch.call(this, c, !!fromOptimisticTransaction);
+  }, {
+    makeCacheKey: (c: Cache.WatchOptions) => {
+      // Return a cache key (thus enabling result caching) only if we're
+      // currently using a data store that can track cache dependencies.
+      const store = c.optimistic ? this.optimisticData : this.data;
+      if (supportsResultCaching(store)) {
+        const { optimistic, rootId, variables } = c;
+        return store.makeCacheKey(
+          c.query,
+          // Different watches can have the same query, optimistic
+          // status, rootId, and variables, but if their callbacks are
+          // different, the (identical) result needs to be delivered to
+          // each distinct callback. The easiest way to achieve that
+          // separation is to include c.callback in the cache key for
+          // maybeBroadcastWatch calls. See issue #5733.
+          c.callback,
+          JSON.stringify({ optimistic, rootId, variables }),
+        );
       }
-      return value;
-    };
+    }
+  });
+
+  private watchDep = dep<Cache.WatchOptions>();
+
+  // This method is wrapped by maybeBroadcastWatch, which is called by
+  // broadcastWatches, so that we compute and broadcast results only when
+  // the data that would be broadcast might have changed. It would be
+  // simpler to check for changes after recomputing a result but before
+  // broadcasting it, but this wrapping approach allows us to skip both
+  // the recomputation and the broadcast, in most cases.
+  private broadcastWatch(
+    c: Cache.WatchOptions,
+    fromOptimisticTransaction: boolean,
+  ) {
+    // First, invalidate any other maybeBroadcastWatch wrapper functions
+    // currently depending on this Cache.WatchOptions object (including
+    // the one currently calling broadcastWatch), so they will be included
+    // in the next broadcast, even if the result they receive is the same
+    // as the previous result they received. This is important because we
+    // are about to deliver a different result to c.callback, so any
+    // previous results should have a chance to be redelivered.
+    this.watchDep.dirty(c);
+
+    // Next, re-depend on this.watchDep for just this invocation of
+    // maybeBroadcastWatch (this is a no-op if broadcastWatch was not
+    // called by maybeBroadcastWatch). This allows only the most recent
+    // maybeBroadcastWatch invocation for this watcher to remain cached,
+    // enabling re-broadcast of previous results even if they have not
+    // changed since they were previously delivered.
+    this.watchDep(c);
+
+    const diff = this.diff<any>({
+      query: c.query,
+      variables: c.variables,
+      optimistic: c.optimistic,
+    });
+
+    if (c.optimistic && fromOptimisticTransaction) {
+      diff.fromOptimisticTransaction = true;
+    }
+
+    c.callback(diff);
   }
 }
-
-export type ReactiveVar<T> = (newValue?: T) => T;

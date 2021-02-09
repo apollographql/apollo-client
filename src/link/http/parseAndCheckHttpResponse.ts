@@ -1,5 +1,5 @@
-import { Operation } from '../core/types';
-import { throwServerError } from '../utils/throwServerError';
+import { Operation } from '../core';
+import { throwServerError } from '../utils';
 
 const { hasOwnProperty } = Object.prototype;
 

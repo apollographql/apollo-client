@@ -1,5 +1,6 @@
 ---
-title: 'Components (DEPRECATED)'
+title: 'Components'
+sidebar_title: 'Components (deprecated)'
 description: Deprecated React Apollo render prop component API
 ---
 
@@ -10,13 +11,17 @@ import MutationResult from '../../../shared/mutation-result.mdx';
 import SubscriptionOptions from '../../../shared/subscription-options.mdx';
 import SubscriptionResult from '../../../shared/subscription-result.mdx';
 
-> **NOTE:** React Apollo's render prop components have been deprecated. They will continue to receive bug fixes until March 2020, after which they will no longer be maintained by Apollo.
+> **Note:** Official support for React Apollo render prop components ended in March 2020. This library is still included in the `@apollo/client` package, but it no longer receives feature updates or bug fixes.
 
 ## Installation
 
+The render prop library is included in the core `@apollo/client` package:
+
 ```
-npm install @apollo/react-components
+npm install @apollo/client
 ```
+
+You then import the library's symbols from `@apollo/client/react/components`.
 
 ## `Query`
 

@@ -1,0 +1,61 @@
+---
+title: Reactive variables
+description: State containers integrated into Apollo Client's reactivity model
+---
+
+New in Apollo Client 3, **reactive variables** are a useful mechanism for storing local state outside of the Apollo Client cache. Because they're separate from the cache, reactive variables can store data of any type and structure, and you can interact with them anywhere in your application without using GraphQL syntax.
+
+**Most importantly, modifying a reactive variable triggers an update of every active query that depends on that variable, as well an update of the react state associated with any variable values returned from the `useReactiveVar` React hook.** A query depends on a reactive variable if any of the query's requested fields defines a [`read` function](../caching/cache-field-behavior/#the-read-function) that reads the variable's value.
+
+## Creating
+
+Create a reactive variable with the `makeVar` method, like so:
+
+```js
+import { makeVar } from '@apollo/client';
+
+const cartItemsVar = makeVar([]);
+```
+
+This code creates a reactive variable with an empty array as its initial value. 
+
+> **Important:** The return value of `makeVar` is a _function_ that you call to read or modify your reactive variable's value.
+
+## Reading
+
+To read the value of your reactive variable, call the function returned by `makeVar` with zero arguments:
+
+```js
+const cartItemsVar = makeVar([]);
+
+// Output: []
+console.log(cartItemsVar());
+```
+
+## Modifying
+
+To modify the value of your reactive variable, call the function returned by `makeVar` with one argument (the variable's new value):
+
+```js
+const cartItemsVar = makeVar([]);
+
+cartItemsVar([100, 101, 102]);
+
+// Output: [100, 101, 102]
+console.log(cartItemsVar());
+
+cartItemsVar([456]);
+
+// Output: [456]
+console.log(cartItemsVar());
+```
+
+## Reacting
+
+As their name suggests, reactive variables can trigger reactive changes in your application. Whenever you modify the value of a reactive variable, queries that depend on that variable refresh, and your application's UI updates accordingly.
+
+For more information, see [Storing local state in reactive variables](./managing-state-with-field-policies/#storing-local-state-in-reactive-variables).
+
+## Example application
+
+[This example to-do list application](https://github.com/apollographql/ac3-state-management-examples/tree/master/apollo-local-state) uses reactive variables to track both the current list of to-do items and the filter that determines which items to display. See [`cache.tsx`](https://github.com/apollographql/ac3-state-management-examples/blob/master/apollo-local-state/src/cache.tsx) in particular.

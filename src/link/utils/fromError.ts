@@ -1,4 +1,4 @@
-import { Observable } from '../../utilities/observables/Observable';
+import { Observable } from '../../utilities';
 
 export function fromError<T>(errorValue: any): Observable<T> {
   return new Observable<T>(observer => {

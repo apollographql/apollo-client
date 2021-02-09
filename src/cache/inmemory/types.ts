@@ -1,10 +1,20 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { Modifier, Modifiers } from '../core/types/common';
-import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
-import { FieldValueGetter, ToReferenceFunction } from './entityStore';
-export { StoreObject, StoreValue }
+import {
+  StoreObject,
+  StoreValue,
+  Reference,
+} from '../../utilities';
+import { FieldValueGetter } from './entityStore';
+import { KeyFieldsFunction, StorageType, FieldMergeFunction } from './policies';
+import {
+  Modifier,
+  Modifiers,
+  ToReferenceFunction,
+  CanReadFunction,
+} from '../core/types/common';
+export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -24,7 +34,7 @@ export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
   merge(dataId: string, incoming: StoreObject): void;
-  modify(dataId: string, modifiers: Modifier<any> | Modifiers): boolean;
+  modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
@@ -51,6 +61,12 @@ export interface NormalizedCache {
 
   getFieldValue: FieldValueGetter;
   toReference: ToReferenceFunction;
+  canRead: CanReadFunction;
+
+  getStorage(
+    idOrObj: string | StoreObject,
+    ...storeFieldNames: (string | number)[]
+  ): StorageType;
 }
 
 /**
@@ -58,6 +74,15 @@ export interface NormalizedCache {
  * a flattened representation of query result trees.
  */
 export interface NormalizedCacheObject {
+  __META?: {
+    // Well-known singleton IDs like ROOT_QUERY and ROOT_MUTATION are
+    // always considered to be root IDs during cache.gc garbage
+    // collection, but other IDs can become roots if they are written
+    // directly with cache.writeFragment or retained explicitly with
+    // cache.retain. When such IDs exist, we include them in the __META
+    // section so that they can survive cache.{extract,restore}.
+    extraRootIds: string[];
+  };
   [dataId: string]: StoreObject | undefined;
 }
 
@@ -81,22 +106,24 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 };
 
 export type ApolloReducerConfig = {
-  dataIdFromObject?: IdGetter;
+  dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
 };
 
-export type CacheResolver = (
-  rootValue: any,
-  args: { [argName: string]: any },
-  context: any,
-) => any;
-
-export type CacheResolverMap = {
-  [typeName: string]: {
-    [fieldName: string]: CacheResolver;
-  };
+export interface MergeInfo {
+  field: FieldNode;
+  typename: string | undefined;
+  merge: FieldMergeFunction;
 };
 
-// backwards compat
-export type CustomResolver = CacheResolver;
-export type CustomResolverMap = CacheResolverMap;
+export interface MergeTree {
+  info?: MergeInfo;
+  map: Map<string | number, MergeTree>;
+};
+
+export interface ReadMergeModifyContext {
+  store: NormalizedCache;
+  variables?: Record<string, any>;
+  // A JSON.stringify-serialized version of context.variables.
+  varString?: string;
+}

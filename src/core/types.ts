@@ -1,9 +1,12 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 
-import { FetchResult } from '../link/core/types';
+import { FetchResult } from '../link/core';
+import { ApolloError } from '../errors';
 import { QueryInfo } from './QueryInfo';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';
+
+export { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
@@ -16,18 +19,16 @@ export type PureQueryOptions = {
 };
 
 export type ApolloQueryResult<T> = {
-  data?: T;
+  data: T;
   errors?: ReadonlyArray<GraphQLError>;
+  error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;
-  stale: boolean;
+  // If result.data was read from the cache with missing fields,
+  // result.partial will be true. Otherwise, result.partial will be falsy
+  // (usually because the property is absent from the result object).
+  partial?: boolean;
 };
-
-export enum FetchType {
-  normal = 1,
-  refetch = 2,
-  poll = 3,
-}
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (

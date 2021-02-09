@@ -1,6 +1,6 @@
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql';
 
-import { Operation } from '../core/types';
+import { Operation } from '../core';
 
 export interface UriFunction {
   (operation: Operation): string;
@@ -54,6 +54,17 @@ export interface HttpOptions {
    * to POST).
    */
   useGETForQueries?: boolean;
+
+  /**
+   * If set to true, the default behavior of stripping unused variables
+   * from the request will be disabled.
+   *
+   * Unused variables are likely to trigger server-side validation errors,
+   * per https://spec.graphql.org/draft/#sec-All-Variables-Used, but this
+   * includeUnusedVariables option can be useful if your server deviates
+   * from the GraphQL specification by not strictly enforcing that rule.
+   */
+  includeUnusedVariables?: boolean;
 }
 
 export interface HttpQueryOptions {

@@ -1,11 +1,10 @@
+import React from 'react';
 import { invariant } from 'ts-invariant';
 
-import { ApolloClient } from '../../ApolloClient';
-import { getApolloContext } from '../context/ApolloContext';
-import { requireReactLazily } from '../react';
+import { ApolloClient } from '../../core';
+import { getApolloContext } from '../context';
 
 export function useApolloClient(): ApolloClient<object> {
-  const React = requireReactLazily();
   const { client } = React.useContext(getApolloContext());
   invariant(
     client,

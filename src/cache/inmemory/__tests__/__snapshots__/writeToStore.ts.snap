@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
+      "localeString": "9/25/2020, 1:08:33 PM",
+    },
+    "someJSON": Object {
+      "foos": Array [
+        "bar",
+        "baz",
+      ],
+      "oyez": 3,
+    },
+  },
+}
+`;
+
+exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
+      "msSinceEpoch": 1601053713081,
+    },
+    "someJSON": Object {
+      "asdf": "middle",
+      "qwer": "upper",
+      "zxcv": "lower",
+    },
+  },
+}
+`;
+
+exports[`writing to the store user objects should be able to have { __typename: "Mutation" } 1`] = `
+Object {
+  "Gene:{\\"id\\":\\"SLC45A2\\"}": Object {
+    "__typename": "Gene",
+    "id": "SLC45A2",
+  },
+  "Gene:{\\"id\\":\\"SNAI2\\"}": Object {
+    "__typename": "Gene",
+    "id": "SNAI2",
+  },
+  "Mutation:{\\"gene\\":{\\"id\\":\\"SLC45A2\\"},\\"name\\":\\"albinism\\"}": Object {
+    "__typename": "Mutation",
+    "gene": Object {
+      "__ref": "Gene:{\\"id\\":\\"SLC45A2\\"}",
+      "id": "SLC45A2",
+    },
+    "name": "albinism",
+  },
+  "Mutation:{\\"gene\\":{\\"id\\":\\"SNAI2\\"},\\"name\\":\\"piebaldism\\"}": Object {
+    "__typename": "Mutation",
+    "gene": Object {
+      "__ref": "Gene:{\\"id\\":\\"SNAI2\\"}",
+      "id": "SNAI2",
+    },
+    "name": "piebaldism",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mutations": Array [
+      Object {
+        "__ref": "Mutation:{\\"gene\\":{\\"id\\":\\"SLC45A2\\"},\\"name\\":\\"albinism\\"}",
+      },
+      Object {
+        "__ref": "Mutation:{\\"gene\\":{\\"id\\":\\"SNAI2\\"},\\"name\\":\\"piebaldism\\"}",
+      },
+    ],
+  },
+}
+`;
+
+exports[`writing to the store user objects should be able to have { __typename: "Subscription" } 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "subscriptions": Array [
+      Object {
+        "__ref": "Subscription:{\\"subId\\":1}",
+      },
+      Object {
+        "__ref": "Subscription:{\\"subId\\":2}",
+      },
+      Object {
+        "__ref": "Subscription:{\\"subId\\":3}",
+      },
+    ],
+  },
+  "Subscription:{\\"subId\\":1}": Object {
+    "__typename": "Subscription",
+    "subId": 1,
+    "subscriber": Object {
+      "name": "Alice",
+    },
+  },
+  "Subscription:{\\"subId\\":2}": Object {
+    "__typename": "Subscription",
+    "subId": 2,
+    "subscriber": Object {
+      "name": "Bob",
+    },
+  },
+  "Subscription:{\\"subId\\":3}": Object {
+    "__typename": "Subscription",
+    "subId": 3,
+    "subscriber": Object {
+      "name": "Clytemnestra",
+    },
+  },
+}
+`;

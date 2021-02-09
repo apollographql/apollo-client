@@ -1,57 +1,497 @@
-# Apollo Client 3.0.0 (TBD - not yet released)
+## Apollo Client 3.3.10 (not yet released)
 
-⚠️ **Note:** As of 3.0.0, Apollo Client uses a new package name: [`@apollo/client`](https://www.npmjs.com/package/@apollo/client)
+### Improvements
+
+- Avoid calling `forceUpdate` when component is unmounted. <br/>
+  [@DylanVann](https://github.com/DylanVann) in [#7655](https://github.com/apollographql/apollo-client/pull/7655)
+
+- The `codemods/` top-level directory has been moved into the `scripts/` directory. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7675](https://github.com/apollographql/apollo-client/pull/7675)
+
+## Apollo Client 3.3.9
+
+### Bug Fixes
+
+- Prevent reactive variables from retaining otherwise unreachable `InMemoryCache` objects. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7661](https://github.com/apollographql/apollo-client/pull/7661)
+
+### Improvements
+
+- The [`graphql-tag`](https://www.npmjs.com/package/graphql-tag) dependency has been updated to version 2.12.0, after converting its repository to use TypeScript and ECMAScript module syntax. There should be no visible changes in behavior, though the internal changes seemed significant enough to mention here. <br/>
+  [@abdonrd](https://github.com/abdonrd) in [graphql-tag#273](https://github.com/apollographql/graphql-tag/pull/273) and
+  [@PowerKiKi](https://github.com/PowerKiKi) in [graphql-tag#325](https://github.com/apollographql/graphql-tag/pull/325)
+
+## Apollo Client 3.3.8
+
+### Bug Fixes
+
+- Catch updates in `useReactiveVar` with an additional check. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7652](https://github.com/apollographql/apollo-client/pull/7652)
+
+- Reactivate forgotten reactive variables whenever `InMemoryCache` acquires its first watcher. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7657](https://github.com/apollographql/apollo-client/pull/7657)
+
+- Backport `Symbol.species` fix for `Concast` and `ObservableQuery` from [`release-3.4`](https://github.com/apollographql/apollo-client/pull/7399), fixing subscriptions in React Native Android when the Hermes JavaScript engine is enabled (among other benefits). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7403](https://github.com/apollographql/apollo-client/pull/7403) and [#7660](https://github.com/apollographql/apollo-client/pull/7660)
+
+## Apollo Client 3.3.7
+
+### Bug Fixes
+
+- Fix a regression due to [#7310](https://github.com/apollographql/apollo-client/pull/7310) that caused `loading` always to be `true` for `skip: true` results during server-side rendering. <br/>
+  [@rgrove](https://github.com/rgrove) in [#7567](https://github.com/apollographql/apollo-client/pull/7567)
+
+- Avoid duplicate `useReactiveVar` listeners when rendering in `React.StrictMode`. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7581](https://github.com/apollographql/apollo-client/pull/7581)
+
+### Improvements
+
+- Set `displayName` on `ApolloContext` objects for easier debugging. <br/>
+  [@dulmandakh](https://github.com/dulmandakh) in [#7550](https://github.com/apollographql/apollo-client/pull/7550)
+
+## Apollo Client 3.3.6
+
+### Bug Fixes
+
+- Immediately apply `queryType: true`, `mutationType: true`, and `subscriptionType: true` type policies, rather than waiting for the first time the policy is used, fixing a [regression](https://github.com/apollographql/apollo-client/issues/7443) introduced by [#7065](https://github.com/apollographql/apollo-client/pull/7065). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7463](https://github.com/apollographql/apollo-client/pull/7463)
+
+- Check that `window` is defined even when `connectToDevTools` is `true`. <br/>
+  [@yasupeke](https://github.com/yasupeke) in [#7434](https://github.com/apollographql/apollo-client/pull/7434)
+
+### Improvements
+
+- Replace stray `console.debug` (undefined in React Native) with `invariant.log`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7454](https://github.com/apollographql/apollo-client/pull/7454)
+
+- Suggest Firefox Apollo DevTools as well as the Chrome extension. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7461](https://github.com/apollographql/apollo-client/pull/7461)
+
+## Apollo Client 3.3.5
+
+### Improvements
+
+- Restore `client.version` property, reflecting the current `@apollo/client` version from `package.json`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7448](https://github.com/apollographql/apollo-client/pull/7448)
+
+## Apollo Client 3.3.4
+
+### Improvements
+
+- Update `ts-invariant` to avoid potential [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)-violating `Function` fallback, thanks to [a clever new `globalThis` polyfill technique](https://mathiasbynens.be/notes/globalthis). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7414](https://github.com/apollographql/apollo-client/pull/7414)
+
+## Apollo Client 3.3.3
+
+### Bug fixes
+
+- Make the `observer` parameter of `ApolloLink#onError` optional, fixing an unnecessary breaking change for any code that called `onError` directly. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7407](https://github.com/apollographql/apollo-client/pull/7407)
+
+## Apollo Client 3.3.2
+
+> ⚠️ **Note:** This version of `@apollo/client` contains no behavioral changes since version 3.3.1
+
+### Documentation
+
+- The [Pagination](https://www.apollographql.com/docs/react/pagination/overview/) article has been completely rewritten (and split into multiple pages) to cover Apollo Client 3 field policies. <br/>
+  [@benjamn](https://github.com/benjamn) and [@StephenBarlow](https://github.com/StephenBarlow) in [#7175](https://github.com/apollographql/apollo-client/pull/7175)
+
+- Revamp [local state tutorial chapter](https://www.apollographql.com/docs/tutorial/local-state/) for Apollo Client 3, including reactive variables. <br/>
+  [@StephenBarlow](https://github.com/StephenBarlow) in [`apollographql@apollo#1050`](https://github.com/apollographql/apollo/pull/1050)
+
+- Add examples of using `ApolloLink` to modify response data asynchronously. <br/>
+  [@alichry](https://github.com/alichry) in [#7332](https://github.com/apollographql/apollo-client/pull/7332)
+
+- Consolidate separate v2.4, v2.5, and v2.6 documentation versions into one v2 version. <br/>
+  [@jgarrow](https://github.com/jgarrow) in [#7378](https://github.com/apollographql/apollo-client/pull/7378)
+
+## Apollo Client 3.3.1
+
+### Bug Fixes
+
+- Revert back to `default`-importing `React` internally, rather than using a namespace import. <br/>
+  [@benjamn](https://github.com/benjamn) in [113475b1](https://github.com/apollographql/apollo-client/commit/113475b163a19a40a67465c11e8e6f48a1de7e76)
+
+## Apollo Client 3.3.0
+
+### Bug Fixes
+
+- Update `@wry/equality` to consider undefined properties equivalent to missing properties. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7108](https://github.com/apollographql/apollo-client/pull/7108)
+
+- Prevent memory leaks involving unused `onBroadcast` function closure created in `ApolloClient` constructor. <br/>
+  [@kamilkisiela](https://github.com/kamilkisiela) in [#7161](https://github.com/apollographql/apollo-client/pull/7161)
+
+- Provide default empty cache object for root IDs like `ROOT_QUERY`, to avoid differences in behavior before/after `ROOT_QUERY` data has been written into `InMemoryCache`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7100](https://github.com/apollographql/apollo-client/pull/7100)
+
+- Cancel `queryInfo.notifyTimeout` in `QueryInfo#markResult` to prevent unnecessary network requests when using a `FetchPolicy` of `cache-and-network` or `network-only` in a React component with multiple `useQuery` calls. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7347](https://github.com/apollographql/apollo-client/pull/7347)
+
+### Potentially breaking changes
+
+- Ensure `cache.readQuery` and `cache.readFragment` always return `TData | null`, instead of throwing `MissingFieldError` exceptions when missing fields are encountered. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7098](https://github.com/apollographql/apollo-client/pull/7098)
+  > Since this change converts prior exceptions to `null` returns, and since `null` was already a possible return value according to the `TData | null` return type, we are confident this change will be backwards compatible (as long as `null` was properly handled before).
+
+- `HttpLink` will now automatically strip any unused `variables` before sending queries to the GraphQL server, since those queries are very likely to fail validation, according to the [All Variables Used](https://spec.graphql.org/draft/#sec-All-Variables-Used) rule in the GraphQL specification. If you depend on the preservation of unused variables, you can restore the previous behavior by passing `includeUnusedVariables: true` to the `HttpLink` constructor (which is typically passed as `options.link` to the `ApolloClient` constructor). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7127](https://github.com/apollographql/apollo-client/pull/7127)
+
+- Ensure `MockLink` (used by `MockedProvider`) returns mock configuration errors (e.g. `No more mocked responses for the query ...`) through the Link's `Observable`, instead of throwing them. These errors are now available through the `error` property of a result. <br/>
+  [@hwillson](https://github.com/hwillson) in [#7110](https://github.com/apollographql/apollo-client/pull/7110)
+  > Returning mock configuration errors through the Link's `Observable` was the default behavior in Apollo Client 2.x. We changed it for 3, but the change has been problematic for those looking to migrate from 2.x to 3. We've decided to change this back with the understanding that not many people want or are relying on `MockLink`'s throwing exception approach. If you want to change this functionality, you can define custom error handling through `MockLink.setOnError`.
+
+- Unsubscribing the last observer from an `ObservableQuery` will once again unsubscribe from the underlying network `Observable` in all cases, as in Apollo Client 2.x, allowing network requests to be cancelled by unsubscribing. <br/>
+  [@javier-garcia-meteologica](https://github.com/javier-garcia-meteologica) in [#7165](https://github.com/apollographql/apollo-client/pull/7165) and [#7170](https://github.com/apollographql/apollo-client/pull/7170).
+
+- The independent `QueryBaseOptions` and `ModifiableWatchQueryOptions` interface supertypes have been eliminated, and their fields are now defined by `QueryOptions`. <br/>
+  [@DCtheTall](https://github.com/DCtheTall) in [#7136](https://github.com/apollographql/apollo-client/pull/7136)
+
+- Internally, Apollo Client now avoids nested imports from the `graphql` package, importing everything from the top-level package instead. For example,
+  ```ts
+  import { visit } from "graphql/language/visitor"
+  ```
+  is now just
+  ```ts
+  import { visit } from "graphql"
+  ```
+  Since the `graphql` package uses `.mjs` modules, your bundler may need to be configured to recognize `.mjs` files as ECMAScript modules rather than CommonJS modules. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7185](https://github.com/apollographql/apollo-client/pull/7185)
+
+### Improvements
+
+- Support inheritance of type and field policies, according to `possibleTypes`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7065](https://github.com/apollographql/apollo-client/pull/7065)
+
+- Allow configuring custom `merge` functions, including the `merge: true` and `merge: false` shorthands, in type policies as well as field policies. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7070](https://github.com/apollographql/apollo-client/pull/7070)
+
+- The verbosity of Apollo Client console messages can be globally adjusted using the `setLogVerbosity` function:
+  ```ts
+  import { setLogVerbosity } from "@apollo/client";
+  setLogVerbosity("log"); // display all messages
+  setLogVerbosity("warn"); // display only warnings and errors (default)
+  setLogVerbosity("error"); // display only errors
+  setLogVerbosity("silent"); // hide all console messages
+  ```
+  Remember that all logs, warnings, and errors are hidden in production. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7226](https://github.com/apollographql/apollo-client/pull/7226)
+
+- Modifying `InMemoryCache` fields that have `keyArgs` configured will now invalidate only the field value with matching key arguments, rather than invalidating all field values that share the same field name. If `keyArgs` has not been configured, the cache must err on the side of invalidating by field name, as before. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7351](https://github.com/apollographql/apollo-client/pull/7351)
+
+- Shallow-merge `options.variables` when combining existing or default options with newly-provided options, so new variables do not completely overwrite existing variables. <br/>
+  [@amannn](https://github.com/amannn) in [#6927](https://github.com/apollographql/apollo-client/pull/6927)
+
+- Avoid displaying `Cache data may be lost...` warnings for scalar field values that happen to be objects, such as JSON data. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7075](https://github.com/apollographql/apollo-client/pull/7075)
+
+- In addition to the `result.data` property, `useQuery` and `useLazyQuery` will now provide a `result.previousData` property, which can be useful when a network request is pending and `result.data` is undefined, since `result.previousData` can be rendered instead of rendering an empty/loading state. <br/>
+  [@hwillson](https://github.com/hwillson) in [#7082](https://github.com/apollographql/apollo-client/pull/7082)
+
+- Passing `validate: true` to the `SchemaLink` constructor will enable validation of incoming queries against the local schema before execution, returning validation errors in `result.errors`, just like a non-local GraphQL endpoint typically would. <br/>
+  [@amannn](https://github.com/amannn) in [#7094](https://github.com/apollographql/apollo-client/pull/7094)
+
+- Allow optional arguments in `keyArgs: [...]` arrays for `InMemoryCache` field policies. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7109](https://github.com/apollographql/apollo-client/pull/7109)
+
+- Avoid registering `QueryPromise` when `skip` is `true` during server-side rendering. <br/>
+  [@izumin5210](https://github.com/izumin5210) in [#7310](https://github.com/apollographql/apollo-client/pull/7310)
+
+- `ApolloCache` objects (including `InMemoryCache`) may now be associated with or disassociated from individual reactive variables by calling `reactiveVar.attachCache(cache)` and/or `reactiveVar.forgetCache(cache)`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7350](https://github.com/apollographql/apollo-client/pull/7350)
+
+## Apollo Client 3.2.9
+
+### Bug Fixes
+
+- Revert back to `default`-importing `React` internally, rather than using a namespace import. <br/>
+  [@benjamn](https://github.com/benjamn) in [113475b1](https://github.com/apollographql/apollo-client/commit/113475b163a19a40a67465c11e8e6f48a1de7e76)
+
+## Apollo Client 3.2.8
+
+### Bug Fixes
+
+- Ensure `sourcesContent` array is properly defined in `.js.map` files generated by `tsc`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7371](https://github.com/apollographql/apollo-client/pull/7371)
+
+- Avoid relying on global `Symbol` properties in `ApolloContext.ts`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7371](https://github.com/apollographql/apollo-client/pull/7371)
+
+## Apollo Client 3.2.7
+
+### Bug Fixes
+
+- Revert updating `symbol-observable` from version 2.x to version 3, which caused TypeScript errors with some `@types/node` versions, especially in Angular applications. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7340](https://github.com/apollographql/apollo-client/pull/7340)
+
+## Apollo Client 3.2.6
+
+### Bug Fixes
+
+- Always consider singleton IDs like `ROOT_QUERY` and `ROOT_MUTATION` to be root IDs during `cache.gc` garbage collection, regardless of whether they have been retained or released. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7333](https://github.com/apollographql/apollo-client/pull/7333)
+
+- Use optional chaining syntax (`this.currentObservable?.refetch`) in React `refetch` wrapper function to avoid crashing when an unmounted component is accidentally refetched. <br/>
+  [@tm1000](https://github.com/tm1000) in [#6314](https://github.com/apollographql/apollo-client/pull/6314) and
+  [@linmic](https://github.com/linmic) in [#7186](https://github.com/apollographql/apollo-client/pull/7186)
+
+### Improvements
+
+- Handle older `react-apollo` package in `codemods/ac2-to-ac3/imports.js` migration script. <br/>
+  [@tm1000](https://github.com/tm1000) in [#7216](https://github.com/apollographql/apollo-client/pull/7216)
+
+- Ensure `relayStylePagination` preserves `pageInfo.{start,end}Cursor` if `edges` is missing or empty. <br/>
+  [@beaucollins](https://github.com/beaucollins) in [#7224](https://github.com/apollographql/apollo-client/pull/7224)
+
+## Apollo Client 3.2.5
+
+### Improvements
+
+- Move `terser` dependency from `dependencies` to `devDependencies`. <br/>
+  [@SimenB](https://github.com/SimenB) in [#7188](https://github.com/apollographql/apollo-client/pull/7188)
+
+- Avoid all sub-package imports from the `graphql` npm package. <br/>
+  [@stoically](https://github.com/stoically) in [#7185](https://github.com/apollographql/apollo-client/pull/7185)
+
+## Apollo Client 3.2.4
+
+### Improvements
+
+- Update the `optimism` npm dependency to version 0.13.0 in order to use the new `optimistic.forget` method to fix a potential `cache.watch` memory leak. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7157](https://github.com/apollographql/apollo-client/pull/7157)
+
+- Consider `cache.reset` a destructive method, like `cache.evict` and `cache.modify`. <br/>
+  [@joshjg](https://github.com/joshjg) in [#7150](https://github.com/apollographql/apollo-client/pull/7150)
+
+- Avoid refetching observerless queries with `reFetchObservableQueries`. <br/>
+  [@joshjg](https://github.com/joshjg) in [#7146](https://github.com/apollographql/apollo-client/pull/7146)
+
+## Apollo Client 3.2.3
+
+### Improvements
+
+- Default `args.offset` to zero in `offsetLimitPagination`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7141](https://github.com/apollographql/apollo-client/pull/7141)
+
+## Apollo Client 3.2.2
+
+### Bug Fixes
+
+- Undo `TEdgeWrapper` approach for `relayStylePagination`, introduced by [f41e9efc](https://github.com/apollographql/apollo-client/commit/f41e9efc9e061b80fe5019456c049a3c56661e87) in [#7023](https://github.com/apollographql/apollo-client/pull/7023), since it was an unintended breaking change for existing code that used `cache.modify` to interact with field data managed by `relayStylePagination`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7103](https://github.com/apollographql/apollo-client/pull/7103)
+
+## Apollo Client 3.2.1
+
+### Bug Fixes
+
+- Fix `relayStylePagination` to handle the possibility that edges might be normalized `Reference` objects (uncommon). <br/>
+  [@anark](https://github.com/anark) and [@benjamn](https://github.com/benjamn) in [#7023](https://github.com/apollographql/apollo-client/pull/7023)
+
+- Disable "Missing cache result fields" warnings when `returnPartialData` is `true`.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#7055](https://github.com/apollographql/apollo-client/pull/7055)
+
+### Improvements
+
+- Mark `subscriptions-transport-ws` `peerDependency` as optional. <br/>
+  [@MasterOdin](https://github.com/MasterOdin) in [#7047](https://github.com/apollographql/apollo-client/pull/7047)
+
+## Apollo Client 3.2.0
+
+### Bug Fixes
+
+- Use `options.nextFetchPolicy` internally to restore original `FetchPolicy` after polling with `fetchPolicy: "network-only"`, so that polling does not interfere with normal query watching. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
+
+- Initialize `ObservableQuery` in `updateObservableQuery` even if `skip` is `true`. <br/>
+  [@mu29](https://github.com/mu29) in [#6999](https://github.com/apollographql/apollo-client/pull/6999)
+
+- Prevent full reobservation of queries affected by optimistic mutation updates, while still delivering results from the cache. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6854](https://github.com/apollographql/apollo-client/pull/6854)
+
+### Improvements
+
+- In TypeScript, all APIs that take `DocumentNode` parameters now may alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation but allows the APIs to infer the data and variable types instead of requiring you to specify types explicitly at the call site. <br/>
+  [@dotansimha](https://github.com/dotansimha) in [#6720](https://github.com/apollographql/apollo-client/pull/6720)
+
+- Bring back an improved form of heuristic fragment matching, by allowing `possibleTypes` to specify subtype regular expression strings, which count as matches if the written result object has all the fields expected for the fragment. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6901](https://github.com/apollographql/apollo-client/pull/6901)
+
+- Allow `options.nextFetchPolicy` to be a function that takes the current `FetchPolicy` and returns a new (or the same) `FetchPolicy`, making `nextFetchPolicy` more suitable for global use in `defaultOptions.watchQuery`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6893](https://github.com/apollographql/apollo-client/pull/6893)
+
+- Implement `useReactiveVar` hook for consuming reactive variables in React components. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6867](https://github.com/apollographql/apollo-client/pull/6867)
+
+- Move `apollo-link-persisted-queries` implementation to `@apollo/client/link/persisted-queries`. Try running our [automated imports transform](https://github.com/apollographql/apollo-client/tree/main/scripts/codemods/ac2-to-ac3) to handle this conversion, if you're using `apollo-link-persisted-queries`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#6837](https://github.com/apollographql/apollo-client/pull/6837)
+
+- Disable feud-stopping logic after any `cache.evict` or `cache.modify` operation. <br/>
+  [@benjamn](https://github.com/benjamn) in
+  [#6817](https://github.com/apollographql/apollo-client/pull/6817) and
+  [#6898](https://github.com/apollographql/apollo-client/pull/6898)
+
+- Throw if `writeFragment` cannot identify `options.data` when no `options.id` provided. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#6859](https://github.com/apollographql/apollo-client/pull/6859)
+
+- Provide `options.storage` object to `cache.modify` functions, as provided to `read` and `merge` functions. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6991](https://github.com/apollographql/apollo-client/pull/6991)
+
+- Allow `cache.modify` functions to return `details.INVALIDATE` (similar to `details.DELETE`) to invalidate the current field, causing affected queries to rerun, even if the field's value is unchanged. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6991](https://github.com/apollographql/apollo-client/pull/6991)
+
+- Support non-default `ErrorPolicy` values (that is, `"ignore"` and `"all"`, in addition to the default value `"none"`) for mutations and subscriptions, like we do for queries. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7003](https://github.com/apollographql/apollo-client/pull/7003)
+
+- Remove invariant forbidding a `FetchPolicy` of `cache-only` in `ObservableQuery#refetch`. <br/>
+  [@benjamn](https://github.com/benjamn) in [ccb0a79a](https://github.com/apollographql/apollo-client/pull/6774/commits/ccb0a79a588721f08bf87a131c31bf37fa3238e5), fixing [#6702](https://github.com/apollographql/apollo-client/issues/6702)
+
+## Apollo Client 3.1.5
+
+### Bug Fixes
+
+- Make `ApolloQueryResult.data` field non-optional again. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6997](https://github.com/apollographql/apollo-client/pull/6997)
+
+### Improvements
+
+- Allow querying `Connection` metadata without `args` in `relayStylePagination`. <br/>
+  [@anark](https://github.com/anark) in [#6935](https://github.com/apollographql/apollo-client/pull/6935)
+
+## Apollo Client 3.1.4
+
+### Bug Fixes
+
+- Restrict root object identification to `ROOT_QUERY` (the ID corresponding to the root `Query` object), allowing `Mutation` and `Subscription` as user-defined types. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6914](https://github.com/apollographql/apollo-client/pull/6914)
+
+- Prevent crash when `pageInfo` and empty `edges` are received by `relayStylePagination`. <br/>
+  [@fracmak](https://github.com/fracmak) in [#6918](https://github.com/apollographql/apollo-client/pull/6918)
+
+## Apollo Client 3.1.3
+
+### Bug Fixes
+
+- Consider only `result.data` (rather than all properties of `result`) when settling cache feuds. <br/>
+  [@danReynolds](https://github.com/danReynolds) in [#6777](https://github.com/apollographql/apollo-client/pull/6777)
+
+### Improvements
+
+- Provide [jscodeshift](https://www.npmjs.com/package/jscodeshift) transform for automatically converting Apollo Client 2.x `import` declarations to use Apollo Client 3.x packages. [Instructions](https://github.com/apollographql/apollo-client/tree/main/scripts/codemods/ac2-to-ac3). <br/>
+  [@dminkovsky](https://github.com/dminkovsky) and [@jcreighton](https://github.com/jcreighton) in [#6486](https://github.com/apollographql/apollo-client/pull/6486)
+
+## Apollo Client 3.1.2
+
+### Bug Fixes
+
+- Avoid making network requests when `skip` is `true`.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6752](https://github.com/apollographql/apollo-client/pull/6752)
+
+### Improvements
+
+- Allow `SchemaLink.Options.context` function to be `async` (or return a `Promise`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6735](https://github.com/apollographql/apollo-client/pull/6735)
+
+## Apollo Client 3.1.1
+
+### Bug Fixes
+
+- Re-export cache types from `@apollo/client/core` (and thus also `@apollo/client`), again. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6725](https://github.com/apollographql/apollo-client/pull/6725)
+
+## Apollo Client 3.1.0
+
+### Bug Fixes
+
+- Rework interdependencies between `@apollo/client/*` entry points, so that CommonJS and ESM modules are supported equally well, without any duplication of shared code. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6656](https://github.com/apollographql/apollo-client/pull/6656) and
+  [#6657](https://github.com/apollographql/apollo-client/pull/6657)
+
+- Tolerate `!==` callback functions (like `onCompleted` and `onError`) in `useQuery` options, since those functions are almost always freshly evaluated each time `useQuery` is called. <br/>
+  [@hwillson](https://github.com/hwillson) and [@benjamn](https://github.com/benjamn) in [#6588](https://github.com/apollographql/apollo-client/pull/6588)
+
+- Respect `context.queryDeduplication` if provided, and otherwise fall back to `client.deduplication` (as before). <br/>
+  [@igaloly](https://github.com/igaloly) in [#6261](https://github.com/apollographql/apollo-client/pull/6261) and
+  [@Kujawadl](https://github.com/Kujawadl) in [#6526](https://github.com/apollographql/apollo-client/pull/6526)
+
+- Refactor `ObservableQuery#getCurrentResult` to reenable immediate delivery of warm cache results. As part of this refactoring, the `ApolloCurrentQueryResult` type was eliminated in favor of `ApolloQueryResult`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6710](https://github.com/apollographql/apollo-client/pull/6710)
+
+- Avoid clobbering `defaultOptions` with `undefined` values. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6715](https://github.com/apollographql/apollo-client/pull/6715)
+
+### Improvements
+
+- Apollo Client will no longer modify `options.fetchPolicy` unless you pass `options.nextFetchPolicy` to request an explicit change in `FetchPolicy` after the current request. Although this is technically a breaking change, `options.nextFieldPolicy` makes it easy to restore the old behavior (by passing `cache-first`). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6712](https://github.com/apollographql/apollo-client/pull/6712), reverting [#6353](https://github.com/apollographql/apollo-client/pull/6353)
+
+- Errors of the form `Invariant Violation: 42` thrown in production can now be looked up much more easily, by consulting the auto-generated `@apollo/client/invariantErrorCodes.js` file specific to your `@apollo/client` version. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6665](https://github.com/apollographql/apollo-client/pull/6665)
+
+- Make the `client` field of the `MutationResult` type non-optional, since it is always provided. <br/>
+  [@glasser](https://github.com/glasser) in [#6617](https://github.com/apollographql/apollo-client/pull/6617)
+
+- Allow passing an asynchronous `options.renderFunction` to `getMarkupFromTree`. <br/>
+  [@richardscarrott](https://github.com/richardscarrott) in [#6576](https://github.com/apollographql/apollo-client/pull/6576)
+
+- Ergonomic improvements for `merge` and `keyArgs` functions in cache field policies. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6714](https://github.com/apollographql/apollo-client/pull/6714)
+
+## Apollo Client 3.0.2
+
+### Bug Fixes
+
+- Avoid duplicating `graphql/execution/execute` dependency in CommonJS bundle for `@apollo/client/link/schema`, fixing `instanceof` errors reported in [#6621](https://github.com/apollographql/apollo-client/issues/6621) and [#6614](https://github.com/apollographql/apollo-client/issues/6614). <br/>
+  [@benjamn](https://github.com/benjamn) in [#6624](https://github.com/apollographql/apollo-client/pull/6624)
+
+## Apollo Client 3.0.1
+
+### Bug Fixes
+
+- Make sure `useQuery` `onCompleted` is not fired when `skip` is `true`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#6589](https://github.com/apollographql/apollo-client/pull/6589)
+
+- Revert changes to `peerDependencies` in `package.json` ([#6594](https://github.com/apollographql/apollo-client/pull/6594)), which would have allowed using incompatible future versions of `graphql` and/or `react` due to overly-permissive `>=` version constraints. <br/>
+  [@hwillson](https://github.com/hwillson) in [#6605](https://github.com/apollographql/apollo-client/pull/6605)
+
+# Apollo Client 3.0.0
 
 ## Improvements
 
-- **[BREAKING]** `InMemoryCache` will no longer merge the fields of written objects unless the objects are known to have the same identity, and the values of fields with the same name will not be recursively merged unless a custom `merge` function is defined by a field policy for that field, within a type policy associated with the `__typename` of the parent object. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5603](https://github.com/apollographql/apollo-client/pull/5603)
+> ⚠️ **Note:** As of 3.0.0, Apollo Client uses a new package name: [`@apollo/client`](https://www.npmjs.com/package/@apollo/client)
 
-- **[BREAKING]** Eliminate "generated" cache IDs to avoid normalizing objects with no meaningful ID, significantly reducing cache memory usage. This is a backwards-incompatible change if your code depends on the precise internal representation of normalized data in the cache. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5146](https://github.com/apollographql/apollo-client/pull/5146)
-
-- **[BREAKING]** Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
-  [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
-
-- **[BREAKING]** Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
-  [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
-
-- **[BREAKING]** The `queryManager` property of `ApolloClient` instances is now marked as `private`, paving the way for a more aggressive redesign of its API.
-
-- **[BREAKING]** `FragmentMatcher`, `HeuristicFragmentMatcher`, and `IntrospectionFragmentMatcher` have all been removed. We now recommend using `InMemoryCache`’s `possibleTypes` option instead. For more information see the [Defining `possibleTypes` manually](https://www.apollographql.com/docs/react/v3.0-beta/data/fragments/#defining-possibletypes-manually) section of the docs. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5073](https://github.com/apollographql/apollo-client/pull/5073)
-
-- **[BREAKING]** As promised in the [Apollo Client 2.6 blog post](https://blog.apollographql.com/whats-new-in-apollo-client-2-6-b3acf28ecad1), all cache results are now frozen/immutable. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5153](https://github.com/apollographql/apollo-client/pull/5153)
+### `ApolloClient`
 
 - **[BREAKING]** `ApolloClient` is now only available as a named export. The default `ApolloClient` export has been removed. <br/>
   [@hwillson](https://github.com/hwillson) in [#5425](https://github.com/apollographql/apollo-client/pull/5425)
 
-- **[BREAKING]** The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
+- **[BREAKING]** The `queryManager` property of `ApolloClient` instances is now marked as `private`, paving the way for a more aggressive redesign of its API.
 
-- **[BREAKING]** We are no longer exporting certain (intended to be) internal utilities. If you are depending on some of the lesser known exports from `apollo-cache`, `apollo-cache-inmemory`, or `apollo-utilities`, they may no longer be available from `@apollo/client`. <br/>
-  [@hwillson](https://github.com/hwillson) in [#5437](https://github.com/apollographql/apollo-client/pull/5437) and [#5514](https://github.com/apollographql/apollo-client/pull/5514)
+- **[BREAKING]** Apollo Client will no longer deliver "stale" results to `ObservableQuery` consumers, but will instead log more helpful errors about which cache fields were missing. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6058](https://github.com/apollographql/apollo-client/pull/6058)
 
-- **[BREAKING?]** Remove `fixPolyfills.ts`, except when bundling for React Native. If you have trouble with `Map` or `Set` operations due to frozen key objects in React Native, either update React Native to version 0.59.0 (or 0.61.x, if possible) or investigate why `fixPolyfills.native.js` is not included in your bundle. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5962](https://github.com/apollographql/apollo-client/pull/5962)
+- **[BREAKING]** `ApolloError`'s thrown by Apollo Client no longer prefix error messages with `GraphQL error:` or `Network error:`. To differentiate between GraphQL/network errors, refer to `ApolloError`'s public `graphQLErrors` and `networkError` properties. <br/>
+  [@lorensr](https://github.com/lorensr) in [#3892](https://github.com/apollographql/apollo-client/pull/3892)
+
+- **[BREAKING]** Support for the `@live` directive has been removed, but might be restored in the future if a more thorough implementation is proposed. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6221](https://github.com/apollographql/apollo-client/pull/6221)
 
 - **[BREAKING]** Apollo Client 2.x allowed `@client` fields to be passed into the `link` chain if `resolvers` were not set in the constructor. This allowed `@client` fields to be passed into Links like `apollo-link-state`. Apollo Client 3 enforces that `@client` fields are local only, meaning they are no longer passed into the `link` chain, under any circumstances.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5982](https://github.com/apollographql/apollo-client/pull/5982)
 
-- **[BREAKING]** `InMemoryCache` now _throws_ when data with missing or undefined query fields is written into the cache, rather than just warning in development. <br/>
-  [@benjamn](https://github.com/benjamn) in [#6055](https://github.com/apollographql/apollo-client/pull/6055)
+- **[BREAKING?]** Refactor `QueryManager` to make better use of observables and enforce `fetchPolicy` more reliably. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6221](https://github.com/apollographql/apollo-client/pull/6221)
 
-- **[BREAKING]** `client|cache.writeData` have been fully removed. `writeData` usage is one of the easiest ways to turn faulty assumptions about how the cache represents data internally, into cache inconsistency and corruption. `client|cache.writeQuery`, `client|cache.writeFragment`, and/or `cache.modify` can be used to update the cache.  <br/>
-  [@benjamn](https://github.com/benjamn) in [#5923](https://github.com/apollographql/apollo-client/pull/5923)
+- The `updateQuery` function previously required by `fetchMore` has been deprecated with a warning, and will be removed in the next major version of Apollo Client. Please consider using a `merge` function to handle incoming data instead of relying on `updateQuery`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6464](https://github.com/apollographql/apollo-client/pull/6464)
 
-- `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
+  - Helper functions for generating common pagination-related field policies may be imported from `@apollo/client/utilities`. The most basic helper is `concatPagination`, which emulates the concatenation behavior of typical `updateQuery` functions. A more sophisticated helper is `offsetLimitPagination`, which implements offset/limit-based pagination. If you are consuming paginated data from a Relay-friendly API, use `relayStylePagination`. Feel free to use [these helper functions](https://github.com/apollographql/apollo-client/blob/main/src/utilities/policies/pagination.ts) as inspiration for your own field policies, and/or modify them to suit your needs. <br/>
+    [@benjamn](https://github.com/benjamn) in [#6465](https://github.com/apollographql/apollo-client/pull/6465)
 
-- The contents of the `@apollo/react-hooks` package have been merged into `@apollo/client`, enabling the following all-in-one `import`:
-  ```ts
-  import { ApolloClient, ApolloProvider, useQuery } from '@apollo/client';
-  ```
-  [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
+- Updated to work with `graphql@15`.  <br/>
+  [@durchanek](https://github.com/durchanek) in [#6194](https://github.com/apollographql/apollo-client/pull/6194) and [#6279](https://github.com/apollographql/apollo-client/pull/6279) <br/>
+  [@hagmic](https://github.com/hagmic) in [#6328](https://github.com/apollographql/apollo-client/pull/6328)
 
 - Apollo Link core and HTTP related functionality has been merged into `@apollo/client`. Functionality that was previously available through the `apollo-link`, `apollo-link-http-common` and `apollo-link-http` packages is now directly available from `@apollo/client` (e.g. `import { HttpLink } from '@apollo/client'`). The `ApolloClient` constructor has also been updated to accept new `uri`, `headers` and `credentials` options. If `uri` is specified, Apollo Client will take care of creating the necessary `HttpLink` behind the scenes. <br/>
   [@hwillson](https://github.com/hwillson) in [#5412](https://github.com/apollographql/apollo-client/pull/5412)
@@ -62,44 +502,100 @@
 - `@apollo/client/core` can be used to import the Apollo Client core, which includes everything the main `@apollo/client` package does, except for all React related functionality.  <br/>
   [@kamilkisiela](https://github.com/kamilkisiela) in [#5541](https://github.com/apollographql/apollo-client/pull/5541)
 
-- `@apollo/client/cache` can be used to import the Apollo Client cache without importing other parts of the Apollo Client codebase. <br/>
-  [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
+- Several deprecated methods have been fully removed:
+  - `ApolloClient#initQueryManager`
+  - `QueryManager#startQuery`
+  - `ObservableQuery#currentResult`
+
+- Apollo Client now supports setting a new `ApolloLink` (or link chain) after `new ApolloClient()` has been called, using the `ApolloClient#setLink` method.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6193](https://github.com/apollographql/apollo-client/pull/6193)
+
+- The final time a mutation `update` function is called, it can no longer accidentally read optimistic data from other concurrent mutations, which ensures the use of optimistic updates has no lasting impact on the state of the cache after mutations have finished. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6551](https://github.com/apollographql/apollo-client/pull/6551)
+
+- Apollo links that were previously maintained in https://github.com/apollographql/apollo-link have been merged into the Apollo Client project. They should be accessed using the new entry points listed in the [migration guide](./docs/source/migrating/apollo-client-3-migration.md).  <br/>
+  [@hwillson](https://github.com/hwillson) in [#](TODO)
+
+### `InMemoryCache`
+
+> ⚠️ **Note:** `InMemoryCache` has been significantly redesigned and rewritten in Apollo Client 3.0. Please consult the [migration guide](https://www.apollographql.com/docs/react/v3.0-beta/migrating/apollo-client-3-migration/#cache-improvements) and read the new [documentation](https://www.apollographql.com/docs/react/v3.0-beta/caching/cache-configuration/) to understand everything that has been improved.
+
+- The `InMemoryCache` constructor should now be imported directly from `@apollo/client`, rather than from a separate package. The `apollo-cache-inmemory` package is no longer supported.
+
+  > The `@apollo/client/cache` entry point can be used to import `InMemoryCache` without importing other parts of the Apollo Client codebase. <br/>
+    [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
+
+- **[BREAKING]** `FragmentMatcher`, `HeuristicFragmentMatcher`, and `IntrospectionFragmentMatcher` have all been removed. We now recommend using `InMemoryCache`’s `possibleTypes` option instead. For more information see the [Defining `possibleTypes` manually](https://www.apollographql.com/docs/react/v3.0-beta/data/fragments/#defining-possibletypes-manually) section of the docs. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5073](https://github.com/apollographql/apollo-client/pull/5073)
+
+- **[BREAKING]** As promised in the [Apollo Client 2.6 blog post](https://blog.apollographql.com/whats-new-in-apollo-client-2-6-b3acf28ecad1), all cache results are now frozen/immutable. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5153](https://github.com/apollographql/apollo-client/pull/5153)
+
+- **[BREAKING]** Eliminate "generated" cache IDs to avoid normalizing objects with no meaningful ID, significantly reducing cache memory usage. This might be a backwards-incompatible change if your code depends on the precise internal representation of normalized data in the cache. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5146](https://github.com/apollographql/apollo-client/pull/5146)
+
+- **[BREAKING]** `InMemoryCache` will no longer merge the fields of written objects unless the objects are known to have the same identity, and the values of fields with the same name will not be recursively merged unless a custom `merge` function is defined by a field policy for that field, within a type policy associated with the `__typename` of the parent object. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5603](https://github.com/apollographql/apollo-client/pull/5603)
+
+- **[BREAKING]** `InMemoryCache` now _throws_ when data with missing or undefined query fields is written into the cache, rather than just warning in development. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6055](https://github.com/apollographql/apollo-client/pull/6055)
+
+- **[BREAKING]** `client|cache.writeData` have been fully removed. `writeData` usage is one of the easiest ways to turn faulty assumptions about how the cache represents data internally, into cache inconsistency and corruption. `client|cache.writeQuery`, `client|cache.writeFragment`, and/or `cache.modify` can be used to update the cache.  <br/>
+  [@benjamn](https://github.com/benjamn) in [#5923](https://github.com/apollographql/apollo-client/pull/5923)
+
+- `InMemoryCache` now supports tracing garbage collection and eviction. Note that the signature of the `evict` method has been simplified in a potentially backwards-incompatible way. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5310](https://github.com/apollographql/apollo-client/pull/5310)
+
+  - **[beta-BREAKING]** Please note that the `cache.evict` method now requires `Cache.EvictOptions`, though it previously supported positional arguments as well. <br/>
+    [@danReynolds](https://github.com/danReynolds) in [#6141](https://github.com/apollographql/apollo-client/pull/6141)
+    [@benjamn](https://github.com/benjamn) in [#6364](https://github.com/apollographql/apollo-client/pull/6364)
+
+  - Removing an entity object using the `cache.evict` method does not automatically remove dangling references to that entity elsewhere in the cache, but dangling references will be automatically filtered from lists whenever those lists are read from the cache. You can define a custom field `read` function to customize this behavior. See [#6412](https://github.com/apollographql/apollo-client/pull/6412), [#6425](https://github.com/apollographql/apollo-client/pull/6425), and [#6454](https://github.com/apollographql/apollo-client/pull/6454) for further explanation.
+
+- Cache methods that would normally trigger a broadcast, like `cache.evict`, `cache.writeQuery`, and `cache.writeFragment`, can now be called with a named options object, which supports a `broadcast: boolean` property that can be used to silence the broadcast, for situations where you want to update the cache multiple times without triggering a broadcast each time. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6288](https://github.com/apollographql/apollo-client/pull/6288)
+
+- `InMemoryCache` now `console.warn`s in development whenever non-normalized data is dangerously overwritten, with helpful links to documentation about normalization and custom `merge` functions. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6372](https://github.com/apollographql/apollo-client/pull/6372)
 
 - The result caching system (introduced in [#3394](https://github.com/apollographql/apollo-client/pull/3394)) now tracks dependencies at the field level, rather than at the level of whole entity objects, allowing the cache to return identical (`===`) results much more often than before. <br/>
   [@benjamn](https://github.com/benjamn) in [#5617](https://github.com/apollographql/apollo-client/pull/5617)
 
 - `InMemoryCache` now has a method called `modify` which can be used to update the value of a specific field within a specific entity object:
   ```ts
-  cache.modify(cache.identify(post), {
-    comments(comments: Reference[], { readField }) {
-      return comments.filter(comment => idToRemove !== readField("id", comment));
+  cache.modify({
+    id: cache.identify(post),
+    fields: {
+      comments(comments: Reference[], { readField }) {
+        return comments.filter(comment => idToRemove !== readField("id", comment));
+      },
     },
   });
   ```
   This API gracefully handles cases where multiple field values are associated with a single field name, and also removes the need for updating the cache by reading a query or fragment, modifying the result, and writing the modified result back into the cache. Behind the scenes, the `cache.evict` method is now implemented in terms of `cache.modify`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5909](https://github.com/apollographql/apollo-client/pull/5909)
+  and [#6178](https://github.com/apollographql/apollo-client/pull/6178)
 
 - `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
   ```ts
-  const v = cache.makeVar(123)
+  import { makeVar } from "@apollo/client"
+  const v = makeVar(123)
   console.log(v()) // 123
   console.log(v(v() + 1)) // 124
   console.log(v()) // 124
   v("asdf") // TS type error
   ```
   These variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
-  [@benjamn](https://github.com/benjamn) in [#5799](https://github.com/apollographql/apollo-client/pull/5799)
+  [@benjamn](https://github.com/benjamn) in
+  [#5799](https://github.com/apollographql/apollo-client/pull/5799),
+  [#5976](https://github.com/apollographql/apollo-client/pull/5976), and
+  [#6512](https://github.com/apollographql/apollo-client/pull/6512)
 
 - Various cache read and write performance optimizations, cutting read and write times by more than 50% in larger benchmarks. <br/>
   [@benjamn](https://github.com/benjamn) in [#5948](https://github.com/apollographql/apollo-client/pull/5948)
 
 - The `cache.readQuery` and `cache.writeQuery` methods now accept an `options.id` string, which eliminates most use cases for `cache.readFragment` and `cache.writeFragment`, and skips the implicit conversion of fragment documents to query documents performed by `cache.{read,write}Fragment`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5930](https://github.com/apollographql/apollo-client/pull/5930)
-
-- Several deprecated methods have been fully removed:
-  - `ApolloClient#initQueryManager`
-  - `QueryManager#startQuery`
-  - `ObservableQuery#currentResult`
 
 - Support `cache.identify(entity)` for easily computing entity ID strings. <br/>
   [@benjamn](https://github.com/benjamn) in [#5642](https://github.com/apollographql/apollo-client/pull/5642)
@@ -119,8 +615,44 @@
 - Custom field `read` functions can read from neighboring fields using the `readField(fieldName)` helper, and may also read fields from other entities by calling `readField(fieldName, objectOrReference)`. <br/>
   [@benjamn](https://github.com/benjamn) in [#5651](https://github.com/apollographql/apollo-client/pull/5651)
 
-- Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
-  [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
+- Expose cache `modify` and `identify` to the mutate `update` function.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5956](https://github.com/apollographql/apollo-client/pull/5956)
+
+- Add a default `gc` implementation to `ApolloCache`.  <br/>
+  [@justinwaite](https://github.com/justinwaite) in [#5974](https://github.com/apollographql/apollo-client/pull/5974)
+
+### React
+
+- **[BREAKING]** The `QueryOptions`, `MutationOptions`, and `SubscriptionOptions` React Apollo interfaces have been renamed to `QueryDataOptions`, `MutationDataOptions`, and `SubscriptionDataOptions` (to avoid conflicting with similarly named and exported Apollo Client interfaces).
+
+- **[BREAKING]** Results with `loading: true` will no longer redeliver previous data, though they may provide partial data from the cache, when available. <br/>
+  [@benjamn](https://github.com/benjamn) in [#6566](https://github.com/apollographql/apollo-client/pull/6566)
+
+- **[BREAKING?]** Remove `fixPolyfills.ts`, except when bundling for React Native. If you have trouble with `Map` or `Set` operations due to frozen key objects in React Native, either update React Native to version 0.59.0 (or 0.61.x, if possible) or investigate why `fixPolyfills.native.js` is not included in your bundle. <br/>
+  [@benjamn](https://github.com/benjamn) in [#5962](https://github.com/apollographql/apollo-client/pull/5962)
+
+- The contents of the `@apollo/react-hooks` package have been merged into `@apollo/client`, enabling the following all-in-one `import`:
+  ```ts
+  import { ApolloClient, ApolloProvider, useQuery } from '@apollo/client';
+  ```
+  [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
+
+- React SSR features (previously accessed via `@apollo/react-ssr`) can now be accessed from the separate Apollo Client entry point of `@apollo/client/react/ssr`. These features are not included in the default `@apollo/client` bundle.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6499](https://github.com/apollographql/apollo-client/pull/6499)
+
+### General
+
+- **[BREAKING]** Removed `graphql-anywhere` since it's no longer used by Apollo Client.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5159](https://github.com/apollographql/apollo-client/pull/5159)
+
+- **[BREAKING]** Removed `apollo-boost` since Apollo Client 3.0 provides a boost like getting started experience out of the box.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#5217](https://github.com/apollographql/apollo-client/pull/5217)
+
+- **[BREAKING]** We are no longer exporting certain (intended to be) internal utilities. If you are depending on some of the lesser known exports from `apollo-cache`, `apollo-cache-inmemory`, or `apollo-utilities`, they may no longer be available from `@apollo/client`. <br/>
+  [@hwillson](https://github.com/hwillson) in [#5437](https://github.com/apollographql/apollo-client/pull/5437) and [#5514](https://github.com/apollographql/apollo-client/pull/5514)
+
+  > Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
+    [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
 
 - Make sure all `graphql-tag` public exports are re-exported.  <br/>
   [@hwillson](https://github.com/hwillson) in [#5861](https://github.com/apollographql/apollo-client/pull/5861)
@@ -131,11 +663,14 @@
 - Make sure `ApolloContext` plays nicely with IE11 when storing the shared context.  <br/>
   [@ms](https://github.com/ms) in [#5840](https://github.com/apollographql/apollo-client/pull/5840)
 
-- Expose cache `modify` and `identify` to the mutate `update` function.  <br/>
-  [@hwillson](https://github.com/hwillson) in [#5956](https://github.com/apollographql/apollo-client/pull/5956)
+- Migrated React Apollo HOC and Components functionality into Apollo Client, making it accessible from `@apollo/client/react/components` and `@apollo/client/react/hoc` entry points.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6558](https://github.com/apollographql/apollo-client/pull/6558)
 
-- Add a default `gc` implementation to `ApolloCache`.  <br/>
-  [@justinwaite](https://github.com/justinwaite) in [#5974](https://github.com/apollographql/apollo-client/pull/5974)
+- Support passing a `context` object through the link execution chain when using subscriptions.  <br/>
+  [@sgtpepper43](https://github.com/sgtpepper43) in [#4925](https://github.com/apollographql/apollo-client/pull/4925)
+
+- `MockSubscriptionLink` now supports multiple subscriptions.  <br/>
+  [@dfrankland](https://github.com/dfrankland) in [#6081](https://github.com/apollographql/apollo-client/pull/6081)
 
 ### Bug Fixes
 
@@ -156,6 +691,15 @@
 
 - Ensure `useMutation` passes a defined `errorPolicy` option into its underlying `ApolloClient.mutate()` call.  <br/>
   [@jamesreggio](https://github.com/jamesreggio) in [#5863](https://github.com/apollographql/apollo-client/pull/5863)
+
+- `useQuery`: Prevent new data re-render attempts during an existing render. This helps avoid React 16.13.0's "Cannot update a component from inside the function body of a different component" warning (https://github.com/facebook/react/pull/17099). <br/>
+  [@hwillson](https://github.com/hwillson) in [#6107](https://github.com/apollographql/apollo-client/pull/6107)
+
+- Expand `ApolloError` typings to include `ServerError` and `ServerParseError`.  <br/>
+  [@dmarkow](https://github.com/dmarkow) in [#6319](https://github.com/apollographql/apollo-client/pull/6319)
+
+- Fast responses received over the link chain will no longer conflict with `skip` settings.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#6587](https://github.com/apollographql/apollo-client/pull/6587)
 
 ## Apollo Client 2.6.8
 

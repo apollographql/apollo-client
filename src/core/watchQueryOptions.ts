@@ -1,7 +1,8 @@
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { ApolloCache } from '../cache/core/cache';
-import { FetchResult } from '../link/core/types';
+import { ApolloCache } from '../cache';
+import { FetchResult } from '../link/core';
 import { MutationQueryReducersMap } from './types';
 import { PureQueryOptions, OperationVariables } from './types';
 
@@ -32,16 +33,16 @@ export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
 export type ErrorPolicy = 'none' | 'ignore' | 'all';
 
 /**
- * Common options shared across all query interfaces.
+ * Query options.
  */
-export interface QueryBaseOptions<TVariables = OperationVariables> {
+export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /**
    * A GraphQL document that consists of a single query to be sent down to the
    * server.
    */
   // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a
   // lot of tests.
-  query: DocumentNode;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /**
    * A map going from variable name to variable value, where the variables are used
@@ -58,24 +59,12 @@ export interface QueryBaseOptions<TVariables = OperationVariables> {
    * Context to be passed to link execution chain
    */
   context?: any;
-}
 
-/**
- * Query options.
- */
-export interface QueryOptions<TVariables = OperationVariables>
-  extends QueryBaseOptions<TVariables> {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query
    */
   fetchPolicy?: FetchPolicy;
-}
 
-/**
- * We can change these options to an ObservableQuery
- */
-export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
-  extends QueryBaseOptions<TVariables> {
   /**
    * The time interval (in milliseconds) on which this query should be
    * refetched from the server.
@@ -104,17 +93,23 @@ export interface ModifiableWatchQueryOptions<TVariables = OperationVariables>
 /**
  * Watched query options.
  */
-export interface WatchQueryOptions<TVariables = OperationVariables>
-  extends QueryBaseOptions<TVariables>,
-    ModifiableWatchQueryOptions<TVariables> {
+export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
+  extends Omit<QueryOptions<TVariables, TData>, 'fetchPolicy'> {
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query
+   * Specifies the {@link FetchPolicy} to be used for this query.
    */
   fetchPolicy?: WatchQueryFetchPolicy;
+  /**
+   * Specifies the {@link FetchPolicy} to be used after this query has completed.
+   */
+  nextFetchPolicy?: WatchQueryFetchPolicy | ((
+    this: WatchQueryOptions<TVariables, TData>,
+    lastFetchPolicy: WatchQueryFetchPolicy,
+  ) => WatchQueryFetchPolicy);
 }
 
-export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables> {
-  query?: DocumentNode;
+export interface FetchMoreQueryOptions<TVariables, K extends keyof TVariables, TData = any> {
+  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   variables?: Pick<TVariables, K>;
   context?: any;
 }
@@ -136,18 +131,19 @@ export type SubscribeToMoreOptions<
   TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData
 > = {
-  document: DocumentNode;
+  document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
   variables?: TSubscriptionVariables;
   updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
+  context?: Record<string, any>;
 };
 
-export interface SubscriptionOptions<TVariables = OperationVariables> {
+export interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single subscription inside of it.
    */
-  query: DocumentNode;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /**
    * An object that maps from the name of a variable as used in the subscription
@@ -159,6 +155,16 @@ export interface SubscriptionOptions<TVariables = OperationVariables> {
    * Specifies the {@link FetchPolicy} to be used for this subscription.
    */
   fetchPolicy?: FetchPolicy;
+
+  /**
+   * Specifies the {@link ErrorPolicy} to be used for this operation
+   */
+  errorPolicy?: ErrorPolicy;
+
+  /**
+   * Context object to be passed through the link execution chain.
+   */
+  context?: Record<string, any>;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
@@ -193,7 +199,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: ExecutionResult<T>) => RefetchQueryDescription)
+    | ((result: FetchResult<T>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**
@@ -246,7 +252,7 @@ export interface MutationOptions<
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single mutation inside of it.
    */
-  mutation: DocumentNode;
+  mutation: DocumentNode | TypedDocumentNode<T, TVariables>;
 
   /**
    * The context to be passed to the link execution chain. This context will
@@ -261,9 +267,12 @@ export interface MutationOptions<
   context?: any;
 
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query
+   * Specifies the {@link FetchPolicy} to be used for this query. Mutations only
+   * support a 'no-cache' fetchPolicy. If you don't want to disable the cache,
+   * remove your fetchPolicy setting to proceed with the default mutation
+   * behavior.
    */
-  fetchPolicy?: FetchPolicy;
+  fetchPolicy?: Extract<FetchPolicy, 'no-cache'>;
 }
 
 // Add a level of indirection for `typedoc`.

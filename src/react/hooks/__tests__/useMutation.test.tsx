@@ -1,17 +1,13 @@
+import React, { useEffect } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { MockedProvider, mockSingleLink } from '../../../utilities/testing';
-import { itAsync } from '../../../utilities/testing/itAsync';
-import { ApolloClient } from '../../../ApolloClient';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloProvider } from '../../context/ApolloProvider';
+import { ApolloClient } from '../../../core';
+import { InMemoryCache } from '../../../cache';
+import { itAsync, MockedProvider, mockSingleLink } from '../../../testing';
+import { ApolloProvider } from '../../context';
 import { useMutation } from '../useMutation';
-import { requireReactLazily } from '../../react';
-
-const React = requireReactLazily();
-const { useEffect } = React;
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -21,8 +17,8 @@ describe('useMutation Hook', () => {
   }
 
   const CREATE_TODO_MUTATION: DocumentNode = gql`
-    mutation createTodo($description: String!) {
-      createTodo(description: $description) {
+    mutation createTodo($description: String!, $priority: String) {
+      createTodo(description: $description, priority: $priority) {
         id
         description
         priority
@@ -337,7 +333,7 @@ describe('useMutation Hook', () => {
             expect(data!.createTodo.description).toEqual(
               CREATE_TODO_RESULT.createTodo.description
             );
-            expect(errors[0].message).toEqual(
+            expect(errors![0].message).toEqual(
               expect.stringContaining(CREATE_TODO_ERROR)
             );
           }
@@ -374,6 +370,59 @@ describe('useMutation Hook', () => {
       );
 
       return wait();
+    });
+
+    it('should merge provided variables', async () => {
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.'
+            }
+          },
+          result: {
+            data: {
+              createTodo: {
+                id: 1,
+                description: 'Get milk!',
+                priority: 'Low',
+                __typename: 'Todo'
+              }
+            }
+          }
+        }
+      ];
+
+      const Component = () => {
+        const [createTodo, result] = useMutation<
+          { createTodo: Todo },
+          { priority?: string, description?: string }
+        >(CREATE_TODO_MUTATION, {
+          variables: { priority: 'Low' }
+        });
+
+        useEffect(() => {
+          createTodo({ variables: { description: 'Get milk.' } })
+        }, []);
+
+        return (
+          <>
+            {result.data ? JSON.stringify(result.data.createTodo) : null}
+          </>
+        );
+      };
+
+      const {getByText} = render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+
+      await wait(() => {
+        getByText('{"id":1,"description":"Get milk!","priority":"Low","__typename":"Todo"}')
+      });
     });
   });
 

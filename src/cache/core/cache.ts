@@ -1,11 +1,13 @@
 import { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 
-import { getFragmentQueryDocument } from '../../utilities/graphql/fragments';
-import { StoreObject } from '../../utilities/graphql/storeUtils';
+import {
+  StoreObject,
+  Reference,
+  getFragmentQueryDocument,
+} from '../../utilities';
 import { DataProxy } from './types/DataProxy';
 import { Cache } from './types/Cache';
-import { Modifier, Modifiers } from './types/common';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -13,19 +15,21 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
   public abstract read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>,
+    query: Cache.ReadOptions<TVariables, T>,
   ): T | null;
   public abstract write<TResult = any, TVariables = any>(
     write: Cache.WriteOptions<TResult, TVariables>,
-  ): void;
+  ): Reference | undefined;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
   public abstract reset(): Promise<void>;
 
-  // If called with only one argument, removes the entire entity
-  // identified by dataId. If called with a fieldName as well, removes all
-  // fields of the identified entity whose store names match fieldName.
-  public abstract evict(dataId: string, fieldName?: string): boolean;
+  // Remove whole objects from the cache by passing just options.id, or
+  // specific fields by passing options.field and/or options.args. If no
+  // options.args are provided, all fields matching options.field (even
+  // those with arguments) will be removed. Returns true iff any data was
+  // removed from the cache.
+  public abstract evict(options: Cache.EvictOptions): boolean;
 
   // intializer / offline / ssr API
   /**
@@ -52,12 +56,22 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public abstract performTransaction(
     transaction: Transaction<TSerialized>,
+    // Although subclasses may implement recordOptimisticTransaction
+    // however they choose, the default implementation simply calls
+    // performTransaction with a string as the second argument, allowing
+    // performTransaction to handle both optimistic and non-optimistic
+    // (broadcast-batching) transactions. Passing null for optimisticId is
+    // also allowed, and indicates that performTransaction should apply
+    // the transaction non-optimistically (ignoring optimistic data).
+    optimisticId?: string | null,
   ): void;
 
-  public abstract recordOptimisticTransaction(
+  public recordOptimisticTransaction(
     transaction: Transaction<TSerialized>,
-    id: string,
-  ): void;
+    optimisticId: string,
+  ) {
+    this.performTransaction(transaction, optimisticId);
+  }
 
   // Optional API
 
@@ -65,20 +79,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return document;
   }
 
-  public identify(object: StoreObject): string | undefined {
+  public identify(object: StoreObject | Reference): string | undefined {
     return;
   }
 
-  public modify(
-    dataId: string,
-    modifiers: Modifier<any> | Modifiers,
-    optimistic = false,
-  ): boolean {
-    return false;
-  }
-  
   public gc(): string[] {
     return [];
+  }
+
+  public modify(options: Cache.ModifyOptions): boolean {
+    return false;
   }
 
   // Experimental API
@@ -94,13 +104,14 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * @param optimistic
    */
   public readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables>,
-    optimistic: boolean = false,
+    options: Cache.ReadQueryOptions<QueryType, TVariables>,
+    optimistic = !!options.optimistic,
   ): QueryType | null {
     return this.read({
       rootId: options.id || 'ROOT_QUERY',
       query: options.query,
       variables: options.variables,
+      returnPartialData: options.returnPartialData,
       optimistic,
     });
   }
@@ -110,36 +121,39 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   private getFragmentDoc = wrap(getFragmentQueryDocument);
 
   public readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables>,
-    optimistic: boolean = false,
+    options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
+    optimistic = !!options.optimistic,
   ): FragmentType | null {
     return this.read({
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
+      returnPartialData: options.returnPartialData,
       optimistic,
     });
   }
 
   public writeQuery<TData = any, TVariables = any>(
     options: Cache.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    this.write({
+  ): Reference | undefined {
+    return this.write({
       dataId: options.id || 'ROOT_QUERY',
       result: options.data,
       query: options.query,
       variables: options.variables,
+      broadcast: options.broadcast,
     });
   }
 
   public writeFragment<TData = any, TVariables = any>(
     options: Cache.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    this.write({
+  ): Reference | undefined {
+    return this.write({
       dataId: options.id,
       result: options.data,
       variables: options.variables,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
+      broadcast: options.broadcast,
     });
   }
 }

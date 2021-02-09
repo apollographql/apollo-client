@@ -1,5 +1,4 @@
 import {
-  ExecutionResult,
   DocumentNode,
   OperationDefinitionNode,
   SelectionSetNode,
@@ -8,31 +7,33 @@ import {
   FragmentDefinitionNode,
   FieldNode,
   ASTNode,
+  visit,
+  BREAK,
 } from 'graphql';
-import { visit, BREAK } from 'graphql/language/visitor';
 import { invariant } from 'ts-invariant';
 
-import { ApolloCache } from '../cache/core/cache';
+import { ApolloCache } from '../cache';
 import {
-  getMainDefinition,
-  getFragmentDefinitions,
-} from '../utilities/graphql/getFromAST';
-import { hasDirectives, shouldInclude } from '../utilities/graphql/directives';
-import { FragmentMap, createFragmentMap } from '../utilities/graphql/fragments';
-import {
-  buildQueryFromSelectionSet,
-  removeClientSetsFromDocument,
-} from '../utilities/graphql/transform';
-import { mergeDeep, mergeDeepArray } from '../utilities/common/mergeDeep';
-import {
+  FragmentMap,
+  StoreObject,
   argumentsObjectFromField,
-  resultKeyNameFromField,
+  buildQueryFromSelectionSet,
+  createFragmentMap,
+  getFragmentDefinitions,
+  getMainDefinition,
+  hasDirectives,
   isField,
   isInlineFragment,
-  StoreObject,
-} from '../utilities/graphql/storeUtils';
-import { ApolloClient } from '../ApolloClient';
+  mergeDeep,
+  mergeDeepArray,
+  removeClientSetsFromDocument,
+  resultKeyNameFromField,
+  shouldInclude,
+} from '../utilities';
+import { ApolloClient } from './ApolloClient';
 import { Resolvers, OperationVariables } from './types';
+import { FetchResult } from '../link/core';
+import { cacheSlot } from '../cache';
 
 export type Resolver = (
   rootValue?: any,
@@ -128,11 +129,11 @@ export class LocalState<TCacheShape> {
     onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
-    remoteResult: ExecutionResult<TData>;
+    remoteResult: FetchResult<TData>;
     context?: Record<string, any>;
     variables?: Record<string, any>;
     onlyRunForcedResolvers?: boolean;
-  }): Promise<ExecutionResult<TData>> {
+  }): Promise<FetchResult<TData>> {
     if (document) {
       return this.resolveDocument(
         document,
@@ -372,12 +373,16 @@ export class LocalState<TCacheShape> {
       if (resolverMap) {
         const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
         if (resolve) {
-          resultPromise = Promise.resolve(resolve(
-            rootValue,
-            argumentsObjectFromField(field, variables),
-            execContext.context,
-            { field, fragmentMap: execContext.fragmentMap },
-          ));
+          resultPromise = Promise.resolve(
+            // In case the resolve function accesses reactive variables,
+            // set cacheSlot to the current cache instance.
+            cacheSlot.withValue(this.cache, resolve, [
+              rootValue,
+              argumentsObjectFromField(field, variables),
+              execContext.context,
+              { field, fragmentMap: execContext.fragmentMap },
+            ])
+          );
         }
       }
     }

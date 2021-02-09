@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import { ObservableQuery } from '../../core/ObservableQuery';
+import { ObservableQuery } from '../../core';
 import { QueryDataOptions } from '../types/types';
 import { QueryData } from '../data/QueryData';
 

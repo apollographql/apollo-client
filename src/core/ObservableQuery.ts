@@ -256,8 +256,8 @@ export class ObservableQuery<
     );
   }
 
-  public fetchMore<K extends keyof TVariables>(
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K, TData> &
+  public fetchMore(
+    fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
       FetchMoreOptions<TData, TVariables>,
   ): Promise<ApolloQueryResult<TData>> {
     const combinedOptions = {
@@ -412,10 +412,6 @@ once, rather than every time you call fetchMore.`);
    *
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
-   *
-   * @param tryFetch: Try and fetch new results even if the variables haven't
-   * changed (we may still just hit the store, but if there's nothing in there
-   * this will refetch)
    */
   public setVariables(
     variables: TVariables,

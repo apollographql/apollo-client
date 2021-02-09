@@ -63,14 +63,13 @@ export type ObservableQueryFields<TData, TVariables> = Pick<
   | 'refetch'
   | 'variables'
 > & {
-  fetchMore: (<K extends keyof TVariables>(
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K, TData> &
+  fetchMore: ((
+    fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
       FetchMoreOptions<TData, TVariables>
   ) => Promise<ApolloQueryResult<TData>>) &
-    (<TData2, TVariables2, K extends keyof TVariables2>(
+    (<TData2, TVariables2>(
       fetchMoreOptions: { query?: DocumentNode | TypedDocumentNode<TData, TVariables> } & FetchMoreQueryOptions<
         TVariables2,
-        K,
         TData
       > &
         FetchMoreOptions<TData2, TVariables2>

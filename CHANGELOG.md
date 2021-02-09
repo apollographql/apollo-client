@@ -20,6 +20,9 @@ TBD
 - Always use `POST` request when falling back to sending full query with `@apollo/client/link/persisted-queries`. <br/>
   [@rieset](https://github.com/rieset) in [#7456](https://github.com/apollographql/apollo-client/pull/7456)
 
+- The `FetchMoreQueryOptions` type now takes two instead of three type parameters (`<TVariables, TData>`), thanks to using `Partial<TVariables>` instead of `K extends typeof TVariables` and `Pick<TVariables, K>`. <br/>
+  [@ArnaudBarre](https://github.com/ArnaudBarre) in [#7476](https://github.com/apollographql/apollo-client/pull/7476)
+
 ### Documentation
 TBD
 

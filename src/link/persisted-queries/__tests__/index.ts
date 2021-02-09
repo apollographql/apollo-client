@@ -39,13 +39,12 @@ const errorResponse = JSON.stringify({ errors });
 const giveUpResponse = JSON.stringify({ errors: giveUpErrors });
 const multiResponse = JSON.stringify({ errors: multipleErrors });
 
-let hash: string;
-(async () => {
-  hash = await sha256(queryString);
-})();
-
 describe('happy path', () => {
-  beforeEach(fetch.mockReset);
+  let hash: string;
+  beforeEach(async () => {
+    fetch.mockReset();
+    hash = hash || await sha256(queryString);
+  });
 
   it('sends a sha256 hash of the query under extensions', done => {
     fetch.mockResponseOnce(response);
@@ -221,7 +220,11 @@ describe('happy path', () => {
 });
 
 describe('failure path', () => {
-  beforeEach(fetch.mockReset);
+  let hash: string;
+  beforeEach(async () => {
+    fetch.mockReset();
+    hash = hash || await sha256(queryString);
+  });
 
   it('correctly identifies the error shape from the server', done => {
     fetch.mockResponseOnce(errorResponse);

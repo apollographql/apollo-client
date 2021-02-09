@@ -264,6 +264,43 @@ describe('failure path', () => {
     }, done.fail);
   });
 
+  it('sends POST for both requests without useGETForHashedQueries', done => {
+    fetch.mockResponseOnce(errorResponse);
+    fetch.mockResponseOnce(response);
+    const link = createPersistedQuery({ sha256 }).concat(
+      createHttpLink(),
+    );
+    execute(link, { query, variables }).subscribe(result => {
+      expect(result.data).toEqual(data);
+      const [, failure] = fetch.mock.calls[0];
+      expect(failure!.method).toBe('POST');
+      expect(JSON.parse(failure!.body!.toString())).toEqual({
+        operationName: 'Test',
+        variables,
+        extensions: {
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: hash,
+          },
+        },
+      });
+      const [, success] = fetch.mock.calls[1];
+      expect(success!.method).toBe('POST');
+      expect(JSON.parse(success!.body!.toString())).toEqual({
+        operationName: 'Test',
+        query: queryString,
+        variables,
+        extensions: {
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: hash,
+          },
+        },
+      });
+      done();
+    }, done.fail);
+  });
+
   it('does not try again after receiving NotSupported error', done => {
     fetch.mockResponseOnce(giveUpResponse);
     fetch.mockResponseOnce(response);

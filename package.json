@@ -41,7 +41,6 @@
     "rollup": "rollup -c ./config/rollup.config.js",
     "prepdist": "node ./config/prepareDist.js",
     "resolve": "ts-node-script config/resolveModuleIds.ts",
-    "watch": "tsc-watch --onSuccess \"npm run postbuild\"",
     "clean": "rimraf -r dist coverage lib",
     "test": "jest --config ./config/jest.config.js",
     "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",
@@ -127,7 +126,6 @@
     "terser": "^5.2.0",
     "ts-jest": "26.4.4",
     "ts-node": "8.10.2",
-    "tsc-watch": "3.0.1",
     "typescript": "3.9.7",
     "wait-for-observables": "^1.0.3"
   },

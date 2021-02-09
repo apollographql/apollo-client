@@ -17,7 +17,7 @@ type MutationResultWithoutClient<TData = any> = Omit<MutationResult<TData>, 'cli
 export class MutationData<
   TData = any,
   TVariables = OperationVariables
-> extends OperationData {
+> extends OperationData<MutationDataOptions<TData, TVariables>> {
   private mostRecentMutationId: number;
   private result: MutationResultWithoutClient<TData>;
   private previousResult?: MutationResultWithoutClient<TData>;

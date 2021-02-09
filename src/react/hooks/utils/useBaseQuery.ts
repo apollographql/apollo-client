@@ -18,12 +18,11 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   options?: QueryHookOptions<TData, TVariables>,
   lazy = false
 ) {
-  const queryDataRef = useRef<QueryData<TData, TVariables>>();
   const context = useContext(getApolloContext());
   const [tick, forceUpdate] = useReducer(x => x + 1, 0);
-
   const updatedOptions = options ? { ...options, query } : { query };
 
+  const queryDataRef = useRef<QueryData<TData, TVariables>>();
   const queryData =
     queryDataRef.current ||
     new QueryData<TData, TVariables>({

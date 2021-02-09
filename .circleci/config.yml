@@ -3,7 +3,7 @@ version: 2
 jobs:
   Filesize:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - checkout
       - restore_cache:
@@ -13,7 +13,7 @@ jobs:
             - npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
             - npm-v3-{{ .Branch }}-
             - npm-v3-
-      - run: npm --version
+      - run: npm version
       - run: npm ci
       - save_cache:
           key: npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
@@ -26,7 +26,7 @@ jobs:
 
   Tests:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - checkout
       - restore_cache:
@@ -36,7 +36,7 @@ jobs:
             - npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
             - npm-v3-{{ .Branch }}-
             - npm-v3-
-      - run: npm --version
+      - run: npm version
       - run: npm ci
       - save_cache:
           key: npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}

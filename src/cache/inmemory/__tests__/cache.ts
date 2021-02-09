@@ -2658,6 +2658,104 @@ describe("ReactiveVar and makeVar", () => {
     expect(spy).toBeCalledWith(cache);
   });
 
+  it("should recall forgotten vars once cache has watches again", () => {
+    const { cache, nameVar, query } = makeCacheAndVar(false);
+    const spy = jest.spyOn(nameVar, "forgetCache");
+
+    const diffs: Cache.DiffResult<any>[] = [];
+    const watch = (immediate = true) => cache.watch({
+      query,
+      optimistic: true,
+      immediate,
+      callback(diff) {
+        diffs.push(diff);
+      },
+    });
+
+    const unwatchers = [
+      watch(),
+      watch(),
+      watch(),
+    ];
+
+    const names = () => diffs.map(diff => diff.result.onCall.name);
+
+    expect(diffs.length).toBe(3);
+    expect(names()).toEqual([
+      "Ben",
+      "Ben",
+      "Ben",
+    ]);
+
+    expect(cache["watches"].size).toBe(3);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.pop()!();
+    expect(cache["watches"].size).toBe(2);
+    expect(spy).not.toBeCalled();
+
+    unwatchers.shift()!();
+    expect(cache["watches"].size).toBe(1);
+    expect(spy).not.toBeCalled();
+
+    nameVar("Hugh");
+    expect(names()).toEqual([
+      "Ben",
+      "Ben",
+      "Ben",
+      "Hugh",
+    ]);
+
+    unwatchers.pop()!();
+    expect(cache["watches"].size).toBe(0);
+    expect(spy).toBeCalledTimes(1);
+    expect(spy).toBeCalledWith(cache);
+
+    // This update is ignored because the cache no longer has any watchers.
+    nameVar("ignored");
+    expect(names()).toEqual([
+      "Ben",
+      "Ben",
+      "Ben",
+      "Hugh",
+    ]);
+
+    // Call watch(false) to avoid immediate delivery of the "ignored" name.
+    unwatchers.push(watch(false));
+    expect(cache["watches"].size).toBe(1);
+    expect(names()).toEqual([
+      "Ben",
+      "Ben",
+      "Ben",
+      "Hugh",
+    ]);
+
+    // This is the test that would fail if cache.watch did not call
+    // recallCache(cache) upon re-adding the first watcher.
+    nameVar("Jenn");
+    expect(names()).toEqual([
+      "Ben",
+      "Ben",
+      "Ben",
+      "Hugh",
+      "Jenn",
+    ]);
+
+    unwatchers.forEach(cancel => cancel());
+    expect(spy).toBeCalledTimes(2);
+    expect(spy).toBeCalledWith(cache);
+
+    // Ignored again because all watchers have been cancelled.
+    nameVar("also ignored");
+    expect(names()).toEqual([
+      "Ben",
+      "Ben",
+      "Ben",
+      "Hugh",
+      "Jenn",
+    ]);
+  });
+
   it("should broadcast only once for multiple reads of same variable", () => {
     const nameVar = makeVar("Ben");
     const cache = new InMemoryCache({

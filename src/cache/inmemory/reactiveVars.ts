@@ -1,5 +1,5 @@
+import { dep, OptimisticDependencyFunction } from "optimism";
 import { Slot } from "@wry/context";
-import { dep } from "optimism";
 import { InMemoryCache } from "./inMemoryCache";
 import { ApolloCache } from '../../core';
 
@@ -11,8 +11,6 @@ export interface ReactiveVar<T> {
 }
 
 export type ReactiveListener<T> = (value: T) => any;
-
-const varDep = dep<ReactiveVar<any>>();
 
 // Contextual Slot that acquires its value when custom read functions are
 // called in Policies#readField.
@@ -31,14 +29,36 @@ function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
   }
 }
 
-const varsByCache = new WeakMap<ApolloCache<any>, Set<ReactiveVar<any>>>();
+const cacheInfoMap = new WeakMap<ApolloCache<any>, {
+  vars: Set<ReactiveVar<any>>;
+  dep: OptimisticDependencyFunction<ReactiveVar<any>>;
+}>();
+
+function getCacheInfo(cache: ApolloCache<any>) {
+  let info = cacheInfoMap.get(cache)!;
+  if (!info) {
+    cacheInfoMap.set(cache, info = {
+      vars: new Set,
+      dep: dep(),
+    });
+  }
+  return info;
+}
 
 export function forgetCache(cache: ApolloCache<any>) {
-  const vars = varsByCache.get(cache);
-  if (vars) {
-    consumeAndIterate(vars, rv => rv.forgetCache(cache));
-    varsByCache.delete(cache);
-  }
+  getCacheInfo(cache).vars.forEach(rv => rv.forgetCache(cache));
+}
+
+// Calling forgetCache(cache) serves to silence broadcasts and allows the
+// cache to be garbage collected. However, the varsByCache WeakMap
+// preserves the set of reactive variables that were previously associated
+// with this cache, which makes it possible to "recall" the cache at a
+// later time, by reattaching it to those variables. If the cache has been
+// garbage collected in the meantime, because it is no longer reachable,
+// you won't be able to call recallCache(cache), and the cache will
+// automatically disappear from the varsByCache WeakMap.
+export function recallCache(cache: ApolloCache<any>) {
+  getCacheInfo(cache).vars.forEach(rv => rv.attachCache(cache));
 }
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
@@ -49,13 +69,15 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;
-        // First, invalidate any fields with custom read functions that
-        // consumed this variable, so query results involving those fields
-        // will be recomputed the next time we read them.
-        varDep.dirty(rv);
-        // Next, broadcast changes to any caches that have previously read
-        // from this variable.
-        caches.forEach(broadcast);
+        caches.forEach(cache => {
+          // Invalidate any fields with custom read functions that
+          // consumed this variable, so query results involving those
+          // fields will be recomputed the next time we read them.
+          getCacheInfo(cache).dep.dirty(rv);
+          // Broadcast changes to any caches that have previously read
+          // from this variable.
+          broadcast(cache);
+        });
         // Finally, notify any listeners added via rv.onNextChange.
         consumeAndIterate(listeners, listener => listener(value));
       }
@@ -64,8 +86,10 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       // context via cacheSlot. This isn't entirely foolproof, but it's
       // the same system that powers varDep.
       const cache = cacheSlot.getValue();
-      if (cache) attach(cache);
-      varDep(rv);
+      if (cache) {
+        attach(cache);
+        getCacheInfo(cache).dep(rv);
+      }
     }
 
     return value;
@@ -80,20 +104,11 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
 
   const attach = rv.attachCache = cache => {
     caches.add(cache);
-    let vars = varsByCache.get(cache)!;
-    if (!vars) varsByCache.set(cache, vars = new Set);
-    vars.add(rv);
+    getCacheInfo(cache).vars.add(rv);
     return rv;
   };
 
-  rv.forgetCache = cache => {
-    const deleted = caches.delete(cache);
-    if (deleted) {
-      const vars = varsByCache.get(cache);
-      if (vars) vars.delete(rv);
-    }
-    return deleted;
-  };
+  rv.forgetCache = cache => caches.delete(cache);
 
   return rv;
 }

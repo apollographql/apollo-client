@@ -20,3 +20,4 @@ The Apollo Client API reference can be found at: <br/>
 
 - [@benjamn](https://github.com/benjamn) (Apollo)
 - [@hwillson](https://github.com/hwillson) (Apollo)
+- [@jcreighton](https://github.com/jcreighton) (Apollo)

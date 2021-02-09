@@ -1,7 +1,9 @@
 ---
-title: ApolloClient
-description: ApolloClient API reference
+title: class ApolloClient
+description: API reference
+sidebar_title: class ApolloClient
 order: 11
+api_reference: true
 ---
 
 import { TypescriptApiBox } from 'gatsby-theme-apollo-docs';
@@ -12,23 +14,21 @@ The `ApolloClient` class encapsulates Apollo's core client-side API. It backs al
 
 <TypescriptApiBox name="ApolloClient.constructor" />
 
-The constructor for `ApolloClient` accepts an `ApolloClientOptions` object that supports the required and optional fields listed below. These fields make it easy to customize how Apollo works based on your application's needs.
+Takes an `ApolloClientOptions` parameter that supports the [fields listed below](#options).
 
-### Example constructor call
+Returns an initialized `ApolloClient` object.
+
+#### Example
 
 ```js
-import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-// Instantiate required constructor fields
 const cache = new InMemoryCache();
-const link = createHttpLink({
-  uri: 'http://localhost:4000/',
-});
 
 const client = new ApolloClient({
   // Provide required constructor fields
   cache: cache,
-  link: link,
+  uri: 'http://localhost:4000/',
 
   // Provide some optional constructor fields
   name: 'react-web-client',
@@ -42,27 +42,178 @@ const client = new ApolloClient({
 });
 ```
 
-### Required fields
+#### Options
 
-| Name | Description |
-| - | - |
-| `uri` | A URI pointing to the backend GraphQL endpoint that Apollo Client will communicate with. **Note:** One of `uri` or `link` is required; if both are specified, `link` will take precedence. You may also [specify `credentials` and `headers`](../../networking/basic-http-networking/) along with `uri`. |
-| `link` | You can provide an Apollo Link instance to serve as Apollo Client's network layer. For more information, see the [advanced HTTP networking](../../networking/advanced-http-networking/) section. **Note:** One of `uri` or `link` is required; if both are specified, `link` will take precedence. |
-| `cache` | Apollo Client uses an Apollo Cache instance to handle its caching strategy. The recommended cache is `InMemoryCache` which is provided by the `@apollo/client` package. For more information, see [Configuring the cache](../../caching/cache-configuration/). |
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
 
-### Optional fields
+<tbody>
 
-| Name | Description |
-| - | - |
-| `name` | A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server uses this property as part of its [Client Awareness](https://www.apollographql.com/docs/apollo-server/v2/features/metrics#Client-Awareness) feature. |
-| `version` | A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server uses this property as part of its [Client Awareness](https://www.apollographql.com/docs/apollo-server/v2/features/metrics#Client-Awareness) feature. <br/><br/> Note that this version string is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client. |
-| `ssrMode` | When using Apollo Client for [server-side rendering](../../performance/server-side-rendering/), set this to `true` so that React Apollo's `getDataFromTree` function can work effectively. |
-| `ssrForceFetchDelay` | Provide this to specify a time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render. This value is `0` by default. |
-| `connectToDevTools` | Set this to `true` to allow the [Apollo Client Devtools](../../development-testing/developer-tooling/#apollo-client-devtools) Chrome extension to connect to your application's Apollo Client in production. (This connection is allowed automatically in dev mode.) |
-| `queryDeduplication` | Set this to `false` to force all created queries to be sent to the server, even if a query with completely identical parameters (query, variables, operationName) is already in flight. |
-| `defaultOptions` | Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object. |
+<tr class="required">
+<td>
 
-### Example `defaultOptions` object
+###### `uri`
+
+`String`
+</td>
+<td>
+
+The URI of the GraphQL endpoint that Apollo Client will communicate with. 
+
+One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+</td>
+</tr>
+
+
+<tr class="required">
+<td>
+
+###### `link`
+
+`ApolloLink`
+</td>
+<td>
+
+You can provide an Apollo Link instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](../../networking/advanced-http-networking/).
+
+One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+</td>
+</tr>
+
+
+<tr class="required">
+<td>
+
+###### `cache`
+
+`ApolloCache` (usually `InMemoryCache`)
+</td>
+<td>
+
+**Required.** The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
+
+For more information, see [Configuring the cache](../../caching/cache-configuration/).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `name`
+
+`String`
+</td>
+<td>
+
+A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#identifying-distinct-clients) feature.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `version`
+
+`String`
+</td>
+<td>
+
+A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics/#identifying-distinct-clients) feature.
+
+This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `ssrMode`
+
+`Boolean`
+</td>
+<td>
+
+When using Apollo Client for [server-side rendering](../../performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
+
+The default value is `false`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `ssrForceFetchDelay`
+
+`Number`
+</td>
+<td>
+
+The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
+
+The default value is `0` (no delay).
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `connectToDevTools`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, the [Apollo Client Devtools](../../development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client in your production environment. The extension can _always_ connect in a non-production environment.
+
+The default value is `false`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `queryDeduplication`
+
+`Boolean`
+</td>
+<td>
+
+If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
+
+The default value is `true`.
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `defaultOptions`
+
+`Object`
+</td>
+<td>
+
+Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
+
+See the [example object below](#example-defaultoptions-object).
+</td>
+</tr>
+
+</tbody>
+</table>
+
+##### Example `defaultOptions` object
 
 ```js
 const defaultOptions = {
@@ -85,7 +236,7 @@ different value for the same option in individual function calls.
 
 > **Note:** The `useQuery` hook uses Apollo Client's `watchQuery` function. To set `defaultOptions` when using the `useQuery` hook, make sure to set them under the `defaultOptions.watchQuery` property.
 
-## `ApolloClient` functions
+## Functions
 
 <TypescriptApiBox name="ApolloClient.watchQuery" />
 <TypescriptApiBox name="ApolloClient.query" />

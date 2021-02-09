@@ -407,10 +407,10 @@ The following sample specifies `possibleTypes` and `typePolicies` in its cache c
 <ExpansionPanel title="Click to expand 🐶">
 
 ```jsx
-// "Dog" supertype can be of type "ShibeInu"
-const ShibeFragment = gql`
-  fragment ShibeInuFields on Dog {
-    ... on ShibeInu {
+// "Dog" supertype can be of type "ShibaInu"
+const ShibaFragment = gql`
+  fragment ShibaInuFields on Dog {
+    ... on ShibaInu {
       tail {
         isCurly
       }
@@ -425,17 +425,17 @@ export const GET_DOG_QUERY = gql`
       name
       breed
 
-      ...ShibeInuFields
+      ...ShibaInuFields
     }
   }
 
-  ${ShibeFragment}
+  ${ShibaFragment}
 `;
 
 export const cache = new ApolloClient({
   cache: new InMemoryCache({
     possibleTypes: {
-      Dog: ['ShibeInu']
+      Dog: ['ShibaInu']
     },
     // suppose you want you key fields for "Dog" to not be simply "id"
     typePolicies: {

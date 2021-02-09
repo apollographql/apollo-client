@@ -1,3 +1,39 @@
+## Apollo Client 3.3.10 (not yet released)
+
+### Improvements
+
+- Avoid calling `forceUpdate` when component is unmounted. <br/>
+  [@DylanVann](https://github.com/DylanVann) in [#7655](https://github.com/apollographql/apollo-client/pull/7655)
+
+- The `codemods/` top-level directory has been moved into the `scripts/` directory. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7675](https://github.com/apollographql/apollo-client/pull/7675)
+
+## Apollo Client 3.3.9
+
+### Bug Fixes
+
+- Prevent reactive variables from retaining otherwise unreachable `InMemoryCache` objects. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7661](https://github.com/apollographql/apollo-client/pull/7661)
+
+### Improvements
+
+- The [`graphql-tag`](https://www.npmjs.com/package/graphql-tag) dependency has been updated to version 2.12.0, after converting its repository to use TypeScript and ECMAScript module syntax. There should be no visible changes in behavior, though the internal changes seemed significant enough to mention here. <br/>
+  [@abdonrd](https://github.com/abdonrd) in [graphql-tag#273](https://github.com/apollographql/graphql-tag/pull/273) and
+  [@PowerKiKi](https://github.com/PowerKiKi) in [graphql-tag#325](https://github.com/apollographql/graphql-tag/pull/325)
+
+## Apollo Client 3.3.8
+
+### Bug Fixes
+
+- Catch updates in `useReactiveVar` with an additional check. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7652](https://github.com/apollographql/apollo-client/pull/7652)
+
+- Reactivate forgotten reactive variables whenever `InMemoryCache` acquires its first watcher. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7657](https://github.com/apollographql/apollo-client/pull/7657)
+
+- Backport `Symbol.species` fix for `Concast` and `ObservableQuery` from [`release-3.4`](https://github.com/apollographql/apollo-client/pull/7399), fixing subscriptions in React Native Android when the Hermes JavaScript engine is enabled (among other benefits). <br/>
+  [@benjamn](https://github.com/benjamn) in [#7403](https://github.com/apollographql/apollo-client/pull/7403) and [#7660](https://github.com/apollographql/apollo-client/pull/7660)
+
 ## Apollo Client 3.3.7
 
 ### Bug Fixes
@@ -288,7 +324,7 @@
 - Implement `useReactiveVar` hook for consuming reactive variables in React components. <br/>
   [@benjamn](https://github.com/benjamn) in [#6867](https://github.com/apollographql/apollo-client/pull/6867)
 
-- Move `apollo-link-persisted-queries` implementation to `@apollo/client/link/persisted-queries`. Try running our [automated imports transform](https://github.com/apollographql/apollo-client/tree/main/codemods/ac2-to-ac3) to handle this conversion, if you're using `apollo-link-persisted-queries`. <br/>
+- Move `apollo-link-persisted-queries` implementation to `@apollo/client/link/persisted-queries`. Try running our [automated imports transform](https://github.com/apollographql/apollo-client/tree/main/scripts/codemods/ac2-to-ac3) to handle this conversion, if you're using `apollo-link-persisted-queries`. <br/>
   [@hwillson](https://github.com/hwillson) in [#6837](https://github.com/apollographql/apollo-client/pull/6837)
 
 - Disable feud-stopping logic after any `cache.evict` or `cache.modify` operation. <br/>
@@ -342,7 +378,7 @@
 
 ### Improvements
 
-- Provide [jscodeshift](https://www.npmjs.com/package/jscodeshift) transform for automatically converting Apollo Client 2.x `import` declarations to use Apollo Client 3.x packages. [Instructions](https://github.com/apollographql/apollo-client/tree/main/codemods/ac2-to-ac3). <br/>
+- Provide [jscodeshift](https://www.npmjs.com/package/jscodeshift) transform for automatically converting Apollo Client 2.x `import` declarations to use Apollo Client 3.x packages. [Instructions](https://github.com/apollographql/apollo-client/tree/main/scripts/codemods/ac2-to-ac3). <br/>
   [@dminkovsky](https://github.com/dminkovsky) and [@jcreighton](https://github.com/jcreighton) in [#6486](https://github.com/apollographql/apollo-client/pull/6486)
 
 ## Apollo Client 3.1.2

@@ -81,6 +81,7 @@ export * from './common/maybeDeepFreeze';
 export * from './observables/iteration';
 export * from './observables/asyncMap';
 export * from './observables/Concast';
+export * from './observables/subclassing';
 export * from './common/arrays';
 export * from './common/errorHandling';
 export * from './common/canUse';

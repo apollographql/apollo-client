@@ -20,7 +20,7 @@ import {
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
-import { makeVar, forgetCache } from './reactiveVars';
+import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import {
   defaultDataIdFromObject,
   PossibleTypesMap,
@@ -194,6 +194,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public watch(watch: Cache.WatchOptions): () => void {
+    if (!this.watches.size) {
+      // In case we previously called forgetCache(this) because
+      // this.watches became empty (see below), reattach this cache to any
+      // reactive variables on which it previously depended. It might seem
+      // paradoxical that we're able to recall something we supposedly
+      // forgot, but the point of calling forgetCache(this) is to silence
+      // useless broadcasts while this.watches is empty, and to allow the
+      // cache to be garbage collected. If, however, we manage to call
+      // recallCache(this) here, this cache object must not have been
+      // garbage collected yet, and should resume receiving updates from
+      // reactive variables, now that it has a watcher to notify.
+      recallCache(this);
+    }
     this.watches.add(watch);
     if (watch.immediate) {
       this.maybeBroadcastWatch(watch);

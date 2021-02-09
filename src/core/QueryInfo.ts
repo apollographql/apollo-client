@@ -304,7 +304,7 @@ export class QueryInfo {
     if (options.fetchPolicy === 'no-cache') {
       this.diff = { result: result.data, complete: true };
 
-    } else if (allowCacheWrite) {
+    } else if (!this.stopped && allowCacheWrite) {
       if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result

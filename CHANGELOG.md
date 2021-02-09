@@ -17,6 +17,9 @@ TBD
 - Allow identical subscriptions to be deduplicated by default, like queries. <br/>
   [@jkossis](https://github.com/jkossis) in [#6910](https://github.com/apollographql/apollo-client/pull/6910)
 
+- Always use `POST` request when falling back to sending full query with `@apollo/client/link/persisted-queries`. <br/>
+  [@rieset](https://github.com/rieset) in [#7456](https://github.com/apollographql/apollo-client/pull/7456)
+
 ### Documentation
 TBD
 

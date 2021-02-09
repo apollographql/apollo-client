@@ -14,7 +14,7 @@
     "webpack-virtual-modules": "^0.4.0"
   },
   "devDependencies": {
-    "typedoc": "0.15.8",
+    "typedoc": "0.20.23",
     "typescript": "3.9.6"
   }
 }

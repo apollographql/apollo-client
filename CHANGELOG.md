@@ -2,6 +2,9 @@
 
 ### Improvements
 
+- Avoid calling `forceUpdate` when component is unmounted. <br/>
+  [@DylanVann](https://github.com/DylanVann) in [#7655](https://github.com/apollographql/apollo-client/pull/7655)
+
 - The `codemods/` top-level directory has been moved into the `scripts/` directory. <br/>
   [@benjamn](https://github.com/benjamn) in [#7675](https://github.com/apollographql/apollo-client/pull/7675)
 

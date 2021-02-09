@@ -14,6 +14,9 @@ TBD
 - When `@apollo/client` is imported as CommonJS (for example, in Node.js), the global `process` variable is now shadowed with a stripped-down object that includes only `process.env.NODE_ENV` (since that's all Apollo Client needs), eliminating the significant performance penalty of repeatedly accessing `process.env` at runtime. <br/>
   [@benjamn](https://github.com/benjamn) in [#7627](https://github.com/apollographql/apollo-client/pull/7627)
 
+- Allow identical subscriptions to be deduplicated by default, like queries. <br/>
+  [@jkossis](https://github.com/jkossis) in [#6910](https://github.com/apollographql/apollo-client/pull/6910)
+
 ### Documentation
 TBD
 

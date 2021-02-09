@@ -301,6 +301,48 @@ describe('failure path', () => {
     }, done.fail);
   });
 
+  // https://github.com/apollographql/apollo-client/pull/7456
+  it('forces POST request when sending full query', done => {
+    fetch.mockResponseOnce(giveUpResponse);
+    fetch.mockResponseOnce(response);
+    const link = createPersistedQuery({
+      sha256,
+      disable({ operation }) {
+        operation.setContext({
+          fetchOptions: {
+            method: 'GET',
+          },
+        });
+        return true;
+      },
+    }).concat(
+      createHttpLink(),
+    );
+    execute(link, { query, variables }).subscribe(result => {
+      expect(result.data).toEqual(data);
+      const [, failure] = fetch.mock.calls[0];
+      expect(failure!.method).toBe('POST');
+      expect(JSON.parse(failure!.body!.toString())).toEqual({
+        operationName: 'Test',
+        variables,
+        extensions: {
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: hash,
+          },
+        },
+      });
+      const [, success] = fetch.mock.calls[1];
+      expect(success!.method).toBe('POST');
+      expect(JSON.parse(success!.body!.toString())).toEqual({
+        operationName: 'Test',
+        query: queryString,
+        variables,
+      });
+      done();
+    }, done.fail);
+  });
+
   it('does not try again after receiving NotSupported error', done => {
     fetch.mockResponseOnce(giveUpResponse);
     fetch.mockResponseOnce(response);

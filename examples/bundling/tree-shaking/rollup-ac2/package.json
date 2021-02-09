@@ -34,7 +34,7 @@
     "apollo-link": "^1.2.13",
     "apollo-link-http": "^1.5.16",
     "graphql": "^15.0.0",
-    "graphql-tag": "^2.10.1",
+    "graphql-tag": "^2.12.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },

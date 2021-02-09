@@ -1,3 +1,10 @@
+## Apollo Client 3.3.10 (not yet released)
+
+### Improvements
+
+- The `codemods/` top-level directory has been moved into the `scripts/` directory. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7675](https://github.com/apollographql/apollo-client/pull/7675)
+
 ## Apollo Client 3.3.9
 
 ### Bug Fixes

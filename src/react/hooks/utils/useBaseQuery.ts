@@ -29,7 +29,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
       options: updatedOptions as QueryDataOptions<TData, TVariables>,
       context,
       onNewData() {
-        if (!queryData.ssrInitiated()) {
+        if (!queryData.ssrInitiated() && queryDataRef.current) {
           // When new data is received from the `QueryData` object, we want to
           // force a re-render to make sure the new data is displayed. We can't
           // force that re-render if we're already rendering however so to be

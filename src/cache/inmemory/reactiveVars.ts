@@ -1,5 +1,5 @@
+import { dep, OptimisticDependencyFunction } from "optimism";
 import { Slot } from "@wry/context";
-import { dep } from "optimism";
 import { InMemoryCache } from "./inMemoryCache";
 import { ApolloCache } from '../../core';
 
@@ -11,8 +11,6 @@ export interface ReactiveVar<T> {
 }
 
 export type ReactiveListener<T> = (value: T) => any;
-
-const varDep = dep<ReactiveVar<any>>();
 
 // Contextual Slot that acquires its value when custom read functions are
 // called in Policies#readField.
@@ -31,11 +29,24 @@ function consumeAndIterate<T>(set: Set<T>, callback: (item: T) => any) {
   }
 }
 
-const varsByCache = new WeakMap<ApolloCache<any>, Set<ReactiveVar<any>>>();
+const cacheInfoMap = new WeakMap<ApolloCache<any>, {
+  vars: Set<ReactiveVar<any>>;
+  dep: OptimisticDependencyFunction<ReactiveVar<any>>;
+}>();
+
+function getCacheInfo(cache: ApolloCache<any>) {
+  let info = cacheInfoMap.get(cache)!;
+  if (!info) {
+    cacheInfoMap.set(cache, info = {
+      vars: new Set,
+      dep: dep(),
+    });
+  }
+  return info;
+}
 
 export function forgetCache(cache: ApolloCache<any>) {
-  const vars = varsByCache.get(cache);
-  if (vars) vars.forEach(rv => rv.forgetCache(cache));
+  getCacheInfo(cache).vars.forEach(rv => rv.forgetCache(cache));
 }
 
 // Calling forgetCache(cache) serves to silence broadcasts and allows the
@@ -47,8 +58,7 @@ export function forgetCache(cache: ApolloCache<any>) {
 // you won't be able to call recallCache(cache), and the cache will
 // automatically disappear from the varsByCache WeakMap.
 export function recallCache(cache: ApolloCache<any>) {
-  const vars = varsByCache.get(cache);
-  if (vars) vars.forEach(rv => rv.attachCache(cache));
+  getCacheInfo(cache).vars.forEach(rv => rv.attachCache(cache));
 }
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
@@ -59,13 +69,15 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;
-        // First, invalidate any fields with custom read functions that
-        // consumed this variable, so query results involving those fields
-        // will be recomputed the next time we read them.
-        varDep.dirty(rv);
-        // Next, broadcast changes to any caches that have previously read
-        // from this variable.
-        caches.forEach(broadcast);
+        caches.forEach(cache => {
+          // Invalidate any fields with custom read functions that
+          // consumed this variable, so query results involving those
+          // fields will be recomputed the next time we read them.
+          getCacheInfo(cache).dep.dirty(rv);
+          // Broadcast changes to any caches that have previously read
+          // from this variable.
+          broadcast(cache);
+        });
         // Finally, notify any listeners added via rv.onNextChange.
         consumeAndIterate(listeners, listener => listener(value));
       }
@@ -74,8 +86,10 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       // context via cacheSlot. This isn't entirely foolproof, but it's
       // the same system that powers varDep.
       const cache = cacheSlot.getValue();
-      if (cache) attach(cache);
-      varDep(rv);
+      if (cache) {
+        attach(cache);
+        getCacheInfo(cache).dep(rv);
+      }
     }
 
     return value;
@@ -90,9 +104,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
 
   const attach = rv.attachCache = cache => {
     caches.add(cache);
-    let vars = varsByCache.get(cache)!;
-    if (!vars) varsByCache.set(cache, vars = new Set);
-    vars.add(rv);
+    getCacheInfo(cache).vars.add(rv);
     return rv;
   };
 

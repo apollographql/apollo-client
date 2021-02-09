@@ -229,24 +229,25 @@ const COMMENTS_QUERY = gql`
 `;
 
 function CommentsWithData() {
-  const {
-    data,
-    loading,
-    fetchMore,
-  } = useQuery(COMMENTS_QUERY);
+  const { data, loading, fetchMore } = useQuery(COMMENTS_QUERY);
 
-  if (loading) return <Loading/>;
+  if (loading) return <Loading />;
 
-  const nodes = data.comments.edges.map(edge => edge.node);
+  const nodes = data.comments.edges.map((edge) => edge.node);
+  const pageInfo = data.comments.pageInfo;
 
   return (
     <Comments
       entries={nodes}
-      onLoadMore={() => fetchMore({
-        variables: {
-          cursor: data.comments.pageInfo.endCursor,
-        },
-      })}
+      onLoadMore={() => {
+        if (pageInfo.hasNextPage) {
+          fetchMore({
+            variables: {
+              cursor: data.comments.pageInfo.endCursor,
+            },
+          });
+        }
+      }}
     />
   );
 }

@@ -139,6 +139,12 @@ export class QueryInfo {
 
   private diff: Cache.DiffResult<any> | null = null;
 
+  reset() {
+    cancelNotifyTimeout(this);
+    this.diff = null;
+    this.dirty = false;
+  }
+
   getDiff(variables = this.variables): Cache.DiffResult<any> {
     if (this.diff && equal(variables, this.variables)) {
       return this.diff;
@@ -296,10 +302,9 @@ export class QueryInfo {
   ) {
     this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
 
-    // If there is a pending notify timeout, cancel it because we are
-    // about to update this.diff to hold the latest data, and we can
-    // assume the data will be broadcast through some other mechanism.
-    cancelNotifyTimeout(this);
+    // Cancel the pending notify timeout (if it exists) to prevent extraneous network
+    // requests. To allow future notify timeouts, diff and dirty are reset as well.
+    this.reset();
 
     if (options.fetchPolicy === 'no-cache') {
       this.diff = { result: result.data, complete: true };
@@ -408,7 +413,7 @@ export class QueryInfo {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
 
-    cancelNotifyTimeout(this);
+    this.reset();
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

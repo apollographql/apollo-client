@@ -1,5 +1,10 @@
 ## Apollo Client 3.3.10 (not yet released)
 
+### Bug fixes
+
+- Revert PR [#7276](https://github.com/apollographql/apollo-client/pull/7276), but test that garbage collection reclaims torn-down `ObservableQuery` objects. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7695](https://github.com/apollographql/apollo-client/pull/7695)
+
 ### Improvements
 
 - Avoid calling `forceUpdate` when component is unmounted. <br/>

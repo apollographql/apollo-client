@@ -48,9 +48,15 @@ function makeRegistry(callback, reject) {
 
 describe("garbage collection", () => {
   itAsync("should collect client.cache after client.stop()", (resolve, reject) => {
+    const expectedKeys = new Set([
+      "client.cache",
+      "ObservableQuery",
+    ]);
+
     const registry = makeRegistry(key => {
-      assert.strictEqual(key, "client.cache");
-      resolve();
+      if (expectedKeys.delete(key) && !expectedKeys.size) {
+        resolve();
+      }
     }, reject);
 
     const localVar = makeVar(123);
@@ -58,9 +64,13 @@ describe("garbage collection", () => {
     (function (client) {
       registry.register(client.cache, "client.cache");
 
-      client.watchQuery({
+      const obsQuery = client.watchQuery({
         query: gql`query { local }`,
-      }).subscribe({
+      });
+
+      registry.register(obsQuery, "ObservableQuery");
+
+      obsQuery.subscribe({
         next(result) {
           assert.deepStrictEqual(result.data, {
             local: 123,
@@ -83,5 +93,56 @@ describe("garbage collection", () => {
         },
       }),
     }));
+  });
+
+  itAsync("should collect ObservableQuery after tear-down", (resolve, reject) => {
+    const expectedKeys = new Set([
+      "ObservableQuery",
+    ]);
+
+    const registry = makeRegistry(key => {
+      // Referring to client here should keep the client itself alive
+      // until after the ObservableQuery is (or should have been)
+      // collected. Collecting the ObservableQuery just because the whole
+      // client instance was collected is not interesting.
+      assert.strictEqual(client instanceof ApolloClient, true);
+
+      if (expectedKeys.delete(key) && !expectedKeys.size) {
+        resolve();
+      }
+    }, reject);
+
+    const localVar = makeVar(123);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              local() {
+                return localVar();
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    (function () {
+      const obsQuery = client.watchQuery({
+        query: gql`query { local }`,
+      });
+
+      registry.register(obsQuery, "ObservableQuery");
+
+      const sub = obsQuery.subscribe({
+        next(result) {
+          assert.deepStrictEqual(result.data, {
+            local: 123,
+          });
+          sub.unsubscribe();
+        },
+      });
+    })();
   });
 });

@@ -89,7 +89,7 @@
     "zen-observable": "^0.8.14"
   },
   "devDependencies": {
-    "@babel/parser": "7.12.11",
+    "@babel/parser": "7.12.16",
     "@rollup/plugin-node-resolve": "11.1.0",
     "@testing-library/react": "9.4.1",
     "@types/fast-json-stable-stringify": "2.0.0",

@@ -5,7 +5,7 @@ import { ApolloCache } from '../../core';
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;
-  onNextChange(listener: ReactiveListener<T>): () => void;
+  onChange(listener: ReactiveListener<T>): () => void;
   attachCache(cache: ApolloCache<any>): this;
   forgetCache(cache: ApolloCache<any>): boolean;
 }
@@ -78,8 +78,6 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
           // from this variable.
           broadcast(cache);
         });
-        // Finally, notify any listeners added via rv.onNextChange.
-        consumeAndIterate(listeners, listener => listener(value));
       }
     } else {
       // When reading from the variable, obtain the current cache from
@@ -92,10 +90,13 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
       }
     }
 
+    // Finally, notify any listeners added via rv.onChange.
+    consumeAndIterate(listeners, listener => listener(value));
+
     return value;
   };
 
-  rv.onNextChange = listener => {
+  rv.onChange = listener => {
     listeners.add(listener);
     return () => {
       listeners.delete(listener);

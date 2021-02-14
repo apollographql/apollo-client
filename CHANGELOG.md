@@ -5,6 +5,9 @@
 - Revert PR [#7276](https://github.com/apollographql/apollo-client/pull/7276), but test that garbage collection reclaims torn-down `ObservableQuery` objects. <br/>
   [@benjamn](https://github.com/benjamn) in [#7695](https://github.com/apollographql/apollo-client/pull/7695)
 
+- Reset `QueryInfo.diff` and `QueryInfo.dirty` after canceling notify timeout in `QueryInfo.markResult` and `QueryInfo.markError`. <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7696](https://github.com/apollographql/apollo-client/pull/7696)
+
 ### Improvements
 
 - Avoid calling `forceUpdate` when component is unmounted. <br/>

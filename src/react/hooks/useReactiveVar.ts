@@ -9,7 +9,7 @@ export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
   // We subscribe to variable updates on initial mount and when the value has
   // changed. This avoids a subtle bug in React.StrictMode where multiple listeners
   // are added, leading to inconsistent updates.
-  useEffect(() => rv.onNextChange(setValue), [value]);
+  useEffect(() => rv.onChange(setValue), [value]);
   // Once the component is unmounted, ignore future updates. Note that the
   // above useEffect function returns a mute function without calling it,
   // allowing it to be called when the component unmounts. This is

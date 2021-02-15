@@ -90,7 +90,7 @@
   },
   "devDependencies": {
     "@babel/parser": "7.12.16",
-    "@rollup/plugin-node-resolve": "11.1.1",
+    "@rollup/plugin-node-resolve": "11.2.0",
     "@testing-library/react": "9.4.1",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/fetch-mock": "^7.3.2",
@@ -126,7 +126,7 @@
     "terser": "^5.2.0",
     "ts-jest": "26.4.4",
     "ts-node": "8.10.2",
-    "typescript": "3.9.7",
+    "typescript": "3.9.9",
     "wait-for-observables": "^1.0.3"
   },
   "publishConfig": {

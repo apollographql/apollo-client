@@ -23,35 +23,30 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   const updatedOptions = options ? { ...options, query } : { query };
 
   const queryDataRef = useRef<QueryData<TData, TVariables>>();
-  const queryData =
-    queryDataRef.current ||
-    new QueryData<TData, TVariables>({
+  const queryData = queryDataRef.current || (
+    queryDataRef.current = new QueryData<TData, TVariables>({
       options: updatedOptions as QueryDataOptions<TData, TVariables>,
       context,
       onNewData() {
-        if (!queryData.ssrInitiated() && queryDataRef.current) {
+        if (!queryData.ssrInitiated()) {
           // When new data is received from the `QueryData` object, we want to
           // force a re-render to make sure the new data is displayed. We can't
           // force that re-render if we're already rendering however so to be
-          // safe we'll trigger the re-render in a microtask.
-          Promise.resolve().then(forceUpdate);
+          // safe we'll trigger the re-render in a microtask. In case the
+          // component gets unmounted before this callback fires, we re-check
+          // queryDataRef.current before calling forceUpdate().
+          Promise.resolve().then(() => queryDataRef.current && forceUpdate());
         } else {
           // If we're rendering on the server side we can force an update at
           // any point.
           forceUpdate();
         }
       }
-    });
+    })
+  );
 
   queryData.setOptions(updatedOptions);
   queryData.context = context;
-
-  // SSR won't trigger the effect hook below that stores the current
-  // `QueryData` instance for future renders, so we'll handle that here if
-  // the current render is happening on the server side.
-  if (queryData.ssrInitiated() && !queryDataRef.current) {
-    queryDataRef.current = queryData;
-  }
 
   // `onError` and `onCompleted` callback functions will not always have a
   // stable identity, so we'll exclude them from the memoization key to
@@ -76,12 +71,6 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     : (result as QueryResult<TData, TVariables>);
 
   useEffect(() => {
-    // We only need one instance of the `QueryData` class, so we'll store it
-    // as a ref to make it available on subsequent renders.
-    if (!queryDataRef.current) {
-      queryDataRef.current = queryData;
-    }
-
     return () => queryData.cleanup();
   }, []);
 

@@ -1,3 +1,10 @@
+## Apollo Client 3.3.11
+
+### Bug fixes
+
+- Fix `useLazyQuery` `forceUpdate` loop regression introduced by [#7655](https://github.com/apollographql/apollo-client/pull/7655) in version 3.3.10. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7715](https://github.com/apollographql/apollo-client/pull/7715)
+
 ## Apollo Client 3.3.10
 
 ### Bug fixes

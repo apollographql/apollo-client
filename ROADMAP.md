@@ -1,14 +1,12 @@
 # Apollo Client Roadmap
 
-*Last updated: December 2020*
+*Last updated: February 2021*
 
-> Please note: This is an approximation of larger effort work planned for the next 6 months. It does not cover all new functionality that will be added, and nothing here is set in stone.
+> **Please note:** This is an approximation of larger effort work planned for the next 6 months. It does not cover all new functionality that will be added, and nothing here is set in stone. Also note that each of these releases, and several patch releases in-between, will include bug fixes (based on issue triaging) and community submitted PR's.
 
 ## 3.4
 
 **Estimated release:** Q1 2021
-
-* Out of the box cache persistence, providing a way for web/mobile users to save their application state for a defined period of time (along the lines of [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist)).
 
 * A new API for reobserving/refetching queries after a mutation, eliminating the need for `updateQueries`, `refetchQueries`, and `awaitRefetchQueries` in a lot of cases.
 
@@ -18,9 +16,12 @@
 
 **Estimated release:** Q1/Q2 2021
 
+* Out of the box cache persistence, providing a way for web/mobile users to save their application state for a defined period of time (along the lines of [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist)).
+
+## 3.6
+
+**Estimated release:** Q2/Q3 2021
+
 * `@defer` support.
 * `@stream` support.
-* Refetching individual entity objects using an optional API like `Query._entities`.
 * An improved story for async `read` functions, involving setting reactive vars from promises (enabling batching of multi-var updates).
-* Allowing `useQuery` to survive across unmount/remount (by storing `QueryData` outside of a React ref), if the developer provides additional identifying information.
-

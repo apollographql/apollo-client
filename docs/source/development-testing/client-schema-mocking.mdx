@@ -1,51 +1,48 @@
 ---
 title: Mocking new schema capabilities
-description: How to build UI features before your GraphQL API supports them
+description: Build client features before your server supports them
 ---
 
-Imagine we're building out a new feature in our Space Explorer app — we'd like to display a description of each rocket we can choose — but the backend support for this feature isn't going to be available for another few weeks. In keeping with [schema-first design](https://www.apollographql.com/docs/tutorial/schema.html#write-schema), the team has decided that we'll be adding a new field called `description` to an existing type in our schema called `Rocket`.
+If your GraphQL server doesn't yet support a field that your client needs, you can still start building against that field by mocking its behavior within the client.
 
-Even though this field doesn't exist in the schema yet, we can take advantage of client schemas to document it as a _client-side_ field. In this guide, we'll walk through a simple recipe for this technique:
+For example, let's say we want to add a feature to the Space Explorer app from [the Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/). Specifically, we want to display a description of the rocket used for each launch. To support this functionality on the server side, we'll add a `description` field to our schema's `Rocket` type:
 
-- declare client-side extensions to the schema using Apollo Client;
-- enhance client resolvers with mock data;
-- write GraphQL queries that leverage client-only types and fields.
-
-## 1. Extend your server schema with a client-only field.
-
-Before we can include this data in the UI, we'll need to define a client schema that extends our server schema. We'll start by constructing an instance of ApolloClient with a few small additions. Simply pass in `typeDefs` with extensions to the schema and `resolvers` which actually provide the mock data:
-
-```js
-const typeDefs = gql`
-  extend type Rocket {
-    description: String!
-  }
-`;
-
-const resolvers = {
-  Rocket: {
-    description: () => "A boilerplate standard space rocket"
-  }
-};
-
-const client = new ApolloClient({
-  cache,
-  link,
-  typeDefs,
-  resolvers
-});
+```graphql{5}
+type Rocket {
+  id: ID!
+  name: String
+  type: String
+  description: String # field not yet supported
+}
 ```
 
-Documenting your client-side API in [Schema Definition Language](https://apollographql.com/docs/graphql-tools/generate-schema.html#schema-language) is incredibly valuable, as other developers can easily see what client state is available in your app. Developers familiar with GraphQL schemas should quickly be able to understand how to query for these fields in other places throughout your app.
+But what if our team won't finish adding support for that field for at least another two weeks? By mocking the field's behavior, we can still start developing the feature in our client. To accomplish this, we'll define `Rocket.description` as a **local-only field**.
 
-Additional tools available from Apollo can further enrich the developer experience when working with client-side schemas. The Apollo Visual Studio Code Plugin provides autocompletion of client-side fields as well as inline mouse-over documentation:
+## 1. Define a client-side schema (recommended)
 
-![VSCode Autocompletion](../assets/client-mocking/vscode-autocomplete.png)
-![VSCode Type Info](../assets/client-mocking/vscode-typeinfo.png)
+Your client application can define a [client-side schema](../local-state/client-side-schema/) that extends types from your server  or even defines entirely new types. The syntax is identical to server-side schema definitions.
 
-We'll also see error messages in the VSCode console if we add fields that collide with the server-side schema:
+> Although a client-side schema isn't _required_ to define local-only fields, it helps team members understand your app's local state. It also unlocks powerful local state support in tools like the [Apollo Client Devtools](./developer-tooling/#apollo-client-devtools) and the [Apollo extension for VS Code](https://www.apollographql.com/docs/devtools/editor-plugins/).
 
-![VSCode Console Errors](../assets/client-mocking/vscode-errors.png)
+This client-side schema extends the `Rocket` type to add a `description` field (make sure to name the variable `typeDefs`):
+
+```js:title=index.js
+const typeDefs = gql`
+  extend type Rocket {
+    description: String
+  }
+`;
+```
+
+We can then provide this schema to the `ApolloClient` constructor, like so:
+
+```js{4}:title=index.js
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache(),
+  typeDefs
+});
+```
 
 ## 2. Introduce richer mock data.
 

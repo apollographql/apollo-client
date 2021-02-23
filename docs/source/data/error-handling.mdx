@@ -1,31 +1,81 @@
 ---
-title: Error handling
-description: Handling errors with Apollo
+title: Client-side error handling
+sidebar_title: Error handling
 ---
 
-Any application, from simple to complex, can have its fair share of errors. It is important to handle these errors and when possible, report these errors back to your users for information. Using GraphQL brings a new set of possible errors from the actual GraphQL response itself. With that in mind, here are a few different types of errors:
+Apollo Client communicates with both your frontend and backend, which means it can encounter a variety of errors from both. It's important to handle errors correctly and show any relevant information to the user when an error occurs.
 
-- GraphQL Errors: errors in the GraphQL results that can appear alongside successful data
-- Server Errors: server internal errors that prevent a successful response from being formed
-- Transaction Errors: errors inside transaction actions like `update` on mutations
-- UI Errors: errors that occur in your component code
-- Apollo Client Errors: internal errors within the core or corresponding libraries
+## Error types
 
-## Error policies
+The most common error types encountered by Apollo Client are described below.
 
-Much like `fetchPolicy`, `errorPolicy` allows you to control how GraphQL Errors from the server are sent to your UI code. By default, the error policy treats any GraphQL Errors as network errors and ends the request chain. It doesn't save any data in the cache, and renders your UI with the `error` prop to be an ApolloError. By changing this policy per request, you can adjust how GraphQL Errors are managed by your UI. The possible options for `errorPolicy` are:
+#### GraphQL errors
 
-- `none`: This is the default policy to match how Apollo Client 1.0 worked. Any GraphQL Errors are treated the same as network errors and any data is ignored from the response.
-- `ignore`: Ignore allows you to read any data that is returned alongside GraphQL Errors, but doesn't save the errors or report them to your UI.
-- `all`: Using the `all` policy is the best way to notify your users of potential issues while still showing as much data as possible from your server. It saves both data and errors so your UI can use them.
+These are errors related to the server-side execution of a GraphQL operation. They include syntax errors (e.g., a query was malformed), semantic errors (e.g., a query included a schema field that doesn't exist), and others.
 
-You can set `errorPolicy` on each request like so:
+When a GraphQL error occurs, it's included in the `errors` array of the server's response to Apollo Client. Apollo Client then adds those errors to [the `error.graphQLErrors` array returned by your `useQuery` call](./queries/#result) (or whichever hook you used).
 
-```tsx
+GraphQL errors usually result in a `4xx` response status code, but some servers might respond with `200`.
+
+##### Partial data with GraphQL errors
+
+An operation that produces GraphQL errors might _also_ return **partial data**. This means that some (but not all) of the data your operation requested is included in your server's response. Apollo Client _ignores_ partial data by default, but you can override this behavior by [setting a GraphQL error policy](#graphql-error-policies).
+
+
+#### Network errors
+
+These are errors encountered while communicating with your GraphQL server, usually resulting in a `4xx` or `5xx` response status code (and no results).
+
+When a network error occurs, Apollo Client adds it to [the `error.networkErrors` array returned by your `useQuery` call](./queries/#result) (or whichever hook you used).
+
+#### Transaction errors
+
+These are errors that occur in your back-end data stores while modifying data for a mutation.
+
+#### UI errors
+
+These are front-end errors that occur within your React components (or your other chosen view layer).
+
+#### Apollo Client errors
+
+These are errors that occur within Apollo Client itself.
+
+## GraphQL error policies
+
+When your server's response to a GraphQL operation includes an `errors` array, it might still include partial data in the `data` field:
+
+```json
+{
+  "data": {
+    "getInt": 12
+  },
+  "errors": [
+    {
+      "message": "Cannot query field \"getStrin\" on type \"Query\". Did you mean \"getString\"?",
+    }
+  ]
+}
+```
+
+By default, Apollo Client throws away partial data and populates [the `error.graphQLErrors` array of your `useQuery` call](./queries/#result) (or whichever hook you're using). You can instead _use_ these partial results by defining an **error policy** for your operation.
+
+Apollo Client supports the following error policies for an operation:
+
+| Policy | Description |
+|--------|-------------|
+| `none` | `graphQLErrors` are treated the same as `networkErrors`, meaning all response `data` is ignored. |
+| `ignore` | `graphQLErrors` are ignored (`error.graphQLErrors`  is _not_ populated), and any returned `data` is rendered as if no errors occurred. |
+| `all` | Both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information. |
+
+### Setting an error policy
+
+Specify an error policy in the options object you provide your operation hook (such as `useQuery`), like so:
+
+```tsx{9}
 const MY_QUERY = gql`
   query WillFail {
-    badField
-    goodField
+    badField # This field produces one or more errors
+    goodField # This field is populated successfully
   }
 `;
 
@@ -45,18 +95,21 @@ function ShowingSomeErrors() {
 }
 ```
 
-Any errors reported will come under an `error` prop along side the data returned from the cache or server.
+## Handling network errors with Apollo Link
 
-## Network Errors
+You can configure advanced handling of networking errors with [Apollo Link](../api/link/introduction/), a library that enables you to customize Apollo Client's network communication.
 
-When using Apollo Link, the ability to handle network errors is way more powerful. The best way to do this is to use the `@apollo/client/link/error` to catch and handle server errors, network errors, and GraphQL errors. If you would like to combine with other links, see [Composing a link chain](../api/link/introduction/#composing-a-link-chain).
+Specifically, you can add an `onError` link to your [link chain](../api/link/introduction/#composing-a-link-chain) that receives error details and acts on them accordingly.
 
-#### Usage
+
+### Example link
+
+This `onError` link checks for `graphQLErrors` or a `networkError` in the server's response. If it finds either, it logs the details.
 
 ```js
 import { onError } from "@apollo/client/link/error";
 
-const link = onError(({ graphQLErrors, networkError }) => {
+const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
     graphQLErrors.forEach(({ message, locations, path }) =>
       console.log(
@@ -68,19 +121,101 @@ const link = onError(({ graphQLErrors, networkError }) => {
 });
 ```
 
-#### Options
+### Options
 
-Error Link takes a function that is called in the event of an error. This function is called with an object containing the following keys:
+The `onError` link takes a function that's called in the event of an error. This function is passed an object with the following fields:
 
-| Option | Description |
-| - | - |
-| `operation` | The Operation that errored |
-| `response` | The result returned from lower down in the link chain |
-| `graphQLErrors` | An array of errors from the GraphQL endpoint |
-| `networkError` | Any error during the link execution or server response, that wasn't delivered as part of the `errors` field in the GraphQL result |
-| `forward` | A reference to the next link in the chain. Calling `return forward(operation)` in the callback will retry the request, returning a new observable for the upstream link to subscribe to. |
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
 
-#### Ignoring errors
+<tbody>
+<tr>
+<td>
+
+###### `operation`
+
+`Operation`
+</td>
+<td>
+
+The details of the GraphQL operation that produced an error.
+
+[See type definition](https://github.com/apollographql/apollo-client/blob/main/src/link/core/types.ts#L14-L21)
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `response`
+
+`ExecutionResult`
+</td>
+<td>
+
+The (possibly modified) GraphQL result from the server, passed by the next link down the chain (i.e., the link closer to the terminating link).
+
+[See type definition](https://github.com/graphql/graphql-js/blob/main/src/execution/execute.d.ts#L49-L57)
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `graphQLErrors`
+
+`ReadonlyArray<GraphQLError>`
+</td>
+<td>
+
+An array of [GraphQL errors](#graphql-errors) that occurred while executing the operation, if any.
+
+[See type definition](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.d.ts)
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `networkError`
+
+`Error | ServerError | ServerParseError`
+</td>
+<td>
+
+A network error that occurred while attempting to execute the operation, if any.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `forward`
+
+Function
+</td>
+<td>
+
+A function that calls the next link down the chain. Calling `return forward(operation)` in your `onError` callback retries the request, returning a new observable for the upstream link to subscribe to.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### Ignoring errors
 
 If you want to conditionally ignore errors, you can set `response.errors = null;` within the error handler:
 

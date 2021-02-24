@@ -303,8 +303,7 @@ After your GraphQL endpoint (successfully) responds with the result of the sent 
 
 ## Handling errors
 
-`HttpLink` distinguishes between client errors, server errors, and GraphQL errors.
-You can add the [Error link](./apollo-link-error) to your link chain to handle these errors via a [callback](./apollo-link-error#callback).
+`HttpLink` distinguishes between client errors, server errors, and GraphQL errors. You can add the [`onError` link](./apollo-link-error) to your link chain to handle these errors via a [callback](./apollo-link-error#options).
 
 The following types of errors can occur:
 

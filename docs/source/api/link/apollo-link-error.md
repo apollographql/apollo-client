@@ -23,7 +23,7 @@ const link = onError(({ graphQLErrors, networkError }) => {
 });
 ```
 
-The function you provide `onError` should not return a value unless you want to [retry the operation](../../data/error-handling#retrying-on-network-error).
+The function you provide `onError` should not return a value unless you want to [retry the operation](../../data/error-handling#retrying-operations).
 
 ## Options
 
@@ -79,7 +79,7 @@ The (possibly modified) GraphQL result from the server, passed by the next link 
 </td>
 <td>
 
-An array of [GraphQL errors](#graphql-errors) that occurred while executing the operation, if any.
+An array of [GraphQL errors](../../data/error-handling/#graphql-errors) that occurred while executing the operation, if any.
 
 [See type definition](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.d.ts)
 
@@ -111,7 +111,7 @@ A network error that occurred while attempting to execute the operation, if any.
 </td>
 <td>
 
-A function that calls the next link down the chain. Calling `return forward(operation)` in your `onError` callback [retries the operation](../../data/error-handling#retrying-on-error), returning a new observable for the upstream link to subscribe to.
+A function that calls the next link down the chain. Calling `return forward(operation)` in your `onError` callback [retries the operation](../../data/error-handling#retrying-operations), returning a new observable for the upstream link to subscribe to.
 
 </td>
 </tr>

@@ -64,11 +64,11 @@ An operation that produces GraphQL errors might _also_ return **partial data**. 
 
 ### Network errors
 
-These are errors encountered while attemptint to communicate with your GraphQL server, usually resulting in a `4xx` or `5xx` response status code (and no data).
+These are errors encountered while attempting to communicate with your GraphQL server, usually resulting in a `4xx` or `5xx` response status code (and no data).
 
 When a network error occurs, Apollo Client adds it to [the `error.networkError` field returned by your `useQuery` call](./queries/#result) (or whichever operation hook you used).
 
-You can add retry logic and other advanced network error handling to your application with [Apollo Link](#handling-network-errors-with-apollo-link).
+You can add retry logic and other advanced network error handling to your application with [Apollo Link](#advanced-error-handling-with-apollo-link).
 
 ## GraphQL error policies
 

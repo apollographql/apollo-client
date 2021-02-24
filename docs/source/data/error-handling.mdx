@@ -1,44 +1,74 @@
 ---
-title: Client-side error handling
+title: Handling operation errors
 sidebar_title: Error handling
 ---
 
-Apollo Client communicates with both your frontend and backend, which means it can encounter a variety of errors from both. It's important to handle errors correctly and show any relevant information to the user when an error occurs.
+import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
+
+Apollo Client can encounter a variety of errors when executing operations on your GraphQL server. Apollo Client helps you handle these errors according to their type, enabling you to show appropriate information to the user when an error occurs.
 
 ## Error types
 
-The most common error types encountered by Apollo Client are described below.
+Executing GraphQL operations on a remote server can result in [GraphQL errors](#graphql-errors) or [network errors](#network-errors).
 
-#### GraphQL errors
+### GraphQL errors
 
-These are errors related to the server-side execution of a GraphQL operation. They include syntax errors (e.g., a query was malformed), semantic errors (e.g., a query included a schema field that doesn't exist), and others.
+These are errors related to the server-side execution of a GraphQL operation. They include:
 
-When a GraphQL error occurs, it's included in the `errors` array of the server's response to Apollo Client. Apollo Client then adds those errors to [the `error.graphQLErrors` array returned by your `useQuery` call](./queries/#result) (or whichever hook you used).
+* Syntax errors (e.g., a query was malformed)
+* Validation errors (e.g., a query included a schema field that doesn't exist)
+* Resolver errors (e.g., an error occurred while attempting to populate a query field)
 
-GraphQL errors usually result in a `4xx` response status code, but some servers might respond with `200`.
+> Learn more about GraphQL errors in the [Apollo Server documentation](https://www.apollographql.com/docs/apollo-server/data/errors/).
 
-##### Partial data with GraphQL errors
+When a GraphQL error occurs, your server includes it in the `errors` array of its response to Apollo Client:
+
+<ExpansionPanel title="Example error response">
+
+```json
+{
+  "errors": [
+    {
+      "message": "Cannot query field \"nonexistentField\" on type \"Query\".",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "extensions": {
+        "code": "GRAPHQL_VALIDATION_FAILED",
+        "exception": {
+          "stacktrace": [
+            "GraphQLError: Cannot query field \"nonexistentField\" on type \"Query\".",
+            "...additional lines...",
+          ]
+        }
+      }
+    }
+  ],
+  "data": null
+}
+```
+
+</ExpansionPanel>
+
+Apollo Client then adds those errors to [the `error.graphQLErrors` array returned by your `useQuery` call](./queries/#result) (or whichever operation hook you used).
+
+If a GraphQL error prevents Apollo Server from including _any_ of the `data` you requested in its response, it responds with a `4xx` status code. Apollo Server responds with a `200` status code if a GraphQL error occurred but the response still includes [partial data](#partial-data-with-graphql-errors).
+
+#### Partial data with GraphQL errors
 
 An operation that produces GraphQL errors might _also_ return **partial data**. This means that some (but not all) of the data your operation requested is included in your server's response. Apollo Client _ignores_ partial data by default, but you can override this behavior by [setting a GraphQL error policy](#graphql-error-policies).
 
 
-#### Network errors
+### Network errors
 
-These are errors encountered while communicating with your GraphQL server, usually resulting in a `4xx` or `5xx` response status code (and no results).
+These are errors encountered while attemptint to communicate with your GraphQL server, usually resulting in a `4xx` or `5xx` response status code (and no data).
 
-When a network error occurs, Apollo Client adds it to [the `error.networkErrors` array returned by your `useQuery` call](./queries/#result) (or whichever hook you used).
+When a network error occurs, Apollo Client adds it to [the `error.networkError` field returned by your `useQuery` call](./queries/#result) (or whichever operation hook you used).
 
-#### Transaction errors
-
-These are errors that occur in your back-end data stores while modifying data for a mutation.
-
-#### UI errors
-
-These are front-end errors that occur within your React components (or your other chosen view layer).
-
-#### Apollo Client errors
-
-These are errors that occur within Apollo Client itself.
+You can add retry logic and other advanced network error handling to your application with [Apollo Link](#handling-network-errors-with-apollo-link).
 
 ## GraphQL error policies
 
@@ -47,11 +77,13 @@ When your server's response to a GraphQL operation includes an `errors` array, i
 ```json
 {
   "data": {
-    "getInt": 12
+    "getInt": 12,
+    "getString": null
   },
   "errors": [
     {
-      "message": "Cannot query field \"getStrin\" on type \"Query\". Did you mean \"getString\"?",
+      "message": "Failed to get string!",
+      // ...additional fields...
     }
   ]
 }
@@ -63,8 +95,8 @@ Apollo Client supports the following error policies for an operation:
 
 | Policy | Description |
 |--------|-------------|
-| `none` | `graphQLErrors` are treated the same as `networkErrors`, meaning all response `data` is ignored. |
-| `ignore` | `graphQLErrors` are ignored (`error.graphQLErrors`  is _not_ populated), and any returned `data` is rendered as if no errors occurred. |
+| `none` | `graphQLErrors` are treated the same as a `networkError`, meaning response `data` is ignored. |
+| `ignore` | `graphQLErrors` are ignored (`error.graphQLErrors`  is _not_ populated), and any returned `data` is cached and rendered as if no errors occurred. |
 | `all` | Both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information. |
 
 ### Setting an error policy
@@ -95,16 +127,15 @@ function ShowingSomeErrors() {
 }
 ```
 
-## Handling network errors with Apollo Link
+This example uses the `all` error policy to render both partial data and error information whenever applicable.
 
-You can configure advanced handling of networking errors with [Apollo Link](../api/link/introduction/), a library that enables you to customize Apollo Client's network communication.
+## Advanced error handling with Apollo Link
 
-Specifically, you can add an `onError` link to your [link chain](../api/link/introduction/#composing-a-link-chain) that receives error details and acts on them accordingly.
+The [Apollo Link](../api/link/introduction/) library enables you to configure advanced handling of errors that occur while executing GraphQL operations.
 
+As a recommended first step, you can add an [`onError` link](../api/link/apollo-link-error/) to your [link chain](../api/link/introduction/#handling-a-response) that receives error details and acts on them accordingly.
 
-### Example link
-
-This `onError` link checks for `graphQLErrors` or a `networkError` in the server's response. If it finds either, it logs the details.
+This `onError` link checks for `graphQLErrors` or a `networkError` in the server's response. It logs the details of whichever error(s) it finds.
 
 ```js
 import { onError } from "@apollo/client/link/error";
@@ -121,103 +152,63 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 });
 ```
 
-### Options
+### Retrying operations
 
-The `onError` link takes a function that's called in the event of an error. This function is passed an object with the following fields:
+Apollo Link helps you retry failed operations that might be resolved by a followup attempt. We recommend different links depending on the type of error that occurred:
 
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+* The `onError` link for [GraphQL errors](#on-graphql-errors)
+* The `RetryLink` for [network errors](#on-network-errors)
 
-<tbody>
-<tr>
-<td>
+#### On GraphQL errors
 
-###### `operation`
+The `onError` link can retry a failed operation based on the type of GraphQL error that's returned. For example, when using token-based authentication, you might want to automatically handle re-authentication when the token expires.
 
-`Operation`
-</td>
-<td>
+To retry an operation, you `return forward(operation)` in your `onError` function. Here's an example:
 
-The details of the GraphQL operation that produced an error.
+```js{18}
+onError(({ graphQLErrors, networkError, operation, forward }) => {
+  if (graphQLErrors) {
+    for (let err of graphQLErrors) {
+      switch (err.extensions.code) {
+        // Apollo Server sets code to UNAUTHENTICATED
+        // when an AuthenticationError is thrown in a resolver
+        case 'UNAUTHENTICATED':
 
-[See type definition](https://github.com/apollographql/apollo-client/blob/main/src/link/core/types.ts#L14-L21)
-</td>
-</tr>
+          // Modify the operation context with a new token
+          const oldHeaders = operation.getContext().headers;
+          operation.setContext({
+            headers: {
+              ...oldHeaders,
+              authorization: getNewToken(),
+            },
+          });
+          // Retry the request, returning the new observable
+          return forward(operation);
+      }
+    }
+  }
 
+  // To retry on network errors, we recommend the RetryLink
+  // instead of the onError link. This just logs the error.
+  if (networkError) {
+    console.log(`[Network error]: ${networkError}`);
+  }
+});
+```
 
-<tr>
-<td>
+> If your retried operation _also_ results in errors, those errors are _not_ passed to your `onError` link to prevent an infinite loop of operations. This means that an `onError` link can retry a particular operation only once.
 
-###### `response`
+If you _don't_ want to retry an operation, your `onError` link's function should return nothing.
 
-`ExecutionResult`
-</td>
-<td>
+#### On network errors
 
-The (possibly modified) GraphQL result from the server, passed by the next link down the chain (i.e., the link closer to the terminating link).
+To retry operations that encounter a network error, we recommend adding a `RetryLink` to your link chain. This link enables you to configure retry logic like backoff and number of attempts.
 
-[See type definition](https://github.com/graphql/graphql-js/blob/main/src/execution/execute.d.ts#L49-L57)
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `graphQLErrors`
-
-`ReadonlyArray<GraphQLError>`
-</td>
-<td>
-
-An array of [GraphQL errors](#graphql-errors) that occurred while executing the operation, if any.
-
-[See type definition](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.d.ts)
-
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `networkError`
-
-`Error | ServerError | ServerParseError`
-</td>
-<td>
-
-A network error that occurred while attempting to execute the operation, if any.
-
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `forward`
-
-Function
-</td>
-<td>
-
-A function that calls the next link down the chain. Calling `return forward(operation)` in your `onError` callback retries the request, returning a new observable for the upstream link to subscribe to.
-
-</td>
-</tr>
-
-</tbody>
-</table>
+See the [documentation for `RetryLink`](../api/link/apollo-link-retry/).
 
 ### Ignoring errors
 
-If you want to conditionally ignore errors, you can set `response.errors = null;` within the error handler:
+To conditionally ignore errors, you can set `response.errors` to `null` in your `onError` link:
 
 ```js
 onError(({ response, operation }) => {
@@ -226,3 +217,7 @@ onError(({ response, operation }) => {
   }
 })
 ```
+
+### `onError` link options
+
+See the [`onError` API reference](../api/link/apollo-link-error/#options).

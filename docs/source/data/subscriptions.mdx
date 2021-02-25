@@ -99,9 +99,11 @@ const wsLink = new WebSocketLink({
 
 Replace the value of the `uri` option with the URL of your GraphQL server. This is often a `localhost` URL during development.
 
-### 3. Use different transports for different operations
+### 3. Split communication by operation (recommended)
 
-Apollo Client should use your `WebSocketLink` for subscriptions, but it _shouldn't_ use it for queries or mutations. For those operations, Apollo Client should use HTTP as usual. To support this, the `@apollo/client` library provides a `split` function that lets you use one of two different `Link`s, according to the result of a boolean check.
+Although Apollo Client _can_ use your `WebSocketLink` to execute all operation types, in most cases it should continue using HTTP for queries and mutations. This is because queries and mutations don't require a stateful or long-lasting connection, making HTTP more efficient and scalable if a WebSocket connection isn't already present.
+
+To support this, the `@apollo/client` library provides a `split` function that lets you use one of two different `Link`s, according to the result of a boolean check.
 
 The following example expands on the previous one by initializing both a `WebSocketLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
 

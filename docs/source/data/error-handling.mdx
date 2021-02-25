@@ -202,7 +202,7 @@ If you _don't_ want to retry an operation, your `onError` link's function should
 
 #### On network errors
 
-To retry operations that encounter a network error, we recommend adding a `RetryLink` to your link chain. This link enables you to configure retry logic like backoff and number of attempts.
+To retry operations that encounter a network error, we recommend adding a `RetryLink` to your link chain. This link enables you to configure retry logic like exponential backoff and total number of attempts.
 
 See the [documentation for `RetryLink`](../api/link/apollo-link-retry/).
 

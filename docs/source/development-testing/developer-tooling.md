@@ -24,18 +24,18 @@ The Apollo Client Devtools are available as an extension for [Chrome](https://ch
 
 ### Features
 
-The Apollo Client Devtools appear as an "Apollo" tab in your web browser inspector, alongside other tabs like "Elements" and "Console". The devtools currently have four main features:
+The Apollo Client Devtools appear as an "Apollo" tab in your web browser's Inspector panel, alongside default tabs like "Console" and "Network". The devtools currently have four main features:
 
 - **GraphiQL:** Send queries to your server through your web application's configured Apollo Client instance, or query the Apollo Client cache to see what data is loaded.
-- **Watched query inspector:** View active queries, variables, cached results, and re-run individual queries.
-- **Mutation inspector:** View fired mutations, variables, and re-run individual mutations.
-- **Cache inspector:** Visualize the Apollo Client cache and search through it by field names and/or values.
+- **Watched query inspector:** View active queries, variables, and cached results, and re-run individual queries.
+- **Mutation inspector:** View active mutations and their variables, and re-run individual mutations.
+- **Cache inspector:** Visualize the Apollo Client cache and search it by field name and/or value.
 
 ![Apollo Client Devtools](../assets/devtools/apollo-client-devtools/ac-browser-devtools-3.png)
 
 ### Installation
 
-You can install the extension via the [Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/) webstores.
+You can install the extension via the webstores for [Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/).
 
 ### Configuration
 

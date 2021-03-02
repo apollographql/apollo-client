@@ -4294,6 +4294,188 @@ describe("type policies", function () {
       expect(personMergeCount).toBe(3);
     });
 
+    it("can force merging references with non-normalized objects", function () {
+      const nameQuery = gql`
+        query GetName {
+          viewer {
+            name
+          }
+        }
+      `;
+
+      const emailQuery = gql`
+        query GetEmail {
+          viewer {
+            id
+            email
+          }
+        }
+      `;
+
+      check(new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              viewer: {
+                merge: true,
+              },
+            },
+          },
+        },
+      }));
+
+      check(new InMemoryCache({
+        typePolicies: {
+          User: {
+            merge: true,
+          },
+        },
+      }));
+
+      function check(cache: InMemoryCache) {
+        // Write nameQuery first, so the existing data will be a
+        // non-normalized object when we write emailQuery next.
+        cache.writeQuery({
+          query: nameQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              name: "Alice",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __typename: "User",
+              name: "Alice",
+            },
+          },
+        });
+
+        cache.writeQuery({
+          query: emailQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              id: 12345,
+              email: "alice@example.com",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __ref: "User:12345",
+            },
+          },
+          "User:12345": {
+            __typename: "User",
+            name: "Alice",
+            id: 12345,
+            email: "alice@example.com",
+          },
+        });
+
+        expect(cache.readQuery({
+          query: nameQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            name: "Alice",
+          },
+        });
+
+        expect(cache.readQuery({
+          query: emailQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            id: 12345,
+            email: "alice@example.com",
+          },
+        });
+
+        cache.reset();
+        expect(cache.extract()).toEqual({});
+
+        // Write emailQuery first, so the existing data will be a
+        // normalized reference when we write nameQuery next.
+        cache.writeQuery({
+          query: emailQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              id: 12345,
+              email: "alice@example.com",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          "User:12345": {
+            id: 12345,
+            __typename: "User",
+            email: "alice@example.com"
+          },
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __ref: "User:12345",
+            },
+          },
+        });
+
+        cache.writeQuery({
+          query: nameQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              name: "Alice",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          "User:12345": {
+            id: 12345,
+            __typename: "User",
+            email: "alice@example.com",
+            name: "Alice",
+          },
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __ref: "User:12345",
+            },
+          },
+        });
+
+        expect(cache.readQuery({
+          query: nameQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            name: "Alice",
+          },
+        });
+
+        expect(cache.readQuery({
+          query: emailQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            id: 12345,
+            email: "alice@example.com",
+          },
+        });
+      }
+    });
+
     it("can force merging with inherited field merge function", function () {
       let authorMergeCount = 0;
 

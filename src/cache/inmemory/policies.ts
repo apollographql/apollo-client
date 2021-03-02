@@ -23,7 +23,12 @@ import {
   canUseWeakMap,
   compact,
 } from '../../utilities';
-import { IdGetter, ReadMergeModifyContext, MergeInfo } from "./types";
+import {
+  IdGetter,
+  MergeInfo,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types";
 import {
   hasOwn,
   fieldNameFromStoreName,
@@ -41,7 +46,6 @@ import {
   ReadFieldOptions,
   CanReadFunction,
 } from '../core/types/common';
-import { FieldValueGetter } from './entityStore';
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -788,7 +792,7 @@ export class Policies {
       // FieldFunctionOptions object and calling mergeTrueFn, we can
       // simply call mergeObjects, as mergeTrueFn would.
       return makeMergeObjectsFunction(
-        context.store.getFieldValue
+        context.store,
       )(existing as StoreObject,
         incoming as StoreObject);
     }
@@ -832,7 +836,7 @@ function makeFieldFunctionOptions(
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
   const variables = fieldSpec.variables || context.variables;
-  const { getFieldValue, toReference, canRead } = context.store;
+  const { toReference, canRead } = context.store;
 
   return {
     args: argsFromFieldSpecifier(fieldSpec),
@@ -867,12 +871,12 @@ function makeFieldFunctionOptions(
       return policies.readField<T>(options, context);
     },
 
-    mergeObjects: makeMergeObjectsFunction(getFieldValue),
+    mergeObjects: makeMergeObjectsFunction(context.store),
   };
 }
 
 function makeMergeObjectsFunction(
-  getFieldValue: FieldValueGetter,
+  store: NormalizedCache,
 ): MergeObjectsFunction {
   return function mergeObjects(existing, incoming) {
     if (Array.isArray(existing) || Array.isArray(incoming)) {
@@ -885,17 +889,24 @@ function makeMergeObjectsFunction(
     // types of options.mergeObjects.
     if (existing && typeof existing === "object" &&
         incoming && typeof incoming === "object") {
-      const eType = getFieldValue(existing, "__typename");
-      const iType = getFieldValue(incoming, "__typename");
+      const eType = store.getFieldValue(existing, "__typename");
+      const iType = store.getFieldValue(incoming, "__typename");
       const typesDiffer = eType && iType && eType !== iType;
 
-      if (typesDiffer ||
-          !storeValueIsStoreObject(existing) ||
-          !storeValueIsStoreObject(incoming)) {
+      if (typesDiffer) {
         return incoming;
       }
 
-      return { ...existing, ...incoming };
+      if (isReference(existing) &&
+          storeValueIsStoreObject(incoming)) {
+        store.merge(existing.__ref, incoming);
+        return existing;
+      }
+
+      if (storeValueIsStoreObject(existing) &&
+          storeValueIsStoreObject(incoming)) {
+        return { ...existing, ...incoming };
+      }
     }
 
     return incoming;

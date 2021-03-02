@@ -904,6 +904,12 @@ function makeMergeObjectsFunction(
       }
 
       if (storeValueIsStoreObject(existing) &&
+          isReference(incoming)) {
+        store.merge(existing, incoming.__ref);
+        return incoming;
+      }
+
+      if (storeValueIsStoreObject(existing) &&
           storeValueIsStoreObject(incoming)) {
         return { ...existing, ...incoming };
       }

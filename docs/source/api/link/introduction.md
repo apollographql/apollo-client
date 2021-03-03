@@ -14,12 +14,12 @@ flowchart LR
   link1(Link)
   link2(Link)
   link3(Terminating Link)
-  operation--Initiated-->link1
-  link1-->link2
-  link2-->link3
-  link3-->link2
-  link2-->link1
-  link1--Completed-->operation
+  operation--"Initiated"-->link1
+  link1--down-->link2
+  link2--down-->link3
+  link3--up-->link2
+  link2--up-->link1
+  link1--"Completed"-->operation
   end
   server(GraphQL server)
   link3--Request-->server
@@ -34,7 +34,7 @@ Each link should represent either a self-contained modification to a GraphQL ope
  1. The first link might log the details of the operation for debugging purposes.
  2. The second link might add an HTTP header to the outgoing operation request for authentication purposes.
  3. The final (terminating) link sends the operation to its destination (usually a GraphQL server over HTTP).
- 4. The server's response is passed back through each link in reverse order, enabling links to [modify the response](#handling-a-response) or take other actions before the data is cached.
+ 4. The server's response is passed back up each link in reverse order, enabling links to [modify the response](#handling-a-response) or take other actions before the data is cached.
 
 By default, Apollo Client uses Apollo Link's `HttpLink` to send GraphQL operations to a remote server over HTTP. Apollo Client takes care of creating this default link, and it covers many use cases without requiring additional customization.
 
@@ -99,12 +99,12 @@ flowchart LR
   link1(Link)
   link2(Link)
   link3(Terminating Link)
-  operation--Initiated-->link1
-  link1-->link2
-  link2-->link3
-  link3-->link2
-  link2-->link1
-  link1--Completed-->operation
+  operation--"Initiated"-->link1
+  link1--down-->link2
+  link2--down-->link3
+  link3--up-->link2
+  link2--up-->link1
+  link1--"Completed"-->operation
   end
   server(GraphQL server)
   link3--Request-->server

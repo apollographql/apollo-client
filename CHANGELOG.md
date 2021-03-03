@@ -23,6 +23,9 @@ TBD
 - The `FetchMoreQueryOptions` type now takes two instead of three type parameters (`<TVariables, TData>`), thanks to using `Partial<TVariables>` instead of `K extends typeof TVariables` and `Pick<TVariables, K>`. <br/>
   [@ArnaudBarre](https://github.com/ArnaudBarre) in [#7476](https://github.com/apollographql/apollo-client/pull/7476)
 
+- Allow `merge: true` field policy to merge `Reference` objects with non-normalized objects, and vice-versa. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7778](https://github.com/apollographql/apollo-client/pull/7778)
+
 ### Documentation
 TBD
 

@@ -1,4 +1,5 @@
 import { dep, OptimisticDependencyFunction } from 'optimism';
+import invariant from 'ts-invariant';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 
@@ -94,13 +95,38 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  public merge(dataId: string, incoming: StoreObject): void {
-    const existing = this.lookup(dataId);
+  public merge(
+    older: string | StoreObject,
+    newer: StoreObject | string,
+  ): void {
+    let dataId: string | undefined;
+
+    const existing: StoreObject | undefined =
+      typeof older === "string"
+        ? this.lookup(dataId = older)
+        : older;
+
+    const incoming: StoreObject | undefined =
+      typeof newer === "string"
+        ? this.lookup(dataId = newer)
+        : newer;
+
+    // If newer was a string ID, but that ID was not defined in this store,
+    // then there are no fields to be merged, so we're done.
+    if (!incoming) return;
+
+    invariant(
+      typeof dataId === "string",
+      "store.merge expects a string ID",
+    );
+
     const merged: StoreObject =
       new DeepMerger(storeObjectReconciler).merge(existing, incoming);
+
     // Even if merged === existing, existing may have come from a lower
     // layer, so we always need to set this.data[dataId] on this level.
     this.data[dataId] = merged;
+
     if (merged !== existing) {
       delete this.refs[dataId];
       if (this.group.caching) {
@@ -142,7 +168,7 @@ export abstract class EntityStore implements NormalizedCache {
         });
 
         Object.keys(fieldsToDirty).forEach(
-          fieldName => this.group.dirty(dataId, fieldName));
+          fieldName => this.group.dirty(dataId as string, fieldName));
       }
     }
   }

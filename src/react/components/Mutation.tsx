@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 
 import { OperationVariables } from '../../core';
 import { MutationComponentOptions } from './types';

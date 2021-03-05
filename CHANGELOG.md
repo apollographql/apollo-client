@@ -26,6 +26,9 @@ TBD
 - Allow `merge: true` field policy to merge `Reference` objects with non-normalized objects, and vice-versa. <br/>
   [@benjamn](https://github.com/benjamn) in [#7778](https://github.com/apollographql/apollo-client/pull/7778)
 
+- Prefer `import * as namepace ...` for imports whose types are re-exported (and thus may appear in `.d.ts` files). <br/>
+  [@devrelm](https://github.com/devrelm) in [#7742](https://github.com/apollographql/apollo-client/pull/7742)
+
 ### Documentation
 TBD
 

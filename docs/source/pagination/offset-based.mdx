@@ -49,7 +49,7 @@ This defines a [`merge` function](../caching/cache-field-behavior/#the-merge-fun
 
 ### Using with `fetchMore`
 
-If you use `offsetLimitPagination` to set your feed policy as shown above,then you can use `fetchMore` with `useQuery` like so:
+If you use `offsetLimitPagination` to set your feed policy as shown above, then you can use `fetchMore` with `useQuery` like so:
 
 ```jsx{17-21}:title=FeedData.jsx
 const FeedData() {
@@ -86,7 +86,7 @@ In this example, the `Feed` component receives the _entire cached list_ (`data.f
 
 In [the example above](#using-with-fetchmore), the GraphQL server returns individual pages of results, but each query then returns _all_ cached results received so far. To limit each query's result to _only_ the items you requested, you can include a [paginated `read` function](./core-api/#paginated-read-functions) in your field policy.
 
-Because the `offsetLimitPagination` helper is currently defining your field policy, you combine your `read` function with its result, like so:
+Because the `offsetLimitPagination` helper is currently defining your field policy, you combine your `read` function with the helper's result, like so:
 
 ```js{8-13}:title=index.js
 import { InMemoryCache } from "@apollo/client";
@@ -98,7 +98,7 @@ const cache = new InMemoryCache({
       fields: {
         feed: {
           ...offsetLimitPagination(),
-          read() {
+          read(existing, { args }) {
             // Implement here
           }
         }

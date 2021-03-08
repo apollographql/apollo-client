@@ -38,7 +38,12 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 
-import { QueryInfo, QueryStoreValue, shouldWriteResult } from './QueryInfo';
+import {
+  QueryInfo,
+  QueryStoreValue,
+  shouldWriteResult,
+  CacheWriteBehavior,
+} from './QueryInfo';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -822,7 +827,7 @@ export class QueryManager<TStore> {
 
   private getResultsFromLink<TData, TVars>(
     queryInfo: QueryInfo,
-    allowCacheWrite: boolean,
+    cacheWriteBehavior: CacheWriteBehavior,
     options: Pick<WatchQueryOptions<TVars, TData>,
       | "variables"
       | "context"
@@ -848,7 +853,7 @@ export class QueryManager<TStore> {
               graphQLErrors: result.errors,
             }));
           }
-          queryInfo.markResult(result, options, allowCacheWrite);
+          queryInfo.markResult(result, options, cacheWriteBehavior);
           queryInfo.markReady();
         }
 
@@ -1076,8 +1081,13 @@ export class QueryManager<TStore> {
       return fromData(data);
     };
 
-    const resultsFromLink = (allowCacheWrite: boolean) =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, allowCacheWrite, {
+    const cacheWriteBehavior =
+      fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID :
+      networkStatus === NetworkStatus.refetch ? CacheWriteBehavior.OVERWRITE :
+      CacheWriteBehavior.MERGE;
+
+    const resultsFromLink = () =>
+      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
         variables,
         context,
         fetchPolicy,
@@ -1103,12 +1113,12 @@ export class QueryManager<TStore> {
       if (returnPartialData || shouldNotify) {
         return [
           resultsFromCache(diff),
-          resultsFromLink(true),
+          resultsFromLink(),
         ];
       }
 
       return [
-        resultsFromLink(true),
+        resultsFromLink(),
       ];
     }
 
@@ -1118,12 +1128,12 @@ export class QueryManager<TStore> {
       if (diff.complete || returnPartialData || shouldNotify) {
         return [
           resultsFromCache(diff),
-          resultsFromLink(true),
+          resultsFromLink(),
         ];
       }
 
       return [
-        resultsFromLink(true),
+        resultsFromLink(),
       ];
     }
 
@@ -1136,11 +1146,11 @@ export class QueryManager<TStore> {
       if (shouldNotify) {
         return [
           resultsFromCache(readCache()),
-          resultsFromLink(true),
+          resultsFromLink(),
         ];
       }
 
-      return [resultsFromLink(true)];
+      return [resultsFromLink()];
 
     case "no-cache":
       if (shouldNotify) {
@@ -1149,11 +1159,11 @@ export class QueryManager<TStore> {
           // cache.diff, but instead returns a { complete: false } stub result
           // when there is no queryInfo.diff already defined.
           resultsFromCache(queryInfo.getDiff()),
-          resultsFromLink(false),
+          resultsFromLink(),
         ];
       }
 
-      return [resultsFromLink(false)];
+      return [resultsFromLink()];
 
     case "standby":
       return [];

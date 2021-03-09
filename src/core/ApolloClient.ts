@@ -604,6 +604,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * Get all observable queries which have current observers (e.g.
+   * they're mounted).
+   */
+  public getObservableQueries() {
+    return this.queryManager.getObservableQueries();
+  }
+
+  /**
    * Set a custom local state fragment matcher.
    */
   public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {

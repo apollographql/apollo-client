@@ -734,25 +734,33 @@ export class QueryManager<TStore> {
     });
   }
 
+  public getObservableQueries() {
+    const queries = new Map<string, ObservableQuery<any>>();
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (observableQuery && observableQuery.hasObservers()) {
+        queries.set(queryId, observableQuery);
+      }
+    });
+    return queries;
+  }
+
   public reFetchObservableQueries(
     includeStandby: boolean = false,
   ): Promise<ApolloQueryResult<any>[]> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
 
-    this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery && observableQuery.hasObservers()) {
-        const fetchPolicy = observableQuery.options.fetchPolicy;
+    this.getObservableQueries().forEach((observableQuery, queryId) => {
+      const fetchPolicy = observableQuery.options.fetchPolicy;
 
-        observableQuery.resetLastResults();
-        if (
-          fetchPolicy !== 'cache-only' &&
-          (includeStandby || fetchPolicy !== 'standby')
-        ) {
-          observableQueryPromises.push(observableQuery.refetch());
-        }
-
-        this.getQuery(queryId).setDiff(null);
+      observableQuery.resetLastResults();
+      if (
+        fetchPolicy !== 'cache-only' &&
+        (includeStandby || fetchPolicy !== 'standby')
+      ) {
+        observableQueryPromises.push(observableQuery.refetch());
       }
+
+      this.getQuery(queryId).setDiff(null);
     });
 
     this.broadcastQueries();

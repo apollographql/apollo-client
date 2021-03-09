@@ -3,6 +3,11 @@
 ### Bug fixes
 TBD
 
+### Potentially breaking changes
+
+- Internally, Apollo Client now uses namespace syntax (e.g. `import * as React from "react"`) for imports whose types are re-exported (and thus may appear in `.d.ts` files). This change should remove any need to configure `esModuleInterop` or `allowSyntheticDefaultImports` in `tsconfig.json`, but might require updating bundler configurations that specify named exports of the `react` and `prop-types` packages, to include exports like `createContext` and `createElement` ([example](https://github.com/apollographql/apollo-client/commit/16b08e1af9ba9934041298496e167aafb128c15d)). <br/>
+  [@devrelm](https://github.com/devrelm) in [#7742](https://github.com/apollographql/apollo-client/pull/7742)
+
 ### Improvements
 
 - `InMemoryCache` now _guarantees_ that any two result objects returned by the cache (from `readQuery`, `readFragment`, etc.) will be referentially equal (`===`) if they are deeply equal. Previously, `===` equality was often achievable for results for the same query, on a best-effort basis. Now, equivalent result objects will be automatically shared among the result trees of completely different queries. This guarantee is important for taking full advantage of optimistic updates that correctly guess the final data, and for "pure" UI components that can skip re-rendering when their input data are unchanged. <br/>
@@ -25,9 +30,6 @@ TBD
 
 - Allow `merge: true` field policy to merge `Reference` objects with non-normalized objects, and vice-versa. <br/>
   [@benjamn](https://github.com/benjamn) in [#7778](https://github.com/apollographql/apollo-client/pull/7778)
-
-- Prefer `import * as namepace ...` for imports whose types are re-exported (and thus may appear in `.d.ts` files). <br/>
-  [@devrelm](https://github.com/devrelm) in [#7742](https://github.com/apollographql/apollo-client/pull/7742)
 
 ### Documentation
 TBD

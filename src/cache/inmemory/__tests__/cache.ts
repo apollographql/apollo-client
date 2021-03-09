@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference, Reference, makeVar, TypedDocumentNode, isReference } from '../../../core';
+import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
 import { Cache } from '../../../cache';
 import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
@@ -1327,6 +1327,137 @@ describe('Cache', () => {
     );
   });
 
+  describe('batch', () => {
+    const last = <E>(array: E[]) => array[array.length - 1];
+
+    it('calls onDirty for each invalidated watch', () => {
+      const cache = new InMemoryCache;
+
+      // TODO Is this really necessary?
+      cache.writeQuery({
+        query: gql`query { __typename }`,
+        data: {
+          __typename: "Query",
+        },
+      });
+
+      const aQuery = gql`query { a }`;
+      const abQuery = gql`query { a b }`;
+      const bQuery = gql`query { b }`;
+
+      const cancelFns = new Set<ReturnType<InMemoryCache["watch"]>>();
+
+      function watch(query: DocumentNode) {
+        const options: Cache.WatchOptions = {
+          query,
+          optimistic: true,
+          immediate: true,
+          callback(diff) {
+            diffs.push(diff);
+          },
+        };
+        const diffs: Cache.DiffResult<any>[] = [];
+        cancelFns.add(cache.watch(options));
+        diffs.shift(); // Discard the immediate diff
+        return { diffs, watch: options };
+      }
+
+      const aInfo = watch(aQuery);
+      const abInfo = watch(abQuery);
+      const bInfo = watch(bQuery);
+
+      const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
+
+      cache.batch({
+        transaction(cache) {
+          cache.writeQuery({
+            query: aQuery,
+            data: {
+              a: "ay",
+            },
+          });
+        },
+        optimistic: true,
+        onDirty(w, diff) {
+          dirtied.set(w, diff);
+        },
+      });
+
+      expect(dirtied.size).toBe(2);
+      expect(dirtied.has(aInfo.watch)).toBe(true);
+      expect(dirtied.has(abInfo.watch)).toBe(true);
+      expect(dirtied.has(bInfo.watch)).toBe(false);
+
+      expect(aInfo.diffs.length).toBe(1);
+      expect(last(aInfo.diffs)).toEqual({
+        complete: true,
+        result: {
+          a: "ay",
+        },
+      });
+
+      expect(abInfo.diffs.length).toBe(1);
+      expect(last(abInfo.diffs)).toEqual({
+        complete: false,
+        missing: expect.any(Array),
+        result: {
+          a: "ay",
+        },
+      });
+
+      expect(bInfo.diffs.length).toBe(0);
+
+      dirtied.clear();
+
+      cache.batch({
+        transaction(cache) {
+          cache.writeQuery({
+            query: bQuery,
+            data: {
+              b: "bee",
+            },
+          });
+        },
+        optimistic: true,
+        onDirty(w, diff) {
+          dirtied.set(w, diff);
+        },
+      });
+
+      expect(dirtied.size).toBe(2);
+      expect(dirtied.has(aInfo.watch)).toBe(false);
+      expect(dirtied.has(abInfo.watch)).toBe(true);
+      expect(dirtied.has(bInfo.watch)).toBe(true);
+
+      expect(aInfo.diffs.length).toBe(1);
+      expect(last(aInfo.diffs)).toEqual({
+        complete: true,
+        result: {
+          a: "ay",
+        },
+      });
+
+      expect(abInfo.diffs.length).toBe(2);
+      expect(last(abInfo.diffs)).toEqual({
+        complete: true,
+        result: {
+          a: "ay",
+          b: "bee",
+        },
+      });
+
+      expect(bInfo.diffs.length).toBe(1);
+      expect(last(bInfo.diffs)).toEqual({
+        complete: true,
+        result: {
+          b: "bee",
+        },
+      });
+
+      cancelFns.forEach(cancel => cancel());
+    });
+  });
+
   describe('performTransaction', () => {
     itWithInitialData('will not broadcast mid-transaction', [{}], cache => {
       let numBroadcasts = 0;
@@ -1373,7 +1504,7 @@ describe('Cache', () => {
     });
   });
 
-  describe('performOptimisticTransaction', () => {
+  describe('recordOptimisticTransaction', () => {
     itWithInitialData('will only broadcast once', [{}], cache => {
       let numBroadcasts = 0;
 

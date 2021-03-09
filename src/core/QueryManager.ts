@@ -346,17 +346,20 @@ export class QueryManager<TStore> {
         });
       }
 
-      cache.performTransaction(c => {
-        cacheWrites.forEach(write => c.write(write));
-
-        // If the mutation has some writes associated with it then we need to
-        // apply those writes to the store by running this reducer again with a
-        // write action.
-        const { update } = mutation;
-        if (update) {
-          update(c, mutation.result);
-        }
-      }, /* non-optimistic transaction: */ null);
+      cache.batch({
+        transaction(c) {
+          cacheWrites.forEach(write => c.write(write));
+          // If the mutation has some writes associated with it then we need to
+          // apply those writes to the store by running this reducer again with
+          // a write action.
+          const { update } = mutation;
+          if (update) {
+            update(c, mutation.result);
+          }
+        },
+        // Write the final mutation.result to the root layer of the cache.
+        optimistic: false,
+      });
     }
   }
 

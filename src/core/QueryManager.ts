@@ -914,7 +914,6 @@ export class QueryManager<TStore> {
     const query = this.transform(options.query).document;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
-    // const oldNetworkStatus = queryInfo.networkStatus;
 
     let {
       fetchPolicy = "cache-first" as WatchQueryFetchPolicy,

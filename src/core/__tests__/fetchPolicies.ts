@@ -324,6 +324,63 @@ describe('no-cache', () => {
       })
       .then(resolve, reject);
   });
+
+  describe('when notifyOnNetworkStatusChange is set', () => {
+    itAsync('does not save the data to the cache on success', (resolve, reject) => {
+      let called = 0;
+      const inspector = new ApolloLink((operation, forward) => {
+        called++;
+        return forward(operation).map(result => {
+          called++;
+          return result;
+        });
+      });
+
+      const client = new ApolloClient({
+        link: inspector.concat(createLink(reject)),
+        cache: new InMemoryCache({ addTypename: false }),
+      });
+
+      return client.query({ query, fetchPolicy: 'no-cache', notifyOnNetworkStatusChange: true }).then(
+        () => client.query({ query }).then(actualResult => {
+          expect(stripSymbols(actualResult.data)).toEqual(result);
+          // the second query couldn't read anything from the cache
+          expect(called).toBe(4);
+        }),
+      ).then(resolve, reject);
+    });
+
+    itAsync('does not save data to the cache on failure', (resolve, reject) => {
+      let called = 0;
+      const inspector = new ApolloLink((operation, forward) => {
+        called++;
+        return forward(operation).map(result => {
+          called++;
+          return result;
+        });
+      });
+
+      const client = new ApolloClient({
+        link: inspector.concat(createFailureLink()),
+        cache: new InMemoryCache({ addTypename: false }),
+      });
+
+      let didFail = false;
+      return client
+        .query({ query, fetchPolicy: 'no-cache', notifyOnNetworkStatusChange: true })
+        .catch(e => {
+          expect(e.message).toMatch('query failed');
+          didFail = true;
+        })
+        .then(() => client.query({ query }).then(actualResult => {
+          expect(stripSymbols(actualResult.data)).toEqual(result);
+          // the first error doesn't call .map on the inspector
+          expect(called).toBe(3);
+          expect(didFail).toBe(true);
+        }))
+        .then(resolve, reject);
+    });
+  });
 });
 
 describe('cache-first', () => {

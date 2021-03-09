@@ -1044,7 +1044,7 @@ export class QueryManager<TStore> {
       diff: Cache.DiffResult<TData>,
       networkStatus = queryInfo.networkStatus || NetworkStatus.loading,
     ) => {
-      const data = diff.result as TData;
+      const data = diff.result;
 
       if (process.env.NODE_ENV !== 'production' &&
           isNonEmptyArray(diff.missing) &&
@@ -1055,21 +1055,21 @@ export class QueryManager<TStore> {
         }`, diff.missing);
       }
 
-      const fromData = (data: TData) => Observable.of({
+      const fromData = (data: TData | undefined) => Observable.of({
         data,
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
         ...(diff.complete ? null : { partial: true }),
       } as ApolloQueryResult<TData>);
 
-      if (this.transform(query).hasForcedResolvers) {
+      if (data && this.transform(query).hasForcedResolvers) {
         return this.localState.runResolvers({
           document: query,
           remoteResult: { data },
           context,
           variables,
           onlyRunForcedResolvers: true,
-        }).then(resolved => fromData(resolved.data!));
+        }).then(resolved => fromData(resolved.data || void 0));
       }
 
       return fromData(data);
@@ -1144,6 +1144,9 @@ export class QueryManager<TStore> {
     case "no-cache":
       if (shouldNotify) {
         return [
+          // Note that queryInfo.getDiff() for no-cache queries does not call
+          // cache.diff, but instead returns a { complete: false } stub result
+          // when there is no queryInfo.diff already defined.
           resultsFromCache(queryInfo.getDiff()),
           resultsFromLink(false),
         ];

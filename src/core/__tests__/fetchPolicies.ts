@@ -433,7 +433,6 @@ describe('no-cache', () => {
           return observable.setVariables({ id: '2' });
         } else if (count === 2) {
           expect(result).toEqual({
-            data: {},
             loading: true,
             networkStatus: NetworkStatus.setVariables,
             partial: true,
@@ -463,7 +462,6 @@ describe('no-cache', () => {
           return observable.refetch({ id: '3' });
         } else if (count === 6) {
           expect(result).toEqual({
-            data: {},
             loading: true,
             networkStatus: NetworkStatus.setVariables,
             partial: true,

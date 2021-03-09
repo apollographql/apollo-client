@@ -152,6 +152,11 @@ export class QueryInfo {
 
     this.updateWatch(this.variables = variables);
 
+    const oq = this.observableQuery;
+    if (oq && oq.options.fetchPolicy === "no-cache") {
+      return { complete: false };
+    }
+
     return this.diff = this.cache.diff({
       query: this.document!,
       variables,

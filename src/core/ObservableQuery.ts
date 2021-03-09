@@ -224,6 +224,16 @@ export class ObservableQuery<
    * the previous values of those variables will be used.
    */
   public refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>> {
+    return this.refresh(variables, NetworkStatus.refetch);
+  }
+
+  // Forces a network query, like fetchMore and refetch, but overwrites
+  // existing cache fields with incoming data, rather than merging field
+  // values. Can be useful for restarting paginated fields with fresh data.
+  public refresh(
+    variables?: Partial<TVariables>,
+    networkStatus = NetworkStatus.refresh,
+  ): Promise<ApolloQueryResult<TData>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -250,9 +260,13 @@ export class ObservableQuery<
 
     this.queryInfo.resetLastWrite();
 
-    return this.newReobserver(false).reobserve(
+    return (
+      networkStatus === NetworkStatus.refresh
+        ? this.getReobserver()
+        : this.newReobserver(false)
+    ).reobserve(
       reobserveOptions,
-      NetworkStatus.refetch,
+      networkStatus,
     );
   }
 

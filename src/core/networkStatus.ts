@@ -28,6 +28,18 @@ export enum NetworkStatus {
   refetch = 4,
 
   /**
+   * Similar to NetworkStatus.refetch, but existing cache fields will be
+   * overwritten by the incoming network data, rather than merging. Useful
+   * for restarting a paginated field with fresh initial data.
+   *
+   * This enum value uses the string "refetch" rather than a number,
+   * because it was added after the other values, and we did not want to
+   * change the existing numbers. Any other values added in the future
+   * should also use strings rather than numbers.
+   */
+  refresh = "refresh",
+
+  /**
    * Indicates that a polling query is currently in flight. So for example if you are polling a
    * query every 10 seconds then the network status will switch to `poll` every 10 seconds whenever
    * a poll request has been sent but not resolved.
@@ -52,5 +64,6 @@ export enum NetworkStatus {
 export function isNetworkRequestInFlight(
   networkStatus?: NetworkStatus,
 ): boolean {
-  return networkStatus ? networkStatus < 7 : false;
+  return networkStatus === "refresh" ||
+    (typeof networkStatus === "number" && networkStatus < 7);
 }

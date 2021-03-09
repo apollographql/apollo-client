@@ -889,7 +889,7 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
+    // refresh, or setVariables.
     networkStatus = NetworkStatus.loading,
   ): Concast<ApolloQueryResult<TData>> {
     const query = this.transform(options.query).document;
@@ -1022,7 +1022,7 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
+    // refresh, or setVariables.
     networkStatus: NetworkStatus,
   ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
     const {
@@ -1083,7 +1083,7 @@ export class QueryManager<TStore> {
 
     const cacheWriteBehavior =
       fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID :
-      networkStatus === NetworkStatus.refetch ? CacheWriteBehavior.OVERWRITE :
+      networkStatus === NetworkStatus.refresh ? CacheWriteBehavior.OVERWRITE :
       CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>

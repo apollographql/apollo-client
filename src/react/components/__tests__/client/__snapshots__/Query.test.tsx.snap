@@ -28,6 +28,7 @@ Object {
   "networkStatus": 1,
   "previousData": undefined,
   "refetch": [Function],
+  "refresh": [Function],
   "startPolling": [Function],
   "stopPolling": [Function],
   "subscribeToMore": [Function],

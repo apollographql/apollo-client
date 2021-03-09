@@ -1,4 +1,4 @@
-import { ApolloClient } from '../../core';
+import { ApolloClient, ObservableQuery } from '../../core';
 import { ApolloError } from '../../errors';
 import {
   ApolloQueryResult,
@@ -28,6 +28,7 @@ export interface QueryControls<
       FetchMoreOptions<TData, TGraphQLVariables>
   ) => Promise<ApolloQueryResult<TData>>;
   refetch: (variables?: TGraphQLVariables) => Promise<ApolloQueryResult<TData>>;
+  refresh: ObservableQuery<TData, TGraphQLVariables>["refresh"];
   startPolling: (pollInterval: number) => void;
   stopPolling: () => void;
   subscribeToMore: (options: SubscribeToMoreOptions) => () => void;

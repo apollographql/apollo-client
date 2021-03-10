@@ -1330,6 +1330,21 @@ describe('Cache', () => {
   describe('batch', () => {
     const last = <E>(array: E[]) => array[array.length - 1];
 
+    function watch(cache: InMemoryCache, query: DocumentNode) {
+      const options: Cache.WatchOptions = {
+        query,
+        optimistic: true,
+        immediate: true,
+        callback(diff) {
+          diffs.push(diff);
+        },
+      };
+      const diffs: Cache.DiffResult<any>[] = [];
+      const cancel = cache.watch(options);
+      diffs.shift(); // Discard the immediate diff
+      return { diffs, watch: options, cancel };
+    }
+
     it('calls onDirty for each invalidated watch', () => {
       const cache = new InMemoryCache;
 
@@ -1337,26 +1352,9 @@ describe('Cache', () => {
       const abQuery = gql`query { a b }`;
       const bQuery = gql`query { b }`;
 
-      const cancelFns = new Set<ReturnType<InMemoryCache["watch"]>>();
-
-      function watch(query: DocumentNode) {
-        const options: Cache.WatchOptions = {
-          query,
-          optimistic: true,
-          immediate: true,
-          callback(diff) {
-            diffs.push(diff);
-          },
-        };
-        const diffs: Cache.DiffResult<any>[] = [];
-        cancelFns.add(cache.watch(options));
-        diffs.shift(); // Discard the immediate diff
-        return { diffs, watch: options };
-      }
-
-      const aInfo = watch(aQuery);
-      const abInfo = watch(abQuery);
-      const bInfo = watch(bQuery);
+      const aInfo = watch(cache, aQuery);
+      const abInfo = watch(cache, abQuery);
+      const bInfo = watch(cache, bQuery);
 
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
@@ -1446,7 +1444,74 @@ describe('Cache', () => {
         },
       });
 
-      cancelFns.forEach(cancel => cancel());
+      aInfo.cancel();
+      abInfo.cancel();
+      bInfo.cancel();
+    });
+
+    it('works with cache.modify and INVALIDATE', () => {
+      const cache = new InMemoryCache;
+
+      const aQuery = gql`query { a }`;
+      const abQuery = gql`query { a b }`;
+      const bQuery = gql`query { b }`;
+
+      cache.writeQuery({
+        query: abQuery,
+        data: {
+          a: "ay",
+          b: "bee",
+        },
+      });
+
+      const aInfo = watch(cache, aQuery);
+      const abInfo = watch(cache, abQuery);
+      const bInfo = watch(cache, bQuery);
+
+      const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
+
+      cache.batch({
+        transaction(cache) {
+          cache.modify({
+            fields: {
+              a(value, { INVALIDATE }) {
+                expect(value).toBe("ay");
+                return INVALIDATE;
+              },
+            },
+          });
+        },
+        optimistic: true,
+        onDirty(w, diff) {
+          dirtied.set(w, diff);
+        },
+      });
+
+      expect(dirtied.size).toBe(2);
+      expect(dirtied.has(aInfo.watch)).toBe(true);
+      expect(dirtied.has(abInfo.watch)).toBe(true);
+      expect(dirtied.has(bInfo.watch)).toBe(false);
+
+      expect(last(aInfo.diffs)).toEqual({
+        complete: true,
+        result: {
+          a: "ay",
+        },
+      });
+
+      expect(last(abInfo.diffs)).toEqual({
+        complete: true,
+        result: {
+          a: "ay",
+          b: "bee",
+        },
+      });
+
+      expect(bInfo.diffs.length).toBe(0);
+
+      aInfo.cancel();
+      abInfo.cancel();
+      bInfo.cancel();
     });
   });
 

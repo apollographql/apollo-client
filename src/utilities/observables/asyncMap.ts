@@ -29,9 +29,11 @@ export function asyncMap<V, R>(
             },
             e => {
               --activeCallbackCount;
-              error && error.call(observer, e);
+              throw e;
             },
-          );
+          ).catch(e => {
+            error && error.call(observer, e);
+          });
         };
       } else {
         return arg => delegate && delegate.call(observer, arg);

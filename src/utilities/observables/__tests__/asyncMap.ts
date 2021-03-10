@@ -54,4 +54,83 @@ describe("asyncMap", () => {
       }),
     });
   });
+
+  itAsync("handles exceptions from mapping functions", (resolve, reject) => {
+    const triples: number[] = [];
+    asyncMap(make1234Observable(), num => {
+      if (num === 3) throw new Error("expected");
+      return num * 3;
+    }).subscribe({
+      next: rejectExceptions(reject, triple => {
+        expect(triple).toBeLessThan(9);
+        triples.push(triple);
+      }),
+      error: rejectExceptions(reject, error => {
+        expect(error.message).toBe("expected");
+        expect(triples).toEqual([3, 6]);
+        resolve();
+      }),
+    });
+  });
+
+  itAsync("handles rejected promises from mapping functions", (resolve, reject) => {
+    const triples: number[] = [];
+    asyncMap(make1234Observable(), num => {
+      if (num === 3) return Promise.reject(new Error("expected"));
+      return num * 3;
+    }).subscribe({
+      next: rejectExceptions(reject, triple => {
+        expect(triple).toBeLessThan(9);
+        triples.push(triple);
+      }),
+      error: rejectExceptions(reject, error => {
+        expect(error.message).toBe("expected");
+        expect(triples).toEqual([3, 6]);
+        resolve();
+      }),
+    });
+  });
+
+  itAsync("handles async exceptions from mapping functions", (resolve, reject) => {
+    const triples: number[] = [];
+    asyncMap(make1234Observable(), num => wait(10).then(() => {
+      if (num === 3) throw new Error("expected");
+      return num * 3;
+    })).subscribe({
+      next: rejectExceptions(reject, triple => {
+        expect(triple).toBeLessThan(9);
+        triples.push(triple);
+      }),
+      error: rejectExceptions(reject, error => {
+        expect(error.message).toBe("expected");
+        expect(triples).toEqual([3, 6]);
+        resolve();
+      }),
+    });
+  });
+
+  itAsync("handles exceptions from next functions", (resolve, reject) => {
+    const triples: number[] = [];
+    asyncMap(make1234Observable(), num => {
+      return num * 3;
+    }).subscribe({
+      next(triple) {
+        triples.push(triple);
+        // Unfortunately this exception won't be caught by asyncMap, because
+        // the Observable implementation wraps this next function with its own
+        // try-catch. Uncomment the remaining lines to make this test more
+        // meaningful, in the event that this behavior ever changes.
+        // if (triple === 9) throw new Error("expected");
+      },
+      // error: rejectExceptions(reject, error => {
+      //   expect(error.message).toBe("expected");
+      //   expect(triples).toEqual([3, 6, 9]);
+      //   resolve();
+      // }),
+      complete: rejectExceptions(reject, () => {
+        expect(triples).toEqual([3, 6, 9, 12]);
+        resolve();
+      }),
+    });
+  });
 });

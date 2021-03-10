@@ -1333,14 +1333,6 @@ describe('Cache', () => {
     it('calls onDirty for each invalidated watch', () => {
       const cache = new InMemoryCache;
 
-      // TODO Is this really necessary?
-      cache.writeQuery({
-        query: gql`query { __typename }`,
-        data: {
-          __typename: "Query",
-        },
-      });
-
       const aQuery = gql`query { a }`;
       const abQuery = gql`query { a b }`;
       const bQuery = gql`query { b }`;

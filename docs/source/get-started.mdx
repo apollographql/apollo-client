@@ -74,8 +74,10 @@ import React from 'react';
 import { render } from 'react-dom';
 
 import { ApolloProvider } from '@apollo/client';
+import { useApolloClient } from "@apollo/react-hooks";
 
 function App() {
+  const client = useApolloClient();
   return (
     <ApolloProvider client={client}>
       <div>

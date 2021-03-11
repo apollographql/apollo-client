@@ -167,6 +167,16 @@ export abstract class EntityStore implements NormalizedCache {
           }
         });
 
+        if (fieldsToDirty.__typename &&
+            !(existing && existing.__typename) &&
+            // Since we return default root __typename strings
+            // automatically from store.get, we don't need to dirty the
+            // ROOT_QUERY.__typename field if merged.__typename is equal
+            // to the default string (usually "Query").
+            this.policies.rootTypenamesById[dataId] === merged.__typename) {
+          delete fieldsToDirty.__typename;
+        }
+
         Object.keys(fieldsToDirty).forEach(
           fieldName => this.group.dirty(dataId as string, fieldName));
       }

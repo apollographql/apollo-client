@@ -355,6 +355,8 @@ export class QueryManager<TStore> {
         });
       }
 
+      const reobserveResults = [];
+
       cache.batch({
         transaction(c) {
           cacheWrites.forEach(write => c.write(write));
@@ -370,16 +372,16 @@ export class QueryManager<TStore> {
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,
 
-        onDirty(watch, diff) {
-          if (mutation.reobserveQuery) {
-            // TODO Get ObservableQuery from watch, somehow.
-            // TODO Call mutation.reobserveQuery with that ObservableQuery.
-            // TODO Store results in an array for the mutation to await.
-
-            // Skip the normal broadcast of this result.
-            return false;
+        onDirty: mutation.reobserveQuery && ((watch, diff) => {
+          if (watch.watcher instanceof QueryInfo) {
+            const oq = watch.watcher.observableQuery;
+            if (oq) {
+              reobserveResults.push(mutation.reobserveQuery!(oq, diff));
+              // Prevent the normal cache broadcast of this result.
+              return false;
+            }
           }
-        },
+        }),
       });
     }
   }

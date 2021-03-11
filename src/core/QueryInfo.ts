@@ -261,7 +261,7 @@ export class QueryInfo {
   // updateWatch method.
   private cancel() {}
 
-  private lastWatch?: Cache.WatchOptions;
+  private lastWatch?: Cache.WatchOptions<QueryInfo>;
 
   private updateWatch(variables = this.variables) {
     const oq = this.observableQuery;
@@ -276,6 +276,7 @@ export class QueryInfo {
         query: this.document!,
         variables,
         optimistic: true,
+        watcher: this,
         callback: diff => this.setDiff(diff),
       });
     }

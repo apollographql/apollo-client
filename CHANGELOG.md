@@ -34,6 +34,13 @@ TBD
 ### Documentation
 TBD
 
+## Apollo Client 3.3.12 (not yet released)
+
+### Bug fixes
+
+- Maintain serial ordering of `asyncMap` mapping function calls, and prevent potential unhandled `Promise` rejection errors. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7818](https://github.com/apollographql/apollo-client/pull/7818)
+
 ## Apollo Client 3.3.11
 
 ### Bug fixes

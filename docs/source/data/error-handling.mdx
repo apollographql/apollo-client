@@ -95,7 +95,7 @@ Apollo Client supports the following error policies for an operation:
 
 | Policy | Description |
 |--------|-------------|
-| `none` | `graphQLErrors` are treated the same as a `networkError`, meaning response `data` is ignored. |
+| `none` | If the response includes GraphQL errors, they are returned on `error.graphQLErrors` and the response `data` is set to `undefined` even if the server returns `data` in its response. This means network errors and GraphQL errors result in a similar response shape. This is the default error policy. |
 | `ignore` | `graphQLErrors` are ignored (`error.graphQLErrors`  is _not_ populated), and any returned `data` is cached and rendered as if no errors occurred. |
 | `all` | Both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information. |
 

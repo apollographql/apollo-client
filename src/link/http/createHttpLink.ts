@@ -1,5 +1,4 @@
-import { DefinitionNode, VariableDefinitionNode } from 'graphql';
-import { visit } from 'graphql/language/visitor';
+import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../core';
 import { Observable } from '../../utilities';

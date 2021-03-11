@@ -39,13 +39,94 @@ Although the cache's default behavior is suitable for a wide variety of applicat
 
 To customize cache behavior, provide an `options` object to the `InMemoryCache` constructor. This object supports the following fields:
 
-| Name | Type | Description |
-| ------- | ----- | --------- |
-| `addTypename`  | boolean | <p>If `true`, the cache automatically adds `__typename` fields to all outgoing queries, removing the need to add them manually.</p><p>Default: `true`</p> |
-| `resultCaching` | boolean | <p>If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This makes it easier to detect changes to a query's result.</p><p>Default: `true`</p> |
-| `possibleTypes` | `{ [supertype: string]: string[] }` | <p>Include this object to define polymorphic relationships between your schema's types. Doing so enables you to look up cached data by interface or by union.</p><p>The key for each entry is the `__typename` of an interface or union, and the value is an array of the `__typename`s of the types that either belong to the corresponding union or implement the corresponding interface.</p> |
-| `typePolicies` | `{ [typename: string]: TypePolicy }` | <p>Include this object to customize the cache's behavior on a type-by-type basis.</p><p>The key for each entry is a type's `__typename`. For details, see [`TypePolicy` fields](#typepolicy-fields).</p> |
-| `dataIdFromObject` **(deprecated)** | function | <p>A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store.</p><p>Deprecated in favor of the `keyFields` option of the `TypePolicy` object.</p> |
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `addTypename`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, the cache automatically adds `__typename` fields to all outgoing queries, removing the need to add them manually.
+
+The default value is `true`.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `resultCaching`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This makes it easier to detect changes to a query's result.
+
+The default value is `true`.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `possibleTypes`
+
+`Object`
+</td>
+<td>
+
+Include this object to define polymorphic relationships between your schema's types. Doing so enables you to look up cached data by interface or by union.
+
+Each key in the object is the `__typename` of an interface or union, and the corresponding value is an array of the `__typename`s of the types that belong to that union or implement that interface.
+
+For an example, see [Defining `possibleTypes` manually](../data/fragments/#defining-possibletypes-manually).
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `typePolicies`
+
+`Object`
+</td>
+<td>
+
+Include this object to customize the cache's behavior on a type-by-type basis.
+
+Each key in the object is the `__typename` of a type to customize, and the corresponding value is a [`TypePolicy` object](#typepolicy-fields).
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `dataIdFromObject`
+
+`Function`
+</td>
+<td>
+
+**Deprecated.** A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store.
+
+Deprecated in favor of the `keyFields` option of the [`TypePolicy` object](#typepolicy-fields).
+</td>
+</tr>
+</tbody>
+</table>
+
 
 ## Data normalization
 

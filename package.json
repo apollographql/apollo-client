@@ -89,7 +89,7 @@
     "zen-observable-ts": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/parser": "7.13.4",
+    "@babel/parser": "7.13.9",
     "@rollup/plugin-node-resolve": "11.2.0",
     "@testing-library/react": "9.4.1",
     "@types/fast-json-stable-stringify": "2.0.0",
@@ -98,8 +98,8 @@
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/jest": "26.0.20",
     "@types/lodash": "4.14.168",
-    "@types/node": "14.14.31",
-    "@types/react": "17.0.2",
+    "@types/node": "14.14.32",
+    "@types/react": "17.0.3",
     "@types/react-dom": "17.0.1",
     "@types/recompose": "^0.30.7",
     "bundlesize": "0.18.1",
@@ -124,7 +124,7 @@
     "rxjs": "6.6.6",
     "subscriptions-transport-ws": "^0.9.17",
     "terser": "^5.2.0",
-    "ts-jest": "26.5.2",
+    "ts-jest": "26.5.3",
     "ts-node": "8.10.2",
     "typescript": "3.9.9",
     "wait-for-observables": "^1.0.3"

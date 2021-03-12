@@ -5,6 +5,8 @@
 - Maintain serial ordering of `asyncMap` mapping function calls, and prevent potential unhandled `Promise` rejection errors. <br/>
   [@benjamn](https://github.com/benjamn) in [#7818](https://github.com/apollographql/apollo-client/pull/7818)
 
+- Preserve fetch policy even when `notifyOnNetworkStatusChange` is set <br />
+  [@jcreighton](https://github.com/jcreighton) in [#7761](https://github.com/apollographql/apollo-client/pull/7761)
 ## Apollo Client 3.3.11
 
 ### Bug fixes

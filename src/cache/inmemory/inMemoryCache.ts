@@ -35,12 +35,11 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
   typePolicies?: TypePolicies;
 }
 
-interface BroadcastOptions extends Pick<
+type BroadcastOptions = Pick<
   BatchOptions<InMemoryCache>,
   | "onDirty"
-> {
-  fromOptimisticTransaction: boolean;
-}
+  | "optimistic"
+>
 
 const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
@@ -329,14 +328,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     };
 
-    let fromOptimisticTransaction = false;
-
     if (typeof optimistic === 'string') {
       // Note that there can be multiple layers with the same optimistic ID.
       // When removeOptimistic(id) is called for that id, all matching layers
       // will be removed, and the remaining layers will be reapplied.
       this.optimisticData = this.optimisticData.addLayer(optimistic, perform);
-      fromOptimisticTransaction = true;
     } else if (optimistic === false) {
       // Ensure both this.data and this.optimisticData refer to the root
       // (non-optimistic) layer of the cache during the transaction. Note
@@ -351,10 +347,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
 
     // This broadcast does nothing if this.txCount > 0.
-    this.broadcastWatches({
-      onDirty: options.onDirty,
-      fromOptimisticTransaction,
-    });
+    this.broadcastWatches(options);
   }
 
   public performTransaction(
@@ -434,7 +427,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     if (options) {
       if (c.optimistic &&
-          options.fromOptimisticTransaction) {
+          typeof options.optimistic === "string") {
         diff.fromOptimisticTransaction = true;
       }
 

@@ -5,7 +5,7 @@
 - Maintain serial ordering of `asyncMap` mapping function calls, and prevent potential unhandled `Promise` rejection errors. <br/>
   [@benjamn](https://github.com/benjamn) in [#7818](https://github.com/apollographql/apollo-client/pull/7818)
 
-- Remove `children` type override in MockedProviderProps <br />
+- Relax incompatible `children?: React.ReactElement` field type in `MockedProviderProps` interface. <br/>
   [@kevinperaza](https://github.com/kevinperaza) in [#7833](https://github.com/apollographql/apollo-client/pull/7833)
 
 ## Apollo Client 3.3.11

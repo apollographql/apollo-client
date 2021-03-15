@@ -12,7 +12,7 @@ Use the `onError` link to perform custom logic when a [GraphQL or network error]
 import { onError } from "@apollo/client/link/error";
 
 // Log any GraphQL errors or network error that occurred
-const link = onError(({ graphQLErrors, networkError }) => {
+const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
     graphQLErrors.map(({ message, locations, path }) =>
       console.log(
@@ -23,7 +23,7 @@ const link = onError(({ graphQLErrors, networkError }) => {
 });
 ```
 
-The function you provide `onError` should not return a value unless you want to [retry the operation](../../data/error-handling#retrying-operations).
+This function is called after the GraphQL operation completes and execution is moving back _up_ your [link chain](./introduction/#handling-a-response). The function should not return a value unless you want to [retry the operation](../../data/error-handling#retrying-operations).
 
 ## Options
 

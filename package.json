@@ -89,7 +89,7 @@
     "zen-observable-ts": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/parser": "7.13.9",
+    "@babel/parser": "7.13.10",
     "@rollup/plugin-node-resolve": "11.2.0",
     "@testing-library/react": "9.4.1",
     "@types/fast-json-stable-stringify": "2.0.0",
@@ -98,9 +98,9 @@
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/jest": "26.0.20",
     "@types/lodash": "4.14.168",
-    "@types/node": "14.14.32",
+    "@types/node": "14.14.34",
     "@types/react": "17.0.3",
-    "@types/react-dom": "17.0.1",
+    "@types/react-dom": "17.0.2",
     "@types/recompose": "^0.30.7",
     "bundlesize": "0.18.1",
     "cross-fetch": "3.0.6",

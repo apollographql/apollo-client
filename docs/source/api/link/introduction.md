@@ -58,7 +58,7 @@ const timeStartLink = new ApolloLink((operation, forward) => {
 });
 ```
 
-This request handler then calls `return forward(operation)`, which is the default syntax for calling the next link in the chain.
+This request handler then calls `return forward(operation)`, which is the syntax for calling the next link down the chain.
 
 ### The request handler
 
@@ -84,13 +84,15 @@ The `Operation` object includes the following fields:
 
 #### The `forward` function
 
-When a link's request handler is done executing its logic, it should return a call to the `forward` function that's passed to it (unless it's the chain's [terminating link](#the-terminating-link)). Calling the `forward` function passes execution along to the next link in the chain.
+When your custom link's request handler is done executing its logic, it should return a call to the `forward` function that's passed to it (unless it's the chain's [terminating link](#the-terminating-link)). Calling `return forward(operation)` passes execution along to the next link in the chain.
+
+> If a non-terminating custom link's request handler _doesn't_ `return forward(operation)`, the link chain ends and the associated GraphQL operation is not executed.
 
 The `forward` function's return type is an `Observable` provided by the [`zen-observable`](https://github.com/zenparsing/zen-observable) library. See the `zen-observable` documentation for details.
 
 ### Handling a response
 
-When your GraphQL server responds with an operation result, that result is passed back through each link in your link chain before it's cached:
+When your GraphQL server responds with an operation result, that result is passed back up through each link in your link chain before it's cached:
 
 ```mermaid
 flowchart LR

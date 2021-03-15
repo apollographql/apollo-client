@@ -890,7 +890,6 @@ export class QueryManager<TStore> {
     const query = this.transform(options.query).document;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
-    const oldNetworkStatus = queryInfo.networkStatus;
 
     let {
       fetchPolicy = "cache-first" as WatchQueryFetchPolicy,
@@ -899,26 +898,6 @@ export class QueryManager<TStore> {
       notifyOnNetworkStatusChange = false,
       context = {},
     } = options;
-
-    const mightUseNetwork =
-      fetchPolicy === "cache-first" ||
-      fetchPolicy === "cache-and-network" ||
-      fetchPolicy === "network-only" ||
-      fetchPolicy === "no-cache";
-
-    if (mightUseNetwork &&
-        notifyOnNetworkStatusChange &&
-        typeof oldNetworkStatus === "number" &&
-        oldNetworkStatus !== networkStatus &&
-        isNetworkRequestInFlight(networkStatus)) {
-      // In order to force delivery of an incomplete cache result with
-      // loading:true, we tweak the fetchPolicy to include the cache, and
-      // pretend that returnPartialData was enabled.
-      if (fetchPolicy !== "cache-first") {
-        fetchPolicy = "cache-and-network";
-      }
-      returnPartialData = true;
-    }
 
     const normalized = Object.assign({}, options, {
       query,
@@ -1047,7 +1026,10 @@ export class QueryManager<TStore> {
       errorPolicy,
       returnPartialData,
       context,
+      notifyOnNetworkStatusChange,
     } = options;
+
+    const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
       document: query,
@@ -1101,6 +1083,13 @@ export class QueryManager<TStore> {
         errorPolicy,
       });
 
+    const shouldNotifyOnNetworkStatusChange = () => (
+      notifyOnNetworkStatusChange &&
+      typeof oldNetworkStatus === "number" &&
+      oldNetworkStatus !== networkStatus &&
+      isNetworkRequestInFlight(networkStatus)
+    );
+
     switch (fetchPolicy) {
     default: case "cache-first": {
       const diff = readCache();
@@ -1118,6 +1107,13 @@ export class QueryManager<TStore> {
         ];
       }
 
+      if (shouldNotifyOnNetworkStatusChange()) {
+        return [
+          resultsFromCache(diff),
+          resultsFromLink(true),
+        ];
+      }
+
       return [
         resultsFromLink(true),
       ];
@@ -1126,7 +1122,7 @@ export class QueryManager<TStore> {
     case "cache-and-network": {
       const diff = readCache();
 
-      if (diff.complete || returnPartialData) {
+      if (diff.complete || returnPartialData || shouldNotifyOnNetworkStatusChange()) {
         return [
           resultsFromCache(diff),
           resultsFromLink(true),
@@ -1144,9 +1140,22 @@ export class QueryManager<TStore> {
       ];
 
     case "network-only":
+      if (shouldNotifyOnNetworkStatusChange()) {
+        const diff = readCache();
+
+        return [
+          resultsFromCache(diff),
+          resultsFromLink(true),
+        ];
+      }
+
       return [resultsFromLink(true)];
 
     case "no-cache":
+      if (shouldNotifyOnNetworkStatusChange()) {
+          return [resultsFromCache(queryInfo.getDiff()), resultsFromLink(false)];
+      }
+
       return [resultsFromLink(false)];
 
     case "standby":

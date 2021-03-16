@@ -8,13 +8,13 @@ import SubscriptionResult from '../../shared/subscription-result.mdx';
 
 In addition to [queries](./queries/) and [mutations](./mutations/), GraphQL supports a third operation type: **subscriptions**.
 
-Like queries, subscriptions enable you to fetch data. _Unlike_ queries, subscriptions maintain an active connection to your GraphQL server (most commonly via WebSocket). This enables your server to push updates to the subscription's result over time.
+Like queries, subscriptions enable you to fetch data. _Unlike_ queries, subscriptions are long-lasting operations that can change their result over time. They can maintain an active connection to your GraphQL server (most commonly via WebSocket), enabling the server to push updates to the subscription's result.
 
 Subscriptions are useful for notifying your client in real time about changes to back-end data, such as the creation of a new object or updates to an important field.
 
 ## When to use subscriptions
 
-In the majority of cases, your client should _not_ use subscriptions to stay up to date with your backend. Instead, you should [poll intermittently](./queries/#polling) with queries, or [re-execute queries on demand](./queries/#refetching) when a user performs a relevant action.
+In the majority of cases, your client should _not_ use subscriptions to stay up to date with your backend. Instead, you should [poll intermittently](./queries/#polling) with queries, or [re-execute queries on demand](./queries/#refetching) when a user performs a relevant action (such as clicking a button).
 
 You _should_ use subscriptions for the following:
 
@@ -28,7 +28,7 @@ You define a subscription on both the server side and the client side, just like
 
 ### Server side
 
-You define available subscriptions in your [GraphQL schema](https://www.apollographql.com/docs/apollo-server/schema/schema/#supported-types) as fields of the `Subscription` type. The following `commentAdded` subscription notifies a subscribing client whenever a new comment is added to a particular blog post (specified by `postID`):
+You define available subscriptions in your GraphQL schema as fields of the `Subscription` type. The following `commentAdded` subscription notifies a subscribing client whenever a new comment is added to a particular blog post (specified by `postID`):
 
 ```graphql
 type Subscription {
@@ -44,8 +44,8 @@ In your application's client, you define the shape of each subscription you want
 
 ```js
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription OnCommentAdded($repoFullName: String!) {
-    commentAdded(repoFullName: $repoFullName) {
+  subscription OnCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
       id
       content
     }
@@ -70,34 +70,34 @@ Whenever your GraphQL server _does_ push data to a subscribing client, that data
 
 ## Setting up the transport
 
-Because subscriptions maintain a persistent connection, they can't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the community-maintained [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) library.
+Because subscriptions usually maintain a persistent connection, they shouldn't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the community-maintained [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) library.
 
 ### 1. Install required libraries
 
-**Apollo Link** is a collection of libraries that help you customize Apollo Client's network communication. One of these libraries is `@apollo/client/link/ws`, which enables communication over WebSocket.
+[Apollo Link](../api/link/introduction/) is a library that helps you customize Apollo Client's network communication. You can use it to define a **link chain** that modifies your operations and routes them to the appropriate destination.
 
-Install both `@apollo/client/link/ws` and `subscriptions-transport-ws` in your project, like so:
+To execute subscriptions over WebSocket, you can add a `WebSocketLink` to your link chain. This link requires the `subscriptions-transport-ws` library. Install it like so:
 
 ```bash
-npm install @apollo/client subscriptions-transport-ws
+npm install subscriptions-transport-ws
 ```
 
 ### 2. Initialize a `WebSocketLink`
 
 Import and initialize a `WebSocketLink` object in the same project file where you initialize `ApolloClient`:
 
-```js
+```js:title=index.js
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
-  uri: 'ws://localhost:5000/graphql',
+  uri: 'ws://localhost:4000/subscriptions',
   options: {
     reconnect: true
   }
 });
 ```
 
-Replace the value of the `uri` option with the URL of your GraphQL server. This is often a `localhost` URL during development.
+Replace the value of the `uri` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#setting-a-subscription-endpoint).
 
 ### 3. Split communication by operation (recommended)
 
@@ -107,17 +107,17 @@ To support this, the `@apollo/client` library provides a `split` function that l
 
 The following example expands on the previous one by initializing both a `WebSocketLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
 
-```js
+```js:title=index.js
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const httpLink = new HttpLink({
-  uri: 'http://localhost:3000/graphql'
+  uri: 'http://localhost:4000/graphql'
 });
 
 const wsLink = new WebSocketLink({
-  uri: 'ws://localhost:5000/graphql',
+  uri: 'ws://localhost:4000/subscriptions',
   options: {
     reconnect: true
   }
@@ -143,7 +143,24 @@ const splitLink = split(
 
 Using this logic, queries and mutations will use HTTP as normal, and subscriptions will use WebSocket.
 
-### 4. Authenticate over WebSocket (optional)
+### 4. Provide the link chain to Apollo Client
+
+After you define your link chain, you provide it to Apollo Client via the `link` constructor option:
+
+```js{6}:title=index.js
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+
+// ...code from the above example goes here...
+
+const client = new ApolloClient({
+  link: splitLink,
+  cache: new InMemoryCache()
+});
+```
+
+> If you provide the `link` option, it takes precedence over the `uri` option (`uri` sets up a default HTTP link chain using the provided URL).
+
+### 5. Authenticate over WebSocket (optional)
 
 It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `WebSocketLink` constructor, like so:
 
@@ -151,7 +168,7 @@ It is often necessary to authenticate a client before allowing it to receive sub
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
-  uri: 'ws://localhost:5000/graphql',
+  uri: 'ws://localhost:4000/subscriptions',
   options: {
     reconnect: true,
     connectionParams: {

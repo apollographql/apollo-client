@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.3.11",
+  "version": "3.3.12",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -84,7 +84,7 @@
     "optimism": "^0.14.0",
     "prop-types": "^15.7.2",
     "symbol-observable": "^2.0.0",
-    "ts-invariant": "^0.6.1",
+    "ts-invariant": "^0.6.2",
     "tslib": "^1.10.0",
     "zen-observable": "^0.8.14"
   },

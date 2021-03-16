@@ -446,6 +446,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     }
 
-    c.callback(diff);
+    if (!c.lastDiff || c.lastDiff.result !== diff.result) {
+      c.callback(c.lastDiff = diff);
+    }
   }
 }

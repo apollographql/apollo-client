@@ -28,6 +28,7 @@ export namespace Cache {
   export interface WatchOptions extends ReadOptions {
     immediate?: boolean;
     callback: WatchCallback;
+    lastDiff?: DiffResult<any>;
   }
 
   export interface EvictOptions {

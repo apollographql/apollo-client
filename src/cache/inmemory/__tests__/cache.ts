@@ -1492,22 +1492,11 @@ describe('Cache', () => {
       expect(dirtied.has(abInfo.watch)).toBe(true);
       expect(dirtied.has(bInfo.watch)).toBe(false);
 
-      expect(last(aInfo.diffs)).toEqual({
-        complete: true,
-        result: {
-          a: "ay",
-        },
-      });
-
-      expect(last(abInfo.diffs)).toEqual({
-        complete: true,
-        result: {
-          a: "ay",
-          b: "bee",
-        },
-      });
-
-      expect(bInfo.diffs.length).toBe(0);
+      // No new diffs should have been generated, since we only invalidated
+      // fields using cache.modify, and did not change any field values.
+      expect(aInfo.diffs).toEqual([]);
+      expect(abInfo.diffs).toEqual([]);
+      expect(bInfo.diffs).toEqual([]);
 
       aInfo.cancel();
       abInfo.cancel();
@@ -1686,7 +1675,6 @@ describe("InMemoryCache#broadcastWatches", function () {
     expect(receivedCallbackResults).toEqual([
       received1,
       // New results:
-      received1,
       received2,
     ]);
 
@@ -1715,7 +1703,6 @@ describe("InMemoryCache#broadcastWatches", function () {
 
     expect(receivedCallbackResults).toEqual([
       received1,
-      received1,
       received2,
       // New results:
       received3,
@@ -1735,15 +1722,11 @@ describe("InMemoryCache#broadcastWatches", function () {
 
     expect(receivedCallbackResults).toEqual([
       received1,
-      received1,
       received2,
       received3,
       received4,
       // New results:
-      received1,
       received2AllCaps,
-      received3,
-      received4,
     ]);
   });
 });

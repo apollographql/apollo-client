@@ -1,6 +1,6 @@
 # Apollo Client Roadmap
 
-*Last updated: February 2021*
+*Last updated: March 2021*
 
 > **Please note:** This is an approximation of larger effort work planned for the next 6 months. It does not cover all new functionality that will be added, and nothing here is set in stone. Also note that each of these releases, and several patch releases in-between, will include bug fixes (based on issue triaging) and community submitted PR's.
 

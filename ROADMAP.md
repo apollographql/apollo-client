@@ -16,12 +16,12 @@
 
 **Estimated release:** Q1/Q2 2021
 
-* Out of the box cache persistence, providing a way for web/mobile users to save their application state for a defined period of time (along the lines of [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist)).
+* `@defer` support.
+* `@stream` support.
 
 ## 3.6
 
 **Estimated release:** Q2/Q3 2021
 
-* `@defer` support.
-* `@stream` support.
+* Out of the box cache persistence, providing a way for web/mobile users to save their application state for a defined period of time (along the lines of [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist)).
 * An improved story for async `read` functions, involving setting reactive vars from promises (enabling batching of multi-var updates).

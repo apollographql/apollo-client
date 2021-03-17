@@ -3,31 +3,22 @@ title: Reading and writing data to the cache
 sidebar_title: Reading and writing
 ---
 
-Apollo Client provides the following methods for reading and writing data to the cache:
+You can read and write data directly to the Apollo Client cache, _without_ communicating with your GraphQL server. You can use methods that conform to the shape and behavior of standard [GraphQL queries](#using-schema-supported-operations) and [GraphQL fragments](#accessing-arbitrary-objects), or you can [directly modify cached fields](#using-cachemodify).
 
-* [`readQuery`](#readquery) and [`readFragment`](#readfragment)
-* [`writeQuery` and `writeFragment`](#writequery-and-writefragment)
-* [`cache.modify`](#cachemodify) (a method of `InMemoryCache`)
+> All code samples below assume that you have initialized an instance of `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
+>
+>In a React component, you can access your instance of `ApolloClient` using [`ApolloProvider`](https://www.apollographql.com/docs/react/api/react/hooks/#the-apolloprovider-component) and the [`useApolloClient`](https://www.apollographql.com/docs/react/api/react/hooks/#useapolloclient) hook.
 
-These methods are described in detail below.
+## Using GraphQL queries
 
-All code samples below assume that you have initialized an instance of  `ApolloClient` and that you have imported the `gql` function from `@apollo/client`.
+You can use the `readQuery` and `writeQuery` methods of `ApolloClient` to read and write cache data. These methods use GraphQL queries that are similar (or identical) to queries that you execute on your server.
 
-> In a React component, you can access your instance of `ApolloClient` using [`ApolloProvider`](https://www.apollographql.com/docs/react/api/react/hooks/#the-apolloprovider-component) and the [`useApolloClient`](https://www.apollographql.com/docs/react/api/react/hooks/#useapolloclient) hook.
+### `readQuery`
 
-## `readQuery`
-
-The `readQuery` method enables you to run a GraphQL query directly on your cache.
-
-* If your cache contains all of the data necessary to fulfill the specified query, `readQuery` returns a data object in the shape of that query, just like a GraphQL server does.
-
-* If your cache does not contain all of the data necessary to fulfill the specified query, `readQuery` returns `null`, without attempting to fetch data from a remote server.
-
-> Prior to Apollo Client 3.3, `readQuery` would throw `MissingFieldError` exceptions to report missing fields. Beginning with Apollo Client 3.3, `readQuery` always returns `null` to indicate fields were missing.
-
-Pass `readQuery` a GraphQL query string like so:
+The `readQuery` method enables you to execute a GraphQL query directly on your cache, like so:
 
 ```js
+// Fetch the cached to-do item with ID 5
 const { todo } = client.readQuery({
   query: gql`
     query ReadTodo {
@@ -41,9 +32,20 @@ const { todo } = client.readQuery({
 });
 ```
 
+* If your cache contains data for _all_ of the query's fields, `readQuery` returns a data object in the shape of the query, just like your GraphQL server does.
+
+* If the cache is missing data for _any_ of the query's fields, `readQuery` returns `null`. It does _not_ attempt to fetch data from your GraphQL server.
+
+    > Prior to Apollo Client 3.3, `readQuery` threw a `MissingFieldError` exception to report missing fields. Beginning with Apollo Client 3.3, `readQuery` always returns `null` to indicate that fields are missing.
+
+**Do not modify the return value of `readQuery`.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
+
+#### Providing variables
+
 You can provide GraphQL variables to `readQuery` like so:
 
-```js
+```js{11-13}
+// Fetch the cached to-do item with ID 5
 const { todo } = client.readQuery({
   query: gql`
     query ReadTodo($id: Int!) {
@@ -52,17 +54,80 @@ const { todo } = client.readQuery({
         text
         completed
       }
-    }
-  `,
+    }`,
   variables: {
     id: 5,
   },
 });
 ```
 
-> **Do not modify the return value of `readQuery`.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
+### `writeQuery`
 
-## `readFragment`
+The `writeQuery` method enables you to write data to your cache in a shape that matches a GraphQL query. It resembles `readQuery`, except that it requires a `data` option:
+
+```js
+client.writeQuery({
+  query: gql`
+    query WriteTodo($id: Int!) {
+      todo(id: $id) {
+        id
+        text
+        completed
+      }
+    }`,
+  data: { // Contains the data to write
+    todo: {
+      __typename: 'Todo',
+      id: 5,
+      text: 'Buy grapes 🍇',
+      completed: false
+    },
+  },
+  variables: {
+    id: 5
+  }
+});
+```
+
+This example creates (or edits) a cached `Todo` object with ID `5`.
+
+Note that any changes you make to cached data with `writeQuery` are **not** pushed to your GraphQL server. If you reload your environment, these changes disappear.
+
+#### Editing existing data 
+
+By default, if your cache _already_ contains a `Todo` object with ID `5`, `writeQuery` overwrites the fields that are included in `data` (other fields are preserved):
+
+```js{6-7,17-18}
+// BEFORE
+{ 
+  'Todo:5': {
+    __typename: 'Todo',
+    id: 5,
+    text: 'Buy oranges 🍊',
+    completed: true,
+    dueDate: '2022-07-02'
+  }
+}
+
+// AFTER
+{ 
+  'Todo:5': {
+    __typename: 'Todo',
+    id: 5,
+    text: 'Buy grapes 🍇',
+    completed: false,
+    dueDate: '2022-07-02'
+  }
+}
+
+```
+
+> If you include a field in `query` but don't include a _value_ for it in `data`, the field's current cached value is preserved.
+
+
+## Using GraphQL fragments
+
+### `readFragment`
 
 The `readFragment` method enables you to read data from _any_ normalized cache object that was stored as part of _any_ query result. Unlike with `readQuery`, calls to `readFragment` do not need to conform to the structure of one of your data graph's supported queries.
 
@@ -87,7 +152,7 @@ In the example above, `readFragment` returns `null` if no `Todo` object with an 
 
 > Prior to Apollo Client 3.3, `readFragment` would throw `MissingFieldError` exceptions to report missing fields, and return `null` only when reading a fragment from a nonexistent ID. Beginning with Apollo Client 3.3, `readFragment` always returns `null` to indicate insufficient data (missing ID or missing fields), instead of throwing a `MissingFieldError`.
 
-## `writeQuery` and `writeFragment`
+### `writeFragment`
 
 In addition to reading arbitrary data from the Apollo Client cache, you can _write_ arbitrary data to the cache with the `writeQuery` and `writeFragment` methods.
 
@@ -149,7 +214,7 @@ client.writeQuery({
 });
 ```
 
-## `cache.modify`
+## Using `cache.modify`
 
 The `modify` method of `InMemoryCache` enables you to directly modify the values of individual cached fields, or even delete fields entirely.
 

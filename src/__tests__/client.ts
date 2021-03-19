@@ -2199,7 +2199,8 @@ describe('client', () => {
     {
       const { data, optimisticData } = client.cache as any;
       expect(optimisticData).not.toBe(data);
-      expect(optimisticData.parent).toBe(data);
+      expect(optimisticData.parent).toBe(data.stump);
+      expect(optimisticData.parent.parent).toBe(data);
     }
 
     mutatePromise
@@ -2208,7 +2209,7 @@ describe('client', () => {
       })
       .catch((_: ApolloError) => {
         const { data, optimisticData } = client.cache as any;
-        expect(optimisticData).toBe(data);
+        expect(optimisticData).toBe(data.stump);
         resolve();
       });
   });

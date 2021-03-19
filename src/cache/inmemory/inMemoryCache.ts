@@ -83,7 +83,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
-    this.data = new EntityStore.Root({
+    const rootStore = this.data = new EntityStore.Root({
       policies: this.policies,
       resultCaching: this.config.resultCaching,
     });
@@ -91,9 +91,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // When no optimistic writes are currently active, cache.optimisticData ===
     // cache.data, so there are no additional layers on top of the actual data.
     // When an optimistic update happens, this.optimisticData will become a
-    // linked list of OptimisticCacheLayer objects that terminates with the
+    // linked list of EntityStore Layer objects that terminates with the
     // original this.data cache object.
-    this.optimisticData = this.data;
+    this.optimisticData = rootStore.stump;
 
     this.storeWriter = new StoreWriter(
       this,
@@ -293,8 +293,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public reset(): Promise<void> {
+    this.optimisticData = this.optimisticData.prune();
     this.data.clear();
-    this.optimisticData = this.data;
     this.broadcastWatches();
     return Promise.resolve();
   }

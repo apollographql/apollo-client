@@ -34,12 +34,12 @@ describe('EntityStore', () => {
       anotherLayer
         .removeLayer("with caching")
         .removeLayer("another layer")
-    ).toBe(storeWithResultCaching);
+    ).toBe(storeWithResultCaching.stump);
     expect(supportsResultCaching(storeWithResultCaching)).toBe(true);
 
     const layerWithoutCaching = storeWithoutResultCaching.addLayer("with caching", () => {});
     expect(supportsResultCaching(layerWithoutCaching)).toBe(false);
-    expect(layerWithoutCaching.removeLayer("with caching")).toBe(storeWithoutResultCaching);
+    expect(layerWithoutCaching.removeLayer("with caching")).toBe(storeWithoutResultCaching.stump);
     expect(supportsResultCaching(storeWithoutResultCaching)).toBe(false);
   });
 
@@ -2413,6 +2413,10 @@ describe('EntityStore', () => {
       variables: {
         isbn: "1982103558",
       },
+      // TODO It's a regrettable accident of history that cache.readQuery is
+      // non-optimistic by default. Perhaps the default can be swapped to true
+      // in the next major version of Apollo Client.
+      optimistic: true,
     });
 
     expect(theEndResult).toEqual(theEndData);
@@ -2427,6 +2431,7 @@ describe('EntityStore', () => {
       variables: {
         isbn: "1449373321",
       },
+      optimistic: true,
     })).toBe(diffs[0].result);
 
     expect(cache.readQuery({
@@ -2434,6 +2439,7 @@ describe('EntityStore', () => {
       variables: {
         isbn: "1982103558",
       },
+      optimistic: true,
     })).toBe(theEndResult);
 
     // Still no additional reads, because both books are cached.
@@ -2461,6 +2467,22 @@ describe('EntityStore', () => {
     expect(isbnsWeHaveRead).toEqual([
       "1449373321",
       "1982103558",
+    ]);
+
+    expect(cache.readQuery({
+      query,
+      variables: {
+        isbn: "1449373321",
+      },
+      // Read this query non-optimistically, to test that the read function
+      // runs again, adding "1449373321" again to isbnsWeHaveRead.
+      optimistic: false,
+    })).toBe(diffs[0].result);
+
+    expect(isbnsWeHaveRead).toEqual([
+      "1449373321",
+      "1982103558",
+      "1449373321",
     ]);
   });
 });

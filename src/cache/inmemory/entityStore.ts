@@ -518,7 +518,10 @@ export type FieldValueGetter = EntityStore["getFieldValue"];
 class CacheGroup {
   private d: OptimisticDependencyFunction<string> | null = null;
 
-  constructor(public readonly caching: boolean) {
+  constructor(
+    public readonly caching: boolean,
+    private parent: CacheGroup | null = null,
+  ) {
     this.d = caching ? dep<string>() : null;
   }
 
@@ -533,6 +536,9 @@ class CacheGroup {
         // short fieldName, so the field can be invalidated using either
         // level of specificity.
         this.d(makeDepKey(dataId, fieldName));
+      }
+      if (this.parent) {
+        this.parent.depend(dataId, storeFieldName);
       }
     }
   }
@@ -674,7 +680,7 @@ class Stump extends Layer {
       "EntityStore.Stump",
       root,
       () => {},
-      new CacheGroup(root.group.caching),
+      new CacheGroup(root.group.caching, root.group),
     );
   }
 

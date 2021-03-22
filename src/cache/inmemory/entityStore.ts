@@ -436,8 +436,9 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   // Used to compute cache keys specific to this.group.
-  public makeCacheKey(...args: any[]) {
-    return this.group.keyMaker.lookupArray(args);
+  public makeCacheKey(...args: any[]): object;
+  public makeCacheKey() {
+    return this.group.keyMaker.lookupArray(arguments);
   }
 
   // Bound function that can be passed around to provide easy access to fields

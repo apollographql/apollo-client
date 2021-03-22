@@ -82,7 +82,8 @@ export class SubscriptionData<
     this.currentObservable.query = this.refreshClient().client.subscribe({
       query: options.subscription,
       variables: options.variables,
-      fetchPolicy: options.fetchPolicy
+      fetchPolicy: options.fetchPolicy,
+      context: options.context,
     });
   }
 

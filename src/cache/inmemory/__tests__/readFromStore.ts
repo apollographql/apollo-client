@@ -7,8 +7,11 @@ import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
 import { Cache } from '../../core/types/Cache';
 import { MissingFieldError } from '../../core/types/common';
-import { defaultNormalizedCacheFactory, readQueryFromStore } from './helpers';
-import { withError } from './diffAgainstStore';
+import {
+  defaultNormalizedCacheFactory,
+  readQueryFromStore,
+  withError,
+} from './helpers';
 import {
   makeReference,
   Reference,

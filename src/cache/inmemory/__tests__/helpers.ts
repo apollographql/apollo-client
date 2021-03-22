@@ -48,6 +48,24 @@ export function writeQueryToStore(
   return store;
 }
 
+export function withError(func: Function, regex?: RegExp) {
+  let message: string = null as never;
+  const { error } = console;
+  console.error = (m: any) => {
+    message = m;
+  };
+
+  try {
+    const result = func();
+    if (regex) {
+      expect(message).toMatch(regex);
+    }
+    return result;
+  } finally {
+    console.error = error;
+  }
+}
+
 describe("defaultNormalizedCacheFactory", function () {
   it("should return an EntityStore", function () {
     const store = defaultNormalizedCacheFactory();

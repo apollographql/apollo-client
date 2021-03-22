@@ -1,12 +1,15 @@
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
-import { withError } from './diffAgainstStore';
 import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { InMemoryCache } from '../inMemoryCache';
-import { writeQueryToStore, readQueryFromStore } from './helpers';
+import {
+  writeQueryToStore,
+  readQueryFromStore,
+  withError,
+} from './helpers';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {

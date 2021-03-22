@@ -1,3 +1,10 @@
+## Apollo Client 3.3.13
+
+### Improvements
+
+- Add missing `context` option to `useSubscription`. <br />
+  [@jcreighton](https://github.com/jcreighton) in [#7860](https://github.com/apollographql/apollo-client/pull/7860)
+
 ## Apollo Client 3.3.12
 
 ### Bug fixes

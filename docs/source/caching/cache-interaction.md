@@ -60,7 +60,7 @@ If your cache contains data for _all_ of the query's fields, `readQuery` returns
 }
 ```
 
-**Do not modify this object directly.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery-and-writefragment).
+**Do not modify this object directly.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery).
 
 If the cache is missing data for _any_ of the query's fields, `readQuery` returns `null`. It does _not_ attempt to fetch data from your GraphQL server.
 
@@ -448,7 +448,7 @@ const invisibleManBook = {
 };
 ```
 
-If we want to interact with this object in our cache with methods like [`writeFragment`](#writequery-and-writefragment) or [`cache.modify`](#cachemodify), we need the object's identifier. Our `Book` type's identifier appears to be custom, because the `id` field isn't present.
+If we want to interact with this object in our cache with methods like [`writeFragment`](#writefragment) or [`cache.modify`](#using-cachemodify), we need the object's identifier. Our `Book` type's identifier appears to be custom, because the `id` field isn't present.
 
 Instead of needing to look up that our `Book` type uses the `isbn` field as its identifier, we can use the `cache.identify` method, like so:
 

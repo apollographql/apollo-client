@@ -2,7 +2,7 @@
 import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
-import { dep, wrap } from 'optimism';
+import { wrap } from 'optimism';
 
 import { ApolloCache, BatchOptions } from '../core/cache';
 import { Cache } from '../core/types/Cache';
@@ -225,7 +225,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       if (this.watches.delete(watch) && !this.watches.size) {
         forgetCache(this);
       }
-      this.watchDep.dirty(watch);
       // Remove this watch from the LRU cache managed by the
       // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory
       // leaks involving the closure of watch.callback.
@@ -417,8 +416,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   });
 
-  private watchDep = dep<Cache.WatchOptions>();
-
   // This method is wrapped by maybeBroadcastWatch, which is called by
   // broadcastWatches, so that we compute and broadcast results only when
   // the data that would be broadcast might have changed. It would be
@@ -429,23 +426,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     c: Cache.WatchOptions,
     options?: BroadcastOptions,
   ) {
-    // First, invalidate any other maybeBroadcastWatch wrapper functions
-    // currently depending on this Cache.WatchOptions object (including
-    // the one currently calling broadcastWatch), so they will be included
-    // in the next broadcast, even if the result they receive is the same
-    // as the previous result they received. This is important because we
-    // are about to deliver a different result to c.callback, so any
-    // previous results should have a chance to be redelivered.
-    this.watchDep.dirty(c);
-
-    // Next, re-depend on this.watchDep for just this invocation of
-    // maybeBroadcastWatch (this is a no-op if broadcastWatch was not
-    // called by maybeBroadcastWatch). This allows only the most recent
-    // maybeBroadcastWatch invocation for this watcher to remain cached,
-    // enabling re-broadcast of previous results even if they have not
-    // changed since they were previously delivered.
-    this.watchDep(c);
-
     const diff = this.diff<any>({
       query: c.query,
       variables: c.variables,

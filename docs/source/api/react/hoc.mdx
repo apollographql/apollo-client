@@ -902,7 +902,7 @@ This option allows you to update your store based on your mutation’s result. B
 
 `options.update` takes two arguments. The first is an instance of a `DataProxy` object which has some methods which will allow you to interact with the data in your store. The second is the response from your mutation - either the optimistic response, or the actual response returned by your server (see the mutation result described in the [mutation render prop](./components/#render-prop-function-1) section for more details).
 
-In order to change the data in your store call methods on your `DataProxy` instance like [`writeQuery` and `writeFragment`](../../caching/cache-interaction/#writequery-and-writefragment). This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
+In order to change the data in your store call methods on your `DataProxy` instance like [`writeQuery`](../../caching/cache-interaction/#writequery) and [`writeFragment`](../../caching/cache-interaction/#writefragment). This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
 
 To read the data from the store that you are changing, make sure to use methods on your `DataProxy` like [`readQuery`](../../caching/cache-interaction/#readquery) and [`readFragment`](../../caching/cache-interaction/#readfragment).
 

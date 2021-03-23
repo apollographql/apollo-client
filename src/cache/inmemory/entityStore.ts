@@ -341,6 +341,17 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
+  // Remove every Layer, leaving behind only the Root and the Stump.
+  public prune(): EntityStore {
+    if (this instanceof Layer) {
+      const parent = this.removeLayer(this.id);
+      if (parent !== this) {
+        return parent.prune();
+      }
+    }
+    return this;
+  }
+
   public abstract getStorage(
     idOrObj: string | StoreObject,
     ...storeFieldNames: (string | number)[]
@@ -507,7 +518,10 @@ export type FieldValueGetter = EntityStore["getFieldValue"];
 class CacheGroup {
   private d: OptimisticDependencyFunction<string> | null = null;
 
-  constructor(public readonly caching: boolean) {
+  constructor(
+    public readonly caching: boolean,
+    private parent: CacheGroup | null = null,
+  ) {
     this.d = caching ? dep<string>() : null;
   }
 
@@ -522,6 +536,9 @@ class CacheGroup {
         // short fieldName, so the field can be invalidated using either
         // level of specificity.
         this.d(makeDepKey(dataId, fieldName));
+      }
+      if (this.parent) {
+        this.parent.depend(dataId, storeFieldName);
       }
     }
   }
@@ -547,13 +564,6 @@ function makeDepKey(dataId: string, storeFieldName: string) {
 export namespace EntityStore {
   // Refer to this class as EntityStore.Root outside this namespace.
   export class Root extends EntityStore {
-    // Although each Root instance gets its own unique CacheGroup object,
-    // any Layer instances created by calling addLayer need to share a
-    // single distinct CacheGroup object. Since this shared object must
-    // outlast the Layer instances themselves, it needs to be created and
-    // owned by the Root instance.
-    private sharedLayerGroup: CacheGroup;
-
     constructor({
       policies,
       resultCaching = true,
@@ -564,16 +574,19 @@ export namespace EntityStore {
       seed?: NormalizedCacheObject;
     }) {
       super(policies, new CacheGroup(resultCaching));
-      this.sharedLayerGroup = new CacheGroup(resultCaching);
       if (seed) this.replace(seed);
     }
+
+    public readonly stump = new Stump(this);
 
     public addLayer(
       layerId: string,
       replay: (layer: EntityStore) => any,
     ): Layer {
-      // The replay function will be called in the Layer constructor.
-      return new Layer(layerId, this, replay, this.sharedLayerGroup);
+      // Adding an optimistic Layer on top of the Root actually adds the Layer
+      // on top of the Stump, so the Stump always comes between the Root and
+      // any Layer objects that we've added.
+      return this.stump.addLayer(layerId, replay);
     }
 
     public removeLayer(): Root {
@@ -654,6 +667,35 @@ class Layer extends EntityStore {
     let p: EntityStore = this.parent;
     while ((p as Layer).parent) p = (p as Layer).parent;
     return p.getStorage.apply(p, arguments);
+  }
+}
+
+// Represents a Layer permanently installed just above the Root, which allows
+// reading optimistically (and registering optimistic dependencies) even when
+// no optimistic layers are currently active. The stump.group CacheGroup object
+// is shared by any/all Layer objects added on top of the Stump.
+class Stump extends Layer {
+  constructor(root: EntityStore.Root) {
+    super(
+      "EntityStore.Stump",
+      root,
+      () => {},
+      new CacheGroup(root.group.caching, root.group),
+    );
+  }
+
+  public removeLayer() {
+    // Never remove the Stump layer.
+    return this;
+  }
+
+  public merge() {
+    // We never want to write any data into the Stump, so we forward any merge
+    // calls to the Root instead. Another option here would be to throw an
+    // exception, but the toReference(object, true) function can sometimes
+    // trigger Stump writes (which used to be Root writes, before the Stump
+    // concept was introduced).
+    return this.parent.merge.apply(this.parent, arguments);
   }
 }
 

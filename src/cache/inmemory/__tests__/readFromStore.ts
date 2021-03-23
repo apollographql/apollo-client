@@ -1419,10 +1419,10 @@ describe('reading from the store', () => {
 
     const diffs: Cache.DiffResult<any>[] = [];
 
-    function watch() {
+    function watch(immediate = true) {
       return cache.watch({
         query: rulerQuery,
-        immediate: true,
+        immediate,
         optimistic: true,
         callback(diff) {
           diffs.push(diff);
@@ -1764,14 +1764,10 @@ describe('reading from the store', () => {
       diffWithZeusAsRuler,
     ]);
 
-    // Rewatch the rulerQuery, which will populate the same diffs array
-    // that we were using before.
-    const cancel2 = watch();
-
-    const diffWithApolloAsRuler = {
-      complete: true,
-      result: apolloRulerResult,
-    };
+    // Rewatch the rulerQuery, but avoid delivering an immediate initial
+    // result (by passing false), so that we can use cache.modify to
+    // trigger the delivery of diffWithApolloAsRuler below.
+    const cancel2 = watch(false);
 
     expect(diffs).toEqual([
       initialDiff,
@@ -1779,7 +1775,6 @@ describe('reading from the store', () => {
       diffWithoutDevouredSons,
       diffWithChildrenOfZeus,
       diffWithZeusAsRuler,
-      diffWithApolloAsRuler,
     ]);
 
     cache.modify({
@@ -1797,6 +1792,11 @@ describe('reading from the store', () => {
 
     cancel2();
 
+    const diffWithApolloAsRuler = {
+      complete: true,
+      result: apolloRulerResult,
+    };
+
     // The cache.modify call should have triggered another diff, since we
     // overwrote the ROOT_QUERY.ruler field with a valid Reference to the
     // Apollo entity object.
@@ -1806,7 +1806,6 @@ describe('reading from the store', () => {
       diffWithoutDevouredSons,
       diffWithChildrenOfZeus,
       diffWithZeusAsRuler,
-      diffWithApolloAsRuler,
       diffWithApolloAsRuler,
     ]);
 

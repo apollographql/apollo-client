@@ -283,25 +283,31 @@ This query returns the following result of three `Person` objects, each with a c
     "allPeople": {
       "people": [
         {
+          "__typename": "Person",
           "id": "cGVvcGxlOjE=",
           "name": "Luke Skywalker",
           "homeworld": {
+            "__typename": "Planet",
             "id": "cGxhbmV0czox",
             "name": "Tatooine"
           }
         },
         {
+          "__typename": "Person",
           "id": "cGVvcGxlOjI=",
           "name": "C-3PO",
           "homeworld": {
+            "__typename": "Planet",
             "id": "cGxhbmV0czox",
             "name": "Tatooine"
           }
         },
         {
+          "__typename": "Person",
           "id": "cGVvcGxlOjM=",
           "name": "R2-D2",
           "homeworld": {
+            "__typename": "Planet",
             "id": "cGxhbmV0czo4",
             "name": "Naboo"
           }
@@ -313,6 +319,8 @@ This query returns the following result of three `Person` objects, each with a c
 ```
 
 </ExpansionPanel>
+
+> Notice that each object in the result includes a `__typename` field, even though our query string _didn't_ include this field. That's because Apollo Client _automatically_ queries for every object's `__typename` field.
 
 After the result is cached, we can view the state of our cache in the Apollo Client Devtools:
 

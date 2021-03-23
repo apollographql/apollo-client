@@ -60,7 +60,9 @@ If your cache contains data for _all_ of the query's fields, `readQuery` returns
 }
 ```
 
-**Do not modify this object directly.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery).
+> Apollo Client automatically queries for every object's `__typename`, even if you don't include this field in your query string.
+
+**Do not modify the returned object directly.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery).
 
 If the cache is missing data for _any_ of the query's fields, `readQuery` returns `null`. It does _not_ attempt to fetch data from your GraphQL server.
 
@@ -228,7 +230,7 @@ client.writeQuery({
 
 The `modify` method of `InMemoryCache` enables you to directly modify the values of individual cached fields, or even delete fields entirely.
 
-* Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you override this behavior).
+* Like `writeQuery` and `writeFragment`, `modify` triggers a refresh of all active queries that depend on modified fields (unless you override this behavior by passing `broadcast: false`).
 * _Unlike_ `writeQuery` and `writeFragment`:
     * `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are always overwritten with exactly the values you specify.
     * `modify` _cannot_ write fields that do not already exist in the cache.

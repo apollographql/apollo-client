@@ -1113,6 +1113,26 @@ describe('useQuery Hook', () => {
   });
 
   describe('Pagination', () => {
+    // Because fetchMore with updateQuery is deprecated, this setup/teardown
+    // code is used to squash deprecation notices.
+    // TODO: delete me after fetchMore with updateQuery is removed.
+    let spy: any;
+    let warned = false;
+    beforeEach(() => {
+      if (!warned) {
+        spy = jest.spyOn(console, "warn").mockImplementation(() => {
+          warned = true;
+        });
+      }
+    });
+
+    afterEach(() => {
+      if (spy) {
+        spy.mockRestore();
+        spy = undefined;
+      }
+    });
+
     describe('should render fetchMore-updated results with proper loading status, when `notifyOnNetworkStatusChange` is true', () => {
       const carQuery: DocumentNode = gql`
         query cars($limit: Int) {
@@ -1221,6 +1241,11 @@ describe('useQuery Hook', () => {
 
         return wait(() => {
           expect(renderCount).toBe(4);
+          // TODO: delete me after fetchMore with updateQuery is removed.
+          if (spy) {
+            expect(spy).toHaveBeenCalledTimes(1);
+            spy.mockRestore();
+          }
         }).then(resolve, reject);
       });
 
@@ -1288,6 +1313,11 @@ describe('useQuery Hook', () => {
 
         return wait(() => {
           expect(renderCount).toBe(4);
+          // TODO: delete me after fetchMore with updateQuery is removed.
+          if (spy) {
+            expect(spy).toHaveBeenCalledTimes(1);
+            spy.mockRestore();
+          }
         }).then(resolve, reject);
       });
     });

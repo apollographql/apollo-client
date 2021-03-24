@@ -889,7 +889,7 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // refresh, or setVariables.
+    // or setVariables.
     networkStatus = NetworkStatus.loading,
   ): Concast<ApolloQueryResult<TData>> {
     const query = this.transform(options.query).document;
@@ -1019,22 +1019,20 @@ export class QueryManager<TStore> {
 
   private fetchQueryByPolicy<TData, TVars>(
     queryInfo: QueryInfo,
-    options: WatchQueryOptions<TVars, TData>,
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // refresh, or setVariables.
-    networkStatus: NetworkStatus,
-  ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
-    const {
-      query,
+    { query,
       variables,
       fetchPolicy,
+      refetchPolicy,
       errorPolicy,
       returnPartialData,
       context,
       notifyOnNetworkStatusChange,
-    } = options;
-
+    }: WatchQueryOptions<TVars, TData>,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus: NetworkStatus,
+  ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
@@ -1083,8 +1081,12 @@ export class QueryManager<TStore> {
 
     const cacheWriteBehavior =
       fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID :
-      networkStatus === NetworkStatus.refresh ? CacheWriteBehavior.OVERWRITE :
-      CacheWriteBehavior.MERGE;
+      ( // Watched queries must opt into overwriting existing data on refetch,
+        // by passing refetchPolicy: "overwrite" in their WatchQueryOptions.
+        networkStatus === NetworkStatus.refetch &&
+        refetchPolicy === "overwrite"
+      ) ? CacheWriteBehavior.OVERWRITE
+        : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {

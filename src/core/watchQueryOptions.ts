@@ -66,6 +66,14 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   fetchPolicy?: FetchPolicy;
 
   /**
+   * Specifies whether a {@link NetworkStatus.refetch} operation should merge
+   * incoming field data with existing data, or overwrite the existing data.
+   * Overwriting is probably preferable, but merging is currently the default
+   * behavior, for backwards compatibility with Apollo Client 3.x.
+   */
+  refetchPolicy?: "merge" | "overwrite";
+
+  /**
    * The time interval (in milliseconds) on which this query should be
    * refetched from the server.
    */

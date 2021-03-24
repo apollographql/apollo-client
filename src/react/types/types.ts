@@ -61,7 +61,6 @@ export type ObservableQueryFields<TData, TVariables> = Pick<
   | 'subscribeToMore'
   | 'updateQuery'
   | 'refetch'
-  | 'refresh'
   | 'variables'
 > & {
   fetchMore: ((

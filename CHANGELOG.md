@@ -8,6 +8,9 @@
 - Remove unnecessary TypeScript global `Observable<T>["@@observable"]` method declaration. <br/>
   [@benjamn](https://github.com/benjamn) in [#7888](https://github.com/apollographql/apollo-client/pull/7888)
 
+- Prevent skipped/observerless `ObservableQuery`s from being refetched by `refetchQueries`. <br/>
+  [@dannycochran](https://github.com/dannycochran) in [#7877](https://github.com/apollographql/apollo-client/pull/7877)
+
 ## Apollo Client 3.3.12
 
 ### Bug fixes

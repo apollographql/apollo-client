@@ -272,6 +272,7 @@ export class QueryManager<TStore> {
               if (typeof refetchQuery === 'string') {
                 self.queries.forEach(({ observableQuery }) => {
                   if (observableQuery &&
+                      observableQuery.hasObservers() &&
                       observableQuery.queryName === refetchQuery) {
                     refetchQueryPromises.push(observableQuery.refetch());
                   }

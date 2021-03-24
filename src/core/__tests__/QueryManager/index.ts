@@ -1349,6 +1349,7 @@ describe('QueryManager', () => {
   });
 
   itAsync('supports cache-only fetchPolicy fetching only cached data', (resolve, reject) => {
+    const spy = jest.spyOn(console, "warn").mockImplementation();
     const primeQuery = gql`
       query primeQuery {
         luke: people_one(id: 1) {
@@ -1393,9 +1394,13 @@ describe('QueryManager', () => {
         return handle.result().then(result => {
           expect(result.data['luke'].name).toBe('Luke Skywalker');
           expect(result.data).not.toHaveProperty('vader');
+          expect(spy).toHaveBeenCalledTimes(1);
         });
       })
-      .then(resolve, reject);
+      .finally(() => {
+        spy.mockRestore();
+      })
+      .then(resolve, reject)
   });
 
   itAsync('runs a mutation', (resolve, reject) => {
@@ -5498,21 +5503,16 @@ describe('QueryManager', () => {
   });
 
   describe('missing cache field warnings', () => {
-    const originalWarn = console.warn;
-    let warnCount = 0;
     let verbosity: ReturnType<typeof setVerbosity>;
-
+    let spy: any;
     beforeEach(() => {
-      warnCount = 0;
       verbosity = setVerbosity("warn");
-      console.warn = (...args: any[]) => {
-        warnCount += 1;
-      };
+      spy = jest.spyOn(console, "warn").mockImplementation();
     });
 
     afterEach(() => {
-      console.warn = originalWarn;
       setVerbosity(verbosity);
+      spy.mockRestore();
     });
 
     function validateWarnings(
@@ -5587,7 +5587,7 @@ describe('QueryManager', () => {
               networkStatus: NetworkStatus.ready,
               partial: true,
             });
-            expect(warnCount).toBe(expectedWarnCount);
+            expect(spy).toHaveBeenCalledTimes(expectedWarnCount);
           },
         ).then(resolve, reject)
       });

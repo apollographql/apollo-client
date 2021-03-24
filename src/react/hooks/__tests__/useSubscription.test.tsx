@@ -2,7 +2,7 @@ import React from 'react';
 import { render, cleanup, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { ApolloClient } from '../../../core';
+import { ApolloClient, ApolloLink, concat } from '../../../core';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
@@ -291,6 +291,73 @@ describe('useSubscription Hook', () => {
 
     return wait(() => {
       expect(renderCount).toEqual(7);
+    });
+  });
+
+  it('should share context set in options', async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ['Audi', 'BMW'].map(make => ({
+      result: { data: { car: { make } } }
+    }));
+
+    let context: string;
+    const link = new MockSubscriptionLink();
+    const contextLink = new ApolloLink((operation, forward) => {
+      context = operation.getContext()?.make
+      return forward(operation);
+    });
+    const client = new ApolloClient({
+      link: concat(contextLink, link),
+      cache: new Cache({ addTypename: false })
+    });
+
+    let renderCount = 0;
+    const Component = () => {
+      const { loading, data, error } = useSubscription(subscription, {
+        context: {
+          make: 'Audi',
+        },
+      });
+      switch (renderCount) {
+        case 0:
+          expect(loading).toBe(true);
+          expect(error).toBeUndefined();
+          expect(data).toBeUndefined();
+          break;
+        case 1:
+          expect(loading).toBe(false);
+          expect(data).toEqual(results[0].result.data);
+          break;
+        case 2:
+          expect(loading).toBe(false);
+          expect(data).toEqual(results[1].result.data);
+          break;
+        default:
+      }
+      setTimeout(() => {
+        renderCount <= results.length &&
+          link.simulateResult(results[renderCount - 1]);
+      });
+      renderCount += 1;
+      return null;
+    };
+
+    render(
+      <ApolloProvider client={client}>
+        <Component />
+      </ApolloProvider>
+    );
+
+    return wait(() => {
+      expect(renderCount).toBe(3);
+      expect(context).toEqual('Audi');
     });
   });
 });

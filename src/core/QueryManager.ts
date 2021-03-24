@@ -978,16 +978,17 @@ export class QueryManager<TStore> {
     return concast;
   }
 
-  public refetchQueries(queries: RefetchQueryDescription):
-    Promise<ApolloQueryResult<any>>[] {
-    const self = this;
+  public refetchQueries(
+    queries: RefetchQueryDescription,
+  ): Promise<ApolloQueryResult<any>>[] {
     const refetchQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
 
     if (isNonEmptyArray(queries)) {
       queries.forEach(refetchQuery => {
         if (typeof refetchQuery === 'string') {
-          self.queries.forEach(({ observableQuery }) => {
+          this.queries.forEach(({ observableQuery }) => {
             if (observableQuery &&
+                observableQuery.hasObservers() &&
                 observableQuery.queryName === refetchQuery) {
               refetchQueryPromises.push(observableQuery.refetch());
             }
@@ -1003,7 +1004,7 @@ export class QueryManager<TStore> {
             queryOptions.context = refetchQuery.context;
           }
 
-          refetchQueryPromises.push(self.query(queryOptions));
+          refetchQueryPromises.push(this.query(queryOptions));
         }
       });
     }

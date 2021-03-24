@@ -40,7 +40,20 @@ TBD
 ### Documentation
 TBD
 
-## Apollo Client 3.3.12 (not yet released)
+## Apollo Client 3.3.13
+
+### Improvements
+
+- Add missing `context` option to `useSubscription`. <br />
+  [@jcreighton](https://github.com/jcreighton) in [#7860](https://github.com/apollographql/apollo-client/pull/7860)
+
+- Remove unnecessary TypeScript global `Observable<T>["@@observable"]` method declaration. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7888](https://github.com/apollographql/apollo-client/pull/7888)
+
+- Prevent skipped/observerless `ObservableQuery`s from being refetched by `refetchQueries`. <br/>
+  [@dannycochran](https://github.com/dannycochran) in [#7877](https://github.com/apollographql/apollo-client/pull/7877)
+
+## Apollo Client 3.3.12
 
 ### Bug fixes
 

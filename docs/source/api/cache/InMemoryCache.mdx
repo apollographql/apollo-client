@@ -146,7 +146,7 @@ readQuery<QueryType, TVariables = any>(
 
 Writes data to the cache in the shape of a provided GraphQL query. Returns a `Reference` to the written object or `undefined` if the write failed.
 
-For usage instructions, see [Interacting with cached data: `writeQuery`](../../caching/cache-interaction/#writequery-and-writefragment).
+For usage instructions, see [Interacting with cached data: `writeQuery`](../../caching/cache-interaction/#writequery).
 
 Takes an `options` object as a parameter. Supported fields of this object are described below.
 
@@ -398,7 +398,7 @@ readFragment<FragmentType, TVariables = any>(
 
 Writes data to the cache in the shape of the provided GraphQL fragment. Returns a `Reference` to the written object or `undefined` if the write failed.
 
-For usage instructions, see [Interacting with cached data: `writeFragment`](../../caching/cache-interaction/#writequery-and-writefragment).
+For usage instructions, see [Interacting with cached data: `writeFragment`](../../caching/cache-interaction/#writefragment).
 
 Takes an `options` object as a parameter. Supported fields of this object are described below.
 
@@ -567,7 +567,7 @@ Modifies one or more field values of a cached object. Must provide a **modifier 
 
 Returns `true` if the cache was modified successfully and `false` otherwise.
 
-For usage instructions, see [`cache.modify`](../../caching/cache-interaction/#cachemodify).
+For usage instructions, see [Using `cache.modify`](../../caching/cache-interaction/#using-cachemodify).
 
 Takes an `options` object as a parameter. Supported fields of this object are described below.
 

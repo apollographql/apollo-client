@@ -1578,7 +1578,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe('options.refetchPolicy', () => {
+  describe('options.refetchWritePolicy', () => {
     const query = gql`
       query GetPrimes ($min: number, $max: number) {
         primes(min: $min, max: $max)
@@ -1644,7 +1644,7 @@ describe('useQuery Hook', () => {
           variables: { min: 0, max: 12 },
           notifyOnNetworkStatusChange: true,
           // This is the key line in this test.
-          refetchPolicy: "overwrite",
+          refetchWritePolicy: "overwrite",
         });
 
         switch (++renderCount) {
@@ -1697,8 +1697,8 @@ describe('useQuery Hook', () => {
             });
             expect(mergeParams).toEqual([
               [void 0, [2, 3, 5, 7, 11]],
-              // Without refetchPolicy: "overwrite", this array will be all 10
-              // primes (2 through 29) together.
+              // Without refetchWritePolicy: "overwrite", this array will be
+              // all 10 primes (2 through 29) together.
               [void 0, [13, 17, 19, 23, 29]],
             ]);
             break;
@@ -1754,7 +1754,7 @@ describe('useQuery Hook', () => {
           variables: { min: 0, max: 12 },
           notifyOnNetworkStatusChange: true,
           // This is the key line in this test.
-          refetchPolicy: "merge",
+          refetchWritePolicy: "merge",
         });
 
         switch (++renderCount) {
@@ -1803,7 +1803,7 @@ describe('useQuery Hook', () => {
             expect(loading).toBe(false);
             expect(error).toBeUndefined();
             expect(data).toEqual({
-              // Thanks to refetchPolicy: "merge".
+              // Thanks to refetchWritePolicy: "merge".
               primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
             });
             expect(mergeParams).toEqual([
@@ -1830,9 +1830,9 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
-    // TODO The default refetchPolicy probably should change to "overwrite"
+    // TODO The default refetchWritePolicy probably should change to "overwrite"
     // when we release the next major version of Apollo Client (v4).
-    itAsync('should assume default refetchPolicy value is "merge"', (resolve, reject) => {
+    itAsync('should assume default refetchWritePolicy value is "merge"', (resolve, reject) => {
       const mergeParams: [any, any][] = [];
       const cache = new InMemoryCache({
         typePolicies: {
@@ -1865,7 +1865,7 @@ describe('useQuery Hook', () => {
         } = useQuery(query, {
           variables: { min: 0, max: 12 },
           notifyOnNetworkStatusChange: true,
-          // Intentionally not passing refetchPolicy.
+          // Intentionally not passing refetchWritePolicy.
         });
 
         switch (++renderCount) {
@@ -1914,7 +1914,7 @@ describe('useQuery Hook', () => {
             expect(loading).toBe(false);
             expect(error).toBeUndefined();
             expect(data).toEqual({
-              // Thanks to refetchPolicy: "merge".
+              // Thanks to refetchWritePolicy: "merge".
               primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
             });
             expect(mergeParams).toEqual([

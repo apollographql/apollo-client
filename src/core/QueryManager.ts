@@ -1022,7 +1022,7 @@ export class QueryManager<TStore> {
     { query,
       variables,
       fetchPolicy,
-      refetchPolicy,
+      refetchWritePolicy,
       errorPolicy,
       returnPartialData,
       context,
@@ -1082,9 +1082,9 @@ export class QueryManager<TStore> {
     const cacheWriteBehavior =
       fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID :
       ( // Watched queries must opt into overwriting existing data on refetch,
-        // by passing refetchPolicy: "overwrite" in their WatchQueryOptions.
+        // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
         networkStatus === NetworkStatus.refetch &&
-        refetchPolicy === "overwrite"
+        refetchWritePolicy === "overwrite"
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 

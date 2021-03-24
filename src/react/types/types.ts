@@ -4,7 +4,7 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { Observable } from '../../utilities';
 import { FetchResult } from '../../link/core';
-import { ApolloClient } from '../../core';
+import { ApolloClient, WatchQueryOptions } from '../../core';
 import { ApolloError } from '../../errors';
 import {
   ApolloQueryResult,
@@ -30,18 +30,11 @@ export type CommonOptions<TOptions> = TOptions & {
 
 /* Query types */
 
-export interface BaseQueryOptions<TVariables = OperationVariables> {
+export interface BaseQueryOptions<TVariables = OperationVariables>
+extends Omit<WatchQueryOptions<TVariables>, "query"> {
   ssr?: boolean;
-  variables?: TVariables;
-  fetchPolicy?: WatchQueryFetchPolicy;
-  nextFetchPolicy?: WatchQueryFetchPolicy;
-  errorPolicy?: ErrorPolicy;
-  pollInterval?: number;
   client?: ApolloClient<any>;
-  notifyOnNetworkStatusChange?: boolean;
   context?: Context;
-  partialRefetch?: boolean;
-  returnPartialData?: boolean;
 }
 
 export interface QueryFunctionOptions<

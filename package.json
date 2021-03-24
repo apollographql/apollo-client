@@ -29,7 +29,7 @@
   "bugs": {
     "url": "https://github.com/apollographql/apollo-client/issues"
   },
-  "homepage": "https://www.apollographql.com",
+  "homepage": "https://www.apollographql.com/docs/react/",
   "scripts": {
     "prebuild": "npm run clean",
     "build": "tsc",

@@ -1,7 +1,7 @@
 import React, { useState, useReducer, Fragment } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { render, cleanup, wait } from '@testing-library/react';
+import { render, cleanup, wait, act } from '@testing-library/react';
 
 import { ApolloClient, NetworkStatus, TypedDocumentNode, WatchQueryFetchPolicy } from '../../../core';
 import { InMemoryCache } from '../../../cache';
@@ -1574,6 +1574,370 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(6);
+      }).then(resolve, reject);
+    });
+  });
+
+  describe('options.refetchWritePolicy', () => {
+    const query = gql`
+      query GetPrimes ($min: number, $max: number) {
+        primes(min: $min, max: $max)
+      }
+    `;
+
+    const mocks = [
+      {
+        request: {
+          query,
+          variables: { min: 0, max: 12 },
+        },
+        result: {
+          data: {
+            primes: [2, 3, 5, 7, 11],
+          }
+        }
+      },
+      {
+        request: {
+          query,
+          variables: { min: 12, max: 30 },
+        },
+        result: {
+          data: {
+            primes: [13, 17, 19, 23, 29],
+          }
+        }
+      },
+    ];
+
+    itAsync('should support explicit "overwrite"', (resolve, reject) => {
+      const mergeParams: [any, any][] = [];
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              primes: {
+                keyArgs: false,
+                merge(existing, incoming) {
+                  mergeParams.push([existing, incoming]);
+                  return existing ? [
+                    ...existing,
+                    ...incoming,
+                  ] : incoming;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      let renderCount = 0;
+
+      function App() {
+        const {
+          loading,
+          networkStatus,
+          data,
+          error,
+          refetch,
+        } = useQuery(query, {
+          variables: { min: 0, max: 12 },
+          notifyOnNetworkStatusChange: true,
+          // This is the key line in this test.
+          refetchWritePolicy: "overwrite",
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(error).toBeUndefined();
+            expect(data).toBeUndefined();
+            expect(typeof refetch).toBe('function');
+            break;
+          case 2:
+            expect(loading).toBe(false);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              primes: [2, 3, 5, 7, 11],
+            });
+            expect(mergeParams).toEqual([
+              [void 0, [2, 3, 5, 7, 11]],
+            ]);
+            act(() => {
+              refetch({
+                min: 12,
+                max: 30,
+              }).then(result => {
+                expect(result).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    primes: [13, 17, 19, 23, 29],
+                  },
+                });
+              });
+            });
+            break;
+          case 3:
+            expect(loading).toBe(true);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              // We get the stale data because we configured keyArgs: false.
+              primes: [2, 3, 5, 7, 11],
+            });
+            // This networkStatus is setVariables instead of refetch because
+            // we called refetch with new variables.
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            break;
+          case 4:
+            expect(loading).toBe(false);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              primes: [13, 17, 19, 23, 29],
+            });
+            expect(mergeParams).toEqual([
+              [void 0, [2, 3, 5, 7, 11]],
+              // Without refetchWritePolicy: "overwrite", this array will be
+              // all 10 primes (2 through 29) together.
+              [void 0, [13, 17, 19, 23, 29]],
+            ]);
+            break;
+          default:
+            reject("too many renders");
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider cache={cache} mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(4);
+      }).then(resolve, reject);
+    });
+
+    itAsync('should support explicit "merge"', (resolve, reject) => {
+      const mergeParams: [any, any][] = [];
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              primes: {
+                keyArgs: false,
+                merge(existing, incoming) {
+                  mergeParams.push([existing, incoming]);
+                  return existing ? [
+                    ...existing,
+                    ...incoming,
+                  ] : incoming;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      let renderCount = 0;
+
+      function App() {
+        const {
+          loading,
+          networkStatus,
+          data,
+          error,
+          refetch,
+        } = useQuery(query, {
+          variables: { min: 0, max: 12 },
+          notifyOnNetworkStatusChange: true,
+          // This is the key line in this test.
+          refetchWritePolicy: "merge",
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(error).toBeUndefined();
+            expect(data).toBeUndefined();
+            expect(typeof refetch).toBe('function');
+            break;
+          case 2:
+            expect(loading).toBe(false);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              primes: [2, 3, 5, 7, 11],
+            });
+            expect(mergeParams).toEqual([
+              [void 0, [2, 3, 5, 7, 11]],
+            ]);
+            act(() => {
+              refetch({
+                min: 12,
+                max: 30,
+              }).then(result => {
+                expect(result).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
+                  },
+                });
+              });
+            });
+            break;
+          case 3:
+            expect(loading).toBe(true);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              // We get the stale data because we configured keyArgs: false.
+              primes: [2, 3, 5, 7, 11],
+            });
+            // This networkStatus is setVariables instead of refetch because
+            // we called refetch with new variables.
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            break;
+          case 4:
+            expect(loading).toBe(false);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              // Thanks to refetchWritePolicy: "merge".
+              primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
+            });
+            expect(mergeParams).toEqual([
+              [void 0, [2, 3, 5, 7, 11]],
+              // This indicates concatenation happened.
+              [[2, 3, 5, 7, 11], [13, 17, 19, 23, 29]],
+            ]);
+            break;
+          default:
+            reject("too many renders");
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider cache={cache} mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(4);
+      }).then(resolve, reject);
+    });
+
+    // TODO The default refetchWritePolicy probably should change to "overwrite"
+    // when we release the next major version of Apollo Client (v4).
+    itAsync('should assume default refetchWritePolicy value is "merge"', (resolve, reject) => {
+      const mergeParams: [any, any][] = [];
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              primes: {
+                keyArgs: false,
+                merge(existing, incoming) {
+                  mergeParams.push([existing, incoming]);
+                  return existing ? [
+                    ...existing,
+                    ...incoming,
+                  ] : incoming;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      let renderCount = 0;
+
+      function App() {
+        const {
+          loading,
+          networkStatus,
+          data,
+          error,
+          refetch,
+        } = useQuery(query, {
+          variables: { min: 0, max: 12 },
+          notifyOnNetworkStatusChange: true,
+          // Intentionally not passing refetchWritePolicy.
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(error).toBeUndefined();
+            expect(data).toBeUndefined();
+            expect(typeof refetch).toBe('function');
+            break;
+          case 2:
+            expect(loading).toBe(false);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              primes: [2, 3, 5, 7, 11],
+            });
+            expect(mergeParams).toEqual([
+              [void 0, [2, 3, 5, 7, 11]],
+            ]);
+            act(() => {
+              refetch({
+                min: 12,
+                max: 30,
+              }).then(result => {
+                expect(result).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
+                  },
+                });
+              });
+            });
+            break;
+          case 3:
+            expect(loading).toBe(true);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              // We get the stale data because we configured keyArgs: false.
+              primes: [2, 3, 5, 7, 11],
+            });
+            // This networkStatus is setVariables instead of refetch because
+            // we called refetch with new variables.
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            break;
+          case 4:
+            expect(loading).toBe(false);
+            expect(error).toBeUndefined();
+            expect(data).toEqual({
+              // Thanks to refetchWritePolicy: "merge".
+              primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
+            });
+            expect(mergeParams).toEqual([
+              [void 0, [2, 3, 5, 7, 11]],
+              // This indicates concatenation happened.
+              [[2, 3, 5, 7, 11], [13, 17, 19, 23, 29]],
+            ]);
+            break;
+          default:
+            reject("too many renders");
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider cache={cache} mocks={mocks}>
+          <App />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(4);
       }).then(resolve, reject);
     });
   });

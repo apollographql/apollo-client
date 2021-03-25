@@ -84,8 +84,7 @@ export namespace DataProxy {
     optimistic?: boolean;
   }
 
-  export interface WriteQueryOptions<TData, TVariables>
-    extends Query<TVariables, TData> {
+  export interface WriteOptions<TData> {
     /**
      * The data you will be writing to the store.
      */
@@ -94,19 +93,18 @@ export namespace DataProxy {
      * Whether to notify query watchers (default: true).
      */
     broadcast?: boolean;
+    /**
+     * When true, ignore existing field data rather than merging it with
+     * incoming data (default: false).
+     */
+    overwrite?: boolean;
   }
 
+  export interface WriteQueryOptions<TData, TVariables>
+    extends Query<TVariables, TData>, WriteOptions<TData> {}
+
   export interface WriteFragmentOptions<TData, TVariables>
-    extends Fragment<TVariables, TData> {
-    /**
-     * The data you will be writing to the store.
-     */
-    data: TData;
-    /**
-     * Whether to notify query watchers (default: true).
-     */
-    broadcast?: boolean;
-  }
+    extends Fragment<TVariables, TData>, WriteOptions<TData> {}
 
   export type DiffResult<T> = {
     result?: T;

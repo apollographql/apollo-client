@@ -1,4 +1,4 @@
-import { SelectionSetNode, FieldNode, DocumentNode } from 'graphql';
+import { SelectionSetNode, FieldNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
@@ -27,6 +27,7 @@ import { makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObj
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 import { EntityStore } from './entityStore';
+import { Cache } from '../../core';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -35,6 +36,8 @@ export interface WriteContext extends ReadMergeModifyContext {
   readonly fragmentMap?: FragmentMap;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
+  // If true, merge functions will be called with undefined existing data.
+  overwrite: boolean;
 };
 
 interface ProcessSelectionSetOptions {
@@ -45,41 +48,19 @@ interface ProcessSelectionSetOptions {
   mergeTree: MergeTree;
 }
 
-export interface WriteToStoreOptions {
-  query: DocumentNode;
-  result: Object;
-  dataId?: string;
-  store: NormalizedCache;
-  variables?: Object;
-}
-
 export class StoreWriter {
   constructor(
     public readonly cache: InMemoryCache,
     private reader?: StoreReader,
   ) {}
 
-  /**
-   * Writes the result of a query to the store.
-   *
-   * @param result The result object returned for the query document.
-   *
-   * @param query The query document whose result we are writing to the store.
-   *
-   * @param store The {@link NormalizedCache} used by Apollo for the `data` portion of the store.
-   *
-   * @param variables A map from the name of a variable to its value. These variables can be
-   * referenced by the query document.
-   *
-   * @return A `Reference` to the written object.
-   */
-  public writeToStore({
+  public writeToStore(store: NormalizedCache, {
     query,
     result,
     dataId,
-    store,
     variables,
-  }: WriteToStoreOptions): Reference | undefined {
+    overwrite,
+  }: Cache.WriteOptions): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
     const merger = makeProcessedFieldsMerger();
 
@@ -102,6 +83,7 @@ export class StoreWriter {
         variables,
         varString: JSON.stringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        overwrite: !!overwrite,
       },
     });
 
@@ -286,7 +268,7 @@ export class StoreWriter {
         incomingFields = this.applyMerges(mergeTree, entityRef, incomingFields, context);
       }
 
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env.NODE_ENV !== "production" && !context.overwrite) {
         const hasSelectionSet = (storeFieldName: string) =>
           fieldsWithSelectionSets.has(fieldNameFromStoreName(storeFieldName));
         const fieldsWithSelectionSets = new Set<string>();
@@ -360,7 +342,7 @@ export class StoreWriter {
     mergeTree: MergeTree,
     existing: StoreValue,
     incoming: T,
-    context: ReadMergeModifyContext,
+    context: WriteContext,
     getStorageArgs?: Parameters<EntityStore["getStorage"]>,
   ): T {
     if (mergeTree.map.size && !isReference(incoming)) {

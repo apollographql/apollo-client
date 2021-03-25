@@ -769,7 +769,7 @@ describe("type policies", function () {
         },
       };
 
-      function check<TData, TVars>(
+      function check<TData extends typeof data, TVars>(
         query: DocumentNode | TypedDocumentNode<TData, TVars>,
         variables?: TVars,
       ) {

@@ -24,6 +24,8 @@ export type FetchPolicy =
 
 export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
 
+export type RefetchWritePolicy = "merge" | "overwrite";
+
 /**
  * errorPolicy determines the level of events for errors in the execution result. The options are:
  * - none (default): any errors from the request are treated like runtime errors and the observable is stopped (XXX this is default to lower breaking changes going from AC 1.0 => 2.0)
@@ -106,6 +108,13 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
     this: WatchQueryOptions<TVariables, TData>,
     lastFetchPolicy: WatchQueryFetchPolicy,
   ) => WatchQueryFetchPolicy);
+  /**
+   * Specifies whether a {@link NetworkStatus.refetch} operation should merge
+   * incoming field data with existing data, or overwrite the existing data.
+   * Overwriting is probably preferable, but merging is currently the default
+   * behavior, for backwards compatibility with Apollo Client 3.x.
+   */
+  refetchWritePolicy?: RefetchWritePolicy;
 }
 
 export interface FetchMoreQueryOptions<TVariables, TData = any> {

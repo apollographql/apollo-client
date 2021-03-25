@@ -167,27 +167,28 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeQuery<TData = any, TVariables = any>(
-    options: Cache.WriteQueryOptions<TData, TVariables>,
-  ): Reference | undefined {
-    return this.write({
-      dataId: options.id || 'ROOT_QUERY',
-      result: options.data,
-      query: options.query,
-      variables: options.variables,
-      broadcast: options.broadcast,
-    });
+  public writeQuery<TData = any, TVariables = any>({
+    id,
+    data,
+    ...options
+  }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined {
+    return this.write(Object.assign(options, {
+      dataId: id || 'ROOT_QUERY',
+      result: data,
+    }));
   }
 
-  public writeFragment<TData = any, TVariables = any>(
-    options: Cache.WriteFragmentOptions<TData, TVariables>,
-  ): Reference | undefined {
-    return this.write({
-      dataId: options.id,
-      result: options.data,
-      variables: options.variables,
-      query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      broadcast: options.broadcast,
-    });
+  public writeFragment<TData = any, TVariables = any>({
+    id,
+    data,
+    fragment,
+    fragmentName,
+    ...options
+  }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
+    return this.write(Object.assign(options, {
+      query: this.getFragmentDoc(fragment, fragmentName),
+      dataId: id,
+      result: data,
+    }));
   }
 }

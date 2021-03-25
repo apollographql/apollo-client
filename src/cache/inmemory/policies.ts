@@ -63,7 +63,7 @@ type KeyFieldsContext = {
 export type KeyFieldsFunction = (
   object: Readonly<StoreObject>,
   context: KeyFieldsContext,
-) => KeySpecifier | ReturnType<IdGetter>;
+) => KeySpecifier | false | ReturnType<IdGetter>;
 
 // TODO Should TypePolicy be a generic type, with a TObject or TEntity
 // type parameter?
@@ -103,7 +103,7 @@ export type KeyArgsFunction = (
     field: FieldNode | null;
     variables?: Record<string, any>;
   },
-) => KeySpecifier | ReturnType<IdGetter>;
+) => KeySpecifier | false | ReturnType<IdGetter>;
 
 export type FieldPolicy<
   // The internal representation used to store the field's data in the

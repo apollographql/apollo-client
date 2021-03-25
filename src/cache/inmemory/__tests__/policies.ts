@@ -4465,6 +4465,81 @@ describe("type policies", function () {
     });
   });
 
+  it("allows keyFields and keyArgs functions to return false", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Person: {
+          keyFields() {
+            return false;
+          },
+          fields: {
+            height: {
+              keyArgs() {
+                return false;
+              },
+              merge(_, height, { args }) {
+                if (args) {
+                  if (args.units === "feet") {
+                    return height;
+                  }
+                  if (args.units === "meters") {
+                    // Convert to feet so we don't have to remember the units.
+                    return height * 3.28084;
+                  }
+                }
+                throw new Error("unexpected units: " + args);
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const query = gql`
+      query GetUser ($units: string) {
+        people {
+          id
+          height(units: $units)
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      variables: {
+        units: "meters",
+      },
+      data: {
+        people: [{
+          __typename: "Person",
+          id: 12345,
+          height: 1.75,
+        }, {
+          __typename: "Person",
+          id: 23456,
+          height: 2,
+        }],
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        // An array of non-normalized objects, not Reference objects.
+        people: [{
+          __typename: "Person",
+          // No serialized units argument, just "height".
+          height: 5.74147,
+          id: 12345,
+        }, {
+          __typename: "Person",
+          height: 6.56168,
+          id: 23456,
+        }],
+      },
+    });
+  });
+
   it("can read from foreign references using read helper", function () {
     const cache = new InMemoryCache({
       typePolicies: {

@@ -19,6 +19,22 @@ TBD
 - `InMemoryCache` supports a new method called `batch`, which is similar to `performTransaction` but takes named options rather than positional parameters. One of these named options is an `onDirty(watch, diff)` callback, which can be used to determine which watched queries were invalidated by the `batch` operation. <br/>
   [@benjamn](https://github.com/benjamn) in [#7819](https://github.com/apollographql/apollo-client/pull/7819)
 
+- In Apollo Client 2.x, `refetch` would always replace existing data in the cache. With the introduction of field policy `merge` functions in Apollo Client 3, existing field values can be inappropriately combined with incoming field values by a custom `merge` function that does not realize a `refetch` has happened.
+
+  To give you more control over this behavior, we have introduced an `overwrite?: boolean = false` option for `cache.writeQuery` and `cache.writeFragment`, and an option called `refetchWritePolicy?: "merge" | "overwrite"` for `client.watchQuery`, `useQuery`, and other functions that accept `WatchQueryOptions`. You can use these options to make sure any `merge` functions involved in cache writes for `refetch` operations get invoked with `undefined` as their first argument, which simulates the absence of any existing data, while still giving the `merge` function a chance to determine the internal representation of the incoming data.
+
+  The default behaviors are `overwrite: false` and `refetchWritePolicy: "merge"`, but you can change the default `refetchWritePolicy` value using `defaultOptions.watchQuery`:
+  ```ts
+  new ApolloClient({
+    defaultOptions: {
+      watchQuery: {
+        refetchWritePolicy: "overwrite",
+      },
+    },
+  })
+  ```
+  [@benjamn](https://github.com/benjamn) in [#7810](https://github.com/apollographql/apollo-client/pull/7810)
+
 - Support `client.refetchQueries` as an imperative way to refetch queries, without having to pass `options.refetchQueries` to `client.mutate`. <br/>
   [@dannycochran](https://github.com/dannycochran) in [#7431](https://github.com/apollographql/apollo-client/pull/7431)
 

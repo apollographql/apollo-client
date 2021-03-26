@@ -55,6 +55,8 @@ interface MutationStoreValue {
   error: Error | null;
 }
 
+type MutationResult<TData> = Omit<FetchResult<TData>, 'context'>;
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
@@ -175,6 +177,7 @@ export class QueryManager<TStore> {
         document: mutation,
         variables,
         errorPolicy,
+        context,
         updateQueries,
         update: updateWithProxyFn,
       });
@@ -224,6 +227,7 @@ export class QueryManager<TStore> {
                 document: mutation,
                 variables,
                 errorPolicy,
+                context,
                 updateQueries,
                 update: updateWithProxyFn,
                 reobserveQuery,
@@ -298,10 +302,15 @@ export class QueryManager<TStore> {
       document: DocumentNode;
       variables?: OperationVariables;
       errorPolicy: ErrorPolicy;
+      context: Record<string, any>;
       updateQueries: MutationOptions<TData>["updateQueries"],
       update?: (
         cache: ApolloCache<TStore>,
-        result: FetchResult<TData>,
+        result: MutationResult<TData>,
+        options: {
+          context?: Record<string, any>,
+          variables?: OperationVariables,
+        },
       ) => void;
       reobserveQuery?: ReobserveQueryCallback;
     },
@@ -371,19 +380,17 @@ export class QueryManager<TStore> {
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,
 
-        onDirty: mutation.reobserveQuery && ((watch, diff) => {
-          if (watch.watcher instanceof QueryInfo) {
-            const oq = watch.watcher.observableQuery;
-            if (oq) {
-              reobserveResults.push(mutation.reobserveQuery!(oq, diff));
-              // Prevent the normal cache broadcast of this result.
-              return false;
-            }
-          }
-        }),
-      });
-
-      return Promise.all(reobserveResults).then(() => void 0);
+        // If the mutation has some writes associated with it then we need to
+        // apply those writes to the store by running this reducer again with a
+        // write action.
+        const { update } = mutation;
+        if (update) {
+          update(c, mutation.result, {
+            context: mutation.context,
+            variables: mutation.variables,
+          });
+        }
+      }, /* non-optimistic transaction: */ null);
     }
 
     return Promise.resolve();
@@ -396,10 +403,11 @@ export class QueryManager<TStore> {
       document: DocumentNode;
       variables?: OperationVariables;
       errorPolicy: ErrorPolicy;
+      context: Record<string, any>;
       updateQueries: MutationOptions<TData>["updateQueries"],
       update?: (
         cache: ApolloCache<TStore>,
-        result: FetchResult<TData>,
+        result: MutationResult<TData>
       ) => void;
     },
   ) {

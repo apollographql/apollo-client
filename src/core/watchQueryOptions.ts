@@ -294,4 +294,5 @@ export interface MutationOptions<
 export type MutationUpdaterFn<T = { [key: string]: any }> = (
   cache: ApolloCache<T>,
   mutationResult: FetchResult<T>,
+  options?: any,
 ) => void;

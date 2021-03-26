@@ -428,6 +428,92 @@ describe('useMutation Hook', () => {
     });
   });
 
+  describe('Update function', () => {
+
+    itAsync('should be called with the provided variables', async (resolve, reject) => {
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const Component = () => {
+        const [createTodo] = useMutation(
+          CREATE_TODO_MUTATION,
+          {
+            update(_, __, options) {
+              expect(options.variables).toEqual(variables);
+              resolve();
+            }
+          }
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, []);
+
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+    });
+
+    itAsync('should be called with the provided context', async (resolve, reject) => {
+      const context = { id: 3 };
+
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const Component = () => {
+        const [createTodo] = useMutation(
+          CREATE_TODO_MUTATION,
+          {
+            context,
+            update(_, __, options) {
+              expect(options.context).toEqual(context);
+              resolve();
+            }
+          }
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, []);
+
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+    });
+  });
+
   describe('Optimistic response', () => {
     itAsync('should support optimistic response handling', async (resolve, reject) => {
       const optimisticResponse = {

@@ -512,6 +512,48 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
     });
+
+    describe('If context is not provided', () => {
+      itAsync('should be undefined', async (resolve, reject) => {
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables
+            },
+            result: { data: CREATE_TODO_RESULT }
+          }
+        ];
+
+        const Component = () => {
+          const [createTodo] = useMutation(
+            CREATE_TODO_MUTATION,
+            {
+              update(_, __, options) {
+                expect(options.context).toBeUndefined();
+                resolve();
+              }
+            }
+          );
+
+          useEffect(() => {
+            createTodo({ variables });
+          }, []);
+
+          return null;
+        };
+
+        render(
+          <MockedProvider mocks={mocks}>
+            <Component />
+          </MockedProvider>
+        );
+      });
+    });
   });
 
   describe('Optimistic response', () => {

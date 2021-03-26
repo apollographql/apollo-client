@@ -1502,6 +1502,112 @@ describe('Cache', () => {
       abInfo.cancel();
       bInfo.cancel();
     });
+
+    it('does not pass previously invalidated queries to onDirty', () => {
+      const cache = new InMemoryCache;
+
+      const aQuery = gql`query { a }`;
+      const abQuery = gql`query { a b }`;
+      const bQuery = gql`query { b }`;
+
+      cache.writeQuery({
+        query: abQuery,
+        data: {
+          a: "ay",
+          b: "bee",
+        },
+      });
+
+      const aInfo = watch(cache, aQuery);
+      const abInfo = watch(cache, abQuery);
+      const bInfo = watch(cache, bQuery);
+
+      cache.writeQuery({
+        query: bQuery,
+        // Writing this data with broadcast:false queues this update for the
+        // next broadcast, whenever it happens. If that next broadcast is the
+        // one triggered by cache.batch, the bQuery broadcast could be
+        // accidentally intercepted by onDirty, even though the transaction
+        // does not touch the Query.b field. To solve this problem, the batch
+        // method calls cache.broadcastWatches() before the transaction, when
+        // options.onDirty is provided.
+        broadcast: false,
+        data: {
+          b: "beeeee",
+        },
+      });
+
+      const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
+
+      cache.batch({
+        transaction(cache) {
+          cache.modify({
+            fields: {
+              a(value) {
+                expect(value).toBe("ay");
+                return "ayyyy";
+              },
+            },
+          });
+        },
+        optimistic: true,
+        onDirty(watch, diff) {
+          dirtied.set(watch, diff);
+        },
+      });
+
+      expect(dirtied.size).toBe(2);
+      expect(dirtied.has(aInfo.watch)).toBe(true);
+      expect(dirtied.has(abInfo.watch)).toBe(true);
+      expect(dirtied.has(bInfo.watch)).toBe(false);
+
+      expect(aInfo.diffs).toEqual([
+        // This diff resulted from the cache.modify call in the cache.batch
+        // transaction function.
+        {
+          complete: true,
+          result: {
+            a: "ayyyy",
+          },
+        }
+      ]);
+
+      expect(abInfo.diffs).toEqual([
+        // This diff came from the broadcast of cache.writeQuery data before
+        // the cache.batch transaction, before any onDirty calls.
+        {
+          complete: true,
+          result: {
+            a: "ay",
+            b: "beeeee",
+          },
+        },
+        // This diff resulted from the cache.modify call in the cache.batch
+        // transaction function.
+        {
+          complete: true,
+          result: {
+            a: "ayyyy",
+            b: "beeeee",
+          },
+        },
+      ]);
+
+      expect(bInfo.diffs).toEqual([
+        // This diff came from the broadcast of cache.writeQuery data before
+        // the cache.batch transaction, before any onDirty calls.
+        {
+          complete: true,
+          result: {
+            b: "beeeee",
+          },
+        },
+      ]);
+
+      aInfo.cancel();
+      abInfo.cancel();
+      bInfo.cancel();
+    });
   });
 
   describe('performTransaction', () => {

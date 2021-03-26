@@ -4,9 +4,9 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { Observable } from '../../utilities';
 import { FetchResult } from '../../link/core';
-import { ApolloClient, WatchQueryOptions } from '../../core';
 import { ApolloError } from '../../errors';
 import {
+  ApolloClient,
   ApolloQueryResult,
   ErrorPolicy,
   FetchMoreOptions,
@@ -17,7 +17,9 @@ import {
   ObservableQuery,
   OperationVariables,
   PureQueryOptions,
+  ReobserveQueryCallback,
   WatchQueryFetchPolicy,
+  WatchQueryOptions,
 } from '../../core';
 
 /* Common types */
@@ -148,6 +150,7 @@ export interface BaseMutationOptions<
   awaitRefetchQueries?: boolean;
   errorPolicy?: ErrorPolicy;
   update?: MutationUpdaterFn<TData>;
+  reobserveQuery?: ReobserveQueryCallback;
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
   context?: Context;
@@ -166,6 +169,7 @@ export interface MutationFunctionOptions<
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
   update?: MutationUpdaterFn<TData>;
+  reobserveQuery?: ReobserveQueryCallback;
   context?: Context;
   fetchPolicy?: WatchQueryFetchPolicy;
 }

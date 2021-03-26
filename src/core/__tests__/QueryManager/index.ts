@@ -5168,6 +5168,217 @@ describe('QueryManager', () => {
     });
   });
 
+  describe('reobserveQuery', () => {
+    const mutation = gql`
+      mutation changeAuthorName {
+        changeAuthorName(newName: "Jack Smith") {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const mutationData = {
+      changeAuthorName: {
+        firstName: 'Jack',
+        lastName: 'Smith',
+      },
+    };
+
+    const query = gql`
+      query getAuthors($id: ID!) {
+        author(id: $id) {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+
+    const secondReqData = {
+      author: {
+        firstName: 'Jane',
+        lastName: 'Johnson',
+      },
+    };
+
+    const variables = { id: '1234' };
+
+    function makeQueryManager(reject: (reason?: any) => void) {
+      return mockQueryManager(
+        reject,
+        {
+          request: { query, variables },
+          result: { data },
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+    }
+
+    itAsync('should refetch the right query when a result is successfully returned', (resolve, reject) => {
+      const queryManager = makeQueryManager(reject);
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      let finishedRefetch = false;
+
+      return observableToPromise(
+        { observable },
+        result => {
+          expect(stripSymbols(result.data)).toEqual(data);
+
+          return queryManager.mutate({
+            mutation,
+
+            update(cache) {
+              cache.modify({
+                fields: {
+                  author(_, { INVALIDATE }) {
+                    return INVALIDATE;
+                  },
+                },
+              });
+            },
+
+            reobserveQuery(obsQuery) {
+              expect(obsQuery.options.query).toBe(query);
+              return obsQuery.refetch().then(async () => {
+                // Wait a bit to make sure the mutation really awaited the
+                // refetching of the query.
+                await new Promise(resolve => setTimeout(resolve, 100));
+                finishedRefetch = true;
+              });
+            },
+          }).then(() => {
+            expect(finishedRefetch).toBe(true);
+          });
+        },
+
+        result => {
+          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+            secondReqData,
+          );
+          expect(stripSymbols(result.data)).toEqual(secondReqData);
+          expect(finishedRefetch).toBe(true);
+        },
+      ).then(resolve, reject);
+    });
+
+    itAsync('should refetch using the original query context (if any)', (resolve, reject) => {
+      const queryManager = makeQueryManager(reject);
+
+      const headers = {
+        someHeader: 'some value',
+      };
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        context: {
+          headers,
+        },
+        notifyOnNetworkStatusChange: false,
+      });
+
+      return observableToPromise(
+        { observable },
+        result => {
+          expect(result.data).toEqual(data);
+
+          queryManager.mutate({
+            mutation,
+
+            update(cache) {
+              cache.modify({
+                fields: {
+                  author(_, { INVALIDATE }) {
+                    return INVALIDATE;
+                  },
+                },
+              });
+            },
+
+            reobserveQuery(obsQuery) {
+              expect(obsQuery.options.query).toBe(query);
+              return obsQuery.refetch();
+            },
+          });
+        },
+
+        result => {
+          expect(result.data).toEqual(secondReqData);
+          const context = (queryManager.link as MockApolloLink).operation!.getContext();
+          expect(context.headers).not.toBeUndefined();
+          expect(context.headers.someHeader).toEqual(headers.someHeader);
+        },
+      ).then(resolve, reject);
+    });
+
+    itAsync('should refetch using the specified context, if provided', (resolve, reject) => {
+      const queryManager = makeQueryManager(reject);
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      const headers = {
+        someHeader: 'some value',
+      };
+
+      return observableToPromise(
+        { observable },
+        result => {
+          expect(result.data).toEqual(data);
+
+          queryManager.mutate({
+            mutation,
+
+            update(cache) {
+              cache.evict({ fieldName: "author" });
+            },
+
+            reobserveQuery(obsQuery) {
+              expect(obsQuery.options.query).toBe(query);
+              return obsQuery.reobserve({
+                fetchPolicy: "network-only",
+                context: {
+                  ...obsQuery.options.context,
+                  headers,
+                },
+              });
+            },
+          });
+        },
+
+        result => {
+          expect(result.data).toEqual(secondReqData);
+          const context = (queryManager.link as MockApolloLink).operation!.getContext();
+          expect(context.headers).not.toBeUndefined();
+          expect(context.headers.someHeader).toEqual(headers.someHeader);
+        },
+      ).then(resolve, reject);
+    });
+  });
+
   describe('awaitRefetchQueries', () => {
     const awaitRefetchTest =
     ({ awaitRefetchQueries, testQueryError = false }: MutationBaseOptions & { testQueryError?: boolean }) =>

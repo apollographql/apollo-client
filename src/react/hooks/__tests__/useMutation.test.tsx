@@ -3,11 +3,13 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
-import { ApolloClient } from '../../../core';
+import { ApolloClient, ApolloQueryResult, Cache, NetworkStatus, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, mockSingleLink } from '../../../testing';
 import { ApolloProvider } from '../../context';
+import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { act } from 'react-dom/test-utils';
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -501,6 +503,173 @@ describe('useMutation Hook', () => {
       return wait(() => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
+    });
+  });
+
+  describe('refetching queries', () => {
+    itAsync('can pass reobserveQuery to useMutation', (resolve, reject) => {
+      interface TData {
+        todoCount: number;
+      }
+      const countQuery: TypedDocumentNode<TData> = gql`
+        query Count { todoCount @client }
+      `;
+
+      const optimisticResponse = {
+        __typename: 'Mutation',
+        createTodo: {
+          id: 1,
+          description: 'TEMPORARY',
+          priority: 'High',
+          __typename: 'Todo'
+        }
+      };
+
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                todoCount(count = 0) {
+                  return count;
+                },
+              },
+            },
+          },
+        }),
+
+        link: mockSingleLink({
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: { data: CREATE_TODO_RESULT },
+        }).setOnError(reject),
+      });
+
+      // The goal of this test is to make sure reobserveQuery gets called as
+      // part of the createTodo mutation, so we use this reobservePromise to
+      // await the calling of reobserveQuery.
+      interface ReobserveResults {
+        obsQuery: ObservableQuery;
+        diff: Cache.DiffResult<TData>;
+        result: ApolloQueryResult<TData>;
+      }
+      let reobserveResolve: (results: ReobserveResults) => any;
+      const reobservePromise = new Promise<ReobserveResults>(resolve => {
+        reobserveResolve = resolve;
+      });
+      let finishedReobserving = false;
+
+      let renderCount = 0;
+      function Component() {
+        const count = useQuery(countQuery);
+
+        const [createTodo, { loading, data }] =
+          useMutation(CREATE_TODO_MUTATION, {
+            optimisticResponse,
+
+            update(cache, mutationResult) {
+              const result = cache.readQuery({
+                query: countQuery,
+              });
+
+              cache.writeQuery({
+                query: countQuery,
+                data: {
+                  todoCount: (result ? result.todoCount : 0) + 1,
+                },
+              });
+            },
+          });
+
+        switch (++renderCount) {
+          case 1:
+            expect(count.loading).toBe(false);
+            expect(count.data).toEqual({ todoCount: 0 });
+
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+
+            act(() => {
+              createTodo({
+                variables,
+                reobserveQuery(obsQuery, diff) {
+                  return obsQuery.reobserve().then(result => {
+                    finishedReobserving = true;
+                    reobserveResolve({ obsQuery, diff, result });
+                  });
+                },
+              });
+            });
+
+            break;
+          case 2:
+            expect(count.loading).toBe(false);
+            expect(count.data).toEqual({ todoCount: 0 });
+
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+
+            expect(finishedReobserving).toBe(false);
+            break;
+          case 3:
+            expect(count.loading).toBe(false);
+            expect(count.data).toEqual({ todoCount: 1 });
+
+            expect(loading).toBe(true);
+            expect(data).toBeUndefined();
+
+            expect(finishedReobserving).toBe(false);
+            break;
+          case 4:
+            expect(count.loading).toBe(false);
+            expect(count.data).toEqual({ todoCount: 1 });
+
+            expect(loading).toBe(false);
+            expect(data).toEqual(CREATE_TODO_RESULT);
+
+            expect(finishedReobserving).toBe(true);
+            break;
+          default:
+            reject("too many renders");
+        }
+
+        return null;
+      }
+
+      render(
+        <ApolloProvider client={client}>
+          <Component />
+        </ApolloProvider>
+      );
+
+      return reobservePromise.then(results => {
+        expect(finishedReobserving).toBe(true);
+
+        expect(results.diff).toEqual({
+          complete: true,
+          result: {
+            todoCount: 1,
+          },
+        });
+
+        expect(results.result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            todoCount: 1,
+          },
+        });
+
+        return wait(() => {
+          expect(renderCount).toBe(4);
+        }).then(resolve, reject);
+      });
     });
   });
 });

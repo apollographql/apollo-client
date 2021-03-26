@@ -590,6 +590,66 @@ describe('useMutation Hook', () => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
+
+    itAsync('should be called with the provided context', async (resolve, reject) => {
+      const optimisticResponse = {
+        __typename: 'Mutation',
+        createTodo: {
+          id: 1,
+          description: 'TEMPORARY',
+          priority: 'High',
+          __typename: 'Todo'
+        }
+      };
+
+      const context = { id: 3 };
+
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const contextFn = jest.fn();
+
+      const Component = () => {
+        const [createTodo] = useMutation(
+          CREATE_TODO_MUTATION,
+          {
+            optimisticResponse,
+            context,
+            update(_, __, options) {
+              contextFn(options.context);
+            }
+          }
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, []);
+
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(contextFn).toHaveBeenCalledTimes(2);
+        expect(contextFn).toHaveBeenCalledWith(context);
+      }).then(resolve, reject);
+    });
   });
 
   describe('refetching queries', () => {

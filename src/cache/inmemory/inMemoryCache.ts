@@ -322,6 +322,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     };
 
+    if (options.onDirty) {
+      // If an options.onDirty callback is provided, we want to call it with
+      // only the Cache.WatchOptions objects affected by options.transaction,
+      // so we broadcast watches first, to clear any pending watches waiting
+      // to be broadcast.
+      const { onDirty, ...rest } = options;
+      // Note that rest is just like options, except with onDirty removed.
+      this.broadcastWatches(rest);
+    }
+
     if (typeof optimistic === 'string') {
       // Note that there can be multiple layers with the same optimistic ID.
       // When removeOptimistic(id) is called for that id, all matching layers

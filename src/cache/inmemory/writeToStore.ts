@@ -66,7 +66,7 @@ export class StoreWriter {
 
     variables = {
       ...getDefaultValues(operationDefinition),
-      ...variables,
+      ...variables!,
     };
 
     const ref = this.processSelectionSet({
@@ -160,7 +160,7 @@ export class StoreWriter {
     // If typename was not passed in, infer it. Note that typename is
     // always passed in for tricky-to-infer cases such as "Query" for
     // ROOT_QUERY.
-    const typename =
+    const typename: string | undefined =
       (dataId && policies.rootTypenamesById[dataId]) ||
       getTypenameFromResult(result, selectionSet, context.fragmentMap) ||
       (dataId && context.store.get(dataId, "__typename") as string);

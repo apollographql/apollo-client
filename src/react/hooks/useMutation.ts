@@ -4,21 +4,25 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { MutationHookOptions, MutationTuple } from '../types/types';
 import { MutationData } from '../data';
-import { OperationVariables } from '../../core';
+import { Context, OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
 
-export function useMutation<TData = any, TVariables = OperationVariables>(
+export function useMutation<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+  TContext extends Context = Context
+>(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<TData, TVariables>
-): MutationTuple<TData, TVariables> {
+  options?: MutationHookOptions<TData, TVariables, TContext>
+): MutationTuple<TData, TVariables, TContext> {
   const context = useContext(getApolloContext());
   const [result, setResult] = useState({ called: false, loading: false });
   const updatedOptions = options ? { ...options, mutation } : { mutation };
 
-  const mutationDataRef = useRef<MutationData<TData, TVariables>>();
+  const mutationDataRef = useRef<MutationData<TData, TVariables, TContext>>();
   function getMutationDataRef() {
     if (!mutationDataRef.current) {
-      mutationDataRef.current = new MutationData<TData, TVariables>({
+      mutationDataRef.current = new MutationData<TData, TVariables, TContext>({
         options: updatedOptions,
         context,
         result,

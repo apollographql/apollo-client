@@ -488,7 +488,7 @@ describe('useMutation Hook', () => {
       ];
 
       const Component = () => {
-        const [createTodo] = useMutation(
+        const [createTodo] = useMutation<Todo, { description: string }, { id: number }>(
           CREATE_TODO_MUTATION,
           {
             context,

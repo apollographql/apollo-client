@@ -29,11 +29,12 @@ import {
   LocalState,
   FragmentMatcher,
 } from './LocalState';
+import { Context } from 'vm';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
   query?: Partial<QueryOptions<any, any>>;
-  mutate?: Partial<MutationOptions<any, any>>;
+  mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
 let hasSuggestedDevtools = false;
@@ -57,13 +58,13 @@ export type ApolloClientOptions<TCacheShape> = {
   version?: string;
 };
 
-type OptionsUnion<TData, TVariables> =
+type OptionsUnion<TData, TVariables, TContext> =
   | WatchQueryOptions<TVariables, TData>
   | QueryOptions<TVariables, TData>
-  | MutationOptions<TData, TVariables>;
+  | MutationOptions<TData, TVariables, TContext>;
 
 export function mergeOptions<
-  TOptions extends OptionsUnion<any, any>
+  TOptions extends OptionsUnion<any, any, any>
 >(
   defaults: Partial<TOptions>,
   options: TOptions,
@@ -348,13 +349,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T = any, TVariables = OperationVariables>(
-    options: MutationOptions<T, TVariables>,
+  public mutate<T = any, TVariables = OperationVariables, TContext = Context>(
+    options: MutationOptions<T, TVariables, TContext>,
   ): Promise<FetchResult<T>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }
-    return this.queryManager.mutate<T>(options);
+    return this.queryManager.mutate<T, TVariables, TContext>(options);
   }
 
   /**

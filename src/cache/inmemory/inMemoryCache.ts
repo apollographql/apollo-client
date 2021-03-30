@@ -381,12 +381,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       });
       // Silently re-dirty any watches that were already dirty before the
       // transaction was performed, and were not broadcast just now.
-      alreadyDirty.forEach(
-        // Equivalent to passing watch => this.maybeBroadcastWatch.dirty(watch),
-        // but without creating any new function objects.
-        this.maybeBroadcastWatch.dirty,
-        this.maybeBroadcastWatch,
-      );
+      if (alreadyDirty.size) {
+        alreadyDirty.forEach(watch => this.maybeBroadcastWatch.dirty(watch));
+      }
     } else {
       // If alreadyDirty is empty or we don't have an options.onDirty function,
       // we don't need to go to the trouble of wrapping options.onDirty.

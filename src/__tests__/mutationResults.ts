@@ -494,6 +494,101 @@ describe('mutation results', () => {
     ).then(resolve, reject);
   });
 
+  describe('InMemoryCache type/field policies', () => {
+    const startTime = Date.now();
+    const link = new ApolloLink(operation => new Observable(observer => {
+      observer.next({
+        data: {
+          __typename: "Mutation",
+          doSomething: {
+            __typename: "MutationPayload",
+            time: startTime,
+          },
+        },
+      });
+      observer.complete();
+    }));
+
+    const mutation = gql`
+      mutation DoSomething {
+        doSomething {
+          time
+        }
+      }
+    `;
+
+    it('mutation update function receives result from cache', () => {
+      let timeReadCount = 0;
+      let timeMergeCount = 0;
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            MutationPayload: {
+              fields: {
+                time: {
+                  read(ms: number = Date.now()) {
+                    ++timeReadCount;
+                    return new Date(ms);
+                  },
+                  merge(existing, incoming: number) {
+                    ++timeMergeCount;
+                    expect(existing).toBeUndefined();
+                    return incoming;
+                  },
+                },
+              },
+            },
+          },
+        }),
+      });
+
+      return client.mutate({
+        mutation,
+        update(cache, {
+          data: {
+            doSomething: {
+              __typename,
+              time,
+            },
+          },
+        }) {
+          expect(__typename).toBe("MutationPayload");
+          expect(time).toBeInstanceOf(Date);
+          expect(time.getTime()).toBe(startTime);
+          expect(timeReadCount).toBe(1);
+          expect(timeMergeCount).toBe(1);
+          expect(cache.extract()).toEqual({
+            ROOT_MUTATION: {
+              __typename: "Mutation",
+              doSomething: {
+                __typename: "MutationPayload",
+                time: startTime,
+              },
+            },
+          });
+        },
+      }).then(({
+        data: {
+          doSomething: {
+            __typename,
+            time,
+          },
+        },
+      }) => {
+        expect(__typename).toBe("MutationPayload");
+        expect(time).toBeInstanceOf(Date);
+        expect(time.getTime()).toBe(startTime);
+        expect(timeReadCount).toBe(1);
+        expect(timeMergeCount).toBe(1);
+        // The ROOT_MUTATION object exists only briefly, for the duration of the
+        // mutation update, and is removed after the mutation write is finished.
+        expect(client.cache.extract()).toEqual({});
+      });
+    });
+  });
+
   describe('updateQueries', () => {
     const mutation = gql`
       mutation createTodo {

@@ -5381,7 +5381,7 @@ describe('QueryManager', () => {
 
   describe('awaitRefetchQueries', () => {
     const awaitRefetchTest =
-    ({ awaitRefetchQueries, testQueryError = false }: MutationBaseOptions & { testQueryError?: boolean }) =>
+    ({ awaitRefetchQueries, testQueryError = false }: MutationBaseOptions<any, any, any> & { testQueryError?: boolean }) =>
     new Promise((resolve, reject) => {
       const query = gql`
         query getAuthors($id: ID!) {
@@ -5455,7 +5455,7 @@ describe('QueryManager', () => {
         { observable },
         result => {
           expect(stripSymbols(result.data)).toEqual(queryData);
-          const mutateOptions: MutationOptions = {
+          const mutateOptions: MutationOptions<any, any, any> = {
             mutation,
             refetchQueries: ['getAuthors'],
           };

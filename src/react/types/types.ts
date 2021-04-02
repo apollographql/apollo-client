@@ -6,8 +6,9 @@ import { Observable } from '../../utilities';
 import { FetchResult } from '../../link/core';
 import { ApolloError } from '../../errors';
 import {
-  Context,
+  ApolloClient,
   ApolloQueryResult,
+  Context,
   ErrorPolicy,
   FetchMoreOptions,
   FetchMoreQueryOptions,
@@ -149,6 +150,7 @@ export interface BaseMutationOptions<
   awaitRefetchQueries?: boolean;
   errorPolicy?: ErrorPolicy;
   update?: MutationUpdaterFunction<TData, TVariables, TContext>;
+  reobserveQuery?: ReobserveQueryCallback;
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
   context?: TContext;
@@ -168,6 +170,7 @@ export interface MutationFunctionOptions<
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
   update?: MutationUpdaterFunction<TData, TVariables, TContext>;
+  reobserveQuery?: ReobserveQueryCallback;
   context?: TContext;
   fetchPolicy?: WatchQueryFetchPolicy;
 }

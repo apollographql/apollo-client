@@ -36,6 +36,7 @@ import {
   ApolloQueryResult,
   OperationVariables,
   MutationUpdaterFunction,
+  ReobserveQueryCallback,
 } from './types';
 import { LocalState } from './LocalState';
 
@@ -216,6 +217,10 @@ export class QueryManager<TStore> {
           storeResult = result;
 
           if (fetchPolicy !== 'no-cache') {
+            // Returning the result of markMutationResult here makes the
+            // mutation await any Promise that markMutationResult returns,
+            // since we are returning this Promise from the asyncMap mapping
+            // function.
             try {
               self.markMutationResult<T, TVariables, TContext>({
                 mutationId,
@@ -299,8 +304,9 @@ export class QueryManager<TStore> {
       variables?: TVariables;
       errorPolicy: ErrorPolicy;
       context?: TContext;
-      updateQueries: UpdateQueries<TData>,
-      update?: MutationUpdaterFunction<TData, TVariables, TContext>,
+      updateQueries: UpdateQueries<TData>;
+      update?: MutationUpdaterFunction<TData, TVariables, TContext>;
+      reobserveQuery?: ReobserveQueryCallback;
     },
     cache = this.cache,
   ): Promise<void> {
@@ -361,24 +367,29 @@ export class QueryManager<TStore> {
           // a write action.
           const { update } = mutation;
           if (update) {
-            update(c, mutation.result);
+            update(c as any, mutation.result, {
+              context: mutation.context,
+              variables: mutation.variables,
+            });
           }
         },
 
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,
 
-        // If the mutation has some writes associated with it then we need to
-        // apply those writes to the store by running this reducer again with a
-        // write action.
-        const { update } = mutation;
-        if (update) {
-          update(c as any, mutation.result, {
-            context: mutation.context,
-            variables: mutation.variables,
-          });
-        }
-      }, /* non-optimistic transaction: */ null);
+        onDirty: mutation.reobserveQuery && ((watch, diff) => {
+          if (watch.watcher instanceof QueryInfo) {
+            const oq = watch.watcher.observableQuery;
+            if (oq) {
+              reobserveResults.push(mutation.reobserveQuery!(oq, diff));
+              // Prevent the normal cache broadcast of this result.
+              return false;
+            }
+          }
+        }),
+      });
+
+      return Promise.all(reobserveResults).then(() => void 0);
     }
 
     return Promise.resolve();

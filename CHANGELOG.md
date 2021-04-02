@@ -5,6 +5,11 @@
 - Adjust TypeScript types to allow `keyFields` and `keyArgs` functions to return `false`. <br/>
   [@CarsonF](https://github.com/CarsonF) and [@benjamn](https://github.com/benjamn) in [#7900](https://github.com/apollographql/apollo-client/pull/7900)
 
+### Bug fixes
+
+- Prevent `RenderPromises` memory leak by calling `renderPromises.clear()` after `getMarkupFromTree` finishes. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7943](https://github.com/apollographql/apollo-client/pull/7943)
+
 ## Apollo Client 3.3.13
 
 ### Improvements

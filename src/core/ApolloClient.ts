@@ -14,6 +14,7 @@ import {
   ApolloQueryResult,
   OperationVariables,
   Resolvers,
+  Context,
 } from './types';
 
 import {
@@ -29,7 +30,6 @@ import {
   LocalState,
   FragmentMatcher,
 } from './LocalState';
-import { Context } from 'vm';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;

@@ -471,9 +471,9 @@ describe('useSubscription Hook', () => {
           break;
         case 1:
           expect(loading).toBe(false);
-          expect(data).toEqual(result.result.data);
+          expect(data).toBe(null);
           break;
-        case 10:
+        case 2:
           throw new Error("Infinite rendering detected");
         default:
           console.log(renderCount, {loading, data, error});
@@ -517,19 +517,31 @@ describe('useSubscription Hook', () => {
 
     let renderCount = 0;
     const Component = () => {
-      const { loading: loading1, data: data1, error: error1 } = useSubscription(subscription);
-      const { loading: loading2, data: data2, error: error2 } = useSubscription(subscription);
+      const result1 = useSubscription(subscription);
+      const result2 = useSubscription(subscription);
+      const result3 = useSubscription(subscription);
       switch (renderCount) {
         case 0:
-          expect(loading1).toBe(true);
-          expect(data1).toBeUndefined();
-          expect(error1).toBeUndefined();
-          expect(loading2).toBe(true);
-          expect(data2).toBeUndefined();
-          expect(error2).toBeUndefined();
+          expect(result1).toEqual({loading: true, data: undefined, error: undefined});
+          expect(result2).toEqual({loading: true, data: undefined, error: undefined});
+          expect(result3).toEqual({loading: true, data: undefined, error: undefined});
           break;
-        // TODO: fill in the remaining expectations for this test
-        case 10:
+        case 1:
+          expect(result1).toEqual({loading: false, data: null, error: undefined});
+          expect(result2).toEqual({loading: true, data: undefined, error: undefined});
+          expect(result3).toEqual({loading: true, data: undefined, error: undefined});
+          break;
+        case 2:
+          expect(result1).toEqual({loading: false, data: null, error: undefined});
+          expect(result2).toEqual({loading: false, data: null, error: undefined});
+          expect(result3).toEqual({loading: true, data: undefined, error: undefined});
+          break;
+        case 3:
+          expect(result1).toEqual({loading: false, data: null, error: undefined});
+          expect(result2).toEqual({loading: false, data: null, error: undefined});
+          expect(result3).toEqual({loading: false, data: null, error: undefined});
+          break;
+        case 4:
           throw new Error("Infinite rendering detected");
         default:
       }
@@ -547,7 +559,7 @@ describe('useSubscription Hook', () => {
     );
 
     return wait(() => {
-      expect(renderCount).toBe(1);
+      expect(renderCount).toBe(4);
     });
   });
 });

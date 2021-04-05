@@ -1,4 +1,4 @@
-## Apollo Client 3.3.14 (not yet released)
+## Apollo Client 3.3.14
 
 ### Improvements
 

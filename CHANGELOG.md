@@ -13,7 +13,9 @@
 - Cancel pending notify timeout when stopping a `QueryInfo` object. <br/>
   [@hollandThomas](https://github.com/hollandThomas) in [#7935](https://github.com/apollographql/apollo-client/pull/7935)
 
-- Fix infinite rendering bug related to `useSubscription`. [#7917](https://github.com/apollographql/apollo-client/pull/7917)
+- Fix infinite rendering bug related to `useSubscription`. <br/>
+  [@brainkim](https://github.com/brainkim) in [#7917](https://github.com/apollographql/apollo-client/pull/7917)
+
 ## Apollo Client 3.3.13
 
 ### Improvements

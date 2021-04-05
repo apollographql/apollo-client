@@ -73,8 +73,7 @@ In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest put
 import React from 'react';
 import { render } from 'react-dom';
 
-import { ApolloProvider } from '@apollo/client';
-import { useApolloClient } from "@apollo/react-hooks";
+import { ApolloProvider, useApolloClient } from '@apollo/client/react';
 
 function App() {
   const client = useApolloClient();

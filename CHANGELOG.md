@@ -10,6 +10,9 @@
 - Prevent `RenderPromises` memory leak by calling `renderPromises.clear()` after `getMarkupFromTree` finishes. <br/>
   [@benjamn](https://github.com/benjamn) in [#7943](https://github.com/apollographql/apollo-client/pull/7943)
 
+- Cancel pending notify timeout when stopping a `QueryInfo` object. <br/>
+  [@hollandThomas](https://github.com/hollandThomas) in [#7935](https://github.com/apollographql/apollo-client/pull/7935)
+
 ## Apollo Client 3.3.13
 
 ### Improvements

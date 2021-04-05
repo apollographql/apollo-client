@@ -8,6 +8,7 @@ import {
   PureQueryOptions,
   OperationVariables,
   MutationUpdaterFunction,
+  ReobserveQueryCallback,
 } from './types';
 
 /**
@@ -265,9 +266,9 @@ export interface MutationBaseOptions<
 }
 
 export interface MutationOptions<
-  T,
-  TVariables extends OperationVariables,
-  TContext extends Context,
+  T = any,
+  TVariables extends OperationVariables = OperationVariables,
+  TContext extends Context = Context,
 > extends MutationBaseOptions<T, TVariables, TContext> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`

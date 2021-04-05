@@ -12,9 +12,9 @@ import { ObservableQuery } from './ObservableQuery';
 
 import {
   ApolloQueryResult,
+  Context,
   OperationVariables,
   Resolvers,
-  Context,
 } from './types';
 
 import {

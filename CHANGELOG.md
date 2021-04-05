@@ -59,12 +59,23 @@ TBD
 ### Documentation
 TBD
 
-## Apollo Client 3.3.14 (not yet released)
+## Apollo Client 3.3.14
 
 ### Improvements
 
 - Adjust TypeScript types to allow `keyFields` and `keyArgs` functions to return `false`. <br/>
   [@CarsonF](https://github.com/CarsonF) and [@benjamn](https://github.com/benjamn) in [#7900](https://github.com/apollographql/apollo-client/pull/7900)
+
+### Bug fixes
+
+- Prevent `RenderPromises` memory leak by calling `renderPromises.clear()` after `getMarkupFromTree` finishes. <br/>
+  [@benjamn](https://github.com/benjamn) in [#7943](https://github.com/apollographql/apollo-client/pull/7943)
+
+- Cancel pending notify timeout when stopping a `QueryInfo` object. <br/>
+  [@hollandThomas](https://github.com/hollandThomas) in [#7935](https://github.com/apollographql/apollo-client/pull/7935)
+
+- Fix infinite rendering bug related to `useSubscription`. <br/>
+  [@brainkim](https://github.com/brainkim) in [#7917](https://github.com/apollographql/apollo-client/pull/7917)
 
 ## Apollo Client 3.3.13
 

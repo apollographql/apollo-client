@@ -172,7 +172,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
 | Param            | Type                                                  | Description                                                                                                                     |
 | ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Execute function | options?: QueryLazyOptions&lt;TVariables&gt;) => void | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. |
+| Execute function | (options?: QueryLazyOptions&lt;TVariables&gt;) => void | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. |
 
 **Result object**
 

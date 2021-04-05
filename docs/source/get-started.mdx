@@ -72,21 +72,24 @@ In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest put
 ```jsx
 import React from 'react';
 import { render } from 'react-dom';
+import { ApolloProvider } from '@apollo/client/react';
 
-import { ApolloProvider, useApolloClient } from '@apollo/client/react';
+const client = new ApolloClient({ uri, cache });
 
 function App() {
-  const client = useApolloClient();
   return (
-    <ApolloProvider client={client}>
-      <div>
-        <h2>My first Apollo app 🚀</h2>
-      </div>
-    </ApolloProvider>
+    <div>
+      <h2>My first Apollo app 🚀</h2>
+    </div>
   );
 }
 
-render(<App />, document.getElementById('root'));
+render(
+  <ApolloProvider client={client}>
+    <App />
+  </ApolloProvider>,
+  document.getElementById('root'),
+);
 ```
 
 ## Request data

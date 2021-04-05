@@ -322,14 +322,26 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     };
 
-    if (options.onDirty) {
+    const { onDirty } = options;
+    const alreadyDirty = new Set<Cache.WatchOptions>();
+
+    if (onDirty && !this.txCount) {
       // If an options.onDirty callback is provided, we want to call it with
       // only the Cache.WatchOptions objects affected by options.transaction,
-      // so we broadcast watches first, to clear any pending watches waiting
-      // to be broadcast.
-      const { onDirty, ...rest } = options;
-      // Note that rest is just like options, except with onDirty removed.
-      this.broadcastWatches(rest);
+      // but there might be dirty watchers already waiting to be broadcast that
+      // have nothing to do with the transaction. To prevent including those
+      // watchers in the post-transaction broadcast, we perform this initial
+      // broadcast to collect the dirty watchers, so we can re-dirty them later,
+      // after the post-transaction broadcast, allowing them to receive their
+      // pending broadcasts the next time broadcastWatches is called, just as
+      // they would if we never called cache.batch.
+      this.broadcastWatches({
+        ...options,
+        onDirty(watch) {
+          alreadyDirty.add(watch);
+          return false;
+        },
+      });
     }
 
     if (typeof optimistic === 'string') {
@@ -350,8 +362,33 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       perform();
     }
 
-    // This broadcast does nothing if this.txCount > 0.
-    this.broadcastWatches(options);
+    // Note: if this.txCount > 0, then alreadyDirty.size === 0, so this code
+    // takes the else branch and calls this.broadcastWatches(options), which
+    // does nothing when this.txCount > 0.
+    if (onDirty && alreadyDirty.size) {
+      this.broadcastWatches({
+        ...options,
+        onDirty(watch, diff) {
+          const onDirtyResult = onDirty.call(this, watch, diff);
+          if (onDirtyResult !== false) {
+            // Since onDirty did not return false, this diff is about to be
+            // broadcast to watch.callback, so we don't need to re-dirty it
+            // with the other alreadyDirty watches below.
+            alreadyDirty.delete(watch);
+          }
+          return onDirtyResult;
+        }
+      });
+      // Silently re-dirty any watches that were already dirty before the
+      // transaction was performed, and were not broadcast just now.
+      if (alreadyDirty.size) {
+        alreadyDirty.forEach(watch => this.maybeBroadcastWatch.dirty(watch));
+      }
+    } else {
+      // If alreadyDirty is empty or we don't have an options.onDirty function,
+      // we don't need to go to the trouble of wrapping options.onDirty.
+      this.broadcastWatches(options);
+    }
   }
 
   public performTransaction(
@@ -390,7 +427,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     c: Cache.WatchOptions,
     options?: BroadcastOptions,
   ) => {
-    return this.broadcastWatch.call(this, c, options);
+    return this.broadcastWatch(c, options);
   }, {
     makeCacheKey: (c: Cache.WatchOptions) => {
       // Return a cache key (thus enabling result caching) only if we're

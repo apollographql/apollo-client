@@ -1537,6 +1537,11 @@ describe('Cache', () => {
         },
       });
 
+      // No diffs reported so far, thanks to broadcast: false.
+      expect(aInfo.diffs).toEqual([]);
+      expect(abInfo.diffs).toEqual([]);
+      expect(bInfo.diffs).toEqual([]);
+
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
       cache.batch({
@@ -1573,15 +1578,6 @@ describe('Cache', () => {
       ]);
 
       expect(abInfo.diffs).toEqual([
-        // This diff came from the broadcast of cache.writeQuery data before
-        // the cache.batch transaction, before any onDirty calls.
-        {
-          complete: true,
-          result: {
-            a: "ay",
-            b: "beeeee",
-          },
-        },
         // This diff resulted from the cache.modify call in the cache.batch
         // transaction function.
         {
@@ -1593,9 +1589,40 @@ describe('Cache', () => {
         },
       ]);
 
+      // No diffs so far for bQuery.
+      expect(bInfo.diffs).toEqual([]);
+
+      // Trigger broadcast of watchers that were dirty before the cache.batch
+      // transaction.
+      cache["broadcastWatches"]();
+
+      expect(aInfo.diffs).toEqual([
+        // Same array of diffs as before.
+        {
+          complete: true,
+          result: {
+            a: "ayyyy",
+          },
+        }
+      ]);
+
+      expect(abInfo.diffs).toEqual([
+        // The abQuery watcher was dirty before the cache.batch transaction,
+        // but it got picked up in the post-transaction broadcast, which is why
+        // we do not see another (duplicate) diff here.
+        {
+          complete: true,
+          result: {
+            a: "ayyyy",
+            b: "beeeee",
+          },
+        },
+      ]);
+
       expect(bInfo.diffs).toEqual([
-        // This diff came from the broadcast of cache.writeQuery data before
-        // the cache.batch transaction, before any onDirty calls.
+        // This diff is caused by the data written by cache.writeQuery before
+        // the cache.batch transaction, but gets broadcast only after the batch
+        // transaction, by cache["broadcastWatches"]() above.
         {
           complete: true,
           result: {

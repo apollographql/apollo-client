@@ -342,6 +342,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     const {
       transaction,
       optimistic = true,
+      removeOptimistic,
     } = options;
 
     const perform = (layer?: EntityStore) => {
@@ -398,6 +399,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // Otherwise, leave this.data and this.optimisticData unchanged and
       // run the transaction with broadcast batching.
       perform();
+    }
+
+    if (typeof removeOptimistic === "string") {
+      this.optimisticData = this.optimisticData.removeLayer(removeOptimistic);
     }
 
     // Note: if this.txCount > 0, then alreadyDirty.size === 0, so this code

@@ -23,6 +23,8 @@ export type BatchOptions<C extends ApolloCache<any>> = {
   // the same as passing null.
   optimistic: string | boolean;
 
+  removeOptimistic?: string;
+
   // If you want to find out which watched queries were invalidated during
   // this batch operation, pass this optional callback function. Returning
   // false from the callback will prevent broadcasting this result.

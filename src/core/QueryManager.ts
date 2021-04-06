@@ -232,6 +232,7 @@ export class QueryManager<TStore> {
                 result,
                 document: mutation,
                 variables,
+                removeOptimistic: !!optimisticResponse,
                 errorPolicy,
                 context,
                 updateQueries,
@@ -311,6 +312,7 @@ export class QueryManager<TStore> {
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      removeOptimistic: boolean;
       onQueryUpdated?: OnQueryUpdated;
     },
     cache = this.cache,
@@ -382,6 +384,10 @@ export class QueryManager<TStore> {
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,
 
+        removeOptimistic: mutation.removeOptimistic
+          ? mutation.mutationId
+          : void 0,
+
         onWatchUpdated: mutation.onQueryUpdated && ((watch, diff) => {
           if (watch.watcher instanceof QueryInfo) {
             const oq = watch.watcher.observableQuery;
@@ -420,6 +426,7 @@ export class QueryManager<TStore> {
       try {
         this.markMutationResult<TData, TVariables, TContext, TCache>({
           ...mutation,
+          removeOptimistic: false,
           result: { data },
         }, cache);
       } catch (error) {

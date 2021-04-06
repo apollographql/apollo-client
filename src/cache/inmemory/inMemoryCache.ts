@@ -39,8 +39,8 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 
 type BroadcastOptions = Pick<
   BatchOptions<InMemoryCache>,
-  | "onDirty"
   | "optimistic"
+  | "onWatchUpdated"
 >
 
 const defaultConfig: InMemoryCacheConfig = {
@@ -359,22 +359,23 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     };
 
-    const { onDirty } = options;
+    const { onWatchUpdated } = options;
     const alreadyDirty = new Set<Cache.WatchOptions>();
 
-    if (onDirty && !this.txCount) {
-      // If an options.onDirty callback is provided, we want to call it with
-      // only the Cache.WatchOptions objects affected by options.transaction,
-      // but there might be dirty watchers already waiting to be broadcast that
-      // have nothing to do with the transaction. To prevent including those
-      // watchers in the post-transaction broadcast, we perform this initial
-      // broadcast to collect the dirty watchers, so we can re-dirty them later,
-      // after the post-transaction broadcast, allowing them to receive their
-      // pending broadcasts the next time broadcastWatches is called, just as
-      // they would if we never called cache.batch.
+    if (onWatchUpdated && !this.txCount) {
+      // If an options.onWatchUpdated callback is provided, we want to
+      // call it with only the Cache.WatchOptions objects affected by
+      // options.transaction, but there might be dirty watchers already
+      // waiting to be broadcast that have nothing to do with the
+      // transaction. To prevent including those watchers in the
+      // post-transaction broadcast, we perform this initial broadcast to
+      // collect the dirty watchers, so we can re-dirty them later, after
+      // the post-transaction broadcast, allowing them to receive their
+      // pending broadcasts the next time broadcastWatches is called, just
+      // as they would if we never called cache.batch.
       this.broadcastWatches({
         ...options,
-        onDirty(watch) {
+        onWatchUpdated(watch) {
           alreadyDirty.add(watch);
           return false;
         },
@@ -402,18 +403,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Note: if this.txCount > 0, then alreadyDirty.size === 0, so this code
     // takes the else branch and calls this.broadcastWatches(options), which
     // does nothing when this.txCount > 0.
-    if (onDirty && alreadyDirty.size) {
+    if (onWatchUpdated && alreadyDirty.size) {
       this.broadcastWatches({
         ...options,
-        onDirty(watch, diff) {
-          const onDirtyResult = onDirty.call(this, watch, diff);
-          if (onDirtyResult !== false) {
-            // Since onDirty did not return false, this diff is about to be
-            // broadcast to watch.callback, so we don't need to re-dirty it
-            // with the other alreadyDirty watches below.
+        onWatchUpdated(watch, diff) {
+          const result = onWatchUpdated.call(this, watch, diff);
+          if (result !== false) {
+            // Since onWatchUpdated did not return false, this diff is
+            // about to be broadcast to watch.callback, so we don't need
+            // to re-dirty it with the other alreadyDirty watches below.
             alreadyDirty.delete(watch);
           }
-          return onDirtyResult;
+          return result;
         }
       });
       // Silently re-dirty any watches that were already dirty before the
@@ -422,8 +423,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         alreadyDirty.forEach(watch => this.maybeBroadcastWatch.dirty(watch));
       }
     } else {
-      // If alreadyDirty is empty or we don't have an options.onDirty function,
-      // we don't need to go to the trouble of wrapping options.onDirty.
+      // If alreadyDirty is empty or we don't have an onWatchUpdated
+      // function, we don't need to go to the trouble of wrapping
+      // options.onWatchUpdated.
       this.broadcastWatches(options);
     }
   }
@@ -482,10 +484,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         diff.fromOptimisticTransaction = true;
       }
 
-      if (options.onDirty &&
-          options.onDirty.call(this, c, diff) === false) {
-        // Returning false from the onDirty callback will prevent calling
-        // c.callback(diff) for this watcher.
+      if (options.onWatchUpdated &&
+          options.onWatchUpdated.call(this, c, diff) === false) {
+        // Returning false from the onWatchUpdated callback will prevent
+        // calling c.callback(diff) for this watcher.
         return;
       }
     }

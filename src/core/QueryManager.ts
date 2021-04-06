@@ -382,7 +382,7 @@ export class QueryManager<TStore> {
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,
 
-        onDirty: mutation.reobserveQuery && ((watch, diff) => {
+        onWatchUpdated: mutation.reobserveQuery && ((watch, diff) => {
           if (watch.watcher instanceof QueryInfo) {
             const oq = watch.watcher.observableQuery;
             if (oq) {

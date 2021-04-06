@@ -1953,7 +1953,7 @@ describe('ObservableQuery', () => {
         });
 
         let invalidateCount = 0;
-        let onDirtyCount = 0;
+        let onWatchUpdatedCount = 0;
 
         cache.batch({
           optimistic: true,
@@ -1969,7 +1969,7 @@ describe('ObservableQuery', () => {
             });
           },
           // Verify that the cache.modify operation did trigger a cache broadcast.
-          onDirty(watch, diff) {
+          onWatchUpdated(watch, diff) {
             expect(watch.watcher).toBe(queryInfo);
             expect(diff).toEqual({
               complete: true,
@@ -1979,7 +1979,7 @@ describe('ObservableQuery', () => {
                 },
               },
             });
-            ++onDirtyCount;
+            ++onWatchUpdatedCount;
           },
         });
 
@@ -1987,7 +1987,7 @@ describe('ObservableQuery', () => {
           expect(setDiffSpy).toHaveBeenCalledTimes(1);
           expect(notifySpy).not.toHaveBeenCalled();
           expect(invalidateCount).toBe(1);
-          expect(onDirtyCount).toBe(1);
+          expect(onWatchUpdatedCount).toBe(1);
           queryManager.stop();
         }).then(resolve, reject);
       } else {

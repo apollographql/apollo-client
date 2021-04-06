@@ -26,7 +26,7 @@ export type BatchOptions<C extends ApolloCache<any>> = {
   // If you want to find out which watched queries were invalidated during
   // this batch operation, pass this optional callback function. Returning
   // false from the callback will prevent broadcasting this result.
-  onDirty?: (
+  onWatchUpdated?: (
     this: C,
     watch: Cache.WatchOptions,
     diff: Cache.DiffResult<any>,

@@ -15,7 +15,7 @@ export type DefaultContext = Record<string, any>;
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
-export type ReobserveQueryCallback = (
+export type OnQueryUpdated = (
   observableQuery: ObservableQuery,
   diff: Cache.DiffResult<any>,
 ) => void | Promise<any>;

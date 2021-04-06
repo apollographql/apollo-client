@@ -5227,7 +5227,7 @@ describe('QueryManager', () => {
     });
   });
 
-  describe('reobserveQuery', () => {
+  describe('onQueryUpdated', () => {
     const mutation = gql`
       mutation changeAuthorName {
         changeAuthorName(newName: "Jack Smith") {
@@ -5316,7 +5316,7 @@ describe('QueryManager', () => {
               });
             },
 
-            reobserveQuery(obsQuery) {
+            onQueryUpdated(obsQuery) {
               expect(obsQuery.options.query).toBe(query);
               return obsQuery.refetch().then(async () => {
                 // Wait a bit to make sure the mutation really awaited the
@@ -5374,7 +5374,7 @@ describe('QueryManager', () => {
               });
             },
 
-            reobserveQuery(obsQuery) {
+            onQueryUpdated(obsQuery) {
               expect(obsQuery.options.query).toBe(query);
               return obsQuery.refetch();
             },
@@ -5415,7 +5415,7 @@ describe('QueryManager', () => {
               cache.evict({ fieldName: "author" });
             },
 
-            reobserveQuery(obsQuery) {
+            onQueryUpdated(obsQuery) {
               expect(obsQuery.options.query).toBe(query);
               return obsQuery.reobserve({
                 fetchPolicy: "network-only",

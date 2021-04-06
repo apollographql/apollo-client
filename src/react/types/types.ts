@@ -19,7 +19,7 @@ import {
   ObservableQuery,
   OperationVariables,
   PureQueryOptions,
-  ReobserveQueryCallback,
+  OnQueryUpdated,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from '../../core';
@@ -154,7 +154,7 @@ export interface BaseMutationOptions<
   awaitRefetchQueries?: boolean;
   errorPolicy?: ErrorPolicy;
   update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-  reobserveQuery?: ReobserveQueryCallback;
+  onQueryUpdated?: OnQueryUpdated;
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
   context?: TContext;
@@ -175,7 +175,7 @@ export interface MutationFunctionOptions<
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
   update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-  reobserveQuery?: ReobserveQueryCallback;
+  onQueryUpdated?: OnQueryUpdated;
   context?: TContext;
   fetchPolicy?: WatchQueryFetchPolicy;
 }

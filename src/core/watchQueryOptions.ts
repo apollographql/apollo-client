@@ -8,7 +8,7 @@ import {
   PureQueryOptions,
   OperationVariables,
   MutationUpdaterFunction,
-  ReobserveQueryCallback,
+  OnQueryUpdated,
 } from './types';
 import { ApolloCache } from '../cache';
 
@@ -260,7 +260,7 @@ export interface MutationBaseOptions<
    * A function that will be called for each ObservableQuery affected by
    * this mutation, after the mutation has completed.
    */
-  reobserveQuery?: ReobserveQueryCallback;
+  onQueryUpdated?: OnQueryUpdated;
 
   /**
    * Specifies the {@link ErrorPolicy} to be used for this operation

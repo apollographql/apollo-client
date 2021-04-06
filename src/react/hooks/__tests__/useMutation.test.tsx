@@ -747,7 +747,7 @@ describe('useMutation Hook', () => {
   });
 
   describe('refetching queries', () => {
-    itAsync('can pass reobserveQuery to useMutation', (resolve, reject) => {
+    itAsync('can pass onQueryUpdated to useMutation', (resolve, reject) => {
       interface TData {
         todoCount: number;
       }
@@ -791,17 +791,17 @@ describe('useMutation Hook', () => {
         }).setOnError(reject),
       });
 
-      // The goal of this test is to make sure reobserveQuery gets called as
+      // The goal of this test is to make sure onQueryUpdated gets called as
       // part of the createTodo mutation, so we use this reobservePromise to
-      // await the calling of reobserveQuery.
-      interface ReobserveResults {
+      // await the calling of onQueryUpdated.
+      interface OnQueryUpdatedResults {
         obsQuery: ObservableQuery;
         diff: Cache.DiffResult<TData>;
         result: ApolloQueryResult<TData>;
       }
-      let reobserveResolve: (results: ReobserveResults) => any;
-      const reobservePromise = new Promise<ReobserveResults>(resolve => {
-        reobserveResolve = resolve;
+      let resolveOnUpdate: (results: OnQueryUpdatedResults) => any;
+      const onUpdatePromise = new Promise<OnQueryUpdatedResults>(resolve => {
+        resolveOnUpdate = resolve;
       });
       let finishedReobserving = false;
 
@@ -838,10 +838,10 @@ describe('useMutation Hook', () => {
             act(() => {
               createTodo({
                 variables,
-                reobserveQuery(obsQuery, diff) {
+                onQueryUpdated(obsQuery, diff) {
                   return obsQuery.reobserve().then(result => {
                     finishedReobserving = true;
-                    reobserveResolve({ obsQuery, diff, result });
+                    resolveOnUpdate({ obsQuery, diff, result });
                   });
                 },
               });
@@ -888,7 +888,7 @@ describe('useMutation Hook', () => {
         </ApolloProvider>
       );
 
-      return reobservePromise.then(results => {
+      return onUpdatePromise.then(results => {
         expect(finishedReobserving).toBe(true);
 
         expect(results.diff).toEqual({

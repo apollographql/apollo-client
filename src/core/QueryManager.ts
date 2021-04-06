@@ -36,7 +36,7 @@ import {
   ApolloQueryResult,
   OperationVariables,
   MutationUpdaterFunction,
-  ReobserveQueryCallback,
+  OnQueryUpdated,
 } from './types';
 import { LocalState } from './LocalState';
 
@@ -139,7 +139,7 @@ export class QueryManager<TStore> {
     refetchQueries = [],
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
-    reobserveQuery,
+    onQueryUpdated,
     errorPolicy = 'none',
     fetchPolicy,
     context,
@@ -236,7 +236,7 @@ export class QueryManager<TStore> {
                 context,
                 updateQueries,
                 update: updateWithProxyFn,
-                reobserveQuery,
+                onQueryUpdated,
               });
             } catch (e) {
               // Likewise, throwing an error from the asyncMap mapping function
@@ -311,7 +311,7 @@ export class QueryManager<TStore> {
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-      reobserveQuery?: ReobserveQueryCallback;
+      onQueryUpdated?: OnQueryUpdated;
     },
     cache = this.cache,
   ): Promise<void> {
@@ -382,11 +382,11 @@ export class QueryManager<TStore> {
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,
 
-        onWatchUpdated: mutation.reobserveQuery && ((watch, diff) => {
+        onWatchUpdated: mutation.onQueryUpdated && ((watch, diff) => {
           if (watch.watcher instanceof QueryInfo) {
             const oq = watch.watcher.observableQuery;
             if (oq) {
-              reobserveResults.push(mutation.reobserveQuery!(oq, diff));
+              reobserveResults.push(mutation.onQueryUpdated!(oq, diff));
               // Prevent the normal cache broadcast of this result.
               return false;
             }

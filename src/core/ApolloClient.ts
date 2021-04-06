@@ -23,7 +23,7 @@ import {
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-  RefetchQueryDescription,
+  RefetchQueriesOptions,
 } from './watchQueryOptions';
 
 import {
@@ -536,9 +536,30 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
   public refetchQueries(
-    queries: RefetchQueryDescription,
-  ): Promise<ApolloQueryResult<any>[]> {
-    return Promise.all(this.queryManager.refetchQueries(queries));
+    options: Pick<
+      RefetchQueriesOptions<ApolloCache<TCacheShape>>,
+      | "updateCache"
+      | "include"
+      | "optimistic"
+      | "onQueryUpdated"
+    >,
+  ): Promise<{
+    queries: ObservableQuery<any>[];
+    results: Map<ObservableQuery<any>, ApolloQueryResult<any>>;
+   }> {
+    const results = this.queryManager.refetchQueries(options);
+    const queries: ObservableQuery<any>[] = [];
+    const values: any[] = [];
+
+    results.forEach((value, obsQuery) => {
+      queries.push(obsQuery);
+      values.push(value);
+    });
+
+    return Promise.all(values).then(values => {
+      values.forEach((value, i) => results.set(queries[i], value));
+      return { queries, results };
+    });
   }
 
   /**

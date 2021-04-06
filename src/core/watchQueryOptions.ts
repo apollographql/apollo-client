@@ -191,6 +191,14 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
+export type RefetchQueriesOptions<Cache extends ApolloCache<any>> = {
+  updateCache?: (cache: Cache) => void;
+  include?: RefetchQueryDescription;
+  optimistic?: boolean;
+  removeOptimistic?: string;
+  onQueryUpdated?: OnQueryUpdated;
+};
+
 export interface MutationBaseOptions<
   TData = any,
   TVariables = OperationVariables,

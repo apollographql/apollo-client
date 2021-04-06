@@ -4382,7 +4382,9 @@ describe('QueryManager', () => {
         observable.subscribe({ next: () => null });
         observable2.subscribe({ next: () => null });
 
-        return Promise.all(queryManager.refetchQueries(['GetAuthor', 'GetAuthor2'])).then(() => {
+        return Promise.all(queryManager.refetchQueries({
+          include: ['GetAuthor', 'GetAuthor2'],
+        })).then(() => {
           const result = getCurrentQueryResult(observable);
           expect(result.partial).toBe(false);
           expect(stripSymbols(result.data)).toEqual(dataChanged);

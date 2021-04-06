@@ -29,6 +29,7 @@ import {
   WatchQueryFetchPolicy,
   ErrorPolicy,
   RefetchQueryDescription,
+  RefetchQueriesOptions,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -194,8 +195,6 @@ export class QueryManager<TStore> {
     const self = this;
 
     return new Promise((resolve, reject) => {
-      let storeResult: FetchResult<TData> | null;
-
       return asyncMap(
         self.getObservableFromLink(
           mutation,
@@ -219,37 +218,75 @@ export class QueryManager<TStore> {
             mutationStoreValue.error = null;
           }
 
-          storeResult = result;
+          const storeResult: typeof result = { ...result };
 
-          if (fetchPolicy !== 'no-cache') {
-            try {
-              // Returning the result of markMutationResult here makes the
-              // mutation await any Promise that markMutationResult returns,
-              // since we are returning this Promise from the asyncMap mapping
-              // function.
-              return self.markMutationResult<TData, TVariables, TContext, TCache>({
-                mutationId,
-                result,
-                document: mutation,
-                variables,
-                removeOptimistic: !!optimisticResponse,
-                errorPolicy,
-                context,
-                updateQueries,
-                update: updateWithProxyFn,
-                onQueryUpdated,
-              });
-            } catch (e) {
-              // Likewise, throwing an error from the asyncMap mapping function
-              // will result in calling the subscribed error handler function.
-              throw new ApolloError({
-                networkError: e,
-              });
-            }
+          if (typeof refetchQueries === "function") {
+            refetchQueries = refetchQueries(storeResult);
           }
+
+          if (errorPolicy === 'ignore' &&
+              graphQLResultHasError(storeResult)) {
+            delete storeResult.errors;
+          }
+
+          if (fetchPolicy === 'no-cache') {
+            const refetchResults = this.refetchQueries({
+              include: refetchQueries,
+              onQueryUpdated,
+            });
+
+            return Promise.all(
+              awaitRefetchQueries ? refetchResults.values() : [],
+            ).then(() => storeResult);
+          }
+
+          const markPromise = self.markMutationResult<
+            TData,
+            TVariables,
+            TContext,
+            TCache
+          >({
+            mutationId,
+            result,
+            document: mutation,
+            variables,
+            errorPolicy,
+            context,
+            update: updateWithProxyFn,
+            updateQueries,
+            refetchQueries,
+            removeOptimistic: optimisticResponse ? mutationId : void 0,
+            onQueryUpdated,
+          });
+
+          if (awaitRefetchQueries || onQueryUpdated) {
+            // Returning the result of markMutationResult here makes the
+            // mutation await the Promise that markMutationResult returns,
+            // since we are returning markPromise from the map function
+            // we passed to asyncMap above.
+            return markPromise.then(() => storeResult);
+          }
+
+          return storeResult;
         },
 
       ).subscribe({
+        next(storeResult) {
+          if (optimisticResponse) {
+            self.cache.removeOptimistic(mutationId);
+          }
+
+          self.broadcastQueries();
+
+          // At the moment, a mutation can have only one result, so we can
+          // immediately resolve upon receiving the first result. In the future,
+          // mutations containing @defer or @stream directives might receive
+          // multiple FetchResult payloads from the ApolloLink chain, so we will
+          // probably need to collect those results in this next method and call
+          // resolve only later, in an observer.complete function.
+          resolve(storeResult);
+        },
+
         error(err: Error) {
           if (mutationStoreValue) {
             mutationStoreValue.loading = false;
@@ -268,41 +305,16 @@ export class QueryManager<TStore> {
             }),
           );
         },
-
-        complete() {
-          if (optimisticResponse) {
-            self.cache.removeOptimistic(mutationId);
-          }
-
-          self.broadcastQueries();
-
-          // allow for conditional refetches
-          // XXX do we want to make this the only API one day?
-          if (typeof refetchQueries === 'function') {
-            refetchQueries = refetchQueries(storeResult!);
-          }
-
-          const refetchQueryPromises = self.refetchQueries(refetchQueries);
-
-          Promise.all(
-            awaitRefetchQueries ? refetchQueryPromises : [],
-          ).then(() => {
-            if (
-              errorPolicy === 'ignore' &&
-              storeResult &&
-              graphQLResultHasError(storeResult)
-            ) {
-              delete storeResult.errors;
-            }
-
-            resolve(storeResult!);
-          }, reject);
-        },
       });
     });
   }
 
-  public markMutationResult<TData, TVariables, TContext, TCache extends ApolloCache<any>>(
+  public markMutationResult<
+    TData,
+    TVariables,
+    TContext,
+    TCache extends ApolloCache<any>
+  >(
     mutation: {
       mutationId: string;
       result: FetchResult<TData>;
@@ -312,7 +324,8 @@ export class QueryManager<TStore> {
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-      removeOptimistic: boolean;
+      refetchQueries?: RefetchQueryDescription;
+      removeOptimistic?: string;
       onQueryUpdated?: OnQueryUpdated;
     },
     cache = this.cache,
@@ -364,43 +377,37 @@ export class QueryManager<TStore> {
         });
       }
 
-      const reobserveResults: any[] = [];
+      const results = this.refetchQueries({
+        updateCache(cache: TCache) {
+          cacheWrites.forEach(write => cache.write(write));
 
-      cache.batch({
-        transaction(c) {
-          cacheWrites.forEach(write => c.write(write));
           // If the mutation has some writes associated with it then we need to
           // apply those writes to the store by running this reducer again with
           // a write action.
           const { update } = mutation;
           if (update) {
-            update(c as any, mutation.result, {
+            update(cache, mutation.result, {
               context: mutation.context,
               variables: mutation.variables,
             });
           }
         },
 
+        include: mutation.refetchQueries,
+
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,
 
-        removeOptimistic: mutation.removeOptimistic
-          ? mutation.mutationId
-          : void 0,
+        // Remove the corresponding optimistic layer at the same time as we
+        // write the final non-optimistic result.
+        removeOptimistic: mutation.removeOptimistic,
 
-        onWatchUpdated: mutation.onQueryUpdated && ((watch, diff) => {
-          if (watch.watcher instanceof QueryInfo) {
-            const oq = watch.watcher.observableQuery;
-            if (oq) {
-              reobserveResults.push(mutation.onQueryUpdated!(oq, diff));
-              // Prevent the normal cache broadcast of this result.
-              return false;
-            }
-          }
-        }),
+        // Let the caller of client.mutate optionally determine the refetching
+        // behavior for watched queries after the mutation.update function runs.
+        onQueryUpdated: mutation.onQueryUpdated,
       });
 
-      return Promise.all(reobserveResults).then(() => void 0);
+      return Promise.all(results.values()).then(() => void 0);
     }
 
     return Promise.resolve();
@@ -426,7 +433,6 @@ export class QueryManager<TStore> {
       try {
         this.markMutationResult<TData, TVariables, TContext, TCache>({
           ...mutation,
-          removeOptimistic: false,
           result: { data },
         }, cache);
       } catch (error) {
@@ -1023,38 +1029,138 @@ export class QueryManager<TStore> {
     return concast;
   }
 
-  public refetchQueries(
-    queries: RefetchQueryDescription,
-  ): Promise<ApolloQueryResult<any>>[] {
-    const refetchQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+  public refetchQueries({
+    updateCache,
+    include,
+    optimistic = false,
+    removeOptimistic = optimistic ? "TODO" : void 0,
+    onQueryUpdated,
+  }: RefetchQueriesOptions<ApolloCache<TStore>>) {
+    const includedQueriesById = new Map<string, RefetchQueryDescription[number]>();
+    const results = new Map<ObservableQuery<any>, any>();
 
-    if (isNonEmptyArray(queries)) {
-      queries.forEach(refetchQuery => {
-        if (typeof refetchQuery === 'string') {
-          this.queries.forEach(({ observableQuery }) => {
-            if (observableQuery &&
-                observableQuery.hasObservers() &&
-                observableQuery.queryName === refetchQuery) {
-              refetchQueryPromises.push(observableQuery.refetch());
-            }
-          });
-        } else {
-          const queryOptions: QueryOptions = {
-            query: refetchQuery.query,
-            variables: refetchQuery.variables,
-            fetchPolicy: 'network-only',
-          };
+    if (include) {
+      const queryIdsByQueryName: Record<string, string> = Object.create(null);
+      this.queries.forEach((queryInfo, queryId) => {
+        const oq = queryInfo.observableQuery;
+        const queryName = oq && oq.queryName;
+        if (queryName) {
+          queryIdsByQueryName[queryName] = queryId;
+        }
+      });
 
-          if (refetchQuery.context) {
-            queryOptions.context = refetchQuery.context;
+      include.forEach(queryNameOrOptions => {
+        if (typeof queryNameOrOptions === "string") {
+          const queryId = queryIdsByQueryName[queryNameOrOptions];
+          if (queryId) {
+            includedQueriesById.set(queryId, queryNameOrOptions);
+          } else {
+            invariant.warn(`Unknown query name ${
+              JSON.stringify(queryNameOrOptions)
+            } passed to refetchQueries method in options.include array`);
           }
-
-          refetchQueryPromises.push(this.query(queryOptions));
+        } else {
+          includedQueriesById.set(
+            // We will be issuing a fresh network request for this query, so we
+            // pre-allocate a new query ID here.
+            this.generateQueryId(),
+            queryNameOrOptions,
+          );
         }
       });
     }
 
-    return refetchQueryPromises;
+    if (updateCache) {
+      this.cache.batch({
+        transaction: updateCache,
+
+        // Since you can perform any combination of cache reads and/or writes in
+        // the cache.batch transaction function, its optimistic option can be
+        // either a boolean or a string, representing three distinct modes of
+        // operation:
+        //
+        // * false: read/write only the root layer
+        // * true: read/write the topmost layer
+        // * string: read/write a fresh optimistic layer with that ID string
+        //
+        // When typeof optimistic === "string", a new optimistic layer will be
+        // temporarily created within cache.batch with that string as its ID. If
+        // we then pass that same string as the removeOptimistic option, we can
+        // make cache.batch immediately remove the optimistic layer after
+        // running the transaction, triggering only one broadcast.
+        //
+        // However, the refetchQueries method accepts only true or false for its
+        // optimistic option (not string). We interpret true to mean a temporary
+        // optimistic layer should be created, to allow efficiently rolling back
+        // the effect of the updateCache function, which involves passing a
+        // string instead of true as the optimistic option to cache.batch, when
+        // refetchQueries receives optimistic: true.
+        //
+        // In other words, we are deliberately not supporting the use case of
+        // writing to an *existing* optimistic layer (using the refetchQueries
+        // updateCache function), since that would potentially interfere with
+        // other optimistic updates in progress. Instead, you can read/write
+        // only the root layer by passing optimistic: false to refetchQueries,
+        // or you can read/write a brand new optimistic layer that will be
+        // automatically removed by passing optimistic: true.
+        optimistic: optimistic && removeOptimistic || false,
+
+        // The removeOptimistic option can also be provided by itself, even if
+        // optimistic === false, to remove some previously-added optimistic
+        // layer safely and efficiently, like we do in markMutationResult.
+        //
+        // If an explicit removeOptimistic string is provided with optimistic:
+        // true, the removeOptimistic string will determine the ID of the
+        // temporary optimistic layer, in case that ever matters.
+        removeOptimistic,
+
+        onWatchUpdated: onQueryUpdated && function (watch, diff) {
+          if (watch.watcher instanceof QueryInfo) {
+            const oq = watch.watcher.observableQuery;
+            if (oq) {
+              includedQueriesById.delete(oq.queryId);
+              results.set(oq, onQueryUpdated!(oq, diff));
+              // Prevent the normal cache broadcast of this result.
+              return false;
+            }
+          }
+        },
+      });
+    }
+
+    if (includedQueriesById.size) {
+      includedQueriesById.forEach((queryNameOrOptions, queryId) => {
+        const queryInfo = this.getQuery(queryId);
+        let oq = queryInfo.observableQuery;
+        if (oq) {
+          const result = onQueryUpdated
+            ? onQueryUpdated(oq, queryInfo.getDiff())
+            : oq.refetch();
+
+          results.set(oq, result);
+
+        } else if (typeof queryNameOrOptions === "object") {
+          const fetchPromise = this.fetchQuery(queryId, {
+            query: queryNameOrOptions.query,
+            variables: queryNameOrOptions.variables,
+            fetchPolicy: "network-only",
+            context: queryNameOrOptions.context,
+          });
+
+          oq = queryInfo.observableQuery;
+          if (oq) {
+            results.set(oq, fetchPromise);
+          } else {
+            throw new InvariantError(JSON.stringify(queryInfo, null, 2));
+          }
+
+          const stop = () => this.stopQuery(queryId);
+          fetchPromise.then(stop, stop);
+        }
+      });
+    }
+
+    return results;
   }
 
   private fetchQueryByPolicy<TData, TVars>(

@@ -2436,7 +2436,9 @@ describe('client', () => {
 
     // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'refetchQueries');
-    await client.refetchQueries(['Author1']);
+    await client.refetchQueries({
+      include: ['Author1'],
+    });
     expect(spy).toHaveBeenCalled();
   });
 

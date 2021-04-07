@@ -1056,10 +1056,11 @@ export class QueryManager<TStore> {
   ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
+    // Do not increment the request ID until we know that we're grabbing
+    // results from link.
     queryInfo.init({
       document: query,
       variables,
-      lastRequestId: this.generateRequestId(),
       networkStatus,
     });
 
@@ -1109,13 +1110,18 @@ export class QueryManager<TStore> {
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 
-    const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
+    const resultsFromLink = () => {
+      // Once we're here, we should increment the request ID,
+      // but not if reading results from cache.
+      queryInfo.lastRequestId = this.generateRequestId();
+
+      return this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
         variables,
         context,
         fetchPolicy,
         errorPolicy,
       });
+    };
 
     const shouldNotify =
       notifyOnNetworkStatusChange &&

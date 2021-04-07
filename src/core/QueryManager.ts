@@ -855,7 +855,7 @@ export class QueryManager<TStore> {
       | "fetchPolicy"
       | "errorPolicy">,
   ): Observable<ApolloQueryResult<TData>> {
-    const { lastRequestId } = queryInfo;
+    const requestId = queryInfo.lastRequestId = this.generateRequestId();
 
     return asyncMap(
       this.getObservableFromLink(
@@ -867,7 +867,9 @@ export class QueryManager<TStore> {
       result => {
         const hasErrors = isNonEmptyArray(result.errors);
 
-        if (lastRequestId >= queryInfo.lastRequestId) {
+        // If we interrupted this request by calling getResultsFromLink again
+        // with the same QueryInfo object, we ignore the old results.
+        if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && options.errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
@@ -896,7 +898,8 @@ export class QueryManager<TStore> {
           ? networkError
           : new ApolloError({ networkError });
 
-        if (lastRequestId >= queryInfo.lastRequestId) {
+        // Avoid storing errors from older interrupted queries.
+        if (requestId >= queryInfo.lastRequestId) {
           queryInfo.markError(error);
         }
 
@@ -1056,8 +1059,6 @@ export class QueryManager<TStore> {
   ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
-    // Do not increment the request ID until we know that we're grabbing
-    // results from link.
     queryInfo.init({
       document: query,
       variables,
@@ -1110,18 +1111,13 @@ export class QueryManager<TStore> {
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 
-    const resultsFromLink = () => {
-      // Once we're here, we should increment the request ID,
-      // but not if reading results from cache.
-      queryInfo.lastRequestId = this.generateRequestId();
-
-      return this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
+    const resultsFromLink = () =>
+      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
         variables,
         context,
         fetchPolicy,
         errorPolicy,
       });
-    };
 
     const shouldNotify =
       notifyOnNetworkStatusChange &&

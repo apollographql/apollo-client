@@ -1,7 +1,9 @@
 ## Apollo Client 3.4.0 (not yet released)
 
 ### Bug fixes
-TBD
+
+- Increment `queryInfo.lastRequestId` only when making a network request through the `ApolloLink` chain, rather than every time `fetchQueryByPolicy` is called. <br/>
+  [@dannycochran](https://github.com/dannycochran) in [#7956](https://github.com/apollographql/apollo-client/pull/7956)
 
 ### Potentially breaking changes
 

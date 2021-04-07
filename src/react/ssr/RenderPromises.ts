@@ -26,6 +26,11 @@ export class RenderPromises {
   // beyond a single call to renderToStaticMarkup.
   private queryInfoTrie = new Map<DocumentNode, Map<string, QueryInfo>>();
 
+  public clear() {
+    this.queryPromises.clear();
+    this.queryInfoTrie.clear();
+  }
+
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables>(
     observable: ObservableQuery<any, TVariables>,

@@ -38,9 +38,9 @@ export class MockSubscriptionLink extends ApolloLink {
       const { observers } = this;
       if (!observers.length) throw new Error('subscription torn down');
       observers.forEach(observer => {
-        if (complete && observer.complete) observer.complete();
         if (result.result && observer.next) observer.next(result.result);
         if (result.error && observer.error) observer.error(result.error);
+        if (complete && observer.complete) observer.complete();
       });
     }, result.delay || 0);
   }

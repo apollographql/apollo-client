@@ -4629,16 +4629,12 @@ describe('QueryManager', () => {
   });
 
   describe('refetchQueries', () => {
-    const oldWarn = console.warn;
-    let timesWarned = 0;
-
+    let consoleWarnSpy: jest.SpyInstance;
     beforeEach(() => {
-      // clear warnings
-      timesWarned = 0;
-      // mock warn method
-      console.warn = (...args: any[]) => {
-        timesWarned++;
-      };
+      consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+    });
+    afterEach(() => {
+      consoleWarnSpy.mockRestore();
     });
 
     itAsync('should refetch the right query when a result is successfully returned', (resolve, reject) => {
@@ -4777,12 +4773,15 @@ describe('QueryManager', () => {
         },
         result => {
           expect(stripSymbols(result.data)).toEqual(secondReqData);
-          expect(timesWarned).toBe(0);
+          expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+            'Unknown query name "fakeQuery" passed to refetchQueries method ' +
+            "in options.include array"
+          );
         },
       ).then(resolve, reject);
     });
 
-    itAsync('should ignore without warning a query name that is asked to refetch with no active subscriptions', (resolve, reject) => {
+    itAsync('should ignore (with warning) a query named in refetchQueries that has no active subscriptions', (resolve, reject) => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -4836,16 +4835,18 @@ describe('QueryManager', () => {
       const observable = queryManager.watchQuery<any>({ query });
       return observableToPromise({ observable }, result => {
         expect(stripSymbols(result.data)).toEqual(data);
-      })
-        .then(() => {
-          // The subscription has been stopped already
-          return queryManager.mutate({
-            mutation,
-            refetchQueries: ['getAuthors'],
-          });
-        })
-        .then(() => expect(timesWarned).toBe(0))
-        .then(resolve, reject);
+      }).then(() => {
+        // The subscription has been stopped already
+        return queryManager.mutate({
+          mutation,
+          refetchQueries: ['getAuthors'],
+        });
+      }).then(() => {
+        expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+          'Unknown query name "getAuthors" passed to refetchQueries method ' +
+          "in options.include array"
+        );
+      }).then(resolve, reject);
     });
 
     itAsync('also works with a query document and variables', (resolve, reject) => {
@@ -5225,10 +5226,6 @@ describe('QueryManager', () => {
           expect(context.headers.someHeader).toEqual(headers.someHeader);
         },
       ).then(resolve, reject);
-    });
-
-    afterEach(() => {
-      console.warn = oldWarn;
     });
   });
 

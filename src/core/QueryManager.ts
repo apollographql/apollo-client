@@ -1141,20 +1141,21 @@ export class QueryManager<TStore> {
           results.set(oq, result);
 
         } else if (typeof queryNameOrOptions === "object") {
-          const fetchPromise = this.fetchQuery(queryId, {
+          const options: WatchQueryOptions = {
             query: queryNameOrOptions.query,
             variables: queryNameOrOptions.variables,
             fetchPolicy: "network-only",
             context: queryNameOrOptions.context,
-          });
+          };
 
-          oq = queryInfo.observableQuery;
-          if (oq) {
-            results.set(oq, fetchPromise);
-          } else {
-            throw new InvariantError(JSON.stringify(queryInfo, null, 2));
-          }
+          queryInfo.setObservableQuery(oq = new ObservableQuery({
+            queryManager: this,
+            queryInfo,
+            options,
+          }));
 
+          const fetchPromise = this.fetchQuery(queryId, options);
+          results.set(oq, fetchPromise);
           const stop = () => this.stopQuery(queryId);
           fetchPromise.then(stop, stop);
         }

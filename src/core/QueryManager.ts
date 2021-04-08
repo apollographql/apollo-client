@@ -272,10 +272,6 @@ export class QueryManager<TStore> {
 
       ).subscribe({
         next(storeResult) {
-          if (optimisticResponse) {
-            self.cache.removeOptimistic(mutationId);
-          }
-
           self.broadcastQueries();
 
           // At the moment, a mutation can have only one result, so we can
@@ -1158,6 +1154,17 @@ export class QueryManager<TStore> {
           fetchPromise.then(stop, stop);
         }
       });
+    }
+
+    if (removeOptimistic) {
+      // In case no updateCache callback was provided (so cache.batch was not
+      // called above, and thus did not already remove the optimistic layer),
+      // remove it here. Since this is a no-op when the layer has already been
+      // removed, we do it even if we called cache.batch above, since it's
+      // possible this.cache is an instance of some ApolloCache subclass other
+      // than InMemoryCache, and does not fully support the removeOptimistic
+      // option for cache.batch.
+      this.cache.removeOptimistic(removeOptimistic);
     }
 
     return results;

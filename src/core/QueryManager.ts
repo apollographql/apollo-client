@@ -230,13 +230,15 @@ export class QueryManager<TStore> {
           }
 
           if (fetchPolicy === 'no-cache') {
-            const refetchResults = this.refetchQueries({
+            const results: any[] = [];
+
+            this.refetchQueries({
               include: refetchQueries,
               onQueryUpdated,
-            });
+            }).forEach(result => results.push(result));
 
             return Promise.all(
-              awaitRefetchQueries ? refetchResults.values() : [],
+              awaitRefetchQueries ? results : [],
             ).then(() => storeResult);
           }
 
@@ -373,7 +375,9 @@ export class QueryManager<TStore> {
         });
       }
 
-      const results = this.refetchQueries({
+      const results: any[] = [];
+
+      this.refetchQueries({
         updateCache(cache: TCache) {
           cacheWrites.forEach(write => cache.write(write));
 
@@ -401,9 +405,10 @@ export class QueryManager<TStore> {
         // Let the caller of client.mutate optionally determine the refetching
         // behavior for watched queries after the mutation.update function runs.
         onQueryUpdated: mutation.onQueryUpdated,
-      });
 
-      return Promise.all(results.values()).then(() => void 0);
+      }).forEach(result => results.push(result));
+
+      return Promise.all(results).then(() => void 0);
     }
 
     return Promise.resolve();

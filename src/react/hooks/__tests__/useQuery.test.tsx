@@ -1830,9 +1830,7 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
-    // TODO The default refetchWritePolicy probably should change to "overwrite"
-    // when we release the next major version of Apollo Client (v4).
-    itAsync('should assume default refetchWritePolicy value is "merge"', (resolve, reject) => {
+    itAsync('should assume default refetchWritePolicy value is "overwrite"', (resolve, reject) => {
       const mergeParams: [any, any][] = [];
       const cache = new InMemoryCache({
         typePolicies: {
@@ -1893,7 +1891,7 @@ describe('useQuery Hook', () => {
                   loading: false,
                   networkStatus: NetworkStatus.ready,
                   data: {
-                    primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
+                    primes: [13, 17, 19, 23, 29],
                   },
                 });
               });
@@ -1914,13 +1912,13 @@ describe('useQuery Hook', () => {
             expect(loading).toBe(false);
             expect(error).toBeUndefined();
             expect(data).toEqual({
-              // Thanks to refetchWritePolicy: "merge".
-              primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29],
+              primes: [13, 17, 19, 23, 29],
             });
             expect(mergeParams).toEqual([
               [void 0, [2, 3, 5, 7, 11]],
-              // This indicates concatenation happened.
-              [[2, 3, 5, 7, 11], [13, 17, 19, 23, 29]],
+              // Without refetchWritePolicy: "overwrite", this array will be
+              // all 10 primes (2 through 29) together.
+              [void 0, [13, 17, 19, 23, 29]],
             ]);
             break;
           default:

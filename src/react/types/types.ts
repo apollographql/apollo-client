@@ -154,7 +154,11 @@ export interface BaseMutationOptions<
   awaitRefetchQueries?: boolean;
   errorPolicy?: ErrorPolicy;
   update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-  onQueryUpdated?: OnQueryUpdated;
+  // Use OnQueryUpdated<any> instead of OnQueryUpdated<TData> here because TData
+  // is the shape of the mutation result, but onQueryUpdated gets called with
+  // results from any queries affected by the mutation update function, which
+  // probably do not have the same shape as the mutation result.
+  onQueryUpdated?: OnQueryUpdated<any>;
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
   context?: TContext;
@@ -175,7 +179,11 @@ export interface MutationFunctionOptions<
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
   update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-  onQueryUpdated?: OnQueryUpdated;
+  // Use OnQueryUpdated<any> instead of OnQueryUpdated<TData> here because TData
+  // is the shape of the mutation result, but onQueryUpdated gets called with
+  // results from any queries affected by the mutation update function, which
+  // probably do not have the same shape as the mutation result.
+  onQueryUpdated?: OnQueryUpdated<any>;
   context?: TContext;
   fetchPolicy?: WatchQueryFetchPolicy;
 }

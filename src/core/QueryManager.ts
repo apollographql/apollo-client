@@ -29,7 +29,7 @@ import {
   WatchQueryFetchPolicy,
   ErrorPolicy,
   RefetchQueryDescription,
-  RefetchQueriesOptions,
+  PrivateRefetchQueriesOptions,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -132,7 +132,12 @@ export class QueryManager<TStore> {
     this.fetchCancelFns.clear();
   }
 
-  public async mutate<TData, TVariables, TContext, TCache extends ApolloCache<any>>({
+  public async mutate<
+    TData,
+    TVariables,
+    TContext,
+    TCache extends ApolloCache<any>
+  >({
     mutation,
     variables,
     optimisticResponse,
@@ -324,7 +329,7 @@ export class QueryManager<TStore> {
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       refetchQueries?: RefetchQueryDescription;
       removeOptimistic?: string;
-      onQueryUpdated?: OnQueryUpdated;
+      onQueryUpdated?: OnQueryUpdated<TData>;
     },
     cache = this.cache,
   ): Promise<void> {
@@ -1030,13 +1035,13 @@ export class QueryManager<TStore> {
     return concast;
   }
 
-  public refetchQueries({
+  public refetchQueries<TData>({
     updateCache,
     include,
     optimistic = false,
     removeOptimistic = optimistic ? "TODO" : void 0,
     onQueryUpdated,
-  }: RefetchQueriesOptions<ApolloCache<TStore>>) {
+  }: PrivateRefetchQueriesOptions<TData, ApolloCache<TStore>>) {
     const includedQueriesById = new Map<string, RefetchQueryDescription[number]>();
     const results = new Map<ObservableQuery<any>, any>();
 

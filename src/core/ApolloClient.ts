@@ -23,7 +23,7 @@ import {
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-  RefetchQueriesOptions,
+  PublicRefetchQueriesOptions,
 } from './watchQueryOptions';
 
 import {
@@ -535,31 +535,25 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
-  public refetchQueries(
-    options: Pick<
-      RefetchQueriesOptions<ApolloCache<TCacheShape>>,
-      | "updateCache"
-      | "include"
-      | "optimistic"
-      | "onQueryUpdated"
-    >,
+  public refetchQueries<TData>(
+    options: PublicRefetchQueriesOptions<TData, ApolloCache<TCacheShape>>,
   ): Promise<{
     queries: ObservableQuery<any>[];
-    results: Map<ObservableQuery<any>, ApolloQueryResult<any>>;
+    results: ApolloQueryResult<TData>[];
    }> {
-    const results = this.queryManager.refetchQueries(options);
+    const map = this.queryManager.refetchQueries(options);
     const queries: ObservableQuery<any>[] = [];
-    const values: any[] = [];
+    const results: any[] = [];
 
-    results.forEach((value, obsQuery) => {
+    map.forEach((result, obsQuery) => {
       queries.push(obsQuery);
-      values.push(value);
+      results.push(result);
     });
 
-    return Promise.all(values).then(values => {
-      values.forEach((value, i) => results.set(queries[i], value));
-      return { queries, results };
-    });
+    return Promise.all(results).then(results => ({
+      queries,
+      results,
+    }));
   }
 
   /**

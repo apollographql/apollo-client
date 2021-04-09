@@ -842,6 +842,7 @@ describe('useMutation Hook', () => {
                   return obsQuery.reobserve().then(result => {
                     finishedReobserving = true;
                     resolveOnUpdate({ obsQuery, diff, result });
+                    return result;
                   });
                 },
               });

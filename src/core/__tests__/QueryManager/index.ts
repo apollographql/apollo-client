@@ -5320,11 +5320,12 @@ describe('QueryManager', () => {
 
             onQueryUpdated(obsQuery) {
               expect(obsQuery.options.query).toBe(query);
-              return obsQuery.refetch().then(async () => {
+              return obsQuery.refetch().then(async (result) => {
                 // Wait a bit to make sure the mutation really awaited the
                 // refetching of the query.
                 await new Promise(resolve => setTimeout(resolve, 100));
                 finishedRefetch = true;
+                return result;
               });
             },
           }).then(() => {

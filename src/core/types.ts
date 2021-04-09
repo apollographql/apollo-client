@@ -15,10 +15,10 @@ export type DefaultContext = Record<string, any>;
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
-export type OnQueryUpdated = (
+export type OnQueryUpdated<TData> = (
   observableQuery: ObservableQuery,
-  diff: Cache.DiffResult<any>,
-) => void | Promise<any>;
+  diff: Cache.DiffResult<TData>,
+) => void | Promise<ApolloQueryResult<TData>>;
 
 export type OperationVariables = Record<string, any>;
 

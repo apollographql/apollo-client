@@ -191,13 +191,31 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
-export type RefetchQueriesOptions<Cache extends ApolloCache<any>> = {
-  updateCache?: (cache: Cache) => void;
-  include?: RefetchQueryDescription;
+export interface PublicRefetchQueriesOptions<
+  TData,
+  TCache extends ApolloCache<any>,
+> {
+  updateCache?: (cache: TCache) => void;
+  // Although you can pass PureQueryOptions objects in addition to strings in
+  // the refetchQueries array for a mutation, the client.refetchQueries method
+  // deliberately discourages passing PureQueryOptions, by restricting the
+  // public type of the options.include array to string[] (just query names).
+  include?: string[];
   optimistic?: boolean;
+  onQueryUpdated?: OnQueryUpdated<TData>;
+}
+
+export interface PrivateRefetchQueriesOptions<
+  TData,
+  TCache extends ApolloCache<any>,
+> extends Omit<PublicRefetchQueriesOptions<TData, TCache>, "include"> {
+  // Just like the refetchQueries array for a mutation, allowing both strings
+  // and PureQueryOptions objects.
+  include?: RefetchQueryDescription;
+  // This part of the API is a (useful) implementation detail, but need not be
+  // exposed in the public client.refetchQueries API (above).
   removeOptimistic?: string;
-  onQueryUpdated?: OnQueryUpdated;
-};
+}
 
 export interface MutationBaseOptions<
   TData = any,
@@ -268,7 +286,7 @@ export interface MutationBaseOptions<
    * A function that will be called for each ObservableQuery affected by
    * this mutation, after the mutation has completed.
    */
-  onQueryUpdated?: OnQueryUpdated;
+  onQueryUpdated?: OnQueryUpdated<TData>;
 
   /**
    * Specifies the {@link ErrorPolicy} to be used for this operation

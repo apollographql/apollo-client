@@ -175,6 +175,9 @@ describe("garbage collection", () => {
       // won't be garbage collected before this function runs, so we can
       // verify that renderPromises.clear() was called by getDataFromTree.
       assert.strictEqual(renderPromisesSet.size, 1);
+      renderPromisesSet.forEach(rp => {
+        assert.strictEqual(rp.stopped, true);
+      });
 
       if (expectedKeys.delete(key) && !expectedKeys.size) {
         resolve();

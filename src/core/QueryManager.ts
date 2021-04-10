@@ -1107,7 +1107,7 @@ export class QueryManager<TStore> {
       ( // Watched queries must opt into overwriting existing data on refetch,
         // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
         networkStatus === NetworkStatus.refetch &&
-        refetchWritePolicy === "overwrite"
+        refetchWritePolicy !== "merge"
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 

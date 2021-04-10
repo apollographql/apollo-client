@@ -5,6 +5,22 @@
 - Increment `queryInfo.lastRequestId` only when making a network request through the `ApolloLink` chain, rather than every time `fetchQueryByPolicy` is called. <br/>
   [@dannycochran](https://github.com/dannycochran) in [#7956](https://github.com/apollographql/apollo-client/pull/7956)
 
+- In Apollo Client 2.x, a `refetch` operation would always replace existing data in the cache. With the introduction of field policy `merge` functions in Apollo Client 3, existing field values could be inappropriately combined with incoming field values by a custom `merge` function that does not realize a `refetch` has happened.
+
+  To give you more control over this behavior, we have introduced an `overwrite?: boolean = false` option for `cache.writeQuery` and `cache.writeFragment`, and an option called `refetchWritePolicy?: "merge" | "overwrite"` for `client.watchQuery`, `useQuery`, and other functions that accept `WatchQueryOptions`. You can use these options to make sure any `merge` functions involved in cache writes for `refetch` operations get invoked with `undefined` as their first argument, which simulates the absence of any existing data, while still giving the `merge` function a chance to determine the internal representation of the incoming data.
+
+  The default behaviors are `overwrite: true` and `refetchWritePolicy: "overwrite"`, which restores the Apollo Client 2.x behavior, but (if this change causes any problems for your application) you can easily recover the previous merging behavior by setting a default value for `refetchWritePolicy` in `defaultOptions.watchQuery`:
+  ```ts
+  new ApolloClient({
+    defaultOptions: {
+      watchQuery: {
+        refetchWritePolicy: "merge",
+      },
+    },
+  })
+  ```
+  [@benjamn](https://github.com/benjamn) in [#7810](https://github.com/apollographql/apollo-client/pull/7810)
+
 ### Potentially breaking changes
 
 - Internally, Apollo Client now uses namespace syntax (e.g. `import * as React from "react"`) for imports whose types are re-exported (and thus may appear in `.d.ts` files). This change should remove any need to configure `esModuleInterop` or `allowSyntheticDefaultImports` in `tsconfig.json`, but might require updating bundler configurations that specify named exports of the `react` and `prop-types` packages, to include exports like `createContext` and `createElement` ([example](https://github.com/apollographql/apollo-client/commit/16b08e1af9ba9934041298496e167aafb128c15d)). <br/>
@@ -20,22 +36,6 @@
 
 - `InMemoryCache` supports a new method called `batch`, which is similar to `performTransaction` but takes named options rather than positional parameters. One of these named options is an `onDirty(watch, diff)` callback, which can be used to determine which watched queries were invalidated by the `batch` operation. <br/>
   [@benjamn](https://github.com/benjamn) in [#7819](https://github.com/apollographql/apollo-client/pull/7819)
-
-- In Apollo Client 2.x, `refetch` would always replace existing data in the cache. With the introduction of field policy `merge` functions in Apollo Client 3, existing field values can be inappropriately combined with incoming field values by a custom `merge` function that does not realize a `refetch` has happened.
-
-  To give you more control over this behavior, we have introduced an `overwrite?: boolean = false` option for `cache.writeQuery` and `cache.writeFragment`, and an option called `refetchWritePolicy?: "merge" | "overwrite"` for `client.watchQuery`, `useQuery`, and other functions that accept `WatchQueryOptions`. You can use these options to make sure any `merge` functions involved in cache writes for `refetch` operations get invoked with `undefined` as their first argument, which simulates the absence of any existing data, while still giving the `merge` function a chance to determine the internal representation of the incoming data.
-
-  The default behaviors are `overwrite: false` and `refetchWritePolicy: "merge"`, but you can change the default `refetchWritePolicy` value using `defaultOptions.watchQuery`:
-  ```ts
-  new ApolloClient({
-    defaultOptions: {
-      watchQuery: {
-        refetchWritePolicy: "overwrite",
-      },
-    },
-  })
-  ```
-  [@benjamn](https://github.com/benjamn) in [#7810](https://github.com/apollographql/apollo-client/pull/7810)
 
 - Mutations now accept an optional callback function called `reobserveQuery`, which will be passed the `ObservableQuery` and `Cache.DiffResult` objects for any queries invalidated by cache writes performed by the mutation's final `update` function. Using `reobserveQuery`, you can override the default `FetchPolicy` of the query, by (for example) calling `ObservableQuery` methods like `refetch` to force a network request. This automatic detection of invalidated queries provides an alternative to manually enumerating queries using the `refetchQueries` mutation option. Also, if you return a `Promise` from `reobserveQuery`, the mutation will automatically await that `Promise`, rendering the `awaitRefetchQueries` option unnecessary. <br/>
   [@benjamn](https://github.com/benjamn) in [#7827](https://github.com/apollographql/apollo-client/pull/7827)

@@ -58,6 +58,8 @@
 - Allow `merge: true` field policy to merge `Reference` objects with non-normalized objects, and vice-versa. <br/>
   [@benjamn](https://github.com/benjamn) in [#7778](https://github.com/apollographql/apollo-client/pull/7778)
 
+- Pass `variables` and `context` to a mutation's `update` function <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#7902](https://github.com/apollographql/apollo-client/pull/7902)
 ### Documentation
 TBD
 

@@ -428,6 +428,134 @@ describe('useMutation Hook', () => {
     });
   });
 
+  describe('Update function', () => {
+
+    itAsync('should be called with the provided variables', async (resolve, reject) => {
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const Component = () => {
+        const [createTodo] = useMutation(
+          CREATE_TODO_MUTATION,
+          {
+            update(_, __, options) {
+              expect(options.variables).toEqual(variables);
+              resolve();
+            }
+          }
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, []);
+
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+    });
+
+    itAsync('should be called with the provided context', async (resolve, reject) => {
+      const context = { id: 3 };
+
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const Component = () => {
+        const [createTodo] = useMutation<Todo, { description: string }, { id: number }>(
+          CREATE_TODO_MUTATION,
+          {
+            context,
+            update(_, __, options) {
+              expect(options.context).toEqual(context);
+              resolve();
+            }
+          }
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, []);
+
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+    });
+
+    describe('If context is not provided', () => {
+      itAsync('should be undefined', async (resolve, reject) => {
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables
+            },
+            result: { data: CREATE_TODO_RESULT }
+          }
+        ];
+
+        const Component = () => {
+          const [createTodo] = useMutation(
+            CREATE_TODO_MUTATION,
+            {
+              update(_, __, options) {
+                expect(options.context).toBeUndefined();
+                resolve();
+              }
+            }
+          );
+
+          useEffect(() => {
+            createTodo({ variables });
+          }, []);
+
+          return null;
+        };
+
+        render(
+          <MockedProvider mocks={mocks}>
+            <Component />
+          </MockedProvider>
+        );
+      });
+    });
+  });
+
   describe('Optimistic response', () => {
     itAsync('should support optimistic response handling', async (resolve, reject) => {
       const optimisticResponse = {
@@ -502,6 +630,66 @@ describe('useMutation Hook', () => {
 
       return wait(() => {
         expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
+
+    itAsync('should be called with the provided context', async (resolve, reject) => {
+      const optimisticResponse = {
+        __typename: 'Mutation',
+        createTodo: {
+          id: 1,
+          description: 'TEMPORARY',
+          priority: 'High',
+          __typename: 'Todo'
+        }
+      };
+
+      const context = { id: 3 };
+
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const contextFn = jest.fn();
+
+      const Component = () => {
+        const [createTodo] = useMutation(
+          CREATE_TODO_MUTATION,
+          {
+            optimisticResponse,
+            context,
+            update(_, __, options) {
+              contextFn(options.context);
+            }
+          }
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, []);
+
+        return null;
+      };
+
+      render(
+        <MockedProvider mocks={mocks}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(contextFn).toHaveBeenCalledTimes(2);
+        expect(contextFn).toHaveBeenCalledWith(context);
       }).then(resolve, reject);
     });
   });

@@ -1,5 +1,6 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 
+import { ApolloCache } from '../cache';
 import { FetchResult } from '../link/core';
 import { ApolloError } from '../errors';
 import { QueryInfo } from './QueryInfo';
@@ -9,6 +10,8 @@ import { ObservableQuery } from './ObservableQuery';
 import { Cache } from '../cache';
 
 export { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
+export type DefaultContext = Record<string, any>;
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
@@ -51,6 +54,19 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
 
+export type MutationUpdaterFunction<
+  TData,
+  TVariables,
+  TContext,
+  TCache extends ApolloCache<any>
+> = (
+  cache: TCache,
+  result: Omit<FetchResult<TData>, 'context'>,
+  options: {
+    context?: TContext,
+    variables?: TVariables,
+  },
+) => void;
 export interface Resolvers {
   [key: string]: {
     [ field: string ]: Resolver;

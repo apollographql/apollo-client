@@ -35,6 +35,7 @@ import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
   OperationVariables,
+  MutationUpdaterFunction,
   ReobserveQueryCallback,
 } from './types';
 import { LocalState } from './LocalState';
@@ -54,6 +55,8 @@ interface MutationStoreValue {
   loading: boolean;
   error: Error | null;
 }
+
+type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -128,7 +131,7 @@ export class QueryManager<TStore> {
     this.fetchCancelFns.clear();
   }
 
-  public async mutate<T>({
+  public async mutate<TData, TVariables, TContext, TCache extends ApolloCache<any>>({
     mutation,
     variables,
     optimisticResponse,
@@ -139,8 +142,8 @@ export class QueryManager<TStore> {
     reobserveQuery,
     errorPolicy = 'none',
     fetchPolicy,
-    context = {},
-  }: MutationOptions): Promise<FetchResult<T>> {
+    context,
+  }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>> {
     invariant(
       mutation,
       'mutation option is required. You must specify your GraphQL document in the mutation option.',
@@ -154,10 +157,10 @@ export class QueryManager<TStore> {
     const mutationId = this.generateMutationId();
     mutation = this.transform(mutation).document;
 
-    variables = this.getVariables(mutation, variables);
+    variables = this.getVariables(mutation, variables) as TVariables;
 
     if (this.transform(mutation).hasClientExports) {
-      variables = await this.localState.addExportedVariables(mutation, variables, context);
+      variables = await this.localState.addExportedVariables(mutation, variables, context) as TVariables;
     }
 
     const mutationStoreValue =
@@ -170,11 +173,17 @@ export class QueryManager<TStore> {
       } as MutationStoreValue);
 
     if (optimisticResponse) {
-      this.markMutationOptimistic<T>(optimisticResponse, {
+      this.markMutationOptimistic<
+        TData,
+        TVariables,
+        TContext,
+        TCache
+      >(optimisticResponse, {
         mutationId,
         document: mutation,
         variables,
         errorPolicy,
+        context,
         updateQueries,
         update: updateWithProxyFn,
       });
@@ -185,7 +194,7 @@ export class QueryManager<TStore> {
     const self = this;
 
     return new Promise((resolve, reject) => {
-      let storeResult: FetchResult<T> | null;
+      let storeResult: FetchResult<TData> | null;
 
       return asyncMap(
         self.getObservableFromLink(
@@ -198,7 +207,7 @@ export class QueryManager<TStore> {
           false,
         ),
 
-        (result: FetchResult<T>) => {
+        (result: FetchResult<TData>) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
             throw new ApolloError({
               graphQLErrors: result.errors,
@@ -218,12 +227,13 @@ export class QueryManager<TStore> {
               // mutation await any Promise that markMutationResult returns,
               // since we are returning this Promise from the asyncMap mapping
               // function.
-              return self.markMutationResult<T>({
+              return self.markMutationResult<TData, TVariables, TContext, TCache>({
                 mutationId,
                 result,
                 document: mutation,
                 variables,
                 errorPolicy,
+                context,
                 updateQueries,
                 update: updateWithProxyFn,
                 reobserveQuery,
@@ -291,18 +301,16 @@ export class QueryManager<TStore> {
     });
   }
 
-  public markMutationResult<TData>(
+  public markMutationResult<TData, TVariables, TContext, TCache extends ApolloCache<any>>(
     mutation: {
       mutationId: string;
       result: FetchResult<TData>;
       document: DocumentNode;
-      variables?: OperationVariables;
+      variables?: TVariables;
       errorPolicy: ErrorPolicy;
-      updateQueries: MutationOptions<TData>["updateQueries"],
-      update?: (
-        cache: ApolloCache<TStore>,
-        result: FetchResult<TData>,
-      ) => void;
+      context?: TContext;
+      updateQueries: UpdateQueries<TData>;
+      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       reobserveQuery?: ReobserveQueryCallback;
     },
     cache = this.cache,
@@ -364,7 +372,10 @@ export class QueryManager<TStore> {
           // a write action.
           const { update } = mutation;
           if (update) {
-            update(c, mutation.result);
+            update(c as any, mutation.result, {
+              context: mutation.context,
+              variables: mutation.variables,
+            });
           }
         },
 
@@ -389,18 +400,16 @@ export class QueryManager<TStore> {
     return Promise.resolve();
   }
 
-  public markMutationOptimistic<TData>(
+  public markMutationOptimistic<TData, TVariables, TContext, TCache extends ApolloCache<any>>(
     optimisticResponse: any,
     mutation: {
       mutationId: string;
       document: DocumentNode;
-      variables?: OperationVariables;
+      variables?: TVariables;
       errorPolicy: ErrorPolicy;
-      updateQueries: MutationOptions<TData>["updateQueries"],
-      update?: (
-        cache: ApolloCache<TStore>,
-        result: FetchResult<TData>,
-      ) => void;
+      context?: TContext;
+      updateQueries: UpdateQueries<TData>,
+      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
     },
   ) {
     const data = typeof optimisticResponse === "function"
@@ -409,7 +418,7 @@ export class QueryManager<TStore> {
 
     return this.cache.recordOptimisticTransaction(cache => {
       try {
-        this.markMutationResult<TData>({
+        this.markMutationResult<TData, TVariables, TContext, TCache>({
           ...mutation,
           result: { data },
         }, cache);
@@ -505,9 +514,9 @@ export class QueryManager<TStore> {
     return transformCache.get(document)!;
   }
 
-  private getVariables(
+  private getVariables<TVariables>(
     document: DocumentNode,
-    variables?: OperationVariables,
+    variables?: TVariables,
   ): OperationVariables {
     return {
       ...this.transform(document).defaultVars,

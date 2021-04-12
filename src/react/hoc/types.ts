@@ -1,4 +1,4 @@
-import { ApolloClient } from '../../core';
+import { ApolloCache, ApolloClient } from '../../core';
 import { ApolloError } from '../../errors';
 import {
   ApolloQueryResult,
@@ -7,6 +7,7 @@ import {
   UpdateQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
+  DefaultContext,
 } from '../../core';
 import {
   MutationFunction,
@@ -89,16 +90,18 @@ export interface OperationOption<
   TProps,
   TData,
   TGraphQLVariables = OperationVariables,
-  TChildProps = ChildProps<TProps, TData, TGraphQLVariables>
+  TChildProps = ChildProps<TProps, TData, TGraphQLVariables>,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > {
   options?:
     | BaseQueryOptions<TGraphQLVariables>
-    | BaseMutationOptions<TData, TGraphQLVariables>
+    | BaseMutationOptions<TData, TGraphQLVariables, TContext, TCache>
     | ((
         props: TProps
       ) =>
         | BaseQueryOptions<TGraphQLVariables>
-        | BaseMutationOptions<TData, TGraphQLVariables>
+        | BaseMutationOptions<TData, TGraphQLVariables, TContext, TCache>
       );
   props?: (
     props: OptionProps<TProps, TData, TGraphQLVariables>,

@@ -21,7 +21,6 @@ export {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  MutationUpdaterFn,
 } from './watchQueryOptions';
 export { NetworkStatus } from './networkStatus';
 export * from './types';

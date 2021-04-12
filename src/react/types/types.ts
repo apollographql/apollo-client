@@ -6,13 +6,15 @@ import { Observable } from '../../utilities';
 import { FetchResult } from '../../link/core';
 import { ApolloError } from '../../errors';
 import {
+  ApolloCache,
   ApolloClient,
   ApolloQueryResult,
+  DefaultContext,
   ErrorPolicy,
   FetchMoreOptions,
   FetchMoreQueryOptions,
   FetchPolicy,
-  MutationUpdaterFn,
+  MutationUpdaterFunction,
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
@@ -24,7 +26,7 @@ import {
 
 /* Common types */
 
-export type Context = Record<string, any>;
+export type { DefaultContext as Context } from "../../core";
 
 export type CommonOptions<TOptions> = TOptions & {
   client?: ApolloClient<object>;
@@ -36,7 +38,7 @@ export interface BaseQueryOptions<TVariables = OperationVariables>
 extends Omit<WatchQueryOptions<TVariables>, "query"> {
   ssr?: boolean;
   client?: ApolloClient<any>;
-  context?: Context;
+  context?: DefaultContext;
 }
 
 export interface QueryFunctionOptions<
@@ -102,7 +104,7 @@ export interface LazyQueryHookOptions<
 
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;
-  context?: Context;
+  context?: DefaultContext;
 }
 
 type UnexecutedLazyFields = {
@@ -141,19 +143,21 @@ export type RefetchQueriesFunction = (
 ) => Array<string | PureQueryOptions>;
 
 export interface BaseMutationOptions<
-  TData = any,
-  TVariables = OperationVariables
+  TData,
+  TVariables extends OperationVariables,
+  TContext extends DefaultContext,
+  TCache extends ApolloCache<any>,
 > {
   variables?: TVariables;
   optimisticResponse?: TData | ((vars: TVariables) => TData);
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
   errorPolicy?: ErrorPolicy;
-  update?: MutationUpdaterFn<TData>;
+  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
   reobserveQuery?: ReobserveQueryCallback;
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
-  context?: Context;
+  context?: TContext;
   onCompleted?: (data: TData) => void;
   onError?: (error: ApolloError) => void;
   fetchPolicy?: Extract<WatchQueryFetchPolicy, 'no-cache'>;
@@ -161,16 +165,18 @@ export interface BaseMutationOptions<
 }
 
 export interface MutationFunctionOptions<
-  TData = any,
-  TVariables = OperationVariables
+  TData,
+  TVariables,
+  TContext,
+  TCache extends ApolloCache<any>,
 > {
   variables?: TVariables;
   optimisticResponse?: TData | ((vars: TVariables) => TData);
   refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
   awaitRefetchQueries?: boolean;
-  update?: MutationUpdaterFn<TData>;
+  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
   reobserveQuery?: ReobserveQueryCallback;
-  context?: Context;
+  context?: TContext;
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
@@ -184,26 +190,35 @@ export interface MutationResult<TData = any> {
 
 export declare type MutationFunction<
   TData = any,
-  TVariables = OperationVariables
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > = (
-  options?: MutationFunctionOptions<TData, TVariables>
+  options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
 ) => Promise<FetchResult<TData>>;
 
 export interface MutationHookOptions<
   TData = any,
-  TVariables = OperationVariables
-> extends BaseMutationOptions<TData, TVariables> {
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export interface MutationDataOptions<TData = any, TVariables = OperationVariables>
-  extends BaseMutationOptions<TData, TVariables> {
+export interface MutationDataOptions<
+  TData,
+  TVariables extends OperationVariables,
+  TContext extends DefaultContext,
+  TCache extends ApolloCache<any>,
+>
+  extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export type MutationTuple<TData, TVariables> = [
+export type MutationTuple<TData, TVariables, TContext, TCache extends ApolloCache<any>> = [
   (
-    options?: MutationFunctionOptions<TData, TVariables>
+    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
   ) => Promise<FetchResult<TData>>,
   MutationResult<TData>
 ];
@@ -226,7 +241,7 @@ export interface BaseSubscriptionOptions<
     | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
   client?: ApolloClient<object>;
   skip?: boolean;
-  context?: Context;
+  context?: DefaultContext;
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   onSubscriptionComplete?: () => void;
 }

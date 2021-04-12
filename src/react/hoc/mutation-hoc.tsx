@@ -18,6 +18,7 @@ import {
   GraphQLBase
 } from './hoc-utils';
 import { OperationOption, OptionProps, MutateProps } from './types';
+import { ApolloCache } from '../../core';
 
 export function withMutation<
   TProps extends TGraphQLVariables | {} = {},
@@ -25,6 +26,7 @@ export function withMutation<
   TGraphQLVariables = {},
   TChildProps = MutateProps<TData, TGraphQLVariables>,
   TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 >(
   document: DocumentNode,
   operationOptions: OperationOption<
@@ -43,9 +45,9 @@ export function withMutation<
     alias = 'Apollo'
   } = operationOptions;
 
-  let mapPropsToOptions = options as (props: any) => BaseMutationOptions<TData, TGraphQLVariables, TContext>;
+  let mapPropsToOptions = options as (props: any) => BaseMutationOptions<TData, TGraphQLVariables, TContext, TCache>;
   if (typeof mapPropsToOptions !== 'function')
-    mapPropsToOptions = () => options as BaseMutationOptions<TData, TGraphQLVariables, TContext>;
+    mapPropsToOptions = () => options as BaseMutationOptions<TData, TGraphQLVariables, TContext, TCache>;
 
   return (
     WrappedComponent: React.ComponentType<TProps & TChildProps>
@@ -56,7 +58,7 @@ export function withMutation<
       static WrappedComponent = WrappedComponent;
       render() {
         let props = this.props as TProps;
-        const opts = mapPropsToOptions(props) as BaseMutationOptions<TData, TGraphQLVariables, TContext>;
+        const opts = mapPropsToOptions(props) as BaseMutationOptions<TData, TGraphQLVariables, TContext, TCache>;
 
         if (operationOptions.withRef) {
           this.withRef = true;

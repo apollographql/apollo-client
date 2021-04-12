@@ -10,6 +10,7 @@ import {
   MutationUpdaterFunction,
   ReobserveQueryCallback,
 } from './types';
+import { ApolloCache } from '../cache';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -184,9 +185,10 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
 export interface MutationBaseOptions<
-  T = any,
+  TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > {
   /**
    * An object that represents the result of this mutation that will be
@@ -195,7 +197,7 @@ export interface MutationBaseOptions<
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: T | ((vars: TVariables) => T);
+  optimisticResponse?: TData | ((vars: TVariables) => TData);
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to
@@ -203,7 +205,7 @@ export interface MutationBaseOptions<
    * results of the mutation into the results of queries that are currently
    * being watched by your application.
    */
-  updateQueries?: MutationQueryReducersMap<T>;
+  updateQueries?: MutationQueryReducersMap<TData>;
 
   /**
    * A list of query names which will be refetched once this mutation has
@@ -214,7 +216,7 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: FetchResult<T>) => RefetchQueryDescription)
+    | ((result: FetchResult<TData>) => RefetchQueryDescription)
     | RefetchQueryDescription;
 
   /**
@@ -245,7 +247,7 @@ export interface MutationBaseOptions<
    * and you don't need to update the store, use the Promise returned from
    * `client.mutate` instead.
    */
-  update?: MutationUpdaterFunction<T, TVariables, TContext>;
+  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
 
   /**
    * A function that will be called for each ObservableQuery affected by
@@ -266,15 +268,16 @@ export interface MutationBaseOptions<
 }
 
 export interface MutationOptions<
-  T = any,
+  TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-> extends MutationBaseOptions<T, TVariables, TContext> {
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single mutation inside of it.
    */
-  mutation: DocumentNode | TypedDocumentNode<T, TVariables>;
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /**
    * The context to be passed to the link execution chain. This context will

@@ -9,16 +9,17 @@ import {
   MutationResult,
 } from '../types/types';
 import { OperationData } from './OperationData';
-import { MutationOptions, mergeOptions } from '../../core';
+import { MutationOptions, mergeOptions, ApolloCache, OperationVariables, DefaultContext } from '../../core';
 import { FetchResult } from '../../link/core';
 
 type MutationResultWithoutClient<TData = any> = Omit<MutationResult<TData>, 'client'>;
 
 export class MutationData<
-  TData,
-  TVariables,
-  TContext,
-> extends OperationData<MutationDataOptions<TData, TVariables, TContext>> {
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+> extends OperationData<MutationDataOptions<TData, TVariables, TContext, TCache>> {
   private mostRecentMutationId: number;
   private result: MutationResultWithoutClient<TData>;
   private previousResult?: MutationResultWithoutClient<TData>;
@@ -30,7 +31,7 @@ export class MutationData<
     result,
     setResult
   }: {
-    options: MutationDataOptions<TData, TVariables, TContext>;
+    options: MutationDataOptions<TData, TVariables, TContext, TCache>;
     context: any;
     result: MutationResultWithoutClient<TData>;
     setResult: (result: MutationResultWithoutClient<TData>) => any;
@@ -42,13 +43,13 @@ export class MutationData<
     this.mostRecentMutationId = 0;
   }
 
-  public execute(result: MutationResultWithoutClient<TData>): MutationTuple<TData, TVariables, TContext> {
+  public execute(result: MutationResultWithoutClient<TData>): MutationTuple<TData, TVariables, TContext, TCache> {
     this.isMounted = true;
     this.verifyDocumentType(this.getOptions().mutation, DocumentType.Mutation);
     return [
       this.runMutation,
       { ...result, client: this.refreshClient().client }
-    ] as MutationTuple<TData, TVariables, TContext>;
+    ] as MutationTuple<TData, TVariables, TContext, TCache>;
   }
 
   public afterExecute() {
@@ -64,8 +65,9 @@ export class MutationData<
     mutationFunctionOptions: MutationFunctionOptions<
       TData,
       TVariables,
-      TContext
-    > = {} as MutationFunctionOptions<TData, TVariables, TContext>
+      TContext,
+      TCache
+    > = {} as MutationFunctionOptions<TData, TVariables, TContext, TCache>
   ) => {
     this.onMutationStart();
     const mutationId = this.generateNewMutationId();
@@ -82,7 +84,7 @@ export class MutationData<
   };
 
   private mutate(
-    options: MutationFunctionOptions<TData, TVariables, TContext>
+    options: MutationFunctionOptions<TData, TVariables, TContext, TCache>
   ) {
     return this.refreshClient().client.mutate(
       mergeOptions(

@@ -54,9 +54,14 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
 
-export type MutationUpdaterFunction<T, TVariables, TContext> = (
-  cache: ApolloCache<T>,
-  result: Omit<FetchResult<T>, 'context'>,
+export type MutationUpdaterFunction<
+  TData,
+  TVariables,
+  TContext,
+  TCache extends ApolloCache<any>
+> = (
+  cache: TCache,
+  result: Omit<FetchResult<TData>, 'context'>,
   options: {
     context?: TContext,
     variables?: TVariables,

@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { OperationVariables, DefaultContext } from '../../core';
+import { OperationVariables, DefaultContext, ApolloCache } from '../../core';
 import {
   QueryFunctionOptions,
   QueryResult,
@@ -24,7 +24,8 @@ export interface MutationComponentOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-> extends BaseMutationOptions<TData, TVariables, TContext> {
+  TCache extends ApolloCache<any> = ApolloCache<any>
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children: (
     mutateFunction: MutationFunction<TData, TVariables, TContext>,

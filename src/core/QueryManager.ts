@@ -223,10 +223,10 @@ export class QueryManager<TStore> {
 
           if (fetchPolicy !== 'no-cache') {
             try {
-            // Returning the result of markMutationResult here makes the
-            // mutation await any Promise that markMutationResult returns,
-            // since we are returning this Promise from the asyncMap mapping
-            // function.
+              // Returning the result of markMutationResult here makes the
+              // mutation await any Promise that markMutationResult returns,
+              // since we are returning this Promise from the asyncMap mapping
+              // function.
               return self.markMutationResult<TData, TVariables, TContext, TCache>({
                 mutationId,
                 result,

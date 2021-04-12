@@ -3,7 +3,7 @@ import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient, MutationUpdaterFunction } from '../../../../core';
+import { ApolloCache, ApolloClient, MutationUpdaterFunction } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { MutationFunction } from '../../../types/types';
@@ -77,7 +77,8 @@ describe('graphql(mutation) update queries', () => {
     const update: MutationUpdaterFunction<
       MutationData,
       Record<string, any>,
-      Record<string, any>
+      Record<string, any>,
+      ApolloCache<any>
     > = (proxy, result) => {
       todoUpdateQueryCount++;
       const data = JSON.parse(

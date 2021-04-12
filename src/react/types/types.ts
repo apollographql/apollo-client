@@ -189,7 +189,7 @@ export interface MutationResult<TData = any> {
 }
 
 export declare type MutationFunction<
-  TData,
+  TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,

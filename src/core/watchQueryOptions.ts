@@ -3,7 +3,7 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { FetchResult } from '../link/core';
 import {
-  Context,
+  DefaultContext,
   MutationQueryReducersMap,
   PureQueryOptions,
   OperationVariables,
@@ -149,7 +149,7 @@ export type SubscribeToMoreOptions<
   variables?: TSubscriptionVariables;
   updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
-  context?: Record<string, any>;
+  context?: DefaultContext;
 };
 
 export interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
@@ -178,15 +178,15 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
   /**
    * Context object to be passed through the link execution chain.
    */
-  context?: Record<string, any>;
+  context?: DefaultContext;
 }
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
 export interface MutationBaseOptions<
-  T,
-  TVariables,
-  TContext,
+  T = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
 > {
   /**
    * An object that represents the result of this mutation that will be
@@ -267,8 +267,8 @@ export interface MutationBaseOptions<
 
 export interface MutationOptions<
   T = any,
-  TVariables extends OperationVariables = OperationVariables,
-  TContext extends Context = Context,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
 > extends MutationBaseOptions<T, TVariables, TContext> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`

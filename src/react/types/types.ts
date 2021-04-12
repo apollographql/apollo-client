@@ -8,7 +8,7 @@ import { ApolloError } from '../../errors';
 import {
   ApolloClient,
   ApolloQueryResult,
-  Context,
+  DefaultContext,
   ErrorPolicy,
   FetchMoreOptions,
   FetchMoreQueryOptions,
@@ -25,6 +25,8 @@ import {
 
 /* Common types */
 
+export type { DefaultContext as Context } from "../../core";
+
 export type CommonOptions<TOptions> = TOptions & {
   client?: ApolloClient<object>;
 };
@@ -35,7 +37,7 @@ export interface BaseQueryOptions<TVariables = OperationVariables>
 extends Omit<WatchQueryOptions<TVariables>, "query"> {
   ssr?: boolean;
   client?: ApolloClient<any>;
-  context?: Context;
+  context?: DefaultContext;
 }
 
 export interface QueryFunctionOptions<
@@ -101,7 +103,7 @@ export interface LazyQueryHookOptions<
 
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;
-  context?: Context;
+  context?: DefaultContext;
 }
 
 type UnexecutedLazyFields = {
@@ -142,7 +144,7 @@ export type RefetchQueriesFunction = (
 export interface BaseMutationOptions<
   TData,
   TVariables extends OperationVariables,
-  TContext extends Context,
+  TContext extends DefaultContext,
 > {
   variables?: TVariables;
   optimisticResponse?: TData | ((vars: TVariables) => TData);
@@ -186,7 +188,7 @@ export interface MutationResult<TData = any> {
 export declare type MutationFunction<
   TData,
   TVariables = OperationVariables,
-  TContext = Context,
+  TContext = DefaultContext,
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext>
 ) => Promise<FetchResult<TData>>;
@@ -194,7 +196,7 @@ export declare type MutationFunction<
 export interface MutationHookOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = Context,
+  TContext = DefaultContext,
 > extends BaseMutationOptions<TData, TVariables, TContext> {
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -202,7 +204,7 @@ export interface MutationHookOptions<
 export interface MutationDataOptions<
   TData,
   TVariables extends OperationVariables,
-  TContext extends Context
+  TContext extends DefaultContext
 >
   extends BaseMutationOptions<TData, TVariables, TContext> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -233,7 +235,7 @@ export interface BaseSubscriptionOptions<
     | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
   client?: ApolloClient<object>;
   skip?: boolean;
-  context?: Context;
+  context?: DefaultContext;
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   onSubscriptionComplete?: () => void;
 }

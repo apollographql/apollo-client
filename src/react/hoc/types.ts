@@ -7,7 +7,7 @@ import {
   UpdateQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  Context,
+  DefaultContext,
 } from '../../core';
 import {
   MutationFunction,
@@ -91,7 +91,7 @@ export interface OperationOption<
   TData,
   TGraphQLVariables = OperationVariables,
   TChildProps = ChildProps<TProps, TData, TGraphQLVariables>,
-  TContext = Context,
+  TContext = DefaultContext,
 > {
   options?:
     | BaseQueryOptions<TGraphQLVariables>

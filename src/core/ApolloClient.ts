@@ -12,7 +12,7 @@ import { ObservableQuery } from './ObservableQuery';
 
 import {
   ApolloQueryResult,
-  Context,
+  DefaultContext,
   OperationVariables,
   Resolvers,
 } from './types';
@@ -349,7 +349,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T = any, TVariables = OperationVariables, TContext = Context>(
+  public mutate<T = any, TVariables = OperationVariables, TContext = DefaultContext>(
     options: MutationOptions<T, TVariables, TContext>,
   ): Promise<FetchResult<T>> {
     if (this.defaultOptions.mutate) {

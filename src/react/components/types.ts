@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { OperationVariables, Context } from '../../core';
+import { OperationVariables, DefaultContext } from '../../core';
 import {
   QueryFunctionOptions,
   QueryResult,
@@ -23,7 +23,7 @@ export interface QueryComponentOptions<
 export interface MutationComponentOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = Context,
+  TContext = DefaultContext,
 > extends BaseMutationOptions<TData, TVariables, TContext> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children: (

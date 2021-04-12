@@ -11,7 +11,7 @@ import { Cache } from '../cache';
 
 export { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-export type Context = Record<string, any>;
+export type DefaultContext = Record<string, any>;
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 

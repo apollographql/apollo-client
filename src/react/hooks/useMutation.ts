@@ -4,13 +4,13 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { MutationHookOptions, MutationTuple } from '../types/types';
 import { MutationData } from '../data';
-import { Context, OperationVariables } from '../../core';
+import { DefaultContext, OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
 
 export function useMutation<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-  TContext extends Context = Context
+  TVariables = OperationVariables,
+  TContext = DefaultContext
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: MutationHookOptions<TData, TVariables, TContext>

@@ -38,12 +38,14 @@ A GraphQL query string parsed into an AST with the `gql` template literal.
 
 ###### `variables`
 
-`Object`
+`{ [key: string]: any }`
 </td>
 
 <td>
 
 An object containing all of the GraphQL variables your query requires to execute.
+
+Each key in the object corresponds to a variable name, and that key's value corresponds to the variable value.
 
 </td>
 </tr>
@@ -53,7 +55,7 @@ An object containing all of the GraphQL variables your query requires to execute
 
 ###### `errorPolicy`
 
-`String`
+`ErrorPolicy`
 </td>
 
 <td>
@@ -72,7 +74,7 @@ The default value is `none`, meaning that the query result includes error detail
 
 ###### `onCompleted`
 
-`Function`
+`(data: TData | {}) => void`
 </td>
 
 <td>
@@ -89,7 +91,7 @@ This function is passed the query's result `data`.
 
 ###### `onError`
 
-`Function`
+`(error: ApolloError) => void`
 </td>
 
 <td>
@@ -106,7 +108,7 @@ This function is passed an [`ApolloError`](https://github.com/apollographql/apol
 
 ###### `skip`
 
-`Boolean`
+`boolean`
 </td>
 
 <td>
@@ -125,7 +127,7 @@ The default value is `false`.
 
 ###### `displayName`
 
-`String`
+`string`
 </td>
 
 <td>
@@ -150,7 +152,7 @@ The default value is `Query`.
 
 ###### `pollInterval`
 
-`Number`
+`number`
 </td>
 
 <td>
@@ -167,7 +169,7 @@ The default value is `0` (no polling).
 
 ###### `notifyOnNetworkStatusChange`
 
-`Boolean`
+`boolean`
 </td>
 
 <td>
@@ -184,7 +186,7 @@ The default value is `false`.
 
 ###### `context`
 
-`Object`
+`Record<string, any>`
 </td>
 
 <td>
@@ -199,7 +201,7 @@ If you're using [Apollo Link](https://www.apollographql.com/docs/react/api/link/
 
 ###### `ssr`
 
-`Boolean`
+`boolean`
 </td>
 
 <td>
@@ -239,7 +241,7 @@ By default, the instance that's passed down via context is used, but you can pro
 
 ###### `fetchPolicy`
 
-`String`
+`FetchPolicy`
 </td>
 
 <td>
@@ -258,14 +260,14 @@ The default value is `cache-first`.
 
 ###### `nextFetchPolicy`
 
-`String`
+`FetchPolicy`
 </td>
 
 <td>
 
 Specifies the [`fetchPolicy`](#fetchpolicy) to use for all executions of this query _after_ this execution.
 
-This is useful for switching back to a `cache-first` fetch policy after using `cache-and-network` or `network-only`.
+For example, you can use this to switch back to a `cache-first` fetch policy after using `cache-and-network` or `network-only` for a single execution.
 
 </td>
 </tr>
@@ -276,7 +278,7 @@ This is useful for switching back to a `cache-first` fetch policy after using `c
 
 ###### `returnPartialData`
 
-`Boolean`
+`boolean`
 </td>
 
 <td>
@@ -301,7 +303,7 @@ The default value is `false`.
 
 ###### `partialRefetch`
 
-`Boolean`
+`boolean`
 </td>
 
 <td>

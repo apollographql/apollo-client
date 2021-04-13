@@ -284,6 +284,7 @@ describe('useQuery Hook SSR', () => {
     return renderToStringWithData(app).then(markup => {
       expect(spy).toHaveBeenNthCalledWith(1, false);
       expect(markup).toMatch(/<div.*>3<\/div>/);
+      expect(cache.extract()).toMatchSnapshot();
     });
   });
 });

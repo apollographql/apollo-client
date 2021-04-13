@@ -524,7 +524,7 @@ export class QueryData<TData, TVariables> extends OperationData<
       TSubscriptionVariables,
       TSubscriptionData
     >
-  ) => this.currentObservable!.subscribeToMore(options);
+  ) => this.currentObservable?.subscribeToMore(options);
 
   private observableQueryFields() {
     return {

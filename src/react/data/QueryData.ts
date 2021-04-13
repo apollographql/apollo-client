@@ -495,7 +495,7 @@ export class QueryData<TData, TVariables> extends OperationData<
   private obsFetchMore = (
     fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
       FetchMoreOptions<TData, TVariables>
-  ) => this.currentObservable!.fetchMore(fetchMoreOptions);
+  ) => this.currentObservable?.fetchMore(fetchMoreOptions);
 
   private obsUpdateQuery = <TVars = TVariables>(
     mapFn: (

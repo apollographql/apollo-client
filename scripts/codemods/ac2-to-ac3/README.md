@@ -18,19 +18,19 @@ following commands to run, depending on the types of files you have:
 ```sh
 # To transform all .js files:
 npx jscodeshift \
-  -t apollo-client/codemods/ac2-to-ac3/imports.js \
+  -t apollo-client/scripts/codemods/ac2-to-ac3/imports.js \
   --extensions js \
   source-directory
 
 # To transform all .ts files:
 npx jscodeshift \
-  -t apollo-client/codemods/ac2-to-ac3/imports.js \
+  -t apollo-client/scripts/codemods/ac2-to-ac3/imports.js \
   --extensions ts --parser ts \
   source-directory
 
 # To transform all .tsx files:
 npx jscodeshift \
-  -t apollo-client/codemods/ac2-to-ac3/imports.js \
+  -t apollo-client/scripts/codemods/ac2-to-ac3/imports.js \
   --extensions tsx --parser tsx \
   source-directory
 ```

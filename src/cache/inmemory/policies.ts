@@ -63,7 +63,9 @@ type KeyFieldsContext = {
 export type KeyFieldsFunction = (
   object: Readonly<StoreObject>,
   context: KeyFieldsContext,
-) => KeySpecifier | ReturnType<IdGetter>;
+) => KeySpecifier | false | ReturnType<IdGetter>;
+
+type KeyFieldsResult = Exclude<ReturnType<KeyFieldsFunction>, KeySpecifier>;
 
 // TODO Should TypePolicy be a generic type, with a TObject or TEntity
 // type parameter?
@@ -103,7 +105,9 @@ export type KeyArgsFunction = (
     field: FieldNode | null;
     variables?: Record<string, any>;
   },
-) => KeySpecifier | ReturnType<IdGetter>;
+) => KeySpecifier | false | ReturnType<IdGetter>;
+
+type KeyArgsResult = Exclude<ReturnType<KeyArgsFunction>, KeySpecifier>;
 
 export type FieldPolicy<
   // The internal representation used to store the field's data in the
@@ -337,7 +341,7 @@ export class Policies {
       fragmentMap,
     };
 
-    let id: string | undefined;
+    let id: KeyFieldsResult;
 
     const policy = typename && this.getTypePolicy(typename);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
@@ -351,8 +355,7 @@ export class Policies {
       }
     }
 
-    id = id && String(id);
-
+    id = id ? String(id) : void 0;
     return context.keyObject ? [id, context.keyObject] : [id];
   }
 
@@ -674,7 +677,7 @@ export class Policies {
   public getStoreFieldName(fieldSpec: FieldSpecifier): string {
     const { typename, fieldName } = fieldSpec;
     const policy = this.getFieldPolicy(typename, fieldName, false);
-    let storeFieldName: string | undefined;
+    let storeFieldName: KeyArgsResult;
 
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
@@ -702,6 +705,12 @@ export class Policies {
       storeFieldName = fieldSpec.field
         ? storeKeyNameFromField(fieldSpec.field, fieldSpec.variables)
         : getStoreKeyName(fieldName, argsFromFieldSpecifier(fieldSpec));
+    }
+
+    // Returning false from a keyArgs function is like configuring
+    // keyArgs: false, but more dynamic.
+    if (storeFieldName === false) {
+      return fieldName;
     }
 
     // Make sure custom field names start with the actual field.name.value

@@ -5,7 +5,7 @@ import { MockedProvider, mockSingleLink } from '../../../testing';
 import { ApolloClient } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
-import { useQuery } from '../../hooks';
+import { useApolloClient, useQuery } from '../../hooks';
 import { render, wait } from '@testing-library/react';
 import { renderToStringWithData } from '..';
 
@@ -170,13 +170,17 @@ describe('useQuery Hook SSR', () => {
   it('should skip SSR tree rendering if `skip` option is `true`', async () => {
     let renderCount = 0;
     const Component = () => {
-      const { data, loading } = useQuery(CAR_QUERY, { skip: true });
+      const {
+        loading,
+        networkStatus,
+        data,
+      } = useQuery(CAR_QUERY, { skip: true });
       renderCount += 1;
 
-      if (!loading) {
-        const { make } = data.cars[0];
-        return <div>{make}</div>;
-      }
+      expect(loading).toBeFalsy();
+      expect(networkStatus).toBe(7);
+      expect(data).toBeUndefined();
+
       return null;
     };
 
@@ -186,9 +190,101 @@ describe('useQuery Hook SSR', () => {
       </MockedProvider>
     );
 
-    return renderToStringWithData(app).then((result) => {
+    return renderToStringWithData(app).then(result => {
       expect(renderCount).toBe(1);
-      expect(result).toEqual('');
+      expect(result).toBe('');
+    });
+  });
+
+  it('should return data written previously to cache during SSR pass if using cache-only fetchPolicy', async () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Order: {
+          keyFields: ["selection"],
+        },
+      },
+    });
+
+    const query = gql`
+      query GetSearchResults {
+        getSearchResults @client {
+          locale
+          order {
+            selection
+          }
+          pagination {
+            pageLimit
+          }
+          results {
+            id
+            text
+          }
+        }
+      }
+    `;
+
+    const initialData = {
+      getSearchResults: {
+        __typename: 'SearchResults',
+        locale: 'en-US',
+        order: {
+          __typename: 'Order',
+          selection: 'RELEVANCE',
+        },
+        pagination: {
+          pageLimit: 3,
+        },
+        results: [
+          { __typename: "SearchResult", id: 1, text: "hi" },
+          { __typename: "SearchResult", id: 2, text: "hello" },
+          { __typename: "SearchResult", id: 3, text: "hey" },
+        ],
+      },
+    };
+
+    const spy = jest.fn();
+
+    const Component = () => {
+      useApolloClient().writeQuery({ query, data: initialData });;
+
+      const { loading, data } = useQuery(query, {
+        fetchPolicy: 'cache-only',
+      });
+
+      spy(loading);
+
+      if (!loading) {
+        expect(data).toEqual(initialData);
+
+        const {
+          getSearchResults: {
+            pagination: {
+              pageLimit,
+            },
+          },
+        } = data;
+        return (
+          <div>
+            {pageLimit}
+          </div>
+        );
+      }
+      return null;
+    };
+
+    const app = (
+      <MockedProvider
+        addTypename
+        cache={cache}
+      >
+        <Component />
+      </MockedProvider>
+    );
+
+    return renderToStringWithData(app).then(markup => {
+      expect(spy).toHaveBeenNthCalledWith(1, false);
+      expect(markup).toMatch(/<div.*>3<\/div>/);
+      expect(cache.extract()).toMatchSnapshot();
     });
   });
 });

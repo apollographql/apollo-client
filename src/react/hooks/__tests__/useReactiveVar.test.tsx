@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { render, wait, act } from "@testing-library/react";
 
 import { itAsync } from "../../../testing";
@@ -13,25 +13,23 @@ describe("useReactiveVar Hook", () => {
     function Component() {
       const count = useReactiveVar(counterVar);
 
-      switch (++renderCount) {
-        case 1:
-          expect(count).toBe(0);
-          act(() => {
+      useEffect(() => {
+        switch (++renderCount) {
+          case 1:
+            expect(count).toBe(0);
             counterVar(count + 1);
-          });
-          break;
-        case 2:
-          expect(count).toBe(1);
-          act(() => {
+            break;
+          case 2:
+            expect(count).toBe(1);
             counterVar(counterVar() + 2);
-          });
-          break;
-        case 3:
-          expect(count).toBe(3);
-          break;
-        default:
-          reject(`too many (${renderCount}) renders`);
-      }
+            break;
+          case 3:
+            expect(count).toBe(3);
+            break;
+          default:
+            reject(`too many (${renderCount}) renders`);
+        }
+      });
 
       return null;
     }
@@ -129,20 +127,13 @@ describe("useReactiveVar Hook", () => {
     function Component() {
       const count = useReactiveVar(counterVar);
 
-      switch (++renderCount) {
-        case 1:
-          expect(count).toBe(0);
-          act(() => {
-            counterVar(count + 1);
-          });
-          break;
-        case 2:
-          expect(count).toBe(1);
-          act(() => {
-            counterVar(counterVar() + 2);
-          });
-          break;
-        case 3:
+      useEffect(() => {
+        if (count < 3) {
+          expect(count).toBe(renderCount++);
+          counterVar(count + 1);
+        }
+
+        if (count === 3) {
           expect(count).toBe(3);
           setTimeout(() => {
             unmount();
@@ -151,10 +142,8 @@ describe("useReactiveVar Hook", () => {
               attemptedUpdateAfterUnmount = true;
             }, 10);
           }, 10);
-          break;
-        default:
-          reject(`too many (${renderCount}) renders`);
-      }
+        }
+      });
 
       return null;
     }
@@ -179,5 +168,73 @@ describe("useReactiveVar Hook", () => {
     }).finally(() => {
       console.error = error;
     }).then(resolve, reject);
+  });
+
+  describe("useEffect", () => {
+    itAsync("works if updated higher in the component tree", async (resolve, reject) => {
+      const counterVar = makeVar(0);
+
+      function ComponentOne() {
+        const count = useReactiveVar(counterVar);
+
+        useEffect(() => {
+          counterVar(1);
+        }, []);
+
+        return (<div>{count}</div>);
+      }
+
+      function ComponentTwo() {
+        const count = useReactiveVar(counterVar);
+
+        return (<div>{count}</div>);
+      }
+
+      const { getAllByText } = render(
+        <>
+          <ComponentOne />
+          <ComponentTwo />
+        </>
+      );
+
+      await wait(() => {
+        expect(getAllByText("1")).toHaveLength(2);
+      });
+
+      resolve();
+    });
+
+    itAsync("works if updated lower in the component tree", async (resolve, reject) => {
+      const counterVar = makeVar(0);
+
+      function ComponentOne() {
+        const count = useReactiveVar(counterVar);
+
+        return (<div>{count}</div>);
+      }
+
+      function ComponentTwo() {
+        const count = useReactiveVar(counterVar);
+
+        useEffect(() => {
+          counterVar(1);
+        }, []);
+
+        return (<div>{count}</div>);
+      }
+
+      const { getAllByText } = render(
+        <>
+          <ComponentOne />
+          <ComponentTwo />
+        </>
+      );
+
+      await wait(() => {
+        expect(getAllByText("1")).toHaveLength(2);
+      });
+
+      resolve();
+    });
   });
 });

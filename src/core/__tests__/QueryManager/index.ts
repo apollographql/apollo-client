@@ -37,6 +37,7 @@ import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { ApolloClient } from '../../../core'
+import { mockFetchQuery } from '../ObservableQuery';
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -1352,6 +1353,7 @@ describe('QueryManager', () => {
   });
 
   itAsync('supports cache-only fetchPolicy fetching only cached data', (resolve, reject) => {
+    const spy = jest.spyOn(console, "warn").mockImplementation();
     const primeQuery = gql`
       query primeQuery {
         luke: people_one(id: 1) {
@@ -1396,9 +1398,13 @@ describe('QueryManager', () => {
         return handle.result().then(result => {
           expect(result.data['luke'].name).toBe('Luke Skywalker');
           expect(result.data).not.toHaveProperty('vader');
+          expect(spy).toHaveBeenCalledTimes(1);
         });
       })
-      .then(resolve, reject);
+      .finally(() => {
+        spy.mockRestore();
+      })
+      .then(resolve, reject)
   });
 
   itAsync('runs a mutation', (resolve, reject) => {
@@ -2719,6 +2725,64 @@ describe('QueryManager', () => {
       }),
     ]).then(resolve, reject);
   });
+
+
+  itAsync('only increments "queryInfo.lastRequestId" when fetching data from network', (resolve, reject) => {
+    const query = gql`
+      query query($id: ID!) {
+        people_one(id: $id) {
+          name
+        }
+      }
+    `;
+    const variables = { id: 1 };
+    const dataOne = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+    const mockedResponses = [
+      {
+        request: { query, variables },
+        result: { data: dataOne },
+      },
+    ];
+
+    const queryManager = mockQueryManager(reject, ...mockedResponses);
+    const queryOptions: WatchQueryOptions<any> = {
+      query,
+      variables,
+      fetchPolicy: 'cache-and-network',
+    };
+    const observable = queryManager.watchQuery(queryOptions);
+
+    const mocks = mockFetchQuery(queryManager);
+    const queryId = '1';
+    const getQuery: QueryManager<any>["getQuery"] =
+      (queryManager as any).getQuery.bind(queryManager);
+
+    subscribeAndCount(reject, observable, async (handleCount) => {
+      const query = getQuery(queryId);
+      const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
+      expect(query.lastRequestId).toEqual(1);
+      expect(fqbpCalls.length).toBe(1);
+
+      // Simulate updating the options of the query, which will trigger
+      // fetchQueryByPolicy, but it should just read from cache and not
+      // update "queryInfo.lastRequestId". For more information, see
+      // https://github.com/apollographql/apollo-client/pull/7956#issue-610298427
+      await observable.setOptions({
+        ...queryOptions,
+        fetchPolicy: 'cache-first',
+      });
+
+      // "fetchQueryByPolicy" was called, but "lastRequestId" does not update
+      // since it was able to read from cache.
+      expect(query.lastRequestId).toEqual(1);
+      expect(fqbpCalls.length).toBe(2);
+      resolve();
+    });
+  })
 
   describe('polling queries', () => {
     itAsync('allows you to poll queries', (resolve, reject) => {
@@ -5410,21 +5474,16 @@ describe('QueryManager', () => {
   });
 
   describe('missing cache field warnings', () => {
-    const originalWarn = console.warn;
-    let warnCount = 0;
     let verbosity: ReturnType<typeof setVerbosity>;
-
+    let spy: any;
     beforeEach(() => {
-      warnCount = 0;
       verbosity = setVerbosity("warn");
-      console.warn = (...args: any[]) => {
-        warnCount += 1;
-      };
+      spy = jest.spyOn(console, "warn").mockImplementation();
     });
 
     afterEach(() => {
-      console.warn = originalWarn;
       setVerbosity(verbosity);
+      spy.mockRestore();
     });
 
     function validateWarnings(
@@ -5499,7 +5558,7 @@ describe('QueryManager', () => {
               networkStatus: NetworkStatus.ready,
               partial: true,
             });
-            expect(warnCount).toBe(expectedWarnCount);
+            expect(spy).toHaveBeenCalledTimes(expectedWarnCount);
           },
         ).then(resolve, reject)
       });

@@ -82,7 +82,8 @@ export class SubscriptionData<
     this.currentObservable.query = this.refreshClient().client.subscribe({
       query: options.subscription,
       variables: options.variables,
-      fetchPolicy: options.fetchPolicy
+      fetchPolicy: options.fetchPolicy,
+      context: options.context,
     });
   }
 
@@ -136,9 +137,14 @@ export class SubscriptionData<
   }
 
   private completeSubscription() {
-    const { onSubscriptionComplete } = this.getOptions();
-    if (onSubscriptionComplete) onSubscriptionComplete();
-    this.endSubscription();
+    // We have to defer this endSubscription call, because otherwise multiple
+    // subscriptions for the same component will cause infinite rendering.
+    // See https://github.com/apollographql/apollo-client/pull/7917
+    Promise.resolve().then(() => {
+      const { onSubscriptionComplete } = this.getOptions();
+      if (onSubscriptionComplete) onSubscriptionComplete();
+      this.endSubscription();
+    });
   }
 
   private endSubscription() {

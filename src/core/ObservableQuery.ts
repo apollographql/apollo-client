@@ -10,6 +10,7 @@ import {
   ObservableSubscription,
   iterateObserversSafely,
   isNonEmptyArray,
+  fixObservableSubclass,
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
@@ -632,11 +633,6 @@ once, rather than every time you call fetchMore.`);
       delete this.reobserver;
     }
 
-    // Since the user-provided context object can retain arbitrarily large
-    // amounts of memory, we delete it when the ObservableQuery is torn
-    // down, to avoid the possibility of memory leaks.
-    delete this.options.context;
-
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();
@@ -648,6 +644,10 @@ once, rather than every time you call fetchMore.`);
     this.isTornDown = true;
   }
 }
+
+// Necessary because the ObservableQuery constructor has a different
+// signature than the Observable constructor.
+fixObservableSubclass(ObservableQuery);
 
 function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
   invariant.error('Unhandled error', error.message, error.stack);

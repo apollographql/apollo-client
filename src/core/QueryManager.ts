@@ -1045,6 +1045,23 @@ export class QueryManager<TStore> {
     const includedQueriesById = new Map<string, RefetchQueryDescription[number]>();
     const results = new Map<ObservableQuery<any>, any>();
 
+    function maybeAddResult(oq: ObservableQuery<any>, result: any): boolean {
+      // The onQueryUpdated function can return false to ignore this query and
+      // skip its normal broadcast, or true to allow the usual broadcast to
+      // happen (when diff.result has changed).
+      if (result === false || result === true) {
+        return result;
+      }
+
+      // Returning anything other than true or false from onQueryUpdated will
+      // cause the result to be included in the results Map, while also
+      // canceling/overriding the normal broadcast.
+      results.set(oq, result);
+
+      // Prevent the normal cache broadcast of this result.
+      return false;
+    }
+
     if (include) {
       const queryIdsByQueryName: Record<string, string> = Object.create(null);
       this.queries.forEach((queryInfo, queryId) => {
@@ -1121,14 +1138,13 @@ export class QueryManager<TStore> {
         removeOptimistic,
 
         onWatchUpdated: onQueryUpdated && function (watch, diff) {
-          if (watch.watcher instanceof QueryInfo) {
-            const oq = watch.watcher.observableQuery;
-            if (oq) {
-              includedQueriesById.delete(oq.queryId);
-              results.set(oq, onQueryUpdated!(oq, diff));
-              // Prevent the normal cache broadcast of this result.
-              return false;
-            }
+          const oq =
+            watch.watcher instanceof QueryInfo &&
+            watch.watcher.observableQuery;
+
+          if (oq) {
+            includedQueriesById.delete(oq.queryId);
+            return maybeAddResult(oq, onQueryUpdated(oq, diff));
           }
         },
       });
@@ -1139,11 +1155,12 @@ export class QueryManager<TStore> {
         const queryInfo = this.getQuery(queryId);
         let oq = queryInfo.observableQuery;
         if (oq) {
-          const result = onQueryUpdated
-            ? onQueryUpdated(oq, queryInfo.getDiff())
-            : oq.refetch();
-
-          results.set(oq, result);
+          maybeAddResult(
+            oq,
+            onQueryUpdated
+              ? onQueryUpdated(oq, queryInfo.getDiff())
+              : oq.refetch(),
+          );
 
         } else if (typeof queryNameOrOptions === "object") {
           const options: WatchQueryOptions = {
@@ -1160,7 +1177,7 @@ export class QueryManager<TStore> {
           }));
 
           const fetchPromise = this.fetchQuery(queryId, options);
-          results.set(oq, fetchPromise);
+          maybeAddResult(oq, fetchPromise);
           const stop = () => this.stopQuery(queryId);
           fetchPromise.then(stop, stop);
         }

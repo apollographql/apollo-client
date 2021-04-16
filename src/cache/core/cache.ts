@@ -32,7 +32,7 @@ export type BatchOptions<C extends ApolloCache<any>> = {
     this: C,
     watch: Cache.WatchOptions,
     diff: Cache.DiffResult<any>,
-  ) => void | false;
+  ) => any;
 };
 
 export abstract class ApolloCache<TSerialized> implements DataProxy {

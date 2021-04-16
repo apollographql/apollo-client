@@ -1039,7 +1039,7 @@ export class QueryManager<TStore> {
     updateCache,
     include,
     optimistic = false,
-    removeOptimistic = optimistic ? "TODO" : void 0,
+    removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: PrivateRefetchQueriesOptions<TData, ApolloCache<TStore>>) {
     const includedQueriesById = new Map<string, RefetchQueryDescription[number]>();
@@ -1366,4 +1366,11 @@ export class QueryManager<TStore> {
       clientAwareness: this.clientAwareness,
     };
   }
+}
+
+const prefixCounts: Record<string, number> = Object.create(null);
+function makeUniqueId(prefix: string) {
+  const count = prefixCounts[prefix] || 1;
+  prefixCounts[prefix] = count + 1;
+  return `${prefix}:${count}:${Math.random().toString(36).slice(2)}`;
 }

@@ -31,7 +31,8 @@ export type BatchOptions<C extends ApolloCache<any>> = {
   onWatchUpdated?: (
     this: C,
     watch: Cache.WatchOptions,
-    diff: Cache.DiffResult<any>,
+    newDiff: Cache.DiffResult<any>,
+    oldDiff?: Cache.DiffResult<any>,
   ) => any;
 };
 

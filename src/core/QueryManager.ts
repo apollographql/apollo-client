@@ -1137,14 +1137,14 @@ export class QueryManager<TStore> {
         // temporary optimistic layer, in case that ever matters.
         removeOptimistic,
 
-        onWatchUpdated: onQueryUpdated && function (watch, diff) {
+        onWatchUpdated: onQueryUpdated && function (watch, newDiff, oldDiff) {
           const oq =
             watch.watcher instanceof QueryInfo &&
             watch.watcher.observableQuery;
 
           if (oq) {
             includedQueriesById.delete(oq.queryId);
-            return maybeAddResult(oq, onQueryUpdated(oq, diff));
+            return maybeAddResult(oq, onQueryUpdated(oq, newDiff, oldDiff));
           }
         },
       });

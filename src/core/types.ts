@@ -17,7 +17,8 @@ export type QueryListener = (queryInfo: QueryInfo) => void;
 
 export type OnQueryUpdated<TData> = (
   observableQuery: ObservableQuery,
-  diff: Cache.DiffResult<TData>,
+  newDiff: Cache.DiffResult<TData>,
+  oldDiff?: Cache.DiffResult<TData>,
 ) => boolean | Promise<ApolloQueryResult<TData>>;
 
 export type OperationVariables = Record<string, any>;

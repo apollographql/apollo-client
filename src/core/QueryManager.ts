@@ -1095,11 +1095,11 @@ export class QueryManager<TStore> {
 
     if (updateCache) {
       this.cache.batch({
-        transaction: updateCache,
+        update: updateCache,
 
         // Since you can perform any combination of cache reads and/or writes in
-        // the cache.batch transaction function, its optimistic option can be
-        // either a boolean or a string, representing three distinct modes of
+        // the cache.batch update function, its optimistic option can be either
+        // a boolean or a string, representing three distinct modes of
         // operation:
         //
         // * false: read/write only the root layer
@@ -1110,7 +1110,7 @@ export class QueryManager<TStore> {
         // temporarily created within cache.batch with that string as its ID. If
         // we then pass that same string as the removeOptimistic option, we can
         // make cache.batch immediately remove the optimistic layer after
-        // running the transaction, triggering only one broadcast.
+        // running the updateCache function, triggering only one broadcast.
         //
         // However, the refetchQueries method accepts only true or false for its
         // optimistic option (not string). We interpret true to mean a temporary

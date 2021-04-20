@@ -57,7 +57,7 @@ export namespace Cache {
   export interface BatchOptions<C extends ApolloCache<any>> {
     // Same as the first parameter of performTransaction, except the cache
     // argument will have the subclass type rather than ApolloCache.
-    transaction(cache: C): void;
+    update(cache: C): void;
 
     // Passing a string for this option creates a new optimistic layer, with the
     // given string as its layer.id, just like passing a string for the

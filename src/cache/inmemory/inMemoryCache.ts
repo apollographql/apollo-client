@@ -341,7 +341,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public batch(options: Cache.BatchOptions<InMemoryCache>) {
     const {
-      transaction,
+      update,
       optimistic = true,
       removeOptimistic,
       onWatchUpdated,
@@ -354,7 +354,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         this.data = this.optimisticData = layer;
       }
       try {
-        transaction(this);
+        update(this);
       } finally {
         --this.txCount;
         this.data = data;
@@ -365,16 +365,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     const alreadyDirty = new Set<Cache.WatchOptions>();
 
     if (onWatchUpdated && !this.txCount) {
-      // If an options.onWatchUpdated callback is provided, we want to
-      // call it with only the Cache.WatchOptions objects affected by
-      // options.transaction, but there might be dirty watchers already
-      // waiting to be broadcast that have nothing to do with the
-      // transaction. To prevent including those watchers in the
-      // post-transaction broadcast, we perform this initial broadcast to
-      // collect the dirty watchers, so we can re-dirty them later, after
-      // the post-transaction broadcast, allowing them to receive their
-      // pending broadcasts the next time broadcastWatches is called, just
-      // as they would if we never called cache.batch.
+      // If an options.onWatchUpdated callback is provided, we want to call it
+      // with only the Cache.WatchOptions objects affected by options.update,
+      // but there might be dirty watchers already waiting to be broadcast that
+      // have nothing to do with the update. To prevent including those watchers
+      // in the post-update broadcast, we perform this initial broadcast to
+      // collect the dirty watchers, so we can re-dirty them later, after the
+      // post-update broadcast, allowing them to receive their pending
+      // broadcasts the next time broadcastWatches is called, just as they would
+      // if we never called cache.batch.
       this.broadcastWatches({
         ...options,
         onWatchUpdated(watch) {
@@ -391,14 +390,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.optimisticData = this.optimisticData.addLayer(optimistic, perform);
     } else if (optimistic === false) {
       // Ensure both this.data and this.optimisticData refer to the root
-      // (non-optimistic) layer of the cache during the transaction. Note
-      // that this.data could be a Layer if we are currently executing an
-      // optimistic transaction function, but otherwise will always be an
-      // EntityStore.Root instance.
+      // (non-optimistic) layer of the cache during the update. Note that
+      // this.data could be a Layer if we are currently executing an optimistic
+      // update function, but otherwise will always be an EntityStore.Root
+      // instance.
       perform(this.data);
     } else {
-      // Otherwise, leave this.data and this.optimisticData unchanged and
-      // run the transaction with broadcast batching.
+      // Otherwise, leave this.data and this.optimisticData unchanged and run
+      // the update with broadcast batching.
       perform();
     }
 
@@ -423,8 +422,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
           return result;
         }
       });
-      // Silently re-dirty any watches that were already dirty before the
-      // transaction was performed, and were not broadcast just now.
+      // Silently re-dirty any watches that were already dirty before the update
+      // was performed, and were not broadcast just now.
       if (alreadyDirty.size) {
         alreadyDirty.forEach(watch => this.maybeBroadcastWatch.dirty(watch));
       }
@@ -437,11 +436,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public performTransaction(
-    transaction: (cache: InMemoryCache) => any,
+    update: (cache: InMemoryCache) => any,
     optimisticId?: string | null,
   ) {
     return this.batch({
-      transaction,
+      update,
       optimistic: optimisticId || (optimisticId !== null),
     });
   }

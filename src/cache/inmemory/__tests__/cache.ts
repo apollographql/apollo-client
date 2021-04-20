@@ -1362,7 +1362,7 @@ describe('Cache', () => {
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.writeQuery({
             query: aQuery,
             data: {
@@ -1403,7 +1403,7 @@ describe('Cache', () => {
       dirtied.clear();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.writeQuery({
             query: bQuery,
             data: {
@@ -1474,7 +1474,7 @@ describe('Cache', () => {
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.modify({
             fields: {
               a(value, { INVALIDATE }) {
@@ -1548,7 +1548,7 @@ describe('Cache', () => {
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.modify({
             fields: {
               a(value) {
@@ -1571,7 +1571,7 @@ describe('Cache', () => {
 
       expect(aInfo.diffs).toEqual([
         // This diff resulted from the cache.modify call in the cache.batch
-        // transaction function.
+        // update function.
         {
           complete: true,
           result: {
@@ -1582,7 +1582,7 @@ describe('Cache', () => {
 
       expect(abInfo.diffs).toEqual([
         // This diff resulted from the cache.modify call in the cache.batch
-        // transaction function.
+        // update function.
         {
           complete: true,
           result: {

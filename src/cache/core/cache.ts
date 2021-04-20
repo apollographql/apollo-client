@@ -63,7 +63,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     const optimisticId =
       typeof options.optimistic === "string" ? options.optimistic :
       options.optimistic === false ? null : void 0;
-    this.performTransaction(options.transaction, optimisticId);
+    this.performTransaction(options.update, optimisticId);
   }
 
   public abstract performTransaction(

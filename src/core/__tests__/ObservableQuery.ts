@@ -1957,7 +1957,7 @@ describe('ObservableQuery', () => {
 
         cache.batch({
           optimistic: true,
-          transaction(cache) {
+          update(cache) {
             cache.modify({
               fields: {
                 people_one(value, { INVALIDATE }) {

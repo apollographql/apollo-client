@@ -5,7 +5,7 @@ import { DocumentNode } from 'graphql';
 import { OptimisticWrapperFunction, wrap } from 'optimism';
 import { equal } from '@wry/equality';
 
-import { ApolloCache, BatchOptions } from '../core/cache';
+import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { MissingFieldError } from '../core/types/common';
 import {
@@ -39,7 +39,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 }
 
 type BroadcastOptions = Pick<
-  BatchOptions<InMemoryCache>,
+  Cache.BatchOptions<InMemoryCache>,
   | "optimistic"
   | "onWatchUpdated"
 >
@@ -339,7 +339,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private txCount = 0;
 
-  public batch(options: BatchOptions<InMemoryCache>) {
+  public batch(options: Cache.BatchOptions<InMemoryCache>) {
     const {
       transaction,
       optimistic = true,

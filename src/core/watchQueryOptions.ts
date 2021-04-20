@@ -191,7 +191,9 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
 
 export type RefetchQueryDescription = Array<string | PureQueryOptions>;
 
-export interface PublicRefetchQueriesOptions<
+// Used by ApolloClient["refetchQueries"]
+// TODO Improve documentation comments for this public type.
+export interface RefetchQueriesOptions<
   TData,
   TCache extends ApolloCache<any>,
 > {
@@ -205,10 +207,11 @@ export interface PublicRefetchQueriesOptions<
   onQueryUpdated?: OnQueryUpdated<TData>;
 }
 
-export interface PrivateRefetchQueriesOptions<
+// Used by QueryManager["refetchQueries"]
+export interface InternalRefetchQueriesOptions<
   TData,
   TCache extends ApolloCache<any>,
-> extends Omit<PublicRefetchQueriesOptions<TData, TCache>, "include"> {
+> extends Omit<RefetchQueriesOptions<TData, TCache>, "include"> {
   // Just like the refetchQueries array for a mutation, allowing both strings
   // and PureQueryOptions objects.
   include?: RefetchQueryDescription;

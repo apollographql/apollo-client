@@ -29,7 +29,7 @@ import {
   WatchQueryFetchPolicy,
   ErrorPolicy,
   RefetchQueryDescription,
-  PrivateRefetchQueriesOptions,
+  InternalRefetchQueriesOptions,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -1041,7 +1041,7 @@ export class QueryManager<TStore> {
     optimistic = false,
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
-  }: PrivateRefetchQueriesOptions<TData, ApolloCache<TStore>>) {
+  }: InternalRefetchQueriesOptions<TData, ApolloCache<TStore>>) {
     const includedQueriesById = new Map<string, RefetchQueryDescription[number]>();
     const results = new Map<ObservableQuery<any>, any>();
 

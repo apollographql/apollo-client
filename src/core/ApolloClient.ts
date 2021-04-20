@@ -23,7 +23,7 @@ import {
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-  PublicRefetchQueriesOptions,
+  RefetchQueriesOptions,
 } from './watchQueryOptions';
 
 import {
@@ -539,7 +539,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TData,
     TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
   >(
-    options: PublicRefetchQueriesOptions<TData, TCache>,
+    options: RefetchQueriesOptions<TData, TCache>,
   ): {
     queries: ObservableQuery<any>[];
     updates: any[];

@@ -4,8 +4,8 @@ import { ApolloCache } from '../cache';
 
 export namespace Cache {
   export type WatchCallback = (
-    newDiff: Cache.DiffResult<any>,
-    oldDiff?: Cache.DiffResult<any>,
+    diff: Cache.DiffResult<any>,
+    lastDiff?: Cache.DiffResult<any>,
   ) => void;
 
   export interface ReadOptions<TVariables = any, TData = any>

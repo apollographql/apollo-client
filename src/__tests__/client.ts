@@ -2428,18 +2428,18 @@ describe('client', () => {
   });
 
   it('has a refetchQueries method which calls QueryManager', async () => {
-    // TODO(dannycochran)
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
 
-    // @ts-ignore
-    const spy = jest.spyOn(client.queryManager, 'refetchQueries');
-    await client.refetchQueries({
-      include: ['Author1'],
-    });
-    expect(spy).toHaveBeenCalled();
+    const spy = jest.spyOn(client['queryManager'], 'refetchQueries');
+    spy.mockImplementation(() => new Map);
+
+    const options = { include: ['Author1'] };
+    await client.refetchQueries(options);
+
+    expect(spy).toHaveBeenCalledWith(options);
   });
 
   itAsync('should propagate errors from network interface to observers', (resolve, reject) => {

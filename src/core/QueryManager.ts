@@ -30,6 +30,7 @@ import {
   ErrorPolicy,
   RefetchQueryDescription,
   InternalRefetchQueriesOptions,
+  RefetchQueryDescriptor,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -579,6 +580,7 @@ export class QueryManager<TStore> {
 
   public query<TData, TVars = OperationVariables>(
     options: QueryOptions<TVars, TData>,
+    queryId = this.generateQueryId(),
   ): Promise<ApolloQueryResult<TData>> {
     invariant(
       options.query,
@@ -601,7 +603,6 @@ export class QueryManager<TStore> {
       'pollInterval option only supported on watchQuery.',
     );
 
-    const queryId = this.generateQueryId();
     return this.fetchQuery<TData, TVars>(
       queryId,
       options,
@@ -1043,9 +1044,22 @@ export class QueryManager<TStore> {
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<TData, ApolloCache<TStore>>) {
     const includedQueriesById = new Map<string, {
-      desc: RefetchQueryDescription[number];
+      desc: RefetchQueryDescriptor;
       diff: Cache.DiffResult<any> | undefined;
     }>();
+
+    if (include) {
+      include.forEach(desc => {
+        getQueryIdsForQueryDescriptor(this, desc).forEach(queryId => {
+          includedQueriesById.set(queryId, {
+            desc,
+            diff: typeof desc === "string"
+              ? this.getQuery(queryId).getDiff()
+              : void 0,
+          });
+        });
+      });
+    }
 
     const results = new Map<ObservableQuery<any>, any>();
     function maybeAddResult(oq: ObservableQuery<any>, result: any): boolean {
@@ -1063,41 +1077,6 @@ export class QueryManager<TStore> {
 
       // Prevent the normal cache broadcast of this result.
       return false;
-    }
-
-    if (include) {
-      const queryIdsByQueryName: Record<string, string> = Object.create(null);
-      this.queries.forEach((queryInfo, queryId) => {
-        const oq = queryInfo.observableQuery;
-        const queryName = oq && oq.queryName;
-        if (queryName) {
-          queryIdsByQueryName[queryName] = queryId;
-        }
-      });
-
-      include.forEach(queryNameOrOptions => {
-        if (typeof queryNameOrOptions === "string") {
-          const queryId = queryIdsByQueryName[queryNameOrOptions];
-          if (queryId) {
-            includedQueriesById.set(queryId, {
-              desc: queryNameOrOptions,
-              diff: this.getQuery(queryId).getDiff(),
-            });
-          } else {
-            invariant.warn(`Unknown query name ${
-              JSON.stringify(queryNameOrOptions)
-            } passed to refetchQueries method in options.include array`);
-          }
-        } else {
-          includedQueriesById.set(
-            // We will be issuing a fresh network request for this query, so we
-            // pre-allocate a new query ID here.
-            this.generateQueryId(),
-            { desc: queryNameOrOptions,
-              diff: void 0 },
-          );
-        }
-      });
     }
 
     if (updateCache) {
@@ -1161,21 +1140,15 @@ export class QueryManager<TStore> {
       includedQueriesById.forEach(({ desc, diff }, queryId) => {
         const queryInfo = this.getQuery(queryId);
         let oq = queryInfo.observableQuery;
-        if (oq) {
-          maybeAddResult(
-            oq,
-            onQueryUpdated
-              ? onQueryUpdated(oq, queryInfo.getDiff(), diff)
-              : oq.refetch(),
-          );
+        let fallback: undefined | (() => Promise<ApolloQueryResult<any>>);
 
-        } else if (typeof desc === "object") {
-          const options: WatchQueryOptions = {
-            query: desc.query,
-            variables: desc.variables,
+        if (typeof desc === "string") {
+          fallback = () => oq!.refetch();
+        } else if (desc && typeof desc === "object") {
+          const options = {
+            ...desc,
             fetchPolicy: "network-only",
-            context: desc.context,
-          };
+          } as QueryOptions;
 
           queryInfo.setObservableQuery(oq = new ObservableQuery({
             queryManager: this,
@@ -1183,10 +1156,19 @@ export class QueryManager<TStore> {
             options,
           }));
 
-          const fetchPromise = this.fetchQuery(queryId, options);
-          maybeAddResult(oq, fetchPromise);
-          const stop = () => this.stopQuery(queryId);
-          fetchPromise.then(stop, stop);
+          fallback = () => this.query(options, queryId);
+        }
+
+        if (oq && fallback) {
+          maybeAddResult(
+            oq,
+            // If onQueryUpdated is provided, we want to use it for all included
+            // queries, even the PureQueryOptions ones. Otherwise, we call the
+            // fallback function defined above.
+            onQueryUpdated
+              ? onQueryUpdated(oq, queryInfo.getDiff(), diff)
+              : fallback(),
+          );
         }
       });
     }
@@ -1373,6 +1355,32 @@ export class QueryManager<TStore> {
       clientAwareness: this.clientAwareness,
     };
   }
+}
+
+function getQueryIdsForQueryDescriptor<TStore>(
+  qm: QueryManager<TStore>,
+  desc: RefetchQueryDescriptor,
+) {
+  const queryIds: string[] = [];
+  if (typeof desc === "string") {
+    qm["queries"].forEach(({ observableQuery: oq }, queryId) => {
+      if (oq &&
+          oq.queryName === desc &&
+          oq.hasObservers()) {
+        queryIds.push(queryId);
+      }
+    });
+  } else {
+    // We will be issuing a fresh network request for this query, so we
+    // pre-allocate a new query ID here.
+    queryIds.push(qm.generateQueryId());
+  }
+  if (process.env.NODE_ENV !== "production" && !queryIds.length) {
+    invariant.warn(`Unknown query name ${
+      JSON.stringify(desc)
+    } passed to refetchQueries method in options.include array`);
+  }
+  return queryIds;
 }
 
 const prefixCounts: Record<string, number> = Object.create(null);

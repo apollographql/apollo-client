@@ -189,7 +189,8 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
   context?: DefaultContext;
 }
 
-export type RefetchQueryDescription = Array<string | PureQueryOptions>;
+export type RefetchQueryDescriptor = string | PureQueryOptions;
+export type RefetchQueryDescription = RefetchQueryDescriptor[];
 
 // Used by ApolloClient["refetchQueries"]
 // TODO Improve documentation comments for this public type.

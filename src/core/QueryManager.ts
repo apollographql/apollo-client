@@ -1042,9 +1042,12 @@ export class QueryManager<TStore> {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<TData, ApolloCache<TStore>>) {
-    const includedQueriesById = new Map<string, RefetchQueryDescription[number]>();
-    const results = new Map<ObservableQuery<any>, any>();
+    const includedQueriesById = new Map<string, {
+      desc: RefetchQueryDescription[number];
+      diff: Cache.DiffResult<any> | undefined;
+    }>();
 
+    const results = new Map<ObservableQuery<any>, any>();
     function maybeAddResult(oq: ObservableQuery<any>, result: any): boolean {
       // The onQueryUpdated function can return false to ignore this query and
       // skip its normal broadcast, or true to allow the usual broadcast to
@@ -1076,7 +1079,10 @@ export class QueryManager<TStore> {
         if (typeof queryNameOrOptions === "string") {
           const queryId = queryIdsByQueryName[queryNameOrOptions];
           if (queryId) {
-            includedQueriesById.set(queryId, queryNameOrOptions);
+            includedQueriesById.set(queryId, {
+              desc: queryNameOrOptions,
+              diff: this.getQuery(queryId).getDiff(),
+            });
           } else {
             invariant.warn(`Unknown query name ${
               JSON.stringify(queryNameOrOptions)
@@ -1087,7 +1093,8 @@ export class QueryManager<TStore> {
             // We will be issuing a fresh network request for this query, so we
             // pre-allocate a new query ID here.
             this.generateQueryId(),
-            queryNameOrOptions,
+            { desc: queryNameOrOptions,
+              diff: void 0 },
           );
         }
       });
@@ -1151,23 +1158,23 @@ export class QueryManager<TStore> {
     }
 
     if (includedQueriesById.size) {
-      includedQueriesById.forEach((queryNameOrOptions, queryId) => {
+      includedQueriesById.forEach(({ desc, diff }, queryId) => {
         const queryInfo = this.getQuery(queryId);
         let oq = queryInfo.observableQuery;
         if (oq) {
           maybeAddResult(
             oq,
             onQueryUpdated
-              ? onQueryUpdated(oq, queryInfo.getDiff())
+              ? onQueryUpdated(oq, queryInfo.getDiff(), diff)
               : oq.refetch(),
           );
 
-        } else if (typeof queryNameOrOptions === "object") {
+        } else if (typeof desc === "object") {
           const options: WatchQueryOptions = {
-            query: queryNameOrOptions.query,
-            variables: queryNameOrOptions.variables,
+            query: desc.query,
+            variables: desc.variables,
             fetchPolicy: "network-only",
-            context: queryNameOrOptions.context,
+            context: desc.context,
           };
 
           queryInfo.setObservableQuery(oq = new ObservableQuery({

@@ -3,7 +3,7 @@ title: Optimistic mutation results
 description: Update your UI before your server responds
 ---
 
-It's often possible to predict a mutation operation's most likely result _before_ your GraphQL server returns it. Apollo Client can use this "most likely result" to update your UI **optimistically**, making your app feel more responsive to the user.
+It's often possible to predict the most likely result of a mutation _before_ your GraphQL server returns it. Apollo Client can use this "most likely result" to update your UI **optimistically**, making your app feel more responsive to the user.
 
 For example, let's say we have a blog application that supports the following mutation:
 
@@ -21,7 +21,7 @@ Our app knows what the updated `Comment` object will probably look like, which m
 
 ## The `optimisticResponse` option
 
-To enable this optimistic UI behavior, we provide an `optimisticResponse` option to the [mutate function](../data/mutations/#calling-the-mutate-function) we use to execute our mutation.
+To enable this optimistic UI behavior, we provide an `optimisticResponse` option to the [mutate function](../data/mutations/#calling-the-mutate-function) that we use to execute our mutation.
 
 Let's look at some code:
 

@@ -1160,15 +1160,15 @@ export class QueryManager<TStore> {
         }
 
         if (oq && fallback) {
-          maybeAddResult(
-            oq,
-            // If onQueryUpdated is provided, we want to use it for all included
-            // queries, even the PureQueryOptions ones. Otherwise, we call the
-            // fallback function defined above.
-            onQueryUpdated
-              ? onQueryUpdated(oq, queryInfo.getDiff(), diff)
-              : fallback(),
-          );
+          // If onQueryUpdated is provided, we want to use it for all included
+          // queries, even the PureQueryOptions ones. Otherwise, we call the
+          // fallback function defined above.
+          let result = onQueryUpdated &&
+            onQueryUpdated(oq, queryInfo.getDiff(), diff);
+          if (!onQueryUpdated || result === true) {
+            result = fallback();
+          }
+          maybeAddResult(oq, result);
         }
       });
     }

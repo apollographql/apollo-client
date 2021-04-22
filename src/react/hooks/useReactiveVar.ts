@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { ReactiveVar } from '../../core';
 
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
@@ -9,7 +9,7 @@ export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
   // We subscribe to variable updates on initial mount and when the value has
   // changed. This avoids a subtle bug in React.StrictMode where multiple listeners
   // are added, leading to inconsistent updates.
-  useEffect(() => rv.onNextChange(setValue), [value]);
+  useLayoutEffect(() => rv.onNextChange(setValue), [value]);
   // Once the component is unmounted, ignore future updates. Note that the
   // above useEffect function returns a mute function without calling it,
   // allowing it to be called when the component unmounts. This is
@@ -24,9 +24,7 @@ export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
   // a useEffect higher in the component tree changing a variable's value
   // before the above useEffect can set the onNextChange handler. Note that React
   // will not schedule an update if setState is called with the same value as before.
-  useEffect(() => {
-    setValue(rv())
-  }, []);
+  useEffect(() => setValue(rv()), []);
 
   return value;
 }

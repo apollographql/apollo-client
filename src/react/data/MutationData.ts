@@ -71,9 +71,6 @@ export class MutationData<
     return this.mutate(mutationFunctionOptions)
       .then((response: FetchResult<TData>) => {
         this.onMutationCompleted(response, mutationId);
-        if (response.errors) {
-
-        }
         return response;
       })
       .catch((error: ApolloError) => {

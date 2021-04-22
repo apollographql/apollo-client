@@ -8,6 +8,9 @@
 - During server-side rendering, allow initial `useQuery` calls to return final `{ loading: false, data }` results when the cache already contains the necessary data. <br/>
   [@benjamn](https://github.com/benjamn) in [#7983](https://github.com/apollographql/apollo-client/pull/7983)
 
+- Prevent `undefined` mutation result in useMutation <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#8018](https://github.com/apollographql/apollo-client/pull/8018)
+
 ## Apollo Client 3.3.14
 
 ### Improvements

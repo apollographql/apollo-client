@@ -729,7 +729,6 @@ describe('reading from the store', () => {
 }`,
         ["normal", "missing"],
         query,
-        false, // clientOnly
         {}, // variables
       ),
       new MissingFieldError(
@@ -738,7 +737,6 @@ describe('reading from the store', () => {
 }`,
         ["clientOnly", "missing"],
         query,
-        true, // clientOnly
         {}, // variables
       ),
     ]);

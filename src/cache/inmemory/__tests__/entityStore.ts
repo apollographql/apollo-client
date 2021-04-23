@@ -1213,14 +1213,12 @@ describe('EntityStore', () => {
           'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
           ["authorOfBook", "hobby"],
           expect.anything(), // query
-          false, // clientOnly
           expect.anything(), // variables
         ),
         new MissingFieldError(
           'Can\'t find field \'publisherOfBook\' on ROOT_QUERY object',
           ["publisherOfBook"],
           expect.anything(), // query
-          false, // clientOnly
           expect.anything(), // variables
         ),
       ],
@@ -1814,7 +1812,6 @@ describe('EntityStore', () => {
         "Dangling reference to missing Author:2 object",
         ["book", "author"],
         expect.anything(), // query
-        false, // clientOnly
         expect.anything(), // variables
       ),
     ];
@@ -2084,7 +2081,6 @@ describe('EntityStore', () => {
           'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
           ["book", "title"],
           expect.anything(), // query
-          false, // clientOnly
           expect.anything(), // variables
         ),
       ],

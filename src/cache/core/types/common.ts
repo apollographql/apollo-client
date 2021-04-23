@@ -23,7 +23,6 @@ export class MissingFieldError extends Error {
     public readonly message: string,
     public readonly path: (string | number)[],
     public readonly query: import('graphql').DocumentNode,
-    public readonly clientOnly: boolean,
     public readonly variables?: Record<string, any>,
   ) {
     super(message);

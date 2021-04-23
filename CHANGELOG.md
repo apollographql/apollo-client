@@ -1,3 +1,12 @@
+## Apollo Client 3.3.16 (to be released)
+
+### Bug fixes
+- Prevent `undefined` mutation result in useMutation <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#8018](https://github.com/apollographql/apollo-client/pull/8018)
+
+- Fix `useReactiveVar` not rerendering for successive synchronous calls. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8022](https://github.com/apollographql/apollo-client/pull/8022)
+
 ## Apollo Client 3.3.15
 
 ### Bug fixes
@@ -7,9 +16,6 @@
 
 - During server-side rendering, allow initial `useQuery` calls to return final `{ loading: false, data }` results when the cache already contains the necessary data. <br/>
   [@benjamn](https://github.com/benjamn) in [#7983](https://github.com/apollographql/apollo-client/pull/7983)
-
-- Prevent `undefined` mutation result in useMutation <br/>
-  [@jcreighton](https://github.com/jcreighton) in [#8018](https://github.com/apollographql/apollo-client/pull/8018)
 
 ## Apollo Client 3.3.14
 

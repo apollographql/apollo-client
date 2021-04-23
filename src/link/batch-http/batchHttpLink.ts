@@ -16,7 +16,7 @@ import { BatchLink } from '../batch';
 export namespace BatchHttpLink {
   export type Options = Pick<
     BatchLink.Options,
-    'batchMax' | 'debounce' | 'batchInterval' | 'batchKey'
+    'batchMax' | 'batchDebounce' | 'batchInterval' | 'batchKey'
   > & HttpOptions;
 }
 
@@ -25,7 +25,7 @@ export namespace BatchHttpLink {
  * context can include the headers property, which will be passed to the fetch function
  */
 export class BatchHttpLink extends ApolloLink {
-  private debounce?: boolean;
+  private batchDebounce?: boolean;
   private batchInterval: number;
   private batchMax: number;
   private batcher: ApolloLink;
@@ -39,7 +39,7 @@ export class BatchHttpLink extends ApolloLink {
       fetch: fetcher,
       includeExtensions,
       batchInterval,
-      debounce,
+      batchDebounce,
       batchMax,
       batchKey,
       ...requestOptions
@@ -62,7 +62,7 @@ export class BatchHttpLink extends ApolloLink {
       headers: requestOptions.headers,
     };
 
-    this.debounce = debounce;
+    this.batchDebounce = batchDebounce;
     this.batchInterval = batchInterval || 10;
     this.batchMax = batchMax || 10;
 
@@ -206,7 +206,7 @@ export class BatchHttpLink extends ApolloLink {
       });
 
     this.batcher = new BatchLink({
-      debounce: this.debounce,
+      batchDebounce: this.batchDebounce,
       batchInterval: this.batchInterval,
       batchMax: this.batchMax,
       batchKey,

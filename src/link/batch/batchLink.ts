@@ -15,10 +15,10 @@ export namespace BatchLink {
 
     /**
      * "batchInterval" is a throttling behavior by default, if you instead wish
-     * to debounce outbound requests, set "debounce" to true. More useful
+     * to debounce outbound requests, set "batchDebounce" to true. More useful
      * for mutations than queries.
      */
-    debounce?: boolean;
+    batchDebounce?: boolean;
 
     /**
      * The maximum number of operations to include in one fetch.
@@ -46,7 +46,7 @@ export class BatchLink extends ApolloLink {
     super();
 
     const {
-      debounce,
+      batchDebounce,
       batchInterval = 10,
       batchMax = 0,
       batchHandler = () => null,
@@ -54,7 +54,7 @@ export class BatchLink extends ApolloLink {
     } = fetchParams || {};
 
     this.batcher = new OperationBatcher({
-      debounce,
+      batchDebounce,
       batchInterval,
       batchMax,
       batchHandler,

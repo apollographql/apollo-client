@@ -332,7 +332,7 @@ describe('OperationBatcher', () => {
       jest.useFakeTimers();
       const batchInterval = 10;
       const myBatcher = new OperationBatcher({
-        debounce: true,
+        batchDebounce: true,
         batchInterval,
         batchHandler,
       });

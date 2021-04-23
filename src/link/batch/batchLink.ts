@@ -3,6 +3,7 @@ import { Observable } from '../../utilities';
 import { OperationBatcher, BatchHandler } from './batching';
 export { OperationBatcher, BatchableRequest, BatchHandler } from './batching';
 
+
 export namespace BatchLink {
   export interface Options {
     /**
@@ -11,6 +12,13 @@ export namespace BatchLink {
      * Defaults to 10.
      */
     batchInterval?: number;
+
+    /**
+     * "batchInterval" is a throttling behavior by default, if you instead wish
+     * to debounce outbound requests, set "debounce" to true. More useful
+     * for mutations than queries.
+     */
+    debounce?: boolean;
 
     /**
      * The maximum number of operations to include in one fetch.
@@ -38,6 +46,7 @@ export class BatchLink extends ApolloLink {
     super();
 
     const {
+      debounce,
       batchInterval = 10,
       batchMax = 0,
       batchHandler = () => null,
@@ -45,6 +54,7 @@ export class BatchLink extends ApolloLink {
     } = fetchParams || {};
 
     this.batcher = new OperationBatcher({
+      debounce,
       batchInterval,
       batchMax,
       batchHandler,

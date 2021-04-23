@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { StrictMode, useEffect } from "react";
 import { render, wait, act } from "@testing-library/react";
 
 import { itAsync } from "../../../testing";
@@ -232,6 +232,40 @@ describe("useReactiveVar Hook", () => {
 
       await wait(() => {
         expect(getAllByText("1")).toHaveLength(2);
+      });
+
+      resolve();
+    });
+
+    itAsync("works with strict mode", async (resolve, reject) => {
+      const counterVar = makeVar(0);
+      const mock = jest.fn();
+
+      function Component() {
+        const count = useReactiveVar(counterVar);
+        useEffect(() => {
+          mock(count);
+        }, [count]);
+
+        useEffect(() => {
+          Promise.resolve().then(() => {
+            counterVar(counterVar() + 1);
+          });
+        }, []);
+
+        return (
+          <div />
+        );
+      }
+
+      render(
+        <StrictMode>
+          <Component />
+        </StrictMode>
+      );
+
+      await wait(() => {
+        expect(mock).toHaveBeenCalledWith(1);
       });
 
       resolve();

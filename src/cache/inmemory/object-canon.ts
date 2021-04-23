@@ -2,12 +2,17 @@ import { Trie } from "@wry/trie";
 import { canUseWeakMap } from "../../utilities";
 import { objToStr } from "./helpers";
 
-class Pass<T> {
-  constructor(public readonly value: T) {}
-}
-
 function isObjectOrArray(value: any): boolean {
   return !!value && typeof value === "object";
+}
+
+function shallowCopy<T>(value: T): T {
+  if (isObjectOrArray(value)) {
+    return Array.isArray(value)
+      ? value.slice(0) as any as T
+      : { __proto__: Object.getPrototypeOf(value), ...value };
+  }
+  return value;
 }
 
 // When programmers talk about the "canonical form" of an object, they
@@ -79,20 +84,23 @@ export class ObjectCanon {
 
   // Make the ObjectCanon assume this value has already been
   // canonicalized.
-  public pass<T>(value: T): T extends object ? Pass<T> : T;
+  private passes = new WeakMap<object, object>();
+  public pass<T>(value: T): T;
   public pass(value: any) {
-    return isObjectOrArray(value) ? new Pass(value) : value;
+    if (isObjectOrArray(value)) {
+      const copy = shallowCopy(value);
+      this.passes.set(copy, value);
+      return copy;
+    }
+    return value;
   }
 
   // Returns the canonical version of value.
   public admit<T>(value: T): T;
   public admit(value: any) {
     if (isObjectOrArray(value)) {
-      // If value is a Pass object returned by canon.pass, unwrap it
-      // as-is, without canonicalizing its value.
-      if (value instanceof Pass) {
-        return value.value;
-      }
+      const original = this.passes.get(value);
+      if (original) return original;
 
       switch (objToStr.call(value)) {
         case "[object Array]": {

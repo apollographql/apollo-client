@@ -34,6 +34,10 @@ See [Executing queries with `getDataFromTree`](../../performance/server-side-ren
 
 The `renderToStringWithData` function is similar to `getDataFromTree`, but uses [`ReactDOMServer.renderToString`](https://reactjs.org/docs/react-dom-server.html#rendertostring) to render its result instead of [`ReactDOMServer.renderToStaticMarkup`](https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup) (the React docs help explain the difference).
 
+```js
+import { renderToStringWithData } from "@apollo/client/react/ssr";
+```
+
 ### Params
 
 | Param | Type | description |

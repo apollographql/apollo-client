@@ -5,13 +5,15 @@ description: Apollo Client React server side rendering API
 
 ## Installation
 
-```
-npm install @apollo/react-ssr
-```
+Apollo Client >= 3 includes React hooks functionality out of the box. You don't need to install any additional packages.
 
 ## `getDataFromTree`
 
 The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all.
+
+```js
+import { getDataFromTree } from "@apollo/client/react/ssr";
+```
 
 ### Params
 

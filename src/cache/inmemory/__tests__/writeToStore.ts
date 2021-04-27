@@ -1812,6 +1812,140 @@ describe('writing to the store', () => {
         todos: null,
       });
     });
+
+    it("handles multiple overlaping fragments (issue #8057)", () => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Amount: {
+            keyFields: false
+          },
+        },
+        possibleTypes: {
+          AmountInterface: ["VatAmount", "Amount", "CoinsAmount"],
+        },
+      });
+
+      const AmountFragment = gql`
+        fragment AmountFragment on AmountInterface {
+          amount
+          currency
+        }
+      `;
+
+      const OrderItemsList_OrderFragment = gql`
+        ## BUG: This fragment is defined on type which has identity ("id" field).
+        ## When spreaded to the "ApplicationDetailFragment", it overwrites its
+        ## selection for "rewards"
+        fragment OrderItemsList_OrderFragment on Order {
+          items {
+            rewards {
+              # coins # TODO: uncomment will pass the test
+              isPurchased
+              discount {
+                ...AmountFragment
+              }
+              relatedObjects {
+                serviceId
+              }
+              type
+            }
+          }
+        }
+      `;
+
+      const ApplicationDetailFragment = gql`
+        fragment ApplicationDetailFragment on Application {
+          order {
+            ## The "OrderItemsList_OrderFragment" is nested here, when spreaded
+            ## directly to the "ApplicationDetailQuery", the test will pass
+            ...OrderItemsList_OrderFragment
+            items {
+              id
+              rewards {
+                coins {
+                  ...AmountFragment
+                }
+                discount {
+                  ...AmountFragment
+                }
+                isPurchased
+                relatedObjects {
+                  serviceId
+                }
+                type
+              }
+            }
+          }
+        }
+      `;
+
+      const ApplicationDetailQuery = gql`
+        query ApplicationDetailQuery($id: String!) {
+          myContractApplication(id: $id) {
+            ...ApplicationDetailFragment
+          }
+        }
+        ${ApplicationDetailFragment}
+        ${OrderItemsList_OrderFragment}
+        ${AmountFragment}
+      `;
+
+      const result = {
+        myContractApplication: {
+          __typename: "Application",
+          order: {
+            __typename: "Order",
+            items: [
+              {
+                __typename: "OrderItem",
+                id: "JUTVV93M8G1Rw4kGJsmtBW",
+                rewards: [
+                  {
+                    coins: {
+                      currency: "XXX",
+                      amount: 500,
+                      __typename: "CoinsAmount"
+                    },
+                    discount: {
+                      currency: "CZK",
+                      amount: 10000,
+                      __typename: "Amount"
+                    },
+                    type: "FREE_DELIVERY",
+                    isPurchased: false,
+                    relatedObjects: null,
+                    __typename: "Reward"
+                  }
+                ]
+              },
+              {
+                __typename: "OrderItem",
+                id: "Rz4rsMMEtGzzrrCfa8En55",
+                rewards: []
+              }
+            ]
+          }
+        }
+      };
+
+      cache.writeQuery({
+        query: ApplicationDetailQuery,
+        data: result,
+        variables: {
+          id: "QMvzmo6pZmV24UxFjbgKeQ",
+        },
+      });
+
+      const orderId = cache.identify({
+        __typename: "OrderItem",
+        id: "JUTVV93M8G1Rw4kGJsmtBW",
+      })!;
+
+      expect(cache.extract()[orderId]).toEqual(
+        result.myContractApplication.order.items[0]
+      );
+    });
+
     it('should not warn if a field is defered', () => {
       let originalWarn = console.warn;
       console.warn = jest.fn((...args) => {});

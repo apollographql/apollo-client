@@ -1819,6 +1819,20 @@ describe('writing to the store', () => {
           Amount: {
             keyFields: false
           },
+          OrderItem: {
+            fields: {
+              rewards: {
+                merge(existing: any[] | undefined, incoming: any[], { mergeObjects }) {
+                  if (existing) {
+                    const merged = existing.map((e, i) => mergeObjects(e, incoming[i]));
+                    const additional = incoming.slice(existing.length);
+                    return [ ...merged, ...additional ];
+                  }
+                  return incoming;
+                }
+              }
+            }
+          },
         },
         possibleTypes: {
           AmountInterface: ["VatAmount", "Amount", "CoinsAmount"],

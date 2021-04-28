@@ -41,6 +41,13 @@ export class HttpLink extends ApolloLink {
       checkFetcher(preferredFetch || backupFetch);
     }
 
+    let controller: AbortController | false;
+    if (!(options as any).signal) {
+      const { controller: _controller, signal } = createSignalIfSupported();
+      controller = _controller as any;
+      if (controller) (options as any).signal = signal;
+    }
+
     const linkConfig = {
       http: { includeExtensions },
       options: requestOptions.fetchOptions,
@@ -115,13 +122,6 @@ export class HttpLink extends ApolloLink {
         }
       }
 
-      let controller: any;
-      if (!(options as any).signal) {
-        const { controller: _controller, signal } = createSignalIfSupported();
-        controller = _controller;
-        if (controller) (options as any).signal = signal;
-      }
-
       // If requested, set method to GET if there are no mutations.
       const definitionIsMutation = (d: DefinitionNode) => {
         return d.kind === 'OperationDefinition' && d.operation === 'mutation';
@@ -170,19 +170,19 @@ export class HttpLink extends ApolloLink {
           .catch(err => {
             // fetch was cancelled so it's already been cleaned up in the unsubscribe
             if (err.name === 'AbortError') return;
-            // if it is a network error, BUT there is graphql result info
-            // fire the next observer before calling error
-            // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networErrors`
-            // to pass to UI
-            // this should only happen if we *also* have data as part of the response key per
-            // the spec
+            // if it is a network error, BUT there is graphql result info fire
+            // the next observer before calling error this gives apollo-client
+            // (and react-apollo) the `graphqlErrors` and `networErrors` to
+            // pass to UI this should only happen if we *also* have data as
+            // part of the response key per the spec
             if (err.result && err.result.errors && err.result.data) {
-              // if we don't call next, the UI can only show networkError because AC didn't
-              // get any graphqlErrors
-              // this is graphql execution result info (i.e errors and possibly data)
-              // this is because there is no formal spec how errors should translate to
+              // if we don't call next, the UI can only show networkError
+              // because AC didn't get any graphqlErrors this is graphql
+              // execution result info (i.e errors and possibly data) this is
+              // because there is no formal spec how errors should translate to
               // http status codes. So an auth error (401) could have both data
-              // from a public field, errors from a private field, and a status of 401
+              // from a public field, errors from a private field, and a status
+              // of 401
               // {
               //  user { // this will have errors
               //    firstName
@@ -209,8 +209,6 @@ export class HttpLink extends ApolloLink {
           });
 
         return () => {
-          // XXX support canceling this request
-          // https://developers.google.com/web/updates/2017/09/abortable-fetch
           if (controller) controller.abort();
         };
       });

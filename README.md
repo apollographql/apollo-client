@@ -23,7 +23,7 @@ The Apollo Client API reference can be found at: <br/>
 - [@jcreighton](https://github.com/jcreighton) (Apollo)
 - [@brainkim](https://github.com/brainkim) (Apollo)
 
-### Who is Apollo?
+## Who is Apollo?
 
 [Apollo Graph Inc.](https://apollographql.com/) is the company behind the industry's leading tools for building applications with GraphQL:
 

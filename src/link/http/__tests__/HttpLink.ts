@@ -1002,6 +1002,7 @@ describe('HttpLink', () => {
       responseBody = JSON.parse(responseBodyText);
       return Promise.resolve(responseBodyText);
     });
+
     const textWithData = jest.fn(() => {
       responseBody = {
         data: { stub: { id: 1 } },
@@ -1018,12 +1019,15 @@ describe('HttpLink', () => {
 
       return Promise.resolve(JSON.stringify(responseBody));
     });
+
     const fetch = jest.fn((uri, options) => {
       return Promise.resolve({ text });
     });
+
     beforeEach(() => {
       fetch.mockReset();
     });
+
     it('makes it easy to do stuff on a 401', done => {
       const middleware = new ApolloLink((operation, forward) => {
         return new Observable(ob => {
@@ -1070,6 +1074,7 @@ describe('HttpLink', () => {
         }),
       );
     });
+
     it('throws an error if response code is > 300 and returns data', done => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: textWithData }),
@@ -1093,6 +1098,7 @@ describe('HttpLink', () => {
         },
       );
     });
+
     it('throws an error if only errors are returned', done => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: textWithErrors }),
@@ -1112,6 +1118,7 @@ describe('HttpLink', () => {
         },
       );
     });
+
     it('throws an error if empty response from the server ', done => {
       fetch.mockReturnValueOnce(Promise.resolve({ text }));
       text.mockReturnValueOnce(Promise.resolve('{ "body": "boo" }'));
@@ -1128,6 +1135,7 @@ describe('HttpLink', () => {
         }),
       );
     });
+
     it("throws if the body can't be stringified", done => {
       fetch.mockReturnValueOnce(Promise.resolve({ data: {}, text }));
       const link = createHttpLink({
@@ -1156,6 +1164,7 @@ describe('HttpLink', () => {
         }),
       );
     });
+
     it('supports being cancelled and does not throw', done => {
       let called = false;
       class AbortController {
@@ -1198,9 +1207,9 @@ describe('HttpLink', () => {
       );
     });
 
-    const body = '{';
-    const unparsableJson = jest.fn(() => Promise.resolve(body));
     it('throws an error if response is unparsable', done => {
+      const body = '{';
+      const unparsableJson = jest.fn(() => Promise.resolve(body));
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: unparsableJson }),
       );

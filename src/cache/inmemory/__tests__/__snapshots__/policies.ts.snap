@@ -1211,6 +1211,86 @@ Object {
 }
 `;
 
+exports[`type policies field policies custom field policy drop functions are called if merge function returns undefined 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todoList": Object {
+      "__ref": "ToDoList:{}",
+    },
+  },
+  "Task:{\\"taskID\\":1}": Object {
+    "__typename": "Task",
+    "taskID": 1,
+    "text": "task #1",
+  },
+  "Task:{\\"taskID\\":2}": Object {
+    "__typename": "Task",
+    "taskID": 2,
+    "text": "task #2",
+  },
+  "ToDoList:{}": Object {
+    "__typename": "ToDoList",
+    "tasks": Array [
+      Object {
+        "__ref": "Task:{\\"taskID\\":1}",
+      },
+      Object {
+        "__ref": "Task:{\\"taskID\\":2}",
+      },
+    ],
+  },
+}
+`;
+
+exports[`type policies field policies custom field policy drop functions are called if merge function returns undefined 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todoList": Object {
+      "__ref": "ToDoList:{}",
+    },
+  },
+  "Task:{\\"taskID\\":1}": Object {
+    "__typename": "Task",
+    "taskID": 1,
+    "text": "task #1",
+  },
+  "Task:{\\"taskID\\":2}": Object {
+    "__typename": "Task",
+    "taskID": 2,
+    "text": "task #2",
+  },
+  "Task:{\\"taskID\\":3}": Object {
+    "__typename": "Task",
+    "taskID": 3,
+    "text": "task #3",
+  },
+  "Task:{\\"taskID\\":4}": Object {
+    "__typename": "Task",
+    "taskID": 4,
+    "text": "task #4",
+  },
+  "ToDoList:{}": Object {
+    "__typename": "ToDoList",
+    "tasks": Array [
+      Object {
+        "__ref": "Task:{\\"taskID\\":1}",
+      },
+      Object {
+        "__ref": "Task:{\\"taskID\\":2}",
+      },
+      Object {
+        "__ref": "Task:{\\"taskID\\":3}",
+      },
+      Object {
+        "__ref": "Task:{\\"taskID\\":4}",
+      },
+    ],
+  },
+}
+`;
+
 exports[`type policies field policies read, merge, and modify functions can access options.storage 1`] = `
 Object {
   "ROOT_QUERY": Object {

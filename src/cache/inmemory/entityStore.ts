@@ -13,8 +13,8 @@ import {
   maybeDeepFreeze,
   canUseWeakMap,
 } from '../../utilities';
-import { NormalizedCache, NormalizedCacheObject } from './types';
-import { hasOwn, fieldNameFromStoreName } from './helpers';
+import { NormalizedCache, NormalizedCacheObject, ReadMergeModifyContext } from './types';
+import { hasOwn, fieldNameFromStoreName, storeValueIsStoreObject } from './helpers';
 import { Policies, StorageType } from './policies';
 import { Cache } from '../core/types/Cache';
 import {
@@ -99,7 +99,7 @@ export abstract class EntityStore implements NormalizedCache {
     older: string | StoreObject,
     newer: StoreObject | string,
   ): void {
-    let dataId: string | undefined;
+    let dataId: string;
 
     const existing: StoreObject | undefined =
       typeof older === "string"
@@ -116,6 +116,7 @@ export abstract class EntityStore implements NormalizedCache {
     if (!incoming) return;
 
     invariant(
+      // @ts-ignore
       typeof dataId === "string",
       "store.merge expects a string ID",
     );
@@ -123,13 +124,10 @@ export abstract class EntityStore implements NormalizedCache {
     const merged: StoreObject =
       new DeepMerger(storeObjectReconciler).merge(existing, incoming);
 
-    // Even if merged === existing, existing may have come from a lower
-    // layer, so we always need to set this.data[dataId] on this level.
-    this.data[dataId] = merged;
-
     if (merged !== existing) {
       delete this.refs[dataId];
       if (this.group.caching) {
+        const isLayer = this instanceof Layer;
         const fieldsToDirty: Record<string, 1> = Object.create(null);
 
         // If we added a new StoreObject where there was previously none, dirty
@@ -160,8 +158,9 @@ export abstract class EntityStore implements NormalizedCache {
 
             // If merged[storeFieldName] has become undefined, and this is the
             // Root layer, actually delete the property from the merged object,
-            // which is guaranteed to have been created fresh in this method.
-            if (merged[storeFieldName] === void 0 && !(this instanceof Layer)) {
+            // which is guaranteed to have been created fresh in store.merge.
+            // TODO Move this to the end of the store.merge method.
+            if (merged[storeFieldName] === void 0 && !isLayer) {
               delete merged[storeFieldName];
             }
           }
@@ -178,9 +177,81 @@ export abstract class EntityStore implements NormalizedCache {
         }
 
         Object.keys(fieldsToDirty).forEach(
-          fieldName => this.group.dirty(dataId as string, fieldName));
+          fieldName => this.group.dirty(dataId, fieldName));
+      }
+
+      // Make sure we have a (string | number)[] path for every object in the
+      // merged object tree, including non-normalized non-Reference objects that
+      // are embedded/nested within normalized parent objects. The path of such
+      // objects will be an array starting with the string ID of the closest
+      // enclosing entity object, followed by the string and number properties
+      // that lead from the entity to the nested object within it.
+      this.group.assignPaths(dataId, merged);
+
+      if (existing) {
+        // Collect objects and field names removed by this merge, so we can run
+        // drop functions configured for the fields that are about to removed
+        // (before we finally set this.data[dataId] = merged, below).
+        const drops: [StoreObject, string][] = [];
+
+        const walk = (exVal: StoreValue, inVal: StoreValue | undefined) => {
+          if (exVal === inVal) return;
+
+          if (Array.isArray(exVal)) {
+            (exVal as StoreValue[]).forEach((exChild, i) => {
+              const inChild = inVal && Array.isArray(inVal) ? inVal[i] : void 0;
+              walk(exChild, inChild);
+            });
+
+          } else if (storeValueIsStoreObject(exVal)) {
+            Object.keys(exVal).forEach(storeFieldName => {
+              const exChild = exVal[storeFieldName];
+              const inChild = inVal && storeValueIsStoreObject(inVal)
+                ? inVal[storeFieldName]
+                : void 0;
+
+              // Visit children before running dropField for eChild.
+              walk(exChild, inChild);
+
+              if (inChild === void 0) {
+                drops.push([exVal, storeFieldName]);
+              }
+            });
+          }
+        };
+
+        // To detect field removals (in order to run drop functions), we can
+        // restrict our attention to the incoming fields, since those are the
+        // top-level fields that might have changed.
+        Object.keys(incoming).forEach(storeFieldName => {
+          const eChild = existing[storeFieldName];
+          const iChild = incoming[storeFieldName];
+
+          walk(eChild, iChild);
+
+          if (iChild === void 0) {
+            drops.push([existing, storeFieldName]);
+          }
+        });
+
+        if (drops.length) {
+          const context: ReadMergeModifyContext = { store: this };
+
+          drops.forEach(([storeObject, storeFieldName]) => {
+            this.policies.dropField(
+              storeObject.__typename,
+              storeObject,
+              storeFieldName,
+              context,
+            );
+          });
+        }
       }
     }
+
+    // Even if merged === existing, existing may have come from a lower
+    // layer, so we always need to set this.data[dataId] on this level.
+    this.data[dataId] = merged;
   }
 
   public modify(
@@ -225,7 +296,10 @@ export abstract class EntityStore implements NormalizedCache {
               ...sharedDetails,
               fieldName,
               storeFieldName,
-              storage: this.getStorage(dataId, storeFieldName),
+              storage: this.group.getStorage(
+                makeReference(dataId),
+                storeFieldName,
+              ),
             });
           if (newValue === INVALIDATE) {
             this.group.dirty(dataId, storeFieldName);
@@ -352,11 +426,6 @@ export abstract class EntityStore implements NormalizedCache {
     return this;
   }
 
-  public abstract getStorage(
-    idOrObj: string | StoreObject,
-    ...storeFieldNames: (string | number)[]
-  ): StorageType;
-
   // Maps root entity IDs to the number of times they have been retained, minus
   // the number of times they have been released. Retained entities keep other
   // entities they reference (even indirectly) from being garbage collected.
@@ -449,7 +518,8 @@ export abstract class EntityStore implements NormalizedCache {
   // Used to compute cache keys specific to this.group.
   public makeCacheKey(...args: any[]): object;
   public makeCacheKey() {
-    return this.group.keyMaker.lookupArray(arguments);
+    const found = this.group.keyMaker.lookupArray(arguments);
+    return found.cacheKey || (found.cacheKey = Object.create(null));
   }
 
   // Bound function that can be passed around to provide easy access to fields
@@ -549,9 +619,80 @@ class CacheGroup {
     }
   }
 
+  // This WeakMap maps every non-normalized object reference contained by the
+  // store to the path of that object within the enclosing entity object. This
+  // information is collected by the assignPaths method after every store.merge,
+  // so store.data should never contain any un-pathed objects. As a reminder,
+  // these object references are handled immutably from here on, so the objects
+  // should not move around in a way that invalidates these paths. This path
+  // information is useful in the getStorage method, below.
+  private paths = new WeakMap<object, (string | number)[]>();
+
+  public assignPaths(dataId: string, merged: StoreObject) {
+    const paths = this.paths;
+    const path: (string | number)[] = [dataId];
+
+    function assign(this: void, obj: StoreValue) {
+      if (Array.isArray(obj)) {
+        obj.forEach(handleChild);
+      } else if (storeValueIsStoreObject(obj) && !paths.has(obj)) {
+        Object.keys(obj).forEach(storeFieldName => {
+          const child = obj[storeFieldName];
+          handleChild(child, storeFieldName);
+        });
+      }
+    }
+
+    function handleChild(child: StoreValue, key: string | number) {
+      if (storeValueIsStoreObject(child)) {
+        if (paths.has(child)) return;
+        paths.set(child, path.concat(key));
+      }
+      try {
+        path.push(key);
+        assign(child);
+      } finally {
+        invariant(path.pop() === key);
+      }
+    }
+
+    assign(merged);
+  }
+
+  public getStorage(
+    parentObjOrRef: StoreObject | Reference,
+    ...pathSuffix: (string | number)[]
+  ) {
+    const path: any[] = [];
+    const push = (key: string | number) => path.push(key);
+
+    if (isReference(parentObjOrRef)) {
+      path.push(parentObjOrRef.__ref);
+    } else {
+      // See assignPaths to understand how this map is populated.
+      const assignedPath = this.paths.get(parentObjOrRef);
+      if (assignedPath) {
+        assignedPath.forEach(push);
+      } else {
+        // If we can't find a path for this object, use the object reference
+        // itself as a key.
+        path.push(parentObjOrRef);
+      }
+    }
+
+    // Append the provided suffix to the path array.
+    pathSuffix.forEach(push);
+
+    const found = this.keyMaker.lookupArray(path);
+    return found.storage || (found.storage = Object.create(null));
+  }
+
   // Used by the EntityStore#makeCacheKey method to compute cache keys
   // specific to this CacheGroup.
-  public readonly keyMaker = new Trie<object>(canUseWeakMap);
+  public readonly keyMaker = new Trie<{
+    cacheKey?: object;
+    storage?: StorageType;
+  }>(canUseWeakMap);
 }
 
 function makeDepKey(dataId: string, storeFieldName: string) {
@@ -592,11 +733,6 @@ export namespace EntityStore {
     public removeLayer(): Root {
       // Never remove the root layer.
       return this;
-    }
-
-    public readonly storageTrie = new Trie<StorageType>(canUseWeakMap);
-    public getStorage(): StorageType {
-      return this.storageTrie.lookupArray(arguments);
     }
   }
 }
@@ -662,12 +798,6 @@ class Layer extends EntityStore {
       ...super.findChildRefIds(dataId),
     } : fromParent;
   }
-
-  public getStorage(): StorageType {
-    let p: EntityStore = this.parent;
-    while ((p as Layer).parent) p = (p as Layer).parent;
-    return p.getStorage.apply(p, arguments);
-  }
 }
 
 // Represents a Layer permanently installed just above the Root, which allows
@@ -702,10 +832,11 @@ class Stump extends Layer {
 function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
-  property: string,
+  storeFieldName: string,
 ): StoreValue {
-  const existingValue = existingObject[property];
-  const incomingValue = incomingObject[property];
+  const existingValue = existingObject[storeFieldName];
+  const incomingValue = incomingObject[storeFieldName];
+
   // Wherever there is a key collision, prefer the incoming value, unless
   // it is deeply equal to the existing value. It's worth checking deep
   // equality here (even though blindly returning incoming would be

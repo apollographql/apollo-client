@@ -24,10 +24,12 @@ import {
 
 import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
 import { makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject } from './helpers';
+import { EntityStore } from './entityStore';
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
-import { EntityStore } from './entityStore';
 import { Cache } from '../../core';
+
+type GetStorageParams = Parameters<EntityStore["group"]["getStorage"]>;
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -343,7 +345,7 @@ export class StoreWriter {
     existing: StoreValue,
     incoming: T,
     context: WriteContext,
-    getStorageArgs?: Parameters<EntityStore["getStorage"]>,
+    getStorageArgs?: GetStorageParams,
   ): T {
     if (mergeTree.map.size && !isReference(incoming)) {
       const e: StoreObject | Reference | undefined = (
@@ -367,7 +369,7 @@ export class StoreWriter {
       // sequence of storeFieldName strings/numbers identifying the nested
       // field name path of each field value to be merged.
       if (e && !getStorageArgs) {
-        getStorageArgs = [isReference(e) ? e.__ref : e];
+        getStorageArgs = [e];
       }
 
       // It's possible that applying merge functions to this subtree will
@@ -423,7 +425,9 @@ export class StoreWriter {
         incoming,
         mergeTree.info,
         context,
-        getStorageArgs && context.store.getStorage(...getStorageArgs),
+        getStorageArgs && (
+          context.store as EntityStore
+        ).group.getStorage(...getStorageArgs),
       );
     }
 

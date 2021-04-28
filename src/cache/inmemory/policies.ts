@@ -47,6 +47,7 @@ import {
   CanReadFunction,
 } from '../core/types/common';
 import { WriteContext } from './writeToStore';
+import { EntityStore } from './entityStore';
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -131,6 +132,7 @@ export type FieldPolicy<
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
   merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
+  drop?: FieldDropFunction<TExisting>;
 };
 
 export type StorageType = Record<string, any>;
@@ -221,6 +223,11 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   options: FieldFunctionOptions,
 ) => SafeReadonly<TExisting>;
 
+export type FieldDropFunction<TExisting = any> = (
+  existing: SafeReadonly<TExisting> | undefined,
+  options: FieldFunctionOptions,
+) => void;
+
 export const defaultDataIdFromObject = (
   { __typename, id, _id }: Readonly<StoreObject>,
   context?: KeyFieldsContext,
@@ -256,6 +263,9 @@ export type PossibleTypesMap = {
   [supertype: string]: string[];
 };
 
+type InternalTypePolicy = Policies["typePolicies"][string];
+type InternalFieldPolicy = InternalTypePolicy["fields"][string];
+
 export class Policies {
   private typePolicies: {
     [__typename: string]: {
@@ -266,6 +276,7 @@ export class Policies {
           keyFn?: KeyArgsFunction;
           read?: FieldReadFunction<any>;
           merge?: FieldMergeFunction<any>;
+          drop?: FieldDropFunction<any>;
         };
       };
     };
@@ -441,7 +452,7 @@ export class Policies {
         if (typeof incoming === "function") {
           existing.read = incoming;
         } else {
-          const { keyArgs, read, merge } = incoming;
+          const { keyArgs, read, merge, drop } = incoming;
 
           existing.keyFn =
             // Pass false to disable argument-based differentiation of
@@ -460,6 +471,10 @@ export class Policies {
           }
 
           setMerge(existing, merge);
+
+          if (typeof drop === "function") {
+            existing.drop = drop;
+          }
         }
 
         if (existing.read && existing.merge) {
@@ -511,7 +526,7 @@ export class Policies {
     });
   }
 
-  private getTypePolicy(typename: string): Policies["typePolicies"][string] {
+  private getTypePolicy(typename: string): InternalTypePolicy {
     if (!hasOwn.call(this.typePolicies, typename)) {
       const policy: Policies["typePolicies"][string] =
         this.typePolicies[typename] = Object.create(null);
@@ -560,11 +575,7 @@ export class Policies {
     typename: string | undefined,
     fieldName: string,
     createIfMissing: boolean,
-  ): {
-    keyFn?: KeyArgsFunction;
-    read?: FieldReadFunction<any>;
-    merge?: FieldMergeFunction<any>;
-  } | undefined {
+  ): InternalFieldPolicy | undefined {
     if (typename) {
       const fieldPolicies = this.getTypePolicy(typename).fields;
       return fieldPolicies[fieldName] || (
@@ -753,12 +764,8 @@ export class Policies {
         objectOrReference,
         options,
         context,
-        context.store.getStorage(
-          isReference(objectOrReference)
-            ? objectOrReference.__ref
-            : objectOrReference,
-          storeFieldName,
-        ),
+        (context.store as EntityStore).group
+          .getStorage(objectOrReference, storeFieldName),
       );
 
       // Call read(existing, readOptions) with cacheSlot holding this.cache.
@@ -772,20 +779,41 @@ export class Policies {
     return existing;
   }
 
+  public dropField(
+    typename: string | undefined,
+    objectOrReference: StoreObject | Reference,
+    storeFieldName: string,
+    context: ReadMergeModifyContext,
+  ) {
+    const fieldName = fieldNameFromStoreName(storeFieldName);
+    const policy = this.getFieldPolicy(typename, fieldName, false);
+    const drop = policy && policy.drop;
+    if (drop) {
+      drop(
+        context.store.getFieldValue(objectOrReference, storeFieldName),
+        // TODO Consolidate this code with similiar code in readField?
+        makeFieldFunctionOptions(
+          this,
+          objectOrReference,
+          { typename, fieldName },
+          context,
+          (context.store as EntityStore).group
+            .getStorage(objectOrReference, storeFieldName),
+        ),
+      );
+    }
+  }
+
   public getMergeFunction(
     parentTypename: string | undefined,
     fieldName: string,
     childTypename: string | undefined,
   ): FieldMergeFunction | undefined {
-    let policy:
-      | Policies["typePolicies"][string]
-      | Policies["typePolicies"][string]["fields"][string]
-      | undefined =
-      this.getFieldPolicy(parentTypename, fieldName, false);
-    let merge = policy && policy.merge;
+    const fieldPolicy = this.getFieldPolicy(parentTypename, fieldName, false);
+    let merge = fieldPolicy && fieldPolicy.merge;
     if (!merge && childTypename) {
-      policy = this.getTypePolicy(childTypename);
-      merge = policy && policy.merge;
+      const typePolicy = this.getTypePolicy(childTypename);
+      merge = typePolicy && typePolicy.merge;
     }
     return merge;
   }

@@ -1705,6 +1705,308 @@ describe("type policies", function () {
       expect(cache.extract()).toMatchSnapshot();
     });
 
+    describe("custom field policy drop functions", function () {
+      const makeCache = (resolve: () => void) => new InMemoryCache({
+        typePolicies: {
+          Parent: {
+            keyFields: false,
+            fields: {
+              deleteMe: {
+                read(existing, { storage }) {
+                  expect(existing).toBe("merged value");
+                  expect(storage.cached).toBe(existing);
+                  return "read value";
+                },
+                merge(existing, incoming, { storage }) {
+                  expect(existing).toBeUndefined();
+                  expect(incoming).toBe("initial value");
+                  return storage.cached = "merged value";
+                },
+                drop(existing, { storage }) {
+                  expect(existing).toBe("merged value");
+                  expect(storage.cached).toBe(existing);
+                  delete storage.cached;
+                  // Finish the test (success).
+                  resolve();
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          parent {
+            deleteMe @client
+          }
+        }
+      `;
+
+      function testWriteAndRead(cache: InMemoryCache) {
+        cache.writeQuery({
+          query,
+          data: {
+            parent: {
+              __typename: "Parent",
+              deleteMe: "initial value",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            parent: {
+              __typename: "Parent",
+              deleteMe: "merged value",
+            },
+          },
+        });
+
+        expect(cache.readQuery({ query })).toEqual({
+          parent: {
+            __typename: "Parent",
+            deleteMe: "read value",
+          },
+        });
+      }
+
+      itAsync("are called when a parent object is evicted from the cache", resolve => {
+        const cache = makeCache(resolve);
+        testWriteAndRead(cache);
+
+        const evicted = cache.evict({
+          // Note that we're removing Query.parent, not directly removing
+          // Parent.deleteMe, but we still expect the Parent.deleteMe drop
+          // function to be called.
+          fieldName: "parent",
+        });
+        expect(evicted).toBe(true);
+      });
+
+      itAsync("are called when cache.modify causes the parent object to lose fields", resolve => {
+        const cache = makeCache(resolve);
+        testWriteAndRead(cache);
+
+        const modified = cache.modify({
+          fields: {
+            parent(value: StoreObject) {
+              const { deleteMe, ...rest } = value;
+              expect(rest).toEqual({
+                __typename: "Parent",
+              });
+              return rest;
+            },
+          },
+        });
+        expect(modified).toBe(true);
+      });
+
+      itAsync("are called even if cache is cleared/restored", resolve => {
+        const cache = makeCache(resolve);
+        testWriteAndRead(cache);
+
+        const snapshot = cache.extract();
+        cache.reset();
+        expect(cache.extract()).toEqual({});
+        cache.restore(snapshot);
+        expect(cache.extract()).toEqual(snapshot);
+
+        cache.writeQuery({
+          query,
+          overwrite: true,
+          data: {
+            parent: {
+              __typename: "Parent",
+              deleteMe: void 0,
+            },
+          },
+        });
+      });
+
+      itAsync("are called if merge function returns undefined", resolve => {
+        const cache = new InMemoryCache({
+          typePolicies: {
+            ToDoList: {
+              keyFields: [],
+              fields: {
+                tasks: {
+                  keyArgs: false,
+
+                  merge(existing: number[] | undefined, incoming: number[], { args }) {
+                    if (args && args.deleteOnMerge) return;
+                    return existing ? [
+                      ...existing,
+                      ...incoming,
+                    ] : incoming;
+                  },
+
+                  drop(existing) {
+                    expect(existing).toEqual([
+                      { __ref: 'Task:{"taskID":1}' },
+                      { __ref: 'Task:{"taskID":2}' },
+                      { __ref: 'Task:{"taskID":3}' },
+                      { __ref: 'Task:{"taskID":4}' },
+                    ]);
+                    // Finish the test (success).
+                    resolve();
+                  },
+                },
+              },
+            },
+
+            Task: {
+              keyFields: ["taskID"],
+            },
+          },
+        });
+
+        const query = gql`
+          query {
+            todoList {
+              tasks {
+                taskID
+                text
+              }
+            }
+          }
+        `;
+
+        const deleteQuery = gql`
+          query {
+            todoList {
+              tasks(deleteOnMerge: true) {
+                taskID
+                text
+              }
+            }
+          }
+        `;
+
+        const deleteData = {
+          todoList: {
+            __typename: "ToDoList",
+            tasks: [],
+          },
+        };
+
+        // This write will cause the merge function to return undefined, but
+        // since the field is already undefined, the undefined return from the
+        // merge function should not trigger the drop function.
+        cache.writeQuery({
+          query: deleteQuery,
+          data: deleteData,
+        });
+
+        cache.writeQuery({
+          query,
+          data: {
+            todoList: {
+              __typename: "ToDoList",
+              tasks: [
+                { __typename: "Task", taskID: 1, text: "task #1" },
+                { __typename: "Task", taskID: 2, text: "task #2" },
+              ],
+            },
+          },
+        });
+
+        expect(cache.extract()).toMatchSnapshot();
+
+        cache.writeQuery({
+          query,
+          data: {
+            todoList: {
+              __typename: "ToDoList",
+              tasks: [
+                { __typename: "Task", taskID: 3, text: "task #3" },
+                { __typename: "Task", taskID: 4, text: "task #4" },
+              ],
+            },
+          },
+        });
+
+        expect(cache.extract()).toMatchSnapshot();
+
+        // Since the ToDoList.tasks field has data now, this deletion should
+        // trigger the drop function, unlike the last time we used deleteQuery.
+        cache.writeQuery({
+          query: deleteQuery,
+          data: deleteData,
+        });
+      });
+
+      itAsync("are called for fields within garbage collected objects", (resolve, reject) => {
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Garbage: {
+              keyFields: ["gid"],
+              fields: {
+                isToxic: {
+                  drop(isToxic: boolean, { readField }) {
+                    const gid = readField<number>("gid")!;
+                    if (expectedToxicities.has(gid)) {
+                      expect(expectedToxicities.get(gid)).toBe(isToxic);
+                      if (expectedToxicities.delete(gid) &&
+                          expectedToxicities.size === 0) {
+                        resolve();
+                      }
+                    } else {
+                      reject(`unexpectedly dropped garbage ${gid}`);
+                    }
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        const expectedToxicities = new Map<number, boolean>();
+        expectedToxicities.set(234, true);
+        expectedToxicities.set(456, false);
+
+        const query = gql`
+          query {
+            garbages {
+              gid
+              isToxic
+            }
+          }
+        `;
+
+        cache.writeQuery({
+          query,
+          data: {
+            garbages: [
+              { __typename: "Garbage", gid: 123, isToxic: false },
+              { __typename: "Garbage", gid: 234, isToxic: true },
+              { __typename: "Garbage", gid: 345, isToxic: true },
+              { __typename: "Garbage", gid: 456, isToxic: false },
+            ],
+          },
+        });
+
+        expect(cache.gc()).toEqual([]);
+
+        cache.writeQuery({
+          query,
+          overwrite: true,
+          data: {
+            garbages: [
+              { __typename: "Garbage", gid: 123, isToxic: false },
+              { __typename: "Garbage", gid: 345, isToxic: true },
+            ],
+          },
+        });
+
+        expect(cache.gc().sort()).toEqual([
+          'Garbage:{"gid":234}',
+          'Garbage:{"gid":456}',
+        ]);
+      });
+    });
+
     it("merge functions can deduplicate items using readField", function () {
       const cache = new InMemoryCache({
         typePolicies: {

@@ -102,7 +102,7 @@ export default [
   ...entryPoints.map(prepareBundle),
   // Convert the ESM entry point to a single CJS bundle.
   prepareCJS(
-    './dist/index.js',
+    './dist/core/index.js',
     './dist/apollo-client.cjs.js',
   ),
   // Minify that single CJS bundle.

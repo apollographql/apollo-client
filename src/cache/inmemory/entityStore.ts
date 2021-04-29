@@ -184,28 +184,35 @@ export abstract class EntityStore implements NormalizedCache {
         // drop functions configured for the fields that are about to removed
         // (before we finally set this.data[dataId] = merged, below).
         const drops: [StoreObject, string][] = [];
+        const empty: StoreObject | any[] = Object.create(null);
 
-        const walk = (exVal: StoreValue, inVal: StoreValue | undefined) => {
-          if (exVal === inVal) return;
+        const scanOldDataForFieldsToDrop = (
+          oldVal: StoreValue,
+          newVal: StoreValue | undefined,
+        ) => {
+          if (oldVal === newVal) return;
 
-          if (Array.isArray(exVal)) {
-            (exVal as StoreValue[]).forEach((exChild, i) => {
-              const inChild = inVal && Array.isArray(inVal) ? inVal[i] : void 0;
-              walk(exChild, inChild);
+          if (Array.isArray(oldVal)) {
+            const newArray: any[] =
+              Array.isArray(newVal) ? newVal : empty as any[];
+
+            (oldVal as StoreValue[]).forEach((oldChild, i) => {
+              scanOldDataForFieldsToDrop(oldChild, newArray[i]);
             });
 
-          } else if (storeValueIsStoreObject(exVal)) {
-            Object.keys(exVal).forEach(storeFieldName => {
-              const exChild = exVal[storeFieldName];
-              const inChild = inVal && storeValueIsStoreObject(inVal)
-                ? inVal[storeFieldName]
-                : void 0;
+          } else if (storeValueIsStoreObject(oldVal)) {
+            const newObject: StoreObject =
+              storeValueIsStoreObject(newVal) ? newVal : empty as StoreObject;
+
+            Object.keys(oldVal).forEach(storeFieldName => {
+              const oldChild = oldVal[storeFieldName];
+              const newChild = newObject[storeFieldName];
 
               // Visit children before running dropField for eChild.
-              walk(exChild, inChild);
+              scanOldDataForFieldsToDrop(oldChild, newChild);
 
-              if (inChild === void 0) {
-                drops.push([exVal, storeFieldName]);
+              if (newChild === void 0) {
+                drops.push([oldVal, storeFieldName]);
               }
             });
           }
@@ -217,12 +224,15 @@ export abstract class EntityStore implements NormalizedCache {
         // restrict our attention to the incoming fields, since those are the
         // top-level fields that might have changed.
         Object.keys(incoming).forEach(storeFieldName => {
-          const eChild = existing[storeFieldName];
-          const iChild = incoming[storeFieldName];
+          // Although we're using the keys from incoming, we want to compare
+          // existing data to merged data, since the merged data have a much
+          // better chance of being partly === to the existing data, whereas
+          // incoming tends to be all fresh objects.
+          const newFieldValue = merged[storeFieldName];
 
-          walk(eChild, iChild);
+          scanOldDataForFieldsToDrop(existing[storeFieldName], newFieldValue);
 
-          if (iChild === void 0) {
+          if (newFieldValue === void 0) {
             drops.push([existing, storeFieldName]);
 
             // If merged[storeFieldName] has become undefined, and this is the

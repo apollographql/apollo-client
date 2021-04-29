@@ -668,10 +668,10 @@ class CacheGroup {
     ...pathSuffix: (string | number)[]
   ) {
     const path: any[] = [];
-    const push = (key: string | number) => path.push(key);
+    const push = (key: StoreObject | string | number) => path.push(key);
 
     if (isReference(parentObjOrRef)) {
-      path.push(parentObjOrRef.__ref);
+      push(parentObjOrRef.__ref);
     } else {
       // See assignPaths to understand how this map is populated.
       const assignedPath = this.paths.get(parentObjOrRef);
@@ -680,7 +680,7 @@ class CacheGroup {
       } else {
         // If we can't find a path for this object, use the object reference
         // itself as a key.
-        path.push(parentObjOrRef);
+        push(parentObjOrRef);
       }
     }
 

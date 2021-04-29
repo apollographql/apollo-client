@@ -638,11 +638,13 @@ class CacheGroup {
       if (Array.isArray(obj)) {
         obj.forEach(handleChild);
       } else if (storeValueIsStoreObject(obj) && !paths.has(obj)) {
-        Object.keys(obj).forEach(storeFieldName => {
-          const child = obj[storeFieldName];
-          handleChild(child, storeFieldName);
-        });
+        Object.keys(obj).forEach(handleObjectProperty, obj);
       }
+    }
+
+    function handleObjectProperty(this: StoreObject, storeFieldName: string) {
+      const child = this[storeFieldName];
+      handleChild(child, storeFieldName);
     }
 
     function handleChild(child: StoreValue, key: string | number) {

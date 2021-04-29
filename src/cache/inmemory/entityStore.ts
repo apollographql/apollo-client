@@ -127,7 +127,6 @@ export abstract class EntityStore implements NormalizedCache {
     if (merged !== existing) {
       delete this.refs[dataId];
       if (this.group.caching) {
-        const isLayer = this instanceof Layer;
         const fieldsToDirty: Record<string, 1> = Object.create(null);
 
         // If we added a new StoreObject where there was previously none, dirty
@@ -154,14 +153,6 @@ export abstract class EntityStore implements NormalizedCache {
             if (fieldName !== storeFieldName &&
                 !this.policies.hasKeyArgs(merged.__typename, fieldName)) {
               fieldsToDirty[fieldName] = 1;
-            }
-
-            // If merged[storeFieldName] has become undefined, and this is the
-            // Root layer, actually delete the property from the merged object,
-            // which is guaranteed to have been created fresh in store.merge.
-            // TODO Move this to the end of the store.merge method.
-            if (merged[storeFieldName] === void 0 && !isLayer) {
-              delete merged[storeFieldName];
             }
           }
         });
@@ -220,6 +211,8 @@ export abstract class EntityStore implements NormalizedCache {
           }
         };
 
+        const isLayer = this instanceof Layer;
+
         // To detect field removals (in order to run drop functions), we can
         // restrict our attention to the incoming fields, since those are the
         // top-level fields that might have changed.
@@ -231,6 +224,15 @@ export abstract class EntityStore implements NormalizedCache {
 
           if (iChild === void 0) {
             drops.push([existing, storeFieldName]);
+
+            // If merged[storeFieldName] has become undefined, and this is the
+            // Root layer, actually delete the property from the merged object,
+            // which is guaranteed to have been created fresh in store.merge.
+            if (hasOwn.call(merged, storeFieldName) &&
+                merged[storeFieldName] === void 0 &&
+                !isLayer) {
+              delete merged[storeFieldName];
+            }
           }
         });
 

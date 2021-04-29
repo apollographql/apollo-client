@@ -25,11 +25,11 @@ The Apollo Client API reference can be found at: <br/>
 
 ## Who is Apollo?
 
-[Apollo Graph Inc.](https://apollographql.com/) is the company behind the industry's leading tools for building applications with GraphQL:
+[Apollo Graph, Inc.](https://apollographql.com/) creates industry-leading tools for building applications with GraphQL:
 
-- [Apollo Client](https://www.apollographql.com/apollo-client/) – most popular GraphQL client for the web. Apollo also builds and maintains [apollo-ios](https://github.com/apollographql/apollo-ios) and [apollo-android](https://github.com/apollographql/apollo-android).
-- [Apollo Server](https://www.apollographql.com/docs/apollo-server/) – build a production-ready JavaScript GraphQL server in a schema-first way.
-- [Apollo Studio](https://www.apollographql.com/studio/develop/) – a turnkey portal for your GraphQL developers with the most feature-rich GraphQL IDE available, the [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer/), and intelligent schema search and documentation.
-- [Apollo Federation](https://www.apollographql.com/apollo-federation) – create and manage a single data graph comprised of subgraphs that can be controlled and managed with independent lifecycles.
+- [Apollo Client](https://www.apollographql.com/apollo-client/) – The most popular GraphQL client for the web. Apollo also builds and maintains [Apollo iOS](https://github.com/apollographql/apollo-ios) and [Apollo Android](https://github.com/apollographql/apollo-android).
+- [Apollo Server](https://www.apollographql.com/docs/apollo-server/) – Build a production-ready JavaScript GraphQL server with a schema-first approach.
+- [Apollo Studio](https://www.apollographql.com/studio/develop/) – A turnkey portal for GraphQL developers, featuring a powerful GraphQL IDE (the [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer/)), metrics reporting, schema search, and documentation.
+- [Apollo Federation](https://www.apollographql.com/apollo-federation) – Create and manage a single data graph composed of subgraphs that can be developed independently.
 
-We are fully committed to pushing the frontier of graph development forward across our developer tools in open source frameworks, hosted software tooling, developer extensions, and more.
+We are fully committed to advancing the frontier of graph development with open-source libraries, hosted software tooling, developer extensions, and community contributions.

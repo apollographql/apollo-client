@@ -185,8 +185,11 @@ export abstract class EntityStore implements NormalizedCache {
         // (before we finally set this.data[dataId] = merged, below).
         const drops: [StoreObject, string][] = [];
         const empty: StoreObject | any[] = Object.create(null);
+        const isLayer = this instanceof Layer;
+        const haveAnyDropFunctions = this.policies.dropCount > 0;
 
-        const scanOldDataForFieldsToDrop = (
+        // This function object is created only if we have any drop functions.
+        const scanOldDataForFieldsToDrop = haveAnyDropFunctions ? (
           oldVal: StoreValue,
           newVal: StoreValue | undefined,
         ) => {
@@ -197,7 +200,7 @@ export abstract class EntityStore implements NormalizedCache {
               Array.isArray(newVal) ? newVal : empty as any[];
 
             (oldVal as StoreValue[]).forEach((oldChild, i) => {
-              scanOldDataForFieldsToDrop(oldChild, newArray[i]);
+              scanOldDataForFieldsToDrop!(oldChild, newArray[i]);
             });
 
           } else if (storeValueIsStoreObject(oldVal)) {
@@ -209,16 +212,14 @@ export abstract class EntityStore implements NormalizedCache {
               const newChild = newObject[storeFieldName];
 
               // Visit children before running dropField for eChild.
-              scanOldDataForFieldsToDrop(oldChild, newChild);
+              scanOldDataForFieldsToDrop!(oldChild, newChild);
 
               if (newChild === void 0) {
                 drops.push([oldVal, storeFieldName]);
               }
             });
           }
-        };
-
-        const isLayer = this instanceof Layer;
+        } : void 0;
 
         // To detect field removals (in order to run drop functions), we can
         // restrict our attention to the incoming fields, since those are the
@@ -230,7 +231,14 @@ export abstract class EntityStore implements NormalizedCache {
           // incoming tends to be all fresh objects.
           const newFieldValue = merged[storeFieldName];
 
-          scanOldDataForFieldsToDrop(existing[storeFieldName], newFieldValue);
+          // No point scanning the existing data for fields with drop functions
+          // if we happen to know the Policies object has no drop functions.
+          if (haveAnyDropFunctions) {
+            scanOldDataForFieldsToDrop!(
+              existing[storeFieldName],
+              newFieldValue,
+            );
+          }
 
           if (newFieldValue === void 0) {
             drops.push([existing, storeFieldName]);
@@ -246,7 +254,7 @@ export abstract class EntityStore implements NormalizedCache {
           }
         });
 
-        if (drops.length) {
+        if (haveAnyDropFunctions && drops.length) {
           const context: ReadMergeModifyContext = { store: this };
 
           drops.forEach(([storeObject, storeFieldName]) => {

@@ -474,6 +474,7 @@ export class Policies {
 
           if (typeof drop === "function") {
             existing.drop = drop;
+            ++(this as { dropCount: number }).dropCount;
           }
         }
 
@@ -779,28 +780,32 @@ export class Policies {
     return existing;
   }
 
+  public readonly dropCount = 0;
+
   public dropField(
     typename: string | undefined,
     objectOrReference: StoreObject | Reference,
     storeFieldName: string,
     context: ReadMergeModifyContext,
   ) {
-    const fieldName = fieldNameFromStoreName(storeFieldName);
-    const policy = this.getFieldPolicy(typename, fieldName, false);
-    const drop = policy && policy.drop;
-    if (drop) {
-      drop(
-        context.store.getFieldValue(objectOrReference, storeFieldName),
-        // TODO Consolidate this code with similiar code in readField?
-        makeFieldFunctionOptions(
-          this,
-          objectOrReference,
-          { typename, fieldName },
-          context,
-          (context.store as EntityStore).group
-            .getStorage(objectOrReference, storeFieldName),
-        ),
-      );
+    if (this.dropCount) {
+      const fieldName = fieldNameFromStoreName(storeFieldName);
+      const policy = this.getFieldPolicy(typename, fieldName, false);
+      const drop = policy && policy.drop;
+      if (drop) {
+        drop(
+          context.store.getFieldValue(objectOrReference, storeFieldName),
+          // TODO Consolidate this code with similiar code in readField?
+          makeFieldFunctionOptions(
+            this,
+            objectOrReference,
+            { typename, fieldName },
+            context,
+            (context.store as EntityStore).group
+              .getStorage(objectOrReference, storeFieldName),
+          ),
+        );
+      }
     }
   }
 

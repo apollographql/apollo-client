@@ -639,8 +639,16 @@ class CacheGroup {
   // should not move around in a way that invalidates these paths. This path
   // information is useful in the getStorage method, below.
   private paths = new WeakMap<object, (string | number)[]>();
+  private pending = new Map<string, StoreObject>();
 
   public assignPaths(dataId: string, merged: StoreObject) {
+    // Since path assignment can be expensive, this method merely registers the
+    // pending assignment and returns immediately. The private assign method
+    // will be called with these arguments only if needed by getStorage.
+    this.pending.set(dataId, merged);
+  }
+
+  private assign(dataId: string, merged: StoreObject) {
     const paths = this.paths;
     const path: (string | number)[] = [dataId];
 
@@ -682,15 +690,23 @@ class CacheGroup {
 
     if (isReference(parentObjOrRef)) {
       push(parentObjOrRef.__ref);
-    } else {
+    } else while (true) {
       // See assignPaths to understand how this map is populated.
       const assignedPath = this.paths.get(parentObjOrRef);
       if (assignedPath) {
         assignedPath.forEach(push);
+        break;
+      }
+      if (this.pending.size) {
+        // If we didn't find a path for this StoreObject, but we have some
+        // pending path assignments to do, do those assignments and try again.
+        this.pending.forEach((object, dataId) => this.assign(dataId, object));
+        this.pending.clear();
       } else {
         // If we can't find a path for this object, use the object reference
         // itself as a key.
         push(parentObjOrRef);
+        break;
       }
     }
 

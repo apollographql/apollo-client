@@ -4,6 +4,7 @@ sidebar_title: Error handling
 ---
 
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
+import LinkChain from '../../shared/link-chain.mdx';
 
 Apollo Client can encounter a variety of errors when executing operations on your GraphQL server. Apollo Client helps you handle these errors according to their type, enabling you to show appropriate information to the user when an error occurs.
 
@@ -135,22 +136,18 @@ The [Apollo Link](../api/link/introduction/) library enables you to configure ad
 
 As a recommended first step, you can add an [`onError` link](../api/link/apollo-link-error/) to your [link chain](../api/link/introduction/#handling-a-response) that receives error details and acts on them accordingly.
 
-This `onError` link checks for `graphQLErrors` or a `networkError` in the server's response. It logs the details of whichever error(s) it finds.
+The example below passes the `ApolloClient` constructor a link chain with two links:
 
-```js
-import { onError } from "@apollo/client/link/error";
+* An `onError` link that checks for `graphQLErrors` or a `networkError` in the server's response. It logs the details of whichever error(s) it finds.
+* An `HttpLink` that sends each GraphQL operation to your server.
+    * _This is the chain's [terminating link](../api/link/introduction/#the-terminating-link)._
 
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors)
-    graphQLErrors.forEach(({ message, locations, path }) =>
-      console.log(
-        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
-      ),
-    );
 
-  if (networkError) console.log(`[Network error]: ${networkError}`);
-});
-```
+<ExpansionPanel title="Click to expand example">
+
+<LinkChain/>
+
+</ExpansionPanel>
 
 ### Retrying operations
 

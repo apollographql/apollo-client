@@ -61,6 +61,15 @@
 ### Documentation
 TBD
 
+## Apollo Client 3.3.16
+
+### Bug fixes
+- Prevent `undefined` mutation result in useMutation <br/>
+  [@jcreighton](https://github.com/jcreighton) in [#8018](https://github.com/apollographql/apollo-client/pull/8018)
+
+- Fix `useReactiveVar` not rerendering for successive synchronous calls. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8022](https://github.com/apollographql/apollo-client/pull/8022)
+
 ## Apollo Client 3.3.15
 
 - Increment `queryInfo.lastRequestId` only when making a network request through the `ApolloLink` chain, rather than every time `fetchQueryByPolicy` is called. <br/>

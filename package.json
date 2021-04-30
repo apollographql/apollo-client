@@ -46,6 +46,7 @@
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "test:memory": "cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
+    "typecheck": "tsc --noEmit",
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
     "bundlesize": "npm run build && bundlesize",
     "predeploy": "npm run build",

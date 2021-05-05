@@ -534,6 +534,8 @@ class CacheGroup {
 
   public dirty(dataId: string, storeFieldName: string) {
     if (this.d) {
+      // TODO When storeFieldName === "__exists", we might want to consider
+      // sending a stronger signal: https://github.com/benjamn/optimism/pull/195
       this.d.dirty(makeDepKey(dataId, storeFieldName));
     }
   }
@@ -548,6 +550,23 @@ function makeDepKey(dataId: string, storeFieldName: string) {
   // of joining the field name and the ID should be unambiguous, and much
   // cheaper than JSON.stringify([dataId, fieldName]).
   return storeFieldName + '#' + dataId;
+}
+
+export function maybeDependOnExistenceOfEntity(
+  store: NormalizedCache,
+  entityId: string,
+) {
+  if (supportsResultCaching(store)) {
+    // We use this pseudo-field __exists elsewhere in the EntityStore code to
+    // represent changes in the existence of the entity object identified by
+    // entityId. This dependency gets reliably dirtied whenever an object with
+    // this ID is deleted (or newly created) within this group, so any result
+    // cache entries (for example, StoreReader#executeSelectionSet results) that
+    // depend on __exists for this entityId will get dirtied as well, leading to
+    // the eventual recomputation (instead of reuse) of those result objects the
+    // next time someone reads them from the cache.
+    store.group.depend(entityId, "__exists");
+  }
 }
 
 export namespace EntityStore {

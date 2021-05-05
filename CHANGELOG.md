@@ -64,14 +64,25 @@
 ### Documentation
 TBD
 
+## Apollo Client 3.3.17 (not yet released)
+
+### Bug fixes
+
+- Make `useReactiveVar(rv)` recheck the latest `rv()` value in its `useEffect` callback, and immediately update state if the value has already changed, rather than calling `rv.onNextChange(setValue)` to listen for future changes. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8135](https://github.com/apollographql/apollo-client/pull/8135)
+
 ## Apollo Client 3.3.16
 
 ### Bug fixes
-- Prevent `undefined` mutation result in useMutation <br/>
+
+- Prevent `undefined` mutation result in `useMutation`. <br/>
   [@jcreighton](https://github.com/jcreighton) in [#8018](https://github.com/apollographql/apollo-client/pull/8018)
 
 - Fix `useReactiveVar` not rerendering for successive synchronous calls. <br/>
   [@brainkim](https://github.com/brainkim) in [#8022](https://github.com/apollographql/apollo-client/pull/8022)
+
+- Support `batchDebounce` option for `BatchLink` and `BatchHttpLink`. <br/>
+  [@dannycochran](https://github.com/dannycochran) in [#8024](https://github.com/apollographql/apollo-client/pull/8024)
 
 ## Apollo Client 3.3.15
 

@@ -6,11 +6,11 @@ export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
 
   // We don't actually care what useState thinks the value of the variable
   // is, so we take only the update function from the returned array.
-  const [, setValue] = useState(value);
+  const setValue = useState(value)[1];
 
   // We subscribe to variable updates on initial mount and when the value has
-  // changed. This avoids a subtle bug in React.StrictMode where multiple listeners
-  // are added, leading to inconsistent updates.
+  // changed. This avoids a subtle bug in React.StrictMode where multiple
+  // listeners are added, leading to inconsistent updates.
   useEffect(() => {
     const probablySameValue = rv();
     if (value !== probablySameValue) {

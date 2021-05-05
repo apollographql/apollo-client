@@ -85,6 +85,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       typePolicies: this.config.typePolicies,
     });
 
+    this.init();
+  }
+
+  private init() {
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
@@ -320,8 +324,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public reset(): Promise<void> {
-    this.optimisticData = this.optimisticData.prune();
-    this.data.clear();
+    this.init();
     this.broadcastWatches();
     return Promise.resolve();
   }

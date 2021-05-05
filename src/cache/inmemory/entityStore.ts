@@ -341,17 +341,6 @@ export abstract class EntityStore implements NormalizedCache {
     }
   }
 
-  // Remove every Layer, leaving behind only the Root and the Stump.
-  public prune(): EntityStore {
-    if (this instanceof Layer) {
-      const parent = this.removeLayer(this.id);
-      if (parent !== this) {
-        return parent.prune();
-      }
-    }
-    return this;
-  }
-
   public abstract getStorage(
     idOrObj: string | StoreObject,
     ...storeFieldNames: (string | number)[]

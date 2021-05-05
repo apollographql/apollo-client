@@ -84,7 +84,7 @@
     "prop-types": "^15.7.2",
     "rxjs": "^7.0.0",
     "ts-invariant": "^0.7.0",
-    "tslib": "^2.2.0"
+    "tslib": "^2.0.0"
   },
   "devDependencies": {
     "@babel/parser": "7.14.0",

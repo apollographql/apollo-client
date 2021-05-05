@@ -1737,35 +1737,33 @@ describe('Cache', () => {
 });
 
 describe('resultCacheMaxSize', () => {
-    let wrapSpy: jest.Mock = wrap as jest.Mock;
-    beforeEach(() => {
-      wrapSpy.mockClear();
-    });
+  let wrapSpy: jest.Mock = wrap as jest.Mock;
+  beforeEach(() => {
+    wrapSpy.mockClear();
+  });
 
-    it("does not set max size on caches if resultCacheMaxSize is not configured", () => {
-      new InMemoryCache();
-      expect(wrapSpy).toHaveBeenCalled();
-      /*
-       * The first wrap call is for getFragmentQueryDocument which intentionally
-       * does not have a max set since it's not expected to grow.
-       */
-      wrapSpy.mock.calls.splice(1).forEach(([, { max }]) => {
-        expect(max).toBeUndefined();
-      })
-    });
+  it("does not set max size on caches if resultCacheMaxSize is not configured", () => {
+    new InMemoryCache();
+    expect(wrapSpy).toHaveBeenCalled();
 
-    it("configures max size on caches when resultCacheMaxSize is set", () => {
-      const resultCacheMaxSize = 12345;
-      new InMemoryCache({ resultCacheMaxSize });
-      expect(wrapSpy).toHaveBeenCalled();
-      /*
-       * The first wrap call is for getFragmentQueryDocument which intentionally
-       * does not have a max set since it's not expected to grow.
-       */
-      wrapSpy.mock.calls.splice(1).forEach(([, { max }]) => {
-        expect(max).toBe(resultCacheMaxSize);
-      })
-    });
+    // The first wrap call is for getFragmentQueryDocument which intentionally
+    // does not have a max set since it's not expected to grow.
+    wrapSpy.mock.calls.splice(1).forEach(([, { max }]) => {
+      expect(max).toBeUndefined();
+    })
+  });
+
+  it("configures max size on caches when resultCacheMaxSize is set", () => {
+    const resultCacheMaxSize = 12345;
+    new InMemoryCache({ resultCacheMaxSize });
+    expect(wrapSpy).toHaveBeenCalled();
+
+    // The first wrap call is for getFragmentQueryDocument which intentionally
+    // does not have a max set since it's not expected to grow.
+    wrapSpy.mock.calls.splice(1).forEach(([, { max }]) => {
+      expect(max).toBe(resultCacheMaxSize);
+    })
+  });
 });
 
 describe("InMemoryCache#broadcastWatches", function () {

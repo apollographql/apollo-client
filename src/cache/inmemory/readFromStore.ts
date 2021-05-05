@@ -30,7 +30,7 @@ import {
   NormalizedCache,
   ReadMergeModifyContext,
 } from './types';
-import { supportsResultCaching } from './entityStore';
+import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
@@ -68,12 +68,14 @@ function missingFromInvariant(
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
   objectOrReference: StoreObject | Reference;
+  enclosingRef: Reference;
   context: ReadContext;
 };
 
 type ExecSubSelectedArrayOptions = {
   field: FieldNode;
   array: any[];
+  enclosingRef: Reference;
   context: ReadContext;
 };
 
@@ -100,7 +102,13 @@ export class StoreReader {
   constructor(private config: StoreReaderConfig) {
     this.config = { addTypename: true, ...config };
 
-    this.executeSelectionSet = wrap(options => this.execSelectionSetImpl(options), {
+    this.executeSelectionSet = wrap(options => {
+      maybeDependOnExistenceOfEntity(
+        options.context.store,
+        options.enclosingRef.__ref,
+      );
+      return this.execSelectionSetImpl(options);
+    }, {
       keyArgs(options) {
         return [
           options.selectionSet,
@@ -122,7 +130,11 @@ export class StoreReader {
       }
     });
 
-    this.executeSubSelectedArray =  wrap((options: ExecSubSelectedArrayOptions) => {
+    this.executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
+      maybeDependOnExistenceOfEntity(
+        options.context.store,
+        options.enclosingRef.__ref,
+      );
       return this.execSubSelectedArrayImpl(options);
     }, {
       max: this.config.resultCacheMaxSize,
@@ -156,12 +168,14 @@ export class StoreReader {
 
     variables = {
       ...getDefaultValues(getQueryDefinition(query)),
-      ...variables,
+      ...variables!,
     };
 
+    const rootRef = makeReference(rootId);
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
-      objectOrReference: makeReference(rootId),
+      objectOrReference: rootRef,
+      enclosingRef: rootRef,
       context: {
         store,
         query,
@@ -207,6 +221,7 @@ export class StoreReader {
   private execSelectionSetImpl({
     selectionSet,
     objectOrReference,
+    enclosingRef,
     context,
   }: ExecSelectionSetOptions): ExecResult {
     if (isReference(objectOrReference) &&
@@ -298,6 +313,7 @@ export class StoreReader {
           fieldValue = handleMissing(this.executeSubSelectedArray({
             field: selection,
             array: fieldValue,
+            enclosingRef,
             context,
           }));
 
@@ -315,6 +331,7 @@ export class StoreReader {
           fieldValue = handleMissing(this.executeSelectionSet({
             selectionSet: selection.selectionSet,
             objectOrReference: fieldValue as StoreObject | Reference,
+            enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
             context,
           }));
         }
@@ -358,6 +375,7 @@ export class StoreReader {
   private execSubSelectedArrayImpl({
     field,
     array,
+    enclosingRef,
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: MissingFieldError[] | undefined;
@@ -390,6 +408,7 @@ export class StoreReader {
         return handleMissing(this.executeSubSelectedArray({
           field,
           array: item,
+          enclosingRef,
           context,
         }), i);
       }
@@ -399,6 +418,7 @@ export class StoreReader {
         return handleMissing(this.executeSelectionSet({
           selectionSet: field.selectionSet,
           objectOrReference: item,
+          enclosingRef: isReference(item) ? item : enclosingRef,
           context,
         }), i);
       }

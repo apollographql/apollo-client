@@ -58,6 +58,9 @@
 - Pass `variables` and `context` to a mutation's `update` function <br/>
   [@jcreighton](https://github.com/jcreighton) in [#7902](https://github.com/apollographql/apollo-client/pull/7902)
 
+- A `resultCacheMaxSize` option may be passed to the `InMemoryCache` constructor to limit the number of result objects that will be retained in memory (to speed up repeated reads), and calling `cache.reset()` now releases all such memory. <br/>
+  [@SofianHn](https://github.com/SofianHn) in [#8701](https://github.com/apollographql/apollo-client/pull/8701)
+
 ### Documentation
 TBD
 

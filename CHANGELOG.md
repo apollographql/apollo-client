@@ -2,9 +2,6 @@
 
 ### Bug fixes
 
-- Prevent warnings about `useLayoutEffect` when using `useReactiveVar` during React server rendering. <br/>
-  [@brainkim](https://github.com/brainkim) in [#8126](https://github.com/apollographql/apollo-client/pull/8126)
-
 - Make `useReactiveVar(rv)` recheck the latest `rv()` value in its `useEffect` callback, and immediately update state if the value has already changed, rather than calling `rv.onNextChange(setValue)` to listen for future changes. <br/>
   [@benjamn](https://github.com/benjamn) in [#8135](https://github.com/apollographql/apollo-client/pull/8135)
 

@@ -223,7 +223,7 @@ const AllPeopleComponent = <Query<Data, Variables> query={ALL_PEOPLE_QUERY}>
 
 Now the `<Query />` component render prop function arguments are typed. Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for full typing to work! Everything else is handled by React Apollo's robust type definitions.
 
-This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subcription />` components! Learn it once, and get the best types ever with Apollo.
+This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subscription />` components! Learn it once, and get the best types ever with Apollo.
 
 ### Extending components
 

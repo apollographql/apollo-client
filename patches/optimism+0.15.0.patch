@@ -1,0 +1,163 @@
+diff --git a/node_modules/optimism/lib/bundle.cjs.js b/node_modules/optimism/lib/bundle.cjs.js
+index 26e4f9e..055d82b 100644
+--- a/node_modules/optimism/lib/bundle.cjs.js
++++ b/node_modules/optimism/lib/bundle.cjs.js
+@@ -88,6 +88,9 @@ var Cache = /** @class */ (function () {
+         }
+         return false;
+     };
++    Cache.prototype.size = function () {
++      this.map.size;
++    };
+     return Cache;
+ }());
+ 
+@@ -177,8 +180,7 @@ var Entry = /** @class */ (function () {
+     };
+     Entry.prototype.dispose = function () {
+         var _this = this;
+-        forgetChildren(this);
+-        maybeUnsubscribe(this);
++        this.setDirty();
+         // Because this entry has been kicked out of the cache (in index.js),
+         // we've lost the ability to find out if/when this entry becomes dirty,
+         // whether that happens through a subscription, because of a direct call
+@@ -195,6 +197,12 @@ var Entry = /** @class */ (function () {
+             forgetChild(parent, _this);
+         });
+     };
++    Entry.prototype.forget = function () {
++        // The code that creates Entry objects in index.ts will replace this method
++        // with one that actually removes the Entry from the cache, which will also
++        // trigger the entry.dispose method.
++        this.dispose();
++    };
+     Entry.prototype.dependOn = function (dep) {
+         dep.add(this);
+         if (!this.deps) {
+@@ -380,10 +388,11 @@ function dep(options) {
+             }
+         }
+     }
+-    depend.dirty = function dirty(key) {
++    depend.dirty = function dirty(key, entryMethodName) {
+         var dep = depsByKey.get(key);
+         if (dep) {
+-            dep.forEach(function (entry) { return entry.setDirty(); });
++            var m = entryMethodName || "setDirty";
++            dep.forEach(function (entry) { return entry[m](); });
+             depsByKey.delete(key);
+             maybeUnsubscribe(dep);
+         }
+@@ -421,6 +430,9 @@ function wrap(originalFunction, options) {
+         if (!entry) {
+             cache.set(key, entry = new Entry(originalFunction));
+             entry.subscribe = options.subscribe;
++            // Give the Entry the ability to trigger cache.delete(key), even though
++            // the Entry itself does not know about key or cache.
++            entry.forget = function () { return cache.delete(key); };
+         }
+         var value = entry.recompute(Array.prototype.slice.call(arguments));
+         // Move this entry to the front of the least-recently used queue,
+@@ -458,6 +470,9 @@ function wrap(originalFunction, options) {
+         var key = makeCacheKey.apply(null, arguments);
+         return key !== void 0 && cache.delete(key);
+     };
++    optimistic.size = function () {
++      return cache.size();
++    }
+     return optimistic;
+ }
+ 
+diff --git a/node_modules/optimism/lib/bundle.esm.js b/node_modules/optimism/lib/bundle.esm.js
+index 02bc3e5..d35b38b 100644
+--- a/node_modules/optimism/lib/bundle.esm.js
++++ b/node_modules/optimism/lib/bundle.esm.js
+@@ -86,6 +86,9 @@ var Cache = /** @class */ (function () {
+         }
+         return false;
+     };
++    Cache.prototype.size = function () {
++        this.map.size;
++    };
+     return Cache;
+ }());
+ 
+@@ -175,8 +178,7 @@ var Entry = /** @class */ (function () {
+     };
+     Entry.prototype.dispose = function () {
+         var _this = this;
+-        forgetChildren(this);
+-        maybeUnsubscribe(this);
++        this.setDirty();
+         // Because this entry has been kicked out of the cache (in index.js),
+         // we've lost the ability to find out if/when this entry becomes dirty,
+         // whether that happens through a subscription, because of a direct call
+@@ -193,6 +195,12 @@ var Entry = /** @class */ (function () {
+             forgetChild(parent, _this);
+         });
+     };
++    Entry.prototype.forget = function () {
++      // The code that creates Entry objects in index.ts will replace this method
++      // with one that actually removes the Entry from the cache, which will also
++      // trigger the entry.dispose method.
++      this.dispose();
++    };
+     Entry.prototype.dependOn = function (dep) {
+         dep.add(this);
+         if (!this.deps) {
+@@ -378,10 +386,11 @@ function dep(options) {
+             }
+         }
+     }
+-    depend.dirty = function dirty(key) {
++    depend.dirty = function dirty(key, entryMethodName) {
+         var dep = depsByKey.get(key);
+         if (dep) {
+-            dep.forEach(function (entry) { return entry.setDirty(); });
++            var m = entryMethodName || "setDirty";
++            dep.forEach(function (entry) { return entry[m](); });
+             depsByKey.delete(key);
+             maybeUnsubscribe(dep);
+         }
+@@ -419,6 +428,9 @@ function wrap(originalFunction, options) {
+         if (!entry) {
+             cache.set(key, entry = new Entry(originalFunction));
+             entry.subscribe = options.subscribe;
++            // Give the Entry the ability to trigger cache.delete(key), even though
++            // the Entry itself does not know about key or cache.
++            entry.forget = function () { return cache.delete(key); };
+         }
+         var value = entry.recompute(Array.prototype.slice.call(arguments));
+         // Move this entry to the front of the least-recently used queue,
+@@ -456,6 +468,9 @@ function wrap(originalFunction, options) {
+         var key = makeCacheKey.apply(null, arguments);
+         return key !== void 0 && cache.delete(key);
+     };
++    optimistic.size = function () {
++      return cache.size();
++    }
+     return optimistic;
+ }
+ 
+diff --git a/node_modules/optimism/lib/index.d.ts b/node_modules/optimism/lib/index.d.ts
+index e945216..fdcf21f 100644
+--- a/node_modules/optimism/lib/index.d.ts
++++ b/node_modules/optimism/lib/index.d.ts
+@@ -4,8 +4,15 @@ export { dep, OptimisticDependencyFunction } from "./dep";
+ export declare type TCacheKey = any;
+ export declare function defaultMakeCacheKey(...args: any[]): any;
+ export { Trie as KeyTrie };
++
++type EntryMethodName = Extract<keyof AnyEntry,
++  | "setDirty" // Mark parent Entry as needing to be recomputed (default)
++  | "dispose"  // Detach parent Entry from parents and children, but leave in LRU cache
++  | "forget"   // Fully remove parent Entry from LRU cache and computation graph
++>;
++
+ export declare type OptimisticWrapperFunction<TArgs extends any[], TResult, TKeyArgs extends any[] = TArgs> = ((...args: TArgs) => TResult) & {
+-    dirty: (...args: TKeyArgs) => void;
++    dirty: (...args: TKeyArgs, entryMethodName?: EntryMethodName) => void;
+     peek: (...args: TKeyArgs) => TResult | undefined;
+     forget: (...args: TKeyArgs) => boolean;
+ };

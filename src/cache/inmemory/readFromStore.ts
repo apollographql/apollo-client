@@ -23,6 +23,7 @@ import {
   getQueryDefinition,
   mergeDeepArray,
   getFragmentFromSelection,
+  maybeDeepFreeze,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
@@ -42,6 +43,7 @@ export type VariableMap = { [name: string]: any };
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
+  canonizeResults: boolean;
   fragmentMap: FragmentMap;
   path: (string | number)[];
   clientOnly: boolean;
@@ -83,13 +85,34 @@ export interface StoreReaderConfig {
   resultCacheMaxSize?: number;
 }
 
+// Arguments type after keyArgs translation.
+type ExecSelectionSetKeyArgs = [
+  SelectionSetNode,
+  StoreObject | Reference,
+  ReadMergeModifyContext,
+  boolean,
+];
+
+function execSelectionSetKeyArgs(
+  options: ExecSelectionSetOptions,
+): ExecSelectionSetKeyArgs {
+  return [
+    options.selectionSet,
+    options.objectOrReference,
+    options.context,
+    // We split out this property so we can pass different values
+    // independently without modifying options.context itself.
+    options.context.canonizeResults,
+  ];
+}
+
 export class StoreReader {
   // cached version of executeSelectionset
   private executeSelectionSet: OptimisticWrapperFunction<
     [ExecSelectionSetOptions], // Actual arguments tuple type.
     ExecResult, // Actual return type.
-    // Arguments type after keyArgs translation.
-    [SelectionSetNode, StoreObject | Reference, ReadMergeModifyContext]>;
+    ExecSelectionSetKeyArgs
+  >;
 
   // cached version of executeSubSelectedArray
   private executeSubSelectedArray: OptimisticWrapperFunction<
@@ -97,32 +120,65 @@ export class StoreReader {
     ExecResult<any>,
     [ExecSubSelectedArrayOptions]>;
 
-  constructor(private config: StoreReaderConfig) {
-    this.config = { addTypename: true, ...config };
+  private config: {
+    cache: InMemoryCache,
+    addTypename: boolean;
+    resultCacheMaxSize?: number;
+  };
 
-    this.executeSelectionSet = wrap(options => this.execSelectionSetImpl(options), {
-      keyArgs(options) {
-        return [
-          options.selectionSet,
-          options.objectOrReference,
-          options.context,
-        ];
-      },
+  constructor(config: StoreReaderConfig) {
+    this.config = {
+      ...config,
+      addTypename: config.addTypename !== false,
+    };
+
+    this.executeSelectionSet = wrap(options => {
+      const { canonizeResults } = options.context;
+
+      const peekArgs = execSelectionSetKeyArgs(options);
+
+      // Negate this boolean option so we can find out if we've already read
+      // this result using the other boolean value.
+      peekArgs[3] = !canonizeResults;
+
+      const other = this.executeSelectionSet.peek(...peekArgs);
+
+      if (other) {
+        if (canonizeResults) {
+          return {
+            ...other,
+            // If we previously read this result without canonizing it, we can
+            // reuse that result simply by canonizing it now.
+            result: this.canon.admit(other.result),
+          };
+        }
+        // If we previously read this result with canonization enabled, we can
+        // return that canonized result as-is.
+        return other;
+      }
+
+      // Finally, if we didn't find any useful previous results, run the real
+      // execSelectionSetImpl method with the given options.
+      return this.execSelectionSetImpl(options);
+
+    }, {
       max: this.config.resultCacheMaxSize,
+      keyArgs: execSelectionSetKeyArgs,
       // Note that the parameters of makeCacheKey are determined by the
       // array returned by keyArgs.
-      makeCacheKey(selectionSet, parent, context) {
+      makeCacheKey(selectionSet, parent, context, canonizeResults) {
         if (supportsResultCaching(context.store)) {
           return context.store.makeCacheKey(
             selectionSet,
             isReference(parent) ? parent.__ref : parent,
             context.varString,
+            canonizeResults,
           );
         }
       }
     });
 
-    this.executeSubSelectedArray =  wrap((options: ExecSubSelectedArrayOptions) => {
+    this.executeSubSelectedArray = wrap((options: ExecSubSelectedArrayOptions) => {
       return this.execSubSelectedArrayImpl(options);
     }, {
       max: this.config.resultCacheMaxSize,
@@ -151,12 +207,13 @@ export class StoreReader {
     rootId = 'ROOT_QUERY',
     variables,
     returnPartialData = true,
+    canonizeResults = true,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const policies = this.config.cache.policies;
 
     variables = {
       ...getDefaultValues(getQueryDefinition(query)),
-      ...variables,
+      ...variables!,
     };
 
     const execResult = this.executeSelectionSet({
@@ -168,6 +225,7 @@ export class StoreReader {
         policies,
         variables,
         varString: JSON.stringify(variables),
+        canonizeResults,
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         path: [],
         clientOnly: false,
@@ -195,7 +253,15 @@ export class StoreReader {
   ): boolean {
     if (supportsResultCaching(context.store) &&
         this.knownResults.get(result) === selectionSet) {
-      const latest = this.executeSelectionSet.peek(selectionSet, parent, context);
+      const latest = this.executeSelectionSet.peek(
+        selectionSet,
+        parent,
+        context,
+        // If result is canonical, then it could only have been previously
+        // cached by the canonizing version of executeSelectionSet, so we can
+        // avoid checking both possibilities here.
+        this.canon.isCanonical(result),
+      );
       if (latest && result === latest.result) {
         return true;
       }
@@ -306,7 +372,9 @@ export class StoreReader {
           // as a scalar value. To keep this.canon from canonicalizing
           // this value, we use this.canon.pass to wrap fieldValue in a
           // Pass object that this.canon.admit will later unwrap as-is.
-          fieldValue = this.canon.pass(fieldValue);
+          if (context.canonizeResults) {
+            fieldValue = this.canon.pass(fieldValue);
+          }
 
         } else if (fieldValue != null) {
           // In this case, because we know the field has a selection set,
@@ -341,7 +409,12 @@ export class StoreReader {
 
     // Perform a single merge at the end so that we can avoid making more
     // defensive shallow copies than necessary.
-    finalResult.result = this.canon.admit(mergeDeepArray(objectsToMerge));
+    const merged = mergeDeepArray(objectsToMerge);
+    finalResult.result = context.canonizeResults
+      ? this.canon.admit(merged)
+      // Since this.canon is normally responsible for freezing results (only in
+      // development), freeze them manually if canonization is disabled.
+      : maybeDeepFreeze(merged);
 
     // Store this result with its selection set so that we can quickly
     // recognize it again in the StoreReader#isFresh method.
@@ -377,7 +450,7 @@ export class StoreReader {
       array = array.filter(context.store.canRead);
     }
 
-    array = this.canon.admit(array.map((item, i) => {
+    array = array.map((item, i) => {
       // null value in array
       if (item === null) {
         return null;
@@ -410,9 +483,12 @@ export class StoreReader {
       invariant(context.path.pop() === i);
 
       return item;
-    }));
+    });
 
-    return { result: array, missing };
+    return {
+      result: context.canonizeResults ? this.canon.admit(array) : array,
+      missing,
+    };
   }
 }
 

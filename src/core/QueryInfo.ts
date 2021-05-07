@@ -168,6 +168,7 @@ export class QueryInfo {
       variables,
       returnPartialData: true,
       optimistic: true,
+      canonizeResults: this.canonize(),
     });
   }
 
@@ -247,7 +248,7 @@ export class QueryInfo {
 
       // Cancel the pending notify timeout
       this.reset();
-      
+
       this.cancel();
       // Revert back to the no-op version of cancel inherited from
       // QueryInfo.prototype.
@@ -281,8 +282,14 @@ export class QueryInfo {
         optimistic: true,
         watcher: this,
         callback: diff => this.setDiff(diff),
+        canonizeResults: this.canonize(),
       });
     }
+  }
+
+  private canonize() {
+    const oq = this.observableQuery;
+    return !oq || oq.options.canonizeResults !== false;
   }
 
   private lastWrite?: {
@@ -396,6 +403,7 @@ export class QueryInfo {
             variables: options.variables,
             returnPartialData: true,
             optimistic: true,
+            canonizeResults: this.canonize(),
           });
 
           // In case the QueryManager stops this QueryInfo before its

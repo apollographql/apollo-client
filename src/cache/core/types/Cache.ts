@@ -10,6 +10,7 @@ export namespace Cache {
     previousResult?: any;
     optimistic: boolean;
     returnPartialData?: boolean;
+    canonizeResults?: boolean;
   }
 
   export interface WriteOptions<TResult = any, TVariables = any>

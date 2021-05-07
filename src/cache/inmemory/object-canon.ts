@@ -82,6 +82,10 @@ export class ObjectCanon {
     keys?: SortedKeysInfo;
   }>(canUseWeakMap);
 
+  public isCanonical(value: any): boolean {
+    return isObjectOrArray(value) && this.known.has(value);
+  }
+
   // Make the ObjectCanon assume this value has already been
   // canonicalized.
   private passes = new WeakMap<object, object>();

@@ -96,6 +96,13 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
    * Apollo Client `QueryManager` (due to a cache miss).
    */
   partialRefetch?: boolean;
+
+  /**
+   * Whether to canonize cache results before returning them. Canonization
+   * takes some extra time, but it speeds up future deep equality comparisons.
+   * Defaults to true.
+   */
+  canonizeResults?: boolean;
 }
 
 /**

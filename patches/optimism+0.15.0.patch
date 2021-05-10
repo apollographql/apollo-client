@@ -1,5 +1,5 @@
 diff --git a/node_modules/optimism/lib/bundle.cjs.js b/node_modules/optimism/lib/bundle.cjs.js
-index 26e4f9e..055d82b 100644
+index 26e4f9e..ca65f7d 100644
 --- a/node_modules/optimism/lib/bundle.cjs.js
 +++ b/node_modules/optimism/lib/bundle.cjs.js
 @@ -88,6 +88,9 @@ var Cache = /** @class */ (function () {
@@ -7,7 +7,7 @@ index 26e4f9e..055d82b 100644
          return false;
      };
 +    Cache.prototype.size = function () {
-+      this.map.size;
++      return this.map.size;
 +    };
      return Cache;
  }());
@@ -70,7 +70,7 @@ index 26e4f9e..055d82b 100644
  }
  
 diff --git a/node_modules/optimism/lib/bundle.esm.js b/node_modules/optimism/lib/bundle.esm.js
-index 02bc3e5..d35b38b 100644
+index 02bc3e5..b2b9f44 100644
 --- a/node_modules/optimism/lib/bundle.esm.js
 +++ b/node_modules/optimism/lib/bundle.esm.js
 @@ -86,6 +86,9 @@ var Cache = /** @class */ (function () {
@@ -78,7 +78,7 @@ index 02bc3e5..d35b38b 100644
          return false;
      };
 +    Cache.prototype.size = function () {
-+        this.map.size;
++        return this.map.size;
 +    };
      return Cache;
  }());
@@ -140,6 +140,27 @@ index 02bc3e5..d35b38b 100644
      return optimistic;
  }
  
+diff --git a/node_modules/optimism/lib/dep.d.ts b/node_modules/optimism/lib/dep.d.ts
+index d58c524..db1b9e9 100644
+--- a/node_modules/optimism/lib/dep.d.ts
++++ b/node_modules/optimism/lib/dep.d.ts
+@@ -1,8 +1,15 @@
+ import { AnyEntry } from "./entry";
+ import { OptimisticWrapOptions } from "./index";
+ import { Unsubscribable } from "./helpers";
++
++
++export type EntryMethodName = Extract<keyof AnyEntry,
++  | "setDirty" // Mark parent Entry as needing to be recomputed (default)
++  | "dispose"  // Detach parent Entry from parents and children, but leave in LRU cache
++  | "forget"   // Fully remove parent Entry from LRU cache and computation graph
++>;
+ export declare type OptimisticDependencyFunction<TKey> = ((key: TKey) => void) & {
+-    dirty: (key: TKey) => void;
++    dirty: (key: TKey, entryMethodName?: EntryMethodName) => void;
+ };
+ export declare type Dep<TKey> = Set<AnyEntry> & {
+     subscribe: OptimisticWrapOptions<[TKey]>["subscribe"];
 diff --git a/node_modules/optimism/lib/index.d.ts b/node_modules/optimism/lib/index.d.ts
 index e945216..fdcf21f 100644
 --- a/node_modules/optimism/lib/index.d.ts

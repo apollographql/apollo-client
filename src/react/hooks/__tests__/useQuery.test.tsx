@@ -2832,6 +2832,120 @@ describe('useQuery Hook', () => {
     });
   });
 
+  describe("canonical cache results", () => {
+    itAsync("can be disabled via useQuery options", (resolve, reject) => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Result: {
+            keyFields: false,
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          results {
+            value
+          }
+        }
+      `;
+
+      const results = [
+        { __typename: "Result", value: 0 },
+        { __typename: "Result", value: 1 },
+        { __typename: "Result", value: 1 },
+        { __typename: "Result", value: 2 },
+        { __typename: "Result", value: 3 },
+        { __typename: "Result", value: 5 },
+      ];
+
+      cache.writeQuery({
+        query,
+        data: { results },
+      })
+
+      let renderCount = 0;
+      function App() {
+        const [canonizeResults, setCanonize] = useState(false);
+        const { loading, data } = useQuery(query, {
+          fetchPolicy: "cache-only",
+          canonizeResults,
+        });
+
+        switch (++renderCount) {
+          case 1: {
+            expect(loading).toBe(false);
+            expect(data).toEqual({ results });
+            expect(data.results.length).toBe(6);
+            const resultSet = new Set(data.results as typeof results);
+            // Since canonization is not happening, the duplicate 1 results are
+            // returned as distinct objects.
+            expect(resultSet.size).toBe(6);
+            act(() => setCanonize(true));
+            break;
+          }
+
+          case 2: {
+            expect(loading).toBe(false);
+            expect(data).toEqual({ results });
+            expect(data.results.length).toBe(6);
+            const resultSet = new Set(data.results as typeof results);
+            // Since canonization is happening now, the duplicate 1 results are
+            // returned as identical (===) objects.
+            expect(resultSet.size).toBe(5);
+            const values: number[] = [];
+            resultSet.forEach(result => values.push(result.value));
+            expect(values).toEqual([0, 1, 2, 3, 5]);
+            act(() => {
+              results.push({
+                __typename: "Result",
+                value: 8,
+              });
+              // Append another element to the results array, invalidating the
+              // array itself, triggering another render (below).
+              cache.writeQuery({
+                query,
+                overwrite: true,
+                data: { results },
+              });
+            });
+            break;
+          }
+
+          case 3: {
+            expect(loading).toBe(false);
+            expect(data).toEqual({ results });
+            expect(data.results.length).toBe(7);
+            const resultSet = new Set(data.results as typeof results);
+            // Since canonization is happening now, the duplicate 1 results are
+            // returned as identical (===) objects.
+            expect(resultSet.size).toBe(6);
+            const values: number[] = [];
+            resultSet.forEach(result => values.push(result.value));
+            expect(values).toEqual([0, 1, 2, 3, 5, 8]);
+            break;
+          }
+
+          default: {
+            reject("too many renders");
+          }
+        }
+
+        return null;
+      }
+
+      render(
+        <MockedProvider cache={cache}>
+          <App/>
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(3);
+      }).then(resolve, reject);
+    });
+  });
+
   describe("multiple useQuery calls per component", () => {
     type ABFields = {
       id: number;

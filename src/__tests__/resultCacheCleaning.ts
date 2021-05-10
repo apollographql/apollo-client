@@ -150,15 +150,15 @@ describe("resultCache cleaning", () => {
   });
 
   afterEach(() => {
-    const storeReader: any = (client.cache as any).storeReader;
-    expect(storeReader.executeSubSelectedArray.size()).toBeGreaterThan(0);
-    expect(storeReader.executeSelectionSet.size()).toBeGreaterThan(0);
+    const storeReader = (client.cache as InMemoryCache)["storeReader"];
+    expect(storeReader["executeSubSelectedArray"].size).toBeGreaterThan(0);
+    expect(storeReader["executeSelectionSet"].size).toBeGreaterThan(0);
     client.cache.evict({
       id: "ROOT_QUERY",
     });
     client.cache.gc();
-    expect(storeReader.executeSubSelectedArray.size()).toEqual(0);
-    expect(storeReader.executeSelectionSet.size()).toEqual(0);
+    expect(storeReader["executeSubSelectedArray"].size).toEqual(0);
+    expect(storeReader["executeSelectionSet"].size).toEqual(0);
   });
 
   it(`empties all result caches after eviction - query`, async () => {

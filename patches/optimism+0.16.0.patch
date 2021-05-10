@@ -1,0 +1,60 @@
+diff --git a/node_modules/optimism/lib/bundle.cjs.js b/node_modules/optimism/lib/bundle.cjs.js
+index aa813e0..ba8e15e 100644
+--- a/node_modules/optimism/lib/bundle.cjs.js
++++ b/node_modules/optimism/lib/bundle.cjs.js
+@@ -88,6 +88,9 @@ var Cache = /** @class */ (function () {
+         }
+         return false;
+     };
++    Cache.prototype.size = function () {
++      return this.map.size;
++    };
+     return Cache;
+ }());
+ 
+@@ -489,6 +492,9 @@ function wrap(originalFunction, options) {
+     optimistic.getKey = keyArgs ? function getKey() {
+         return makeCacheKey.apply(null, keyArgs.apply(null, arguments));
+     } : makeCacheKey;
++    optimistic.size = function size() {
++      return cache.size();
++    };
+     return Object.freeze(optimistic);
+ }
+ 
+diff --git a/node_modules/optimism/lib/bundle.esm.js b/node_modules/optimism/lib/bundle.esm.js
+index 27a2ec0..f26e185 100644
+--- a/node_modules/optimism/lib/bundle.esm.js
++++ b/node_modules/optimism/lib/bundle.esm.js
+@@ -86,6 +86,9 @@ var Cache = /** @class */ (function () {
+         }
+         return false;
+     };
++    Cache.prototype.size = function () {
++      return this.map.size;
++    };
+     return Cache;
+ }());
+ 
+@@ -487,6 +490,9 @@ function wrap(originalFunction, options) {
+     optimistic.getKey = keyArgs ? function getKey() {
+         return makeCacheKey.apply(null, keyArgs.apply(null, arguments));
+     } : makeCacheKey;
++    optimistic.size = function size() {
++      return cache.size();
++    };
+     return Object.freeze(optimistic);
+ }
+ 
+diff --git a/node_modules/optimism/lib/index.d.ts b/node_modules/optimism/lib/index.d.ts
+index d10f6b1..d3e50b0 100644
+--- a/node_modules/optimism/lib/index.d.ts
++++ b/node_modules/optimism/lib/index.d.ts
+@@ -12,6 +12,7 @@ export declare type OptimisticWrapperFunction<TArgs extends any[], TResult, TKey
+     forgetKey: (key: TCacheKey) => boolean;
+     getKey: (...args: TArgs) => TCacheKey;
+     makeCacheKey: (...args: TKeyArgs) => TCacheKey;
++    size: () => number;
+ };
+ export declare type OptimisticWrapOptions<TArgs extends any[], TKeyArgs extends any[] = TArgs, TCacheKey = any> = {
+     max?: number;

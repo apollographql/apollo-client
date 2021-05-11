@@ -536,7 +536,8 @@ class CacheGroup {
     if (this.d) {
       // TODO When storeFieldName === "__exists", we might want to consider
       // sending a stronger signal: https://github.com/benjamn/optimism/pull/195
-      this.d.dirty(makeDepKey(dataId, storeFieldName));
+      const entityMethodName: any = storeFieldName === "__exists" ? "forget" : undefined;
+      this.d.dirty(makeDepKey(dataId, storeFieldName), entityMethodName);
     }
   }
 

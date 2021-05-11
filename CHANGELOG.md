@@ -61,6 +61,9 @@
 - A `resultCacheMaxSize` option may be passed to the `InMemoryCache` constructor to limit the number of result objects that will be retained in memory (to speed up repeated reads), and calling `cache.reset()` now releases all such memory. <br/>
   [@SofianHn](https://github.com/SofianHn) in [#8701](https://github.com/apollographql/apollo-client/pull/8701)
 
+- Fully remove result cache entries from LRU dependency system when the corresponding entities are removed from `InMemoryCache` by eviction, or by any other means. <br/>
+  [@sofianhn](https://github.com/sofianhn) and [@benjamn](https://github.com/benjamn) in [#8147](https://github.com/apollographql/apollo-client/pull/8147)
+
 ### Documentation
 TBD
 

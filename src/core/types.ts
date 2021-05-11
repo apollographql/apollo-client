@@ -15,11 +15,14 @@ export type DefaultContext = Record<string, any>;
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
-export type OnQueryUpdated<TData> = (
-  observableQuery: ObservableQuery,
-  diff: Cache.DiffResult<TData>,
-  lastDiff: Cache.DiffResult<TData> | undefined,
-) => boolean | Promise<ApolloQueryResult<TData>>;
+export type OnQueryUpdated<TResult> = (
+  observableQuery: ObservableQuery<any>,
+  diff: Cache.DiffResult<any>,
+  lastDiff: Cache.DiffResult<any> | undefined,
+) => boolean | TResult;
+
+export type PromiseResult<T> =
+  T extends PromiseLike<infer U> ? U : T;
 
 export type OperationVariables = Record<string, any>;
 

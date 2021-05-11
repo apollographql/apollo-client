@@ -195,8 +195,8 @@ export type RefetchQueryDescription = RefetchQueryDescriptor[];
 // Used by ApolloClient["refetchQueries"]
 // TODO Improve documentation comments for this public type.
 export interface RefetchQueriesOptions<
-  TData,
   TCache extends ApolloCache<any>,
+  TResult,
 > {
   updateCache?: (cache: TCache) => void;
   // Although you can pass PureQueryOptions objects in addition to strings in
@@ -205,14 +205,14 @@ export interface RefetchQueriesOptions<
   // public type of the options.include array to string[] (just query names).
   include?: string[];
   optimistic?: boolean;
-  onQueryUpdated?: OnQueryUpdated<TData>;
+  onQueryUpdated?: OnQueryUpdated<TResult>;
 }
 
 // Used by QueryManager["refetchQueries"]
 export interface InternalRefetchQueriesOptions<
-  TData,
   TCache extends ApolloCache<any>,
-> extends Omit<RefetchQueriesOptions<TData, TCache>, "include"> {
+  TResult,
+> extends Omit<RefetchQueriesOptions<TCache, TResult>, "include"> {
   // Just like the refetchQueries array for a mutation, allowing both strings
   // and PureQueryOptions objects.
   include?: RefetchQueryDescription;
@@ -290,7 +290,7 @@ export interface MutationBaseOptions<
    * A function that will be called for each ObservableQuery affected by
    * this mutation, after the mutation has completed.
    */
-  onQueryUpdated?: OnQueryUpdated<TData>;
+  onQueryUpdated?: OnQueryUpdated<any>;
 
   /**
    * Specifies the {@link ErrorPolicy} to be used for this operation

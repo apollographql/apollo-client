@@ -14,6 +14,7 @@ import {
   ApolloQueryResult,
   DefaultContext,
   OperationVariables,
+  PromiseResult,
   Resolvers,
 } from './types';
 
@@ -536,13 +537,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
   public refetchQueries<
-    TData,
     TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
+    TResult = any,
   >(
-    options: RefetchQueriesOptions<TData, TCache>,
-  ): PromiseLike<ApolloQueryResult<any>[]> & {
+    options: RefetchQueriesOptions<TCache, TResult>,
+  ): PromiseLike<PromiseResult<TResult>[]> & {
     queries: ObservableQuery<any>[];
-    results: any[];
+    results: TResult[];
   } {
     const map = this.queryManager.refetchQueries(options);
     const queries: ObservableQuery<any>[] = [];

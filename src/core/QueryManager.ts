@@ -330,7 +330,7 @@ export class QueryManager<TStore> {
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       refetchQueries?: RefetchQueryDescription;
       removeOptimistic?: string;
-      onQueryUpdated?: OnQueryUpdated<TData>;
+      onQueryUpdated?: OnQueryUpdated<any>;
     },
     cache = this.cache,
   ): Promise<void> {
@@ -1036,13 +1036,13 @@ export class QueryManager<TStore> {
     return concast;
   }
 
-  public refetchQueries<TData>({
+  public refetchQueries<TResult>({
     updateCache,
     include,
     optimistic = false,
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
-  }: InternalRefetchQueriesOptions<TData, ApolloCache<TStore>>) {
+  }: InternalRefetchQueriesOptions<ApolloCache<TStore>, TResult>) {
     const includedQueriesById = new Map<string, {
       desc: RefetchQueryDescriptor;
       diff: Cache.DiffResult<any> | undefined;
@@ -1140,7 +1140,7 @@ export class QueryManager<TStore> {
       includedQueriesById.forEach(({ desc, diff }, queryId) => {
         const queryInfo = this.getQuery(queryId);
         let oq = queryInfo.observableQuery;
-        let fallback: undefined | (() => Promise<ApolloQueryResult<any>>);
+        let fallback: undefined | (() => any);
 
         if (typeof desc === "string") {
           fallback = () => oq!.refetch();

@@ -64,7 +64,7 @@
 ### Documentation
 TBD
 
-## Apollo Client 3.3.17 (not yet released)
+## Apollo Client 3.3.17
 
 ### Bug fixes
 

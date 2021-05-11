@@ -81,7 +81,7 @@
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-tag": "^2.12.3",
     "hoist-non-react-statics": "^3.3.2",
-    "optimism": "^0.16.0",
+    "optimism": "^0.16.1",
     "prop-types": "^15.7.2",
     "symbol-observable": "^2.0.0",
     "ts-invariant": "^0.7.3",

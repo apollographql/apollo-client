@@ -534,7 +534,17 @@ class CacheGroup {
 
   public dirty(dataId: string, storeFieldName: string) {
     if (this.d) {
-      this.d.dirty(makeDepKey(dataId, storeFieldName));
+      this.d.dirty(
+        makeDepKey(dataId, storeFieldName),
+        // When storeFieldName === "__exists", that means the entity identified
+        // by dataId has either disappeared from the cache or was newly added,
+        // so the result caching system would do well to "forget everything it
+        // knows" about that object. To achieve that kind of invalidation, we
+        // not only dirty the associated result cache entry, but also remove it
+        // completely from the dependency graph. For the optimism implmentation
+        // details, see https://github.com/benjamn/optimism/pull/195.
+        storeFieldName === "__exists" ? "forget" : "setDirty",
+      );
     }
   }
 
@@ -548,6 +558,23 @@ function makeDepKey(dataId: string, storeFieldName: string) {
   // of joining the field name and the ID should be unambiguous, and much
   // cheaper than JSON.stringify([dataId, fieldName]).
   return storeFieldName + '#' + dataId;
+}
+
+export function maybeDependOnExistenceOfEntity(
+  store: NormalizedCache,
+  entityId: string,
+) {
+  if (supportsResultCaching(store)) {
+    // We use this pseudo-field __exists elsewhere in the EntityStore code to
+    // represent changes in the existence of the entity object identified by
+    // entityId. This dependency gets reliably dirtied whenever an object with
+    // this ID is deleted (or newly created) within this group, so any result
+    // cache entries (for example, StoreReader#executeSelectionSet results) that
+    // depend on __exists for this entityId will get dirtied as well, leading to
+    // the eventual recomputation (instead of reuse) of those result objects the
+    // next time someone reads them from the cache.
+    store.group.depend(entityId, "__exists");
+  }
 }
 
 export namespace EntityStore {

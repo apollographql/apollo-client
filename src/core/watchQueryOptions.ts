@@ -205,7 +205,12 @@ export interface RefetchQueriesOptions<
   // public type of the options.include array to string[] (just query names).
   include?: string[];
   optimistic?: boolean;
-  onQueryUpdated?: OnQueryUpdated<TResult>;
+  // If no onQueryUpdated function is provided, any queries affected by the
+  // updateCache function or included in the options.include array will be
+  // refetched by default. Passing null instead of undefined disables this
+  // default refetching behavior for affected queries, though included queries
+  // will still be refetched.
+  onQueryUpdated?: OnQueryUpdated<TResult> | null;
 }
 
 // Used by QueryManager["refetchQueries"]

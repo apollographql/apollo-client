@@ -410,7 +410,9 @@ export class QueryManager<TStore> {
 
         // Let the caller of client.mutate optionally determine the refetching
         // behavior for watched queries after the mutation.update function runs.
-        onQueryUpdated: mutation.onQueryUpdated,
+        // If no onQueryUpdated function was provided for this mutation, pass
+        // null instead of undefined to disable the default refetching behavior.
+        onQueryUpdated: mutation.onQueryUpdated || null,
 
       }).forEach(result => results.push(result));
 
@@ -1123,14 +1125,25 @@ export class QueryManager<TStore> {
         // temporary optimistic layer, in case that ever matters.
         removeOptimistic,
 
-        onWatchUpdated: onQueryUpdated && function (watch, diff, lastDiff) {
+        onWatchUpdated(watch, diff, lastDiff) {
           const oq =
             watch.watcher instanceof QueryInfo &&
             watch.watcher.observableQuery;
 
           if (oq) {
-            includedQueriesById.delete(oq.queryId);
-            return maybeAddResult(oq, onQueryUpdated(oq, diff, lastDiff));
+            if (onQueryUpdated) {
+              includedQueriesById.delete(oq.queryId);
+              return maybeAddResult(oq, onQueryUpdated(oq, diff, lastDiff));
+            }
+            if (onQueryUpdated !== null) {
+              // If we don't have an onQueryUpdated function, and onQueryUpdated
+              // was not disabled by passing null, make sure this query is
+              // "included" like any other options.include-specified query.
+              includedQueriesById.set(oq.queryId, {
+                desc: oq.queryName || `<anonymous ObservableQuery ${oq.queryId}>`,
+                diff,
+              });
+            }
           }
         },
       });

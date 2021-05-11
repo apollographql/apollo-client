@@ -253,4 +253,49 @@ describe("client.refetchQueries", () => {
     unsubscribe();
     resolve();
   });
+
+  itAsync("refetches watched queries if onQueryUpdated not provided", async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const aSpy = jest.spyOn(aObs, "refetch");
+    const bSpy = jest.spyOn(bObs, "refetch");
+    const abSpy = jest.spyOn(abObs, "refetch");
+
+    const ayyResults = (
+      await client.refetchQueries({
+        include: ["B"],
+        updateCache(cache) {
+          cache.writeQuery({
+            query: aQuery,
+            data: {
+              a: "Ayy",
+            },
+          });
+        },
+      })
+    ).map(result => result.data as object);
+
+    sortObjects(ayyResults);
+
+    // These results have reverted back to what the ApolloLink returns ("A"
+    // rather than "Ayy"), because we let them be refetched (by not providing
+    // an onQueryUpdated function).
+    expect(ayyResults).toEqual([
+      { a: "A" },
+      { a: "A", b: "B" },
+      { b: "B" },
+    ]);
+
+    expect(aSpy).toHaveBeenCalledTimes(1);
+    expect(bSpy).toHaveBeenCalledTimes(1);
+    expect(abSpy).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    resolve();
+  });
 });

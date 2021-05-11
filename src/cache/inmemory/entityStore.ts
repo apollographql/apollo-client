@@ -534,10 +534,17 @@ class CacheGroup {
 
   public dirty(dataId: string, storeFieldName: string) {
     if (this.d) {
-      // TODO When storeFieldName === "__exists", we might want to consider
-      // sending a stronger signal: https://github.com/benjamn/optimism/pull/195
-      const entityMethodName: any = storeFieldName === "__exists" ? "forget" : undefined;
-      this.d.dirty(makeDepKey(dataId, storeFieldName), entityMethodName);
+      this.d.dirty(
+        makeDepKey(dataId, storeFieldName),
+        // When storeFieldName === "__exists", that means the entity identified
+        // by dataId has either disappeared from the cache or was newly added,
+        // so the result caching system would do well to "forget everything it
+        // knows" about that object. To achieve that kind of invalidation, we
+        // not only dirty the associated result cache entry, but also remove it
+        // completely from the dependency graph. For the optimism implmentation
+        // details, see https://github.com/benjamn/optimism/pull/195.
+        storeFieldName === "__exists" ? "forget" : "setDirty",
+      );
     }
   }
 

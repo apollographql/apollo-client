@@ -142,10 +142,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic = !!options.optimistic,
   ): QueryType | null {
     return this.read({
+      ...options,
       rootId: options.id || 'ROOT_QUERY',
-      query: options.query,
-      variables: options.variables,
-      returnPartialData: options.returnPartialData,
       optimistic,
     });
   }
@@ -159,10 +157,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     optimistic = !!options.optimistic,
   ): FragmentType | null {
     return this.read({
+      ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      variables: options.variables,
       rootId: options.id,
-      returnPartialData: options.returnPartialData,
       optimistic,
     });
   }

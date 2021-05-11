@@ -67,6 +67,12 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
+    /**
+     * Whether to canonize cache results before returning them. Canonization
+     * takes some extra time, but it speeds up future deep equality comparisons.
+     * Defaults to true.
+     */
+    canonizeResults?: boolean;
   }
 
   export interface ReadFragmentOptions<TData, TVariables>
@@ -82,6 +88,12 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
+    /**
+     * Whether to canonize cache results before returning them. Canonization
+     * takes some extra time, but it speeds up future deep equality comparisons.
+     * Defaults to true.
+     */
+    canonizeResults?: boolean;
   }
 
   export interface WriteOptions<TData> {

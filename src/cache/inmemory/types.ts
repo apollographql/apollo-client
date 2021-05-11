@@ -103,6 +103,7 @@ export type ReadQueryOptions = {
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;
+  canonizeResults?: boolean;
   rootId?: string;
   config?: ApolloReducerConfig;
 };

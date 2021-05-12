@@ -1923,6 +1923,79 @@ describe('ObservableQuery', () => {
     });
   });
 
+  itAsync("QueryInfo does not notify for !== but deep-equal results", (resolve, reject) => {
+    const queryManager = mockQueryManager(reject, {
+      request: { query, variables },
+      result: { data: dataOne },
+    });
+
+    const observable = queryManager.watchQuery({
+      query,
+      variables,
+      // If we let the cache return canonical results, it will be harder to
+      // write this test, because any two results that are deeply equal will
+      // also be !==, making the choice of equality test in queryInfo.setDiff
+      // less visible/important.
+      canonizeResults: false,
+    });
+
+    const queryInfo = observable["queryInfo"];
+    const cache = queryInfo["cache"];
+    const setDiffSpy = jest.spyOn(queryInfo, "setDiff");
+    const notifySpy = jest.spyOn(queryInfo, "notify");
+
+    subscribeAndCount(reject, observable, (count, result) => {
+      if (count === 1) {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: dataOne,
+        });
+
+        let invalidateCount = 0;
+        let onDirtyCount = 0;
+
+        cache.batch({
+          optimistic: true,
+          transaction(cache) {
+            cache.modify({
+              fields: {
+                people_one(value, { INVALIDATE }) {
+                  expect(value).toEqual(dataOne.people_one);
+                  ++invalidateCount;
+                  return INVALIDATE;
+                },
+              },
+            });
+          },
+          // Verify that the cache.modify operation did trigger a cache broadcast.
+          onDirty(watch, diff) {
+            expect(watch.watcher).toBe(queryInfo);
+            expect(diff).toEqual({
+              complete: true,
+              result: {
+                people_one: {
+                  name: "Luke Skywalker",
+                },
+              },
+            });
+            ++onDirtyCount;
+          },
+        });
+
+        new Promise(resolve => setTimeout(resolve, 100)).then(() => {
+          expect(setDiffSpy).toHaveBeenCalledTimes(1);
+          expect(notifySpy).not.toHaveBeenCalled();
+          expect(invalidateCount).toBe(1);
+          expect(onDirtyCount).toBe(1);
+          queryManager.stop();
+        }).then(resolve, reject);
+      } else {
+        reject("too many results");
+      }
+    });
+  });
+
   itAsync("ObservableQuery#map respects Symbol.species", (resolve, reject) => {
     const observable = mockWatchQuery(reject, {
       request: { query, variables },

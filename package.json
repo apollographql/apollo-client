@@ -16,9 +16,7 @@
   "main": "./dist/main.cjs.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "sideEffects": [
-    "./dist/cache/inmemory/fixPolyfills.native.js"
-  ],
+  "sideEffects": false,
   "react-native": {
     "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js"
   },

@@ -1,3 +1,10 @@
+## Apollo Client 3.3.18 (not yet released)
+
+### Bug fixes
+
+- Add `"sideEffects": false` to all generated/published `package.json` files, to improve dead code elimination for nested entry points like `@apollo/client/cache`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8213](https://github.com/apollographql/apollo-client/pull/8213)
+
 ## Apollo Client 3.3.17
 
 ### Bug fixes

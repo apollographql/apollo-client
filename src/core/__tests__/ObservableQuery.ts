@@ -1,5 +1,6 @@
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { ApolloClient, NetworkStatus } from '../../core';
 import { ObservableQuery } from '../ObservableQuery';
@@ -39,7 +40,11 @@ export const mockFetchQuery = (queryManager: QueryManager<any>) => {
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests
-  const query = gql`
+  const query: TypedDocumentNode<{
+    people_one: {
+      name: string;
+    };
+  }> = gql`
     query query($id: ID!) {
       people_one(id: $id) {
         name

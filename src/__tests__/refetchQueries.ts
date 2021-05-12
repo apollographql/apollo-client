@@ -23,7 +23,7 @@ describe("client.refetchQueries", () => {
         expect(cache).toBe(client.cache);
         expect(cache.extract()).toEqual({});
       },
-      onQueryUpdated(obsQuery, diff) {
+      onQueryUpdated() {
         reject("should not have called onQueryUpdated");
         return false;
       },
@@ -299,8 +299,82 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
-  it("can run updateQuery function against optimistic cache layer", () => {
-    // TODO
+  itAsync("can run updateQuery function against optimistic cache layer", async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    client.cache.watch({
+      query: abQuery,
+      optimistic: false,
+      callback(diff) {
+        reject("should not have notified non-optimistic watcher");
+      },
+    });
+
+    expect(client.cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "a": "A",
+        "b": "B",
+      },
+    });
+
+    const results = await client.refetchQueries({
+      // This causes the update to run against a temporary optimistic layer.
+      optimistic: true,
+
+      updateCache(cache) {
+        const modified = cache.modify({
+          fields: {
+            a(value, { DELETE }) {
+              expect(value).toEqual("A");
+              return DELETE;
+            },
+          },
+        });
+        expect(modified).toBe(true);
+      },
+
+      onQueryUpdated(obs, diff) {
+        expect(diff.complete).toBe(true);
+
+        // Even though we evicted the Query.a field in the updateCache function,
+        // that optimistic layer was discarded before broadcasting results, so
+        // we're back to the original (non-optimistic) data.
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "A" });
+        } else if (obs === bObs) {
+          reject("bQuery should not have been updated");
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "A", b: "B" });
+        } else {
+          reject("unexpected ObservableQuery");
+        }
+
+        return diff.result;
+      },
+    });
+
+    sortObjects(results);
+
+    expect(results).toEqual([
+      { a: "A" },
+      { a: "A", b: "B" },
+    ]);
+
+    expect(client.cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        "a": "A",
+        "b": "B",
+      },
+    });
+
+    resolve();
   });
 
   it("can return true from onQueryUpdated to choose default refetching behavior", () => {

@@ -298,4 +298,20 @@ describe("client.refetchQueries", () => {
     unsubscribe();
     resolve();
   });
+
+  it("can run updateQuery function against optimistic cache layer", () => {
+    // TODO
+  });
+
+  it("can return true from onQueryUpdated to choose default refetching behavior", () => {
+    // TODO
+  });
+
+  it("can return false from onQueryUpdated to skip the updated query", () => {
+    // TODO
+  });
+
+  it("can refetch no-cache queries", () => {
+    // TODO
+  });
 });

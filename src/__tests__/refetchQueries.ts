@@ -443,8 +443,60 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
-  it("can return false from onQueryUpdated to skip the updated query", () => {
-    // TODO
+  itAsync("can return false from onQueryUpdated to skip the updated query", async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const refetchResult = client.refetchQueries({
+      include: ["A", "B"],
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "A" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          reject("abQuery should not have been updated");
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        // Skip refetching all but the B query.
+        return obs.queryName === "B";
+      },
+    });
+
+    expect(refetchResult.results.length).toBe(1);
+    refetchResult.results.forEach(result => {
+      expect(result).toBeInstanceOf(Promise);
+    });
+
+    expect(refetchResult.queries.map(obs => {
+      expect(obs).toBeInstanceOf(ObservableQuery);
+      return obs.queryName;
+    }).sort()).toEqual(["B"]);
+
+    const results = (await refetchResult).map(result => {
+      // These results are ApolloQueryResult<any>, as inferred by TypeScript.
+      expect(Object.keys(result).sort()).toEqual([
+        "data",
+        "loading",
+        "networkStatus",
+      ]);
+      return result.data;
+    });
+
+    sortObjects(results);
+
+    expect(results).toEqual([
+      { b: "B" },
+    ]);
+
+    resolve();
   });
 
   it("can refetch no-cache queries", () => {

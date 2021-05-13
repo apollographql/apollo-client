@@ -14,9 +14,9 @@ import {
   ApolloQueryResult,
   DefaultContext,
   OperationVariables,
-  PromiseResult,
   Resolvers,
   RefetchQueriesOptions,
+  RefetchQueriesResult,
 } from './types';
 
 import {
@@ -541,30 +541,22 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TResult = Promise<ApolloQueryResult<any>>,
   >(
     options: RefetchQueriesOptions<TCache, TResult>,
-  ): PromiseLike<PromiseResult<TResult>[]> & {
-    queries: ObservableQuery<any>[];
-    results: TResult[];
-  } {
+  ): RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(options);
     const queries: ObservableQuery<any>[] = [];
-    const results: any[] = [];
+    const results: TResult[] = [];
 
     map.forEach((update, obsQuery) => {
       queries.push(obsQuery);
       results.push(update);
     });
 
-    return {
-      // In case you need the raw results immediately, without awaiting
-      // Promise.all(results):
-      queries,
-      results,
-      // Using a thenable instead of a Promise here allows us to avoid creating
-      // the Promise if it isn't going to be awaited.
-      then(onResolved, onRejected) {
-        return Promise.all(results).then(onResolved, onRejected);
-      },
-    };
+    const result = Promise.all(results) as RefetchQueriesResult<TResult>;
+    // In case you need the raw results immediately, without awaiting
+    // Promise.all(results):
+    result.queries = queries;
+    result.results = results;
+    return result;
   }
 
   /**

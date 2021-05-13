@@ -86,3 +86,5 @@ export * from './common/arrays';
 export * from './common/errorHandling';
 export * from './common/canUse';
 export * from './common/compact';
+
+export * from './types/IsStrictlyAny';

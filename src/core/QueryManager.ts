@@ -1044,7 +1044,8 @@ export class QueryManager<TStore> {
     optimistic = false,
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
-  }: InternalRefetchQueriesOptions<ApolloCache<TStore>, TResult>) {
+  }: InternalRefetchQueriesOptions<ApolloCache<TStore>, TResult>
+  ): Map<ObservableQuery<any>, TResult> {
     const includedQueriesById = new Map<string, {
       desc: RefetchQueryDescriptor;
       diff: Cache.DiffResult<any> | undefined;
@@ -1063,7 +1064,7 @@ export class QueryManager<TStore> {
       });
     }
 
-    const results = new Map<ObservableQuery<any>, any>();
+    const results = new Map<ObservableQuery<any>, TResult>();
     function maybeAddResult(oq: ObservableQuery<any>, result: any): boolean {
       // The onQueryUpdated function can return false to ignore this query and
       // skip its normal broadcast, or true to allow the usual broadcast to

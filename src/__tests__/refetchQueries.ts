@@ -500,6 +500,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("can refetch no-cache queries", () => {
-    // TODO
+    // TODO The options.updateCache function won't work for these queries, but
+    // the options.include array should work, at least.
   });
 });

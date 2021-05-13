@@ -120,7 +120,9 @@ describe("client.refetchQueries", () => {
         } else if (obs === abObs) {
           expect(diff.result).toEqual({ a: "Ayy", b: "B" });
         } else {
-          reject("unexpected ObservableQuery");
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
         }
         return Promise.resolve(diff.result);
       },
@@ -152,7 +154,9 @@ describe("client.refetchQueries", () => {
         } else if (obs === abObs) {
           expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
         } else {
-          reject("unexpected ObservableQuery");
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
         }
         return diff.result;
       },
@@ -199,7 +203,9 @@ describe("client.refetchQueries", () => {
         } else if (obs === abObs) {
           expect(diff.result).toEqual({ a: "Ayy", b: "B" });
         } else {
-          reject("unexpected ObservableQuery");
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
         }
         return Promise.resolve(diff.result);
       },
@@ -236,7 +242,9 @@ describe("client.refetchQueries", () => {
         } else if (obs === abObs) {
           expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
         } else {
-          reject("unexpected ObservableQuery");
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
         }
         return diff.result;
       },
@@ -352,7 +360,9 @@ describe("client.refetchQueries", () => {
         } else if (obs === abObs) {
           expect(diff.result).toEqual({ a: "A", b: "B" });
         } else {
-          reject("unexpected ObservableQuery");
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
         }
 
         return diff.result;
@@ -377,8 +387,60 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
-  it("can return true from onQueryUpdated to choose default refetching behavior", () => {
-    // TODO
+  itAsync("can return true from onQueryUpdated to choose default refetching behavior", async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const refetchResult = client.refetchQueries({
+      include: ["A", "B"],
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "A" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          reject("abQuery should not have been updated");
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return true;
+      },
+    });
+
+    expect(refetchResult.results.length).toBe(2);
+    refetchResult.results.forEach(result => {
+      expect(result).toBeInstanceOf(Promise);
+    });
+
+    expect(refetchResult.queries.map(obs => {
+      expect(obs).toBeInstanceOf(ObservableQuery);
+      return obs.queryName;
+    }).sort()).toEqual(["A", "B"]);
+
+    const results = (await refetchResult).map(result => {
+      // These results are ApolloQueryResult<any>, as inferred by TypeScript.
+      expect(Object.keys(result).sort()).toEqual([
+        "data",
+        "loading",
+        "networkStatus",
+      ]);
+      return result.data;
+    });
+
+    sortObjects(results);
+
+    expect(results).toEqual([
+      { a: "A" },
+      { b: "B" },
+    ]);
+
+    resolve();
   });
 
   it("can return false from onQueryUpdated to skip the updated query", () => {

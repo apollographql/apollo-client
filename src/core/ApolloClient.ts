@@ -16,6 +16,7 @@ import {
   OperationVariables,
   PromiseResult,
   Resolvers,
+  RefetchQueriesOptions,
 } from './types';
 
 import {
@@ -24,7 +25,6 @@ import {
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-  RefetchQueriesOptions,
 } from './watchQueryOptions';
 
 import {

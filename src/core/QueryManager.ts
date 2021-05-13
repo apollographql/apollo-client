@@ -28,9 +28,6 @@ import {
   MutationOptions,
   WatchQueryFetchPolicy,
   ErrorPolicy,
-  RefetchQueryDescription,
-  InternalRefetchQueriesOptions,
-  RefetchQueryDescriptor,
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -39,6 +36,9 @@ import {
   OperationVariables,
   MutationUpdaterFunction,
   OnQueryUpdated,
+  RefetchQueryDescription,
+  InternalRefetchQueriesOptions,
+  RefetchQueryDescriptor,
 } from './types';
 import { LocalState } from './LocalState';
 

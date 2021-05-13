@@ -5,10 +5,10 @@ import { FetchResult } from '../link/core';
 import {
   DefaultContext,
   MutationQueryReducersMap,
-  PureQueryOptions,
   OperationVariables,
   MutationUpdaterFunction,
   OnQueryUpdated,
+  RefetchQueryDescription,
 } from './types';
 import { ApolloCache } from '../cache';
 
@@ -187,43 +187,6 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
    * Context object to be passed through the link execution chain.
    */
   context?: DefaultContext;
-}
-
-export type RefetchQueryDescriptor = string | PureQueryOptions;
-export type RefetchQueryDescription = RefetchQueryDescriptor[];
-
-// Used by ApolloClient["refetchQueries"]
-// TODO Improve documentation comments for this public type.
-export interface RefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
-  TResult,
-> {
-  updateCache?: (cache: TCache) => void;
-  // Although you can pass PureQueryOptions objects in addition to strings in
-  // the refetchQueries array for a mutation, the client.refetchQueries method
-  // deliberately discourages passing PureQueryOptions, by restricting the
-  // public type of the options.include array to string[] (just query names).
-  include?: string[];
-  optimistic?: boolean;
-  // If no onQueryUpdated function is provided, any queries affected by the
-  // updateCache function or included in the options.include array will be
-  // refetched by default. Passing null instead of undefined disables this
-  // default refetching behavior for affected queries, though included queries
-  // will still be refetched.
-  onQueryUpdated?: OnQueryUpdated<TResult> | null;
-}
-
-// Used by QueryManager["refetchQueries"]
-export interface InternalRefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
-  TResult,
-> extends Omit<RefetchQueriesOptions<TCache, TResult>, "include"> {
-  // Just like the refetchQueries array for a mutation, allowing both strings
-  // and PureQueryOptions objects.
-  include?: RefetchQueryDescription;
-  // This part of the API is a (useful) implementation detail, but need not be
-  // exposed in the public client.refetchQueries API (above).
-  removeOptimistic?: string;
 }
 
 export interface MutationBaseOptions<

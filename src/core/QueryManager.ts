@@ -1065,22 +1065,6 @@ export class QueryManager<TStore> {
     }
 
     const results = new Map<ObservableQuery<any>, TResult>();
-    function maybeAddResult(oq: ObservableQuery<any>, result: any): boolean {
-      // The onQueryUpdated function can return false to ignore this query and
-      // skip its normal broadcast, or true to allow the usual broadcast to
-      // happen (when diff.result has changed).
-      if (result === false || result === true) {
-        return result;
-      }
-
-      // Returning anything other than true or false from onQueryUpdated will
-      // cause the result to be included in the results Map, while also
-      // canceling/overriding the normal broadcast.
-      results.set(oq, result);
-
-      // Prevent the normal cache broadcast of this result.
-      return false;
-    }
 
     if (updateCache) {
       this.cache.batch({
@@ -1134,8 +1118,25 @@ export class QueryManager<TStore> {
           if (oq) {
             if (onQueryUpdated) {
               includedQueriesById.delete(oq.queryId);
-              return maybeAddResult(oq, onQueryUpdated(oq, diff, lastDiff));
+
+              const result = onQueryUpdated(oq, diff, lastDiff);
+
+              // The onQueryUpdated function can return false to ignore this
+              // query and skip its normal broadcast, or true to allow the usual
+              // broadcast to happen (when diff.result has changed).
+              if (result === true || result === false) {
+                return result;
+              }
+
+              // Returning anything other than true or false from onQueryUpdated
+              // will cause the result to be included in the results Map, while
+              // also canceling/overriding the normal broadcast.
+              results.set(oq, result);
+
+              // Prevent the normal cache broadcast of this result.
+              return false;
             }
+
             if (onQueryUpdated !== null) {
               // If we don't have an onQueryUpdated function, and onQueryUpdated
               // was not disabled by passing null, make sure this query is
@@ -1185,7 +1186,9 @@ export class QueryManager<TStore> {
           if (!onQueryUpdated || result === true) {
             result = fallback();
           }
-          maybeAddResult(oq, result);
+          if (result !== false) {
+            results.set(oq, result as TResult);
+          }
         }
       });
     }

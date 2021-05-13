@@ -73,20 +73,20 @@ export type RefetchQueriesPromiseResults<TResult> =
   // to client.refetchQueries.
   TResult[];
 
-export type RefetchQueriesResult<TResult> =
-  // The result of client.refetchQueries is thenable/awaitable, if you just want
-  // an array of fully resolved results, but you can also access the raw results
-  // immediately by examining the additional { queries, results } properties of
-  // the RefetchQueriesResult<TResult> object.
-  Promise<RefetchQueriesPromiseResults<TResult>> & {
-    // An array of ObservableQuery objects corresponding 1:1 to TResult values
-    // in the results arrays (both the TResult[] array below, and the results
-    // array resolved by the Promise above).
-    queries: ObservableQuery<any>[];
-    // These are the raw TResult values returned by any onQueryUpdated functions
-    // that were invoked by client.refetchQueries.
-    results: TResult[];
-  };
+// The result of client.refetchQueries is thenable/awaitable, if you just want
+// an array of fully resolved results, but you can also access the raw results
+// immediately by examining the additional { queries, results } properties of
+// the RefetchQueriesResult<TResult> object.
+export interface RefetchQueriesResult<TResult>
+extends Promise<RefetchQueriesPromiseResults<TResult>> {
+  // An array of ObservableQuery objects corresponding 1:1 to TResult values
+  // in the results arrays (both the TResult[] array below, and the results
+  // array resolved by the Promise above).
+  queries: ObservableQuery<any>[];
+  // These are the raw TResult values returned by any onQueryUpdated functions
+  // that were invoked by client.refetchQueries.
+  results: TResult[];
+}
 
 // Used by QueryManager["refetchQueries"]
 export interface InternalRefetchQueriesOptions<

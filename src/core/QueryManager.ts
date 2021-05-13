@@ -1048,7 +1048,8 @@ export class QueryManager<TStore> {
   ): Map<ObservableQuery<any>, TResult> {
     const includedQueriesById = new Map<string, {
       desc: RefetchQueryDescriptor;
-      diff: Cache.DiffResult<any> | undefined;
+      lastDiff?: Cache.DiffResult<any>;
+      diff?: Cache.DiffResult<any>;
     }>();
 
     if (include) {
@@ -1056,7 +1057,7 @@ export class QueryManager<TStore> {
         getQueryIdsForQueryDescriptor(this, desc).forEach(queryId => {
           includedQueriesById.set(queryId, {
             desc,
-            diff: typeof desc === "string"
+            lastDiff: typeof desc === "string"
               ? this.getQuery(queryId).getDiff()
               : void 0,
           });
@@ -1143,6 +1144,7 @@ export class QueryManager<TStore> {
               // "included" like any other options.include-specified query.
               includedQueriesById.set(oq.queryId, {
                 desc: oq.queryName || `<anonymous ObservableQuery ${oq.queryId}>`,
+                lastDiff,
                 diff,
               });
             }
@@ -1152,7 +1154,7 @@ export class QueryManager<TStore> {
     }
 
     if (includedQueriesById.size) {
-      includedQueriesById.forEach(({ desc, diff }, queryId) => {
+      includedQueriesById.forEach(({ desc, lastDiff, diff }, queryId) => {
         const queryInfo = this.getQuery(queryId);
         let oq = queryInfo.observableQuery;
         let fallback: undefined | (() => any);
@@ -1180,8 +1182,11 @@ export class QueryManager<TStore> {
           // queries, even the PureQueryOptions ones. Otherwise, we call the
           // fallback function defined above.
           if (onQueryUpdated) {
-            queryInfo.reset(); // Force queryInfo.getDiff() to read from cache.
-            result = onQueryUpdated(oq, queryInfo.getDiff(), diff);
+            if (!diff) {
+              queryInfo.reset(); // Force queryInfo.getDiff() to read from cache.
+              diff = queryInfo.getDiff();
+            }
+            result = onQueryUpdated(oq, diff, lastDiff);
           }
           if (!onQueryUpdated || result === true) {
             result = fallback();

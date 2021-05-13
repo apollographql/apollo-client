@@ -443,7 +443,90 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
-  itAsync("can return false from onQueryUpdated to skip the updated query", async (resolve, reject) => {
+  itAsync("can return true from onQueryUpdated when using options.updateCache", async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const refetchResult = client.refetchQueries({
+      updateCache(cache) {
+        cache.writeQuery({
+          query: bQuery,
+          data: {
+            b: "Beetlejuice"
+          },
+        });
+      },
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          reject("aQuery should not have been updated");
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "Beetlejuice" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "A", b: "Beetlejuice" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+
+        expect(client.cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            a: "A",
+            b: "Beetlejuice",
+          },
+        });
+
+        return true;
+      },
+    });
+
+    expect(refetchResult.results.length).toBe(2);
+    refetchResult.results.forEach(result => {
+      expect(result).toBeInstanceOf(Promise);
+    });
+
+    expect(refetchResult.queries.map(obs => {
+      expect(obs).toBeInstanceOf(ObservableQuery);
+      return obs.queryName;
+    }).sort()).toEqual(["AB", "B"]);
+
+    const results = (await refetchResult).map(result => {
+      // These results are ApolloQueryResult<any>, as inferred by TypeScript.
+      expect(Object.keys(result).sort()).toEqual([
+        "data",
+        "loading",
+        "networkStatus",
+      ]);
+      return result.data;
+    });
+
+    sortObjects(results);
+
+    expect(results).toEqual([
+      // Since we returned true from onQueryUpdated, the results were refetched,
+      // replacing "Beetlejuice" with "B" again.
+      { a: "A", b: "B"},
+      { b: "B" },
+    ]);
+
+    expect(client.cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        a: "A",
+        b: "B",
+      },
+    });
+
+    resolve();
+  });
+
+  itAsync("can return false from onQueryUpdated to skip/ignore a query", async (resolve, reject) => {
     const client = makeClient();
     const [
       aObs,

@@ -62,7 +62,7 @@ export namespace Cache {
     // Passing a string for this option creates a new optimistic layer, with the
     // given string as its layer.id, just like passing a string for the
     // optimisticId parameter of performTransaction. Passing true is the same as
-    // passing undefined to performTransaction (runing the batch operation
+    // passing undefined to performTransaction (running the batch operation
     // against the current top layer of the cache), and passing false is the
     // same as passing null (running the operation against root/non-optimistic
     // cache data).

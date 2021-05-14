@@ -250,7 +250,7 @@ function stringifyReplacer(_key: string, value: any): any {
     value = Object.keys(value).sort().reduce((copy, key) => {
       copy[key] = value[key];
       return copy;
-    }, Object.create(Object.getPrototypeOf(value)));
+    }, {} as Record<string, any>);
   }
   return value;
 }

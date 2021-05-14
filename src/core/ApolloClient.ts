@@ -17,6 +17,7 @@ import {
   Resolvers,
   RefetchQueriesOptions,
   RefetchQueriesResult,
+  InternalRefetchQueriesResult,
 } from './types';
 
 import {
@@ -544,18 +545,22 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   ): RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(options);
     const queries: ObservableQuery<any>[] = [];
-    const results: TResult[] = [];
+    const results: InternalRefetchQueriesResult<TResult>[] = [];
 
-    map.forEach((update, obsQuery) => {
+    map.forEach((result, obsQuery) => {
       queries.push(obsQuery);
-      results.push(update);
+      results.push(result);
     });
 
-    const result = Promise.all(results) as RefetchQueriesResult<TResult>;
+    const result = Promise.all<TResult>(
+      results as TResult[]
+    ) as RefetchQueriesResult<TResult>;
+
     // In case you need the raw results immediately, without awaiting
     // Promise.all(results):
     result.queries = queries;
     result.results = results;
+
     return result;
   }
 

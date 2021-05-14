@@ -39,6 +39,8 @@ import {
   RefetchQueryDescription,
   InternalRefetchQueriesOptions,
   RefetchQueryDescriptor,
+  InternalRefetchQueriesResult,
+  InternalRefetchQueriesMap,
 } from './types';
 import { LocalState } from './LocalState';
 
@@ -1045,7 +1047,7 @@ export class QueryManager<TStore> {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<ApolloCache<TStore>, TResult>
-  ): Map<ObservableQuery<any>, TResult> {
+  ): InternalRefetchQueriesMap<TResult> {
     const includedQueriesById = new Map<string, {
       desc: RefetchQueryDescriptor;
       lastDiff?: Cache.DiffResult<any>;
@@ -1065,7 +1067,7 @@ export class QueryManager<TStore> {
       });
     }
 
-    const results = new Map<ObservableQuery<any>, TResult>();
+    const results: InternalRefetchQueriesMap<TResult> = new Map;
 
     if (updateCache) {
       this.cache.batch({
@@ -1123,18 +1125,19 @@ export class QueryManager<TStore> {
               // options.include.
               includedQueriesById.delete(oq.queryId);
 
-              let result = onQueryUpdated(oq, diff, lastDiff);
+              let result: boolean | InternalRefetchQueriesResult<TResult> =
+                onQueryUpdated(oq, diff, lastDiff);
 
               if (result === true) {
                 // The onQueryUpdated function requested the default refetching
                 // behavior by returning true.
-                result = oq.refetch() as any;
+                result = oq.refetch();
               }
 
               // Record the result in the results Map, as long as onQueryUpdated
               // did not return false to skip/ignore this result.
               if (result !== false) {
-                results.set(oq, result as TResult);
+                results.set(oq, result);
               }
 
               // Prevent the normal cache broadcast of this result, since we've
@@ -1161,7 +1164,7 @@ export class QueryManager<TStore> {
       includedQueriesById.forEach(({ desc, lastDiff, diff }, queryId) => {
         const queryInfo = this.getQuery(queryId);
         let oq = queryInfo.observableQuery;
-        let fallback: undefined | (() => any);
+        let fallback: undefined | (() => Promise<ApolloQueryResult<any>>);
 
         if (typeof desc === "string") {
           fallback = () => oq!.refetch();
@@ -1181,7 +1184,7 @@ export class QueryManager<TStore> {
         }
 
         if (oq && fallback) {
-          let result: boolean | TResult | undefined;
+          let result: undefined | boolean | InternalRefetchQueriesResult<TResult>;
           // If onQueryUpdated is provided, we want to use it for all included
           // queries, even the PureQueryOptions ones. Otherwise, we call the
           // fallback function defined above.
@@ -1196,7 +1199,7 @@ export class QueryManager<TStore> {
             result = fallback();
           }
           if (result !== false) {
-            results.set(oq, result as TResult);
+            results.set(oq, result!);
           }
         }
       });

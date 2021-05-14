@@ -85,7 +85,7 @@ extends Promise<RefetchQueriesPromiseResults<TResult>> {
   queries: ObservableQuery<any>[];
   // These are the raw TResult values returned by any onQueryUpdated functions
   // that were invoked by client.refetchQueries.
-  results: TResult[];
+  results: InternalRefetchQueriesResult<TResult>[];
 }
 
 // Used by QueryManager["refetchQueries"]
@@ -100,6 +100,13 @@ export interface InternalRefetchQueriesOptions<
   // exposed in the public client.refetchQueries API (above).
   removeOptimistic?: string;
 }
+
+export type InternalRefetchQueriesResult<TResult> =
+  TResult | Promise<ApolloQueryResult<any>>;
+
+export type InternalRefetchQueriesMap<TResult> =
+  Map<ObservableQuery<any>,
+      InternalRefetchQueriesResult<TResult>>;
 
 export type OperationVariables = Record<string, any>;
 

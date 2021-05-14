@@ -180,7 +180,6 @@ export function getStoreKeyName(
   fieldName: string,
   args?: Record<string, any> | null,
   directives?: Directives,
-  stringify: (value: any) => string = JSON.stringify,
 ): string {
   if (
     args &&
@@ -232,6 +231,28 @@ export function getStoreKeyName(
   }
 
   return completeFieldName;
+}
+
+export namespace getStoreKeyName {
+  export function setStringify(s: typeof stringify) {
+    const previous = stringify;
+    stringify = s;
+    return previous;
+  }
+}
+
+let stringify = function defaultStringify(value: any): string {
+  return JSON.stringify(value, stringifyReplacer);
+};
+
+function stringifyReplacer(_key: string, value: any): any {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    value = Object.keys(value).sort().reduce((copy, key) => {
+      copy[key] = value[key];
+      return copy;
+    }, Object.create(Object.getPrototypeOf(value)));
+  }
+  return value;
 }
 
 export function argumentsObjectFromField(

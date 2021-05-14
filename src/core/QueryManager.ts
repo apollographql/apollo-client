@@ -1118,23 +1118,27 @@ export class QueryManager<TStore> {
 
           if (oq) {
             if (onQueryUpdated) {
+              // Since we're about to handle this query now, remove it from
+              // includedQueriesById, in case it was added earlier because of
+              // options.include.
               includedQueriesById.delete(oq.queryId);
 
-              const result = onQueryUpdated(oq, diff, lastDiff);
+              let result = onQueryUpdated(oq, diff, lastDiff);
 
-              // The onQueryUpdated function can return false to ignore this
-              // query and skip its normal broadcast, or true to allow the usual
-              // broadcast to happen (when diff.result has changed).
-              if (result === true || result === false) {
-                return result;
+              if (result === true) {
+                // The onQueryUpdated function requested the default refetching
+                // behavior by returning true.
+                result = oq.refetch() as any;
               }
 
-              // Returning anything other than true or false from onQueryUpdated
-              // will cause the result to be included in the results Map, while
-              // also canceling/overriding the normal broadcast.
-              results.set(oq, result);
+              // Record the result in the results Map, as long as onQueryUpdated
+              // did not return false to skip/ignore this result.
+              if (result !== false) {
+                results.set(oq, result as TResult);
+              }
 
-              // Prevent the normal cache broadcast of this result.
+              // Prevent the normal cache broadcast of this result, since we've
+              // already handled it.
               return false;
             }
 

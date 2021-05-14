@@ -17,7 +17,6 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import stringify from 'fast-json-stable-stringify';
 import { InvariantError } from 'ts-invariant';
 import { FragmentMap, getFragmentFromSelection } from './fragments';
 
@@ -181,6 +180,7 @@ export function getStoreKeyName(
   fieldName: string,
   args?: Record<string, any> | null,
   directives?: Directives,
+  stringify: (value: any) => string = JSON.stringify,
 ): string {
   if (
     args &&
@@ -202,7 +202,7 @@ export function getStoreKeyName(
         filteredArgs[key] = args[key];
       });
 
-      return `${directives['connection']['key']}(${JSON.stringify(
+      return `${directives['connection']['key']}(${stringify(
         filteredArgs,
       )})`;
     } else {
@@ -224,7 +224,7 @@ export function getStoreKeyName(
     Object.keys(directives).forEach(key => {
       if (KNOWN_DIRECTIVES.indexOf(key) !== -1) return;
       if (directives[key] && Object.keys(directives[key]).length) {
-        completeFieldName += `@${key}(${JSON.stringify(directives[key])})`;
+        completeFieldName += `@${key}(${stringify(directives[key])})`;
       } else {
         completeFieldName += `@${key}`;
       }

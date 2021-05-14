@@ -48,6 +48,12 @@ import {
 } from '../core/types/common';
 import { WriteContext } from './writeToStore';
 
+// Upgrade to a faster version of the default stable JSON.stringify function
+// used by getStoreKeyName. This function is used when computing storeFieldName
+// strings (when no keyArgs has been configured for a field).
+import { canonicalStringify } from './object-canon';
+getStoreKeyName.setStringify(canonicalStringify);
+
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
 }

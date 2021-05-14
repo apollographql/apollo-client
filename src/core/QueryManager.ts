@@ -19,6 +19,7 @@ import {
   isNonEmptyArray,
   Concast,
   ConcastSourcesIterable,
+  makeUniqueId,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -1413,11 +1414,4 @@ function getQueryIdsForQueryDescriptor<TStore>(
     } passed to refetchQueries method in options.include array`);
   }
   return queryIds;
-}
-
-const prefixCounts: Record<string, number> = Object.create(null);
-function makeUniqueId(prefix: string) {
-  const count = prefixCounts[prefix] || 1;
-  prefixCounts[prefix] = count + 1;
-  return `${prefix}:${count}:${Math.random().toString(36).slice(2)}`;
 }

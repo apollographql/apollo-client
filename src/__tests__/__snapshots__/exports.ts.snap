@@ -353,6 +353,7 @@ Array [
   "isReference",
   "iterateObserversSafely",
   "makeReference",
+  "makeUniqueId",
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",

@@ -68,6 +68,7 @@ Array [
   "MissingFieldError",
   "Policies",
   "cacheSlot",
+  "canonicalStringify",
   "defaultDataIdFromObject",
   "fieldNameFromStoreName",
   "isReference",

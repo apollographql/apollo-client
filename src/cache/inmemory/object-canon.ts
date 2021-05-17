@@ -194,7 +194,10 @@ type SortedKeysInfo = {
   json: string;
 };
 
-const stringifyCanon = new ObjectCanon;
+let stringifyCanon = new ObjectCanon;
+export function resetStringifyCanon() {
+  stringifyCanon = new ObjectCanon;
+}
 const stringifyCache = new WeakMap<object, string>();
 
 // Since the keys of canonical objects are always created in lexicographically

@@ -176,7 +176,7 @@ const KNOWN_DIRECTIVES: string[] = [
   'export',
 ];
 
-export function getStoreKeyName(
+export const getStoreKeyName = Object.assign(function (
   fieldName: string,
   args?: Record<string, any> | null,
   directives?: Directives,
@@ -231,16 +231,16 @@ export function getStoreKeyName(
   }
 
   return completeFieldName;
-}
-
-export namespace getStoreKeyName {
-  export function setStringify(s: typeof stringify) {
+}, {
+  setStringify(s: typeof stringify) {
     const previous = stringify;
     stringify = s;
     return previous;
-  }
-}
+  },
+});
 
+// Default stable JSON.stringify implementation. Can be updated/replaced with
+// something better by calling getStoreKeyName.setStringify.
 let stringify = function defaultStringify(value: any): string {
   return JSON.stringify(value, stringifyReplacer);
 };

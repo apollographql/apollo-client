@@ -28,7 +28,7 @@ import {
   TypePolicies,
 } from './policies';
 import { hasOwn } from './helpers';
-import { resetStringifyCanon } from './object-canon';
+import { canonicalStringify } from './object-canon';
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
@@ -263,7 +263,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   // Request garbage collection of unreachable normalized entities.
   public gc() {
-    resetStringifyCanon();
+    canonicalStringify.reset();
     return this.optimisticData.gc();
   }
 
@@ -324,7 +324,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public reset(): Promise<void> {
     this.init();
     this.broadcastWatches();
-    resetStringifyCanon();
+    canonicalStringify.reset();
     return Promise.resolve();
   }
 

@@ -194,16 +194,10 @@ type SortedKeysInfo = {
   json: string;
 };
 
-let stringifyCanon = new ObjectCanon;
-export function resetStringifyCanon() {
-  stringifyCanon = new ObjectCanon;
-}
-const stringifyCache = new WeakMap<object, string>();
-
 // Since the keys of canonical objects are always created in lexicographically
 // sorted order, we can use the ObjectCanon to implement a fast and stable
 // version of JSON.stringify, which automatically sorts object keys.
-export function canonicalStringify(value: any): string {
+export const canonicalStringify = Object.assign(function (value: any): string {
   if (isObjectOrArray(value)) {
     const canonical = stringifyCanon.admit(value);
     let json = stringifyCache.get(canonical);
@@ -216,4 +210,14 @@ export function canonicalStringify(value: any): string {
     return json;
   }
   return JSON.stringify(value);
-}
+}, {
+  reset() {
+    stringifyCanon = new ObjectCanon;
+  },
+});
+
+// Can be reset by calling canonicalStringify.reset().
+let stringifyCanon = new ObjectCanon;
+
+// Needs no resetting, thanks to weakness.
+const stringifyCache = new WeakMap<object, string>();

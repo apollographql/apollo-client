@@ -273,7 +273,7 @@ export class StoreReader {
         // If result is canonical, then it could only have been previously
         // cached by the canonizing version of executeSelectionSet, so we can
         // avoid checking both possibilities here.
-        this.canon.isCanonical(result),
+        this.canon.isKnown(result),
       );
       if (latest && result === latest.result) {
         return true;

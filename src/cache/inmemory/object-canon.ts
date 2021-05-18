@@ -1,6 +1,5 @@
 import { Trie } from "@wry/trie";
 import { canUseWeakMap } from "../../utilities";
-import { objToStr } from "./helpers";
 
 function isObjectOrArray(value: any): value is object {
   return !!value && typeof value === "object";
@@ -82,7 +81,7 @@ export class ObjectCanon {
     keys?: SortedKeysInfo;
   }>(canUseWeakMap);
 
-  public isCanonical(value: any): boolean {
+  public isKnown(value: any): boolean {
     return isObjectOrArray(value) && this.known.has(value);
   }
 
@@ -106,8 +105,9 @@ export class ObjectCanon {
       const original = this.passes.get(value);
       if (original) return original;
 
-      switch (objToStr.call(value)) {
-        case "[object Array]": {
+      const proto = Object.getPrototypeOf(value);
+      switch (proto) {
+        case Array.prototype: {
           if (this.known.has(value)) return value;
           const array: any[] = (value as any[]).map(this.admit, this);
           // Arrays are looked up in the Trie using their recursively
@@ -126,7 +126,8 @@ export class ObjectCanon {
           return node.array;
         }
 
-        case "[object Object]": {
+        case null:
+        case Object.prototype: {
           if (this.known.has(value)) return value;
           const proto = Object.getPrototypeOf(value);
           const array = [proto];

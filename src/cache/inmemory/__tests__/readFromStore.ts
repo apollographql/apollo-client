@@ -2044,11 +2044,11 @@ describe('reading from the store', () => {
     }
 
     const nonCanonicalQueryResult0 = readQuery(false);
-    expect(canon.isCanonical(nonCanonicalQueryResult0)).toBe(false);
+    expect(canon.isKnown(nonCanonicalQueryResult0)).toBe(false);
     expect(nonCanonicalQueryResult0).toEqual({ count: 0 });
 
     const canonicalQueryResult0 = readQuery(true);
-    expect(canon.isCanonical(canonicalQueryResult0)).toBe(true);
+    expect(canon.isKnown(canonicalQueryResult0)).toBe(true);
     // The preservation of { count: 0 } proves the result didn't have to be
     // recomputed, but merely canonized.
     expect(canonicalQueryResult0).toEqual({ count: 0 });
@@ -2058,7 +2058,7 @@ describe('reading from the store', () => {
     });
 
     const canonicalQueryResult1 = readQuery(true);
-    expect(canon.isCanonical(canonicalQueryResult1)).toBe(true);
+    expect(canon.isKnown(canonicalQueryResult1)).toBe(true);
     expect(canonicalQueryResult1).toEqual({ count: 1 });
 
     const nonCanonicalQueryResult1 = readQuery(false);
@@ -2101,7 +2101,7 @@ describe('reading from the store', () => {
     }
 
     const canonicalFragmentResult1 = readFragment(true);
-    expect(canon.isCanonical(canonicalFragmentResult1)).toBe(true);
+    expect(canon.isKnown(canonicalFragmentResult1)).toBe(true);
     expect(canonicalFragmentResult1).toEqual({ count: 0 });
 
     const nonCanonicalFragmentResult1 = readFragment(false);
@@ -2115,13 +2115,13 @@ describe('reading from the store', () => {
 
     const nonCanonicalFragmentResult2 = readFragment(false);
     expect(readFragment(false)).toBe(nonCanonicalFragmentResult2);
-    expect(canon.isCanonical(nonCanonicalFragmentResult2)).toBe(false);
+    expect(canon.isKnown(nonCanonicalFragmentResult2)).toBe(false);
     expect(nonCanonicalFragmentResult2).toEqual({ count: 1 });
     expect(readFragment(false)).toBe(nonCanonicalFragmentResult2);
 
     const canonicalFragmentResult2 = readFragment(true);
     expect(readFragment(true)).toBe(canonicalFragmentResult2);
-    expect(canon.isCanonical(canonicalFragmentResult2)).toBe(true);
+    expect(canon.isKnown(canonicalFragmentResult2)).toBe(true);
     expect(canonicalFragmentResult2).toEqual({ count: 1 });
   });
 });

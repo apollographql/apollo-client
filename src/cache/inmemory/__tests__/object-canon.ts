@@ -46,7 +46,9 @@ describe("ObjectCanon", () => {
     expect(canon.admit(c2)).toBe(c2);
   });
 
-  it("preserves custom prototypes", () => {
+  // TODO Reenable this when ObjectCanon allows enabling canonization for
+  // arbitrary prototypes (not just {Array,Object}.prototype and null).
+  it.skip("preserves custom prototypes", () => {
     const canon = new ObjectCanon;
 
     class Custom {

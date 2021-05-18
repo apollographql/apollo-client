@@ -1,4 +1,4 @@
-<table class="field-table apiref">
+<table class="field-table api-ref">
   <thead>
     <tr>
       <th>Name /<br/>Type</th>
@@ -27,7 +27,7 @@
 
 A GraphQL query string parsed into an AST with the `gql` template literal.
 
-**Optional** for the `useMutation` hook, because the query can be provided as the first parameter to the hook. **Required** for the `Mutation` component.
+**Optional** for the `useMutation` hook, because the mutation can be provided as the first parameter to the hook. **Required** for the `Mutation` component.
 </td>
 </tr>
 
@@ -106,12 +106,17 @@ This function is passed an [`ApolloError`](https://github.com/apollographql/apol
 
 ###### `refetchQueries`
 
-`Array&lt;string\|{ query: DocumentNode, variables?: TVariables}&gt; \| ((mutationResult: FetchResult) => Array&lt;string\|{ query: DocumentNode, variables?: TVariables}&gt;)`
+`Array<string | { query: DocumentNode, variables?: TVariables}> | ((mutationResult: FetchResult) => Array<string | { query: DocumentNode, variables?: TVariables}>)`
 </td>
 
 <td>
 
-An array or function that allows you to specify which queries you want to refetch after a mutation has occurred. Array values can either be queries (with optional variables) or just the string names of queries to be refetched.
+An array or a function that _returns_ an array that specifies which queries you want to refetch after the mutation occurs.
+
+Each array value can be either:
+
+* An object containing the `query` to execute, along with any `variables`
+* A string indicating the operation name of the query to refetch
 
 </td>
 </tr>
@@ -221,12 +226,14 @@ If you're using [Apollo Link](https://www.apollographql.com/docs/react/api/link/
 
 ###### `update`
 
-`(cache: ApolloCache, mutationResult: FetchResult)`
+`(cache: ApolloCache, mutationResult: FetchResult) => void`
 </td>
 
 <td>
 
-A function used to update the cache after the mutation completes.
+A function used to update the Apollo Client cache after the mutation completes.
+
+For more information, see [Updating the cache after a mutation](/data/mutations#updating-the-cache-after-a-mutation).
 
 </td>
 </tr>

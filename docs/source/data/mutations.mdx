@@ -1,25 +1,23 @@
 ---
 title: Mutations
-description: Update data with the useMutation hook
+description: Modify data with the useMutation hook
 ---
 
 import MutationOptions from '../../shared/mutation-options.mdx';
 import MutationResult from '../../shared/mutation-result.mdx';
 
-Now that we've [learned how to fetch data](queries/) from our backend with Apollo Client, the natural next step is to learn how to update that data with **mutations**.
+Now that we've [learned how to query data](queries/) from our backend with Apollo Client, the natural next step is to learn how to _modify_ back-end data with **mutations**.
 
-This article demonstrates how to send updates to your GraphQL server with the
-`useMutation` hook. You'll also learn how to update the Apollo Client cache
-after executing a mutation, and how to track loading and error states for a mutation.
+This article demonstrates how to send updates to your GraphQL server with the `useMutation` hook. You'll also learn how to update the Apollo Client cache after executing a mutation, and how to track loading and error states for a mutation.
+
+> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/mutations-example-app-start-gm7i5) and [sample GraphQL server](https://codesandbox.io/s/mutations-example-app-server-sxewr) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/mutations-example-app-final-tjoje).
 
 ## Prerequisites
 
 This article assumes you're familiar with building basic GraphQL mutations. If you need a refresher, we recommend that you
 [read this guide](http://graphql.org/learn/queries/#mutations).
 
-This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. Read our [getting started guide](../get-started/) if you need help with either of those steps.
-
-> To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/mutations-example-app-start-gm7i5) and [sample GraphQL server](https://codesandbox.io/s/mutations-example-app-server-sxewr) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/mutations-example-app-final-tjoje).
+This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. For help with those steps, [get started](../get-started/).
 
 ## Executing a mutation
 
@@ -43,7 +41,7 @@ function MyComponent() {
  When your component renders, `useMutation` returns a tuple that includes:
 
 * A **mutate function** that you can call at any time to execute the mutation
-    * Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically. Instead, you call this function.
+    * Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically. Instead, you call the mutate function.
 * An object with fields that represent the current status of the mutation's execution (`data`, `loading`, etc.)
     * This object is similar to the object returned by the `useQuery` hook. For details, see [Result](#result).
 
@@ -98,20 +96,40 @@ function AddTodo() {
 
 In this example, our `form`'s `onSubmit` handler calls the **mutate function** (named `addTodo`) that's returned by the `useMutation` hook. This tells Apollo Client to execute the mutation by sending it to our GraphQL server.
 
-> Note that this behavior differs from [`useQuery`](./queries/), which executes its operation as soon as its component renders. This is because mutations are more commonly executed in response to a user action, such as submitting a form.
+> Note that this behavior differs from [`useQuery`](./queries/), which executes its operation as soon as its component renders. This is because mutations are more commonly executed in response to a user action (such as submitting a form in this case).
 
 ### Providing options
 
-Both `useMutation` itself and the mutate function accept options that are described in the [API reference](../api/react/hooks/#usemutation). Any options you provide to a mutate function _override_ corresponding options you previously provided to `useMutation`.
+The `useMutation` hook accepts an `options` object as its second parameter. Here's an example that provides the `onCompleted` option to take an action after the mutation completes successfully:
 
-In the example above, we provide the `variables` option to `addTodo`, which enables us to specify any GraphQL variables that the mutation requires (in this case, the `text` of the to-do item).
+```js
+const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
+  onCompleted: (data) => console.log('Complete!')
+});
+```
 
+> All supported options are listed in [Options](#options).
+
+You can _also_ provide these options to your mutate function, as demonstrated in [the example above](#example):
+
+```js
+addTodo({ variables: { text: input.value } });
+```
+
+Here, we're using the `variables` option to provide the values of any GraphQL variables that our mutation requires (specifically, the `text` of the created to-do item).
+
+> If you provide the same option to both `useMutation` _and_ your mutate function, the value you provide your mutate function takes precedence.
 
 ### Tracking mutation status
 
 In addition to a mutate function, the `useMutation` hook returns an object that represents the current state of the mutation's execution. The fields of this object (listed in [Result](#result)) include booleans that indicate whether the mutate function has been `called` yet, and whether the mutation's result is currently `loading`.
 
-[The example above](#example) destructures the `loading` and `error` fields from this object to render the `AddTodo` component differently depending on the mutation's current status.
+[The example above](#example) destructures the `loading` and `error` fields from this object to render the `AddTodo` component differently depending on the mutation's current status:
+
+```jsx
+if (loading) return 'Submitting...';
+if (error) return `Submission error! ${error.message}`;
+```
 
 > The `useMutation` hook also supports `onCompleted` and `onError` options if you prefer to use callbacks. [See the API reference.](../api/react/hooks/#options-2)
 

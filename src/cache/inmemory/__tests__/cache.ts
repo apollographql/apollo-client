@@ -1348,7 +1348,7 @@ describe('Cache', () => {
       return { diffs, watch: options, cancel };
     }
 
-    it('calls onDirty for each invalidated watch', () => {
+    it('calls onWatchUpdated for each invalidated watch', () => {
       const cache = new InMemoryCache;
 
       const aQuery = gql`query { a }`;
@@ -1362,7 +1362,7 @@ describe('Cache', () => {
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.writeQuery({
             query: aQuery,
             data: {
@@ -1371,7 +1371,7 @@ describe('Cache', () => {
           });
         },
         optimistic: true,
-        onDirty(w, diff) {
+        onWatchUpdated(w, diff) {
           dirtied.set(w, diff);
         },
       });
@@ -1403,7 +1403,7 @@ describe('Cache', () => {
       dirtied.clear();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.writeQuery({
             query: bQuery,
             data: {
@@ -1412,7 +1412,7 @@ describe('Cache', () => {
           });
         },
         optimistic: true,
-        onDirty(w, diff) {
+        onWatchUpdated(w, diff) {
           dirtied.set(w, diff);
         },
       });
@@ -1474,7 +1474,7 @@ describe('Cache', () => {
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.modify({
             fields: {
               a(value, { INVALIDATE }) {
@@ -1485,7 +1485,7 @@ describe('Cache', () => {
           });
         },
         optimistic: true,
-        onDirty(w, diff) {
+        onWatchUpdated(w, diff) {
           dirtied.set(w, diff);
         },
       });
@@ -1506,7 +1506,7 @@ describe('Cache', () => {
       bInfo.cancel();
     });
 
-    it('does not pass previously invalidated queries to onDirty', () => {
+    it('does not pass previously invalidated queries to onWatchUpdated', () => {
       const cache = new InMemoryCache;
 
       const aQuery = gql`query { a }`;
@@ -1527,13 +1527,13 @@ describe('Cache', () => {
 
       cache.writeQuery({
         query: bQuery,
-        // Writing this data with broadcast:false queues this update for the
-        // next broadcast, whenever it happens. If that next broadcast is the
-        // one triggered by cache.batch, the bQuery broadcast could be
-        // accidentally intercepted by onDirty, even though the transaction
-        // does not touch the Query.b field. To solve this problem, the batch
-        // method calls cache.broadcastWatches() before the transaction, when
-        // options.onDirty is provided.
+        // Writing this data with broadcast:false queues this update for
+        // the next broadcast, whenever it happens. If that next broadcast
+        // is the one triggered by cache.batch, the bQuery broadcast could
+        // be accidentally intercepted by onWatchUpdated, even though the
+        // transaction does not touch the Query.b field. To solve this
+        // problem, the batch method calls cache.broadcastWatches() before
+        // the transaction, when options.onWatchUpdated is provided.
         broadcast: false,
         data: {
           b: "beeeee",
@@ -1548,7 +1548,7 @@ describe('Cache', () => {
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
       cache.batch({
-        transaction(cache) {
+        update(cache) {
           cache.modify({
             fields: {
               a(value) {
@@ -1559,7 +1559,7 @@ describe('Cache', () => {
           });
         },
         optimistic: true,
-        onDirty(watch, diff) {
+        onWatchUpdated(watch, diff) {
           dirtied.set(watch, diff);
         },
       });
@@ -1571,7 +1571,7 @@ describe('Cache', () => {
 
       expect(aInfo.diffs).toEqual([
         // This diff resulted from the cache.modify call in the cache.batch
-        // transaction function.
+        // update function.
         {
           complete: true,
           result: {
@@ -1582,7 +1582,7 @@ describe('Cache', () => {
 
       expect(abInfo.diffs).toEqual([
         // This diff resulted from the cache.modify call in the cache.batch
-        // transaction function.
+        // update function.
         {
           complete: true,
           result: {

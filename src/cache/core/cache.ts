@@ -11,28 +11,6 @@ import { Cache } from './types/Cache';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
-export type BatchOptions<C extends ApolloCache<any>> = {
-  // Same as the first parameter of performTransaction, except the cache
-  // argument will have the subclass type rather than ApolloCache.
-  transaction(cache: C): void;
-
-  // Passing a string for this option creates a new optimistic layer with
-  // that string as its layer.id, just like passing a string for the
-  // optimisticId parameter of performTransaction. Passing true is the
-  // same as passing undefined to performTransaction, and passing false is
-  // the same as passing null.
-  optimistic: string | boolean;
-
-  // If you want to find out which watched queries were invalidated during
-  // this batch operation, pass this optional callback function. Returning
-  // false from the callback will prevent broadcasting this result.
-  onDirty?: (
-    this: C,
-    watch: Cache.WatchOptions,
-    diff: Cache.DiffResult<any>,
-  ) => void | false;
-};
-
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
@@ -81,11 +59,11 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // provide a default batch implementation that's just another way of calling
   // performTransaction. Subclasses of ApolloCache (such as InMemoryCache) can
   // override the batch method to do more interesting things with its options.
-  public batch(options: BatchOptions<this>) {
+  public batch(options: Cache.BatchOptions<this>) {
     const optimisticId =
       typeof options.optimistic === "string" ? options.optimistic :
       options.optimistic === false ? null : void 0;
-    this.performTransaction(options.transaction, optimisticId);
+    this.performTransaction(options.update, optimisticId);
   }
 
   public abstract performTransaction(

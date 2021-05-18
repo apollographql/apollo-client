@@ -15,6 +15,9 @@ import {
   DefaultContext,
   OperationVariables,
   Resolvers,
+  RefetchQueriesOptions,
+  RefetchQueriesResult,
+  InternalRefetchQueriesResult,
 } from './types';
 
 import {
@@ -23,7 +26,6 @@ import {
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-  RefetchQueryDescription,
 } from './watchQueryOptions';
 
 import {
@@ -535,10 +537,31 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
-  public refetchQueries(
-    queries: RefetchQueryDescription,
-  ): Promise<ApolloQueryResult<any>[]> {
-    return Promise.all(this.queryManager.refetchQueries(queries));
+  public refetchQueries<
+    TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
+    TResult = Promise<ApolloQueryResult<any>>,
+  >(
+    options: RefetchQueriesOptions<TCache, TResult>,
+  ): RefetchQueriesResult<TResult> {
+    const map = this.queryManager.refetchQueries(options);
+    const queries: ObservableQuery<any>[] = [];
+    const results: InternalRefetchQueriesResult<TResult>[] = [];
+
+    map.forEach((result, obsQuery) => {
+      queries.push(obsQuery);
+      results.push(result);
+    });
+
+    const result = Promise.all<TResult>(
+      results as TResult[]
+    ) as RefetchQueriesResult<TResult>;
+
+    // In case you need the raw results immediately, without awaiting
+    // Promise.all(results):
+    result.queries = queries;
+    result.results = results;
+
+    return result;
   }
 
   /**

@@ -5,10 +5,10 @@ import { FetchResult } from '../link/core';
 import {
   DefaultContext,
   MutationQueryReducersMap,
-  PureQueryOptions,
   OperationVariables,
   MutationUpdaterFunction,
-  ReobserveQueryCallback,
+  OnQueryUpdated,
+  RefetchQueryDescription,
 } from './types';
 import { ApolloCache } from '../cache';
 
@@ -189,8 +189,6 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
   context?: DefaultContext;
 }
 
-export type RefetchQueryDescription = Array<string | PureQueryOptions>;
-
 export interface MutationBaseOptions<
   TData = any,
   TVariables = OperationVariables,
@@ -260,7 +258,7 @@ export interface MutationBaseOptions<
    * A function that will be called for each ObservableQuery affected by
    * this mutation, after the mutation has completed.
    */
-  reobserveQuery?: ReobserveQueryCallback;
+  onQueryUpdated?: OnQueryUpdated<any>;
 
   /**
    * Specifies the {@link ErrorPolicy} to be used for this operation

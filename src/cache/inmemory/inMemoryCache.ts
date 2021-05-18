@@ -3,8 +3,9 @@ import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 import { OptimisticWrapperFunction, wrap } from 'optimism';
+import { equal } from '@wry/equality';
 
-import { ApolloCache, BatchOptions } from '../core/cache';
+import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
 import { MissingFieldError } from '../core/types/common';
 import {
@@ -38,9 +39,9 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 }
 
 type BroadcastOptions = Pick<
-  BatchOptions<InMemoryCache>,
-  | "onDirty"
+  Cache.BatchOptions<InMemoryCache>,
   | "optimistic"
+  | "onWatchUpdated"
 >
 
 const defaultConfig: InMemoryCacheConfig = {
@@ -338,10 +339,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private txCount = 0;
 
-  public batch(options: BatchOptions<InMemoryCache>) {
+  public batch(options: Cache.BatchOptions<InMemoryCache>) {
     const {
-      transaction,
+      update,
       optimistic = true,
+      removeOptimistic,
+      onWatchUpdated,
     } = options;
 
     const perform = (layer?: EntityStore) => {
@@ -351,7 +354,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         this.data = this.optimisticData = layer;
       }
       try {
-        transaction(this);
+        update(this);
       } finally {
         --this.txCount;
         this.data = data;
@@ -359,22 +362,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }
     };
 
-    const { onDirty } = options;
     const alreadyDirty = new Set<Cache.WatchOptions>();
 
-    if (onDirty && !this.txCount) {
-      // If an options.onDirty callback is provided, we want to call it with
-      // only the Cache.WatchOptions objects affected by options.transaction,
+    if (onWatchUpdated && !this.txCount) {
+      // If an options.onWatchUpdated callback is provided, we want to call it
+      // with only the Cache.WatchOptions objects affected by options.update,
       // but there might be dirty watchers already waiting to be broadcast that
-      // have nothing to do with the transaction. To prevent including those
-      // watchers in the post-transaction broadcast, we perform this initial
-      // broadcast to collect the dirty watchers, so we can re-dirty them later,
-      // after the post-transaction broadcast, allowing them to receive their
-      // pending broadcasts the next time broadcastWatches is called, just as
-      // they would if we never called cache.batch.
+      // have nothing to do with the update. To prevent including those watchers
+      // in the post-update broadcast, we perform this initial broadcast to
+      // collect the dirty watchers, so we can re-dirty them later, after the
+      // post-update broadcast, allowing them to receive their pending
+      // broadcasts the next time broadcastWatches is called, just as they would
+      // if we never called cache.batch.
       this.broadcastWatches({
         ...options,
-        onDirty(watch) {
+        onWatchUpdated(watch) {
           alreadyDirty.add(watch);
           return false;
         },
@@ -388,52 +390,57 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this.optimisticData = this.optimisticData.addLayer(optimistic, perform);
     } else if (optimistic === false) {
       // Ensure both this.data and this.optimisticData refer to the root
-      // (non-optimistic) layer of the cache during the transaction. Note
-      // that this.data could be a Layer if we are currently executing an
-      // optimistic transaction function, but otherwise will always be an
-      // EntityStore.Root instance.
+      // (non-optimistic) layer of the cache during the update. Note that
+      // this.data could be a Layer if we are currently executing an optimistic
+      // update function, but otherwise will always be an EntityStore.Root
+      // instance.
       perform(this.data);
     } else {
-      // Otherwise, leave this.data and this.optimisticData unchanged and
-      // run the transaction with broadcast batching.
+      // Otherwise, leave this.data and this.optimisticData unchanged and run
+      // the update with broadcast batching.
       perform();
+    }
+
+    if (typeof removeOptimistic === "string") {
+      this.optimisticData = this.optimisticData.removeLayer(removeOptimistic);
     }
 
     // Note: if this.txCount > 0, then alreadyDirty.size === 0, so this code
     // takes the else branch and calls this.broadcastWatches(options), which
     // does nothing when this.txCount > 0.
-    if (onDirty && alreadyDirty.size) {
+    if (onWatchUpdated && alreadyDirty.size) {
       this.broadcastWatches({
         ...options,
-        onDirty(watch, diff) {
-          const onDirtyResult = onDirty.call(this, watch, diff);
-          if (onDirtyResult !== false) {
-            // Since onDirty did not return false, this diff is about to be
-            // broadcast to watch.callback, so we don't need to re-dirty it
-            // with the other alreadyDirty watches below.
+        onWatchUpdated(watch, diff) {
+          const result = onWatchUpdated.call(this, watch, diff);
+          if (result !== false) {
+            // Since onWatchUpdated did not return false, this diff is
+            // about to be broadcast to watch.callback, so we don't need
+            // to re-dirty it with the other alreadyDirty watches below.
             alreadyDirty.delete(watch);
           }
-          return onDirtyResult;
+          return result;
         }
       });
-      // Silently re-dirty any watches that were already dirty before the
-      // transaction was performed, and were not broadcast just now.
+      // Silently re-dirty any watches that were already dirty before the update
+      // was performed, and were not broadcast just now.
       if (alreadyDirty.size) {
         alreadyDirty.forEach(watch => this.maybeBroadcastWatch.dirty(watch));
       }
     } else {
-      // If alreadyDirty is empty or we don't have an options.onDirty function,
-      // we don't need to go to the trouble of wrapping options.onDirty.
+      // If alreadyDirty is empty or we don't have an onWatchUpdated
+      // function, we don't need to go to the trouble of wrapping
+      // options.onWatchUpdated.
       this.broadcastWatches(options);
     }
   }
 
   public performTransaction(
-    transaction: (cache: InMemoryCache) => any,
+    update: (cache: InMemoryCache) => any,
     optimisticId?: string | null,
   ) {
     return this.batch({
-      transaction,
+      update,
       optimistic: optimisticId || (optimisticId !== null),
     });
   }
@@ -470,6 +477,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     c: Cache.WatchOptions,
     options?: BroadcastOptions,
   ) {
+    const { lastDiff } = c;
     const diff = this.diff<any>({
       query: c.query,
       variables: c.variables,
@@ -482,16 +490,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         diff.fromOptimisticTransaction = true;
       }
 
-      if (options.onDirty &&
-          options.onDirty.call(this, c, diff) === false) {
-        // Returning false from the onDirty callback will prevent calling
-        // c.callback(diff) for this watcher.
+      if (options.onWatchUpdated &&
+          options.onWatchUpdated.call(this, c, diff, lastDiff) === false) {
+        // Returning false from the onWatchUpdated callback will prevent
+        // calling c.callback(diff) for this watcher.
         return;
       }
     }
 
-    if (!c.lastDiff || c.lastDiff.result !== diff.result) {
-      c.callback(c.lastDiff = diff);
+    if (!lastDiff || !equal(lastDiff.result, diff.result)) {
+      c.callback(c.lastDiff = diff, lastDiff);
     }
   }
 }

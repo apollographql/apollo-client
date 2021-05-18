@@ -642,18 +642,44 @@ class Layer extends EntityStore {
     const parent = this.parent.removeLayer(layerId);
 
     if (layerId === this.id) {
-      // Dirty every ID we're removing.
       if (this.group.caching) {
+        // Dirty every ID we're removing. Technically we might be able to avoid
+        // dirtying fields that have values in higher layers, but we don't have
+        // easy access to higher layers here, and we're about to recreate those
+        // layers anyway (see parent.addLayer below).
         Object.keys(this.data).forEach(dataId => {
-          // If this.data[dataId] contains nothing different from what
-          // lies beneath, we can avoid dirtying this dataId and all of
-          // its fields, and simply discard this Layer. The only reason we
-          // call this.delete here is to dirty the removed fields.
-          if (this.data[dataId] !== (parent as Layer).lookup(dataId)) {
+          const ownStoreObject = this.data[dataId];
+          const parentStoreObject = parent["lookup"](dataId);
+          if (!parentStoreObject) {
+            // The StoreObject identified by dataId was defined in this layer
+            // but will be undefined in the parent layer, so we can delete the
+            // whole entity using this.delete(dataId). Since we're about to
+            // throw this layer away, the only goal of this deletion is to dirty
+            // the removed fields.
             this.delete(dataId);
+          } else if (!ownStoreObject) {
+            // This layer had an entry for dataId but it was undefined, which
+            // means the entity was deleted in this layer, and it's about to
+            // become undeleted when we remove this layer, so we need to dirty
+            // all fields that are about to be reexposed.
+            this.group.dirty(dataId, "__exists");
+            Object.keys(parentStoreObject).forEach(storeFieldName => {
+              this.group.dirty(dataId, storeFieldName);
+            });
+          } else if (ownStoreObject !== parentStoreObject) {
+            // If ownStoreObject is not exactly the same as parentStoreObject,
+            // dirty any fields whose values will change as a result of this
+            // removal.
+            Object.keys(ownStoreObject).forEach(storeFieldName => {
+              if (!equal(ownStoreObject[storeFieldName],
+                         parentStoreObject[storeFieldName])) {
+                this.group.dirty(dataId, storeFieldName);
+              }
+            });
           }
         });
       }
+
       return parent;
     }
 

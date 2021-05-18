@@ -70,6 +70,18 @@
 ### Documentation
 TBD
 
+## Apollo Client 3.3.19
+
+### Bug fixes
+
+- Use `export ... from` syntax to re-export `graphql-tag` named exports, making tree-shaking easier for some bundlers. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8221](https://github.com/apollographql/apollo-client/pull/8221)
+
+### Documentation
+
+- Replace Spectrum references with [community.apollographql.com](https://community.apollographql.com). <br/>
+  [@hwillson](https://github.com/hwillson) in [#8238](https://github.com/apollographql/apollo-client/pull/8238)
+
 ## Apollo Client 3.3.18
 
 ### Bug fixes

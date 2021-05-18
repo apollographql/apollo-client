@@ -1,4 +1,4 @@
-## Apollo Client 3.3.19 (not yet released)
+## Apollo Client 3.3.19
 
 ### Bug fixes
 
@@ -7,7 +7,7 @@
 
 ### Documentation
 
-- Replace Spectrum references with [community.apollographql.com](https://community.apollographql.com). <br/> (#8238)
+- Replace Spectrum references with [community.apollographql.com](https://community.apollographql.com). <br/>
   [@hwillson](https://github.com/hwillson) in [#8238](https://github.com/apollographql/apollo-client/pull/8238)
 
 ## Apollo Client 3.3.18

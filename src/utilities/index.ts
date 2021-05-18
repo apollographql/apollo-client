@@ -33,6 +33,7 @@ export {
   Directives,
   VariableValue,
   makeReference,
+  isDocumentNode,
   isReference,
   isField,
   isInlineFragment,

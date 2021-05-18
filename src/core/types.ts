@@ -22,7 +22,7 @@ export type OnQueryUpdated<TResult> = (
   lastDiff: Cache.DiffResult<any> | undefined,
 ) => boolean | TResult;
 
-export type RefetchQueryDescriptor = string | PureQueryOptions;
+export type RefetchQueryDescriptor = string | DocumentNode | PureQueryOptions;
 export type RefetchQueryDescription = RefetchQueryDescriptor[];
 
 // Used by ApolloClient["refetchQueries"]
@@ -36,7 +36,7 @@ export interface RefetchQueriesOptions<
   // the refetchQueries array for a mutation, the client.refetchQueries method
   // deliberately discourages passing PureQueryOptions, by restricting the
   // public type of the options.include array to string[] (just query names).
-  include?: string[];
+  include?: Exclude<RefetchQueryDescriptor, PureQueryOptions>[];
   optimistic?: boolean;
   // If no onQueryUpdated function is provided, any queries affected by the
   // updateCache function or included in the options.include array will be

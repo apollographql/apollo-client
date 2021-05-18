@@ -262,6 +262,95 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
+  itAsync("includes query DocumentNode objects specified in options.include", async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const ayyResults = await client.refetchQueries({
+      updateCache(cache) {
+        cache.writeQuery({
+          query: aQuery,
+          data: {
+            a: "Ayy",
+          },
+        });
+      },
+
+      // Note that we're passing query DocumentNode objects instead of query
+      // name strings, in this test.
+      include: [bQuery, abQuery],
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "Ayy" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "Ayy", b: "B" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return Promise.resolve(diff.result);
+      },
+    });
+
+    sortObjects(ayyResults);
+
+    expect(ayyResults).toEqual([
+      { a: "Ayy" },
+      { a: "Ayy", b: "B" },
+      // Included this time!
+      { b: "B" },
+    ]);
+
+    const beeResults = await client.refetchQueries({
+      updateCache(cache) {
+        cache.writeQuery({
+          query: bQuery,
+          data: {
+            b: "Bee",
+          },
+        });
+      },
+
+      // The abQuery and "AB" should be redundant, but the aQuery here is
+      // important for aObs to be included.
+      include: [abQuery, "AB", aQuery],
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "Ayy" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "Bee" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return diff.result;
+      },
+    });
+
+    sortObjects(beeResults);
+
+    expect(beeResults).toEqual([
+      { a: "Ayy" }, // Included this time!
+      { a: "Ayy", b: "Bee" },
+      { b: "Bee" },
+    ]);
+
+    unsubscribe();
+    resolve();
+  });
+
   itAsync("refetches watched queries if onQueryUpdated not provided", async (resolve, reject) => {
     const client = makeClient();
     const [

@@ -15,6 +15,7 @@ import {
   SelectionNode,
   NameNode,
   SelectionSetNode,
+  DocumentNode,
 } from 'graphql';
 
 import { InvariantError } from 'ts-invariant';
@@ -46,6 +47,15 @@ export type StoreValue =
 export interface StoreObject {
   __typename?: string;
   [storeFieldName: string]: StoreValue;
+}
+
+export function isDocumentNode(value: any): value is DocumentNode {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    (value as DocumentNode).kind === "Document" &&
+    Array.isArray((value as DocumentNode).definitions)
+  );
 }
 
 function isStringValue(value: ValueNode): value is StringValueNode {

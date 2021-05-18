@@ -20,6 +20,7 @@ import {
   Concast,
   ConcastSourcesIterable,
   makeUniqueId,
+  isDocumentNode,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -1060,7 +1061,7 @@ export class QueryManager<TStore> {
         getQueryIdsForQueryDescriptor(this, desc).forEach(queryId => {
           includedQueriesById.set(queryId, {
             desc,
-            lastDiff: typeof desc === "string"
+            lastDiff: typeof desc === "string" || isDocumentNode(desc)
               ? this.getQuery(queryId).getDiff()
               : void 0,
           });
@@ -1167,7 +1168,7 @@ export class QueryManager<TStore> {
         let oq = queryInfo.observableQuery;
         let fallback: undefined | (() => Promise<ApolloQueryResult<any>>);
 
-        if (typeof desc === "string") {
+        if (typeof desc === "string" || isDocumentNode(desc)) {
           fallback = () => oq!.refetch();
         } else if (desc && typeof desc === "object") {
           const options = {
@@ -1395,10 +1396,11 @@ function getQueryIdsForQueryDescriptor<TStore>(
   desc: RefetchQueryDescriptor,
 ) {
   const queryIds: string[] = [];
-  if (typeof desc === "string") {
-    qm["queries"].forEach(({ observableQuery: oq }, queryId) => {
+  const isName = typeof desc === "string";
+  if (isName || isDocumentNode(desc)) {
+    qm["queries"].forEach(({ observableQuery: oq, document }, queryId) => {
       if (oq &&
-          oq.queryName === desc &&
+          desc === (isName ? oq.queryName : document) &&
           oq.hasObservers()) {
         queryIds.push(queryId);
       }

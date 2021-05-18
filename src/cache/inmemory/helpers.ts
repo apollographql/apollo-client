@@ -14,7 +14,6 @@ import {
 
 export const {
   hasOwnProperty: hasOwn,
-  toString: objToStr,
 } = Object.prototype;
 
 export function getTypenameFromStoreObject(

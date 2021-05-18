@@ -2,7 +2,7 @@ import { Trie } from "@wry/trie";
 import { canUseWeakMap } from "../../utilities";
 import { objToStr } from "./helpers";
 
-function isObjectOrArray(value: any): boolean {
+function isObjectOrArray(value: any): value is object {
   return !!value && typeof value === "object";
 }
 
@@ -109,7 +109,7 @@ export class ObjectCanon {
       switch (objToStr.call(value)) {
         case "[object Array]": {
           if (this.known.has(value)) return value;
-          const array: any[] = value.map(this.admit, this);
+          const array: any[] = (value as any[]).map(this.admit, this);
           // Arrays are looked up in the Trie using their recursively
           // canonicalized elements, and the known version of the array is
           // preserved as node.array.
@@ -134,7 +134,7 @@ export class ObjectCanon {
           array.push(keys.json);
           const firstValueIndex = array.length;
           keys.sorted.forEach(key => {
-            array.push(this.admit(value[key]));
+            array.push(this.admit((value as any)[key]));
           });
           // Objects are looked up in the Trie by their prototype (which
           // is *not* recursively canonicalized), followed by a JSON
@@ -193,3 +193,31 @@ type SortedKeysInfo = {
   sorted: string[];
   json: string;
 };
+
+// Since the keys of canonical objects are always created in lexicographically
+// sorted order, we can use the ObjectCanon to implement a fast and stable
+// version of JSON.stringify, which automatically sorts object keys.
+export const canonicalStringify = Object.assign(function (value: any): string {
+  if (isObjectOrArray(value)) {
+    const canonical = stringifyCanon.admit(value);
+    let json = stringifyCache.get(canonical);
+    if (json === void 0) {
+      stringifyCache.set(
+        canonical,
+        json = JSON.stringify(canonical),
+      );
+    }
+    return json;
+  }
+  return JSON.stringify(value);
+}, {
+  reset() {
+    stringifyCanon = new ObjectCanon;
+  },
+});
+
+// Can be reset by calling canonicalStringify.reset().
+let stringifyCanon = new ObjectCanon;
+
+// Needs no resetting, thanks to weakness.
+const stringifyCache = new WeakMap<object, string>();

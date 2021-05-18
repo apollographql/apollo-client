@@ -38,4 +38,8 @@ export {
   Policies,
 } from './inmemory/policies';
 
+export {
+  canonicalStringify,
+} from './inmemory/object-canon';
+
 export * from './inmemory/types';

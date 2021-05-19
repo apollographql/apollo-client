@@ -67,6 +67,8 @@
 - Fully remove result cache entries from LRU dependency system when the corresponding entities are removed from `InMemoryCache` by eviction, or by any other means. <br/>
   [@sofianhn](https://github.com/sofianhn) and [@benjamn](https://github.com/benjamn) in [#8147](https://github.com/apollographql/apollo-client/pull/8147)
 
+- Expose missing field errors in results. <br/> [@brainkim](github.com/brainkim) in [#8262](https://github.com/apollographql/apollo-client/pull/8262)
+
 ### Documentation
 TBD
 

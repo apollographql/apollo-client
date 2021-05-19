@@ -135,9 +135,25 @@ if (error) return `Submission error! ${error.message}`;
 
 ## Updating the cache after a mutation
 
-When you execute a mutation, you modify back-end data. You often then want to update your [Apollo Client cache](../caching/cache-configuration/) to reflect that back-end modification.
+When you execute a mutation, you modify back-end data. You often then want to update your _locally cached_ data to reflect that back-end modification. For example, if you execute a mutation to add an item to your to-do list, you also want that item to appear in your local copy of the list.
 
-### Include updates in mutation responses
+### Available methods
+
+The most straightforward way to update your local data is to **refetch any queries** that might be affected by the mutation. However, this method requires additional network requests.
+
+If your mutation returns all of the objects and fields that it modified, you can **update the cache directly** _without_ making any network requests. However, this method increases in complexity as your mutations become more complex.
+
+If you're just getting started with Apollo Client, we recommend refetching queries to update your cached data. After you get that working, you can improve your app's performance by updating the cache directly instead.
+
+### Refetching queries
+
+TODO
+
+### Updating the cache directly
+
+TODO
+
+### Include modified objects in mutation responses
 
 In most cases, a mutation response should include any object(s) the mutation modified. This enables Apollo Client to normalize those objects and cache them according to their `id` and `__typename` fields ([by default](../caching/cache-configuration/#generating-unique-identifiers)).
 
@@ -157,7 +173,7 @@ Upon receiving this response object, Apollo Client caches it with key `Todo:5`. 
 
 Returning modified objects like this is a helpful first step to keeping your cache in sync with your backend. However, it isn't always sufficient. For example, a newly cached object isn't automatically added to any _list fields_ that should now include that object. To accomplish this, you can define an **update function**.
 
-### Refetch queries
+### The update function
 
 If a mutation modifies multiple entities, or if it creates or deletes entities, the Apollo Client cache is _not_ automatically updated to reflect the result of the
 mutation. To resolve this, your call to `useMutation` can include an **update function**.

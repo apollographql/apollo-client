@@ -23,8 +23,7 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the primary API for executing mutations in an Apollo application.
 
-To run a mutation, you first call `useMutation` within a React component and pass it a GraphQL string that represents the mutation:
-
+To run a mutation, you first call `useMutation` within a React component and pass it `MY_MUTATION`, which is a GraphQL document parsed from a string by the `gql` function:
 
 ```jsx{8}:title=my-component.jsx
 import { gql, useMutation } from '@apollo/client';

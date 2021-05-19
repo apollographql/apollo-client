@@ -239,13 +239,13 @@ As shown, the `update` function is passed a `cache` object that represents the A
 
 The `update` function is _also_ passed an object with a `data` property that contains the result of the mutation. You can use this value to update the cache with `cache.writeQuery`, `cache.writeFragment` or `cache.modify`.
 
-> If your mutation specifies an [optimistic response](../performance/optimistic-ui/), your update function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
+> If your mutation specifies an [optimistic response](../performance/optimistic-ui/), your `update` function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
 
 When the `ADD_TODO` mutation is run in the above example, the newly added and returned `addTodo` object is automatically saved into the cache before the `update` function runs. The previously cached list of `ROOT_QUERY.todos`, being watched by the `GET_TODOS` query, is not automatically updated. This means the `GET_TODOS` query isn't notified that a new todo was added, which then means the query will not update to show the new todo.
 
 To address this we're using `cache.modify` which gives us a way to surgically insert or delete items from the cache, by running "modifier" functions. In the example above we know the results of the `GET_TODOS` query are stored in the `ROOT_QUERY.todos` array in the cache, so we're using a `todos` modifier function to update the cached array to include a reference to the newly added todo. With the help of `cache.writeFragment` we get an internal reference to the added todo, then append that reference to the `ROOT_QUERY.todos` array.
 
-Any changes you make to cached data inside of an update function are automatically broadcast to queries that are listening for changes to that data. Consequently, your application's UI will update to reflect these updated cached values.
+Any changes you make to cached data inside of an `update` function are automatically broadcast to queries that are listening for changes to that data. Consequently, your application's UI will update to reflect these updated cached values.
 
 ## `useMutation` API
 
@@ -277,4 +277,4 @@ you can begin to take advantage of Apollo Client's full feature set, including:
 
 - [Optimistic UI](../performance/optimistic-ui/): Learn how to improve perceived performance by returning an optimistic response before your mutation result comes back from the server.
 - [Local state](../local-state/local-state-management/): Use Apollo Client to manage the entirety of your application's local state by executing client-side mutations.
-- [Caching in Apollo](../caching/cache-configuration/): Dive deep into the Apollo Client cache and how it's normalized. Understanding the cache is helpful when writing update functions for your mutations!
+- [Caching in Apollo](../caching/cache-configuration/): Dive deep into the Apollo Client cache and how it's normalized. Understanding the cache is helpful when writing `update` functions for your mutations!

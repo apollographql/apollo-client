@@ -162,6 +162,7 @@ export class ObservableQuery<
       !this.queryManager.transform(this.options.query).hasForcedResolvers
     ) {
       const diff = this.queryInfo.getDiff();
+      // XXX the only reason this typechecks is that diff.result is inferred as any
       result.data = (
         diff.complete ||
         this.options.returnPartialData
@@ -179,6 +180,16 @@ export class ObservableQuery<
         delete result.partial;
       } else {
         result.partial = true;
+      }
+
+      if (
+        !diff.complete &&
+        !this.options.partialRefetch &&
+        !result.loading &&
+        !result.data &&
+        !result.error
+      ) {
+        result.error = new ApolloError({ clientErrors: diff.missing });
       }
     }
 

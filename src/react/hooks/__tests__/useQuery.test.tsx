@@ -2645,6 +2645,83 @@ describe('useQuery Hook', () => {
     });
   });
 
+  describe('Missing Fields', () => {
+    itAsync(
+      'should have errors populated with missing field errors from the cache',
+      (resolve, reject) => {
+        const carQuery: DocumentNode = gql`
+          query cars($id: Int) {
+            cars(id: $id) {
+              id
+              make
+              model
+              vin
+              __typename
+            }
+          }
+        `;
+
+        const carData = {
+          cars: [
+            {
+              id: 1,
+              make: 'Audi',
+              model: 'RS8',
+              vine: 'DOLLADOLLABILL',
+              __typename: 'Car'
+            }
+          ]
+        };
+
+        const mocks = [
+          {
+            request: { query: carQuery, variables: { id: 1 } },
+            result: { data: carData }
+          },
+        ];
+
+        let renderCount = 0;
+        function App() {
+          const { loading, data, error } = useQuery(carQuery, {
+            variables: { id: 1 },
+          });
+
+          switch (renderCount) {
+            case 0:
+              expect(loading).toBeTruthy();
+              expect(data).toBeUndefined();
+              expect(error).toBeUndefined();
+              break;
+            case 1:
+              expect(loading).toBeFalsy();
+              expect(data).toBeUndefined();
+              expect(error).toBeDefined();
+              // TODO: ApolloError.name is Error for some reason
+              // expect(error!.name).toBe(ApolloError);
+              expect(error!.clientErrors.length).toEqual(1);
+              expect(error!.message).toMatch(/Can't find field 'vin' on Car:1/);
+              break;
+            default:
+              throw new Error("Unexpected render");
+          }
+
+          renderCount += 1;
+          return null;
+        }
+
+        render(
+          <MockedProvider mocks={mocks}>
+            <App />
+          </MockedProvider>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(2);
+        }).then(resolve, reject);
+      },
+    );
+  });
+
   describe('Previous data', () => {
     itAsync('should persist previous data when a query is re-run', (resolve, reject) => {
       const query = gql`

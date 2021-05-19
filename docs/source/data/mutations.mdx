@@ -171,20 +171,15 @@ In most cases, a mutation response should include any object(s) the mutation mod
 
 Upon receiving this response object, Apollo Client caches it with key `Todo:5`. If a cached object _already_ exists with this key, Apollo Client overwrites any existing fields that are also included in the mutation response (other existing fields are preserved).
 
-Returning modified objects like this is a helpful first step to keeping your cache in sync with your backend. However, it isn't always sufficient. For example, a newly cached object isn't automatically added to any _list fields_ that should now include that object. To accomplish this, you can define an **update function**.
+Returning modified objects like this is a helpful first step to keeping your cache in sync with your backend. However, it isn't always sufficient. For example, a newly cached object isn't automatically added to any _list fields_ that should now include that object. To accomplish this, you can define an `update` function.
 
-### The update function
+### The `update` function
 
-If a mutation modifies multiple entities, or if it creates or deletes entities, the Apollo Client cache is _not_ automatically updated to reflect the result of the
-mutation. To resolve this, your call to `useMutation` can include an **update function**.
+A single mutation can create, modify, or delete any number of different entities in your data graph. Often, the mutation will return some representation of these updated entity objects as part of its result data. Apollo Client will automatically write these entity objects into the cache, which is sometimes enough to broadcast appropriate updates to your application, but not always.
 
-The purpose of an update function is to modify your _cached_ data to
-match the modifications that a mutation makes to your _back-end_
-data. In the example in [Executing a mutation](#executing-a-mutation), the
-update function for the `ADD_TODO` mutation should add the same item to our
-cached version of the to-do list.
+While you could refetch all your queries to find out what changed after each mutation, a much more efficient solution is to pass an `update` function to `useMutation` to apply manual changes to your cached data, to match whatever modifications the mutation made to your back-end data.
 
-The following sample illustrates defining an update function in a call to `useMutation`:
+The following sample illustrates defining an `update` function in a call to `useMutation`:
 
 ```jsx
 const GET_TODOS = gql`
@@ -239,17 +234,19 @@ function AddTodo() {
 }
 ```
 
-As shown, the update function is passed a `cache` object that represents the Apollo Client cache. This object provides access to cache API methods like `readQuery`, `writeQuery`, `readFragment`, `writeFragment` and `modify`. These methods enable you to execute GraphQL operations on the cache as though you're interacting with a GraphQL server.
+As shown, the `update` function is passed a `cache` object that represents the Apollo Client cache. This object provides access to cache API methods like `readQuery`, `writeQuery`, `readFragment`, `writeFragment`, `evict` and `modify`. These methods enable you to execute GraphQL operations on the cache as though you're interacting with a GraphQL server.
 
 > Learn more about supported cache functions in [Interacting with cached data](../caching/cache-interaction/).
 
-The update function is _also_ passed an object with a `data` property that contains the result of the mutation. You can use this value to update the cache with `cache.writeQuery`, `cache.writeFragment` or `cache.modify`.
+The `update` function is _also_ passed an object with a `data` property that contains the result of the mutation. You can use this value to update the cache with `cache.writeQuery`, `cache.writeFragment` or `cache.modify`.
 
 > If your mutation specifies an [optimistic response](../performance/optimistic-ui/), your update function is called **twice**: once with the optimistic result, and again with the actual result of the mutation when it returns.
 
-When the `ADD_TODO` mutation is run in the above example, the newly added and returned todo object is saved into the cache. The previously cached list of todos, being watched by the `GET_TODOS` query, is not automatically updated however. This means the `GET_TODOS` query isn't notified that a new todo was added, which then means the query will not update to show the new todo. To address this we're using `cache.modify` which gives us a way to surgically insert or delete items from the cache, by running modifier functions. In the example above we know the results of the `GET_TODOS` query are stored in the `ROOT_QUERY.todos` array in the cache, so we're using a `todos` modifier function to update the cached array to include a reference to the newly added todo. With the help of `cache.writeFragment` we get an internal reference to the added todo, then store that reference in the `ROOT_QUERY.todos` array.
+When the `ADD_TODO` mutation is run in the above example, the newly added and returned `addTodo` object is automatically saved into the cache before the `update` function runs. The previously cached list of `ROOT_QUERY.todos`, being watched by the `GET_TODOS` query, is not automatically updated. This means the `GET_TODOS` query isn't notified that a new todo was added, which then means the query will not update to show the new todo.
 
-Any changes you make to cached data inside of an update function are automatically broadcast to queries that are listening for changes to that data. Consequently, your application's UI will update to reflect newly cached values.
+To address this we're using `cache.modify` which gives us a way to surgically insert or delete items from the cache, by running "modifier" functions. In the example above we know the results of the `GET_TODOS` query are stored in the `ROOT_QUERY.todos` array in the cache, so we're using a `todos` modifier function to update the cached array to include a reference to the newly added todo. With the help of `cache.writeFragment` we get an internal reference to the added todo, then append that reference to the `ROOT_QUERY.todos` array.
+
+Any changes you make to cached data inside of an update function are automatically broadcast to queries that are listening for changes to that data. Consequently, your application's UI will update to reflect these updated cached values.
 
 ## `useMutation` API
 

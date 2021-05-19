@@ -1,0 +1,83 @@
+---
+title: Operation best practices
+sidebar_title: Best practices
+---
+
+When creating queries and mutations, follow these best practices to get the most out of GraphQL and Apollo tooling.
+
+## Name every operation
+
+These two queries fetch the same data:
+
+```graphql
+# Recommended ✅
+query GetBooks {
+  books {
+    title
+  }
+}
+
+# Not recommended ❌
+query {
+  books {
+    title
+  }
+}
+```
+
+The first query is named `GetBooks`. The second query is **anonymous**.
+
+You should define a name for _every_ GraphQL operation in your application. Doing so provides the following benefits:
+
+* You clarify the purpose of each operation for both yourself and your teammates.
+* You avoid unexpected errors when combining multiple operations in a single query document (an anonymous operation can only appear alone).
+* You improve debugging output in both client _and_ server code, helping you identify exactly which operation is causing issues. 
+* [Apollo Studio](https://www.apollographql.com/docs/studio/) provides helpful operation-level metrics, which require named operations.
+
+## Always use variables to provide GraphQL arguments
+
+These two queries can both fetch a `Dog` object with ID `"5"`:
+
+```graphql{2-3,10-11}
+# Recommended ✅
+query GetDog($dogId: ID!) {
+  dog(id: $dogId) {
+    name
+    breed
+  }
+}
+
+# Not recommended ❌
+query GetDog {
+  dog(id: "5") {
+    name
+    breed
+  }
+}
+```
+
+The first query uses a variable (`$dogId`) for the value of the `dog` field's required argument. This means you can use the query to fetch a `Dog` object with _any_ ID, making it much more reusable.
+
+> If two otherwise identical operations have different hardcoded argument values, they're considered _entirely different operations_ by tools like [automatic persisted queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) and the [federated gateway](https://www.apollographql.com/docs/federation/gateway/). This duplication reduces performance gains and can take up unnecessary space in operation caches.
+
+You pass variable values to `useQuery` (or `useMutation`) like so:
+
+```js{11-15}:title=dog.tsx
+const GET_DOG = gql`
+  query GetDog($dogId: ID!) {
+    dog(id: $dogId) {
+      name
+      breed
+    }
+  }
+`;
+
+function Dog({ id }) {
+  const { loading, error, data } = useQuery(GET_DOG, {
+    variables: {
+      dogId: id
+    },
+  });
+  // ...render component...
+}
+```

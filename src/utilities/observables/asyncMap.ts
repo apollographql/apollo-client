@@ -1,66 +1,59 @@
-import { Observable, Observer } from "./Observable";
+import { Observable } from "./Observable";
 
-// Like Observable.prototype.map, except that the mapping function can
-// optionally return a Promise (or be async).
+/**
+ * Maps a potentially async function over the observable. An errorFn may also
+ * be passed, causing .
+ */
 export function asyncMap<V, R>(
   observable: Observable<V>,
   mapFn: (value: V) => R | PromiseLike<R>,
-  catchFn?: (error: any) => R | PromiseLike<R>,
+  errorFn?: (error: any) => R | PromiseLike<R>,
 ): Observable<R> {
   return new Observable<R>(observer => {
-    const { next, error, complete } = observer;
-    let activeCallbackCount = 0;
     let completed = false;
-    let promiseQueue = {
-      // Normally we would initialize promiseQueue to Promise.resolve(), but
-      // in this case, for backwards compatibility, we need to be careful to
-      // invoke the first callback synchronously.
-      then(callback: () => any) {
-        return new Promise(resolve => resolve(callback()));
-      },
-    } as Promise<void>;
-
+    let pending: Promise<unknown> | undefined;
+    let pendingCount = 0;
     function makeCallback(
-      examiner: typeof mapFn | typeof catchFn,
-      delegate: typeof next | typeof error,
+      fn: ((arg: unknown) => R | PromiseLike<R>) | undefined,
+      delegate: (arg: unknown) => void,
     ): (arg: any) => void {
-      if (examiner) {
-        return arg => {
-          ++activeCallbackCount;
-          const both = () => examiner(arg);
-          promiseQueue = promiseQueue.then(both, both).then(
-            result => {
-              --activeCallbackCount;
-              next && next.call(observer, result);
-              if (completed) {
-                handler.complete!();
-              }
-            },
-            error => {
-              --activeCallbackCount;
-              throw error;
-            },
-          ).catch(caught => {
-            error && error.call(observer, caught);
-          });
-        };
-      } else {
-        return arg => delegate && delegate.call(observer, arg);
+      if (!fn) {
+        return delegate;
       }
+
+      return arg => {
+        pendingCount++;
+        pending = (
+          pending
+          ? pending.then(() => fn(arg))
+          : new Promise((resolve) => resolve(fn(arg)))
+        ).then(
+          result => {
+            pendingCount--;
+            delegate(result);
+            if (completed && pendingCount <= 0) {
+              observer.complete();
+            }
+          },
+          err => {
+            pendingCount--;
+            observer.error(err);
+          },
+        );
+      };
     }
 
-    const handler: Observer<V> = {
-      next: makeCallback(mapFn, next),
-      error: makeCallback(catchFn, error),
-      complete() {
+    const sub = observable.subscribe(
+      makeCallback(mapFn, observer.next.bind(observer)),
+      makeCallback(errorFn, observer.error.bind(observer)),
+      () => {
         completed = true;
-        if (!activeCallbackCount) {
-          complete && complete.call(observer);
+        if (pendingCount <= 0) {
+          observer.complete();
         }
       },
-    };
+    );
 
-    const sub = observable.subscribe(handler);
     return () => sub.unsubscribe();
   });
 }

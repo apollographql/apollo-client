@@ -1,7 +1,29 @@
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 export { DocumentNode };
 
 import { Observable } from '../../utilities';
+
+// Copied from https://github.com/graphql/graphql-js/blob/1012e3e481d3b03ab92fb59a05b73a8b867f13d5/src/execution/execute.d.ts
+export interface ExecutionResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>
+> {
+  errors?: ReadonlyArray<GraphQLError>;
+  data?: TData | null;
+  extensions?: TExtensions;
+}
+
+export interface ExecutionPatchResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>
+> {
+  errors?: ReadonlyArray<GraphQLError>;
+  data?: TData | null;
+  path?: ReadonlyArray<string | number>;
+  label?: string;
+  hasNext?: boolean;
+  extensions?: TExtensions;
+}
 
 export interface GraphQLRequest {
   query: DocumentNode;
@@ -24,11 +46,11 @@ export interface FetchResult<
   TData = Record<string, any>,
   TContext = Record<string, any>,
   TExtensions = Record<string, any>
-> extends ExecutionResult<TData, TExtensions> {
+> extends ExecutionPatchResult<TData, TExtensions> {
   data?: TData | null | undefined;
-  extensions?: TExtensions;
   context?: TContext;
-};
+  extensions?: TExtensions;
+}
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 

@@ -361,6 +361,10 @@ export class QueryInfo {
     this.reset();
 
     if (options.fetchPolicy === 'no-cache') {
+      if (result.path) {
+        throw new Error("TODO");
+      }
+
       this.updateLastDiff(
         { result: result.data, complete: true },
         this.getDiffOptions(options.variables),

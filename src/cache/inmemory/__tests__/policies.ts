@@ -1352,7 +1352,6 @@ describe("type policies", function () {
           `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
           ["jobs", jobNumber - 1, "result"],
           expect.anything(), // query
-          false, // clientOnly
           expect.anything(), // variables
         );
       }

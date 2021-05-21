@@ -7,7 +7,7 @@ import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 When creating queries and mutations, follow these best practices to get the most out of GraphQL and Apollo tooling.
 
-## Name every operation
+## Name all operations
 
 These two queries fetch the same data:
 
@@ -36,7 +36,7 @@ You should define a name for _every_ GraphQL operation in your application. Doin
 * You improve debugging output in both client _and_ server code, helping you identify exactly which operation is causing issues. 
 * [Apollo Studio](https://www.apollographql.com/docs/studio/) provides helpful operation-level metrics, which require named operations.
 
-## Always use variables to provide GraphQL arguments
+## Use variables to provide GraphQL arguments
 
 These two queries can both fetch a `Dog` object with ID `"5"`:
 
@@ -84,13 +84,13 @@ function Dog({ id }) {
 }
 ```
 
-## Query exactly the data you need, exactly where you need it
+## Query only the data you need, where you need it
 
-One of GraphQL's biggest advantages over a traditional REST API is its support of [declarative data fetching](https://www.apollographql.com/docs/intro/benefits/#declarative-and-efficient-data-fetching). Each component can and should query for exactly the types and fields it requires to render, with no superfluous data sent over the network.
+One of GraphQL's biggest advantages over a traditional REST API is its support for [declarative data fetching](https://www.apollographql.com/docs/intro/benefits/#declarative-and-efficient-data-fetching). Each component can (and should) query exactly the fields it requires to render, with no superfluous data sent over the network.
 
-If instead your root component executes a single, enormous query to obtain data for all of its children, it might query on behalf of components that _aren't even rendered_ given the current state. This can result in a delayed response with no benefit to the user.
+If instead your root component executes a single, enormous query to obtain data for all of its children, it might query on behalf of components that _aren't even rendered_ given the current state. This can result in a delayed response, and it drastically reduces the likelihood that the query's result can be reused by a [server-side response cache](https://www.apollographql.com/docs/apollo-server/performance/caching/).
 
-In the large majority of cases, a query such as the following should be divided into _multiple_ queries that are excuted by the appropriate components:
+In the large majority of cases, a query such as the following should be divided into _multiple_ queries that are distributed among the appropriate components:
 
 <ExpansionPanel title="Click to expand">
 
@@ -149,7 +149,8 @@ query GetGlobalStatus {
 * If you're querying a list field that returns more items than your component needs to render, you should [paginate that field](../pagination/overview/).
 
 
-## Use fragments to represent logical field relationships
+
+## Use fragments to encapsulate related sets of fields
 
 [GraphQL fragments](./fragments/) are sets of fields you can share across multiple operations. Here's an example declaration:
 
@@ -170,7 +171,7 @@ It's likely that multiple queries in an app require a person's full name. This `
 query GetAttendees($eventId: ID!) {
   attendees(id: $eventId) {
     id
-    rsvp(id: $eventId)
+    rsvp
     ...NameParts # Include all fields from the NameParts fragment
   }
 }
@@ -187,7 +188,7 @@ If you use _too many_ fragments, your queries might become _less_ readable:
 query GetAttendees($eventId: ID!) {
   attendees(id: $eventId) {
     id
-    rsvp(id: $eventId)
+    rsvp
     ...NameParts
     profile {
       ...VisibilitySettings
@@ -205,7 +206,7 @@ query GetAttendees($eventId: ID!) {
 
 </ExpansionPanel>
 
-Additionally, only define fragments for sets of fields that share a logical semantic relationship. _Don't_ create a fragment just because multiple queries happen to share fields:
+Additionally, only define fragments for sets of fields that share a logical semantic relationship. _Don't_ create a fragment just because multiple queries happen to share certain fields:
 
 ```graphql
 # Recommended ✅
@@ -227,3 +228,53 @@ fragment SharedFields on Country {
   }
 }
 ```
+
+## Query global data and user-specific data separately
+
+Some fields return the exact same data regardless of which user queries them:
+
+```graphql
+# Returns all elements of the periodic table
+query GetAllElements {
+  elements {
+    atomicNumber
+    name
+    symbol
+  }
+}
+```
+
+Other fields return _different_ data depending on which user queries them:
+
+```graphql
+# Returns a particular user's documents
+query GetMyDocuments {
+  myDocuments {
+    id
+    title
+    url
+    updatedAt
+  }
+}
+```
+
+To improve the performance of your [server-side response cache](https://www.apollographql.com/docs/apollo-server/performance/caching/), fetch these types of fields in _separate queries_ whenever possible. By doing so, your server can cache just a _single_ response for a query like `GetAllElements` above, while caching separate responses for each user that executes `GetMyDocuments`.
+
+## Set your app's `name` and `version` for metrics reporting (paid)
+
+> This recommendation is _most_ pertinent to Apollo Studio organizations with a [paid plan](https://www.apollographql.com/pricing/), however it can be helpful for all apps.
+
+The constructor of `ApolloClient` accepts the `name` and `version` options:
+
+```js{4-5}
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache(),
+  name: 'MarketingSite',
+  version: '1.2'
+}); 
+```
+
+If you specify these values, Apollo Client automatically adds them to each operation request as HTTP headers (`apollographql-client-name` and `apollographql-client-version`).
+
+Then if you've configured [metrics reporting in Apollo Studio](https://www.apollographql.com/docs/studio/setup-analytics/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](https://www.apollographql.com/docs/studio/client-awareness/).

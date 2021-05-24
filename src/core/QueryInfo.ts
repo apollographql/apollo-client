@@ -453,7 +453,7 @@ export class QueryInfo {
     }
   }
 
-  public markReady() {
+  public markReady(): NetworkStatus {
     this.networkError = null;
     return this.networkStatus = NetworkStatus.ready;
   }

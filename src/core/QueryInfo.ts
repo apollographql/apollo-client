@@ -148,14 +148,14 @@ export class QueryInfo {
 
   reset() {
     cancelNotifyTimeout(this);
-    this.lastDiff = void 0;
     this.dirty = false;
   }
 
-  getDiff(variables = this.variables): Cache.DiffResult<any> {
+  // TODO the only features which require forceCache to be true are refetchQueries tests...
+  getDiff(variables = this.variables, forceCache = false): Cache.DiffResult<any> {
     const options = this.getDiffOptions(variables);
 
-    if (this.lastDiff && equal(options, this.lastDiff.options)) {
+    if (!forceCache && this.lastDiff && equal(options, this.lastDiff.options)) {
       return this.lastDiff.diff;
     }
 
@@ -205,7 +205,7 @@ export class QueryInfo {
                diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {
-        this.notifyTimeout = setTimeout(() => this.notify(), 0);
+        this.notifyTimeout = setTimeout(() => this.notify());
       }
     }
   }
@@ -242,12 +242,11 @@ export class QueryInfo {
   }
 
   notify() {
-    cancelNotifyTimeout(this);
-
     if (this.shouldNotify()) {
       this.listeners.forEach(listener => listener(this));
     }
 
+    cancelNotifyTimeout(this);
     this.dirty = false;
   }
 
@@ -272,9 +271,7 @@ export class QueryInfo {
     if (!this.stopped) {
       this.stopped = true;
 
-      // Cancel the pending notify timeout
       this.reset();
-
       this.cancel();
       // Revert back to the no-op version of cancel inherited from
       // QueryInfo.prototype.
@@ -350,9 +347,6 @@ export class QueryInfo {
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
     this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
-
-    // Cancel the pending notify timeout (if it exists) to prevent extraneous network
-    // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
 
     if (options.fetchPolicy === 'no-cache') {
@@ -360,7 +354,6 @@ export class QueryInfo {
         { result: result.data, complete: true },
         this.getDiffOptions(options.variables),
       );
-
     } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
@@ -414,8 +407,7 @@ export class QueryInfo {
             // mitigate the clobbering somehow, but that would make this
             // particular cache write even less important, and thus
             // skipping it would be even safer than it is today.
-            if (this.lastDiff &&
-                this.lastDiff.diff.complete) {
+            if (this.lastDiff && this.lastDiff.diff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
               result.data = this.lastDiff.diff.result;
@@ -461,7 +453,6 @@ export class QueryInfo {
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
-
     this.reset();
 
     if (error.graphQLErrors) {

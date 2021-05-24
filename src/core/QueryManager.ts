@@ -959,17 +959,13 @@ export class QueryManager<TStore> {
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
+      context = this.prepareContext(context);
       const operation = {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
-        context: this.prepareContext({
-          ...context,
-          forceFetch: !deduplication
-        }),
+        context,
       };
-
-      context = operation.context;
 
       if (deduplication) {
         const byVariables = inFlightLinkObservables.get(serverQuery) || new Map();

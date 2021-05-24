@@ -934,20 +934,15 @@ describe('mutation results', () => {
       client.mutate({
         mutation,
       }),
-    ])
-      .then(() => {
-        expect((client.cache as InMemoryCache).extract()).toEqual({
-          ROOT_MUTATION: {
-            __typename: 'Mutation',
-            'result({"a":1,"b":2})': 'hello',
-            'result({"a":1,"c":3})': 'world',
-            'result({"b":2,"c":3})': 'goodbye',
-            'result({})': 'moon',
-          },
-        });
-        resolve();
-      })
-      .catch(reject);
+    ]).then(results => {
+      expect(client.cache.extract()).toEqual({});
+      expect(results).toEqual([
+        { data: { result: "hello" }},
+        { data: { result: "world" }},
+        { data: { result: "goodbye" }},
+        { data: { result: "moon" }},
+      ]);
+    }).then(resolve, reject);
   });
 
   itAsync('allows mutations with default values', (resolve, reject) => {
@@ -1012,19 +1007,14 @@ describe('mutation results', () => {
         mutation,
         variables: { c: 3 },
       }),
-    ])
-      .then(() => {
-        expect((client.cache as InMemoryCache).extract()).toEqual({
-          ROOT_MUTATION: {
-            __typename: 'Mutation',
-            'result({"a":1,"b":"water"})': 'hello',
-            'result({"a":2,"b":"cheese","c":3})': 'world',
-            'result({"a":1,"b":"cheese","c":3})': 'goodbye',
-          },
-        });
-        resolve();
-      })
-      .catch(reject);
+    ]).then(results => {
+      expect(client.cache.extract()).toEqual({});
+      expect(results).toEqual([
+        { data: { result: 'hello' }},
+        { data: { result: 'world' }},
+        { data: { result: 'goodbye' }},
+      ]);
+    }).then(resolve, reject);
   });
 
   itAsync('will pass null to the network interface when provided', (resolve, reject) => {
@@ -1090,19 +1080,14 @@ describe('mutation results', () => {
         mutation,
         variables: { a: null, b: null, c: null },
       }),
-    ])
-      .then(() => {
-        expect((client.cache as InMemoryCache).extract()).toEqual({
-          ROOT_MUTATION: {
-            __typename: 'Mutation',
-            'result({"a":1,"b":2,"c":null})': 'hello',
-            'result({"a":1,"b":null,"c":3})': 'world',
-            'result({"a":null,"b":null,"c":null})': 'moon',
-          },
-        });
-        resolve();
-      })
-      .catch(reject);
+    ]).then(results => {
+      expect(client.cache.extract()).toEqual({});
+      expect(results).toEqual([
+        { data: { result: 'hello' }},
+        { data: { result: 'world' }},
+        { data: { result: 'moon' }},
+      ]);
+    }).then(resolve, reject);
   });
 
   describe('store transaction updater', () => {

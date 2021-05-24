@@ -401,6 +401,17 @@ export class QueryManager<TStore> {
               variables: mutation.variables,
             });
           }
+
+          // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
+          // shallow to allow rolling back optimistic evictions.
+          if (!skipCache) {
+            cache.modify({
+              id: 'ROOT_MUTATION',
+              fields(_fieldValue, { DELETE }) {
+                return DELETE;
+              },
+            });
+          }
         },
 
         include: mutation.refetchQueries,

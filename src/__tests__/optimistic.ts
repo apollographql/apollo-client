@@ -2049,9 +2049,6 @@ describe('optimistic mutation results', () => {
               mutationItem,
             ],
           },
-          ROOT_MUTATION: {
-            __typename: "Mutation",
-          },
         });
 
         // Now that the mutation is finished, reading optimistically from
@@ -2083,9 +2080,6 @@ describe('optimistic mutation results', () => {
               manualItem2,
             ],
           },
-          ROOT_MUTATION: {
-            __typename: "Mutation",
-          },
         });
 
         cache.removeOptimistic("manual");
@@ -2098,9 +2092,6 @@ describe('optimistic mutation results', () => {
             items: [
               mutationItem,
             ],
-          },
-          ROOT_MUTATION: {
-            __typename: "Mutation",
           },
         });
 

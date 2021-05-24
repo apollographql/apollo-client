@@ -587,6 +587,71 @@ describe('mutation results', () => {
         expect(client.cache.extract()).toEqual({});
       });
     });
+
+    it('mutation update function runs even when fetchPolicy is "no-cache"', async () => {
+      let timeReadCount = 0;
+      let timeMergeCount = 0;
+      let mutationUpdateCount = 0;
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            MutationPayload: {
+              fields: {
+                time: {
+                  read(ms: number = Date.now()) {
+                    ++timeReadCount;
+                    return new Date(ms);
+                  },
+                  merge(existing, incoming: number) {
+                    ++timeMergeCount;
+                    expect(existing).toBeUndefined();
+                    return incoming;
+                  },
+                },
+              },
+            },
+          },
+        }),
+      });
+
+      return client.mutate({
+        mutation,
+        fetchPolicy: "no-cache",
+        update(cache, {
+          data: {
+            doSomething: {
+              __typename,
+              time,
+            },
+          },
+        }) {
+          expect(++mutationUpdateCount).toBe(1);
+          expect(__typename).toBe("MutationPayload");
+          expect(time).not.toBeInstanceOf(Date);
+          expect(time).toBe(startTime);
+          expect(timeReadCount).toBe(0);
+          expect(timeMergeCount).toBe(0);
+          expect(cache.extract()).toEqual({});
+        },
+      }).then(({
+        data: {
+          doSomething: {
+            __typename,
+            time,
+          },
+        },
+      }) => {
+        expect(__typename).toBe("MutationPayload");
+        expect(time).not.toBeInstanceOf(Date);
+        expect(time).toBe(+startTime);
+        expect(timeReadCount).toBe(0);
+        expect(timeMergeCount).toBe(0);
+        expect(mutationUpdateCount).toBe(1);
+        expect(client.cache.extract()).toEqual({});
+      });
+    });
   });
 
   describe('updateQueries', () => {

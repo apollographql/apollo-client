@@ -203,6 +203,7 @@ export class QueryManager<TStore> {
         mutationId,
         document: mutation,
         variables,
+        fetchPolicy,
         errorPolicy,
         context,
         updateQueries,
@@ -259,6 +260,7 @@ export class QueryManager<TStore> {
             result: storeResult,
             document: mutation,
             variables,
+            fetchPolicy,
             errorPolicy,
             context,
             update: updateWithProxyFn,
@@ -316,6 +318,7 @@ export class QueryManager<TStore> {
       result: FetchResult<TData>;
       document: DocumentNode;
       variables?: TVariables;
+      fetchPolicy?: "no-cache";
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
@@ -329,8 +332,9 @@ export class QueryManager<TStore> {
   ): Promise<FetchResult<TData>> {
     let { result } = mutation;
     const cacheWrites: Cache.WriteOptions[] = [];
+    const skipCache = mutation.fetchPolicy === "no-cache";
 
-    if (shouldWriteResult(result, mutation.errorPolicy)) {
+    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
       cacheWrites.push({
         result: result.data,
         dataId: 'ROOT_MUTATION',
@@ -389,30 +393,34 @@ export class QueryManager<TStore> {
 
       this.refetchQueries({
         updateCache: (cache: TCache) => {
-          cacheWrites.forEach(write => cache.write(write));
+          if (!skipCache) {
+            cacheWrites.forEach(write => cache.write(write));
+          }
 
           // If the mutation has some writes associated with it then we need to
           // apply those writes to the store by running this reducer again with
           // a write action.
           const { update } = mutation;
           if (update) {
-            // Re-read the ROOT_MUTATION data we just wrote into the cache
-            // (the first cache.write call in the cacheWrites.forEach loop
-            // above), so field read functions have a chance to run for
-            // fields within mutation result objects.
-            const diff = cache.diff<TData>({
-              id: "ROOT_MUTATION",
-              // The cache complains if passed a mutation where it expects a
-              // query, so we transform mutations and subscriptions to queries
-              // (only once, thanks to this.transformCache).
-              query: this.transform(mutation.document).asQuery,
-              variables: mutation.variables,
-              optimistic: false,
-              returnPartialData: true,
-            });
+            if (!skipCache) {
+              // Re-read the ROOT_MUTATION data we just wrote into the cache
+              // (the first cache.write call in the cacheWrites.forEach loop
+              // above), so field read functions have a chance to run for
+              // fields within mutation result objects.
+              const diff = cache.diff<TData>({
+                id: "ROOT_MUTATION",
+                // The cache complains if passed a mutation where it expects a
+                // query, so we transform mutations and subscriptions to queries
+                // (only once, thanks to this.transformCache).
+                query: this.transform(mutation.document).asQuery,
+                variables: mutation.variables,
+                optimistic: false,
+                returnPartialData: true,
+              });
 
-            if (diff.complete) {
-              result = { ...result, data: diff.result };
+              if (diff.complete) {
+                result = { ...result, data: diff.result };
+              }
             }
 
             update(cache, result, {
@@ -423,12 +431,14 @@ export class QueryManager<TStore> {
 
           // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
           // shallow to allow rolling back optimistic evictions.
-          cache.modify({
-            id: 'ROOT_MUTATION',
-            fields(_fieldValue, { DELETE }) {
-              return DELETE;
-            },
-          });
+          if (!skipCache) {
+            cache.modify({
+              id: 'ROOT_MUTATION',
+              fields(_fieldValue, { DELETE }) {
+                return DELETE;
+              },
+            });
+          }
         },
 
         include: mutation.refetchQueries,
@@ -465,6 +475,7 @@ export class QueryManager<TStore> {
       mutationId: string;
       document: DocumentNode;
       variables?: TVariables;
+      fetchPolicy?: "no-cache";
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>,

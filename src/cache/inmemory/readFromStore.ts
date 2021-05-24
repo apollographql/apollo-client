@@ -36,7 +36,7 @@ import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
-import { ObjectCanon } from './object-canon';
+import { canonicalStringify, ObjectCanon } from './object-canon';
 
 export type VariableMap = { [name: string]: any };
 
@@ -235,7 +235,7 @@ export class StoreReader {
         query,
         policies,
         variables,
-        varString: JSON.stringify(variables),
+        varString: canonicalStringify(variables),
         canonizeResults,
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         path: [],

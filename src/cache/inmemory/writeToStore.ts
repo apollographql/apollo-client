@@ -28,6 +28,7 @@ import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 import { EntityStore } from './entityStore';
 import { Cache } from '../../core';
+import { canonicalStringify } from './object-canon';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -81,7 +82,7 @@ export class StoreWriter {
           return merger.merge(existing, incoming) as T;
         },
         variables,
-        varString: JSON.stringify(variables),
+        varString: canonicalStringify(variables),
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         overwrite: !!overwrite,
       },

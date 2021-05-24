@@ -137,7 +137,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
             // separation is to include c.callback in the cache key for
             // maybeBroadcastWatch calls. See issue #5733.
             c.callback,
-            JSON.stringify({ optimistic, rootId, variables }),
+            canonicalStringify({ optimistic, rootId, variables }),
           );
         }
       }

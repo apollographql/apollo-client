@@ -239,7 +239,7 @@ export class Concast<T> extends Observable<T> {
   }
 
   // A public way to abort observation and broadcast.
-  public cancel = (reason: any) => {
+  public cancel(reason: any) {
     this.reject(reason);
     this.sources = [];
     this.handlers.complete();

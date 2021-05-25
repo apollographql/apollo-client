@@ -80,7 +80,7 @@
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.16.1",
     "prop-types": "^15.7.2",
-    "symbol-observable": "^2.0.0",
+    "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.7.3",
     "tslib": "^2.1.0",
     "zen-observable-ts": "^1.0.0"
@@ -95,7 +95,7 @@
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/jest": "26.0.23",
     "@types/lodash": "4.14.168",
-    "@types/node": "14.14.44",
+    "@types/node": "14.17.0",
     "@types/react": "17.0.3",
     "@types/react-dom": "17.0.2",
     "@types/recompose": "^0.30.7",

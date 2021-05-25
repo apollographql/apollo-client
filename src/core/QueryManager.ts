@@ -3,7 +3,7 @@ import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
-import { Cache, ApolloCache } from '../cache';
+import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
 import {
   getDefaultValues,
@@ -836,7 +836,7 @@ export class QueryManager<TStore> {
         const byVariables = inFlightLinkObservables.get(serverQuery) || new Map();
         inFlightLinkObservables.set(serverQuery, byVariables);
 
-        const varJson = JSON.stringify(variables);
+        const varJson = canonicalStringify(variables);
         observable = byVariables.get(varJson);
 
         if (!observable) {

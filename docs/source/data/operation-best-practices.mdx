@@ -247,7 +247,7 @@ query GetAllElements {
 Other fields return _different_ data depending on which user queries them:
 
 ```graphql
-# Returns a particular user's documents
+# Returns the current user's documents
 query GetMyDocuments {
   myDocuments {
     id
@@ -258,7 +258,7 @@ query GetMyDocuments {
 }
 ```
 
-To improve the performance of your [server-side response cache](https://www.apollographql.com/docs/apollo-server/performance/caching/), fetch these types of fields in _separate queries_ whenever possible. By doing so, your server can cache just a _single_ response for a query like `GetAllElements` above, while caching separate responses for each user that executes `GetMyDocuments`.
+To improve the performance of your [server-side response cache](https://www.apollographql.com/docs/apollo-server/performance/caching/), fetch these two types of fields in _separate queries_ whenever possible. By doing so, your server can cache just a _single_ response for a query like `GetAllElements` above, while caching separate responses for each user that executes `GetMyDocuments`.
 
 ## Set your app's `name` and `version` for metrics reporting (paid)
 

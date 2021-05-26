@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from "graphql-tools";
+import { makeExecutableSchema } from "@graphql-tools/schema";
 
 import { ApolloClient, Resolvers, gql } from "../core";
 import { InMemoryCache, NormalizedCacheObject } from "../cache";

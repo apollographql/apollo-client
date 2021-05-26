@@ -10,17 +10,14 @@ import {
   ApolloClient,
   ApolloQueryResult,
   DefaultContext,
-  ErrorPolicy,
   FetchMoreOptions,
   FetchMoreQueryOptions,
   FetchPolicy,
-  MutationUpdaterFunction,
+  MutationOptions,
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
   PureQueryOptions,
-  OnQueryUpdated,
-  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from '../../core';
 
@@ -147,24 +144,14 @@ export interface BaseMutationOptions<
   TVariables extends OperationVariables,
   TContext extends DefaultContext,
   TCache extends ApolloCache<any>,
+> extends Omit<
+  MutationOptions<TData, TVariables, TContext, TCache>,
+  | "mutation"
 > {
-  variables?: TVariables;
-  optimisticResponse?: TData | ((vars: TVariables) => TData);
-  refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
-  awaitRefetchQueries?: boolean;
-  errorPolicy?: ErrorPolicy;
-  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-  // Use OnQueryUpdated<any> instead of OnQueryUpdated<TData> here because TData
-  // is the shape of the mutation result, but onQueryUpdated gets called with
-  // results from any queries affected by the mutation update function, which
-  // probably do not have the same shape as the mutation result.
-  onQueryUpdated?: OnQueryUpdated<any>;
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
-  context?: TContext;
   onCompleted?: (data: TData) => void;
   onError?: (error: ApolloError) => void;
-  fetchPolicy?: Extract<WatchQueryFetchPolicy, 'no-cache'>;
   ignoreResults?: boolean;
 }
 
@@ -173,19 +160,8 @@ export interface MutationFunctionOptions<
   TVariables,
   TContext,
   TCache extends ApolloCache<any>,
-> {
-  variables?: TVariables;
-  optimisticResponse?: TData | ((vars: TVariables) => TData);
-  refetchQueries?: Array<string | PureQueryOptions> | RefetchQueriesFunction;
-  awaitRefetchQueries?: boolean;
-  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
-  // Use OnQueryUpdated<any> instead of OnQueryUpdated<TData> here because TData
-  // is the shape of the mutation result, but onQueryUpdated gets called with
-  // results from any queries affected by the mutation update function, which
-  // probably do not have the same shape as the mutation result.
-  onQueryUpdated?: OnQueryUpdated<any>;
-  context?: TContext;
-  fetchPolicy?: WatchQueryFetchPolicy;
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
+  mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface MutationResult<TData = any> {
@@ -219,8 +195,7 @@ export interface MutationDataOptions<
   TVariables extends OperationVariables,
   TContext extends DefaultContext,
   TCache extends ApolloCache<any>,
->
-  extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 

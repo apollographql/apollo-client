@@ -270,6 +270,18 @@ export interface MutationBaseOptions<
    * GraphQL document to that variable's value.
    */
   variables?: TVariables;
+
+  /**
+   * The context to be passed to the link execution chain. This context will
+   * only be used with this mutation. It will not be used with
+   * `refetchQueries`. Refetched queries use the context they were
+   * initialized with (since the intitial context is stored as part of the
+   * `ObservableQuery` instance). If a specific context is needed when
+   * refetching queries, make sure it is configured (via the
+   * [query `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))
+   * when the query is first initialized/run.
+   */
+   context?: TContext;
 }
 
 export interface MutationOptions<
@@ -285,22 +297,21 @@ export interface MutationOptions<
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /**
-   * The context to be passed to the link execution chain. This context will
-   * only be used with the mutation. It will not be used with
-   * `refetchQueries`. Refetched queries use the context they were
-   * initialized with (since the intitial context is stored as part of the
-   * `ObservableQuery` instance). If a specific context is needed when
-   * refetching queries, make sure it is configured (via the
-   * [`query` `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))
-   * when the query is first initialized/run.
-   */
-  context?: TContext;
-
-  /**
    * Specifies the {@link FetchPolicy} to be used for this query. Mutations only
    * support a 'no-cache' fetchPolicy. If you don't want to disable the cache,
    * remove your fetchPolicy setting to proceed with the default mutation
    * behavior.
    */
   fetchPolicy?: Extract<FetchPolicy, 'no-cache'>;
+
+  /**
+   * To avoid retaining sensitive information from mutation root field
+   * arguments, Apollo Client v3.4+ automatically clears any `ROOT_MUTATION`
+   * fields from the cache after each mutation finishes. If you need this
+   * information to remain in the cache, you can prevent the removal by passing
+   * `keepRootFields: true` to the mutation. `ROOT_MUTATION` result data are
+   * also passed to the mutation `update` function, so we recommend obtaining
+   * the results that way, rather than using this option, if possible.
+   */
+  keepRootFields?: boolean;
 }

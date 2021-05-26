@@ -22,4 +22,4 @@ Subscription.propTypes = {
   onSubscriptionData: PropTypes.func,
   onSubscriptionComplete: PropTypes.func,
   shouldResubscribe: PropTypes.oneOfType([PropTypes.func, PropTypes.bool])
-};
+} as Subscription<any, any>["propTypes"];

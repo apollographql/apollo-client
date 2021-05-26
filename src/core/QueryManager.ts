@@ -64,6 +64,16 @@ interface MutationStoreValue {
 
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
+interface TransformCacheEntry {
+  document: DocumentNode;
+  hasClientExports: boolean;
+  hasForcedResolvers: boolean;
+  clientQuery: DocumentNode | null;
+  serverQuery: DocumentNode | null;
+  defaultVars: OperationVariables;
+  asQuery: DocumentNode;
+}
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
@@ -153,6 +163,7 @@ export class QueryManager<TStore> {
     onQueryUpdated,
     errorPolicy = 'none',
     fetchPolicy,
+    keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>> {
     invariant(
@@ -193,10 +204,12 @@ export class QueryManager<TStore> {
         mutationId,
         document: mutation,
         variables,
+        fetchPolicy,
         errorPolicy,
         context,
         updateQueries,
         update: updateWithProxyFn,
+        keepRootFields,
       });
     }
 
@@ -239,47 +252,27 @@ export class QueryManager<TStore> {
             delete storeResult.errors;
           }
 
-          if (fetchPolicy === 'no-cache') {
-            const results: any[] = [];
-
-            this.refetchQueries({
-              include: refetchQueries,
-              onQueryUpdated,
-            }).forEach(result => results.push(result));
-
-            return Promise.all(
-              awaitRefetchQueries ? results : [],
-            ).then(() => storeResult);
-          }
-
-          const markPromise = self.markMutationResult<
+          return self.markMutationResult<
             TData,
             TVariables,
             TContext,
             TCache
           >({
             mutationId,
-            result,
+            result: storeResult,
             document: mutation,
             variables,
+            fetchPolicy,
             errorPolicy,
             context,
             update: updateWithProxyFn,
             updateQueries,
+            awaitRefetchQueries,
             refetchQueries,
             removeOptimistic: optimisticResponse ? mutationId : void 0,
             onQueryUpdated,
+            keepRootFields,
           });
-
-          if (awaitRefetchQueries || onQueryUpdated) {
-            // Returning the result of markMutationResult here makes the
-            // mutation await the Promise that markMutationResult returns,
-            // since we are returning markPromise from the map function
-            // we passed to asyncMap above.
-            return markPromise.then(() => storeResult);
-          }
-
-          return storeResult;
         },
 
       ).subscribe({
@@ -328,23 +321,30 @@ export class QueryManager<TStore> {
       result: FetchResult<TData>;
       document: DocumentNode;
       variables?: TVariables;
+      fetchPolicy?: "no-cache";
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      awaitRefetchQueries?: boolean;
       refetchQueries?: RefetchQueryDescription;
       removeOptimistic?: string;
       onQueryUpdated?: OnQueryUpdated<any>;
+      keepRootFields?: boolean;
     },
     cache = this.cache,
-  ): Promise<void> {
-    if (shouldWriteResult(mutation.result, mutation.errorPolicy)) {
-      const cacheWrites: Cache.WriteOptions[] = [{
-        result: mutation.result.data,
+  ): Promise<FetchResult<TData>> {
+    let { result } = mutation;
+    const cacheWrites: Cache.WriteOptions[] = [];
+    const skipCache = mutation.fetchPolicy === "no-cache";
+
+    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
+      cacheWrites.push({
+        result: result.data,
         dataId: 'ROOT_MUTATION',
         query: mutation.document,
         variables: mutation.variables,
-      }];
+      });
 
       const { updateQueries } = mutation;
       if (updateQueries) {
@@ -367,7 +367,7 @@ export class QueryManager<TStore> {
           if (complete && currentQueryResult) {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = updater(currentQueryResult, {
-              mutationResult: mutation.result,
+              mutationResult: result,
               queryName: document && getOperationName(document) || void 0,
               queryVariables: variables!,
             });
@@ -384,21 +384,63 @@ export class QueryManager<TStore> {
           }
         });
       }
+    }
 
+    if (
+      cacheWrites.length > 0 ||
+      mutation.refetchQueries ||
+      mutation.update ||
+      mutation.onQueryUpdated ||
+      mutation.removeOptimistic
+    ) {
       const results: any[] = [];
 
       this.refetchQueries({
-        updateCache(cache: TCache) {
-          cacheWrites.forEach(write => cache.write(write));
+        updateCache: (cache: TCache) => {
+          if (!skipCache) {
+            cacheWrites.forEach(write => cache.write(write));
+          }
 
           // If the mutation has some writes associated with it then we need to
           // apply those writes to the store by running this reducer again with
           // a write action.
           const { update } = mutation;
           if (update) {
-            update(cache, mutation.result, {
+            if (!skipCache) {
+              // Re-read the ROOT_MUTATION data we just wrote into the cache
+              // (the first cache.write call in the cacheWrites.forEach loop
+              // above), so field read functions have a chance to run for
+              // fields within mutation result objects.
+              const diff = cache.diff<TData>({
+                id: "ROOT_MUTATION",
+                // The cache complains if passed a mutation where it expects a
+                // query, so we transform mutations and subscriptions to queries
+                // (only once, thanks to this.transformCache).
+                query: this.transform(mutation.document).asQuery,
+                variables: mutation.variables,
+                optimistic: false,
+                returnPartialData: true,
+              });
+
+              if (diff.complete) {
+                result = { ...result, data: diff.result };
+              }
+            }
+
+            update(cache, result, {
               context: mutation.context,
               variables: mutation.variables,
+            });
+          }
+
+          // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
+          // shallow to allow rolling back optimistic evictions.
+          if (!skipCache && !mutation.keepRootFields) {
+            cache.modify({
+              id: 'ROOT_MUTATION',
+              fields(value, { fieldName, DELETE }) {
+                return fieldName === "__typename" ? value : DELETE;
+              },
             });
           }
         },
@@ -420,10 +462,15 @@ export class QueryManager<TStore> {
 
       }).forEach(result => results.push(result));
 
-      return Promise.all(results).then(() => void 0);
+      if (mutation.awaitRefetchQueries || mutation.onQueryUpdated) {
+        // Returning a promise here makes the mutation await that promise, so we
+        // include results in that promise's work if awaitRefetchQueries or an
+        // onQueryUpdated function was specified.
+        return Promise.all(results).then(() => result);
+      }
     }
 
-    return Promise.resolve();
+    return Promise.resolve(result);
   }
 
   public markMutationOptimistic<TData, TVariables, TContext, TCache extends ApolloCache<any>>(
@@ -432,10 +479,12 @@ export class QueryManager<TStore> {
       mutationId: string;
       document: DocumentNode;
       variables?: TVariables;
+      fetchPolicy?: "no-cache";
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>,
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      keepRootFields?: boolean,
     },
   ) {
     const data = typeof optimisticResponse === "function"
@@ -487,17 +536,9 @@ export class QueryManager<TStore> {
     }
   }
 
-  private transformCache = new (canUseWeakMap ? WeakMap : Map)<
-    DocumentNode,
-    Readonly<{
-      document: Readonly<DocumentNode>;
-      hasClientExports: boolean;
-      hasForcedResolvers: boolean;
-      clientQuery: Readonly<DocumentNode> | null;
-      serverQuery: Readonly<DocumentNode> | null;
-      defaultVars: Readonly<OperationVariables>;
-    }>
-  >();
+  private transformCache = new (
+    canUseWeakMap ? WeakMap : Map
+  )<DocumentNode, TransformCacheEntry>();
 
   public transform(document: DocumentNode) {
     const { transformCache } = this;
@@ -510,7 +551,7 @@ export class QueryManager<TStore> {
       const clientQuery = this.localState.clientQuery(transformed);
       const serverQuery = forLink && this.localState.serverQuery(forLink);
 
-      const cacheEntry = {
+      const cacheEntry: TransformCacheEntry = {
         document: transformed,
         // TODO These two calls (hasClientExports and shouldForceResolvers)
         // could probably be merged into a single traversal.
@@ -521,6 +562,18 @@ export class QueryManager<TStore> {
         defaultVars: getDefaultValues(
           getOperationDefinition(transformed)
         ) as OperationVariables,
+        // Transform any mutation or subscription operations to query operations
+        // so we can read/write them from/to the cache.
+        asQuery: {
+          ...transformed,
+          definitions: transformed.definitions.map(def => {
+            if (def.kind === "OperationDefinition" &&
+                def.operation !== "query") {
+              return { ...def, operation: "query" };
+            }
+            return def;
+          }),
+        }
       };
 
       const add = (doc: DocumentNode | null) => {

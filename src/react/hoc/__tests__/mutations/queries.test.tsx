@@ -175,11 +175,6 @@ describe('graphql(mutation) query integration', () => {
           this.props.mutate!().then(result => {
             expect(stripSymbols(result && result.data)).toEqual(mutationData);
           });
-
-          const dataInStore = cache.extract(true);
-          expect(stripSymbols(dataInStore.ROOT_MUTATION!.createTodo)).toEqual(
-            optimisticResponse.createTodo
-          );
           return null;
         }
 

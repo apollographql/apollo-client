@@ -605,4 +605,163 @@ describe('missing and undefined optional fields', () => {
       expect(queryResult?.error?.message).toContain('thisFieldIsPresentButUndefined');
     });
   });
+
+  describe('mocks available', () => {
+    const queryWithOptionalInputFields: DocumentNode = gql`
+      # type Input {
+      #   required: String!
+      #   optional: String
+      # }
+      query OptionalFields($input: Input) {
+        user(input: $input) {
+          id
+        }
+      }
+    `;
+
+    const mockResult = { data: user };
+
+    type OptionalInputFieldVariables = {
+      input: {
+        required: string
+        optional?: string
+      }
+    };
+
+    const optionalUndefined: OptionalInputFieldVariables = {
+      input: {
+        required: "a",
+        optional: undefined,
+      }
+    };
+
+    const optionalMissing: OptionalInputFieldVariables = {
+      input: {
+        required: "a",
+      }
+    };
+
+
+    const mocksOptional = (mockVariables: OptionalInputFieldVariables) => [
+      {
+        request: {
+          query: queryWithOptionalInputFields,
+          variables: mockVariables,
+        },
+        result: mockResult,
+      },
+    ];
+
+    it("should load data when: undefined in input, undefined in mock", async () => {
+      expect.assertions(3);
+
+      let queryResult: QueryResult<Data, OptionalInputFieldVariables> | undefined;
+
+      const Component: FC = () => {
+        queryResult = useQuery<Data, OptionalInputFieldVariables>(queryWithOptionalInputFields, {
+          variables: optionalUndefined,
+        });
+        return null;
+      };
+
+      await act(async () => {
+        render(
+          <MockedProvider mocks={mocksOptional(optionalUndefined)}>
+            <Component />
+          </MockedProvider>
+        );
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+
+      expect(queryResult?.loading).toBe(false);
+      expect(queryResult?.error).toBeUndefined();
+      expect(queryResult?.data).toEqual(mockResult);
+    });
+
+    it("should load data when: undefined in input, missing in mock", async () => {
+      expect.assertions(3);
+
+      let queryResult: QueryResult<Data, OptionalInputFieldVariables> | undefined;
+
+      const Component: FC = () => {
+        queryResult = useQuery<Data, OptionalInputFieldVariables>(queryWithOptionalInputFields, {
+          variables: optionalUndefined,
+        });
+        return null;
+      };
+
+      await act(async () => {
+        render(
+          <MockedProvider mocks={mocksOptional(optionalMissing)}>
+            <Component />
+          </MockedProvider>
+        );
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+
+      expect(queryResult?.loading).toBe(false);
+      expect(queryResult?.error).toBeUndefined();
+      expect(queryResult?.data).toEqual(mockResult);
+    });
+
+    it("should load data when: missing in input, undefined in mock", async () => {
+      expect.assertions(3);
+
+      let queryResult: QueryResult<Data, OptionalInputFieldVariables> | undefined;
+
+      const Component: FC = () => {
+        queryResult = useQuery<Data, OptionalInputFieldVariables>(queryWithOptionalInputFields, {
+          variables: optionalMissing,
+        });
+        return null;
+      };
+
+      await act(async () => {
+        render(
+          <MockedProvider mocks={mocksOptional(optionalUndefined)}>
+            <Component />
+          </MockedProvider>
+        );
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+
+      expect(queryResult?.loading).toBe(false);
+      expect(queryResult?.error).toBeUndefined();
+      expect(queryResult?.data).toEqual(mockResult);
+    });
+
+    it("should load data when: missing in input, missing in mock", async () => {
+      expect.assertions(3);
+
+      let queryResult: QueryResult<Data, OptionalInputFieldVariables> | undefined;
+
+      const Component: FC = () => {
+        queryResult = useQuery<Data, OptionalInputFieldVariables>(queryWithOptionalInputFields, {
+          variables: optionalMissing,
+        });
+        return null;
+      };
+
+      await act(async () => {
+        render(
+          <MockedProvider mocks={mocksOptional(optionalMissing)}>
+            <Component />
+          </MockedProvider>
+        );
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+
+      expect(queryResult?.loading).toBe(false);
+      expect(queryResult?.error).toBeUndefined();
+      expect(queryResult?.data).toEqual(mockResult);
+    });
+  });
 });

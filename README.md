@@ -16,6 +16,9 @@ All Apollo Client documentation, including React integration articles and helpfu
 The Apollo Client API reference can be found at: <br/>
 [https://www.apollographql.com/docs/react/api/apollo-client/](https://www.apollographql.com/docs/react/api/apollo-client/)
 
+Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apollo's official learning platform: <br/>
+[https://odyssey.apollographql.com/](https://odyssey.apollographql.com/)
+
 ## Maintainers
 
 - [@benjamn](https://github.com/benjamn) (Apollo)

@@ -8,6 +8,9 @@ Object {
     "__typename": "Person",
     "name": "Jenn Creighton",
   },
+  "ROOT_MUTATION": Object {
+    "__typename": "Mutation",
+  },
 }
 `;
 
@@ -20,6 +23,9 @@ Object {
   "Person:{\\"name\\":\\"Jenn Creighton\\"}": Object {
     "__typename": "Person",
     "name": "Jenn Creighton",
+  },
+  "ROOT_MUTATION": Object {
+    "__typename": "Mutation",
   },
 }
 `;

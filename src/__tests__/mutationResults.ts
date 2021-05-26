@@ -582,9 +582,15 @@ describe('mutation results', () => {
         expect(time.getTime()).toBe(startTime);
         expect(timeReadCount).toBe(1);
         expect(timeMergeCount).toBe(1);
-        // The ROOT_MUTATION object exists only briefly, for the duration of the
-        // mutation update, and is removed after the mutation write is finished.
-        expect(client.cache.extract()).toEqual({});
+
+        // The contents of the ROOT_MUTATION object exist only briefly, for the
+        // duration of the mutation update, and are removed after the mutation
+        // write is finished.
+        expect(client.cache.extract()).toEqual({
+          ROOT_MUTATION: {
+            __typename: "Mutation",
+          },
+        });
       });
     });
 
@@ -1095,7 +1101,11 @@ describe('mutation results', () => {
         mutation,
       }),
     ]).then(results => {
-      expect(client.cache.extract()).toEqual({});
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
+      });
       expect(results).toEqual([
         { data: { result: "hello" }},
         { data: { result: "world" }},
@@ -1168,7 +1178,11 @@ describe('mutation results', () => {
         variables: { c: 3 },
       }),
     ]).then(results => {
-      expect(client.cache.extract()).toEqual({});
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
+      });
       expect(results).toEqual([
         { data: { result: 'hello' }},
         { data: { result: 'world' }},
@@ -1241,7 +1255,11 @@ describe('mutation results', () => {
         variables: { a: null, b: null, c: null },
       }),
     ]).then(results => {
-      expect(client.cache.extract()).toEqual({});
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
+      });
       expect(results).toEqual([
         { data: { result: 'hello' }},
         { data: { result: 'world' }},

@@ -434,8 +434,8 @@ export class QueryManager<TStore> {
           if (!skipCache) {
             cache.modify({
               id: 'ROOT_MUTATION',
-              fields(_fieldValue, { DELETE }) {
-                return DELETE;
+              fields(value, { fieldName, DELETE }) {
+                return fieldName === "__typename" ? value : DELETE;
               },
             });
           }

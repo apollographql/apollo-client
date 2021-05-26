@@ -163,6 +163,7 @@ export class QueryManager<TStore> {
     onQueryUpdated,
     errorPolicy = 'none',
     fetchPolicy,
+    keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>> {
     invariant(
@@ -208,6 +209,7 @@ export class QueryManager<TStore> {
         context,
         updateQueries,
         update: updateWithProxyFn,
+        keepRootFields,
       });
     }
 
@@ -269,6 +271,7 @@ export class QueryManager<TStore> {
             refetchQueries,
             removeOptimistic: optimisticResponse ? mutationId : void 0,
             onQueryUpdated,
+            keepRootFields,
           });
         },
 
@@ -327,6 +330,7 @@ export class QueryManager<TStore> {
       refetchQueries?: RefetchQueryDescription;
       removeOptimistic?: string;
       onQueryUpdated?: OnQueryUpdated<any>;
+      keepRootFields?: boolean;
     },
     cache = this.cache,
   ): Promise<FetchResult<TData>> {
@@ -431,7 +435,7 @@ export class QueryManager<TStore> {
 
           // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
           // shallow to allow rolling back optimistic evictions.
-          if (!skipCache) {
+          if (!skipCache && !mutation.keepRootFields) {
             cache.modify({
               id: 'ROOT_MUTATION',
               fields(value, { fieldName, DELETE }) {
@@ -480,6 +484,7 @@ export class QueryManager<TStore> {
       context?: TContext;
       updateQueries: UpdateQueries<TData>,
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      keepRootFields?: boolean,
     },
   ) {
     const data = typeof optimisticResponse === "function"

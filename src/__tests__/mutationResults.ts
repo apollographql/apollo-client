@@ -594,6 +594,85 @@ describe('mutation results', () => {
       });
     });
 
+    it('mutations can preserve ROOT_MUTATION cache data with keepRootFields: true', () => {
+      let timeReadCount = 0;
+      let timeMergeCount = 0;
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            MutationPayload: {
+              fields: {
+                time: {
+                  read(ms: number = Date.now()) {
+                    ++timeReadCount;
+                    return new Date(ms);
+                  },
+                  merge(existing, incoming: number) {
+                    ++timeMergeCount;
+                    expect(existing).toBeUndefined();
+                    return incoming;
+                  },
+                },
+              },
+            },
+          },
+        }),
+      });
+
+      return client.mutate({
+        mutation,
+        keepRootFields: true,
+        update(cache, {
+          data: {
+            doSomething: {
+              __typename,
+              time,
+            },
+          },
+        }) {
+          expect(__typename).toBe("MutationPayload");
+          expect(time).toBeInstanceOf(Date);
+          expect(time.getTime()).toBe(startTime);
+          expect(timeReadCount).toBe(1);
+          expect(timeMergeCount).toBe(1);
+          expect(cache.extract()).toEqual({
+            ROOT_MUTATION: {
+              __typename: "Mutation",
+              doSomething: {
+                __typename: "MutationPayload",
+                time: startTime,
+              },
+            },
+          });
+        },
+      }).then(({
+        data: {
+          doSomething: {
+            __typename,
+            time,
+          },
+        },
+      }) => {
+        expect(__typename).toBe("MutationPayload");
+        expect(time).toBeInstanceOf(Date);
+        expect(time.getTime()).toBe(startTime);
+        expect(timeReadCount).toBe(1);
+        expect(timeMergeCount).toBe(1);
+
+        expect(client.cache.extract()).toEqual({
+          ROOT_MUTATION: {
+            __typename: "Mutation",
+            doSomething: {
+              __typename: "MutationPayload",
+              time: startTime,
+            },
+          },
+        });
+      });
+    });
+
     it('mutation update function runs even when fetchPolicy is "no-cache"', async () => {
       let timeReadCount = 0;
       let timeMergeCount = 0;

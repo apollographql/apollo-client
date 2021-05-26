@@ -303,4 +303,15 @@ export interface MutationOptions<
    * behavior.
    */
   fetchPolicy?: Extract<FetchPolicy, 'no-cache'>;
+
+  /**
+   * To avoid retaining sensitive information from mutation root field
+   * arguments, Apollo Client v3.4+ automatically clears any `ROOT_MUTATION`
+   * fields from the cache after each mutation finishes. If you need this
+   * information to remain in the cache, you can prevent the removal by passing
+   * `keepRootFields: true` to the mutation. `ROOT_MUTATION` result data are
+   * also passed to the mutation `update` function, so we recommend obtaining
+   * the results that way, rather than using this option, if possible.
+   */
+  keepRootFields?: boolean;
 }

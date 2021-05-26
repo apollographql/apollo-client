@@ -270,6 +270,18 @@ export interface MutationBaseOptions<
    * GraphQL document to that variable's value.
    */
   variables?: TVariables;
+
+  /**
+   * The context to be passed to the link execution chain. This context will
+   * only be used with this mutation. It will not be used with
+   * `refetchQueries`. Refetched queries use the context they were
+   * initialized with (since the intitial context is stored as part of the
+   * `ObservableQuery` instance). If a specific context is needed when
+   * refetching queries, make sure it is configured (via the
+   * [query `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))
+   * when the query is first initialized/run.
+   */
+   context?: TContext;
 }
 
 export interface MutationOptions<
@@ -283,18 +295,6 @@ export interface MutationOptions<
    * package, that contains a single mutation inside of it.
    */
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
-  /**
-   * The context to be passed to the link execution chain. This context will
-   * only be used with the mutation. It will not be used with
-   * `refetchQueries`. Refetched queries use the context they were
-   * initialized with (since the intitial context is stored as part of the
-   * `ObservableQuery` instance). If a specific context is needed when
-   * refetching queries, make sure it is configured (via the
-   * [`query` `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))
-   * when the query is first initialized/run.
-   */
-  context?: TContext;
 
   /**
    * Specifies the {@link FetchPolicy} to be used for this query. Mutations only

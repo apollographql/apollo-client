@@ -29,4 +29,4 @@ Query.propTypes = {
   ssr: PropTypes.bool,
   partialRefetch: PropTypes.bool,
   returnPartialData: PropTypes.bool
-};
+} as Query<any, any>["propTypes"];

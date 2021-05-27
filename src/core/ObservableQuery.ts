@@ -306,7 +306,7 @@ export class ObservableQuery<
       const { updateQuery } = fetchMoreOptions;
 
       if (updateQuery) {
-        if (process.env.NODE_ENV !== "production" &&
+        if (__DEV__ &&
             !warnedAboutUpdateQuery) {
           invariant.warn(
 `The updateQuery callback for fetchMore is deprecated, and will be removed

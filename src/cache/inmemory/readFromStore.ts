@@ -477,7 +477,7 @@ export class StoreReader {
         }), i);
       }
 
-      if (process.env.NODE_ENV !== 'production') {
+      if (__DEV__) {
         assertSelectionSetForIdValue(context.store, field, item);
       }
 

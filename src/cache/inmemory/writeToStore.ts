@@ -109,7 +109,7 @@ export class StoreWriter {
         fields = this.applyMerges(mergeTree, entityRef, fields, context);
       }
 
-      if (process.env.NODE_ENV !== "production" && !context.overwrite) {
+      if (__DEV__ && !context.overwrite) {
         const hasSelectionSet = (storeFieldName: string) =>
           fieldsWithSelectionSets.has(fieldNameFromStoreName(storeFieldName));
         const fieldsWithSelectionSets = new Set<string>();
@@ -379,7 +379,7 @@ export class StoreWriter {
       // In development, we need to clone scalar values so that they can be
       // safely frozen with maybeDeepFreeze in readFromStore.ts. In production,
       // it's cheaper to store the scalar values directly in the cache.
-      return process.env.NODE_ENV === 'production' ? value : cloneDeep(value);
+      return __DEV__ ? cloneDeep(value) : value;
     }
 
     if (Array.isArray(value)) {

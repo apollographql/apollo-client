@@ -802,7 +802,7 @@ export class QueryManager<TStore> {
       });
     }
 
-    if (process.env.NODE_ENV !== "production" && queryNamesAndDocs.size) {
+    if (__DEV__ && queryNamesAndDocs.size) {
       queryNamesAndDocs.forEach((included, nameOrDoc) => {
         if (!included) {
           invariant.warn(`Unknown query ${
@@ -1343,7 +1343,7 @@ export class QueryManager<TStore> {
     ) => {
       const data = diff.result;
 
-      if (process.env.NODE_ENV !== 'production' &&
+      if (__DEV__ &&
           isNonEmptyArray(diff.missing) &&
           !equal(data, {}) &&
           !returnPartialData) {

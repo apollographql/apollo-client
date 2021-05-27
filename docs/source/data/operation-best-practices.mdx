@@ -1,11 +1,11 @@
 ---
-title: Operation best practices
+title: GraphQL query best practices
 sidebar_title: Best practices
 ---
 
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
-When creating queries and mutations, follow these best practices to get the most out of GraphQL and Apollo tooling.
+When creating queries and mutations, follow these best practices to get the most out of both GraphQL and Apollo tooling.
 
 ## Name all operations
 
@@ -60,8 +60,6 @@ query GetDog {
 
 The first query uses a variable (`$dogId`) for the value of the `dog` field's required argument. This means you can use the query to fetch a `Dog` object with _any_ ID, making it much more reusable.
 
-> If two otherwise identical operations have different hardcoded argument values, they're considered _entirely different operations_ by tools like [automatic persisted queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) and the [federated gateway](https://www.apollographql.com/docs/federation/gateway/). This duplication reduces performance gains and can take up unnecessary space in operation caches.
-
 You pass variable values to `useQuery` (or `useMutation`) like so:
 
 ```js{11-15}:title=dog.tsx
@@ -83,6 +81,22 @@ function Dog({ id }) {
   // ...render component...
 }
 ```
+
+### Disadvantages of hardcoded GraphQL arguments
+
+Beyond reusability, hardcoded arguments have other disadvantages relative to variables:
+
+#### Reduced cache effectiveness
+
+If two otherwise identical queries have different hardcoded argument values, they're considered _entirely different operations_ by your GraphQL server's cache. The cache enables your server to _skip_ parsing and validating operations that it's encountered before, improving performance.
+
+The server-side cache also powers features like [automatic persisted queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) and query plans in a [federated gateway](https://www.apollographql.com/docs/federation/gateway/). Hardcoded arguments reduce the performance gains of these features and take up useful space in the cache.
+
+#### Reduced information privacy
+
+The value of a GraphQL argument might include sensitive information, such as an access token or a user's personal info. If this information is included in a query string, it's cached with the rest of that query string.
+
+Variable values are _not_ included in query strings. You can also specify _which_ variable values (if any) are [included in metrics reporting](https://www.apollographql.com/docs/apollo-server/api/plugin/usage-reporting/#sendvariablevalues) to Apollo Studio.
 
 ## Query only the data you need, where you need it
 

@@ -1,5 +1,5 @@
 import { dep, OptimisticDependencyFunction } from 'optimism';
-import invariant from 'ts-invariant';
+import { invariant } from 'ts-invariant';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 

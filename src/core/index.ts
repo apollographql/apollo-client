@@ -103,7 +103,7 @@ setVerbosity("log");
 // then re-exporting them separately, helps keeps bundlers happy without any
 // additional config changes.
 export {
-  default as gql,
+  gql,
   resetCaches,
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,

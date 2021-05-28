@@ -95,6 +95,7 @@ function prepareBundle({
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
+      interop: 'esModule',
       externalLiveBindings: false,
       // In Node.js, where these CommonJS bundles are most commonly used,
       // the expression process.env.NODE_ENV can be very expensive to

@@ -17,6 +17,8 @@
   })
   ```
   [@benjamn](https://github.com/benjamn) in [#7810](https://github.com/apollographql/apollo-client/pull/7810)
+- Make sure the `MockedResponse` `ResultFunction` type is re-exported.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#8315](https://github.com/apollographql/apollo-client/pull/8315)
 
 ### Potentially breaking changes
 

@@ -30,7 +30,7 @@ export function makeReference(id: string): Reference {
 }
 
 export function isReference(obj: any): obj is Reference {
-  return obj && typeof obj === 'object' && typeof obj.__ref === 'string';
+  return Boolean(obj && typeof obj === 'object' && typeof obj.__ref === 'string');
 }
 
 export type StoreValue =
@@ -43,6 +43,11 @@ export type StoreValue =
   | undefined
   | void
   | Object;
+
+export interface StoreObject {
+  __typename?: string;
+  [storeFieldName: string]: StoreValue;
+}
 
 function isStringValue(value: ValueNode): value is StringValueNode {
   return value.kind === 'StringValue';
@@ -174,10 +179,11 @@ const KNOWN_DIRECTIVES: string[] = [
 
 export function getStoreKeyName(
   fieldName: string,
-  args?: Object,
+  args?: Record<string, any> | null,
   directives?: Directives,
 ): string {
   if (
+    args &&
     directives &&
     directives['connection'] &&
     directives['connection']['key']
@@ -191,10 +197,9 @@ export function getStoreKeyName(
         : [];
       filterKeys.sort();
 
-      const queryArgs = args as { [key: string]: any };
       const filteredArgs = {} as { [key: string]: any };
       filterKeys.forEach(key => {
-        filteredArgs[key] = queryArgs[key];
+        filteredArgs[key] = args[key];
       });
 
       return `${directives['connection']['key']}(${JSON.stringify(
@@ -231,8 +236,8 @@ export function getStoreKeyName(
 
 export function argumentsObjectFromField(
   field: FieldNode | DirectiveNode,
-  variables: Object,
-): Object {
+  variables?: Record<string, any>,
+): Object | null {
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
     field.arguments.forEach(({ name, value }) =>
@@ -240,7 +245,6 @@ export function argumentsObjectFromField(
     );
     return argObj;
   }
-
   return null;
 }
 
@@ -251,7 +255,7 @@ export function resultKeyNameFromField(field: FieldNode): string {
 export function getTypenameFromResult(
   result: Record<string, any>,
   selectionSet: SelectionSetNode,
-  fragmentMap: FragmentMap,
+  fragmentMap?: FragmentMap,
 ): string | undefined {
   if (typeof result.__typename === 'string') {
     return result.__typename;
@@ -265,7 +269,7 @@ export function getTypenameFromResult(
     } else {
       const typename = getTypenameFromResult(
         result,
-        getFragmentFromSelection(selection, fragmentMap).selectionSet,
+        getFragmentFromSelection(selection, fragmentMap)!.selectionSet,
         fragmentMap,
       );
       if (typeof typename === 'string') {
@@ -286,4 +290,3 @@ export function isInlineFragment(
 }
 
 export type VariableValue = (node: VariableNode) => any;
-

@@ -2,16 +2,21 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 
-import { Observable, Observer } from '../../utilities/observables/Observable';
-import { ApolloLink } from '../../link/core/ApolloLink';
-import { ApolloClient } from '../..';
+import { LocalState } from '../../core/LocalState';
+
+import {
+  ApolloClient,
+  ApolloQueryResult,
+  Resolvers,
+  WatchQueryOptions,
+} from '../../core';
+
+import { InMemoryCache } from '../../cache';
+import { Observable, Observer } from '../../utilities';
+import { ApolloLink } from '../../link/core';
+import { itAsync } from '../../testing';
 import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
 import wrap from '../../utilities/testing/wrap';
-import { itAsync } from '../../utilities/testing/itAsync';
-import { ApolloQueryResult, Resolvers } from '../../core/types';
-import { WatchQueryOptions } from '../../core/watchQueryOptions';
-import { LocalState } from '../../core/LocalState';
-import { InMemoryCache } from '../../cache/inmemory/inMemoryCache';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
@@ -508,7 +513,7 @@ describe('Writing cache data from resolvers', () => {
       resolvers: {
         Mutation: {
           start(_data, _args, { cache }) {
-            cache.writeData({ data: { field: 1 } });
+            cache.writeQuery({ query, data: { field: 1 } });
             return { start: true };
           },
         },
@@ -538,19 +543,31 @@ describe('Writing cache data from resolvers', () => {
       }
     `;
 
+    const cache = new InMemoryCache();
+
     const client = new ApolloClient({
-      cache: new InMemoryCache(),
+      cache,
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start(_data, _args, { cache }) {
+          start() {
             cache.writeQuery({
               query,
               data: {
                 obj: { field: 1, id: 'uniqueId', __typename: 'Object' },
               },
             });
-            cache.writeData({ id: 'Object:uniqueId', data: { field: 2 } });
+
+            cache.modify({
+              id: 'Object:uniqueId',
+              fields: {
+                field(value) {
+                  expect(value).toBe(1);
+                  return 2;
+                },
+              },
+            });
+
             return { start: true };
           },
         },
@@ -583,12 +600,14 @@ describe('Writing cache data from resolvers', () => {
       }
     `;
 
+    const cache = new InMemoryCache();
+
     const client = new ApolloClient({
-      cache: new InMemoryCache(),
+      cache,
       link: ApolloLink.empty(),
       resolvers: {
         Mutation: {
-          start(_data, _args, { cache }) {
+          start() {
             cache.writeQuery({
               query,
               data: {
@@ -599,10 +618,15 @@ describe('Writing cache data from resolvers', () => {
                 },
               },
             });
-            cache.writeData({
+            cache.modify({
               id: 'Object:uniqueId',
-              data: { field: { field2: 2, __typename: 'Field' } },
-            });
+              fields: {
+                field(value: { field2: number }) {
+                  expect(value.field2).toBe(1);
+                  return { ...value, field2: 2 };
+                },
+              },
+            })
             return { start: true };
           },
         },
@@ -618,95 +642,6 @@ describe('Writing cache data from resolvers', () => {
       })
       .catch(e => console.log(e));
   });
-
-  it(
-    'should add a __typename for an object without one when writing to the ' +
-      'cache with an id',
-    () => {
-      const query = gql`
-        {
-          obj @client {
-            field {
-              field2
-            }
-            id
-          }
-        }
-      `;
-
-      const mutation = gql`
-        mutation start {
-          start @client
-        }
-      `;
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
-        resolvers: {
-          Mutation: {
-            start(_data, _args, { cache }) {
-              // This would cause a warning to be printed because we don't have
-              // __typename on the obj field. But that's intentional because
-              // that's exactly the situation we're trying to test...
-
-              // Let's swap out console.warn to suppress this one message
-              const suppressString = '__typename';
-              const originalWarn = console.warn;
-              console.warn = (...args: any[]) => {
-                if (
-                  args.find(element => {
-                    if (typeof element === 'string') {
-                      return element.indexOf(suppressString) !== -1;
-                    }
-                    return false;
-                  }) != null
-                ) {
-                  // Found a thing in the args we told it to exclude
-                  return;
-                }
-                originalWarn.apply(console, args);
-              };
-              // Actually call the problematic query
-              cache.writeQuery({
-                query,
-                data: {
-                  obj: {
-                    field: { field2: 1, __typename: 'Field' },
-                    id: 'uniqueId',
-                  },
-                },
-              });
-              // Restore warning logger
-              console.warn = originalWarn;
-
-              cache.writeData({
-                id: 'ROOT_QUERY',
-                data: {
-                  obj: {
-                    field: {
-                      field2: 2,
-                      __typename: 'Field',
-                    },
-                  },
-                },
-              });
-              return { start: true };
-            },
-          },
-        },
-      });
-
-      return client
-        .mutate({ mutation })
-        .then(() => client.query({ query }))
-        .then(({ data }: any) => {
-          expect(data.obj.__typename).toEqual('__ClientData');
-          expect(data.obj.field.__typename).toEqual('Field');
-        })
-        .catch(e => console.log(e));
-    },
-  );
 });
 
 describe('Resolving field aliases', () => {
@@ -848,7 +783,8 @@ describe('Resolving field aliases', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query: gql`{ foo { bar }}`,
         data: {
           foo: {
             bar: 'yo',
@@ -905,7 +841,8 @@ describe('Resolving field aliases', () => {
         },
       });
 
-      client.writeData({
+      client.writeQuery({
+        query: gql`{ launch { isInCart }}`,
         data: {
           launch: {
             isInCart: false,
@@ -950,7 +887,8 @@ describe('Force local resolvers', () => {
         resolvers: {},
       });
 
-      cache.writeData({
+      cache.writeQuery({
+        query,
         data: {
           author: {
             name: 'John Smith',
@@ -1182,7 +1120,7 @@ describe('Async resolvers', () => {
       },
     });
 
-    const { data: { isLoggedIn } } = await client.query({ query });
+    const { data: { isLoggedIn } } = await client.query({ query })!;
     expect(isLoggedIn).toBe(true);
     return resolve();
   });
@@ -1232,7 +1170,7 @@ describe('Async resolvers', () => {
         },
       });
 
-      const { data: { member } } = await client.query({ query });
+      const { data: { member } } = await client.query({ query })!;
       expect(member.name).toBe(testMember.name);
       expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
       expect(member.sessionCount).toBe(testMember.sessionCount);

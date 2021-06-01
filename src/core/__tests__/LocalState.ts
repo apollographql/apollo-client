@@ -1,10 +1,10 @@
-import { ApolloClient, InMemoryCache, gql } from '../..';
+import { ApolloClient, InMemoryCache, gql } from '../../core';
 
 /**
  * Creates an apollo-client instance with a local query resolver named 'localQuery'.
  * @param localQueryResolver resolver function to run for "localQuery" query.
  */
-const setupClientWithLocalQueryResolver = localQueryResolver => {
+const setupClientWithLocalQueryResolver = (localQueryResolver: any) => {
   const cache = new InMemoryCache();
 
   const resolvers = {

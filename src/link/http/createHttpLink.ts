@@ -1,6 +1,7 @@
-import { DefinitionNode } from 'graphql';
+import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
-import { Observable } from '../../utilities/observables/Observable';
+import { ApolloLink } from '../core';
+import { Observable } from '../../utilities';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
 import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';
@@ -12,8 +13,7 @@ import {
 } from './selectHttpOptionsAndBody';
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
-import { ApolloLink } from '../core/ApolloLink';
-import { fromError } from '../utils/fromError';
+import { fromError } from '../utils';
 
 export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   let {
@@ -22,6 +22,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     fetch: fetcher,
     includeExtensions,
     useGETForQueries,
+    includeUnusedVariables = false,
     ...requestOptions
   } = linkOptions;
 
@@ -85,6 +86,29 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       contextConfig,
     );
 
+    if (body.variables && !includeUnusedVariables) {
+      const unusedNames = new Set(Object.keys(body.variables));
+      visit(operation.query, {
+        Variable(node, _key, parent) {
+          // A variable type definition at the top level of a query is not
+          // enough to silence server-side errors about the variable being
+          // unused, so variable definitions do not count as usage.
+          // https://spec.graphql.org/draft/#sec-All-Variables-Used
+          if (parent && (parent as VariableDefinitionNode).kind !== 'VariableDefinition') {
+            unusedNames.delete(node.name.value);
+          }
+        },
+      });
+      if (unusedNames.size) {
+        // Make a shallow copy of body.variables (with keys in the same
+        // order) and then delete unused variables from the copy.
+        body.variables = { ...body.variables };
+        unusedNames.forEach(name => {
+          delete body.variables![name];
+        });
+      }
+    }
+
     let controller: any;
     if (!(options as any).signal) {
       const { controller: _controller, signal } = createSignalIfSupported();
@@ -118,7 +142,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     return new Observable(observer => {
-      fetcher(chosenURI, options)
+      fetcher!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
           return response;

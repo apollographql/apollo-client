@@ -1,26 +1,27 @@
-import { print } from 'graphql/language/printer';
-import stringify from 'fast-json-stable-stringify';
+import { print } from 'graphql';
 import { equal } from '@wry/equality';
+import { invariant } from 'ts-invariant';
 
-import { Observable } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
 import {
+  ApolloLink,
   Operation,
   GraphQLRequest,
   FetchResult,
-} from '../../../link/core/types';
+} from '../../../link/core';
+
 import {
+  Observable,
   addTypenameToDocument,
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
-} from '../../../utilities/graphql/transform';
-import { cloneDeep } from '../../../utilities/common/cloneDeep';
+  cloneDeep,
+} from '../../../utilities';
 
 export type ResultFunction<T> = () => T;
 
-export interface MockedResponse {
+export interface MockedResponse<TData = Record<string, any>> {
   request: GraphQLRequest;
-  result?: FetchResult | ResultFunction<FetchResult>;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
   error?: Error;
   delay?: number;
   newData?: ResultFunction<FetchResult>;
@@ -71,67 +72,73 @@ export class MockLink extends ApolloLink {
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
-    let responseIndex;
+    let responseIndex: number = 0;
     const response = (this.mockedResponsesByKey[key] || []).find(
       (res, index) => {
         const requestVariables = operation.variables || {};
         const mockedResponseVariables = res.request.variables || {};
-        if (
-          !equal(
-            stringify(requestVariables),
-            stringify(mockedResponseVariables)
-          )
-        ) {
-          return false;
+        if (equal(requestVariables, mockedResponseVariables)) {
+          responseIndex = index;
+          return true;
         }
-        responseIndex = index;
-        return true;
+        return false;
       }
     );
 
+    let configError: Error;
+
     if (!response || typeof responseIndex === 'undefined') {
-      this.onError(new Error(
+      configError = new Error(
         `No more mocked responses for the query: ${print(
           operation.query
         )}, variables: ${JSON.stringify(operation.variables)}`
-      ));
-    }
+      );
+    } else {
+      this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
-    this.mockedResponsesByKey[key].splice(responseIndex, 1);
+      const { newData } = response;
+      if (newData) {
+        response.result = newData();
+        this.mockedResponsesByKey[key].push(response);
+      }
 
-    const { newData } = response;
-
-    if (newData) {
-      response.result = newData();
-      this.mockedResponsesByKey[key].push(response);
-    }
-
-    const { result, error, delay } = response;
-
-    if (!result && !error) {
-      this.onError(new Error(
-        `Mocked response should contain either result or error: ${key}`
-      ));
+      if (!response.result && !response.error) {
+        configError = new Error(
+          `Mocked response should contain either result or error: ${key}`
+        );
+      }
     }
 
     return new Observable(observer => {
-      let timer = setTimeout(
-        () => {
-          if (error) {
+      const timer = setTimeout(() => {
+        if (configError) {
+          try {
+            // The onError function can return false to indicate that
+            // configError need not be passed to observer.error. For
+            // example, the default implementation of onError calls
+            // observer.error(configError) and then returns false to
+            // prevent this extra (harmless) observer.error call.
+            if (this.onError(configError, observer) !== false) {
+              throw configError;
+            }
+          } catch (error) {
             observer.error(error);
+          }
+        } else if (response) {
+          if (response.error) {
+            observer.error(response.error);
           } else {
-            if (result) {
+            if (response.result) {
               observer.next(
-                typeof result === 'function'
-                  ? (result as ResultFunction<FetchResult>)()
-                  : result
+                typeof response.result === 'function'
+                  ? (response.result as ResultFunction<FetchResult>)()
+                  : response.result
               );
             }
             observer.complete();
           }
-        },
-        delay ? delay : 0
-      );
+        }
+      }, response && response.delay || 0);
 
       return () => {
         clearTimeout(timer);
@@ -143,9 +150,11 @@ export class MockLink extends ApolloLink {
     mockedResponse: MockedResponse
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
-    newMockedResponse.request.query = removeConnectionDirectiveFromDocument(
-      newMockedResponse.request.query
+    const queryWithoutConnection = removeConnectionDirectiveFromDocument(
+        newMockedResponse.request.query
     );
+    invariant(queryWithoutConnection, "query is required");
+    newMockedResponse.request.query = queryWithoutConnection!;
     const query = removeClientSetsFromDocument(newMockedResponse.request.query);
     if (query) {
       newMockedResponse.request.query = query;
@@ -154,7 +163,7 @@ export class MockLink extends ApolloLink {
   }
 }
 
-interface MockApolloLink extends ApolloLink {
+export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
 }
 

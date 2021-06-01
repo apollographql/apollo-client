@@ -3,16 +3,15 @@
 export {
   ApolloClient,
   ApolloClientOptions,
-  DefaultOptions
-} from '../ApolloClient';
+  DefaultOptions,
+  mergeOptions,
+} from './ApolloClient';
 export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
-  ApolloCurrentQueryResult,
-} from '../core/ObservableQuery';
+} from './ObservableQuery';
 export {
-  QueryBaseOptions,
   QueryOptions,
   WatchQueryOptions,
   MutationOptions,
@@ -23,58 +22,74 @@ export {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   MutationUpdaterFn,
-} from '../core/watchQueryOptions';
-export { NetworkStatus } from '../core/networkStatus';
-export * from '../core/types';
+} from './watchQueryOptions';
+export { NetworkStatus } from './networkStatus';
+export * from './types';
 export {
   Resolver,
-  FragmentMatcher as LocalStateFragmentMatcher,
-} from '../core/LocalState';
-export { isApolloError, ApolloError } from '../errors/ApolloError';
+  FragmentMatcher,
+} from './LocalState';
+export { isApolloError, ApolloError } from '../errors';
 
 /* Cache */
 
-export * from '../cache';
+export {
+  // All the exports (types and values) from ../cache, minus cacheSlot,
+  // which we want to keep semi-private.
+  Cache,
+  ApolloCache,
+  Transaction,
+  DataProxy,
+  InMemoryCache,
+  InMemoryCacheConfig,
+  MissingFieldError,
+  defaultDataIdFromObject,
+  ReactiveVar,
+  makeVar,
+  TypePolicies,
+  TypePolicy,
+  FieldPolicy,
+  FieldReadFunction,
+  FieldMergeFunction,
+  FieldFunctionOptions,
+  PossibleTypesMap,
+} from '../cache';
+
+export * from '../cache/inmemory/types';
 
 /* Link */
 
-export { empty } from '../link/core/empty';
-export { from } from '../link/core/from';
-export { split } from '../link/core/split';
-export { concat } from '../link/core/concat';
-export { execute } from '../link/core/execute';
-export { ApolloLink } from '../link/core/ApolloLink';
-export * from '../link/core/types';
+export * from '../link/core';
+export * from '../link/http';
 export {
-  parseAndCheckHttpResponse,
-  ServerParseError
-} from '../link/http/parseAndCheckHttpResponse';
-export {
-  serializeFetchParameter,
-  ClientParseError
-} from '../link/http/serializeFetchParameter';
-export {
-  HttpOptions,
-  fallbackHttpConfig,
-  selectHttpOptionsAndBody,
-  UriFunction
-} from '../link/http/selectHttpOptionsAndBody';
-export { checkFetcher } from '../link/http/checkFetcher';
-export { createSignalIfSupported } from '../link/http/createSignalIfSupported';
-export { selectURI } from '../link/http/selectURI';
-export { createHttpLink } from '../link/http/createHttpLink';
-export { HttpLink } from '../link/http/HttpLink';
-export { fromError } from '../link/utils/fromError';
-export { toPromise } from '../link/utils/toPromise';
-export { fromPromise } from '../link/utils/fromPromise';
-export { ServerError, throwServerError } from '../link/utils/throwServerError';
+  fromError,
+  toPromise,
+  fromPromise,
+  ServerError,
+  throwServerError,
+} from '../link/utils';
+
+/* Utilities */
+
 export {
   Observable,
   Observer,
-  ObservableSubscription
-} from '../utilities/observables/Observable';
+  ObservableSubscription,
+  Reference,
+  isReference,
+  makeReference,
+  StoreObject,
+} from '../utilities';
 
 /* Supporting */
+
+// The verbosity of invariant.{log,warn,error} can be controlled globally
+// (for anyone using the same ts-invariant package) by passing "log",
+// "warn", "error", or "silent" to setVerbosity ("log" is the default).
+// Note that all invariant.* logging is hidden in production.
+import { setVerbosity } from "ts-invariant";
+export { setVerbosity as setLogVerbosity }
+setVerbosity("log");
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.
@@ -88,11 +103,10 @@ export {
 // workaround of pulling the extra properties off the `gql` function,
 // then re-exporting them separately, helps keeps bundlers happy without any
 // additional config changes.
-import gql from 'graphql-tag';
-export const {
+export {
+  default as gql,
   resetCaches,
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
-  disableExperimentalFragmentVariables
-} = gql;
-export { gql };
+  disableExperimentalFragmentVariables,
+} from 'graphql-tag';

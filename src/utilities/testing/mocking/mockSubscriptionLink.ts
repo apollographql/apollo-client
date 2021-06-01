@@ -1,6 +1,5 @@
-import { Observable } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../../link/core/ApolloLink';
-import { FetchResult, Operation } from '../../../link/core/types';
+import { Observable } from '../../../utilities';
+import { ApolloLink, FetchResult, Operation } from '../../../link/core';
 
 export interface MockedSubscription {
   request: Operation;
@@ -15,17 +14,19 @@ export interface MockedSubscriptionResult {
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
   public setups: any[] = [];
+  public operation: Operation;
 
-  private observer: any;
+  private observers: any[] = [];
 
   constructor() {
     super();
   }
 
-  public request(_req: any) {
+  public request(operation: Operation) {
+    this.operation = operation;
     return new Observable<FetchResult>(observer => {
       this.setups.forEach(x => x());
-      this.observer = observer;
+      this.observers.push(observer);
       return () => {
         this.unsubscribers.forEach(x => x());
       };
@@ -34,18 +35,22 @@ export class MockSubscriptionLink extends ApolloLink {
 
   public simulateResult(result: MockedSubscriptionResult, complete = false) {
     setTimeout(() => {
-      const { observer } = this;
-      if (!observer) throw new Error('subscription torn down');
-      if (complete && observer.complete) observer.complete();
-      if (result.result && observer.next) observer.next(result.result);
-      if (result.error && observer.error) observer.error(result.error);
+      const { observers } = this;
+      if (!observers.length) throw new Error('subscription torn down');
+      observers.forEach(observer => {
+        if (result.result && observer.next) observer.next(result.result);
+        if (result.error && observer.error) observer.error(result.error);
+        if (complete && observer.complete) observer.complete();
+      });
     }, result.delay || 0);
   }
 
   public simulateComplete() {
-    const { observer } = this;
-    if (!observer) throw new Error('subscription torn down');
-    if (observer.complete) observer.complete();
+    const { observers } = this;
+    if (!observers.length) throw new Error('subscription torn down');
+    observers.forEach(observer => {
+      if (observer.complete) observer.complete();
+    })
   }
 
   public onSetup(listener: any): void {

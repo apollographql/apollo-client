@@ -1,18 +1,24 @@
 export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';
 export { DataProxy } from './core/types/DataProxy';
+export { MissingFieldError } from './core/types/common';
 
 export {
   Reference,
   isReference,
   makeReference,
-} from '../utilities/graphql/storeUtils';
+} from '../utilities';
 
 export {
   InMemoryCache,
   InMemoryCacheConfig,
-  LocalVar,
 } from './inmemory/inMemoryCache';
+
+export {
+  ReactiveVar,
+  makeVar,
+  cacheSlot,
+} from './inmemory/reactiveVars';
 
 export {
   defaultDataIdFromObject,

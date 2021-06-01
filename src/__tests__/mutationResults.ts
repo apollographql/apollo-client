@@ -1,13 +1,12 @@
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
+import { GraphQLError } from 'graphql';
 
-import { Observable, Subscription } from '../utilities/observables/Observable';
-import { ApolloLink } from '../link/core/ApolloLink';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { ApolloClient } from '..';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { withWarning } from '../utilities/testing/wrap';
-import { itAsync } from '../utilities/testing/itAsync';
+import { ApolloClient } from '../core';
+import { InMemoryCache } from '../cache';
+import { ApolloLink } from '../link/core';
+import { Observable, ObservableSubscription as Subscription } from '../utilities';
+import { itAsync, subscribeAndCount, mockSingleLink } from '../testing';
 
 describe('mutation results', () => {
   const query = gql`
@@ -117,20 +116,15 @@ describe('mutation results', () => {
     },
   };
 
-  let client: ApolloClient<any>;
-  let link: any;
-
-  function setupObsHandle(
+  function setupObsQuery(
     reject: (reason: any) => any,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink({
-      request: { query: queryWithTypename } as any,
-      result,
-    }, ...mockedResponses).setOnError(reject);
-
-    client = new ApolloClient({
-      link,
+    const client = new ApolloClient({
+      link: mockSingleLink({
+        request: { query: queryWithTypename } as any,
+        result,
+      }, ...mockedResponses),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
@@ -143,25 +137,26 @@ describe('mutation results', () => {
       }),
     });
 
-    return client.watchQuery({
-      query,
-      notifyOnNetworkStatusChange: false,
-    });
+    return {
+      client,
+      obsQuery: client.watchQuery({
+        query,
+        notifyOnNetworkStatusChange: false,
+      }),
+    };
   }
 
-  function setupDelayObsHandle(
+  function setupDelayObsQuery(
     reject: (reason: any) => any,
     delay: number,
     ...mockedResponses: any[]
   ) {
-    link = mockSingleLink({
-      request: { query: queryWithTypename } as any,
-      result,
-      delay,
-    }, ...mockedResponses).setOnError(reject);
-
-    client = new ApolloClient({
-      link,
+    const client = new ApolloClient({
+      link: mockSingleLink({
+        request: { query: queryWithTypename } as any,
+        result,
+        delay,
+      }, ...mockedResponses).setOnError(reject),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
@@ -174,22 +169,18 @@ describe('mutation results', () => {
       }),
     });
 
-    return client.watchQuery({
-      query,
-      notifyOnNetworkStatusChange: false,
-    });
-  }
-
-  function setup(
-    reject: (reason: any) => any,
-    ...mockedResponses: any[]
-  ) {
-    const obsHandle = setupObsHandle(reject, ...mockedResponses);
-    return obsHandle.result();
+    return {
+      client,
+      obsQuery: client.watchQuery({
+        query,
+        notifyOnNetworkStatusChange: false,
+      }),
+    };
   }
 
   itAsync('correctly primes cache for tests', (resolve, reject) => {
-    return setup(reject).then(
+    const { client, obsQuery } = setupObsQuery(reject);
+    return obsQuery.result().then(
       () => client.query({ query })
     ).then(resolve, reject);
   });
@@ -217,20 +208,18 @@ describe('mutation results', () => {
       },
     };
 
-    return setup(reject, {
+    const { client, obsQuery } = setupObsQuery(reject, {
       request: { query: mutation },
       result: mutationResult,
-    })
-      .then(() => {
-        return client.mutate({ mutation });
-      })
-      .then(() => {
-        return client.query({ query });
-      })
-      .then((newResult: any) => {
-        expect(newResult.data.todoList.todos[0].completed).toBe(true);
-      })
-      .then(resolve, reject);
+    });
+
+    return obsQuery.result().then(() => {
+      return client.mutate({ mutation });
+    }).then(() => {
+      return client.query({ query });
+    }).then((newResult: any) => {
+      expect(newResult.data.todoList.todos[0].completed).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('correctly integrates field changes by default with variables', (resolve, reject) => {
@@ -299,7 +288,7 @@ describe('mutation results', () => {
       next: result => {
         if (count === 0) {
           client.mutate({ mutation, variables: { signature: '1234' } });
-          expect(result.data.mini.cover).toBe('image');
+          expect(result.data!.mini.cover).toBe('image');
 
           setTimeout(() => {
             if (count === 0)
@@ -309,7 +298,7 @@ describe('mutation results', () => {
           }, 250);
         }
         if (count === 1) {
-          expect(result.data.mini.cover).toBe('image2');
+          expect(result.data!.mini.cover).toBe('image2');
           resolve();
         }
         count++;
@@ -318,10 +307,102 @@ describe('mutation results', () => {
     });
   });
 
+  itAsync("should write results to cache according to errorPolicy", async (resolve, reject) => {
+    const expectedFakeError = new GraphQLError("expected/fake error");
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Person: {
+            keyFields: ["name"],
+          },
+        },
+      }),
+
+      link: new ApolloLink(operation => new Observable(observer => {
+        observer.next({
+          errors: [
+            expectedFakeError,
+          ],
+          data: {
+            newPerson: {
+              __typename: "Person",
+              name: operation.variables.newName,
+            },
+          },
+        });
+        observer.complete();
+      })).setOnError(reject),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await client.mutate({
+      mutation,
+      variables: {
+        newName: "Hugh Willson",
+      },
+    }).then(() => {
+      reject("should have thrown for default errorPolicy");
+    }, error => {
+      expect(error.message).toBe(expectedFakeError.message);
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    const ignoreErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "ignore",
+      variables: {
+        newName: "Jenn Creighton",
+      },
+    });
+
+    expect(ignoreErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Jenn Creighton",
+        },
+      },
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    const allErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "all",
+      variables: {
+        newName: "Ellen Shapiro",
+      },
+    });
+
+    expect(allErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Ellen Shapiro",
+        },
+      },
+      errors: [
+        expectedFakeError,
+      ],
+    });
+
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    resolve();
+  });
+
   itAsync("should warn when the result fields don't match the query fields", (resolve, reject) => {
     let handle: any;
     let subscriptionHandle: Subscription;
-    let counter = 0;
 
     const queryTodos = gql`
       query todos {
@@ -368,48 +449,49 @@ describe('mutation results', () => {
       },
     };
 
-    return withWarning(() => {
-      return setup(
-        reject,
-        {
-          request: { query: queryTodos },
-          result: queryTodosResult,
-        },
-        {
-          request: { query: mutationTodo },
-          result: mutationTodoResult,
-        },
-      )
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            handle = client.watchQuery({ query: queryTodos });
-            subscriptionHandle = handle.subscribe({
-              next(res: any) {
-                counter++;
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          return client.mutate({
-            mutation: mutationTodo,
-            updateQueries: {
-              todos: (prev, { mutationResult }) => {
-                const newTodo = (mutationResult as any).data.createTodo;
+    const { client, obsQuery } = setupObsQuery(
+      reject,
+      {
+        request: { query: queryTodos },
+        result: queryTodosResult,
+      },
+      {
+        request: { query: mutationTodo },
+        result: mutationTodoResult,
+      },
+    );
 
-                const newResults = {
-                  todos: [...(prev as any).todos, newTodo],
-                };
-                return newResults;
-              },
-            },
-          });
-        })
-        .then(() => subscriptionHandle.unsubscribe())
-        .then(resolve, reject);
-    }, /Missing field description/);
+    return obsQuery.result().then(() => {
+      // we have to actually subscribe to the query to be able to update it
+      return new Promise(resolve => {
+        handle = client.watchQuery({ query: queryTodos });
+        subscriptionHandle = handle.subscribe({
+          next(res: any) {
+            resolve(res);
+          },
+        });
+      });
+    }).then(() => client.mutate({
+      mutation: mutationTodo,
+      updateQueries: {
+        todos: (prev, { mutationResult }) => {
+          const newTodo = (mutationResult as any).data.createTodo;
+          const newResults = {
+            todos: [...(prev as any).todos, newTodo],
+          };
+          return newResults;
+        },
+      },
+    })).then(
+      () => {
+        subscriptionHandle.unsubscribe();
+        fail("should have errored");
+      },
+      error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toMatch(/Missing field 'description' /);
+      },
+    ).then(resolve, reject);
   });
 
   describe('updateQueries', () => {
@@ -440,54 +522,48 @@ describe('mutation results', () => {
 
     itAsync('analogous of ARRAY_INSERT', (resolve, reject) => {
       let subscriptionHandle: Subscription;
-      return setup(reject, {
+      const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
         result: mutationResult,
-      })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          return client.mutate({
-            mutation,
-            updateQueries: {
-              todoList: (prev, options) => {
-                const mResult = options.mutationResult as any;
-                expect(mResult.data.createTodo.id).toBe('99');
-                expect(mResult.data.createTodo.text).toBe(
-                  'This one was created with a mutation.',
-                );
+      });
 
-                const state = cloneDeep(prev) as any;
-                state.todoList.todos.unshift(mResult.data.createTodo);
-                return state;
-              },
+      return obsQuery.result().then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
             },
           });
-        })
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
+        });
+      }).then(() => client.mutate({
+        mutation,
+        updateQueries: {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+            expect(mResult.data.createTodo.id).toBe('99');
+            expect(mResult.data.createTodo.text).toBe(
+              'This one was created with a mutation.',
+            );
+            const state = cloneDeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        },
+      })).then(
+        () => client.query({ query })
+      ).then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
 
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(4);
+        // There should be one more todo item than before
+        expect(newResult.data.todoList.todos.length).toBe(4);
 
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
-            'This one was created with a mutation.',
-          );
-        })
-        .then(resolve, reject);
+        // Since we used `prepend` it should be at the front
+        expect(newResult.data.todoList.todos[0].text).toBe(
+          'This one was created with a mutation.',
+        );
+      }).then(resolve, reject);
     });
 
     itAsync('does not fail if optional query variables are not supplied', (resolve, reject) => {
@@ -509,69 +585,63 @@ describe('mutation results', () => {
         requiredVar: 'x',
         // optionalVar: 'y',
       };
-      return setup(reject, {
+      const { client, obsQuery } = setupObsQuery(reject, {
         request: {
           query: mutationWithVars,
           variables,
         },
         result: mutationResult,
-      })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({
-              query,
-              variables,
-            });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          return client.mutate({
-            mutation: mutationWithVars,
-            variables,
-            updateQueries: {
-              todoList: (prev, options) => {
-                const mResult = options.mutationResult as any;
-                expect(mResult.data.createTodo.id).toBe('99');
-                expect(mResult.data.createTodo.text).toBe(
-                  'This one was created with a mutation.',
-                );
+      });
 
-                const state = cloneDeep(prev) as any;
-                state.todoList.todos.unshift(mResult.data.createTodo);
-                return state;
-              },
+      return obsQuery.result().then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise(resolve => {
+          const handle = client.watchQuery({
+            query,
+            variables,
+          });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
             },
           });
-        })
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
+        });
+      }).then(() => client.mutate({
+        mutation: mutationWithVars,
+        variables,
+        updateQueries: {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+            expect(mResult.data.createTodo.id).toBe('99');
+            expect(mResult.data.createTodo.text).toBe(
+              'This one was created with a mutation.',
+            );
+            const state = cloneDeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        },
+      })).then(() => {
+        return client.query({ query });
+      }).then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
 
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(4);
+        // There should be one more todo item than before
+        expect(newResult.data.todoList.todos.length).toBe(4);
 
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
-            'This one was created with a mutation.',
-          );
-        })
-        .then(resolve, reject);
+        // Since we used `prepend` it should be at the front
+        expect(newResult.data.todoList.todos[0].text).toBe(
+          'This one was created with a mutation.',
+        );
+      }).then(resolve, reject);
     });
 
     itAsync('does not fail if the query did not complete correctly', (resolve, reject) => {
-      const obsHandle = setupObsHandle(reject, {
+      const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
         result: mutationResult,
       });
-      const subs = obsHandle.subscribe({
+      const subs = obsQuery.subscribe({
         next: () => null,
       });
       // Cancel the query right away!
@@ -595,11 +665,11 @@ describe('mutation results', () => {
     });
 
     itAsync('does not fail if the query did not finish loading', (resolve, reject) => {
-      const obsHandle = setupDelayObsHandle(reject, 15, {
+      const { client, obsQuery } = setupDelayObsQuery(reject, 15, {
         request: { query: mutation },
         result: mutationResult,
       });
-      obsHandle.subscribe({
+      obsQuery.subscribe({
         next: () => null,
       });
       return client.mutate({
@@ -621,7 +691,7 @@ describe('mutation results', () => {
     });
 
     itAsync('does not make next queries fail if a mutation fails', (resolve, reject) => {
-      const obsHandle = setupObsHandle(
+      const { client, obsQuery } = setupObsQuery(
         error => { throw error },
         {
           request: { query: mutation },
@@ -633,7 +703,7 @@ describe('mutation results', () => {
         },
       );
 
-      obsHandle.subscribe({
+      obsQuery.subscribe({
         next() {
           client
             .mutate({
@@ -668,7 +738,7 @@ describe('mutation results', () => {
             )
             .then(
               () => reject(new Error('Mutation should have failed')),
-              () => obsHandle.refetch(),
+              () => obsQuery.refetch(),
             )
             .then(resolve, reject);
         },
@@ -676,45 +746,36 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
-      return setup(reject, {
+      const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
         result: mutationResult,
-      })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          return client.mutate({
-            mutation,
-            updateQueries: {
-              todoList: () => {
-                throw new Error(`Hello... It's me.`);
-              },
+      });
+
+      return obsQuery.result().then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
             },
           });
-        })
-        .then(() => {
-          subscriptionHandle.unsubscribe();
-          expect(errors).toHaveLength(1);
-          expect(errors[0].message).toBe(`Hello... It's me.`);
-          console.error = oldError;
-        })
-        .then(resolve, reject);
+        });
+      }).then(() => client.mutate({
+        mutation,
+        updateQueries: {
+          todoList: () => {
+            throw new Error(`Hello... It's me.`);
+          },
+        },
+      })).then(() => {
+        subscriptionHandle.unsubscribe();
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
+      }).then(resolve, reject);
     });
   });
 
@@ -761,19 +822,17 @@ describe('mutation results', () => {
       },
     };
 
-    link = mockSingleLink({
-      request: { query: variableQuery, variables: variables1 } as any,
-      result: result1,
-    }, {
-      request: { query: variableQuery, variables: variables2 } as any,
-      result: result2,
-    }, {
-      request: { query: resetMutation } as any,
-      result: resetMutationResult,
-    }).setOnError(reject);
-
-    client = new ApolloClient({
-      link,
+    const client = new ApolloClient({
+      link: mockSingleLink({
+        request: { query: variableQuery, variables: variables1 } as any,
+        result: result1,
+      }, {
+        request: { query: variableQuery, variables: variables2 } as any,
+        result: result2,
+      }, {
+        request: { query: resetMutation } as any,
+        result: resetMutationResult,
+      }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -790,28 +849,23 @@ describe('mutation results', () => {
     // Cancel the query right away!
     firstSubs.unsubscribe();
 
-    let yieldCount = 0;
-    watchedQuery.subscribe({
-      next: ({ data }: any) => {
-        yieldCount += 1;
-        if (yieldCount === 1) {
-          expect(data.echo).toBe('b');
-          client.mutate({
-            mutation: resetMutation,
-            updateQueries: {
-              Echo: () => {
-                return { echo: '0' };
-              },
+    subscribeAndCount(reject, watchedQuery, (count, result) => {
+      if (count === 1) {
+        expect(result.data).toEqual({ echo: "a" });
+      } else if (count === 2) {
+        expect(result.data).toEqual({ echo: "b" });
+        client.mutate({
+          mutation: resetMutation,
+          updateQueries: {
+            Echo: () => {
+              return { echo: "0" };
             },
-          });
-        } else if (yieldCount === 2) {
-          expect(data.echo).toBe('0');
-          resolve();
-        }
-      },
-      error: () => {
-        // Do nothing, but quash unhandled error
-      },
+          },
+        });
+      } else if (count === 3) {
+        expect(result.data).toEqual({ echo: "0" });
+        resolve();
+      }
     });
 
     watchedQuery.refetch(variables2);
@@ -820,7 +874,7 @@ describe('mutation results', () => {
   itAsync('allows mutations with optional arguments', (resolve, reject) => {
     let count = 0;
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
         ({ variables }: any) =>
@@ -899,7 +953,7 @@ describe('mutation results', () => {
   itAsync('allows mutations with default values', (resolve, reject) => {
     let count = 0;
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
         ({ variables }: any) =>
@@ -976,7 +1030,7 @@ describe('mutation results', () => {
   itAsync('will pass null to the network interface when provided', (resolve, reject) => {
     let count = 0;
 
-    client = new ApolloClient({
+    const client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
         ({ variables }: any) =>
@@ -1079,70 +1133,65 @@ describe('mutation results', () => {
 
     itAsync('analogous of ARRAY_INSERT', (resolve, reject) => {
       let subscriptionHandle: Subscription;
-      return setup(reject, {
+      const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
         result: mutationResult,
-      })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          return client.mutate({
-            mutation,
-            update: (proxy, mResult: any) => {
-              expect(mResult.data.createTodo.id).toBe('99');
-              expect(mResult.data.createTodo.text).toBe(
-                'This one was created with a mutation.',
-              );
+      });
 
-              const id = 'TodoList5';
-              const fragment = gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `;
-
-              const data: any = proxy.readFragment({ id, fragment });
-
-              proxy.writeFragment({
-                data: {
-                  ...data,
-                  todos: [mResult.data.createTodo, ...data.todos],
-                },
-                id,
-                fragment,
-              });
+      return obsQuery.result().then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
             },
           });
-        })
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
-
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(4);
-
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
+        });
+      }).then(() => client.mutate({
+        mutation,
+        update: (proxy, mResult: any) => {
+          expect(mResult.data.createTodo.id).toBe('99');
+          expect(mResult.data.createTodo.text).toBe(
             'This one was created with a mutation.',
           );
-        })
-        .then(resolve, reject);
+
+          const id = 'TodoList5';
+          const fragment = gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `;
+
+          const data: any = proxy.readFragment({ id, fragment });
+
+          proxy.writeFragment({
+            data: {
+              ...data,
+              todos: [mResult.data.createTodo, ...data.todos],
+            },
+            id,
+            fragment,
+          });
+        },
+      })).then(() => {
+        return client.query({ query });
+      }).then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+
+        // There should be one more todo item than before
+        expect(newResult.data.todoList.todos.length).toBe(4);
+
+        // Since we used `prepend` it should be at the front
+        expect(newResult.data.todoList.todos[0].text).toBe(
+          'This one was created with a mutation.',
+        );
+      }).then(resolve, reject);
     });
 
     itAsync('does not fail if optional query variables are not supplied', (resolve, reject) => {
@@ -1164,81 +1213,77 @@ describe('mutation results', () => {
         requiredVar: 'x',
         // optionalVar: 'y',
       };
-      return setup(reject, {
+
+      const { client, obsQuery } = setupObsQuery(reject, {
         request: {
           query: mutationWithVars,
           variables,
         },
         result: mutationResult,
-      })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({
-              query,
-              variables,
-            });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          return client.mutate({
-            mutation: mutationWithVars,
+      });
+
+      return obsQuery.result().then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise(resolve => {
+          const handle = client.watchQuery({
+            query,
             variables,
-            update: (proxy, mResult: any) => {
-              expect(mResult.data.createTodo.id).toBe('99');
-              expect(mResult.data.createTodo.text).toBe(
-                'This one was created with a mutation.',
-              );
-
-              const id = 'TodoList5';
-              const fragment = gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `;
-
-              const data: any = proxy.readFragment({ id, fragment });
-
-              proxy.writeFragment({
-                data: {
-                  ...data,
-                  todos: [mResult.data.createTodo, ...data.todos],
-                },
-                id,
-                fragment,
-              });
+          });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
             },
           });
-        })
-        .then(() => {
-          return client.query({ query });
-        })
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
-
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(4);
-
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
+        });
+      }).then(() => client.mutate({
+        mutation: mutationWithVars,
+        variables,
+        update: (proxy, mResult: any) => {
+          expect(mResult.data.createTodo.id).toBe('99');
+          expect(mResult.data.createTodo.text).toBe(
             'This one was created with a mutation.',
           );
-        })
-        .then(resolve, reject);
+
+          const id = 'TodoList5';
+          const fragment = gql`
+            fragment todoList on TodoList {
+              todos {
+                id
+                text
+                completed
+                __typename
+              }
+            }
+          `;
+
+          const data: any = proxy.readFragment({ id, fragment });
+
+          proxy.writeFragment({
+            data: {
+              ...data,
+              todos: [mResult.data.createTodo, ...data.todos],
+            },
+            id,
+            fragment,
+          });
+        },
+      })).then(() => {
+        return client.query({ query });
+      }).then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+
+        // There should be one more todo item than before
+        expect(newResult.data.todoList.todos.length).toBe(4);
+
+        // Since we used `prepend` it should be at the front
+        expect(newResult.data.todoList.todos[0].text).toBe(
+          'This one was created with a mutation.',
+        );
+      }).then(resolve, reject);
     });
 
     itAsync('does not make next queries fail if a mutation fails', (resolve, reject) => {
-      const obsHandle = setupObsHandle(
+      const { client, obsQuery } = setupObsQuery(
         error => { throw error },
         {
           request: { query: mutation },
@@ -1250,7 +1295,7 @@ describe('mutation results', () => {
         },
       );
 
-      obsHandle.subscribe({
+      obsQuery.subscribe({
         next() {
           client
             .mutate({
@@ -1323,7 +1368,7 @@ describe('mutation results', () => {
             )
             .then(
               () => reject(new Error('Mutation should have failed')),
-              () => obsHandle.refetch(),
+              () => obsQuery.refetch(),
             )
             .then(resolve, reject);
         },
@@ -1331,43 +1376,71 @@ describe('mutation results', () => {
     });
 
     itAsync('error handling in reducer functions', (resolve, reject) => {
-      const oldError = console.error;
-      const errors: any[] = [];
-      console.error = (msg: string) => {
-        errors.push(msg);
-      };
-
       let subscriptionHandle: Subscription;
-      return setup(reject, {
+      const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
         result: mutationResult,
-      })
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise(resolve => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() => {
-          return client.mutate({
-            mutation,
-            update: () => {
-              throw new Error(`Hello... It's me.`);
+      });
+
+      return obsQuery.result().then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise(resolve => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
             },
           });
-        })
-        .then(() => {
-          subscriptionHandle.unsubscribe();
-          expect(errors).toHaveLength(1);
-          expect(errors[0].message).toBe(`Hello... It's me.`);
-          console.error = oldError;
-        })
-        .then(resolve, reject);
+        });
+      }).then(() => client.mutate({
+        mutation,
+        update: () => {
+          throw new Error(`Hello... It's me.`);
+        },
+      })).then(() => {
+        subscriptionHandle.unsubscribe();
+        reject("should have thrown");
+      }, error => {
+        subscriptionHandle.unsubscribe();
+        expect(error.message).toBe(`Hello... It's me.`);
+      }).then(resolve, reject);
     });
+
+    itAsync('mutate<MyType>() data should never be `undefined` in case of success', (resolve, reject) => {
+
+      const mutation = gql`
+        mutation Foo {
+          foo {
+            bar
+          }
+        }
+      `;
+
+      const result1 = {
+        data: {
+          foo: {
+            bar: 'a',
+          },
+        },
+      };
+
+      const client = new ApolloClient({
+        link: mockSingleLink({
+          request: {query: mutation} as any,
+          result: result1,
+
+        }).setOnError(reject),
+        cache: new InMemoryCache({addTypename: false}),
+      });
+
+      client.mutate<{ foo: { bar: string; }; }>({
+        mutation: mutation,
+      }).then(result => {
+        // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'.", even without `!` operator
+        if (result.data!.foo.bar) {
+          resolve();
+        }
+      }, reject);
+    })
   });
 });

@@ -2,17 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Test",
-      "request": "launch",
       "type": "node",
-      "program":
-        "${workspaceRoot}/packages/apollo-client/node_modules/jest/bin/jest.js",
-      "internalConsoleOptions": "openOnSessionStart",
-      "stopOnEntry": false,
-      "args": ["-i"],
-      "cwd": "${workspaceRoot}/packages/apollo-client",
-      "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/lib/**/*"]
+      "request": "launch",
+      "name": "Jest Current File",
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": [
+        "${fileBasenameNoExtension}",
+        "--config",
+        "./config/jest.config.js"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true,
+      "windows": {
+        "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+      }
     }
   ]
 }

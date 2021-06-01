@@ -1,6 +1,6 @@
 import { InvariantError, invariant } from 'ts-invariant';
 
-import { Observable } from '../../utilities/observables/Observable';
+import { Observable } from '../../utilities';
 import {
   NextLink,
   Operation,
@@ -8,12 +8,14 @@ import {
   FetchResult,
   GraphQLRequest
 } from './types';
-import { validateOperation } from '../utils/validateOperation';
-import { createOperation } from '../utils/createOperation';
-import { transformOperation } from '../utils/transformOperation';
+import {
+  validateOperation,
+  createOperation,
+  transformOperation,
+} from '../utils';
 
 function passthrough(op: Operation, forward: NextLink) {
-  return forward ? forward(op) : Observable.of();
+  return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
 }
 
 function toLink(handler: RequestHandler | ApolloLink) {
@@ -25,7 +27,7 @@ function isTerminating(link: ApolloLink): boolean {
 }
 
 class LinkError extends Error {
-  public link: ApolloLink;
+  public link?: ApolloLink;
   constructor(message?: string, link?: ApolloLink) {
     super(message);
     this.link = link;
@@ -37,7 +39,7 @@ export class ApolloLink {
     return new ApolloLink(() => Observable.of());
   }
 
-  public static from(links: ApolloLink[]): ApolloLink {
+  public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
     if (links.length === 0) return ApolloLink.empty();
     return links.map(toLink).reduce((x, y) => x.concat(y)) as ApolloLink;
   }
@@ -139,11 +141,25 @@ export class ApolloLink {
     throw new InvariantError('request is not implemented');
   }
 
-  protected onError(reason: any) {
-    throw reason;
+  protected onError(
+    error: any,
+    observer?: ZenObservable.Observer<FetchResult>,
+  ): false | void {
+    if (observer && observer.error) {
+      observer.error(error);
+      // Returning false indicates that observer.error does not need to be
+      // called again, since it was already called (on the previous line).
+      // Calling observer.error again would not cause any real problems,
+      // since only the first call matters, but custom onError functions
+      // might have other reasons for wanting to prevent the default
+      // behavior by returning false.
+      return false;
+    }
+    // Throw errors will be passed to observer.error.
+    throw error;
   }
 
-  public setOnError(fn: (reason: any) => any): this {
+  public setOnError(fn: ApolloLink["onError"]): this {
     this.onError = fn;
     return this;
   }

@@ -1,5 +1,6 @@
 ---
 title: Context Link
+sidebar_title: Context
 description: Easily set a context on your operation, which is used by other links further down the chain.
 ---
 
@@ -8,7 +9,7 @@ description: Easily set a context on your operation, which is used by other link
 The `setContext` function accepts a function that returns either an object or a promise, which then returns an object to set the new context of a request. It receives two arguments: the GraphQL request being executed, and the previous context. This link makes it easy to perform the asynchronous lookup of things like authentication tokens and more.
 
 ```js
-import { setContext } from "@apollo/link-context";
+import { setContext } from "@apollo/client/link/context";
 
 const setAuthorizationLink = setContext((request, previousContext) => ({
   headers: {authorization: "1234"}
@@ -32,8 +33,8 @@ Typically async actions can be expensive and may not need to be called for every
 Take for example a user auth token being found, cached, then removed on a 401 response:
 
 ```js
-import { setContext } from "@apollo/link-context";
-import { onError } from "@apollo/link-error";
+import { setContext } from "@apollo/client/link/context";
+import { onError } from "@apollo/client/link/error";
 
 // cached storage for the user token
 let token;

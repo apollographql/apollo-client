@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import { ObservableQuery } from '../../core/ObservableQuery';
+import { ObservableQuery } from '../../core';
 import { QueryDataOptions } from '../types/types';
 import { QueryData } from '../data/QueryData';
 
@@ -25,6 +25,11 @@ export class RenderPromises {
   // getMarkupFromTree process, whereas specific Query instances do not survive
   // beyond a single call to renderToStaticMarkup.
   private queryInfoTrie = new Map<DocumentNode, Map<string, QueryInfo>>();
+
+  public clear() {
+    this.queryPromises.clear();
+    this.queryInfoTrie.clear();
+  }
 
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables>(

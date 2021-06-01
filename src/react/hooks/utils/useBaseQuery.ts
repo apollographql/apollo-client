@@ -1,4 +1,6 @@
+import { useContext, useEffect, useReducer, useRef } from 'react';
 import { DocumentNode } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import {
   QueryHookOptions,
@@ -6,34 +8,43 @@ import {
   QueryTuple,
   QueryResult,
 } from '../../types/types';
-import { QueryData } from '../../data/QueryData';
+import { QueryData } from '../../data';
 import { useDeepMemo } from './useDeepMemo';
-import { OperationVariables } from '../../../core/types';
-import { getApolloContext } from '../../context/ApolloContext';
-import { requireReactLazily } from '../../react';
+import { OperationVariables } from '../../../core';
+import { getApolloContext } from '../../context';
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
-  query: DocumentNode,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: QueryHookOptions<TData, TVariables>,
   lazy = false
 ) {
-  const React = requireReactLazily();
-  const { useContext, useEffect, useReducer, useRef } = React;
   const context = useContext(getApolloContext());
   const [tick, forceUpdate] = useReducer(x => x + 1, 0);
   const updatedOptions = options ? { ...options, query } : { query };
 
   const queryDataRef = useRef<QueryData<TData, TVariables>>();
-
-  if (!queryDataRef.current) {
+  const queryData = queryDataRef.current || (
     queryDataRef.current = new QueryData<TData, TVariables>({
       options: updatedOptions as QueryDataOptions<TData, TVariables>,
       context,
-      forceUpdate
-    });
-  }
+      onNewData() {
+        if (!queryData.ssrInitiated()) {
+          // When new data is received from the `QueryData` object, we want to
+          // force a re-render to make sure the new data is displayed. We can't
+          // force that re-render if we're already rendering however so to be
+          // safe we'll trigger the re-render in a microtask. In case the
+          // component gets unmounted before this callback fires, we re-check
+          // queryDataRef.current before calling forceUpdate().
+          Promise.resolve().then(() => queryDataRef.current && forceUpdate());
+        } else {
+          // If we're rendering on the server side we can force an update at
+          // any point.
+          forceUpdate();
+        }
+      }
+    })
+  );
 
-  const queryData = queryDataRef.current;
   queryData.setOptions(updatedOptions);
   queryData.context = context;
 
@@ -59,16 +70,16 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     ? (result as QueryTuple<TData, TVariables>)[1]
     : (result as QueryResult<TData, TVariables>);
 
-  useEffect(() => queryData.afterExecute({ queryResult, lazy }), [
-    queryResult.loading,
-    queryResult.networkStatus,
-    queryResult.error,
-    queryResult.data
-  ]);
-
   useEffect(() => {
     return () => queryData.cleanup();
   }, []);
+
+  useEffect(() => queryData.afterExecute({ lazy }), [
+    queryResult.loading,
+    queryResult.networkStatus,
+    queryResult.error,
+    queryResult.data,
+  ]);
 
   return result;
 }

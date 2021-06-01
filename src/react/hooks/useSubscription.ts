@@ -1,17 +1,16 @@
+import { useContext, useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { SubscriptionHookOptions } from '../types/types';
-import { SubscriptionData } from '../data/SubscriptionData';
-import { OperationVariables } from '../../core/types';
-import { getApolloContext } from '../context/ApolloContext';
-import { requireReactLazily } from '../react';
+import { SubscriptionData } from '../data';
+import { OperationVariables } from '../../core';
+import { getApolloContext } from '../context';
 
 export function useSubscription<TData = any, TVariables = OperationVariables>(
-  subscription: DocumentNode,
+  subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SubscriptionHookOptions<TData, TVariables>
 ) {
-  const React = requireReactLazily();
-  const { useContext, useState, useRef, useEffect } = React;
   const context = useContext(getApolloContext());
   const updatedOptions = options
     ? { ...options, subscription }

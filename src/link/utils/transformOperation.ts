@@ -1,5 +1,5 @@
-import { GraphQLRequest, Operation } from '../core/types';
-import { getOperationName } from '../../utilities/graphql/getFromAST';
+import { GraphQLRequest, Operation } from '../core';
+import { getOperationName } from '../../utilities';
 
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   const transformedOperation: GraphQLRequest = {
@@ -13,7 +13,7 @@ export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   if (!transformedOperation.operationName) {
     transformedOperation.operationName =
       typeof transformedOperation.query !== 'string'
-        ? getOperationName(transformedOperation.query)
+        ? getOperationName(transformedOperation.query) || undefined
         : '';
   }
 

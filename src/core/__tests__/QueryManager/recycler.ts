@@ -14,6 +14,7 @@ import {
 
 // core
 import { QueryManager } from '../../QueryManager';
+import { ObservableQuery } from '../../ObservableQuery';
 
 describe('Subscription lifecycles', () => {
   it('cleans up and reuses data like QueryRecycler wants', done => {
@@ -48,11 +49,10 @@ describe('Subscription lifecycles', () => {
       fetchPolicy: 'cache-and-network',
     });
 
-    const observableQueries = [];
-    let count = 0;
+    const observableQueries: { observableQuery: ObservableQuery, subscription: ZenObservable.Subscription; }[] = [];
 
     const resubscribe = () => {
-      const { observableQuery, subscription } = observableQueries.pop();
+      const { observableQuery, subscription } = observableQueries.pop()!;
       subscription.unsubscribe();
 
       observableQuery.setOptions({
@@ -64,43 +64,34 @@ describe('Subscription lifecycles', () => {
     };
 
     const sub = observable.subscribe({
-      next: result => {
-        count++;
-        if (count === 1) {
-          expect(result.data).toBeUndefined();
-          expect(result.loading).toBe(true);
-        }
-        if (count === 2) {
-          expect(result.loading).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(initialData);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-            initialData,
-          );
+      next(result: any) {
+        expect(result.loading).toBe(false);
+        expect(stripSymbols(result.data)).toEqual(initialData);
+        expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+          initialData,
+        );
 
-          // step 2, recycle it
-          observable.setOptions({
-            fetchPolicy: 'standby',
-            pollInterval: 0,
-            fetchResults: false,
-          });
+        // step 2, recycle it
+        observable.setOptions({
+          fetchPolicy: 'standby',
+          pollInterval: 0,
+        });
 
-          observableQueries.push({
-            observableQuery: observable,
-            subscription: observable.subscribe({}),
-          });
+        observableQueries.push({
+          observableQuery: observable,
+          subscription: observable.subscribe({}),
+        });
 
-          // step 3, unsubscribe from observable
-          sub.unsubscribe();
+        // step 3, unsubscribe from observable
+        sub.unsubscribe();
 
-          setTimeout(() => {
-            // step 4, start new Subscription;
-            const recyled = resubscribe();
-            const currentResult = recyled.getCurrentResult();
-            expect(recyled.isTornDown).toEqual(false);
-            expect(stripSymbols(currentResult.data)).toEqual(initialData);
-            done();
-          }, 10);
-        }
+        setTimeout(() => {
+          // step 4, start new Subscription;
+          const recycled = resubscribe();
+          const currentResult = recycled.getCurrentResult();
+          expect(stripSymbols(currentResult.data)).toEqual(initialData);
+          done();
+        }, 10);
       },
     });
 

@@ -1,8 +1,7 @@
-import { DocumentNode } from 'graphql/language/ast';
-import { ExecutionResult } from 'graphql/execution/execute';
-export { ExecutionResult, DocumentNode };
+import { DocumentNode, ExecutionResult } from 'graphql';
+export { DocumentNode };
 
-import { Observable } from '../../utilities/observables/Observable';
+import { Observable } from '../../utilities';
 
 export interface GraphQLRequest {
   query: DocumentNode;
@@ -21,11 +20,12 @@ export interface Operation {
   getContext: () => Record<string, any>;
 }
 
-export type FetchResult<
+export interface FetchResult<
   TData = { [key: string]: any },
   C = Record<string, any>,
   E = Record<string, any>
-> = ExecutionResult<TData> & {
+> extends ExecutionResult {
+  data?: TData | null;
   extensions?: E;
   context?: C;
 };

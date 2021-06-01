@@ -22,6 +22,7 @@ import {
   getStoreKeyName,
   canUseWeakMap,
   compact,
+  isNonNullObject,
 } from '../../utilities';
 import {
   IdGetter,
@@ -911,8 +912,8 @@ function makeMergeObjectsFunction(
     // custom merge function can easily have the any type, so the type
     // system cannot always enforce the StoreObject | Reference parameter
     // types of options.mergeObjects.
-    if (existing && typeof existing === "object" &&
-        incoming && typeof incoming === "object") {
+    if (isNonNullObject(existing) &&
+        isNonNullObject(incoming)) {
       const eType = store.getFieldValue(existing, "__typename");
       const iType = store.getFieldValue(incoming, "__typename");
       const typesDiffer = eType && iType && eType !== iType;

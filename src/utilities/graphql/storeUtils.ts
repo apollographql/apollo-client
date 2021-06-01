@@ -19,6 +19,7 @@ import {
 } from 'graphql';
 
 import { InvariantError } from 'ts-invariant';
+import { isNonNullObject } from '../common/objects';
 import { FragmentMap, getFragmentFromSelection } from './fragments';
 
 export interface Reference {
@@ -51,8 +52,7 @@ export interface StoreObject {
 
 export function isDocumentNode(value: any): value is DocumentNode {
   return (
-    value !== null &&
-    typeof value === "object" &&
+    isNonNullObject(value) &&
     (value as DocumentNode).kind === "Document" &&
     Array.isArray((value as DocumentNode).definitions)
   );
@@ -256,7 +256,7 @@ let stringify = function defaultStringify(value: any): string {
 };
 
 function stringifyReplacer(_key: string, value: any): any {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
+  if (isNonNullObject(value) && !Array.isArray(value)) {
     value = Object.keys(value).sort().reduce((copy, key) => {
       copy[key] = value[key];
       return copy;

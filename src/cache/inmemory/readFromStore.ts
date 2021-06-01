@@ -24,6 +24,7 @@ import {
   mergeDeepArray,
   getFragmentFromSelection,
   maybeDeepFreeze,
+  isNonNullObject,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
@@ -500,7 +501,7 @@ function assertSelectionSetForIdValue(
   if (!field.selectionSet) {
     const workSet = new Set([fieldValue]);
     workSet.forEach(value => {
-      if (value && typeof value === "object") {
+      if (isNonNullObject(value)) {
         invariant(
           !isReference(value),
           `Missing selection set for object of type ${

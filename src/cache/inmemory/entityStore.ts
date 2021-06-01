@@ -12,6 +12,7 @@ import {
   DeepMerger,
   maybeDeepFreeze,
   canUseWeakMap,
+  isNonNullObject,
 } from '../../utilities';
 import { NormalizedCache, NormalizedCacheObject } from './types';
 import { hasOwn, fieldNameFromStoreName } from './helpers';
@@ -419,15 +420,14 @@ export abstract class EntityStore implements NormalizedCache {
       const workSet = new Set([this.data[dataId]]);
       // Within the store, only arrays and objects can contain child entity
       // references, so we can prune the traversal using this predicate:
-      const canTraverse = (obj: any) => obj !== null && typeof obj === 'object';
       workSet.forEach(obj => {
         if (isReference(obj)) {
           found[obj.__ref] = true;
-        } else if (canTraverse(obj)) {
+        } else if (isNonNullObject(obj)) {
           Object.values(obj!)
             // No need to add primitive values to the workSet, since they cannot
             // contain reference objects.
-            .filter(canTraverse)
+            .filter(isNonNullObject)
             .forEach(workSet.add, workSet);
         }
       });

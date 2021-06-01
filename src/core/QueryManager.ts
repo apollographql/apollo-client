@@ -21,6 +21,7 @@ import {
   ConcastSourcesIterable,
   makeUniqueId,
   isDocumentNode,
+  isNonNullObject,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -1223,7 +1224,7 @@ export class QueryManager<TStore> {
 
         if (typeof desc === "string" || isDocumentNode(desc)) {
           fallback = () => oq!.refetch();
-        } else if (desc && typeof desc === "object") {
+        } else if (isNonNullObject(desc)) {
           const options = {
             ...desc,
             fetchPolicy: "network-only",

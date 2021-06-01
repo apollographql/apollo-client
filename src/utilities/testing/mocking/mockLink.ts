@@ -73,6 +73,7 @@ export class MockLink extends ApolloLink {
     this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
     let responseIndex: number = 0;
+    const diffs: Array<Record<string, any>> = [];
     const response = (this.mockedResponsesByKey[key] || []).find(
       (res, index) => {
         const requestVariables = operation.variables || {};
@@ -81,6 +82,7 @@ export class MockLink extends ApolloLink {
           responseIndex = index;
           return true;
         }
+        diffs.push(mockedResponseVariables);
         return false;
       }
     );
@@ -88,11 +90,21 @@ export class MockLink extends ApolloLink {
     let configError: Error;
 
     if (!response || typeof responseIndex === 'undefined') {
+      const replacer = (key: string, value: any) =>
+        typeof value === 'undefined' ? "undefined" : value;
       configError = new Error(
         `No more mocked responses for the query: ${print(
           operation.query
-        )}, variables: ${JSON.stringify(operation.variables)}`
-      );
+        )}\nExpected variables:\n\t${JSON.stringify(operation.variables, replacer)}${
+        diffs.length > 0
+          ? `\nFound ${diffs.length} mock${
+          diffs.length > 1 ? "s" : ""
+          } with variables:\n${diffs.map(
+            (d, i) => `\t${i + 1}: ${JSON.stringify(d, replacer)}\n`
+          )}`
+          : ""
+        }`
+      )
     } else {
       this.mockedResponsesByKey[key].splice(responseIndex, 1);
 
@@ -151,7 +163,7 @@ export class MockLink extends ApolloLink {
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
     const queryWithoutConnection = removeConnectionDirectiveFromDocument(
-        newMockedResponse.request.query
+      newMockedResponse.request.query
     );
     invariant(queryWithoutConnection, "query is required");
     newMockedResponse.request.query = queryWithoutConnection!;

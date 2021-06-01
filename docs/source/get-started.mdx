@@ -72,6 +72,7 @@ In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest put
 ```jsx
 import React from 'react';
 import { render } from 'react-dom';
+import { ApolloClient } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
 
 const client = new ApolloClient({ uri, cache });

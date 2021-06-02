@@ -41,7 +41,6 @@ import {
   OnQueryUpdated,
   RefetchQueryDescription,
   InternalRefetchQueriesOptions,
-  RefetchQueryDescriptor,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
 } from './types';
@@ -734,13 +733,73 @@ export class QueryManager<TStore> {
     });
   }
 
-  public getObservableQueries() {
+  public getObservableQueries(
+    include: RefetchQueryDescription = "active",
+  ) {
     const queries = new Map<string, ObservableQuery<any>>();
-    this.queries.forEach(({ observableQuery }, queryId) => {
-      if (observableQuery && observableQuery.hasObservers()) {
-        queries.set(queryId, observableQuery);
+    const queryNames = new Set<string>();
+    const queryDocs = new Set<DocumentNode>();
+    const legacyQueryOptions = new Set<QueryOptions>();
+
+    if (Array.isArray(include)) {
+      include.forEach(desc => {
+        if (typeof desc === "string") {
+          queryNames.add(desc);
+        } else if (isDocumentNode(desc)) {
+          queryDocs.add(desc);
+        } else if (isNonNullObject(desc) && desc.query) {
+          legacyQueryOptions.add(desc);
+        }
+      });
+    }
+
+    this.queries.forEach(({ observableQuery: oq, document }, queryId) => {
+      if (oq) {
+        if (include === "all") {
+          queries.set(queryId, oq);
+          return;
+        }
+
+        const { fetchPolicy } = oq.options;
+        if (fetchPolicy === "cache-only" ||
+            fetchPolicy === "standby" ||
+            !oq.hasObservers()) {
+          // Skip inactive queries unless include === "all".
+          return;
+        }
+
+        if (
+          include === "active" ||
+          queryNames.has(oq.queryName!) ||
+          (document && queryDocs.has(document))
+        ) {
+          queries.set(queryId, oq);
+        }
       }
     });
+
+    if (legacyQueryOptions.size) {
+      legacyQueryOptions.forEach((options: QueryOptions) => {
+        // We will be issuing a fresh network request for this query, so we
+        // pre-allocate a new query ID here.
+        const queryId = this.generateQueryId();
+        const queryInfo = this.getQuery(queryId).init({
+          document: options.query,
+          variables: options.variables,
+        });
+        const oq = new ObservableQuery({
+          queryManager: this,
+          queryInfo,
+          options: {
+            ...options,
+            fetchPolicy: "network-only",
+          },
+        });
+        queryInfo.setObservableQuery(oq);
+        queries.set(queryId, oq);
+      });
+    }
+
     return queries;
   }
 
@@ -749,17 +808,11 @@ export class QueryManager<TStore> {
   ): Promise<ApolloQueryResult<any>[]> {
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
 
-    this.getObservableQueries().forEach((observableQuery, queryId) => {
-      const fetchPolicy = observableQuery.options.fetchPolicy;
-
+    this.getObservableQueries(
+      includeStandby ? "all" : "active"
+    ).forEach((observableQuery, queryId) => {
       observableQuery.resetLastResults();
-      if (
-        fetchPolicy !== 'cache-only' &&
-        (includeStandby || fetchPolicy !== 'standby')
-      ) {
-        observableQueryPromises.push(observableQuery.refetch());
-      }
-
+      observableQueryPromises.push(observableQuery.refetch());
       this.getQuery(queryId).setDiff(null);
     });
 
@@ -1112,21 +1165,17 @@ export class QueryManager<TStore> {
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<ApolloCache<TStore>, TResult>
   ): InternalRefetchQueriesMap<TResult> {
-    const includedQueriesById = new Map<string, {
-      desc: RefetchQueryDescriptor;
+    const includedQueries = new Map<string, {
+      oq: ObservableQuery<any>;
       lastDiff?: Cache.DiffResult<any>;
       diff?: Cache.DiffResult<any>;
     }>();
 
     if (include) {
-      include.forEach(desc => {
-        getQueryIdsForQueryDescriptor(this, desc).forEach(queryId => {
-          includedQueriesById.set(queryId, {
-            desc,
-            lastDiff: typeof desc === "string" || isDocumentNode(desc)
-              ? this.getQuery(queryId).getDiff()
-              : void 0,
-          });
+      this.getObservableQueries(include).forEach((oq, queryId) => {
+        includedQueries.set(queryId, {
+          oq,
+          lastDiff: this.getQuery(queryId).getDiff(),
         });
       });
     }
@@ -1187,7 +1236,7 @@ export class QueryManager<TStore> {
               // Since we're about to handle this query now, remove it from
               // includedQueriesById, in case it was added earlier because of
               // options.include.
-              includedQueriesById.delete(oq.queryId);
+              includedQueries.delete(oq.queryId);
 
               let result: boolean | InternalRefetchQueriesResult<TResult> =
                 onQueryUpdated(oq, diff, lastDiff);
@@ -1213,58 +1262,35 @@ export class QueryManager<TStore> {
               // If we don't have an onQueryUpdated function, and onQueryUpdated
               // was not disabled by passing null, make sure this query is
               // "included" like any other options.include-specified query.
-              includedQueriesById.set(oq.queryId, {
-                desc: oq.queryName || `<anonymous ObservableQuery ${oq.queryId}>`,
-                lastDiff,
-                diff,
-              });
+              includedQueries.set(oq.queryId, { oq, lastDiff, diff });
             }
           }
         },
       });
     }
 
-    if (includedQueriesById.size) {
-      includedQueriesById.forEach(({ desc, lastDiff, diff }, queryId) => {
-        const queryInfo = this.getQuery(queryId);
-        let oq = queryInfo.observableQuery;
-        let fallback: undefined | (() => Promise<ApolloQueryResult<any>>);
+    if (includedQueries.size) {
+      includedQueries.forEach(({ oq, lastDiff, diff }, queryId) => {
+        let result: undefined | boolean | InternalRefetchQueriesResult<TResult>;
 
-        if (typeof desc === "string" || isDocumentNode(desc)) {
-          fallback = () => oq!.refetch();
-        } else if (isNonNullObject(desc)) {
-          const options = {
-            ...desc,
-            fetchPolicy: "network-only",
-          } as QueryOptions;
-
-          queryInfo.setObservableQuery(oq = new ObservableQuery({
-            queryManager: this,
-            queryInfo,
-            options,
-          }));
-
-          fallback = () => this.query(options, queryId);
+        // If onQueryUpdated is provided, we want to use it for all included
+        // queries, even the PureQueryOptions ones.
+        if (onQueryUpdated) {
+          if (!diff) {
+            const info = oq["queryInfo"];
+            info.reset(); // Force info.getDiff() to read from cache.
+            diff = info.getDiff();
+          }
+          result = onQueryUpdated(oq, diff, lastDiff);
         }
 
-        if (oq && fallback) {
-          let result: undefined | boolean | InternalRefetchQueriesResult<TResult>;
-          // If onQueryUpdated is provided, we want to use it for all included
-          // queries, even the PureQueryOptions ones. Otherwise, we call the
-          // fallback function defined above.
-          if (onQueryUpdated) {
-            if (!diff) {
-              queryInfo.reset(); // Force queryInfo.getDiff() to read from cache.
-              diff = queryInfo.getDiff();
-            }
-            result = onQueryUpdated(oq, diff, lastDiff);
-          }
-          if (!onQueryUpdated || result === true) {
-            result = fallback();
-          }
-          if (result !== false) {
-            results.set(oq, result!);
-          }
+        // Otherwise, we fall back to refetching.
+        if (!onQueryUpdated || result === true) {
+          result = oq.refetch();
+        }
+
+        if (result !== false) {
+          results.set(oq, result!);
         }
       });
     }
@@ -1451,31 +1477,4 @@ export class QueryManager<TStore> {
       clientAwareness: this.clientAwareness,
     };
   }
-}
-
-function getQueryIdsForQueryDescriptor<TStore>(
-  qm: QueryManager<TStore>,
-  desc: RefetchQueryDescriptor,
-) {
-  const queryIds: string[] = [];
-  const isName = typeof desc === "string";
-  if (isName || isDocumentNode(desc)) {
-    qm["queries"].forEach(({ observableQuery: oq, document }, queryId) => {
-      if (oq &&
-          desc === (isName ? oq.queryName : document) &&
-          oq.hasObservers()) {
-        queryIds.push(queryId);
-      }
-    });
-  } else {
-    // We will be issuing a fresh network request for this query, so we
-    // pre-allocate a new query ID here.
-    queryIds.push(qm.generateQueryId());
-  }
-  if (process.env.NODE_ENV !== "production" && !queryIds.length) {
-    invariant.warn(`Unknown query name ${
-      JSON.stringify(desc)
-    } passed to refetchQueries method in options.include array`);
-  }
-  return queryIds;
 }

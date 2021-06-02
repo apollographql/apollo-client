@@ -23,7 +23,7 @@ export type OnQueryUpdated<TResult> = (
 ) => boolean | TResult;
 
 export type RefetchQueryDescriptor = string | DocumentNode | PureQueryOptions;
-export type RefetchQueryDescription = RefetchQueryDescriptor[];
+export type RefetchQueryDescription = RefetchQueryDescriptor[] | "all" | "active";
 
 // Used by ApolloClient["refetchQueries"]
 // TODO Improve documentation comments for this public type.

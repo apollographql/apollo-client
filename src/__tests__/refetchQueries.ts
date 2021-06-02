@@ -351,6 +351,171 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
+  itAsync('includes all queries when options.include === "all"', async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const ayyResults = await client.refetchQueries({
+      include: "all",
+
+      updateCache(cache) {
+        cache.writeQuery({
+          query: aQuery,
+          data: {
+            a: "Ayy",
+          },
+        });
+      },
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "Ayy" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "Ayy", b: "B" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return Promise.resolve(diff.result);
+      },
+    });
+
+    sortObjects(ayyResults);
+
+    expect(ayyResults).toEqual([
+      { a: "Ayy" },
+      { a: "Ayy", b: "B" },
+      { b: "B" },
+    ]);
+
+    const beeResults = await client.refetchQueries({
+      include: "all",
+
+      updateCache(cache) {
+        cache.writeQuery({
+          query: bQuery,
+          data: {
+            b: "Bee",
+          },
+        });
+      },
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "Ayy" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "Bee" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "Ayy", b: "Bee" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return diff.result;
+      },
+    });
+
+    sortObjects(beeResults);
+
+    expect(beeResults).toEqual([
+      { a: "Ayy" },
+      { a: "Ayy", b: "Bee" },
+      { b: "Bee" },
+    ]);
+
+    unsubscribe();
+    resolve();
+  });
+
+  itAsync('includes all active queries when options.include === "active"', async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const extraObs = client.watchQuery({ query: abQuery });
+    expect(extraObs.hasObservers()).toBe(false);
+
+    const activeResults = await client.refetchQueries({
+      include: "active",
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "A" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "A", b: "B" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return Promise.resolve(diff.result);
+      },
+    });
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([
+      { a: "A" },
+      { a: "A", b: "B" },
+      { b: "B" },
+    ]);
+
+    subs.push(extraObs.subscribe({
+      next(result) {
+        expect(result).toEqual({ a: "A", b: "B" });
+      },
+    }));
+    expect(extraObs.hasObservers()).toBe(true);
+
+    const resultsAfterSubscribe = await client.refetchQueries({
+      include: "active",
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "A" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "A", b: "B" });
+        } else if (obs === extraObs) {
+          expect(diff.result).toEqual({ a: "A", b: "B" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return Promise.resolve(diff.result);
+      },
+    });
+
+    sortObjects(resultsAfterSubscribe);
+
+    expect(resultsAfterSubscribe).toEqual([
+      { a: "A" },
+      { a: "A", b: "B" },
+      // Included thanks to extraObs this time.
+      { a: "A", b: "B" },
+      // Sorted last by sortObjects.
+      { b: "B" },
+    ]);
+
+    unsubscribe();
+    resolve();
+  });
+
   itAsync("refetches watched queries if onQueryUpdated not provided", async (resolve, reject) => {
     const client = makeClient();
     const [

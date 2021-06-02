@@ -50,8 +50,13 @@ describe("client.refetchQueries", () => {
         operation.operationName.split("").forEach(letter => {
           data[letter.toLowerCase()] = letter.toUpperCase();
         });
-        observer.next({ data });
-        observer.complete();
+        function finish() {
+          observer.next({ data });
+          observer.complete();
+        }
+        if (typeof operation.variables.delay === "number") {
+          setTimeout(finish, operation.variables.delay);
+        } else finish();
       })),
     });
   }
@@ -513,6 +518,104 @@ describe("client.refetchQueries", () => {
     ]);
 
     unsubscribe();
+    resolve();
+  });
+
+  itAsync('should not include unwatched single queries', async (resolve, reject) => {
+    const client = makeClient();
+    const [
+      aObs,
+      bObs,
+      abObs,
+    ] = await setup(client);
+
+    const delayedQuery = gql`query DELAYED { d e l a y e d }`;
+
+    client.query({
+      query: delayedQuery,
+      variables: {
+        // Delay this query by 10 seconds so it stays in-flight.
+        delay: 10000,
+      },
+    }).catch(reject);
+
+    const queries = client["queryManager"]["queries"];
+    expect(queries.size).toBe(4);
+
+    queries.forEach((queryInfo, queryId) => {
+      if (
+        queryId === "1" ||
+        queryId === "2" ||
+        queryId === "3"
+      ) {
+        expect(queryInfo.observableQuery).toBeInstanceOf(ObservableQuery);
+      } else if (queryId === "4") {
+        // One-off client.query-style queries never get an ObservableQuery, so
+        // they should not be included by include: "active".
+        expect(queryInfo.observableQuery).toBe(null);
+        expect(queryInfo.document).toBe(delayedQuery);
+      }
+    });
+
+    const activeResults = await client.refetchQueries({
+      include: "active",
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "A" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "A", b: "B" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return Promise.resolve(diff.result);
+      },
+    });
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([
+      { a: "A" },
+      { a: "A", b: "B" },
+      { b: "B" },
+    ]);
+
+    const allResults = await client.refetchQueries({
+      include: "all",
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.result).toEqual({ a: "A" });
+        } else if (obs === bObs) {
+          expect(diff.result).toEqual({ b: "B" });
+        } else if (obs === abObs) {
+          expect(diff.result).toEqual({ a: "A", b: "B" });
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return Promise.resolve(diff.result);
+      },
+    });
+
+    sortObjects(allResults);
+
+    expect(allResults).toEqual([
+      { a: "A" },
+      { a: "A", b: "B" },
+      { b: "B" },
+    ]);
+
+    unsubscribe();
+    client.stop();
+
+    expect(queries.size).toBe(0);
+
     resolve();
   });
 

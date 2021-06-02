@@ -39,7 +39,7 @@ import {
   OperationVariables,
   MutationUpdaterFunction,
   OnQueryUpdated,
-  RefetchQueryDescription,
+  InternalRefetchQueriesInclude,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
@@ -327,7 +327,7 @@ export class QueryManager<TStore> {
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       awaitRefetchQueries?: boolean;
-      refetchQueries?: RefetchQueryDescription;
+      refetchQueries?: InternalRefetchQueriesInclude;
       removeOptimistic?: string;
       onQueryUpdated?: OnQueryUpdated<any>;
       keepRootFields?: boolean;
@@ -734,7 +734,7 @@ export class QueryManager<TStore> {
   }
 
   public getObservableQueries(
-    include: RefetchQueryDescription = "active",
+    include: InternalRefetchQueriesInclude = "active",
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
     const queryNamesAndDocs = new Map<string | DocumentNode, boolean>();
@@ -1180,7 +1180,7 @@ export class QueryManager<TStore> {
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<ApolloCache<TStore>, TResult>
   ): InternalRefetchQueriesMap<TResult> {
-    const includedQueries = new Map<string, {
+    const includedQueriesById = new Map<string, {
       oq: ObservableQuery<any>;
       lastDiff?: Cache.DiffResult<any>;
       diff?: Cache.DiffResult<any>;
@@ -1188,7 +1188,7 @@ export class QueryManager<TStore> {
 
     if (include) {
       this.getObservableQueries(include).forEach((oq, queryId) => {
-        includedQueries.set(queryId, {
+        includedQueriesById.set(queryId, {
           oq,
           lastDiff: this.getQuery(queryId).getDiff(),
         });
@@ -1251,7 +1251,7 @@ export class QueryManager<TStore> {
               // Since we're about to handle this query now, remove it from
               // includedQueriesById, in case it was added earlier because of
               // options.include.
-              includedQueries.delete(oq.queryId);
+              includedQueriesById.delete(oq.queryId);
 
               let result: boolean | InternalRefetchQueriesResult<TResult> =
                 onQueryUpdated(oq, diff, lastDiff);
@@ -1277,19 +1277,19 @@ export class QueryManager<TStore> {
               // If we don't have an onQueryUpdated function, and onQueryUpdated
               // was not disabled by passing null, make sure this query is
               // "included" like any other options.include-specified query.
-              includedQueries.set(oq.queryId, { oq, lastDiff, diff });
+              includedQueriesById.set(oq.queryId, { oq, lastDiff, diff });
             }
           }
         },
       });
     }
 
-    if (includedQueries.size) {
-      includedQueries.forEach(({ oq, lastDiff, diff }, queryId) => {
+    if (includedQueriesById.size) {
+      includedQueriesById.forEach(({ oq, lastDiff, diff }, queryId) => {
         let result: undefined | boolean | InternalRefetchQueriesResult<TResult>;
 
         // If onQueryUpdated is provided, we want to use it for all included
-        // queries, even the PureQueryOptions ones.
+        // queries, even the QueryOptions ones.
         if (onQueryUpdated) {
           if (!diff) {
             const info = oq["queryInfo"];

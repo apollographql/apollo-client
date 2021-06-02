@@ -17,7 +17,7 @@ import {
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
-  PureQueryOptions,
+  InternalRefetchQueriesInclude,
   WatchQueryOptions,
 } from '../../core';
 
@@ -137,7 +137,7 @@ export type QueryTuple<TData, TVariables> = [
 
 export type RefetchQueriesFunction = (
   ...args: any[]
-) => Array<string | PureQueryOptions>;
+) => InternalRefetchQueriesInclude;
 
 export interface BaseMutationOptions<
   TData,

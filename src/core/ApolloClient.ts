@@ -18,7 +18,7 @@ import {
   RefetchQueriesOptions,
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
-  RefetchQueryDescription,
+  RefetchQueriesInclude,
 } from './types';
 
 import {
@@ -566,17 +566,16 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
-   * Get all currently active ObservableQuery objects, in a Map keyed by query
-   * ID strings. An "active" query is one that has observers and a fetchPolicy
-   * other than "standby" or "cache-only". You can include all ObservableQuery
-   * objects (including the inactive ones) by passing "all" instead of "active",
-   * or you can include just a subset of active queries by passing an array of
-   * query names or DocumentNode objects. This method is used internally by
-   * `client.refetchQueries` to handle its `include` option.
+   * Get all currently active `ObservableQuery` objects, in a `Map` keyed by
+   * query ID strings. An "active" query is one that has observers and a
+   * `fetchPolicy` other than "standby" or "cache-only". You can include all
+   * `ObservableQuery` objects (including the inactive ones) by passing "all"
+   * instead of "active", or you can include just a subset of active queries by
+   * passing an array of query names or DocumentNode objects.
    */
   public getObservableQueries(
-    include: RefetchQueryDescription = "active",
-  ) {
+    include: RefetchQueriesInclude = "active",
+  ): Map<string, ObservableQuery<any>> {
     return this.queryManager.getObservableQueries(include);
   }
 

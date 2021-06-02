@@ -1,9 +1,8 @@
 import { Trie } from "@wry/trie";
-import { canUseWeakMap } from "../../utilities";
-
-function isObjectOrArray(value: any): value is object {
-  return !!value && typeof value === "object";
-}
+import {
+  canUseWeakMap,
+  isNonNullObject as isObjectOrArray,
+} from "../../utilities";
 
 function shallowCopy<T>(value: T): T {
   if (isObjectOrArray(value)) {

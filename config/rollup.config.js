@@ -7,15 +7,41 @@ const entryPoints = require('./entryPoints');
 
 const distDir = './dist';
 
-function isExternal(id) {
-  return !(id.startsWith("./") || id.startsWith("../"));
+function isExternal(id, parentId, entryPointsAreExternal = true) {
+  // Rollup v2.26.8 started passing absolute id strings to this function, thanks
+  // apparently to https://github.com/rollup/rollup/pull/3753, so we relativize
+  // the id again in those cases.
+  if (path.posix.isAbsolute(id)) {
+    id = path.posix.relative(
+      path.posix.dirname(parentId),
+      id,
+    );
+    if (!id.startsWith(".")) {
+      id = "./" + id;
+    }
+  }
+
+  const isRelative =
+    id.startsWith("./") ||
+    id.startsWith("../");
+
+  if (!isRelative) {
+    return true;
+  }
+
+  if (entryPointsAreExternal &&
+      entryPoints.check(id, parentId)) {
+    return true;
+  }
+
+  return false;
 }
 
 function prepareCJS(input, output) {
   return {
     input,
-    external(id) {
-      return isExternal(id);
+    external(id, parentId) {
+      return isExternal(id, parentId, false);
     },
     output: {
       file: output,
@@ -62,13 +88,14 @@ function prepareBundle({
   return {
     input: `${dir}/index.js`,
     external(id, parentId) {
-      return isExternal(id) || entryPoints.check(id, parentId);
+      return isExternal(id, parentId, true);
     },
     output: {
       file: `${dir}/${bundleName}.cjs.js`,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
+      interop: 'esModule',
       externalLiveBindings: false,
       // In Node.js, where these CommonJS bundles are most commonly used,
       // the expression process.env.NODE_ENV can be very expensive to

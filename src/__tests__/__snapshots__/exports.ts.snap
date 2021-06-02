@@ -351,6 +351,7 @@ Array [
   "isField",
   "isInlineFragment",
   "isNonEmptyArray",
+  "isNonNullObject",
   "isReference",
   "iterateObserversSafely",
   "makeReference",

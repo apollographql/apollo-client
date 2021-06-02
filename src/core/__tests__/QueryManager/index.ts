@@ -4774,8 +4774,7 @@ describe('QueryManager', () => {
         result => {
           expect(stripSymbols(result.data)).toEqual(secondReqData);
           expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-            'Unknown query name "fakeQuery" passed to refetchQueries method ' +
-            "in options.include array"
+            'Unknown query named "fakeQuery" requested in refetchQueries options.include array'
           );
         },
       ).then(resolve, reject);
@@ -4843,8 +4842,7 @@ describe('QueryManager', () => {
         });
       }).then(() => {
         expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-          'Unknown query name "getAuthors" passed to refetchQueries method ' +
-          "in options.include array"
+          'Unknown query named "getAuthors" requested in refetchQueries options.include array'
         );
       }).then(resolve, reject);
     });

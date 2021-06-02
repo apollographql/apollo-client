@@ -737,16 +737,13 @@ export class QueryManager<TStore> {
     include: RefetchQueryDescription = "active",
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
-    const queryNames = new Set<string>();
-    const queryDocs = new Set<DocumentNode>();
+    const queryNamesAndDocs = new Map<string | DocumentNode, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
 
     if (Array.isArray(include)) {
       include.forEach(desc => {
-        if (typeof desc === "string") {
-          queryNames.add(desc);
-        } else if (isDocumentNode(desc)) {
-          queryDocs.add(desc);
+        if (typeof desc === "string" || isDocumentNode(desc)) {
+          queryNamesAndDocs.set(desc, false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }
@@ -760,7 +757,11 @@ export class QueryManager<TStore> {
           return;
         }
 
-        const { fetchPolicy } = oq.options;
+        const {
+          queryName,
+          options: { fetchPolicy },
+        } = oq;
+
         if (fetchPolicy === "cache-only" ||
             fetchPolicy === "standby" ||
             !oq.hasObservers()) {
@@ -770,10 +771,12 @@ export class QueryManager<TStore> {
 
         if (
           include === "active" ||
-          queryNames.has(oq.queryName!) ||
-          (document && queryDocs.has(document))
+          (queryName && queryNamesAndDocs.has(queryName)) ||
+          (document && queryNamesAndDocs.has(document))
         ) {
           queries.set(queryId, oq);
+          if (queryName) queryNamesAndDocs.set(queryName, true);
+          if (document) queryNamesAndDocs.set(document, true);
         }
       }
     });
@@ -797,6 +800,18 @@ export class QueryManager<TStore> {
         });
         queryInfo.setObservableQuery(oq);
         queries.set(queryId, oq);
+      });
+    }
+
+    if (process.env.NODE_ENV !== "production" && queryNamesAndDocs.size) {
+      queryNamesAndDocs.forEach((included, nameOrDoc) => {
+        if (!included) {
+          invariant.warn(`Unknown query ${
+            typeof nameOrDoc === "string" ? "named " : ""
+          }${
+            JSON.stringify(nameOrDoc, null, 2)
+          } requested in refetchQueries options.include array`);
+        }
       });
     }
 

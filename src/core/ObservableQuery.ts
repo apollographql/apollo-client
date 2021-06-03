@@ -536,12 +536,11 @@ once, rather than every time you call fetchMore.`);
     // Initiate observation of this query if it hasn't been reported to
     // the QueryManager yet.
     if (first) {
-      this.reobserve().catch(_ => {
-        // Blindly catching here prevents unhandled promise rejections,
-        // and is safe because the ObservableQuery handles this error with
-        // this.observer.error, so we're not just swallowing the error by
-        // ignoring it here.
-      });
+      // Blindly catching here prevents unhandled promise rejections,
+      // and is safe because the ObservableQuery handles this error with
+      // this.observer.error, so we're not just swallowing the error by
+      // ignoring it here.
+      this.reobserve().catch(() => {});
     }
 
     return () => {

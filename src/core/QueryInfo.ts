@@ -236,7 +236,7 @@ export class QueryInfo {
 
       // Cancel the pending notify timeout
       this.reset();
-      
+
       this.cancel();
       // Revert back to the no-op version of cancel inherited from
       // QueryInfo.prototype.

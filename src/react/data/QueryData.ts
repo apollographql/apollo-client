@@ -8,10 +8,11 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ObservableQuery,
+  applyNextFetchPolicy,
   FetchMoreOptions,
   UpdateQueryOptions,
   DocumentNode,
-  TypedDocumentNode
+  TypedDocumentNode,
 } from '../../core';
 
 import {
@@ -198,8 +199,7 @@ export class QueryData<TData, TVariables> extends OperationData<
     ) {
       options.fetchPolicy = 'cache-first';
     } else if (options.nextFetchPolicy && this.currentObservable) {
-      // XXX: This is a hack to handle skipped queries with a nextFetchPolicy.
-      options.fetchPolicy = options.nextFetchPolicy;
+      applyNextFetchPolicy(options);
     }
 
     return {

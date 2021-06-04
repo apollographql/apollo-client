@@ -29,7 +29,7 @@ import {
   WatchQueryFetchPolicy,
   ErrorPolicy,
 } from './watchQueryOptions';
-import { ObservableQuery } from './ObservableQuery';
+import { ObservableQuery, applyNextFetchPolicy } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
@@ -1000,28 +1000,7 @@ export class QueryManager<TStore> {
 
     concast.cleanup(() => {
       this.fetchCancelFns.delete(queryId);
-
-      const { nextFetchPolicy } = options;
-      if (nextFetchPolicy) {
-        // The options.nextFetchPolicy transition should happen only once,
-        // but it should be possible for a nextFetchPolicy function to set
-        // this.nextFetchPolicy to perform an additional transition.
-        options.nextFetchPolicy = void 0;
-
-        // When someone chooses cache-and-network or network-only as their
-        // initial FetchPolicy, they often do not want future cache updates to
-        // trigger unconditional network requests, which is what repeatedly
-        // applying the cache-and-network or network-only policies would seem
-        // to imply. Instead, when the cache reports an update after the
-        // initial network request, it may be desirable for subsequent network
-        // requests to be triggered only if the cache result is incomplete.
-        // The options.nextFetchPolicy option provides an easy way to update
-        // options.fetchPolicy after the intial network request, without
-        // having to call observableQuery.setOptions.
-        options.fetchPolicy = typeof nextFetchPolicy === "function"
-          ? nextFetchPolicy.call(options, options.fetchPolicy || "cache-first")
-          : nextFetchPolicy;
-      }
+      applyNextFetchPolicy(options);
     });
 
     return concast;

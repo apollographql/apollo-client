@@ -782,8 +782,9 @@ export class QueryManager<TStore> {
     if (legacyQueryOptions.size) {
       legacyQueryOptions.forEach((options: QueryOptions) => {
         // We will be issuing a fresh network request for this query, so we
-        // pre-allocate a new query ID here.
-        const queryId = this.generateQueryId();
+        // pre-allocate a new query ID here, using a special prefix to enable
+        // cleaning up these temporary queries later, after fetching.
+        const queryId = makeUniqueId("legacyOneTimeQuery");
         const queryInfo = this.getQuery(queryId).init({
           document: options.query,
           variables: options.variables,
@@ -1309,6 +1310,10 @@ export class QueryManager<TStore> {
 
         if (result !== false) {
           results.set(oq, result!);
+        }
+
+        if (queryId.indexOf("legacyOneTimeQuery") >= 0) {
+          this.stopQueryNoBroadcast(queryId);
         }
       });
     }

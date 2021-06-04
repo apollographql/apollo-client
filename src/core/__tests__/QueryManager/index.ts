@@ -4916,7 +4916,14 @@ describe('QueryManager', () => {
         } else if (count === 2) {
           expect(result.data).toEqual(secondReqData);
           expect(observable.getCurrentResult().data).toEqual(secondReqData);
-          setTimeout(resolve, 10);
+
+          return new Promise(res => setTimeout(res, 10)).then(() => {
+            // Make sure the QueryManager cleans up legacy one-time queries like
+            // the one we requested above using refetchQueries.
+            queryManager["queries"].forEach((queryInfo, queryId) => {
+              expect(queryId).not.toContain("legacyOneTimeQuery");
+            });
+          }).then(resolve, reject);
         } else {
           reject("too many results");
         }

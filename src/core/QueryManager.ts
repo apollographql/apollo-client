@@ -762,9 +762,7 @@ export class QueryManager<TStore> {
           options: { fetchPolicy },
         } = oq;
 
-        if (fetchPolicy === "cache-only" ||
-            fetchPolicy === "standby" ||
-            !oq.hasObservers()) {
+        if (fetchPolicy === "standby" || !oq.hasObservers()) {
           // Skip inactive queries unless include === "all".
           return;
         }
@@ -826,8 +824,13 @@ export class QueryManager<TStore> {
     this.getObservableQueries(
       includeStandby ? "all" : "active"
     ).forEach((observableQuery, queryId) => {
+      const { fetchPolicy } = observableQuery.options;
       observableQuery.resetLastResults();
-      observableQueryPromises.push(observableQuery.refetch());
+      if (includeStandby ||
+          (fetchPolicy !== "standby" &&
+           fetchPolicy !== "cache-only")) {
+        observableQueryPromises.push(observableQuery.refetch());
+      }
       this.getQuery(queryId).setDiff(null);
     });
 

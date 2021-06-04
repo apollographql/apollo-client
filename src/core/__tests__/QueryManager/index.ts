@@ -4904,31 +4904,22 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query, variables });
-      let count = 0;
-      observable.subscribe({
-        next: result => {
-          const resultData = stripSymbols(result.data);
-          if (count === 0) {
-            expect(resultData).toEqual(data);
-            queryManager.mutate({
-              mutation,
-              variables: mutationVariables,
-              refetchQueries: [{ query, variables }],
-            });
-          }
-          if (count === 1) {
-            setTimeout(() => {
-              expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-                secondReqData,
-              );
-              resolve();
-            }, 1);
 
-            expect(resultData).toEqual(secondReqData);
-          }
-
-          count++;
-        },
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.data).toEqual(data);
+          queryManager.mutate({
+            mutation,
+            variables: mutationVariables,
+            refetchQueries: [{ query, variables }],
+          });
+        } else if (count === 2) {
+          expect(result.data).toEqual(secondReqData);
+          expect(observable.getCurrentResult().data).toEqual(secondReqData);
+          setTimeout(resolve, 10);
+        } else {
+          reject("too many results");
+        }
       });
     });
 

@@ -8,7 +8,7 @@ import {
   OperationVariables,
   MutationUpdaterFunction,
   OnQueryUpdated,
-  RefetchQueryDescription,
+  InternalRefetchQueriesInclude,
 } from './types';
 import { ApolloCache } from '../cache';
 
@@ -221,8 +221,8 @@ export interface MutationBaseOptions<
    * once these queries return.
    */
   refetchQueries?:
-    | ((result: FetchResult<TData>) => RefetchQueryDescription)
-    | RefetchQueryDescription;
+    | ((result: FetchResult<TData>) => InternalRefetchQueriesInclude)
+    | InternalRefetchQueriesInclude;
 
   /**
    * By default, `refetchQueries` does not wait for the refetched queries to

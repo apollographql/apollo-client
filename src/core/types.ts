@@ -7,6 +7,7 @@ import { QueryInfo } from './QueryInfo';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';
 import { ObservableQuery } from './ObservableQuery';
+import { QueryOptions } from './watchQueryOptions';
 import { Cache } from '../cache';
 import { IsStrictlyAny } from '../utilities';
 
@@ -22,8 +23,18 @@ export type OnQueryUpdated<TResult> = (
   lastDiff: Cache.DiffResult<any> | undefined,
 ) => boolean | TResult;
 
-export type RefetchQueryDescriptor = string | DocumentNode | PureQueryOptions;
-export type RefetchQueryDescription = RefetchQueryDescriptor[];
+export type RefetchQueryDescriptor = string | DocumentNode;
+export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | QueryOptions;
+
+type RefetchQueriesIncludeShorthand = "all" | "active";
+
+export type RefetchQueriesInclude =
+  | RefetchQueryDescriptor[]
+  | RefetchQueriesIncludeShorthand;
+
+export type InternalRefetchQueriesInclude =
+  | InternalRefetchQueryDescriptor[]
+  | RefetchQueriesIncludeShorthand;
 
 // Used by ApolloClient["refetchQueries"]
 // TODO Improve documentation comments for this public type.
@@ -32,11 +43,11 @@ export interface RefetchQueriesOptions<
   TResult,
 > {
   updateCache?: (cache: TCache) => void;
-  // Although you can pass PureQueryOptions objects in addition to strings in
-  // the refetchQueries array for a mutation, the client.refetchQueries method
-  // deliberately discourages passing PureQueryOptions, by restricting the
-  // public type of the options.include array to string[] (just query names).
-  include?: Exclude<RefetchQueryDescriptor, PureQueryOptions>[];
+  // The client.refetchQueries method discourages passing QueryOptions, by
+  // restricting the public type of options.include to exclude QueryOptions as
+  // an available array element type (see InternalRefetchQueriesInclude for a
+  // version of RefetchQueriesInclude that allows legacy QueryOptions objects).
+  include?: RefetchQueriesInclude;
   optimistic?: boolean;
   // If no onQueryUpdated function is provided, any queries affected by the
   // updateCache function or included in the options.include array will be
@@ -93,9 +104,10 @@ export interface InternalRefetchQueriesOptions<
   TCache extends ApolloCache<any>,
   TResult,
 > extends Omit<RefetchQueriesOptions<TCache, TResult>, "include"> {
-  // Just like the refetchQueries array for a mutation, allowing both strings
-  // and PureQueryOptions objects.
-  include?: RefetchQueryDescription;
+  // Just like the refetchQueries option for a mutation, an array of strings,
+  // DocumentNode objects, and/or QueryOptions objects, or one of the shorthand
+  // strings "all" or "active", to select every (active) query.
+  include?: InternalRefetchQueriesInclude;
   // This part of the API is a (useful) implementation detail, but need not be
   // exposed in the public client.refetchQueries API (above).
   removeOptimistic?: string;
@@ -108,13 +120,10 @@ export type InternalRefetchQueriesMap<TResult> =
   Map<ObservableQuery<any>,
       InternalRefetchQueriesResult<TResult>>;
 
-export type OperationVariables = Record<string, any>;
+// TODO Remove this unnecessary type in Apollo Client 4.
+export type { QueryOptions as PureQueryOptions };
 
-export type PureQueryOptions = {
-  query: DocumentNode;
-  variables?: { [key: string]: any };
-  context?: any;
-};
+export type OperationVariables = Record<string, any>;
 
 export type ApolloQueryResult<T> = {
   data: T;

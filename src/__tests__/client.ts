@@ -2442,6 +2442,18 @@ describe('client', () => {
     expect(spy).toHaveBeenCalledWith(options);
   });
 
+  it('has a getObservableQueries method which calls QueryManager', async () => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    // @ts-ignore
+    const spy = jest.spyOn(client.queryManager, 'getObservableQueries');
+    await client.getObservableQueries();
+    expect(spy).toHaveBeenCalled();
+  });
+
   itAsync('should propagate errors from network interface to observers', (resolve, reject) => {
     const link = ApolloLink.from([
       () =>

@@ -4774,8 +4774,7 @@ describe('QueryManager', () => {
         result => {
           expect(stripSymbols(result.data)).toEqual(secondReqData);
           expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-            'Unknown query name "fakeQuery" passed to refetchQueries method ' +
-            "in options.include array"
+            'Unknown query named "fakeQuery" requested in refetchQueries options.include array'
           );
         },
       ).then(resolve, reject);
@@ -4843,8 +4842,7 @@ describe('QueryManager', () => {
         });
       }).then(() => {
         expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-          'Unknown query name "getAuthors" passed to refetchQueries method ' +
-          "in options.include array"
+          'Unknown query named "getAuthors" requested in refetchQueries options.include array'
         );
       }).then(resolve, reject);
     });
@@ -4906,31 +4904,29 @@ describe('QueryManager', () => {
         },
       );
       const observable = queryManager.watchQuery<any>({ query, variables });
-      let count = 0;
-      observable.subscribe({
-        next: result => {
-          const resultData = stripSymbols(result.data);
-          if (count === 0) {
-            expect(resultData).toEqual(data);
-            queryManager.mutate({
-              mutation,
-              variables: mutationVariables,
-              refetchQueries: [{ query, variables }],
+
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.data).toEqual(data);
+          queryManager.mutate({
+            mutation,
+            variables: mutationVariables,
+            refetchQueries: [{ query, variables }],
+          });
+        } else if (count === 2) {
+          expect(result.data).toEqual(secondReqData);
+          expect(observable.getCurrentResult().data).toEqual(secondReqData);
+
+          return new Promise(res => setTimeout(res, 10)).then(() => {
+            // Make sure the QueryManager cleans up legacy one-time queries like
+            // the one we requested above using refetchQueries.
+            queryManager["queries"].forEach((queryInfo, queryId) => {
+              expect(queryId).not.toContain("legacyOneTimeQuery");
             });
-          }
-          if (count === 1) {
-            setTimeout(() => {
-              expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
-                secondReqData,
-              );
-              resolve();
-            }, 1);
-
-            expect(resultData).toEqual(secondReqData);
-          }
-
-          count++;
-        },
+          }).then(resolve, reject);
+        } else {
+          reject("too many results");
+        }
       });
     });
 

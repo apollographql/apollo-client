@@ -153,7 +153,28 @@ If you're just getting started with Apollo Client, we recommend refetching queri
 
 ### Refetching queries
 
-TODO
+If you happen to know that certain queries always (or usually) need to be refetched from the network after a particular kind of mutation, you can identify them by passing a `refetchQueries: [...]` array in the mutation options.
+
+Typically, the elements of the `refetchQueries` array will be the string names of queries you want to refetch. Remember to give your queries unique names if you want to refer to them this way:
+
+```js
+const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
+  refetchQueries: ["GetTodos"],
+});
+```
+
+You can also specify queries using a `DocumentNode` object, or pass `refetchQueries` to the `addTodo` mutate function, instead of passing it to `useMutation`:
+
+```js
+addTodo({
+  variables: {
+    text: input.value,
+  },
+  refetchQueries: [GET_TODOS],
+})
+```
+
+With only one query to refetch, this manual specification of `refetchQueries` may not seem very difficult. However, in larger applications, it can become tricky to guess which queries should be updated after an arbitrary mutation.
 
 ### Updating the cache directly
 

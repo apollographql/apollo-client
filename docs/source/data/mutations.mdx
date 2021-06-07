@@ -8,7 +8,7 @@ import MutationResult from '../../shared/mutation-result.mdx';
 
 Now that we've [learned how to query data](queries/) from our backend with Apollo Client, the natural next step is to learn how to _modify_ back-end data with **mutations**.
 
-This article demonstrates how to send updates to your GraphQL server with the `useMutation` hook. You'll also learn how to update the Apollo Client cache after executing a mutation, and how to track loading and error states for a mutation.
+This article demonstrates how to send updates to your GraphQL server with the `useMutation` hook. You'll also learn how to update the Apollo Client cache after executing a mutation, and how to track loading and error states.
 
 > To follow along with the examples below, open up our [starter project](https://codesandbox.io/s/mutations-example-app-start-gm7i5) and [sample GraphQL server](https://codesandbox.io/s/mutations-example-app-server-sxewr) on CodeSandbox. You can view the completed version of the app [here](https://codesandbox.io/s/mutations-example-app-final-tjoje).
 
@@ -23,24 +23,31 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the primary API for executing mutations in an Apollo application.
 
-To run a mutation, you first call `useMutation` within a React component and pass it `MY_MUTATION`, which is a GraphQL document parsed from a string by the `gql` function:
+To execute a mutation, you first call `useMutation` within a React component and pass it the mutation you want to execute, like so:
 
-```jsx{8}:title=my-component.jsx
+```jsx{13}:title=my-component.jsx
 import { gql, useMutation } from '@apollo/client';
 
-const MY_MUTATION = gql`
-  # Define mutation here
+// Define mutation
+const INCREMENT_COUNTER = gql`
+  # Increments a back-end counter and gets its resulting value
+  mutation IncrementCounter {
+    currentValue
+  }
 `;
 
 function MyComponent() {
-  const [mutateFunction, { data, loading, error }] = useMutation(MY_MUTATION);
+  // Pass mutation to useMutation
+  const [mutateFunction, { data, loading, error }] = useMutation(INCREMENT_COUNTER);
 }
 ```
 
- When your component renders, `useMutation` returns a tuple that includes:
+As shown above, you use the `gql` function to parse the mutation string into a GraphQL document that you then pass to `useMutation`.
+
+When your component renders, `useMutation` returns a tuple that includes:
 
 * A **mutate function** that you can call at any time to execute the mutation
-    * Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically. Instead, you call the mutate function.
+    * Unlike `useQuery`, `useMutation` _doesn't_ execute its operation automatically on render. Instead, you call the mutate function.
 * An object with fields that represent the current status of the mutation's execution (`data`, `loading`, etc.)
     * This object is similar to the object returned by the `useQuery` hook. For details, see [Result](#result).
 
@@ -152,7 +159,7 @@ TODO
 
 TODO
 
-### Include modified objects in mutation responses
+#### Include modified objects in mutation responses
 
 In most cases, a mutation response should include any object(s) the mutation modified. This enables Apollo Client to normalize those objects and cache them according to their `id` and `__typename` fields ([by default](../caching/cache-configuration/#generating-unique-identifiers)).
 
@@ -172,7 +179,7 @@ Upon receiving this response object, Apollo Client caches it with key `Todo:5`. 
 
 Returning modified objects like this is a helpful first step to keeping your cache in sync with your backend. However, it isn't always sufficient. For example, a newly cached object isn't automatically added to any _list fields_ that should now include that object. To accomplish this, you can define an `update` function.
 
-### The `update` function
+#### The `update` function
 
 A single mutation can create, modify, or delete any number of different entities in your data graph. Often, the mutation will return some representation of these updated entity objects as part of its result data. Apollo Client will automatically write these entity objects into the cache, which is sometimes enough to broadcast appropriate updates to your application, but not always.
 

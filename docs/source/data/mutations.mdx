@@ -106,11 +106,14 @@ In this example, our `form`'s `onSubmit` handler calls the **mutate function** (
 
 ### Providing options
 
-The `useMutation` hook accepts an `options` object as its second parameter. Here's an example that provides the `onCompleted` option to take an action after the mutation completes successfully:
+The `useMutation` hook accepts an `options` object as its second parameter. Here's an example that provides some default `variables`:
 
 ```js
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
-  onCompleted: (data) => console.log('Complete!')
+  variables: {
+    text: "placeholder",
+    someOtherVariable: 1234,
+  },
 });
 ```
 
@@ -119,12 +122,16 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
 You can _also_ provide these options to your mutate function, as demonstrated in [the example above](#example):
 
 ```js
-addTodo({ variables: { text: input.value } });
+addTodo({
+  variables: {
+    text: input.value,
+  },
+});
 ```
 
 Here, we're using the `variables` option to provide the values of any GraphQL variables that our mutation requires (specifically, the `text` of the created to-do item).
 
-> If you provide the same option to both `useMutation` _and_ your mutate function, the value you provide your mutate function takes precedence.
+If you provide the same option to both `useMutation` _and_ your mutate function, the value you provide your mutate function takes precedence. In this case, `variables.text` will end up equal to `input.value`, overriding the `"placeholder"` text. The two `variables` objects are merged shallowly, so `variables.someOtherVariable` is preserved. This preservation is convenient, since it means passing `variables` to the mutate function won't discard other `variables` you passed to the `useMutation` function.
 
 ### Tracking mutation status
 

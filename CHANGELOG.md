@@ -19,6 +19,8 @@
   [@benjamn](https://github.com/benjamn) in [#7810](https://github.com/apollographql/apollo-client/pull/7810)
 - Make sure the `MockedResponse` `ResultFunction` type is re-exported.  <br/>
   [@hwillson](https://github.com/hwillson) in [#8315](https://github.com/apollographql/apollo-client/pull/8315)
+- Fix polling when used with skip <br />
+  [@brainkim](https://github.com/brainkim) in [#8346](https://github.com/apollographql/apollo-client/pull/8346)
 
 ### Potentially breaking changes
 

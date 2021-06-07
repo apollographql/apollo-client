@@ -15,9 +15,17 @@ import {
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
   cloneDeep,
+  makeUniqueId,
 } from '../../../utilities';
 
 export type ResultFunction<T> = () => T;
+
+function stringifyForDisplay(value: any): string {
+  const undefId = makeUniqueId("stringifyForDisplay");
+  return JSON.stringify(value, (key, value) => {
+    return value === void 0 ? undefId : value;
+  }).split(JSON.stringify(undefId)).join("<undefined>");
+}
 
 export interface MockedResponse<TData = Record<string, any>> {
   request: GraphQLRequest;
@@ -72,46 +80,41 @@ export class MockLink extends ApolloLink {
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
-    let responseIndex: number = 0;
-    const diffs: Array<Record<string, any>> = [];
-    const response = (this.mockedResponsesByKey[key] || []).find(
-      (res, index) => {
-        const requestVariables = operation.variables || {};
-        const mockedResponseVariables = res.request.variables || {};
-        if (equal(requestVariables, mockedResponseVariables)) {
-          responseIndex = index;
-          return true;
-        }
-        diffs.push(mockedResponseVariables);
-        return false;
+    const unmatchedVars: Array<Record<string, any>> = [];
+    const requestVariables = operation.variables || {};
+    const mockedResponses = this.mockedResponsesByKey[key];
+    const responseIndex = mockedResponses ? mockedResponses.findIndex((res, index) => {
+      const mockedResponseVars = res.request.variables || {};
+      if (equal(requestVariables, mockedResponseVars)) {
+        return true;
       }
-    );
+      unmatchedVars.push(mockedResponseVars);
+      return false;
+    }) : -1;
+
+    const response = responseIndex >= 0
+      ? mockedResponses[responseIndex]
+      : void 0;
 
     let configError: Error;
 
-    if (!response || typeof responseIndex === 'undefined') {
-      const replacer = (key: string, value: any) =>
-        typeof value === 'undefined' ? "undefined" : value;
+    if (!response) {
       configError = new Error(
-        `No more mocked responses for the query: ${print(
-          operation.query
-        )}\nExpected variables:\n\t${JSON.stringify(operation.variables, replacer)}${
-        diffs.length > 0
-          ? `\nFound ${diffs.length} mock${
-          diffs.length > 1 ? "s" : ""
-          } with variables:\n${diffs.map(
-            (d, i) => `\t${i + 1}: ${JSON.stringify(d, replacer)}\n`
-          )}`
-          : ""
-        }`
-      )
+`No more mocked responses for the query: ${print(operation.query)}
+Expected variables: ${stringifyForDisplay(operation.variables)}
+${unmatchedVars.length > 0 ? `
+Failed to match ${unmatchedVars.length} mock${
+  unmatchedVars.length === 1 ? "" : "s"
+} for this query, which had the following variables:
+${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
+` : ""}`);
     } else {
-      this.mockedResponsesByKey[key].splice(responseIndex, 1);
+      mockedResponses.splice(responseIndex, 1);
 
       const { newData } = response;
       if (newData) {
         response.result = newData();
-        this.mockedResponsesByKey[key].push(response);
+        mockedResponses.push(response);
       }
 
       if (!response.result && !response.error) {

@@ -548,6 +548,87 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
+    itAsync('should start polling when skip goes from true to false', (resolve, reject) => {
+      const query = gql`
+        query car {
+          car {
+            id
+            make
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          id: 1,
+          make: 'Venturi',
+          __typename: 'Car',
+        }
+      };
+
+      const data2 = {
+        car: {
+          id: 2,
+          make: 'Wiesmann',
+          __typename: 'Car',
+        }
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: data1 } },
+        { request: { query }, result: { data: data2 } }
+      ];
+
+      let renderCount = 0;
+      const Component = () => {
+        const [shouldSkip, setShouldSkip] = useState(false);
+        let { data, loading, stopPolling } = useQuery(query, {
+          pollInterval: 100,
+          skip: shouldSkip,
+        });
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            setShouldSkip(true);
+            break;
+          case 3:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            setShouldSkip(false);
+            break;
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data1);
+            break;
+          case 5:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(data2);
+            stopPolling();
+            break;
+          default:
+            reject(new Error('too many updates'));
+        }
+
+        return null;
+      };
+
+      render(
+        <MockedProvider link={new MockLink(mocks).setOnError(reject)}>
+          <Component />
+        </MockedProvider>
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(5);
+      }).then(resolve, reject);
+    });
+
     itAsync('should stop polling when the component is unmounted', async (resolve, reject) => {
       const mocks = [
         ...CAR_MOCKS,

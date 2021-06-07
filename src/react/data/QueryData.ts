@@ -8,10 +8,11 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ObservableQuery,
+  applyNextFetchPolicy,
   FetchMoreOptions,
   UpdateQueryOptions,
   DocumentNode,
-  TypedDocumentNode
+  TypedDocumentNode,
 } from '../../core';
 
 import {
@@ -197,6 +198,8 @@ export class QueryData<TData, TVariables> extends OperationData<
         options.fetchPolicy === 'cache-and-network')
     ) {
       options.fetchPolicy = 'cache-first';
+    } else if (options.nextFetchPolicy && this.currentObservable) {
+      applyNextFetchPolicy(options);
     }
 
     return {
@@ -243,18 +246,18 @@ export class QueryData<TData, TVariables> extends OperationData<
       return;
     }
 
-    if (this.getOptions().skip) return;
-
     const newObservableQueryOptions = {
       ...this.prepareObservableQueryOptions(),
       children: null
     };
 
+    if (this.getOptions().skip) {
+      this.previous.observableQueryOptions = newObservableQueryOptions;
+      return;
+    }
+
     if (
-      !equal(
-        newObservableQueryOptions,
-        this.previous.observableQueryOptions
-      )
+      !equal(newObservableQueryOptions, this.previous.observableQueryOptions)
     ) {
       this.previous.observableQueryOptions = newObservableQueryOptions;
       this.currentObservable

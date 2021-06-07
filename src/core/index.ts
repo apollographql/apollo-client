@@ -10,6 +10,7 @@ export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
+  applyNextFetchPolicy,
 } from './ObservableQuery';
 export {
   QueryOptions,

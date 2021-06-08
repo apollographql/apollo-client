@@ -282,6 +282,64 @@ To address this we're using `cache.modify` which gives us a way to surgically in
 
 Any changes you make to cached data inside of an `update` function are automatically broadcast to queries that are listening for changes to that data. Consequently, your application's UI will update to reflect these updated cached values.
 
+#### Refetching `update`d data
+
+The goal of the `update` function is to simulate the effects of a mutation locally, even though most mutations really take place on a remote server. If the `update` function succeeds in simulating the authoritative server-side changes, then your users won't have to await another network round-trip to see the latest data.
+
+In other words, just as an [optimistic response](../performance/optimistic-ui/) represents an informed guess about the _response data_ a mutation will return, the `update` function represents an informed guess about any _indirect effects_ that mutation might have.
+
+Both of these guesses could be slightly wrong in some cases. The `optimisticResponse` eventually gets superseded by the real mutation response, but what can you do to check the guesswork of your `update` function?
+
+> Thankfully, although GraphQL mutations can have arbitrary effects on the server, a GraphQL client only needs to worry about mutation effects that can be later observed by refetching GraphQL queries.
+
+Normally, when the `update` function succeeds, the cache is modified, and those modifications are broadcast to the application, which rerenders a few of its components, without needing to refetch the affected queries from the network.
+
+If you knew which currently-active queries were affected by the `update` function, then perhaps you could refetch just those queries from the network, behind the scenes, updating the UI only if the network data turns out to be different from what your `update` function produced, in effect double-checking the work of the `update` function.
+
+That's where `onQueryUpdated` comes in handy:
+
+```js
+addTodo({
+  variables: { type: input.value },
+  update(cache, result) {
+    // Update the cache as an approximation of server-side mutation effects.
+  },
+  onQueryUpdated(observableQuery) {
+    // Provide your own dynamic logic for controlling refetching behavior.
+    if (shouldRefetchQuery(observableQuery)) {
+      return observableQuery.refetch();
+    }
+  },
+})
+```
+
+If the `update` function triggers changes to the results of any queries, those queries will be passed to the `onQueryUpdated` function, represented by `ObservableQuery` objects. If you decide to `refetch` a query to make sure the `update` function guessed correctly, you can do that by returning `observableQuery.refetch()` from the `onQueryUpdated` function, as shown above.
+
+The beauty of this system is that the UI should not need to rerender as long as your optimistic guesses (both `optimisticResponse` and the `update` function) were accurate.
+
+Occasionally, it might be difficult to make your `update` function update all relevant queries. Not every mutation returns enough information for the `update` function to do its job effectively. To make absolutely sure a certain query is included, you can combine `onQueryUpdated` with `refetchQueries: [...]`:
+
+```js
+addTodo({
+  variables: { type: input.value },
+  update(cache, result) {
+    // Update the cache as an approximation of server-side mutation effects.
+  },
+  // Force ReallyImportantQuery to be passed to onQueryUpdated.
+  refetchQueries: ["ReallyImportantQuery"],
+  onQueryUpdated(observableQuery) {
+    // If ReallyImportantQuery is active, it will be passed to onQueryUpdated.
+    // If no query with that name is active, a warning will be logged.
+  },
+})
+```
+
+If `ReallyImportantQuery` was already going to be passed to `onQueryUpdated` thanks of your `update` function, then it will only be passed once. Using `refetchQueries: ["ReallyImportantQuery"]` just guarantees the query will be included.
+
+If you find you've included more queries than you expected, you can skip or ignore a query by returning `false` from `onQueryUpdated`, after examining the `ObservableQuery` to determine that it doesn't need refetching. Returning a `Promise` from `onQueryUpdated` causes the final `Promise<FetchResult<TData>>` for the mutation to await any promises returned from `onQueryUpated`, eliminating the need for the legacy `awaitRefetchQueries: true` option.
+
+To use the `onQueryUpdated` API without performing a mutation, try the [`client.refetchQueries`](#TODO) method. In the standalone `client.refetchQueries` API, the `refetchQueries: [...]` mutation option is called `include: [...]`, and the `update` function is called `updateCache` for clarity. Otherwise, the same internal system powers both `client.refetchQueries` and refetching queries after a mutation.
+
 ## `useMutation` API
 
 Supported options and result fields for the `useMutation` hook are listed below.

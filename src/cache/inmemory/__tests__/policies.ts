@@ -318,7 +318,7 @@ describe("type policies", function () {
     })).toBe("MotionPicture::3993d4118143");
   });
 
-  it.only("does not remove previous typePolicies", function () {
+  it("does not remove previous typePolicies", function () {
     const cache = new InMemoryCache({
       typePolicies: {
         Query: {

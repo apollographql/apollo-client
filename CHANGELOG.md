@@ -85,6 +85,13 @@
 ### Documentation
 TBD
 
+## Apollo Client 3.3.20
+
+### Bug fixes
+
+- Fix policy merging bug when calling `cache.policies.addTypePolicies` multiple times for the same type policy. <br/>
+  [@Banou26](https://github.com/Banou26) in [#8361](https://github.com/apollographql/apollo-client/pull/8361)
+
 ## Apollo Client 3.3.19
 
 ### Bug fixes

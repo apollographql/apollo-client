@@ -186,19 +186,24 @@ export class ObservableQuery<
     });
   }
 
+  public getNetworkStatus() {
+    return this.queryInfo.networkStatus ||
+      (this.last && this.last.result.networkStatus) ||
+      NetworkStatus.ready;
+  }
+
+  public getLoading(networkStatus = this.getNetworkStatus()) {
+    return isNetworkRequestInFlight(networkStatus);
+  }
+
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
     const lastResult = this.getLastResult(true);
-
-    const networkStatus =
-      this.queryInfo.networkStatus ||
-      (lastResult && lastResult.networkStatus) ||
-      NetworkStatus.ready;
-
+    const networkStatus = this.getNetworkStatus();
     const result = {
       ...lastResult,
-      loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
+      loading: this.getLoading(networkStatus),
     } as ApolloQueryResult<TData>;
 
     // If this.options.query has @client(always: true) fields, we cannot trust

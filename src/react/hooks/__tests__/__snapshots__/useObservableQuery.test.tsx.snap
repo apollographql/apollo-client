@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useObservableQuery useObservableQuery avoids depending on whole query response 1`] = `
+Object {
+  "Item:1": Object {
+    "__typename": "Item",
+    "id": 1,
+  },
+  "Item:2": Object {
+    "__typename": "Item",
+    "id": 2,
+    "text": "Item #2 updated",
+  },
+  "Item:3": Object {
+    "__typename": "Item",
+    "id": 3,
+  },
+  "Item:4": Object {
+    "__typename": "Item",
+    "id": 4,
+    "text": "Item #4 updated",
+  },
+  "Item:5": Object {
+    "__typename": "Item",
+    "id": 5,
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "list": Array [
+      Object {
+        "__ref": "Item:1",
+      },
+      Object {
+        "__ref": "Item:2",
+      },
+      Object {
+        "__ref": "Item:3",
+      },
+      Object {
+        "__ref": "Item:4",
+      },
+      Object {
+        "__ref": "Item:5",
+      },
+    ],
+  },
+  "__META": Object {
+    "extraRootIds": Array [
+      "Item:2",
+      "Item:3",
+      "Item:4",
+    ],
+  },
+}
+`;

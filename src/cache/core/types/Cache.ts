@@ -28,7 +28,7 @@ export namespace Cache {
   export interface DiffOptions<
     TData = any,
     TVariables = any,
-  > extends ReadOptions<TVariables, TData> {
+  > extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
@@ -37,7 +37,7 @@ export namespace Cache {
   export interface WatchOptions<
     TData = any,
     TVariables = any,
-  > extends ReadOptions<TVariables, TData> {
+  > extends DiffOptions<TData, TVariables> {
     watcher?: object;
     immediate?: boolean;
     callback: WatchCallback<TData>;

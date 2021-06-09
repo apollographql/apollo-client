@@ -52,6 +52,7 @@ Array [
   "throwServerError",
   "toPromise",
   "useApolloClient",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -231,6 +232,7 @@ Array [
   "parser",
   "resetApolloContext",
   "useApolloClient",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -278,6 +280,7 @@ Array [
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
   "useApolloClient",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",

@@ -139,7 +139,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         // currently using a data store that can track cache dependencies.
         const store = c.optimistic ? this.optimisticData : this.data;
         if (supportsResultCaching(store)) {
-          const { optimistic, rootId, variables } = c;
+          const { optimistic, id, variables } = c;
           return store.makeCacheKey(
             c.query,
             // Different watches can have the same query, optimistic
@@ -149,7 +149,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
             // separation is to include c.callback in the cache key for
             // maybeBroadcastWatch calls. See issue #5733.
             c.callback,
-            canonicalStringify({ optimistic, rootId, variables }),
+            canonicalStringify({ optimistic, id, variables }),
           );
         }
       }
@@ -517,11 +517,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     options?: BroadcastOptions,
   ) {
     const { lastDiff } = c;
-    const diff = this.diff<any>({
-      query: c.query,
-      variables: c.variables,
-      optimistic: c.optimistic,
-    });
+    const diff = this.diff<any>(c);
 
     if (options) {
       if (c.optimistic &&

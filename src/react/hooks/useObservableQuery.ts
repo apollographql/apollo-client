@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { unstable_batchedUpdates } from "react-dom";
 import equal from "@wry/equality";
 
 import {
@@ -35,18 +36,23 @@ export function useObservableQuery<TData, TVars>(
 
     const sub = observable.subscribe({
       next(result) {
-        state.loadingVar(result.loading);
-        state.networkStatusVar(result.networkStatus);
-        state.errorVar(result.error);
-        state.dataVar(result.data);
+        unstable_batchedUpdates(() => {
+          state.loadingVar(result.loading);
+          state.networkStatusVar(result.networkStatus);
+          state.errorVar(result.error);
+          state.dataVar(result.data);
+        });
       },
+
       error(error) {
-        state.loadingVar(false);
-        state.networkStatusVar(NetworkStatus.error);
-        state.errorVar(error);
-        // Intentionally not clearing state.dataVar, since it may still be
-        // useful even though there's been an error.
-        // state.dataVar(void 0);
+        unstable_batchedUpdates(() => {
+          state.loadingVar(false);
+          state.networkStatusVar(NetworkStatus.error);
+          state.errorVar(error);
+          // Intentionally not clearing state.dataVar, since it may still be
+          // useful even though there's been an error.
+          // state.dataVar(void 0);
+        });
       },
     });
 

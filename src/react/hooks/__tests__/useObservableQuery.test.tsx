@@ -7,13 +7,13 @@ import { useObservableQuery } from "../useObservableQuery";
 import { itAsync } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
-  InMemoryCache,
+  ApolloClient,
+  ApolloLink,
   gql,
   TypedDocumentNode,
+  InMemoryCache,
   Reference,
-  ApolloLink,
   Observable,
-  ApolloClient,
   NetworkStatus,
 } from "../../../core";
 
@@ -97,10 +97,14 @@ describe("useObservableQuery", () => {
     function List() {
       renders.push("list");
 
-      const oq = useObservableQuery({
+      const {
+        observable,
+        useLoading,
+        useNetworkStatus,
+        useError,
+        useData,
+      } = useObservableQuery({
         query: listQuery,
-      }, {
-        error: reject,
       });
 
       const { complete, data } = useFragment({
@@ -108,13 +112,23 @@ describe("useObservableQuery", () => {
         from: { __typename: "Query" },
       });
 
+      expect(
+        observable.getLoading()
+          ? NetworkStatus.loading
+          : NetworkStatus.ready
+      ).toBe(observable.getNetworkStatus());
+      expect(observable.getLastError()).toBeUndefined();
+      expect(useError()).toBeUndefined();
+
+      // We avoid actually calling these hooks in this test because their state
+      // transitions would result in additional renders of the List component.
+      expect(typeof useLoading).toBe("function");
+      expect(typeof useNetworkStatus).toBe("function");
+      expect(typeof useData).toBe("function");
+
       // Test that we can force a specific ObservableQuery by passing it instead
       // of WatchQueryOptions.
-      expect(useObservableQuery(oq)).toBe(oq);
-
-      expect(
-        oq.getLoading() ? NetworkStatus.loading : NetworkStatus.ready
-      ).toBe(oq.getNetworkStatus());
+      expect(useObservableQuery(observable).observable).toBe(observable);
 
       return complete ? (
         <ol>

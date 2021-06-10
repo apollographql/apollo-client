@@ -1,14 +1,16 @@
 import * as React from "react";
 import { render, waitFor } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
+import { Subscription } from "zen-observable-ts";
 
 import { useFragment } from "../useFragment";
 import { useObservableQuery } from "../useObservableQuery";
-import { itAsync } from "../../../testing";
+import { itAsync, MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
   ApolloClient,
   ApolloLink,
+  ApolloQueryResult,
   gql,
   TypedDocumentNode,
   InMemoryCache,
@@ -18,6 +20,137 @@ import {
 } from "../../../core";
 
 describe("useObservableQuery", () => {
+  itAsync("can be used as a replacement for useQuery", (resolve, reject) => {
+    type TData = {
+      words: string[];
+    };
+
+    const query: TypedDocumentNode<TData> = gql`
+      query WordsQuery {
+        words
+      }
+    `;
+
+    let sub: Subscription | undefined;
+    const subResults = new Map<number, ApolloQueryResult<TData>>();
+
+    let renderCount = 0;
+    function Component() {
+      const {
+        observable,
+        useLoading,
+        useNetworkStatus,
+        useData,
+        useError,
+      } = useObservableQuery({
+        query,
+        notifyOnNetworkStatusChange: true,
+      });
+
+      const loading = useLoading();
+      const networkStatus = useNetworkStatus();
+      const data = useData();
+      const error = useError();
+
+      try {
+        expect(error).toBeUndefined();
+
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.loading);
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data).toEqual({
+              words: ["oyez"],
+            });
+            observable.refetch();
+            break;
+          case 3:
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.refetch);
+            expect(data).toEqual({
+              words: ["oyez"],
+            });
+            break;
+          case 4:
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data).toEqual({
+              words: ["oyez", "noyez"],
+            });
+            break;
+          default:
+            throw new Error(`too many renders (${renderCount})`);
+        }
+      } catch (error) {
+        reject(error);
+      }
+
+      if (!sub) {
+        sub = observable.subscribe({
+          error: reject,
+          next(result) {
+            subResults.set(renderCount, result);
+          },
+        });
+      }
+
+      return null;
+    }
+
+    render(
+      <MockedProvider mocks={[
+        {
+          request: { query },
+          result: {
+            data: {
+              words: ["oyez"],
+            },
+          },
+        },
+        {
+          request: { query },
+          result: {
+            data: {
+              words: ["oyez", "noyez"],
+            },
+          },
+        },
+      ]}>
+        <Component />
+      </MockedProvider>
+    );
+
+    waitFor(() => {
+      expect(renderCount).toBe(4);
+      expect(subResults.size).toBe(3);
+    }).then(() => {
+      sub?.unsubscribe();
+
+      expect(subResults.get(1)).toEqual({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: { words: ["oyez"] },
+      });
+
+      expect(subResults.get(2)).toEqual({
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        data: { words: ["oyez"] },
+      });
+
+      expect(subResults.get(3)).toEqual({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: { words: ["oyez", "noyez"] },
+      });
+    }).then(resolve, reject);
+  });
+
   type Item = {
     __typename: string;
     id: number;

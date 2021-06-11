@@ -1,4 +1,4 @@
-import { SelectionSetNode, FieldNode } from 'graphql';
+import { SelectionSetNode, FieldNode, SelectionNode } from 'graphql';
 import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
@@ -39,6 +39,11 @@ export interface WriteContext extends ReadMergeModifyContext {
   merge<T>(existing: T, incoming: T): T;
   // If true, merge functions will be called with undefined existing data.
   overwrite: boolean;
+  incomingById: Map<string, {
+    fields: StoreObject;
+    mergeTree: MergeTree;
+    selections: Set<SelectionNode>;
+  }>;
 };
 
 interface ProcessSelectionSetOptions {
@@ -70,27 +75,74 @@ export class StoreWriter {
       ...variables!,
     };
 
+    const context: WriteContext = {
+      store,
+      written: Object.create(null),
+      merge<T>(existing: T, incoming: T) {
+        return merger.merge(existing, incoming) as T;
+      },
+      variables,
+      varString: canonicalStringify(variables),
+      fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+      overwrite: !!overwrite,
+      incomingById: new Map,
+    };
+
     const ref = this.processSelectionSet({
       result: result || Object.create(null),
       dataId,
       selectionSet: operationDefinition.selectionSet,
       mergeTree: { map: new Map },
-      context: {
-        store,
-        written: Object.create(null),
-        merge<T>(existing: T, incoming: T) {
-          return merger.merge(existing, incoming) as T;
-        },
-        variables,
-        varString: canonicalStringify(variables),
-        fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        overwrite: !!overwrite,
-      },
+      context,
     });
 
     if (!isReference(ref)) {
       throw new InvariantError(`Could not identify object ${JSON.stringify(result)}`);
     }
+
+    // So far, the store has not been modified, so now it's time to process
+    // context.incomingById and merge those incoming fields into context.store.
+    context.incomingById.forEach(({ fields, mergeTree, selections }, dataId) => {
+      const entityRef = makeReference(dataId);
+
+      if (mergeTree.map.size) {
+        fields = this.applyMerges(mergeTree, entityRef, fields, context);
+      }
+
+      if (process.env.NODE_ENV !== "production" && !context.overwrite) {
+        const hasSelectionSet = (storeFieldName: string) =>
+          fieldsWithSelectionSets.has(fieldNameFromStoreName(storeFieldName));
+        const fieldsWithSelectionSets = new Set<string>();
+        selections.forEach(selection => {
+          if (isField(selection) && selection.selectionSet) {
+            fieldsWithSelectionSets.add(selection.name.value);
+          }
+        });
+
+        const hasMergeFunction = (storeFieldName: string) => {
+          const childTree = mergeTree.map.get(storeFieldName);
+          return Boolean(childTree && childTree.info && childTree.info.merge);
+        };
+
+        Object.keys(fields).forEach(storeFieldName => {
+          // If a merge function was defined for this field, trust that it
+          // did the right thing about (not) clobbering data. If the field
+          // has no selection set, it's a scalar field, so it doesn't need
+          // a merge function (even if it's an object, like JSON data).
+          if (hasSelectionSet(storeFieldName) &&
+              !hasMergeFunction(storeFieldName)) {
+            warnAboutDataLoss(
+              entityRef,
+              fields,
+              storeFieldName,
+              context.store,
+            );
+          }
+        });
+      }
+
+      store.merge(dataId, fields);
+    });
 
     // Any IDs written explicitly to the cache will be retained as
     // reachable root IDs for garbage collection purposes. Although this
@@ -170,9 +222,9 @@ export class StoreWriter {
       incomingFields.__typename = typename;
     }
 
-    const workSet = new Set(selectionSet.selections);
+    const selections = new Set(selectionSet.selections);
 
-    workSet.forEach(selection => {
+    selections.forEach(selection => {
       if (!shouldInclude(selection, context.variables)) return;
 
       if (isField(selection)) {
@@ -192,9 +244,41 @@ export class StoreWriter {
           let incomingValue =
             this.processFieldValue(value, selection, context, childTree);
 
-          const childTypename = selection.selectionSet
-            && context.store.getFieldValue<string>(incomingValue as StoreObject, "__typename")
-            || void 0;
+          // To determine if this field holds a child object with a merge
+          // function defined in its type policy (see PR #7070), we need to
+          // figure out the child object's __typename.
+          let childTypename: string | undefined;
+
+          // The field's value can be an object that has a __typename only if
+          // the field has a selection set. Otherwise incomingValue is scalar.
+          if (selection.selectionSet) {
+            // We attempt to find the child __typename first in context.store,
+            // but the child object may not exist in the store yet, likely
+            // because it's being written for the first time, during this very
+            // call to writeToStore. Note: if incomingValue is a non-normalized
+            // StoreObject (not a Reference), getFieldValue will read from that
+            // object's properties to find its __typename.
+            childTypename = context.store.getFieldValue<string>(
+              incomingValue as StoreObject | Reference,
+              "__typename",
+            );
+
+            // If the child object is being written for the first time, but
+            // incomingValue is a Reference, then the entity that Reference
+            // identifies should have an entry in context.incomingById, which
+            // likely contains a __typename field we can use. After all, how
+            // could we know the object's ID if it had no __typename? If we
+            // wrote data into context.store as each processSelectionSet call
+            // finished processing an entity object, the child object would
+            // already be in context.store, so we wouldn't need this extra
+            // check, but holding all context.store.merge calls until after
+            // we've finished all processSelectionSet work is cleaner and solves
+            // other problems, such as issue #8370.
+            if (!childTypename && isReference(incomingValue)) {
+              const info = context.incomingById.get(incomingValue.__ref);
+              childTypename = info && info.fields.__typename;
+            }
+          }
 
           const merge = policies.getMergeFunction(
             typename,
@@ -257,53 +341,29 @@ export class StoreWriter {
             // __typename strings produced by server/schema changes, which
             // would otherwise be breaking changes.
             policies.fragmentMatches(fragment, typename, result, context.variables)) {
-          fragment.selectionSet.selections.forEach(workSet.add, workSet);
+          fragment.selectionSet.selections.forEach(selections.add, selections);
         }
       }
     });
 
     if ("string" === typeof dataId) {
-      const entityRef = makeReference(dataId);
-
-      if (mergeTree.map.size) {
-        incomingFields = this.applyMerges(mergeTree, entityRef, incomingFields, context);
-      }
-
-      if (process.env.NODE_ENV !== "production" && !context.overwrite) {
-        const hasSelectionSet = (storeFieldName: string) =>
-          fieldsWithSelectionSets.has(fieldNameFromStoreName(storeFieldName));
-        const fieldsWithSelectionSets = new Set<string>();
-        workSet.forEach(selection => {
-          if (isField(selection) && selection.selectionSet) {
-            fieldsWithSelectionSets.add(selection.name.value);
-          }
-        });
-
-        const hasMergeFunction = (storeFieldName: string) => {
-          const childTree = mergeTree.map.get(storeFieldName);
-          return Boolean(childTree && childTree.info && childTree.info.merge);
-        };
-
-        Object.keys(incomingFields).forEach(storeFieldName => {
-          // If a merge function was defined for this field, trust that it
-          // did the right thing about (not) clobbering data. If the field
-          // has no selection set, it's a scalar field, so it doesn't need
-          // a merge function (even if it's an object, like JSON data).
-          if (hasSelectionSet(storeFieldName) &&
-              !hasMergeFunction(storeFieldName)) {
-            warnAboutDataLoss(
-              entityRef,
-              incomingFields,
-              storeFieldName,
-              context.store,
-            );
-          }
+      const previous = context.incomingById.get(dataId);
+      if (previous) {
+        previous.fields = context.merge(previous.fields, incomingFields);
+        previous.mergeTree = mergeMergeTrees(previous.mergeTree, mergeTree);
+        // Add all previous SelectionNode objects, rather than creating a new
+        // Set, since the original unmerged selections Set is not going to be
+        // needed again (only the merged Set).
+        previous.selections.forEach(selections.add, selections);
+        previous.selections = selections;
+      } else {
+        context.incomingById.set(dataId, {
+          fields: incomingFields,
+          mergeTree,
+          selections,
         });
       }
-
-      context.store.merge(dataId, incomingFields);
-
-      return entityRef;
+      return makeReference(dataId);
     }
 
     return incomingFields;
@@ -388,11 +448,13 @@ export class StoreWriter {
       };
 
       mergeTree.map.forEach((childTree, storeFieldName) => {
+        const eVal = getValue(e, storeFieldName);
+        const iVal = getValue(i, storeFieldName);
+        // If we have no incoming data, leave any existing data untouched.
+        if (void 0 === iVal) return;
         if (getStorageArgs) {
           getStorageArgs.push(storeFieldName);
         }
-        const eVal = getValue(e, storeFieldName);
-        const iVal = getValue(i, storeFieldName);
         const aVal = this.applyMerges(
           childTree,
           eVal,
@@ -444,14 +506,59 @@ function getChildMergeTree(
   return map.get(name)!;
 }
 
+function mergeMergeTrees(
+  left: MergeTree | undefined,
+  right: MergeTree | undefined,
+): MergeTree {
+  if (left === right || !right || mergeTreeIsEmpty(right)) return left!;
+  if (!left || mergeTreeIsEmpty(left)) return right;
+
+  const info = left.info && right.info ? {
+    ...left.info,
+    ...right.info,
+  } : left.info || right.info;
+
+  const needToMergeMaps = left.map.size && right.map.size;
+  const map = needToMergeMaps ? new Map :
+    left.map.size ? left.map : right.map;
+
+  const merged = { info, map };
+
+  if (needToMergeMaps) {
+    const remainingRightKeys = new Set(right.map.keys());
+
+    left.map.forEach((leftTree, key) => {
+      merged.map.set(
+        key,
+        mergeMergeTrees(leftTree, right.map.get(key)),
+      );
+      remainingRightKeys.delete(key);
+    });
+
+    remainingRightKeys.forEach(key => {
+      merged.map.set(
+        key,
+        mergeMergeTrees(
+          right.map.get(key),
+          left.map.get(key),
+        ),
+      );
+    });
+  }
+
+  return merged;
+}
+
+function mergeTreeIsEmpty(tree: MergeTree | undefined): boolean {
+  return !tree || !(tree.info || tree.map.size);
+}
+
 function maybeRecycleChildMergeTree(
   { map }: MergeTree,
   name: string | number,
 ) {
   const childTree = map.get(name);
-  if (childTree &&
-      !childTree.info &&
-      !childTree.map.size) {
+  if (childTree && mergeTreeIsEmpty(childTree)) {
     emptyMergeTreePool.push(childTree);
     map.delete(name);
   }

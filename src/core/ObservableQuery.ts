@@ -250,15 +250,16 @@ export class ObservableQuery<
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
-      // Unless the provided fetchPolicy always consults the network
-      // (no-cache, network-only, or cache-and-network), override it with
-      // network-only to force the refetch for this fetchQuery call.
       fetchPolicy: 'network-only',
     };
 
+    // Unless the provided fetchPolicy always consults the network
+    // (no-cache, network-only, or cache-and-network), override it with
+    // network-only to force the refetch for this fetchQuery call.
     const { fetchPolicy } = this.options;
-    if (fetchPolicy !== 'no-cache' &&
-        fetchPolicy !== 'cache-and-network') {
+    if (fetchPolicy === 'no-cache') {
+      reobserveOptions.fetchPolicy = 'no-cache';
+    } else if (fetchPolicy !== 'cache-and-network') {
       reobserveOptions.fetchPolicy = 'network-only';
       // Go back to the original options.fetchPolicy after this refetch.
       reobserveOptions.nextFetchPolicy = fetchPolicy || "cache-first";

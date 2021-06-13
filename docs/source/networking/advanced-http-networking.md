@@ -25,7 +25,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
       ...headers,
       authorization: localStorage.getItem('token') || null,
     }
-  });
+  }));
 
   return forward(operation);
 })

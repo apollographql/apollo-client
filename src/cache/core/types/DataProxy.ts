@@ -118,6 +118,12 @@ export namespace DataProxy {
   export interface WriteFragmentOptions<TData, TVariables>
     extends Fragment<TVariables, TData>, WriteOptions<TData> {}
 
+  export interface ModifyQueryOptions<TData, TVariables>
+    extends Omit<ReadQueryOptions<TData, TVariables> & WriteQueryOptions<TData, TVariables>, 'data'> {}
+
+  export interface ModifyFragmentOptions<TData, TVariables>
+    extends Omit<ReadFragmentOptions<TData, TVariables> & WriteFragmentOptions<TData, TVariables>, 'data'> {}
+
   export type DiffResult<T> = {
     result?: T;
     complete?: boolean;

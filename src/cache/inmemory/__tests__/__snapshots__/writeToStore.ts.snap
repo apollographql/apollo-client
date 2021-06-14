@@ -69,6 +69,35 @@ Object {
 }
 `;
 
+exports[`writing to the store should respect id fields added by fragments 1`] = `
+Object {
+  "AType:a-id": Object {
+    "__typename": "AType",
+    "b": Array [
+      Object {
+        "__ref": "BType:b-id",
+      },
+    ],
+    "id": "a-id",
+  },
+  "BType:b-id": Object {
+    "__typename": "BType",
+    "c": Object {
+      "__typename": "CType",
+      "title": "Your experience",
+      "titleSize": null,
+    },
+    "id": "b-id",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": Object {
+      "__ref": "AType:a-id",
+    },
+  },
+}
+`;
+
 exports[`writing to the store user objects should be able to have { __typename: "Mutation" } 1`] = `
 Object {
   "Gene:{\\"id\\":\\"SLC45A2\\"}": Object {

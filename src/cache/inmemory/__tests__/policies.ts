@@ -9,6 +9,7 @@ import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { FieldPolicy, StorageType } from "../policies";
+import { withErrorSpy } from "../../../testing";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -253,7 +254,7 @@ describe("type policies", function () {
     checkAuthorName(cache);
   });
 
-  it("complains about missing key fields", function () {
+  withErrorSpy(it, "complains about missing key fields", function () {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -583,7 +584,7 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
-    it("assumes keyArgs:false when read and merge function present", function () {
+    withErrorSpy(it, "assumes keyArgs:false when read and merge function present", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           TypeA: {
@@ -1281,7 +1282,7 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
-    it("read and merge can cooperate through options.storage", function () {
+    withErrorSpy(it, "read and merge can cooperate through options.storage", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {
@@ -1922,7 +1923,7 @@ describe("type policies", function () {
       });
     });
 
-    it("readField helper function calls custom read functions", function () {
+    withErrorSpy(it, "readField helper function calls custom read functions", function () {
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
       const ownTimes: Record<string, ReactiveVar<number>> = {
@@ -3099,6 +3100,7 @@ describe("type policies", function () {
           node: {
             __typename: "SearchableItem",
             displayLabel: "James Turrell: Light knows when we’re looking",
+            description: "<placeholder for unknown description>",
           },
         },
       ];
@@ -3528,7 +3530,7 @@ describe("type policies", function () {
       });
     });
 
-    it("runs nested merge functions as well as ancestors", function () {
+    withErrorSpy(it, "runs nested merge functions as well as ancestors", function () {
       let eventMergeCount = 0;
       let attendeeMergeCount = 0;
 

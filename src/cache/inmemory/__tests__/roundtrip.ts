@@ -10,6 +10,7 @@ import {
   readQueryFromStore,
   withError,
 } from './helpers';
+import { withErrorSpy } from '../../../testing';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
@@ -315,7 +316,7 @@ describe('roundtrip', () => {
 
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
-    it('should throw an error on two of the same inline fragment types', () => {
+    withErrorSpy(it, 'should throw an error on two of the same inline fragment types', () => {
       expect(() => {
         storeRoundtrip(
           gql`
@@ -342,7 +343,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Missing field 'rank' /);
+      }).toThrowError(/Can't find field 'rank' /);
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
@@ -455,7 +456,7 @@ describe('roundtrip', () => {
       });
     });
 
-    it('should throw on error on two of the same spread fragment types', () => {
+    withErrorSpy(it, 'should throw on error on two of the same spread fragment types', () => {
       expect(() => {
         storeRoundtrip(
           gql`
@@ -486,7 +487,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Missing field 'rank' /);
+      }).toThrowError(/Can't find field 'rank' /);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

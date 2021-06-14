@@ -1843,7 +1843,10 @@ describe('ObservableQuery', () => {
                   value: 'oyez',
                 };
               }
-              client.writeQuery({ query, data });
+              client.writeQuery({
+                query: queryOptions.query,
+                data,
+              });
             },
             error(err) {
               expect(err.message).toMatch(/No more mocked responses/);

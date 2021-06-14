@@ -20,6 +20,7 @@ import {
   stripSymbols,
   subscribeAndCount,
   mockSingleLink,
+  withErrorSpy,
 } from '../testing';
 
 describe('client', () => {
@@ -2081,6 +2082,7 @@ describe('client', () => {
         resolve();
       });
   });
+
   itAsync('should allow errors to be returned from a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
@@ -2102,7 +2104,12 @@ describe('client', () => {
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
-        result: { data, errors },
+        result: {
+          errors,
+          data: {
+            newPerson: data,
+          },
+        },
       }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
@@ -2112,7 +2119,9 @@ describe('client', () => {
         expect(result.errors).toBeDefined();
         expect(result.errors!.length).toBe(1);
         expect(result.errors![0].message).toBe(errors[0].message);
-        expect(result.data).toEqual(data);
+        expect(result.data).toEqual({
+          newPerson: data,
+        });
         resolve();
       })
       .catch((error: ApolloError) => {
@@ -2132,9 +2141,11 @@ describe('client', () => {
       }
     `;
     const data = {
-      person: {
-        firstName: 'John',
-        lastName: 'Smith',
+      newPerson: {
+        person: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
       },
     };
     const errors = [new Error('Some kind of GraphQL error.')];
@@ -2631,7 +2642,7 @@ describe('client', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should warn if server returns wrong data', (resolve, reject) => {
+  withErrorSpy(itAsync, 'should warn if server returns wrong data', (resolve, reject) => {
     const query = gql`
       query {
         todos {
@@ -2654,6 +2665,7 @@ describe('client', () => {
         ],
       },
     };
+
     const link = mockSingleLink({
       request: { query },
       result,
@@ -2666,14 +2678,9 @@ describe('client', () => {
       }),
     });
 
-    return client.query({ query }).then(
-      result => {
-        fail("should have errored");
-      },
-      error => {
-        expect(error.message).toMatch(/Missing field 'description' /);
-      },
-    ).then(resolve, reject);
+    return client.query({ query }).then(({ data }) => {
+      expect(data).toEqual(result.data);
+    }).then(resolve, reject);
   });
 
   itAsync('runs a query with the connection directive and writes it to the store key defined in the directive', (resolve, reject) => {

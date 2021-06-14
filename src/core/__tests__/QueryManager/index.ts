@@ -5741,7 +5741,11 @@ describe('QueryManager', () => {
       const queryManager = createQueryManager({
         link: mockSingleLink({
           request: { query },
-          result: { author: { firstName: 'John' } },
+          result: {
+            data: {
+              author: { firstName: 'John' },
+            },
+          },
         }),
       });
 
@@ -5749,6 +5753,7 @@ describe('QueryManager', () => {
 
       expect(queryManager['inFlightLinkObservables'].size).toBe(1)
     });
+
     it('should allow overriding global queryDeduplication: true to false', () => {
       const query = gql`
         query {
@@ -5757,10 +5762,15 @@ describe('QueryManager', () => {
           }
         }
       `;
+
       const queryManager = createQueryManager({
         link: mockSingleLink({
           request: { query },
-          result: { author: { firstName: 'John' } },
+          result: {
+            data: {
+              author: { firstName: 'John' },
+            },
+          },
         }),
         queryDeduplication: true,
       });

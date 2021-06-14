@@ -20,6 +20,7 @@ import { itAsync } from '../../../utilities/testing/itAsync';
 import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
+import { withErrorSpy } from '../../../testing';
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -1798,7 +1799,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    it('should write the result data without validating its shape when a fragment matcher is not provided', () => {
+    withErrorSpy(it, 'should write the result data without validating its shape when a fragment matcher is not provided', () => {
       const result = {
         todos: [
           {
@@ -1823,7 +1824,7 @@ describe('writing to the store', () => {
       expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
     });
 
-    it('should warn when it receives the wrong data with non-union fragments', () => {
+    withErrorSpy(it, 'should warn when it receives the wrong data with non-union fragments', () => {
       const result = {
         todos: [
           {
@@ -1840,13 +1841,11 @@ describe('writing to the store', () => {
         }),
       );
 
-      expect(() => {
-        writeQueryToStore({
-          writer,
-          query,
-          result,
-        });
-      }).toThrowError(/Missing field 'description' /);
+      writeQueryToStore({
+        writer,
+        query,
+        result,
+      });
     });
 
     it('should warn when it receives the wrong data inside a fragment', () => {
@@ -1893,13 +1892,11 @@ describe('writing to the store', () => {
         }),
       );
 
-      expect(() => {
-        writeQueryToStore({
-          writer,
-          query: queryWithInterface,
-          result,
-        });
-      }).toThrowError(/Missing field 'price' /);
+      writeQueryToStore({
+        writer,
+        query: queryWithInterface,
+        result,
+      });
     });
 
     it('should warn if a result is missing __typename when required', () => {
@@ -1920,13 +1917,11 @@ describe('writing to the store', () => {
         }),
       );
 
-      expect(() => {
-        writeQueryToStore({
-          writer,
-          query: addTypenameToDocument(query),
-          result,
-        });
-      }).toThrowError(/Missing field '__typename' /);
+      writeQueryToStore({
+        writer,
+        query: addTypenameToDocument(query),
+        result,
+      });
     });
 
     it('should not warn if a field is null', () => {
@@ -2190,7 +2185,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('should not keep reference when type of mixed inlined field changes to non-inlined field', () => {
+  withErrorSpy(it, 'should not keep reference when type of mixed inlined field changes to non-inlined field', () => {
     const store = defaultNormalizedCacheFactory();
 
     const query = gql`

@@ -69,6 +69,46 @@ Object {
 }
 `;
 
+exports[`writing to the store should not keep reference when type of mixed inlined field changes to non-inlined field 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'price' while writing result {
+  \\"id\\": \\"1\\",
+  \\"name\\": \\"Todo 1\\",
+  \\"description\\": \\"Description 1\\",
+  \\"__typename\\": \\"ShoppingCartItem\\"
+}",
+    ],
+    Array [
+      "Missing field 'expensive' while writing result {
+  \\"id\\": 1
+}",
+    ],
+    Array [
+      "Missing field 'id' while writing result {
+  \\"__typename\\": \\"Cat\\",
+  \\"name\\": \\"cat\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
 exports[`writing to the store should respect id fields added by fragments 1`] = `
 Object {
   "AType:a-id": Object {
@@ -175,5 +215,43 @@ Object {
       "name": "Clytemnestra",
     },
   },
+}
+`;
+
+exports[`writing to the store writeResultToStore shape checking should warn when it receives the wrong data with non-union fragments 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'description' while writing result {
+  \\"id\\": \\"1\\",
+  \\"name\\": \\"Todo 1\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`writing to the store writeResultToStore shape checking should write the result data without validating its shape when a fragment matcher is not provided 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'description' while writing result {
+  \\"id\\": \\"1\\",
+  \\"name\\": \\"Todo 1\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
 }
 `;

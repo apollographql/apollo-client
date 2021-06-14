@@ -1402,6 +1402,145 @@ describe('writing to the store', () => {
     });
   });
 
+  it('correctly merges fragment fields along multiple paths', () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Container: {
+          // Uncommenting this line fixes the test, but should not be necessary,
+          // since the Container response object in question has the same
+          // identity along both paths.
+          // merge: true,
+        },
+      },
+    });
+
+    const query = gql`
+      query Query {
+        item(id: "123") {
+          id
+          value {
+            ...ContainerFragment
+          }
+        }
+      }
+
+      fragment ContainerFragment on Container {
+        value {
+          ...ValueFragment
+          item {
+            id
+            value {
+              text
+            }
+          }
+        }
+      }
+
+      fragment ValueFragment on Value {
+        item {
+          ...ItemFragment
+        }
+      }
+
+      fragment ItemFragment on Item {
+        value {
+          value {
+            __typename
+          }
+        }
+      }
+    `;
+
+    const data = {
+      item: {
+        __typename: "Item",
+        id: "0f47f85d-8081-466e-9121-c94069a77c3e",
+        value: {
+          __typename: "Container",
+          value: {
+            __typename: "Value",
+            item: {
+              __typename: "Item",
+              id: "6dc3530b-6731-435e-b12a-0089d0ae05ac",
+              value: {
+                __typename: "Container",
+                text: "Hello World",
+                value: {
+                  __typename: "Value"
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data,
+    });
+
+    expect(cache.readQuery({ query })).toEqual(data);
+    expect(cache.extract()).toMatchSnapshot();
+  });
+
+  it('should respect id fields added by fragments', () => {
+    const query = gql`
+      query ABCQuery {
+        __typename
+        a {
+          __typename
+          id
+          ...SharedFragment
+          b {
+            __typename
+            c {
+              __typename
+              title
+              titleSize
+            }
+          }
+        }
+      }
+      fragment SharedFragment on AShared {
+        __typename
+        b {
+          __typename
+          id
+          c {
+            __typename
+          }
+        }
+      }
+    `;
+
+    const data = {
+      __typename: "Query",
+      a: {
+        __typename: "AType",
+        id: "a-id",
+        b: [{
+          __typename: "BType",
+          id: "b-id",
+          c: {
+            __typename: "CType",
+            title: "Your experience",
+            titleSize: null
+          },
+        }],
+      },
+    };
+
+    const cache = new InMemoryCache({
+      possibleTypes: { AShared: ["AType"] }
+    });
+
+    cache.writeQuery({ query, data });
+    expect(cache.readQuery({ query })).toEqual(data);
+
+    expect(cache.extract()).toMatchSnapshot();
+  });
+
   it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {
     const dataWithPlaceholder = {
       author: {

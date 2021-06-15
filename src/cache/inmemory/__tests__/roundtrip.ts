@@ -57,7 +57,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   const immutableResult = readQueryFromStore(reader, readOptions);
   expect(immutableResult).toEqual(reconstructedResult);
   expect(readQueryFromStore(reader, readOptions)).toBe(immutableResult);
-  if (process.env.NODE_ENV !== 'production') {
+  if (__DEV__) {
     try {
       // Note: this illegal assignment will only throw in strict mode, but that's
       // safe to assume because this test file is a module.

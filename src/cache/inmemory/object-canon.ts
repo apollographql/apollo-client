@@ -118,7 +118,7 @@ export class ObjectCanon {
             // Since canonical arrays may be shared widely between
             // unrelated consumers, it's important to regard them as
             // immutable, even if they are not frozen in production.
-            if (process.env.NODE_ENV !== "production") {
+            if (__DEV__) {
               Object.freeze(array);
             }
           }
@@ -154,7 +154,7 @@ export class ObjectCanon {
             // Since canonical objects may be shared widely between
             // unrelated consumers, it's important to regard them as
             // immutable, even if they are not frozen in production.
-            if (process.env.NODE_ENV !== "production") {
+            if (__DEV__) {
               Object.freeze(obj);
             }
           }

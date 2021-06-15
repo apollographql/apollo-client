@@ -1,5 +1,7 @@
 /* Core */
 
+export { __DEV__ } from "../utilities";
+
 export {
   ApolloClient,
   ApolloClientOptions,

@@ -151,7 +151,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         // devtools, but disable them by default in production.
         typeof window === 'object' &&
         !(window as any).__APOLLO_CLIENT__ &&
-        process.env.NODE_ENV !== 'production',
+        __DEV__,
       queryDeduplication = true,
       defaultOptions,
       assumeImmutableResults = false,
@@ -205,7 +205,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && process.env.NODE_ENV !== 'production') {
+    if (!hasSuggestedDevtools && __DEV__) {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&

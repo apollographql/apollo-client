@@ -1,3 +1,5 @@
+export { __DEV__ } from "../utilities";
+
 export {
   ApolloProvider,
   ApolloConsumer,

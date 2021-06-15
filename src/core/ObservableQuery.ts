@@ -679,18 +679,22 @@ once, rather than every time you call fetchMore.`);
     }
 
     const concast = this.fetch(options, newNetworkStatus);
-    if (this.concast) {
+    if (newNetworkStatus !== NetworkStatus.refetch) {
       // We use the {add,remove}Observer methods directly to avoid
       // wrapping observer with an unnecessary SubscriptionObserver
       // object, in part so that we can remove it here without triggering
       // any unsubscriptions, because we just want to ignore the old
       // observable, not prematurely shut it down, since other consumers
       // may be awaiting this.concast.promise.
-      this.concast.removeObserver(this.observer, true);
+      if (this.concast) {
+        this.concast.removeObserver(this.observer, true);
+      }
+
+      this.concast = concast;
     }
 
     concast.addObserver(this.observer);
-    return (this.concast = concast).promise;
+    return concast.promise;
   }
 
   // Pass the current result to this.observer.next without applying any

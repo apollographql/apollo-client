@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`useObservableQuery useObservableQuery avoids depending on whole query response 1`] = `
+exports[`useBackgroundQuery useBackgroundQuery avoids depending on whole query response 1`] = `
 Object {
   "Item:1": Object {
     "__typename": "Item",

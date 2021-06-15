@@ -1,4 +1,5 @@
-export { __DEV__ } from "./globals";
+import { __DEV__ } from "./globals";
+export { __DEV__ }
 
 export {
   DirectiveInfo,

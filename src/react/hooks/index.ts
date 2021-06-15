@@ -7,4 +7,4 @@ export { useQuery } from './useQuery';
 export * from './useSubscription';
 export * from './useReactiveVar';
 export * from './useFragment';
-export * from './useObservableQuery';
+export * from './useBackgroundQuery';

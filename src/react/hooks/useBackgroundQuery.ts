@@ -15,11 +15,11 @@ import {
 import { useApolloClient } from "./useApolloClient";
 import { useReactiveVar } from "./useReactiveVar";
 
-export function useObservableQuery<TData, TVars>(
+export function useBackgroundQuery<TData, TVars>(
   queryOrOptions:
     | ObservableQuery<TData, TVars>
     | WatchQueryOptions<TVars, TData>,
-): UseObservableQueryResult<TData, TVars> {
+): UseBackgroundQueryResult<TData, TVars> {
   const state = useInternalState(queryOrOptions);
   const { observable } = state;
 
@@ -62,10 +62,10 @@ export function useObservableQuery<TData, TVars>(
   return state;
 }
 
-export interface UseObservableQueryResult<TData, TVars> {
+export interface UseBackgroundQueryResult<TData, TVars> {
   observable: ObservableQuery<TData, TVars>;
   // By returning hook functions that the component can choose to call (or not),
-  // useObservableQuery is technically a "higher-order hook," in the same way a
+  // useBackgroundQuery is technically a "higher-order hook," in the same way a
   // function that returns other functions is a higher-order function.
   useLoading(): boolean;
   useNetworkStatus(): NetworkStatus;
@@ -74,7 +74,7 @@ export interface UseObservableQueryResult<TData, TVars> {
 }
 
 interface InternalState<TData, TVars>
-extends UseObservableQueryResult<TData, TVars> {
+extends UseBackgroundQueryResult<TData, TVars> {
   options: WatchQueryOptions<TVars, TData>;
   loadingVar: ReactiveVar<boolean>;
   networkStatusVar: ReactiveVar<NetworkStatus>;

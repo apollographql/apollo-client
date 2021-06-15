@@ -4,7 +4,7 @@ import { act } from "react-dom/test-utils";
 import { Subscription } from "zen-observable-ts";
 
 import { useFragment } from "../useFragment";
-import { useObservableQuery } from "../useObservableQuery";
+import { useBackgroundQuery } from "../useBackgroundQuery";
 import { itAsync, MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
@@ -19,7 +19,7 @@ import {
   NetworkStatus,
 } from "../../../core";
 
-describe("useObservableQuery", () => {
+describe("useBackgroundQuery", () => {
   itAsync("can be used as a replacement for useQuery", (resolve, reject) => {
     type TData = {
       words: string[];
@@ -42,7 +42,7 @@ describe("useObservableQuery", () => {
         useNetworkStatus,
         useData,
         useError,
-      } = useObservableQuery({
+      } = useBackgroundQuery({
         query,
         notifyOnNetworkStatusChange: true,
       });
@@ -175,7 +175,7 @@ describe("useObservableQuery", () => {
     list: Item[];
   };
 
-  itAsync("useObservableQuery avoids depending on whole query response", async (resolve, reject) => {
+  itAsync("useBackgroundQuery avoids depending on whole query response", async (resolve, reject) => {
     const cache = new InMemoryCache({
       typePolicies: {
         Item: {
@@ -236,7 +236,7 @@ describe("useObservableQuery", () => {
         useNetworkStatus,
         useError,
         useData,
-      } = useObservableQuery({
+      } = useBackgroundQuery({
         query: listQuery,
       });
 
@@ -261,7 +261,7 @@ describe("useObservableQuery", () => {
 
       // Test that we can force a specific ObservableQuery by passing it instead
       // of WatchQueryOptions.
-      expect(useObservableQuery(observable).observable).toBe(observable);
+      expect(useBackgroundQuery(observable).observable).toBe(observable);
 
       return complete ? (
         <ol>

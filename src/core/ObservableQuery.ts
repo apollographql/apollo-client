@@ -72,7 +72,7 @@ export class ObservableQuery<
     interval: number;
     timeout: ReturnType<typeof setTimeout>;
   };
-  private shouldFetch: false | (() => boolean);
+
   constructor({
     queryManager,
     queryInfo,
@@ -98,13 +98,7 @@ export class ObservableQuery<
 
     // related classes
     this.queryManager = queryManager;
-
     this.queryInfo = queryInfo;
-
-    // Avoid polling during SSR and when the query is already in flight.
-    this.shouldFetch =
-      !this.queryManager.ssrMode &&
-      (() => !isNetworkRequestInFlight(this.queryInfo.networkStatus));
   }
 
   public result(): Promise<ApolloQueryResult<TData>> {
@@ -544,6 +538,11 @@ once, rather than every time you call fetchMore.`);
 
   // Turns polling on or off based on this.options.pollInterval.
   private updatePolling() {
+    // Avoid polling in SSR mode
+    if (this.queryManager.ssrMode) {
+      return;
+    }
+
     const {
       pollingInfo,
       options: {
@@ -569,17 +568,12 @@ once, rather than every time you call fetchMore.`);
       'Attempted to start a polling query without a polling interval.',
     );
 
-    // Go no further if polling is disabled.
-    if (this.shouldFetch === false) {
-      return;
-    }
-
     const info = pollingInfo || (this.pollingInfo = {} as any);
     info.interval = pollInterval;
 
     const maybeFetch = () => {
       if (this.pollingInfo) {
-        if (this.shouldFetch && this.shouldFetch()) {
+        if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
           this.reobserve({
             fetchPolicy: "network-only",
             nextFetchPolicy: this.options.fetchPolicy || "cache-first",

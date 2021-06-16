@@ -72,8 +72,6 @@ export class QueryData<TData, TVariables> extends OperationData<
 
     this.updateObservableQuery();
 
-    if (this.isMounted) this.startQuerySubscription();
-
     return this.getExecuteSsrResult() || this.getExecuteResult();
   }
 
@@ -100,6 +98,10 @@ export class QueryData<TData, TVariables> extends OperationData<
 
   public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
     this.isMounted = true;
+
+    if (this.currentObservable) {
+      this.startQuerySubscription();
+    }
 
     if (!lazy || this.runLazy) {
       this.handleErrorOrCompleted();

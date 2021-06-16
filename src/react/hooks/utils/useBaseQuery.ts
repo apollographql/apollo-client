@@ -70,7 +70,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     ? (result as QueryTuple<TData, TVariables>)[1]
     : (result as QueryResult<TData, TVariables>);
 
-  if (typeof window === 'undefined') {
+  if (!lazy && typeof window === 'undefined') {
     queryData.cleanup();
   }
 

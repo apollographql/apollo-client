@@ -82,9 +82,50 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer: Observer<ApolloQueryResult<TData>>) =>
-      this.onSubscribe(observer),
-    );
+    super((observer: Observer<ApolloQueryResult<TData>>) => {
+      // Subscribing using this.observer will create an infinite notificaion
+      // loop, but the intent of broadcasting results to all the other
+      // this.observers can be satisfied without doing anything, which is
+      // why we do not bother throwing an error here.
+      if (observer === this.observer) {
+        throw new Error('This never actually happens');
+      }
+
+      // Zen Observable has its own error function, so in order to log correctly
+      // we need to provide a custom error callback.
+      try {
+        var subObserver = (observer as any)._subscription._observer;
+        if (subObserver && !subObserver.error) {
+          subObserver.error = defaultSubscriptionObserverErrorCallback;
+        }
+      } catch {}
+
+      const first = !this.observers.size;
+      this.observers.add(observer);
+
+      // Deliver most recent error or result.
+      if (this.lastError) {
+        observer.error && observer.error(this.lastError);
+      } else if (this.lastResult) {
+        observer.next && observer.next(this.lastResult);
+      }
+
+      // Initiate observation of this query if it hasn't been reported to
+      // the QueryManager yet.
+      if (first) {
+        // Blindly catching here prevents unhandled promise rejections,
+        // and is safe because the ObservableQuery handles this error with
+        // this.observer.error, so we're not just swallowing the error by
+        // ignoring it here.
+        this.reobserve().catch(() => {});
+      }
+
+      return () => {
+        if (this.observers.delete(observer) && !this.observers.size) {
+          this.tearDownQuery();
+        }
+      };
+    });
 
     // active state
     this.isTornDown = false;
@@ -605,51 +646,6 @@ once, rather than every time you call fetchMore.`);
       delete this.lastError;
     }
     return previousResult;
-  }
-
-  private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
-    // Subscribing using this.observer will create an infinite notificaion
-    // loop, but the intent of broadcasting results to all the other
-    // this.observers can be satisfied without doing anything, which is
-    // why we do not bother throwing an error here.
-    if (observer === this.observer) {
-      throw new Error('This never actually happens');
-    }
-
-    // Zen Observable has its own error function, so in order to log correctly
-    // we need to provide a custom error callback.
-    try {
-      var subObserver = (observer as any)._subscription._observer;
-      if (subObserver && !subObserver.error) {
-        subObserver.error = defaultSubscriptionObserverErrorCallback;
-      }
-    } catch {}
-
-    const first = !this.observers.size;
-    this.observers.add(observer);
-
-    // Deliver most recent error or result.
-    if (this.lastError) {
-      observer.error && observer.error(this.lastError);
-    } else if (this.lastResult) {
-      observer.next && observer.next(this.lastResult);
-    }
-
-    // Initiate observation of this query if it hasn't been reported to
-    // the QueryManager yet.
-    if (first) {
-      // Blindly catching here prevents unhandled promise rejections,
-      // and is safe because the ObservableQuery handles this error with
-      // this.observer.error, so we're not just swallowing the error by
-      // ignoring it here.
-      this.reobserve().catch(() => {});
-    }
-
-    return () => {
-      if (this.observers.delete(observer) && !this.observers.size) {
-        this.tearDownQuery();
-      }
-    };
   }
 
   public reobserve(

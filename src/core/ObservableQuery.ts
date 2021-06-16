@@ -250,7 +250,6 @@ export class ObservableQuery<
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
-      fetchPolicy: 'network-only',
     };
 
     // Unless the provided fetchPolicy always consults the network

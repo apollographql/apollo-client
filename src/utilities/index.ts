@@ -1,5 +1,5 @@
-import { __DEV__ } from "./globals";
-export { __DEV__ }
+import { DEV } from "./globals";
+export { DEV }
 
 export {
   DirectiveInfo,

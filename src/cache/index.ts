@@ -1,4 +1,4 @@
-export { __DEV__ } from "../utilities";
+export { DEV } from "../utilities";
 
 export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';

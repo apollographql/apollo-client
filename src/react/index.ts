@@ -1,4 +1,4 @@
-export { __DEV__ } from "../utilities";
+export { DEV } from "../utilities";
 
 export {
   ApolloProvider,

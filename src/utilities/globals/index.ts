@@ -1,7 +1,7 @@
 // Just in case the graphql package switches from process.env.NODE_ENV to
 // __DEV__, make sure __DEV__ is polyfilled before importing graphql.
-import { default as __DEV__ } from "./__DEV__";
-export { __DEV__ }
+import DEV from "./__DEV__";
+export { DEV }
 
 // Import graphql/jsutils/instanceOf safely, working around its unchecked usage
 // of process.env.NODE_ENV and https://github.com/graphql/graphql-js/pull/2894.

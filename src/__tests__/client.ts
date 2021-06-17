@@ -2582,8 +2582,9 @@ describe('client', () => {
         const lastError = observable.getLastError();
         const lastResult = observable.getLastResult();
 
-        expect(lastResult.loading).toBeFalsy();
-        expect(lastResult.networkStatus).toBe(8);
+        expect(lastResult).toBeTruthy();
+        expect(lastResult!.loading).toBe(false);
+        expect(lastResult!.networkStatus).toBe(8);
 
         observable.resetLastResults();
         subscription = observable.subscribe(observerOptions);

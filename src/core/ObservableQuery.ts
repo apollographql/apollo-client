@@ -61,9 +61,9 @@ export class ObservableQuery<
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
   private subscriptions = new Set<ObservableSubscription>();
 
-  private lastResult: ApolloQueryResult<TData>;
-  private lastResultSnapshot: ApolloQueryResult<TData>;
-  private lastError: ApolloError;
+  private lastResult: ApolloQueryResult<TData> | undefined;
+  private lastResultSnapshot: ApolloQueryResult<TData> | undefined;
+  private lastError: ApolloError | undefined;
   private queryInfo: QueryInfo;
 
   constructor({
@@ -134,11 +134,11 @@ export class ObservableQuery<
       (lastResult && lastResult.networkStatus) ||
       NetworkStatus.ready;
 
-    const result: ApolloQueryResult<TData> = {
+    const result = {
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-    };
+    } as ApolloQueryResult<TData>;
 
     if (this.isTornDown) {
       return result;
@@ -208,11 +208,11 @@ export class ObservableQuery<
 
   // Returns the last result that observer.next was called with. This is not the same as
   // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
-  public getLastResult(): ApolloQueryResult<TData> {
+  public getLastResult(): ApolloQueryResult<TData> | undefined {
     return this.lastResult;
   }
 
-  public getLastError(): ApolloError {
+  public getLastError(): ApolloError | undefined {
     return this.lastError;
   }
 
@@ -623,7 +623,7 @@ once, rather than every time you call fetchMore.`);
         errors: error.graphQLErrors,
         networkStatus: NetworkStatus.error,
         loading: false,
-      });
+      } as ApolloQueryResult<TData>);
 
       iterateObserversSafely(this.observers, 'error', this.lastError = error);
     },

@@ -98,8 +98,13 @@ export class QueryData<TData, TVariables> extends OperationData<
 
   public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
     this.isMounted = true;
-
-    if (this.currentObservable) {
+    const options = this.getOptions();
+    const ssrDisabled = options.ssr === false;
+    if (
+      this.currentObservable &&
+      !ssrDisabled &&
+      !this.ssrInitiated()
+    ) {
       this.startQuerySubscription();
     }
 
@@ -107,7 +112,7 @@ export class QueryData<TData, TVariables> extends OperationData<
       this.handleErrorOrCompleted();
     }
 
-    this.previousOptions = this.getOptions();
+    this.previousOptions = options;
     return this.unmount.bind(this);
   }
 
@@ -151,9 +156,7 @@ export class QueryData<TData, TVariables> extends OperationData<
   };
 
   private getExecuteResult(): QueryResult<TData, TVariables> {
-    const result = this.getQueryResult();
-    this.startQuerySubscription();
-    return result;
+    return this.getQueryResult();
   };
 
   private getExecuteSsrResult() {

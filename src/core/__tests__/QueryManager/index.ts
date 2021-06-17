@@ -5440,7 +5440,7 @@ describe('QueryManager', () => {
   describe('awaitRefetchQueries', () => {
     const awaitRefetchTest =
     ({ awaitRefetchQueries, testQueryError = false }: MutationBaseOptions<any, any, any> & { testQueryError?: boolean }) =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       const query = gql`
         query getAuthors($id: ID!) {
           author(id: $id) {
@@ -5540,7 +5540,7 @@ describe('QueryManager', () => {
           expect(stripSymbols(result.data)).toEqual(secondReqData);
         },
       )
-      .then(resolve)
+      .then(() => resolve())
       .catch(error => {
         const isRefetchError = awaitRefetchQueries && testQueryError &&
           error.message.includes(refetchError?.message);

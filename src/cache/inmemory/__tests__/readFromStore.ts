@@ -1710,7 +1710,7 @@ describe('reading from the store', () => {
       ...snapshotAfterGC,
       __META: zeusMeta,
     };
-    delete snapshotWithoutAres["Deity:{\"name\":\"Ares\"}"];
+    delete (snapshotWithoutAres as any)["Deity:{\"name\":\"Ares\"}"];
     expect(cache.extract()).toEqual(snapshotWithoutAres);
     // Ares already removed, so no new garbage to collect.
     expect(cache.gc()).toEqual([]);

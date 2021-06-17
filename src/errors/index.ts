@@ -1,3 +1,7 @@
+import { invariant } from "ts-invariant";
+import { DEV } from "../utilities";
+invariant("boolean" === typeof DEV, DEV);
+
 import { GraphQLError } from 'graphql';
 
 import { isNonEmptyArray } from '../utilities';

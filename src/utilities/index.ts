@@ -1,4 +1,6 @@
+import { invariant } from "ts-invariant";
 import { DEV } from "./globals";
+invariant("boolean" === typeof DEV, DEV);
 export { DEV }
 
 export {

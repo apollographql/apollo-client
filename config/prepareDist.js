@@ -73,6 +73,7 @@ entryPoints.forEach(function buildPackageJson({
       module: 'index.js',
       types: 'index.d.ts',
       sideEffects,
+      ...dirs.includes('core') && { type: "module" },
     }, null, 2) + "\n",
   );
 });

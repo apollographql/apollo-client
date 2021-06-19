@@ -328,6 +328,7 @@ Array [
   "asyncMap",
   "buildQueryFromSelectionSet",
   "canUseWeakMap",
+  "canUseWeakSet",
   "checkDocument",
   "cloneDeep",
   "compact",

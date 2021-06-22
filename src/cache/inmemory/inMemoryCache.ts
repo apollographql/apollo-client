@@ -159,6 +159,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public restore(data: NormalizedCacheObject): this {
+    this.init();
+    // Since calling this.init() discards/replaces the entire StoreReader, along
+    // with the result caches it maintains, this.data.replace(data) won't have
+    // to bother deleting the old data.
     if (data) this.data.replace(data);
     return this;
   }

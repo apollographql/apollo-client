@@ -253,7 +253,7 @@ Next, we modify our `CommentsPageWithData` function to add a `subscribeToNewComm
 ```jsx{10-25}
 function CommentsPageWithData({ params }) {
   const { subscribeToMore, ...result } = useQuery(
-    COMMENT_QUERY,
+    COMMENTS_QUERY,
     { variables: { postID: params.postID } }
   );
 

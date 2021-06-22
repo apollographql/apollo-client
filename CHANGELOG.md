@@ -94,6 +94,13 @@
 ### Documentation
 TBD
 
+## Apollo Client 3.3.21 (not yet released)
+
+### Bug fixes
+
+- Fix race condition in `@apollo/client/link/context` that could leak subscriptions if the subscription is cancelled before `operation.setContext` is called. <br/>
+  [@sofianhn](https://github.com/sofianhn) in [#8399](https://github.com/apollographql/apollo-client/pull/8399)
+
 ## Apollo Client 3.3.20
 
 ### Bug fixes

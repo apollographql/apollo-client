@@ -720,6 +720,69 @@ describe('useQuery Hook', () => {
       }
     );
 
+    itAsync(
+      'stop polling and start polling should work with StrictMode',
+      (resolve, reject) => {
+        const query = gql`
+          query car {
+            car {
+              id
+              make
+            }
+          }
+        `;
+
+        const data1 = {
+          car: {
+            id: 1,
+            make: 'Venturi',
+            __typename: 'Car',
+          }
+        };
+
+        const mocks = [
+          { request: { query }, result: { data: data1 } },
+        ];
+
+        let renderCount = 0;
+        const Component = () => {
+          let { data, loading, stopPolling } = useQuery(query, {
+            pollInterval: 100,
+          });
+
+          switch (++renderCount) {
+            case 1:
+            case 2:
+              expect(loading).toBeTruthy();
+              expect(data).toBeUndefined();
+              break;
+            case 3:
+            case 4:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(data1);
+              stopPolling();
+              break;
+            default:
+              reject(new Error('Unexpected render count'));
+          }
+
+          return null;
+        };
+
+        render(
+          <React.StrictMode>
+            <MockedProvider link={new MockLink(mocks).setOnError(reject)}>
+              <Component />
+            </MockedProvider>
+          </React.StrictMode>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(4);
+        }).then(() => setTimeout(resolve, 300), reject);
+      },
+    );
+
     it('should set called to true by default', () => {
       const Component = () => {
         const { loading, called } = useQuery(CAR_QUERY);

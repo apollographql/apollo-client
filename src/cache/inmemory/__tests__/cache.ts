@@ -2603,6 +2603,17 @@ describe("InMemoryCache#modify", () => {
 
     expect(aResults).toEqual([a123, a124]);
     expect(bResults).toEqual([b321, b322]);
+
+    // Check that resetting the result cache does not trigger additional watch
+    // notifications.
+    expect(cache.gc({
+      resetResultCache: true,
+    })).toEqual([]);
+    expect(aResults).toEqual([a123, a124]);
+    expect(bResults).toEqual([b321, b322]);
+    cache["broadcastWatches"]();
+    expect(aResults).toEqual([a123, a124]);
+    expect(bResults).toEqual([b321, b322]);
   });
 
   it("should handle argument-determined field identities", () => {

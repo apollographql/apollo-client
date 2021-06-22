@@ -106,6 +106,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = rootStore.stump;
 
+    this.resetResultCache();
+  }
+
+  private resetResultCache() {
+    // The StoreWriter is mostly stateless and so doesn't really need to be
+    // reset, but it does need to have its writer.storeReader reference updated,
+    // so it's simpler to update this.storeWriter as well.
     this.storeWriter = new StoreWriter(
       this,
       this.storeReader = new StoreReader({
@@ -263,9 +270,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   // Request garbage collection of unreachable normalized entities.
-  public gc() {
+  public gc(options?: {
+    resetResultCache?: boolean;
+  }) {
     canonicalStringify.reset();
-    return this.optimisticData.gc();
+    const ids = this.optimisticData.gc();
+    if (options && options.resetResultCache) {
+      this.resetResultCache();
+    }
+    return ids;
   }
 
   // Call this method to ensure the given root ID remains in the cache after

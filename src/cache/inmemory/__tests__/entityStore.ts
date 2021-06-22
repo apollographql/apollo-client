@@ -200,19 +200,32 @@ describe('EntityStore', () => {
       },
     });
 
-    // Nothing left to garbage collect, but let's also reset the result cache to
+    // Nothing left to collect, but let's also reset the result cache to
     // demonstrate that the recomputed cache results are unchanged.
+    const originalReader = cache["storeReader"];
     expect(cache.gc({
       resetResultCache: true,
+    })).toEqual([]);
+    expect(cache["storeReader"]).not.toBe(originalReader);
+    const resultAfterResetResultCache = cache.readQuery({ query });
+    expect(resultAfterResetResultCache).toBe(resultBeforeGC);
+    expect(resultAfterResetResultCache).toBe(resultAfterGC);
+
+    // Now discard cache.storeReader.canon as well.
+    expect(cache.gc({
+      resetResultCache: true,
+      preserveCanon: false,
     })).toEqual([]);
 
     const resultAfterFullGC = cache.readQuery({ query });
     expect(resultAfterFullGC).toEqual(resultBeforeGC);
     expect(resultAfterFullGC).toEqual(resultAfterGC);
-    // These !== relations are triggered by the resetResultCache:true option
+    // These !== relations are triggered by the preserveCanon:false option
     // passed to cache.gc, above.
     expect(resultAfterFullGC).not.toBe(resultBeforeGC);
     expect(resultAfterFullGC).not.toBe(resultAfterGC);
+    // Result caching immediately begins working again after the intial reset.
+    expect(cache.readQuery({ query })).toBe(resultAfterFullGC);
 
     // Go back to the pre-GC snapshot.
     cache.restore(snapshot);

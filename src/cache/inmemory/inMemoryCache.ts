@@ -109,7 +109,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.resetResultCache();
   }
 
-  private resetResultCache() {
+  private resetResultCache(preserveCanon = true) {
+    const previousReader = this.storeReader;
+
     // The StoreWriter is mostly stateless and so doesn't really need to be
     // reset, but it does need to have its writer.storeReader reference updated,
     // so it's simpler to update this.storeWriter as well.
@@ -119,6 +121,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
+        canon: (
+          preserveCanon &&
+          previousReader &&
+          previousReader["canon"]
+        ) || void 0,
       }),
     );
 
@@ -269,14 +276,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     };
   }
 
-  // Request garbage collection of unreachable normalized entities.
   public gc(options?: {
+    // If true, also free non-essential result cache memory by bulk-releasing
+    // this.{store{Reader,Writer},maybeBroadcastWatch}. Defaults to false.
     resetResultCache?: boolean;
+    // If resetResultCache is true, this.storeReader.canon will be preserved by
+    // default, but can also be discarded by passing false for preserveCanon.
+    // Defaults to true, but has no effect if resetResultCache is false.
+    preserveCanon?: boolean;
   }) {
     canonicalStringify.reset();
     const ids = this.optimisticData.gc();
-    if (options && options.resetResultCache) {
-      this.resetResultCache();
+    if (options && options.resetResultCache && !this.txCount) {
+      this.resetResultCache(options.preserveCanon);
     }
     return ids;
   }

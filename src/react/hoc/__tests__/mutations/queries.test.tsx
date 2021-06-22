@@ -281,13 +281,15 @@ describe('graphql(mutation) query integration', () => {
       > {
         render() {
           if (count === 1) {
-            this.props.mutate!()
-              .then(result => {
-                expect(stripSymbols(result && result.data)).toEqual(
-                  mutationData
-                );
-              })
-              .catch(reject);
+            setTimeout(() => {
+              this.props.mutate!()
+                .then(result => {
+                  expect(stripSymbols(result && result.data)).toEqual(
+                    mutationData
+                  );
+                })
+                .catch(reject);
+            });
           }
           return null;
         }

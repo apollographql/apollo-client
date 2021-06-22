@@ -83,14 +83,6 @@ export class ObservableQuery<
     options: WatchQueryOptions<TVariables, TData>;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) => {
-      // Subscribing using this.observer will create an infinite notificaion
-      // loop, but the intent of broadcasting results to all the other
-      // this.observers can be satisfied without doing anything, which is
-      // why we do not bother throwing an error here.
-      if (observer === this.observer) {
-        throw new Error('This never actually happens');
-      }
-
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {
@@ -144,6 +136,9 @@ export class ObservableQuery<
 
   public result(): Promise<ApolloQueryResult<TData>> {
     return new Promise((resolve, reject) => {
+      // TODO: this code doesn’t actually make sense insofar as the observer
+      // will never exist in this.observers due how zen-observable wraps observables.
+      // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
       const observer: Observer<ApolloQueryResult<TData>> = {
         next: (result: ApolloQueryResult<TData>) => {
           resolve(result);
@@ -537,19 +532,13 @@ once, rather than every time you call fetchMore.`);
   }
 
   public startPolling(pollInterval: number) {
-    this.updateOptions({ pollInterval });
+    this.options.pollInterval = pollInterval;
+    this.updatePolling();
   }
 
   public stopPolling() {
-    this.updateOptions({ pollInterval: 0 });
-  }
-
-  public updateOptions(
-    newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
-  ) {
-    Object.assign(this.options, compact(newOptions));
+    this.options.pollInterval = 0;
     this.updatePolling();
-    return this;
   }
 
   private fetch(
@@ -562,19 +551,6 @@ once, rather than every time you call fetchMore.`);
       options,
       newNetworkStatus,
     );
-  }
-
-  public stop() {
-    if (this.concast) {
-      this.concast.removeObserver(this.observer);
-      delete this.concast;
-    }
-
-    if (this.pollingInfo) {
-      clearTimeout(this.pollingInfo.timeout);
-      this.options.pollInterval = 0;
-      this.updatePolling();
-    }
   }
 
   // Turns polling on or off based on this.options.pollInterval.
@@ -656,13 +632,11 @@ once, rather than every time you call fetchMore.`);
     let options: WatchQueryOptions<TVariables, TData>;
     if (newNetworkStatus === NetworkStatus.refetch) {
       options = Object.assign({}, this.options, compact(newOptions));
-    } else if (newOptions) {
-      this.updateOptions(newOptions);
-      options = this.options;
     } else {
-      // When we call this.updateOptions(newOptions) in the branch above,
-      // it takes care of calling this.updatePolling(). In this branch, we
-      // still need to update polling, even if there were no newOptions.
+      if (newOptions) {
+        Object.assign(this.options, compact(newOptions));
+      }
+
       this.updatePolling();
       options = this.options;
     }
@@ -725,7 +699,12 @@ once, rather than every time you call fetchMore.`);
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    this.stop();
+    if (this.concast) {
+      this.concast.removeObserver(this.observer);
+      delete this.concast;
+    }
+
+    this.stopPolling();
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();

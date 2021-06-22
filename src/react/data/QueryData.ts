@@ -155,10 +155,6 @@ export class QueryData<TData, TVariables> extends OperationData<
     this.onNewData();
   };
 
-  private getExecuteResult(): QueryResult<TData, TVariables> {
-    return this.getQueryResult();
-  };
-
   private getExecuteSsrResult() {
     const { ssr, skip } = this.getOptions();
     const ssrDisabled = ssr === false;
@@ -182,7 +178,7 @@ export class QueryData<TData, TVariables> extends OperationData<
     }
 
     if (this.ssrInitiated()) {
-      const result = this.getQueryResult() || ssrLoading;
+      const result = this.getExecuteResult() || ssrLoading;
       if (result.loading && !skip) {
         this.context.renderPromises!.addQueryPromise(this, () => null);
       }
@@ -339,7 +335,7 @@ export class QueryData<TData, TVariables> extends OperationData<
     }
   }
 
-  private getQueryResult = (): QueryResult<TData, TVariables> => {
+  private getExecuteResult(): QueryResult<TData, TVariables> {
     let result = this.observableQueryFields() as QueryResult<TData, TVariables>;
     const options = this.getOptions();
 

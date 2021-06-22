@@ -25,6 +25,7 @@ import {
   getFragmentFromSelection,
   maybeDeepFreeze,
   isNonNullObject,
+  canUseWeakMap,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
@@ -84,6 +85,7 @@ export interface StoreReaderConfig {
   cache: InMemoryCache,
   addTypename?: boolean;
   resultCacheMaxSize?: number;
+  canon?: ObjectCanon;
 }
 
 // Arguments type after keyArgs translation.
@@ -127,11 +129,19 @@ export class StoreReader {
     resultCacheMaxSize?: number;
   };
 
+  private canon: ObjectCanon;
+
+  private knownResults = new (
+    canUseWeakMap ? WeakMap : Map
+  )<Record<string, any>, SelectionSetNode>();
+
   constructor(config: StoreReaderConfig) {
     this.config = {
       ...config,
       addTypename: config.addTypename !== false,
     };
+
+    this.canon = config.canon || new ObjectCanon;
 
     this.executeSelectionSet = wrap(options => {
       const { canonizeResults } = options.context;
@@ -420,10 +430,6 @@ export class StoreReader {
 
     return finalResult;
   }
-
-  private canon = new ObjectCanon;
-
-  private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
   // Uncached version of executeSubSelectedArray.
   private execSubSelectedArrayImpl({

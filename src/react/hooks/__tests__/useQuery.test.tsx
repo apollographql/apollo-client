@@ -8,7 +8,7 @@ import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
-import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
+import { itAsync, MockLink, MockedProvider, mockSingleLink, withErrorSpy } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { QueryFunctionOptions } from '../..';
@@ -2022,7 +2022,7 @@ describe('useQuery Hook', () => {
   });
 
   describe('Partial refetching', () => {
-    itAsync(
+    withErrorSpy(itAsync,
       'should attempt a refetch when the query result was marked as being ' +
         'partial, the returned data was reset to an empty Object by the ' +
         'Apollo Client QueryManager (due to a cache miss), and the ' +
@@ -2391,13 +2391,15 @@ describe('useQuery Hook', () => {
       let renderCount = 0;
       const Component = () => {
         const [mutate, { loading: mutationLoading }] = useMutation(mutation, {
-          optimisticResponse: carData,
+          optimisticResponse: {
+            addCar: carData,
+          },
           update: (cache, { data }) => {
             cache.modify({
               fields: {
                 cars(existing, { readField }) {
                   const newCarRef = cache.writeFragment({
-                    data,
+                    data: data!.addCar,
                     fragment: gql`fragment NewCar on Car {
                       id
                       make
@@ -2405,7 +2407,7 @@ describe('useQuery Hook', () => {
                     }`,
                   });
                   if (existing.some(
-                    (ref: Reference) => readField('id', ref) === data!.id
+                    (ref: Reference) => readField('id', ref) === data!.addCar.id
                   )) {
                     return existing;
                   }

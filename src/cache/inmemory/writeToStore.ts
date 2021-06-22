@@ -18,8 +18,8 @@ import {
   Reference,
   isReference,
   shouldInclude,
-  hasDirectives,
   cloneDeep,
+  addTypenameToDocument,
 } from '../../utilities';
 
 import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
@@ -44,6 +44,7 @@ export interface WriteContext extends ReadMergeModifyContext {
     mergeTree: MergeTree;
     selections: Set<SelectionNode>;
   }>;
+  clientOnly: boolean;
 };
 
 interface ProcessSelectionSetOptions {
@@ -86,6 +87,7 @@ export class StoreWriter {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       overwrite: !!overwrite,
       incomingById: new Map,
+      clientOnly: false,
     };
 
     const ref = this.processSelectionSet({
@@ -231,7 +233,13 @@ export class StoreWriter {
         const resultFieldKey = resultKeyNameFromField(selection);
         const value = result[resultFieldKey];
 
-        if (typeof value !== 'undefined') {
+        const wasClientOnly = context.clientOnly;
+        context.clientOnly = wasClientOnly || !!(
+          selection.directives &&
+          selection.directives.some(d => d.name.value === "client")
+        );
+
+        if (value !== void 0) {
           const storeFieldName = policies.getStoreFieldName({
             typename,
             fieldName: selection.name.value,
@@ -303,17 +311,18 @@ export class StoreWriter {
           });
 
         } else if (
-          policies.usingPossibleTypes &&
-          !hasDirectives(["defer", "client"], selection)
+          !context.clientOnly &&
+          !addTypenameToDocument.added(selection)
         ) {
-          throw new InvariantError(
-            `Missing field '${resultFieldKey}' in ${JSON.stringify(
-              result,
-              null,
-              2,
-            ).substring(0, 100)}`,
-          );
+          invariant.error(`Missing field '${
+            resultKeyNameFromField(selection)
+          }' while writing result ${
+            JSON.stringify(result, null, 2)
+          }`.substring(0, 1000));
         }
+
+        context.clientOnly = wasClientOnly;
+
       } else {
         // This is not a field, so it must be a fragment, either inline or named
         const fragment = getFragmentFromSelection(

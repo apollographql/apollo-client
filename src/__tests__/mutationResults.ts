@@ -6,7 +6,7 @@ import { ApolloClient } from '../core';
 import { InMemoryCache } from '../cache';
 import { ApolloLink } from '../link/core';
 import { Observable, ObservableSubscription as Subscription } from '../utilities';
-import { itAsync, subscribeAndCount, mockSingleLink } from '../testing';
+import { itAsync, subscribeAndCount, mockSingleLink, withErrorSpy } from '../testing';
 
 describe('mutation results', () => {
   const query = gql`
@@ -400,7 +400,7 @@ describe('mutation results', () => {
     resolve();
   });
 
-  itAsync("should warn when the result fields don't match the query fields", (resolve, reject) => {
+  withErrorSpy(itAsync, "should warn when the result fields don't match the query fields", (resolve, reject) => {
     let handle: any;
     let subscriptionHandle: Subscription;
 
@@ -482,16 +482,11 @@ describe('mutation results', () => {
           return newResults;
         },
       },
-    })).then(
-      () => {
-        subscriptionHandle.unsubscribe();
-        fail("should have errored");
-      },
-      error => {
-        subscriptionHandle.unsubscribe();
-        expect(error.message).toMatch(/Missing field 'description' /);
-      },
-    ).then(resolve, reject);
+    })).finally(
+      () => subscriptionHandle.unsubscribe(),
+    ).then(result => {
+      expect(result).toEqual(mutationTodoResult);
+    }).then(resolve, reject);
   });
 
   describe('InMemoryCache type/field policies', () => {

@@ -2857,7 +2857,7 @@ describe("ReactiveVar and makeVar", () => {
 
     const query = gql`
       query {
-        onCall {
+        onCall @client {
           name
         }
       }

@@ -13,3 +13,4 @@ export { createMockClient } from './mocking/mockClient';
 export { stripSymbols } from './stripSymbols';
 export { default as subscribeAndCount } from './subscribeAndCount';
 export { itAsync } from './itAsync';
+export { withErrorSpy } from './withErrorSpy';

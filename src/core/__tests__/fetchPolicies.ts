@@ -610,7 +610,7 @@ describe('cache-only', () => {
       })),
     });
 
-    const query = gql`query { counter }`;
+    const query = gql`query { count }`;
 
     const observable = client.watchQuery({
       query,

@@ -8,7 +8,7 @@ import { ApolloError } from '../../../../errors';
 import { ApolloLink } from '../../../../link/core';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
-import { itAsync, stripSymbols, MockedProvider, mockSingleLink } from '../../../../testing';
+import { itAsync, stripSymbols, MockedProvider, mockSingleLink, withErrorSpy } from '../../../../testing';
 import { Query } from '../../Query';
 
 const allPeopleQuery: DocumentNode = gql`
@@ -1853,7 +1853,7 @@ describe('Query component', () => {
       console.warn = origConsoleWarn;
     });
 
-    itAsync(
+    withErrorSpy(itAsync,
       'should attempt a refetch when the query result was marked as being ' +
         'partial, the returned data was reset to an empty Object by the ' +
         'Apollo Client QueryManager (due to a cache miss), and the ' +

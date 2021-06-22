@@ -307,6 +307,7 @@ describe('EntityStore', () => {
             {
               __typename: 'Book',
               isbn: '9781451673319',
+              title: 'Fahrenheit 451',
             },
           ],
         },
@@ -535,6 +536,7 @@ describe('EntityStore', () => {
             {
               __typename: 'Book',
               isbn: '0735211280',
+              title: "Spineless",
             },
           ],
         },
@@ -1559,7 +1561,7 @@ describe('EntityStore', () => {
     expect(cache.identify(todoRef!)).toBe("Todo:123");
 
     const taskRef = cache.writeFragment({
-      fragment: gql`fragment TaskId on Task { id }`,
+      fragment: gql`fragment TaskId on Task { uuid }`,
       data: {
         __typename: "Task",
         uuid: "eb8cffcc-7a9e-4d8b-a517-7d987bf42138",

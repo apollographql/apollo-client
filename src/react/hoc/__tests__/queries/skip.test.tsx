@@ -628,7 +628,7 @@ describe('[queries] skip', () => {
           switch (++count) {
             case 1:
               expect(this.props.data.loading).toBe(true);
-              expect(ranQuery).toBe(1);
+              expect(ranQuery).toBe(0);
               break;
             case 2:
               // The first batch of data is fetched over the network, and

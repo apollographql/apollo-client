@@ -677,6 +677,60 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
+    itAsync('should stop polling when the component is unmounted when using StrictMode', async (resolve, reject) => {
+      const mocks = [
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+        ...CAR_MOCKS,
+      ];
+
+      const mockLink = new MockLink(mocks).setOnError(reject);
+
+      const linkRequestSpy = jest.spyOn(mockLink, 'request');
+
+      let renderCount = 0;
+      const QueryComponent = ({ unmount }: { unmount: () => void }) => {
+        const { data, loading } = useQuery(CAR_QUERY, { pollInterval: 10 });
+        switch (++renderCount) {
+          case 1:
+          case 2:
+            expect(loading).toBeTruthy();
+            break;
+          case 3:
+          case 4:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(CAR_RESULT_DATA);
+            expect(linkRequestSpy).toHaveBeenCalledTimes(1);
+            if (renderCount === 3) {
+              unmount();
+            }
+            break;
+          default:
+            reject("unreached");
+        }
+        return null;
+      };
+
+      const Component = () => {
+        const [queryMounted, setQueryMounted] = useState(true);
+        const unmount = () => setTimeout(() => setQueryMounted(false), 0);
+        return <>{queryMounted && <QueryComponent unmount={unmount} />}</>;
+      };
+
+      render(
+        <React.StrictMode>
+          <MockedProvider mocks={CAR_MOCKS} link={mockLink}>
+            <Component />
+          </MockedProvider>
+        </React.StrictMode>
+      );
+
+      return wait(() => {
+        expect(linkRequestSpy).toHaveBeenCalledTimes(1);
+      }).then(resolve, reject);
+    });
+
     itAsync(
       'should not throw an error if `stopPolling` is called manually after ' +
         'a component has unmounted (even though polling has already been ' +
@@ -718,6 +772,69 @@ describe('useQuery Hook', () => {
           expect(renderCount).toBe(2);
         }).then(resolve, reject);
       }
+    );
+
+    itAsync(
+      'stop polling and start polling should work with StrictMode',
+      (resolve, reject) => {
+        const query = gql`
+          query car {
+            car {
+              id
+              make
+            }
+          }
+        `;
+
+        const data1 = {
+          car: {
+            id: 1,
+            make: 'Venturi',
+            __typename: 'Car',
+          }
+        };
+
+        const mocks = [
+          { request: { query }, result: { data: data1 } },
+        ];
+
+        let renderCount = 0;
+        const Component = () => {
+          let { data, loading, stopPolling } = useQuery(query, {
+            pollInterval: 100,
+          });
+
+          switch (++renderCount) {
+            case 1:
+            case 2:
+              expect(loading).toBeTruthy();
+              expect(data).toBeUndefined();
+              break;
+            case 3:
+            case 4:
+              expect(loading).toBeFalsy();
+              expect(data).toEqual(data1);
+              stopPolling();
+              break;
+            default:
+              reject(new Error('Unexpected render count'));
+          }
+
+          return null;
+        };
+
+        render(
+          <React.StrictMode>
+            <MockedProvider link={new MockLink(mocks).setOnError(reject)}>
+              <Component />
+            </MockedProvider>
+          </React.StrictMode>
+        );
+
+        return wait(() => {
+          expect(renderCount).toBe(4);
+        }).then(() => setTimeout(resolve, 300), reject);
+      },
     );
 
     it('should set called to true by default', () => {

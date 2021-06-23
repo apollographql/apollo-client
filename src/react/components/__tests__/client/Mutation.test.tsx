@@ -893,7 +893,7 @@ describe('General Mutation testing', () => {
           <Query query={query}>
             {(resultQuery: any) => {
               if (count === 0) {
-                setTimeout(() => createTodo());
+                setTimeout(() => createTodo(), 10);
               } else if (count === 1) {
                 expect(resultMutation.loading).toBe(false);
                 expect(resultQuery.loading).toBe(false);
@@ -1070,7 +1070,7 @@ describe('General Mutation testing', () => {
           <Query query={query}>
             {(resultQuery: any) => {
               if (count === 0) {
-                setTimeout(() => createTodo({ refetchQueries }));
+                setTimeout(() => createTodo({ refetchQueries }), 10);
               } else if (count === 1) {
                 expect(resultMutation.loading).toBe(false);
                 expect(resultQuery.loading).toBe(false);

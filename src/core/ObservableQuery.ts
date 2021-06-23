@@ -3,6 +3,8 @@ import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
+  Concast,
+  compact,
   cloneDeep,
   getOperationDefinition,
   Observable,
@@ -20,7 +22,6 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
 } from './watchQueryOptions';
-import { Reobserver } from './Reobserver';
 import { QueryInfo } from './QueryInfo';
 
 export interface FetchMoreOptions<
@@ -66,6 +67,12 @@ export class ObservableQuery<
   private lastError: ApolloError | undefined;
   private queryInfo: QueryInfo;
 
+  private concast?: Concast<ApolloQueryResult<TData>>;
+  private pollingInfo?: {
+    interval: number;
+    timeout: ReturnType<typeof setTimeout>;
+  };
+
   constructor({
     queryManager,
     queryInfo,
@@ -75,9 +82,42 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer: Observer<ApolloQueryResult<TData>>) =>
-      this.onSubscribe(observer),
-    );
+    super((observer: Observer<ApolloQueryResult<TData>>) => {
+      // Zen Observable has its own error function, so in order to log correctly
+      // we need to provide a custom error callback.
+      try {
+        var subObserver = (observer as any)._subscription._observer;
+        if (subObserver && !subObserver.error) {
+          subObserver.error = defaultSubscriptionObserverErrorCallback;
+        }
+      } catch {}
+
+      const first = !this.observers.size;
+      this.observers.add(observer);
+
+      // Deliver most recent error or result.
+      if (this.lastError) {
+        observer.error && observer.error(this.lastError);
+      } else if (this.lastResult) {
+        observer.next && observer.next(this.lastResult);
+      }
+
+      // Initiate observation of this query if it hasn't been reported to
+      // the QueryManager yet.
+      if (first) {
+        // Blindly catching here prevents unhandled promise rejections,
+        // and is safe because the ObservableQuery handles this error with
+        // this.observer.error, so we're not just swallowing the error by
+        // ignoring it here.
+        this.reobserve().catch(() => {});
+      }
+
+      return () => {
+        if (this.observers.delete(observer) && !this.observers.size) {
+          this.tearDownQuery();
+        }
+      };
+    });
 
     // active state
     this.isTornDown = false;
@@ -91,12 +131,14 @@ export class ObservableQuery<
 
     // related classes
     this.queryManager = queryManager;
-
     this.queryInfo = queryInfo;
   }
 
   public result(): Promise<ApolloQueryResult<TData>> {
     return new Promise((resolve, reject) => {
+      // TODO: this code doesn’t actually make sense insofar as the observer
+      // will never exist in this.observers due how zen-observable wraps observables.
+      // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
       const observer: Observer<ApolloQueryResult<TData>> = {
         next: (result: ApolloQueryResult<TData>) => {
           resolve(result);
@@ -244,8 +286,9 @@ export class ObservableQuery<
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
     const { fetchPolicy } = this.options;
-    if (fetchPolicy !== 'no-cache' &&
-        fetchPolicy !== 'cache-and-network') {
+    if (fetchPolicy === 'no-cache') {
+      reobserveOptions.fetchPolicy = 'no-cache';
+    } else if (fetchPolicy !== 'cache-and-network') {
       reobserveOptions.fetchPolicy = 'network-only';
       // Go back to the original options.fetchPolicy after this refetch.
       reobserveOptions.nextFetchPolicy = fetchPolicy || "cache-first";
@@ -260,11 +303,7 @@ export class ObservableQuery<
     }
 
     this.queryInfo.resetLastWrite();
-
-    return this.newReobserver(false).reobserve(
-      reobserveOptions,
-      NetworkStatus.refetch,
-    );
+    return this.reobserve(reobserveOptions, NetworkStatus.refetch);
   }
 
   public fetchMore(
@@ -493,13 +532,84 @@ once, rather than every time you call fetchMore.`);
   }
 
   public startPolling(pollInterval: number) {
-    this.getReobserver().updateOptions({ pollInterval });
+    this.options.pollInterval = pollInterval;
+    this.updatePolling();
   }
 
   public stopPolling() {
-    if (this.reobserver) {
-      this.reobserver.updateOptions({ pollInterval: 0 });
+    this.options.pollInterval = 0;
+    this.updatePolling();
+  }
+
+  private fetch(
+    options: WatchQueryOptions<TVariables, TData>,
+    newNetworkStatus?: NetworkStatus,
+  ): Concast<ApolloQueryResult<TData>> {
+    this.queryManager.setObservableQuery(this);
+    return this.queryManager.fetchQueryObservable(
+      this.queryId,
+      options,
+      newNetworkStatus,
+    );
+  }
+
+  // Turns polling on or off based on this.options.pollInterval.
+  private updatePolling() {
+    // Avoid polling in SSR mode
+    if (this.queryManager.ssrMode) {
+      return;
     }
+
+    const {
+      pollingInfo,
+      options: {
+        pollInterval,
+      },
+    } = this;
+
+    if (!pollInterval) {
+      if (pollingInfo) {
+        clearTimeout(pollingInfo.timeout);
+        delete this.pollingInfo;
+      }
+      return;
+    }
+
+    if (pollingInfo &&
+        pollingInfo.interval === pollInterval) {
+      return;
+    }
+
+    invariant(
+      pollInterval,
+      'Attempted to start a polling query without a polling interval.',
+    );
+
+    const info = pollingInfo || (this.pollingInfo = {} as any);
+    info.interval = pollInterval;
+
+    const maybeFetch = () => {
+      if (this.pollingInfo) {
+        if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
+          this.reobserve({
+            fetchPolicy: "network-only",
+            nextFetchPolicy: this.options.fetchPolicy || "cache-first",
+          }, NetworkStatus.poll).then(poll, poll);
+        } else {
+          poll();
+        }
+      };
+    };
+
+    const poll = () => {
+      const info = this.pollingInfo;
+      if (info) {
+        clearTimeout(info.timeout);
+        info.timeout = setTimeout(maybeFetch, info.interval);
+      }
+    };
+
+    poll();
   }
 
   private updateLastResult(newResult: ApolloQueryResult<TData>) {
@@ -514,90 +624,44 @@ once, rather than every time you call fetchMore.`);
     return previousResult;
   }
 
-  private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
-    // Subscribing using this.observer will create an infinite notificaion
-    // loop, but the intent of broadcasting results to all the other
-    // this.observers can be satisfied without doing anything, which is
-    // why we do not bother throwing an error here.
-    if (observer === this.observer) {
-      return () => {};
-    }
-
-    // Zen Observable has its own error function, so in order to log correctly
-    // we need to provide a custom error callback.
-    try {
-      var subObserver = (observer as any)._subscription._observer;
-      if (subObserver && !subObserver.error) {
-        subObserver.error = defaultSubscriptionObserverErrorCallback;
-      }
-    } catch {}
-
-    const first = !this.observers.size;
-    this.observers.add(observer);
-
-    // Deliver most recent error or result.
-    if (this.lastError) {
-      observer.error && observer.error(this.lastError);
-    } else if (this.lastResult) {
-      observer.next && observer.next(this.lastResult);
-    }
-
-    // Initiate observation of this query if it hasn't been reported to
-    // the QueryManager yet.
-    if (first) {
-      // Blindly catching here prevents unhandled promise rejections,
-      // and is safe because the ObservableQuery handles this error with
-      // this.observer.error, so we're not just swallowing the error by
-      // ignoring it here.
-      this.reobserve().catch(() => {});
-    }
-
-    return () => {
-      if (this.observers.delete(observer) && !this.observers.size) {
-        this.tearDownQuery();
-      }
-    };
-  }
-
-  private reobserver?: Reobserver<TData, TVariables>;
-
-  private getReobserver(): Reobserver<TData, TVariables> {
-    return this.reobserver || (this.reobserver = this.newReobserver(true));
-  }
-
-  private newReobserver(shareOptions: boolean) {
-    const { queryManager, queryId } = this;
-    queryManager.setObservableQuery(this);
-    return new Reobserver<TData, TVariables>(
-      this.observer,
-      // Sharing options allows this.reobserver.options to be ===
-      // this.options, so we don't have to worry about synchronizing the
-      // properties of two distinct objects.
-      shareOptions ? this.options : { ...this.options },
-      (currentOptions, newNetworkStatus) => {
-        queryManager.setObservableQuery(this);
-        return queryManager.fetchQueryObservable(
-          queryId,
-          currentOptions,
-          newNetworkStatus,
-        );
-      },
-      // Avoid polling during SSR and when the query is already in flight.
-      !queryManager.ssrMode && (
-        () => !isNetworkRequestInFlight(this.queryInfo.networkStatus))
-    );
-  }
-
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;
-    return this.getReobserver().reobserve(newOptions, newNetworkStatus);
+    let options: WatchQueryOptions<TVariables, TData>;
+    if (newNetworkStatus === NetworkStatus.refetch) {
+      options = Object.assign({}, this.options, compact(newOptions));
+    } else {
+      if (newOptions) {
+        Object.assign(this.options, compact(newOptions));
+      }
+
+      this.updatePolling();
+      options = this.options;
+    }
+
+    const concast = this.fetch(options, newNetworkStatus);
+    if (newNetworkStatus !== NetworkStatus.refetch) {
+      // We use the {add,remove}Observer methods directly to avoid
+      // wrapping observer with an unnecessary SubscriptionObserver
+      // object, in part so that we can remove it here without triggering
+      // any unsubscriptions, because we just want to ignore the old
+      // observable, not prematurely shut it down, since other consumers
+      // may be awaiting this.concast.promise.
+      if (this.concast) {
+        this.concast.removeObserver(this.observer, true);
+      }
+
+      this.concast = concast;
+    }
+
+    concast.addObserver(this.observer);
+    return concast.promise;
   }
 
   // Pass the current result to this.observer.next without applying any
-  // fetch policies, bypassing the Reobserver.
+  // fetch policies.
   private observe() {
     // Passing false is important so that this.getCurrentResult doesn't
     // save the fetchMore result as this.lastResult, causing it to be
@@ -635,20 +699,17 @@ once, rather than every time you call fetchMore.`);
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-
-    if (this.reobserver) {
-      this.reobserver.stop();
-      delete this.reobserver;
+    if (this.concast) {
+      this.concast.removeObserver(this.observer);
+      delete this.concast;
     }
 
+    this.stopPolling();
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();
-
     this.queryManager.stopQuery(this.queryId);
-
     this.observers.clear();
-
     this.isTornDown = true;
   }
 }

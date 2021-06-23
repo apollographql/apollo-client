@@ -27,6 +27,9 @@
 - `InMemoryCache` now coalesces `EntityStore` updates to guarantee only one `store.merge(id, fields)` call per `id` per cache write. <br/>
   [@benjamn](https://github.com/benjamn) in [#8372](https://github.com/apollographql/apollo-client/pull/8372)
 
+- Fix polling when used with `React.StrictMode`, <br/>
+  [@brainkim](https://github.com/brainkim) in [#8414](https://github.com/apollographql/apollo-client/pull/8414)
+
 ### Potentially disruptive changes
 
 - To avoid retaining sensitive information from mutation root field arguments, Apollo Client v3.4 automatically clears any `ROOT_MUTATION` fields from the cache after each mutation finishes. If you need this information to remain in the cache, you can prevent the removal by passing the `keepRootFields: true` option to `client.mutate`. `ROOT_MUTATION` result data are also passed to the mutation `update` function, so we recommend obtaining the results that way, rather than using `keepRootFields: true`, if possible. <br/>

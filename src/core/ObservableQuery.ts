@@ -169,7 +169,12 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
-    const { lastResult } = this;
+    const {
+      lastResult,
+      options: {
+        fetchPolicy = "cache-first",
+      },
+    } = this;
 
     const networkStatus =
       this.queryInfo.networkStatus ||
@@ -182,33 +187,18 @@ export class ObservableQuery<
       networkStatus,
     } as ApolloQueryResult<TData>;
 
-    if (this.isTornDown) {
-      return result;
-    }
-
-    const { fetchPolicy = 'cache-first' } = this.options;
-    if (fetchPolicy === 'no-cache' ||
-        fetchPolicy === 'network-only') {
-      // Similar to setting result.partial to false, but taking advantage
-      // of the falsiness of missing fields.
-      delete result.partial;
-    } else if (
-      !result.data ||
-      // If this.options.query has @client(always: true) fields, we cannot
-      // trust result.data, since it was read from the cache without
-      // running local resolvers (and it's too late to run resolvers now,
-      // since we must return a result synchronously). TODO In the future
-      // (after Apollo Client 3.0), we should find a way to trust
-      // this.lastResult in more cases, and read from the cache only in
-      // cases when no result has been received yet.
-      !this.queryManager.transform(this.options.query).hasForcedResolvers
-    ) {
+    // If this.options.query has @client(always: true) fields, we cannot trust
+    // diff.result, since it was read from the cache without running local
+    // resolvers (and it's too late to run resolvers now, since we must return a
+    // result synchronously).
+    if (!this.queryManager.transform(this.options.query).hasForcedResolvers) {
       const diff = this.queryInfo.getDiff();
-      // XXX the only reason this typechecks is that diff.result is inferred as any
+
       result.data = (
         diff.complete ||
         this.options.returnPartialData
       ) ? diff.result : void 0;
+
       if (diff.complete) {
         // If the diff is complete, and we're using a FetchPolicy that
         // terminates after a complete cache read, we can assume the next
@@ -220,7 +210,10 @@ export class ObservableQuery<
           result.loading = false;
         }
         delete result.partial;
-      } else {
+      } else if (fetchPolicy !== "no-cache") {
+        // Since result.partial comes from diff.complete, and we shouldn't be
+        // using cache data to provide a DiffResult when the fetchPolicy is
+        // "no-cache", avoid annotating result.partial for "no-cache" results.
         result.partial = true;
       }
 

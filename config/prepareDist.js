@@ -70,7 +70,7 @@ entryPoints.forEach(function buildPackageJson({
     JSON.stringify({
       name: path.posix.join('@apollo', 'client', ...dirs),
       type: "module",
-      main: `${bundleName}.cjs.js`,
+      main: `${bundleName}.cjs`,
       module: 'index.js',
       types: 'index.d.ts',
       sideEffects,

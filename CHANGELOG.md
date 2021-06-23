@@ -27,10 +27,14 @@
 - `InMemoryCache` now coalesces `EntityStore` updates to guarantee only one `store.merge(id, fields)` call per `id` per cache write. <br/>
   [@benjamn](https://github.com/benjamn) in [#8372](https://github.com/apollographql/apollo-client/pull/8372)
 
-- Fix polling when used with `React.StrictMode`, <br/>
+- Fix polling when used with `<React.StrictMode>`. <br/>
   [@brainkim](https://github.com/brainkim) in [#8414](https://github.com/apollographql/apollo-client/pull/8414)
 
-- Fix the React integration logging `Warning: Can't perform a React state update on an unmounted component`. <br/> [@wuarmin](https://github.com/wuarmin) in [#7745](https://github.com/apollographql/apollo-client/pull/7745)
+- Fix the React integration logging `Warning: Can't perform a React state update on an unmounted component`. <br/>
+  [@wuarmin](https://github.com/wuarmin) in [#7745](https://github.com/apollographql/apollo-client/pull/7745)
+
+- Make `ObservableQuery#getCurrentResult` always call `queryInfo.getDiff()`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8422](https://github.com/apollographql/apollo-client/pull/8422)
 
 ### Potentially disruptive changes
 

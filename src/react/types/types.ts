@@ -142,8 +142,8 @@ export type RefetchQueriesFunction = (
 export interface BaseMutationOptions<
   TData,
   TVariables extends OperationVariables,
-  TContext extends DefaultContext,
-  TCache extends ApolloCache<any>,
+  TContext extends DefaultContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>
 > extends Omit<
   MutationOptions<TData, TVariables, TContext, TCache>,
   | "mutation"

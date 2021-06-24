@@ -768,8 +768,7 @@ describe('useMutation Hook', () => {
   });
 
   describe('Update function', () => {
-
-    itAsync('should be called with the provided variables', async (resolve, reject) => {
+    itAsync('should be called with the provided variables', (resolve, reject) => {
       const variables = {
         description: 'Get milk!'
       };
@@ -784,13 +783,14 @@ describe('useMutation Hook', () => {
         }
       ];
 
+      let variablesMatched = false;
       const Component = () => {
         const [createTodo] = useMutation(
           CREATE_TODO_MUTATION,
           {
             update(_, __, options) {
               expect(options.variables).toEqual(variables);
-              resolve();
+              variablesMatched = true;
             }
           }
         );
@@ -807,9 +807,13 @@ describe('useMutation Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      return wait(() => {
+        expect(variablesMatched).toBe(true);
+      }).then(resolve, reject);
     });
 
-    itAsync('should be called with the provided context', async (resolve, reject) => {
+    itAsync('should be called with the provided context', (resolve, reject) => {
       const context = { id: 3 };
 
       const variables = {
@@ -826,6 +830,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
+      let foundContext = false;
       const Component = () => {
         const [createTodo] = useMutation<Todo, { description: string }, { id: number }>(
           CREATE_TODO_MUTATION,
@@ -833,7 +838,7 @@ describe('useMutation Hook', () => {
             context,
             update(_, __, options) {
               expect(options.context).toEqual(context);
-              resolve();
+              foundContext = true;
             }
           }
         );
@@ -850,10 +855,14 @@ describe('useMutation Hook', () => {
           <Component />
         </MockedProvider>
       );
+
+      return wait(() => {
+        expect(foundContext).toBe(true);
+      }).then(resolve, reject);
     });
 
     describe('If context is not provided', () => {
-      itAsync('should be undefined', async (resolve, reject) => {
+      itAsync('should be undefined', (resolve, reject) => {
         const variables = {
           description: 'Get milk!'
         };
@@ -868,13 +877,14 @@ describe('useMutation Hook', () => {
           }
         ];
 
+        let checkedContext = false;
         const Component = () => {
           const [createTodo] = useMutation(
             CREATE_TODO_MUTATION,
             {
               update(_, __, options) {
                 expect(options.context).toBeUndefined();
-                resolve();
+                checkedContext = true;
               }
             }
           );
@@ -891,6 +901,10 @@ describe('useMutation Hook', () => {
             <Component />
           </MockedProvider>
         );
+
+        return wait(() => {
+          expect(checkedContext).toBe(true);
+        }).then(resolve, reject);
       });
     });
   });
@@ -1176,8 +1190,9 @@ describe('useMutation Hook', () => {
         </ApolloProvider>
       );
 
-      return onUpdatePromise.then(results => {
+      return wait(() => onUpdatePromise.then(results => {
         expect(finishedReobserving).toBe(true);
+        expect(renderCount).toBe(4);
 
         expect(results.diff).toEqual({
           complete: true,
@@ -1193,11 +1208,7 @@ describe('useMutation Hook', () => {
             todoCount: 1,
           },
         });
-
-        return wait(() => {
-          expect(renderCount).toBe(4);
-        }).then(resolve, reject);
-      });
+      })).then(resolve, reject);
     });
   });
 });

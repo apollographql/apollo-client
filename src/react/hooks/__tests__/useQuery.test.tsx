@@ -1,4 +1,4 @@
-import React, { useState, useReducer, Fragment } from 'react';
+import React, { useState, useReducer, Fragment, useEffect } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait, act } from '@testing-library/react';
@@ -629,6 +629,28 @@ describe('useQuery Hook', () => {
       }).then(resolve, reject);
     });
 
+    function useStatefulUnmount() {
+      const [queryMounted, setQueryMounted] = useState(true);
+
+      let mounted = false;
+      useEffect(() => {
+        mounted = true;
+        expect(queryMounted).toBe(true);
+        return () => {
+          mounted = false;
+        };
+      }, []);
+
+      return {
+        mounted: queryMounted,
+        unmount() {
+          if (mounted) {
+            setQueryMounted(mounted = false);
+          }
+        },
+      };
+    }
+
     itAsync('should stop polling when the component is unmounted', async (resolve, reject) => {
       const mocks = [
         ...CAR_MOCKS,
@@ -652,7 +674,7 @@ describe('useQuery Hook', () => {
             expect(loading).toBeFalsy();
             expect(data).toEqual(CAR_RESULT_DATA);
             expect(linkRequestSpy).toHaveBeenCalledTimes(1);
-            unmount();
+            setTimeout(unmount, 10);
             break;
           default:
             reject("unreached");
@@ -661,9 +683,8 @@ describe('useQuery Hook', () => {
       };
 
       const Component = () => {
-        const [queryMounted, setQueryMounted] = useState(true);
-        const unmount = () => setTimeout(() => setQueryMounted(false), 0);
-        return <>{queryMounted && <QueryComponent unmount={unmount} />}</>;
+        const { mounted, unmount } = useStatefulUnmount();
+        return <>{mounted && <QueryComponent unmount={unmount} />}</>;
       };
 
       render(
@@ -674,6 +695,7 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(linkRequestSpy).toHaveBeenCalledTimes(1);
+        expect(renderCount).toBe(2);
       }).then(resolve, reject);
     });
 
@@ -703,7 +725,7 @@ describe('useQuery Hook', () => {
             expect(data).toEqual(CAR_RESULT_DATA);
             expect(linkRequestSpy).toHaveBeenCalledTimes(1);
             if (renderCount === 3) {
-              unmount();
+              setTimeout(unmount, 10);
             }
             break;
           default:
@@ -713,9 +735,8 @@ describe('useQuery Hook', () => {
       };
 
       const Component = () => {
-        const [queryMounted, setQueryMounted] = useState(true);
-        const unmount = () => setTimeout(() => setQueryMounted(false), 0);
-        return <>{queryMounted && <QueryComponent unmount={unmount} />}</>;
+        const { mounted, unmount } = useStatefulUnmount();
+        return <>{mounted && <QueryComponent unmount={unmount} />}</>;
       };
 
       render(
@@ -728,6 +749,7 @@ describe('useQuery Hook', () => {
 
       return wait(() => {
         expect(linkRequestSpy).toHaveBeenCalledTimes(1);
+        expect(renderCount).toBe(4);
       }).then(resolve, reject);
     });
 

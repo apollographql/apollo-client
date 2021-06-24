@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import gql from 'graphql-tag';
 import { ExecutionResult, GraphQLError } from 'graphql';
-import { render, cleanup, fireEvent, wait } from '@testing-library/react';
+import { render, cleanup, fireEvent, wait, act } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../core';
 import { ApolloError } from '../../../../errors';
@@ -1305,7 +1305,7 @@ describe('General Mutation testing', () => {
         <Mutation client={client2} mutation={mutation}>
           {(createTodo: any, result: any) => {
             if (!result.called) {
-              setTimeout(() => {
+              act(() => {
                 createTodo();
               });
             }
@@ -1322,6 +1322,10 @@ describe('General Mutation testing', () => {
         </Mutation>
       </ApolloProvider>
     );
+
+    return wait(() => {
+      expect(count).toBe(3);
+    });
   });
 
   it('errors if a query is passed instead of a mutation', () => {

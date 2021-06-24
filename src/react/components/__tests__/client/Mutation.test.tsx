@@ -886,24 +886,24 @@ describe('General Mutation testing', () => {
       }
     ];
 
-    let count = 0;
+    let renderCount = 0;
     const Component = () => (
       <Mutation mutation={mutation} refetchQueries={refetchQueries}>
         {(createTodo: any, resultMutation: any) => (
           <Query query={query}>
             {(resultQuery: any) => {
-              if (count === 0) {
+              ++renderCount;
+              if (renderCount === 1) {
                 setTimeout(() => createTodo(), 10);
-              } else if (count === 1) {
+              } else if (renderCount === 2) {
                 expect(resultMutation.loading).toBe(false);
                 expect(resultQuery.loading).toBe(false);
-              } else if (count === 2) {
+              } else if (renderCount === 3) {
                 expect(resultMutation.loading).toBe(true);
                 expect(stripSymbols(resultQuery.data)).toEqual(queryData);
-              } else if (count === 3) {
+              } else if (renderCount === 4) {
                 expect(resultMutation.loading).toBe(false);
               }
-              count++;
               return null;
             }}
           </Query>
@@ -917,7 +917,9 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    await wait();
+    return wait(() => {
+      expect(renderCount).toBe(4);
+    });
   });
 
   it('allows a refetchQueries prop as string and variables have updated', async () => {

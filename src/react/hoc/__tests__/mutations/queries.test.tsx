@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { act, render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -78,7 +78,9 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(mutateFired).toBeTruthy()).then(resolve, reject);
+    return wait(() => {
+      expect(mutateFired).toBeTruthy();
+    }).then(resolve, reject);
   });
 
   itAsync('allows for updating queries from a mutation', (resolve, reject) => {
@@ -165,28 +167,34 @@ describe('graphql(mutation) query integration', () => {
       options: () => ({ optimisticResponse, update })
     });
 
-    let count = 0;
+    let renderCount = 0;
 
     type ContainerProps = ChildProps<WithQueryChildProps, MutationData>;
     class Container extends React.Component<ContainerProps> {
       render() {
         if (!this.props.data || !this.props.data.todo_list) return null;
         if (!this.props.data.todo_list.tasks.length) {
-          this.props.mutate!().then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(mutationData);
+          act(() => {
+            this.props.mutate!().then(result => {
+              expect(stripSymbols(result && result.data)).toEqual(mutationData);
+            });
           });
           return null;
         }
 
-        if (count === 0) {
-          count++;
-          expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
-            optimisticResponse.createTodo
-          ]);
-        } else if (count === 1) {
-          expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
-            mutationData.createTodo
-          ]);
+        switch (++renderCount) {
+          case 1:
+            expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
+              optimisticResponse.createTodo
+            ]);
+            break;
+          case 2:
+            expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
+              mutationData.createTodo
+            ]);
+            break;
+          default:
+            reject(`too many renders (${renderCount})`);
         }
 
         return null;
@@ -201,7 +209,9 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(1)).then(resolve, reject);
+    return wait(() => {
+      expect(renderCount).toBe(2);
+    }).then(resolve, reject);
   });
 
   itAsync('allows for updating queries from a mutation automatically', (resolve, reject) => {
@@ -324,7 +334,9 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    return wait(() => {
+      expect(count).toBe(3);
+    }).then(resolve, reject);
   });
 
   it('should be able to override the internal `ignoreResults` setting', async () => {

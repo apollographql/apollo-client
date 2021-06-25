@@ -2,19 +2,19 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import { terser as minify } from 'rollup-plugin-terser';
 import path from 'path';
 
-const packageJson = require('../package.json');
 const entryPoints = require('./entryPoints');
-
 const distDir = './dist';
 
 function isExternal(id, parentId, entryPointsAreExternal = true) {
   // Rollup v2.26.8 started passing absolute id strings to this function, thanks
   // apparently to https://github.com/rollup/rollup/pull/3753, so we relativize
   // the id again in those cases.
-  if (path.posix.isAbsolute(id)) {
+  if (path.isAbsolute(id)) {
+    const posixId = toPosixPath(id);
+    const posixParentId = toPosixPath(parentId);
     id = path.posix.relative(
-      path.posix.dirname(parentId),
-      id,
+      path.posix.dirname(posixParentId),
+      posixId,
     );
     if (!id.startsWith(".")) {
       id = "./" + id;
@@ -35,6 +35,23 @@ function isExternal(id, parentId, entryPointsAreExternal = true) {
   }
 
   return false;
+}
+
+// Adapted from https://github.com/meteor/meteor/blob/devel/tools/static-assets/server/mini-files.ts
+function toPosixPath(p) {
+  // Sometimes, you can have a path like \Users\IEUser on windows, and this
+  // actually means you want C:\Users\IEUser
+  if (p[0] === '\\') {
+    p = process.env.SystemDrive + p;
+  }
+
+  p = p.replace(/\\/g, '/');
+  if (p[1] === ':') {
+    // Transform "C:/bla/bla" to "/c/bla/bla"
+    p = '/' + p[0] + p.slice(2);
+  }
+
+  return p;
 }
 
 function prepareCJS(input, output) {

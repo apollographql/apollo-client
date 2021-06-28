@@ -214,7 +214,7 @@ describe('EntityStore', () => {
     // Now discard cache.storeReader.canon as well.
     expect(cache.gc({
       resetResultCache: true,
-      preserveCanon: false,
+      resetResultIdentities: true,
     })).toEqual([]);
 
     const resultAfterFullGC = cache.readQuery({ query });

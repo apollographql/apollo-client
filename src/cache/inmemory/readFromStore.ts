@@ -134,6 +134,9 @@ export class StoreReader {
   )<Record<string, any>, SelectionSetNode>();
 
   public canon: ObjectCanon;
+  public resetCanon() {
+    this.canon = new ObjectCanon;
+  }
 
   constructor(config: StoreReaderConfig) {
     this.config = {

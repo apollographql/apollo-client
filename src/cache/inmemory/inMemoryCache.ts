@@ -109,7 +109,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.resetResultCache();
   }
 
-  private resetResultCache(preserveCanon = true) {
+  private resetResultCache(resetResultIdentities?: boolean) {
     const previousReader = this.storeReader;
 
     // The StoreWriter is mostly stateless and so doesn't really need to be
@@ -121,11 +121,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
-        canon: (
-          preserveCanon &&
-          previousReader &&
-          previousReader.canon
-        ) || void 0,
+        canon: resetResultIdentities
+          ? void 0
+          : previousReader && previousReader.canon,
       }),
     );
 
@@ -285,14 +283,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // this.{store{Reader,Writer},maybeBroadcastWatch}. Defaults to false.
     resetResultCache?: boolean;
     // If resetResultCache is true, this.storeReader.canon will be preserved by
-    // default, but can also be discarded by passing false for preserveCanon.
-    // Defaults to true, but has no effect if resetResultCache is false.
-    preserveCanon?: boolean;
+    // default, but can also be discarded by passing resetResultIdentities:true.
+    // Defaults to false.
+    resetResultIdentities?: boolean;
   }) {
     canonicalStringify.reset();
     const ids = this.optimisticData.gc();
-    if (options && options.resetResultCache && !this.txCount) {
-      this.resetResultCache(options.preserveCanon);
+    if (options && !this.txCount) {
+      if (options.resetResultCache) {
+        this.resetResultCache(options.resetResultIdentities);
+      } else if (options.resetResultIdentities) {
+        this.storeReader.resetCanon();
+      }
     }
     return ids;
   }

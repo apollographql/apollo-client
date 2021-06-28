@@ -1648,15 +1648,16 @@ describe('ObservableQuery', () => {
         });
 
         expect(observable.getCurrentResult()).toEqual({
-          data: void 0,
+          data: dataOne,
           loading: true,
-          networkStatus: 1,
+          networkStatus: NetworkStatus.loading,
         });
 
         subscribeAndCount(reject, observable, (handleCount, subResult) => {
           if (handleCount === 1) {
             expect(subResult).toEqual({
               loading: true,
+              data: dataOne,
               networkStatus: NetworkStatus.loading,
             });
           } else if (handleCount === 2) {

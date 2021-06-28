@@ -3129,6 +3129,232 @@ describe('useQuery Hook', () => {
         expect(renderCount).toBe(5);
       }).then(resolve, reject);
     });
+
+    itAsync("should be cleared when variables change causes cache miss", (resolve, reject) => {
+      const peopleData = [
+        { id: 1, name: 'John Smith', gender: 'male' },
+        { id: 2, name: 'Sara Smith', gender: 'female' },
+        { id: 3, name: 'Budd Deey', gender: 'nonbinary' },
+        { id: 4, name: 'Johnny Appleseed', gender: 'male' },
+        { id: 5, name: 'Ada Lovelace', gender: 'female' },
+      ];
+
+      const link = new ApolloLink(operation => {
+        return new Observable(observer => {
+          const { gender } = operation.variables;
+          new Promise(resolve => setTimeout(resolve, 300)).then(() => {
+            observer.next({
+              data: {
+                people: gender === "all" ? peopleData :
+                  gender ? peopleData.filter(
+                    person => person.gender === gender
+                  ) : peopleData,
+              }
+            });
+            observer.complete();
+          });
+        });
+      });
+
+      type Person = {
+        __typename: string;
+        id: string;
+        name: string;
+      };
+
+      const ALL_PEOPLE: TypedDocumentNode<{
+        people: Person[];
+      }> = gql`
+        query AllPeople($gender: String!) {
+          people(gender: $gender) {
+            id
+            name
+          }
+        }
+      `;
+
+      let renderCount = 0;
+      function App() {
+        const [gender, setGender] = useState("all");
+        const {
+          loading,
+          networkStatus,
+          data,
+        } = useQuery(ALL_PEOPLE, {
+          variables: { gender },
+          fetchPolicy: "network-only",
+        });
+
+        const currentPeopleNames = data?.people?.map(person => person.name);
+
+        switch (++renderCount) {
+          case 1:
+            expect(gender).toBe("all");
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.loading);
+            expect(data).toBeUndefined();
+            expect(currentPeopleNames).toBeUndefined();
+            break;
+
+          case 2:
+            expect(gender).toBe("all");
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data).toEqual({
+              people: peopleData.map(({ gender, ...person }) => person),
+            });
+            expect(currentPeopleNames).toEqual([
+              "John Smith",
+              "Sara Smith",
+              "Budd Deey",
+              "Johnny Appleseed",
+              "Ada Lovelace",
+            ]);
+            act(() => {
+              setGender("female");
+            });
+            break;
+
+          case 3:
+            expect(gender).toBe("female");
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            expect(data).toBeUndefined();
+            expect(currentPeopleNames).toBeUndefined();
+            break;
+
+          case 4:
+            expect(gender).toBe("female");
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data!.people.length).toBe(2);
+            expect(currentPeopleNames).toEqual([
+              "Sara Smith",
+              "Ada Lovelace",
+            ]);
+            act(() => {
+              setGender("nonbinary");
+            });
+            break;
+
+          case 5:
+            expect(gender).toBe("nonbinary");
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            expect(data).toBeUndefined();
+            expect(currentPeopleNames).toBeUndefined();
+            break;
+
+          case 6:
+            expect(gender).toBe("nonbinary");
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data!.people.length).toBe(1);
+            expect(currentPeopleNames).toEqual([
+              "Budd Deey",
+            ]);
+            act(() => {
+              setGender("male");
+            });
+            break;
+
+          case 7:
+            expect(gender).toBe("male");
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            expect(data).toBeUndefined();
+            expect(currentPeopleNames).toBeUndefined();
+            break;
+
+          case 8:
+            expect(gender).toBe("male");
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data!.people.length).toBe(2);
+            expect(currentPeopleNames).toEqual([
+              "John Smith",
+              "Johnny Appleseed",
+            ]);
+            act(() => {
+              setGender("female");
+            });
+            break;
+
+          case 9:
+            expect(gender).toBe("female");
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            expect(data!.people.length).toBe(2);
+            expect(currentPeopleNames).toEqual([
+              "Sara Smith",
+              "Ada Lovelace",
+            ]);
+            break;
+
+          case 10:
+            expect(gender).toBe("female");
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data!.people.length).toBe(2);
+            expect(currentPeopleNames).toEqual([
+              "Sara Smith",
+              "Ada Lovelace",
+            ]);
+            act(() => {
+              setGender("all");
+            });
+            break;
+
+          case 11:
+            expect(gender).toBe("all");
+            expect(loading).toBe(true);
+            expect(networkStatus).toBe(NetworkStatus.setVariables);
+            expect(data!.people.length).toBe(5);
+            expect(currentPeopleNames).toEqual([
+              "John Smith",
+              "Sara Smith",
+              "Budd Deey",
+              "Johnny Appleseed",
+              "Ada Lovelace",
+            ]);
+            break;
+
+          case 12:
+            expect(gender).toBe("all");
+            expect(loading).toBe(false);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect(data!.people.length).toBe(5);
+            expect(currentPeopleNames).toEqual([
+              "John Smith",
+              "Sara Smith",
+              "Budd Deey",
+              "Johnny Appleseed",
+              "Ada Lovelace",
+            ]);
+            break;
+
+          default:
+            reject(`too many (${renderCount}) renders`);
+        }
+
+        return null;
+      }
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link
+      });
+
+      render(
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>,
+      );
+
+      return wait(() => {
+        expect(renderCount).toBe(12);
+      }).then(resolve, reject);
+    });
   });
 
   describe("canonical cache results", () => {

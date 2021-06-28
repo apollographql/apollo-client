@@ -220,8 +220,8 @@ describe('EntityStore', () => {
     const resultAfterFullGC = cache.readQuery({ query });
     expect(resultAfterFullGC).toEqual(resultBeforeGC);
     expect(resultAfterFullGC).toEqual(resultAfterGC);
-    // These !== relations are triggered by the preserveCanon:false option
-    // passed to cache.gc, above.
+    // These !== relations are triggered by passing resetResultIdentities:true
+    // to cache.gc, above.
     expect(resultAfterFullGC).not.toBe(resultBeforeGC);
     expect(resultAfterFullGC).not.toBe(resultAfterGC);
     // Result caching immediately begins working again after the intial reset.

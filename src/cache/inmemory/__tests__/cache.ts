@@ -1378,7 +1378,7 @@ describe('Cache', () => {
       expect(originalWriter).not.toBe(cache["storeWriter"]);
       expect(originalMBW).not.toBe(cache["maybeBroadcastWatch"]);
       // The cache.storeReader.canon is preserved by default, but can be dropped
-      // by passing preserveCanon:false to cache.gc.
+      // by passing resetResultIdentities:true to cache.gc.
       expect(originalCanon).toBe(cache["storeReader"].canon);
     });
   });

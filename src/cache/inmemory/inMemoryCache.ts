@@ -154,6 +154,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         }
       }
     });
+
+    // Since we have thrown away all the cached functions that depend on the
+    // CacheGroup dependencies maintained by EntityStore, we should also reset
+    // all CacheGroup dependency information.
+    new Set([
+      this.data.group,
+      this.optimisticData.group,
+    ]).forEach(group => group.resetCaching());
   }
 
   public restore(data: NormalizedCacheObject): this {

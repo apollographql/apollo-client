@@ -507,11 +507,20 @@ export type FieldValueGetter = EntityStore["getFieldValue"];
 class CacheGroup {
   private d: OptimisticDependencyFunction<string> | null = null;
 
+  // Used by the EntityStore#makeCacheKey method to compute cache keys
+  // specific to this CacheGroup.
+  public keyMaker: Trie<object>;
+
   constructor(
     public readonly caching: boolean,
     private parent: CacheGroup | null = null,
   ) {
-    this.d = caching ? dep<string>() : null;
+    this.resetCaching();
+  }
+
+  public resetCaching() {
+    this.d = this.caching ? dep<string>() : null;
+    this.keyMaker = new Trie(canUseWeakMap);
   }
 
   public depend(dataId: string, storeFieldName: string) {
@@ -547,10 +556,6 @@ class CacheGroup {
       );
     }
   }
-
-  // Used by the EntityStore#makeCacheKey method to compute cache keys
-  // specific to this CacheGroup.
-  public readonly keyMaker = new Trie<object>(canUseWeakMap);
 }
 
 function makeDepKey(dataId: string, storeFieldName: string) {

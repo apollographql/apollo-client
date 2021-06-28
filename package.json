@@ -86,7 +86,7 @@
     "zen-observable-ts": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/parser": "7.14.6",
+    "@babel/parser": "7.14.7",
     "@graphql-tools/schema": "7.1.5",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@testing-library/react": "9.4.1",
@@ -96,7 +96,7 @@
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "26.0.23",
     "@types/lodash": "4.14.170",
-    "@types/node": "15.12.4",
+    "@types/node": "15.12.5",
     "@types/react": "17.0.11",
     "@types/react-dom": "17.0.2",
     "@types/recompose": "0.30.7",

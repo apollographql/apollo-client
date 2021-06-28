@@ -129,11 +129,11 @@ export class StoreReader {
     resultCacheMaxSize?: number;
   };
 
-  private canon: ObjectCanon;
-
   private knownResults = new (
     canUseWeakMap ? WeakMap : Map
   )<Record<string, any>, SelectionSetNode>();
+
+  public canon: ObjectCanon;
 
   constructor(config: StoreReaderConfig) {
     this.config = {

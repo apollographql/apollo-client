@@ -1347,7 +1347,7 @@ describe('Cache', () => {
       const originalMBW = cache["maybeBroadcastWatch"];
       expect(typeof originalMBW).toBe("function");
 
-      const originalCanon = originalReader["canon"];
+      const originalCanon = originalReader.canon;
       expect(originalCanon).toBeInstanceOf(ObjectCanon);
 
       cache.writeQuery({
@@ -1379,7 +1379,7 @@ describe('Cache', () => {
       expect(originalMBW).not.toBe(cache["maybeBroadcastWatch"]);
       // The cache.storeReader.canon is preserved by default, but can be dropped
       // by passing preserveCanon:false to cache.gc.
-      expect(originalCanon).toBe(cache["storeReader"]["canon"]);
+      expect(originalCanon).toBe(cache["storeReader"].canon);
     });
   });
 

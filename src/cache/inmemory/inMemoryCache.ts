@@ -124,7 +124,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         canon: (
           preserveCanon &&
           previousReader &&
-          previousReader["canon"]
+          previousReader.canon
         ) || void 0,
       }),
     );

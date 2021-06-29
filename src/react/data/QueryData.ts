@@ -8,7 +8,6 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ObservableQuery,
-  applyNextFetchPolicy,
   FetchMoreOptions,
   UpdateQueryOptions,
   DocumentNode,
@@ -199,8 +198,6 @@ export class QueryData<TData, TVariables> extends OperationData<
         options.fetchPolicy === 'cache-and-network')
     ) {
       options.fetchPolicy = 'cache-first';
-    } else if (options.nextFetchPolicy && this.currentObservable) {
-      applyNextFetchPolicy(options);
     }
 
     return {

@@ -5,6 +5,9 @@
 - Fix race condition in `@apollo/client/link/context` that could leak subscriptions if the subscription is cancelled before `operation.setContext` is called. <br/>
   [@sofianhn](https://github.com/sofianhn) in [#8399](https://github.com/apollographql/apollo-client/pull/8399)
 
+- Prefer `existing.pageInfo.startCursor` and `endCursor` (if defined) in `read` function of `relayStylePagination` policies. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8438](https://github.com/apollographql/apollo-client/pull/8438)
+
 ## Apollo Client 3.3.20
 
 ### Bug fixes

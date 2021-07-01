@@ -362,7 +362,7 @@ export class QueryInfo {
         this.getDiffOptions(options.variables),
       );
 
-    } else if (!this.stopped && cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
+    } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
@@ -448,7 +448,6 @@ export class QueryInfo {
             result.data = diff.result;
           }
         });
-
       } else {
         this.lastWrite = void 0;
       }

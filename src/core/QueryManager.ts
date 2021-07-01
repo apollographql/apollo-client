@@ -742,8 +742,10 @@ export class QueryManager<TStore> {
 
     if (Array.isArray(include)) {
       include.forEach(desc => {
-        if (typeof desc === "string" || isDocumentNode(desc)) {
+        if (typeof desc === "string") {
           queryNamesAndDocs.set(desc, false);
+        } else if (isDocumentNode(desc)) {
+          queryNamesAndDocs.set(this.transform(desc).document, false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }

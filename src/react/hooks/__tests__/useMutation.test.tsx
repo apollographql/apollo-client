@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { DocumentNode, GraphQLError } from 'graphql';
+import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
 
@@ -18,7 +18,7 @@ describe('useMutation Hook', () => {
     priority: string;
   }
 
-  const CREATE_TODO_MUTATION: DocumentNode = gql`
+  const CREATE_TODO_MUTATION = gql`
     mutation createTodo($description: String!, $priority: String) {
       createTodo(description: $description, priority: $priority) {
         id
@@ -1209,6 +1209,139 @@ describe('useMutation Hook', () => {
           },
         });
       })).then(resolve, reject);
+    });
+
+    itAsync('refetchQueries with operation names should update cache after unmount', async (resolve, reject) => {
+      const GET_TODOS_QUERY = gql`
+        query getTodos {
+          todos {
+            id
+            description
+            priority
+          }
+        }
+      `;
+
+      const GET_TODOS_RESULT_1 = {
+        todos: [
+          {
+            id: 2,
+            description: 'Walk the dog',
+            priority: 'Medium',
+            __typename: 'Todo'
+          },
+          {
+            id: 3,
+            description: 'Call mom',
+            priority: 'Low',
+            __typename: 'Todo'
+          },
+        ],
+      };
+
+      const GET_TODOS_RESULT_2 = {
+        todos: [
+          {
+            id: 1,
+            description: 'Get milk!',
+            priority: 'High',
+            __typename: 'Todo'
+          },
+          {
+            id: 2,
+            description: 'Walk the dog',
+            priority: 'Medium',
+            __typename: 'Todo'
+          },
+          {
+            id: 3,
+            description: 'Call mom',
+            priority: 'Low',
+            __typename: 'Todo'
+          },
+        ],
+      };
+
+      const variables = { description: 'Get milk!' };
+
+      const mocks = [
+        {
+          request: {
+            query: GET_TODOS_QUERY,
+          },
+          result: { data: GET_TODOS_RESULT_1 },
+        },
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            data: CREATE_TODO_RESULT,
+          },
+        },
+        {
+          request: {
+            query: GET_TODOS_QUERY,
+          },
+          result: { data: GET_TODOS_RESULT_2 },
+        },
+      ];
+
+      const link = mockSingleLink(...mocks).setOnError(reject);
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      let unmount: Function;
+      let renderCount = 0;
+      const QueryComponent = () => {
+        const { loading, data } = useQuery(GET_TODOS_QUERY);
+        const [mutate] = useMutation(CREATE_TODO_MUTATION);
+        switch (++renderCount) {
+          case 1:
+            expect(loading).toBe(true);
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBe(false);
+            expect(data).toEqual(mocks[0].result.data);
+            setTimeout(() => {
+              act(() => {
+                mutate({
+                  variables,
+                  refetchQueries: ['getTodos'],
+                  update() {
+                    unmount();
+                  },
+                });
+              });
+            });
+            break;
+          case 3:
+            expect(loading).toBe(false);
+            expect(data).toEqual(mocks[0].result.data);
+            break;
+          default:
+            reject("too many renders");
+        }
+
+        return null;
+      };
+
+      ({unmount} = render(
+        <ApolloProvider client={client}>
+          <QueryComponent />
+        </ApolloProvider>
+      ));
+
+      return wait(() => expect(renderCount).toBe(3))
+        .then(() => {
+          expect(client.readQuery({ query: GET_TODOS_QUERY}))
+            .toEqual(mocks[2].result.data);
+        })
+        .then(resolve, reject);
     });
   });
 });

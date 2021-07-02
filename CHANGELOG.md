@@ -8,6 +8,11 @@
 - Prefer `existing.pageInfo.startCursor` and `endCursor` (if defined) in `read` function of `relayStylePagination` policies. <br/>
   [@benjamn](https://github.com/benjamn) in [#8438](https://github.com/apollographql/apollo-client/pull/8438)
 
+### Improvements
+
+- Normalize user-provided `HttpLink` headers by lower-casing their names. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8449](https://github.com/apollographql/apollo-client/pull/8449)
+
 ## Apollo Client 3.3.20
 
 ### Bug fixes

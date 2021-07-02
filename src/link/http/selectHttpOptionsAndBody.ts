@@ -153,7 +153,7 @@ function headersToLowerCase(
 ): typeof headers {
   if (headers) {
     const normalized = Object.create(null);
-    Object.keys(headers).forEach(name => {
+    Object.keys(Object(headers)).forEach(name => {
       normalized[name.toLowerCase()] = headers[name];
     });
     return normalized;

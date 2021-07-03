@@ -97,7 +97,7 @@
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "26.0.23",
     "@types/lodash": "4.14.170",
-    "@types/node": "15.12.5",
+    "@types/node": "15.14.1",
     "@types/react": "17.0.13",
     "@types/react-dom": "17.0.2",
     "@types/recompose": "0.30.7",

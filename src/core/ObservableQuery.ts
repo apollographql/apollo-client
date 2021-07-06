@@ -21,6 +21,7 @@ import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
+  WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 
@@ -56,6 +57,10 @@ export class ObservableQuery<
   public get variables(): TVariables | undefined {
     return this.options.variables;
   }
+
+  // Original value of this.options.fetchPolicy (defaulting to "cache-first"),
+  // from whenever the ObservableQuery was first created.
+  public initialFetchPolicy: WatchQueryFetchPolicy;
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
@@ -128,6 +133,8 @@ export class ObservableQuery<
 
     const opDef = getOperationDefinition(options.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
+
+    this.initialFetchPolicy = options.fetchPolicy || "cache-first";
 
     // related classes
     this.queryManager = queryManager;
@@ -475,23 +482,11 @@ once, rather than every time you call fetchMore.`);
       return Promise.resolve();
     }
 
-    let { fetchPolicy = 'cache-first' } = this.options;
-    const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
-      fetchPolicy,
+    return this.reobserve({
+      // Reset options.fetchPolicy to its original value.
+      fetchPolicy: this.initialFetchPolicy,
       variables,
-    };
-
-    if (fetchPolicy !== 'cache-first' &&
-        fetchPolicy !== 'no-cache' &&
-        fetchPolicy !== 'network-only') {
-      reobserveOptions.fetchPolicy = 'cache-and-network';
-      reobserveOptions.nextFetchPolicy = fetchPolicy;
-    }
-
-    return this.reobserve(
-      reobserveOptions,
-      NetworkStatus.setVariables,
-    );
+    }, NetworkStatus.setVariables);
   }
 
   public updateQuery<TVars = TVariables>(

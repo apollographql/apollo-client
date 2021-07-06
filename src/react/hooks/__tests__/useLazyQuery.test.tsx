@@ -474,4 +474,101 @@ describe('useLazyQuery Hook', () => {
       expect(renderCount).toBe(5);
     }).then(resolve, reject);
   });
+
+  itAsync('should persist previous data when a query is re-run and variable changes', (resolve, reject) => {
+    const CAR_QUERY_BY_ID = gql`
+      query($id: Int) {
+        car(id: $id) {
+          make
+          model
+        }
+      }
+    `;
+
+    const CAR_DATA_A4 = {
+      car: {
+        make: 'Audi',
+        model: 'A4',
+        __typename: 'Car',
+      },
+    };
+
+    const CAR_DATA_RS8 = {
+      car: {
+        make: 'Audi',
+        model: 'RS8',
+        __typename: 'Car',
+      },
+    };
+
+    const mocks = [
+      {
+        request: { query: CAR_QUERY_BY_ID, variables: { id: 1 } },
+        result: { data: CAR_DATA_A4 },
+      },
+      {
+        request: { query: CAR_QUERY_BY_ID, variables: { id: 2 } },
+        result: { data: CAR_DATA_RS8 },
+      },
+    ];
+
+    let renderCount = 0;
+    function App() {
+      const [execute, { loading, data, previousData }] = useLazyQuery(
+        CAR_QUERY_BY_ID,
+        { notifyOnNetworkStatusChange: true },
+      );
+
+      switch (++renderCount) {
+        case 1:
+          expect(loading).toEqual(false);
+          expect(data).toBeUndefined();
+          expect(previousData).toBeUndefined();
+          setTimeout(() => execute(
+            {
+              variables: { id: 1 },
+            },
+          ));
+          break;
+        case 2:
+          expect(loading).toBeTruthy();
+          expect(data).toBeUndefined();
+          expect(previousData).toBeUndefined();
+          break;
+        case 3:
+          expect(loading).toBeFalsy();
+          expect(data).toEqual(CAR_DATA_A4);
+          expect(previousData).toBeUndefined();
+          setTimeout(() => execute(
+            {
+              variables: { id: 2 },
+            },
+          ));
+          break;
+        case 4:
+          expect(loading).toBeTruthy();
+          expect(data).toEqual(CAR_DATA_A4);
+          expect(previousData).toEqual(CAR_DATA_A4);
+          break;
+        case 5:
+          expect(loading).toBeFalsy();
+          expect(data).toEqual(CAR_DATA_RS8);
+          expect(previousData).toEqual(CAR_DATA_A4);
+          break;
+        default: // Do nothing
+      }
+
+      return null;
+    }
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <App />
+      </MockedProvider>
+    );
+
+    return wait(() => {
+      expect(renderCount).toBe(5);
+    }).then(resolve, reject);
+  });
 });

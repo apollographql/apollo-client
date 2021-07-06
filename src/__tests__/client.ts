@@ -3319,7 +3319,6 @@ describe('@connection', () => {
               // again to perform an additional transition.
               this.nextFetchPolicy = fetchPolicy => {
                 ++nextFetchPolicyCallCount;
-                expect(fetchPolicy).toBe("cache-and-network");
                 return "cache-first";
               };
               return "cache-and-network";
@@ -3372,9 +3371,8 @@ describe('@connection', () => {
           client.cache.evict({ fieldName: "count" });
         } else if (handleCount === 6) {
           expect(result.data).toEqual({ count: 2 });
-          expect(nextFetchPolicyCallCount).toBe(3);
+          expect(nextFetchPolicyCallCount).toBe(4);
           expect(obs.options.fetchPolicy).toBe("cache-first");
-          expect(obs.options.nextFetchPolicy).toBeUndefined();
           setTimeout(resolve, 50);
         } else {
           reject("too many results");

@@ -732,11 +732,6 @@ export function applyNextFetchPolicy<TData, TVars>(
   } = options;
 
   if (nextFetchPolicy) {
-    // The options.nextFetchPolicy transition should happen only once, but it
-    // should also be possible (though uncommon) for a nextFetchPolicy function
-    // to set options.nextFetchPolicy to perform an additional transition.
-    options.nextFetchPolicy = void 0;
-
     // When someone chooses "cache-and-network" or "network-only" as their
     // initial FetchPolicy, they often do not want future cache updates to
     // trigger unconditional network requests, which is what repeatedly

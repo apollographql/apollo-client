@@ -978,22 +978,43 @@ describe('ObservableQuery', () => {
 
       const mocks = mockFetchQuery(queryManager);
 
-      subscribeAndCount(reject, observable, handleCount => {
-        if (handleCount === 1) {
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: dataOne,
+          });
+
           observable.refetch(differentVariables);
-        } else if (handleCount === 2) {
+
+        } else if (count === 2) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: dataTwo,
+          });
+
           const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
           expect(fqbpCalls.length).toBe(2);
+          expect(fqbpCalls[0][1].fetchPolicy).toEqual('cache-first');
           expect(fqbpCalls[1][1].fetchPolicy).toEqual('network-only');
+
+          const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+          expect(fqoCalls.length).toBe(2);
+          expect(fqoCalls[0][1].fetchPolicy).toEqual('cache-first');
+          expect(fqoCalls[1][1].fetchPolicy).toEqual('network-only');
+
           // Although the options.fetchPolicy we passed just now to
           // fetchQueryByPolicy should have been network-only,
           // observable.options.fetchPolicy should now be updated to
           // cache-first, thanks to options.nextFetchPolicy.
           expect(observable.options.fetchPolicy).toBe('cache-first');
-          const fqoCalls = mocks.fetchQueryObservable.mock.calls;
-          expect(fqoCalls.length).toBe(2);
-          expect(fqoCalls[1][1].fetchPolicy).toEqual('cache-first');
-          resolve();
+
+          // Give the test time to fail if more results are delivered.
+          setTimeout(resolve, 50);
+        } else {
+          reject(new Error(`too many results (${count}, ${result})`));
         }
       });
     });

@@ -2025,7 +2025,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const canon = cache["storeReader"]["canon"];
+    const canon = cache["storeReader"].canon;
 
     const query = gql`
       query {
@@ -2081,7 +2081,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const canon = cache["storeReader"]["canon"];
+    const canon = cache["storeReader"].canon;
 
     const fragment = gql`
       fragment CountFragment on Query {

@@ -8,6 +8,9 @@ import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
 
 jest.mock('optimism');
 import { wrap } from 'optimism';
+import { StoreReader } from '../readFromStore';
+import { StoreWriter } from '../writeToStore';
+import { ObjectCanon } from '../object-canon';
 
 disableFragmentWarnings();
 
@@ -1330,7 +1333,57 @@ describe('Cache', () => {
     );
   });
 
-  describe('batch', () => {
+  describe('cache.restore', () => {
+    it('replaces cache.{store{Reader,Writer},maybeBroadcastWatch}', () => {
+      const cache = new InMemoryCache;
+      const query = gql`query { a b c }`;
+
+      const originalReader = cache["storeReader"];
+      expect(originalReader).toBeInstanceOf(StoreReader);
+
+      const originalWriter = cache["storeWriter"];
+      expect(originalWriter).toBeInstanceOf(StoreWriter);
+
+      const originalMBW = cache["maybeBroadcastWatch"];
+      expect(typeof originalMBW).toBe("function");
+
+      const originalCanon = originalReader.canon;
+      expect(originalCanon).toBeInstanceOf(ObjectCanon);
+
+      cache.writeQuery({
+        query,
+        data: {
+          a: "ay",
+          b: "bee",
+          c: "see",
+        },
+      });
+
+      const snapshot = cache.extract();
+      expect(snapshot).toMatchSnapshot();
+
+      cache.restore({});
+      expect(cache.extract()).toEqual({});
+      expect(cache.readQuery({ query })).toBe(null);
+
+      cache.restore(snapshot);
+      expect(cache.extract()).toEqual(snapshot);
+      expect(cache.readQuery({ query })).toEqual({
+        a: "ay",
+        b: "bee",
+        c: "see",
+      });
+
+      expect(originalReader).not.toBe(cache["storeReader"]);
+      expect(originalWriter).not.toBe(cache["storeWriter"]);
+      expect(originalMBW).not.toBe(cache["maybeBroadcastWatch"]);
+      // The cache.storeReader.canon is preserved by default, but can be dropped
+      // by passing resetResultIdentities:true to cache.gc.
+      expect(originalCanon).toBe(cache["storeReader"].canon);
+    });
+  });
+
+  describe('cache.batch', () => {
     const last = <E>(array: E[]) => array[array.length - 1];
 
     function watch(cache: InMemoryCache, query: DocumentNode) {
@@ -2601,6 +2654,17 @@ describe("InMemoryCache#modify", () => {
 
     const b322 = makeResult("B", 322);
 
+    expect(aResults).toEqual([a123, a124]);
+    expect(bResults).toEqual([b321, b322]);
+
+    // Check that resetting the result cache does not trigger additional watch
+    // notifications.
+    expect(cache.gc({
+      resetResultCache: true,
+    })).toEqual([]);
+    expect(aResults).toEqual([a123, a124]);
+    expect(bResults).toEqual([b321, b322]);
+    cache["broadcastWatches"]();
     expect(aResults).toEqual([a123, a124]);
     expect(bResults).toEqual([b321, b322]);
   });

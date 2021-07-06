@@ -106,12 +106,24 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // original this.data cache object.
     this.optimisticData = rootStore.stump;
 
+    this.resetResultCache();
+  }
+
+  private resetResultCache(resetResultIdentities?: boolean) {
+    const previousReader = this.storeReader;
+
+    // The StoreWriter is mostly stateless and so doesn't really need to be
+    // reset, but it does need to have its writer.storeReader reference updated,
+    // so it's simpler to update this.storeWriter as well.
     this.storeWriter = new StoreWriter(
       this,
       this.storeReader = new StoreReader({
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
+        canon: resetResultIdentities
+          ? void 0
+          : previousReader && previousReader.canon,
       }),
     );
 
@@ -142,9 +154,21 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         }
       }
     });
+
+    // Since we have thrown away all the cached functions that depend on the
+    // CacheGroup dependencies maintained by EntityStore, we should also reset
+    // all CacheGroup dependency information.
+    new Set([
+      this.data.group,
+      this.optimisticData.group,
+    ]).forEach(group => group.resetCaching());
   }
 
   public restore(data: NormalizedCacheObject): this {
+    this.init();
+    // Since calling this.init() discards/replaces the entire StoreReader, along
+    // with the result caches it maintains, this.data.replace(data) won't have
+    // to bother deleting the old data.
     if (data) this.data.replace(data);
     return this;
   }
@@ -262,10 +286,25 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     };
   }
 
-  // Request garbage collection of unreachable normalized entities.
-  public gc() {
+  public gc(options?: {
+    // If true, also free non-essential result cache memory by bulk-releasing
+    // this.{store{Reader,Writer},maybeBroadcastWatch}. Defaults to false.
+    resetResultCache?: boolean;
+    // If resetResultCache is true, this.storeReader.canon will be preserved by
+    // default, but can also be discarded by passing resetResultIdentities:true.
+    // Defaults to false.
+    resetResultIdentities?: boolean;
+  }) {
     canonicalStringify.reset();
-    return this.optimisticData.gc();
+    const ids = this.optimisticData.gc();
+    if (options && !this.txCount) {
+      if (options.resetResultCache) {
+        this.resetResultCache(options.resetResultIdentities);
+      } else if (options.resetResultIdentities) {
+        this.storeReader.resetCanon();
+      }
+    }
+    return ids;
   }
 
   // Call this method to ensure the given root ID remains in the cache after

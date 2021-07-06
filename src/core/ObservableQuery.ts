@@ -290,8 +290,6 @@ export class ObservableQuery<
       reobserveOptions.fetchPolicy = 'no-cache';
     } else if (fetchPolicy !== 'cache-and-network') {
       reobserveOptions.fetchPolicy = 'network-only';
-      // Go back to the original options.fetchPolicy after this refetch.
-      reobserveOptions.nextFetchPolicy = fetchPolicy || "cache-first";
     }
 
     if (variables && !equal(this.options.variables, variables)) {

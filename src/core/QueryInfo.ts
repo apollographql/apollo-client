@@ -184,12 +184,13 @@ export class QueryInfo {
   }
 
   private getDiffOptions(variables = this.variables): Cache.DiffOptions {
+    const oq = this.observableQuery;
     return {
       query: this.document!,
       variables,
       returnPartialData: true,
       optimistic: true,
-      canonizeResults: this.canonize(),
+      canonizeResults: !oq || oq.options.canonizeResults !== false,
     };
   }
 
@@ -309,11 +310,6 @@ export class QueryInfo {
       this.cancel();
       this.cancel = this.cache.watch(this.lastWatch = watchOptions);
     }
-  }
-
-  private canonize() {
-    const oq = this.observableQuery;
-    return !oq || oq.options.canonizeResults !== false;
   }
 
   private lastWrite?: {

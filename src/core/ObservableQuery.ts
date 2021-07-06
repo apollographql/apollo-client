@@ -586,7 +586,6 @@ once, rather than every time you call fetchMore.`);
         if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
           this.reobserve({
             fetchPolicy: "network-only",
-            nextFetchPolicy: this.options.fetchPolicy || "cache-first",
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();
@@ -622,26 +621,38 @@ once, rather than every time you call fetchMore.`);
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;
-    let options: WatchQueryOptions<TVariables, TData>;
-    if (newNetworkStatus === NetworkStatus.refetch) {
-      options = Object.assign({}, this.options, compact(newOptions));
-    } else {
-      if (newOptions) {
-        Object.assign(this.options, compact(newOptions));
-      }
 
+    const useDisposableConcast =
+      // Refetching uses a disposable Concast to allow refetches using different
+      // options/variables, without permanently altering the options of the
+      // original ObservableQuery.
+      newNetworkStatus === NetworkStatus.refetch ||
+      // The fetchMore method does not actually call the reobserve method, but,
+      // if it did, it would definitely use a disposable Concast.
+      newNetworkStatus === NetworkStatus.fetchMore ||
+      // Polling uses a disposable Concast so the polling options (which force
+      // fetchPolicy to be "network-only") won't override the original options.
+      newNetworkStatus === NetworkStatus.poll;
+
+    const options = useDisposableConcast
+      // Disposable Concast fetches receive a shallow copy of this.options
+      // (merged with newOptions), leaving this.options unmodified.
+      ? compact(this.options, newOptions)
+      : Object.assign(this.options, compact(newOptions));
+
+    // We can skip calling updatePolling if we're not changing this.options.
+    if (!useDisposableConcast) {
       this.updatePolling();
-      options = this.options;
     }
 
     const concast = this.fetch(options, newNetworkStatus);
-    if (newNetworkStatus !== NetworkStatus.refetch) {
-      // We use the {add,remove}Observer methods directly to avoid
-      // wrapping observer with an unnecessary SubscriptionObserver
-      // object, in part so that we can remove it here without triggering
-      // any unsubscriptions, because we just want to ignore the old
-      // observable, not prematurely shut it down, since other consumers
-      // may be awaiting this.concast.promise.
+
+    if (!useDisposableConcast) {
+      // We use the {add,remove}Observer methods directly to avoid wrapping
+      // observer with an unnecessary SubscriptionObserver object, in part so
+      // that we can remove it here without triggering any unsubscriptions,
+      // because we just want to ignore the old observable, not prematurely shut
+      // it down, since other consumers may be awaiting this.concast.promise.
       if (this.concast) {
         this.concast.removeObserver(this.observer, true);
       }
@@ -650,6 +661,7 @@ once, rather than every time you call fetchMore.`);
     }
 
     concast.addObserver(this.observer);
+
     return concast.promise;
   }
 

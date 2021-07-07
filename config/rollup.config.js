@@ -112,7 +112,6 @@ function prepareBundle({
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
-      interop: 'esModule',
       externalLiveBindings: false,
     },
     plugins: [

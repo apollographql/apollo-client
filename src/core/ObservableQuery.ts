@@ -627,15 +627,32 @@ once, rather than every time you call fetchMore.`);
       // fetchPolicy to be "network-only") won't override the original options.
       newNetworkStatus === NetworkStatus.poll;
 
+    // Save the old variables, since Object.assign may modify them below.
+    const oldVariables = this.options.variables;
+
     const options = useDisposableConcast
       // Disposable Concast fetches receive a shallow copy of this.options
       // (merged with newOptions), leaving this.options unmodified.
       ? compact(this.options, newOptions)
       : Object.assign(this.options, compact(newOptions));
 
-    // We can skip calling updatePolling if we're not changing this.options.
     if (!useDisposableConcast) {
+      // We can skip calling updatePolling if we're not changing this.options.
       this.updatePolling();
+
+      // Reset options.fetchPolicy to its original value when variables change,
+      // unless a new fetchPolicy was provided by newOptions.
+      if (
+        newOptions &&
+        newOptions.variables &&
+        !newOptions.fetchPolicy &&
+        !equal(newOptions.variables, oldVariables)
+      ) {
+        options.fetchPolicy = this.initialFetchPolicy;
+        if (newNetworkStatus === void 0) {
+          newNetworkStatus = NetworkStatus.setVariables;
+        }
+      }
     }
 
     const concast = this.fetch(options, newNetworkStatus);

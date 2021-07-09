@@ -60,7 +60,7 @@ export class ObservableQuery<
 
   // Original value of this.options.fetchPolicy (defaulting to "cache-first"),
   // from whenever the ObservableQuery was first created.
-  public initialFetchPolicy: WatchQueryFetchPolicy;
+  private initialFetchPolicy: WatchQueryFetchPolicy;
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;

@@ -83,7 +83,7 @@
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.8.2",
     "tslib": "^2.1.0",
-    "zen-observable-ts": "^1.0.0"
+    "zen-observable-ts": "^1.1.0"
   },
   "devDependencies": {
     "@babel/parser": "7.14.7",

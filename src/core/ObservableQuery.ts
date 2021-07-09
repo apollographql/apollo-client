@@ -21,6 +21,7 @@ import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
+  WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 
@@ -56,6 +57,10 @@ export class ObservableQuery<
   public get variables(): TVariables | undefined {
     return this.options.variables;
   }
+
+  // Original value of this.options.fetchPolicy (defaulting to "cache-first"),
+  // from whenever the ObservableQuery was first created.
+  private initialFetchPolicy: WatchQueryFetchPolicy;
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
@@ -128,6 +133,8 @@ export class ObservableQuery<
 
     const opDef = getOperationDefinition(options.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
+
+    this.initialFetchPolicy = options.fetchPolicy || "cache-first";
 
     // related classes
     this.queryManager = queryManager;
@@ -283,8 +290,6 @@ export class ObservableQuery<
       reobserveOptions.fetchPolicy = 'no-cache';
     } else if (fetchPolicy !== 'cache-and-network') {
       reobserveOptions.fetchPolicy = 'network-only';
-      // Go back to the original options.fetchPolicy after this refetch.
-      reobserveOptions.nextFetchPolicy = fetchPolicy || "cache-first";
     }
 
     if (variables && !equal(this.options.variables, variables)) {
@@ -475,23 +480,11 @@ once, rather than every time you call fetchMore.`);
       return Promise.resolve();
     }
 
-    let { fetchPolicy = 'cache-first' } = this.options;
-    const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
-      fetchPolicy,
+    return this.reobserve({
+      // Reset options.fetchPolicy to its original value.
+      fetchPolicy: this.initialFetchPolicy,
       variables,
-    };
-
-    if (fetchPolicy !== 'cache-first' &&
-        fetchPolicy !== 'no-cache' &&
-        fetchPolicy !== 'network-only') {
-      reobserveOptions.fetchPolicy = 'cache-and-network';
-      reobserveOptions.nextFetchPolicy = fetchPolicy;
-    }
-
-    return this.reobserve(
-      reobserveOptions,
-      NetworkStatus.setVariables,
-    );
+    }, NetworkStatus.setVariables);
   }
 
   public updateQuery<TVars = TVariables>(
@@ -586,7 +579,6 @@ once, rather than every time you call fetchMore.`);
         if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
           this.reobserve({
             fetchPolicy: "network-only",
-            nextFetchPolicy: this.options.fetchPolicy || "cache-first",
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();
@@ -622,26 +614,55 @@ once, rather than every time you call fetchMore.`);
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;
-    let options: WatchQueryOptions<TVariables, TData>;
-    if (newNetworkStatus === NetworkStatus.refetch) {
-      options = Object.assign({}, this.options, compact(newOptions));
-    } else {
-      if (newOptions) {
-        Object.assign(this.options, compact(newOptions));
-      }
 
+    const useDisposableConcast =
+      // Refetching uses a disposable Concast to allow refetches using different
+      // options/variables, without permanently altering the options of the
+      // original ObservableQuery.
+      newNetworkStatus === NetworkStatus.refetch ||
+      // The fetchMore method does not actually call the reobserve method, but,
+      // if it did, it would definitely use a disposable Concast.
+      newNetworkStatus === NetworkStatus.fetchMore ||
+      // Polling uses a disposable Concast so the polling options (which force
+      // fetchPolicy to be "network-only") won't override the original options.
+      newNetworkStatus === NetworkStatus.poll;
+
+    // Save the old variables, since Object.assign may modify them below.
+    const oldVariables = this.options.variables;
+
+    const options = useDisposableConcast
+      // Disposable Concast fetches receive a shallow copy of this.options
+      // (merged with newOptions), leaving this.options unmodified.
+      ? compact(this.options, newOptions)
+      : Object.assign(this.options, compact(newOptions));
+
+    if (!useDisposableConcast) {
+      // We can skip calling updatePolling if we're not changing this.options.
       this.updatePolling();
-      options = this.options;
+
+      // Reset options.fetchPolicy to its original value when variables change,
+      // unless a new fetchPolicy was provided by newOptions.
+      if (
+        newOptions &&
+        newOptions.variables &&
+        !newOptions.fetchPolicy &&
+        !equal(newOptions.variables, oldVariables)
+      ) {
+        options.fetchPolicy = this.initialFetchPolicy;
+        if (newNetworkStatus === void 0) {
+          newNetworkStatus = NetworkStatus.setVariables;
+        }
+      }
     }
 
     const concast = this.fetch(options, newNetworkStatus);
-    if (newNetworkStatus !== NetworkStatus.refetch) {
-      // We use the {add,remove}Observer methods directly to avoid
-      // wrapping observer with an unnecessary SubscriptionObserver
-      // object, in part so that we can remove it here without triggering
-      // any unsubscriptions, because we just want to ignore the old
-      // observable, not prematurely shut it down, since other consumers
-      // may be awaiting this.concast.promise.
+
+    if (!useDisposableConcast) {
+      // We use the {add,remove}Observer methods directly to avoid wrapping
+      // observer with an unnecessary SubscriptionObserver object, in part so
+      // that we can remove it here without triggering any unsubscriptions,
+      // because we just want to ignore the old observable, not prematurely shut
+      // it down, since other consumers may be awaiting this.concast.promise.
       if (this.concast) {
         this.concast.removeObserver(this.observer, true);
       }
@@ -650,6 +671,7 @@ once, rather than every time you call fetchMore.`);
     }
 
     concast.addObserver(this.observer);
+
     return concast.promise;
   }
 
@@ -732,11 +754,6 @@ export function applyNextFetchPolicy<TData, TVars>(
   } = options;
 
   if (nextFetchPolicy) {
-    // The options.nextFetchPolicy transition should happen only once, but it
-    // should also be possible (though uncommon) for a nextFetchPolicy function
-    // to set options.nextFetchPolicy to perform an additional transition.
-    options.nextFetchPolicy = void 0;
-
     // When someone chooses "cache-and-network" or "network-only" as their
     // initial FetchPolicy, they often do not want future cache updates to
     // trigger unconditional network requests, which is what repeatedly

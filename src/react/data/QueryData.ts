@@ -8,7 +8,6 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   ObservableQuery,
-  applyNextFetchPolicy,
   FetchMoreOptions,
   UpdateQueryOptions,
   DocumentNode,
@@ -29,6 +28,9 @@ import {
 } from '../types/types';
 import { OperationData } from './OperationData';
 
+type ObservableQueryOptions<TData, TVars> =
+  ReturnType<QueryData<TData, TVars>["prepareObservableQueryOptions"]>;
+
 export class QueryData<TData, TVariables> extends OperationData<
   QueryDataOptions<TData, TVariables>
 > {
@@ -40,7 +42,7 @@ export class QueryData<TData, TVariables> extends OperationData<
   private previous: {
     client?: ApolloClient<object>;
     query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    observableQueryOptions?: {};
+    observableQueryOptions?: ObservableQueryOptions<TData, TVariables>;
     result?: QueryResult<TData, TVariables>;
     loading?: boolean;
     options?: QueryDataOptions<TData, TVariables>;
@@ -199,8 +201,6 @@ export class QueryData<TData, TVariables> extends OperationData<
         options.fetchPolicy === 'cache-and-network')
     ) {
       options.fetchPolicy = 'cache-first';
-    } else if (options.nextFetchPolicy && this.currentObservable) {
-      applyNextFetchPolicy(options);
     }
 
     return {
@@ -225,7 +225,7 @@ export class QueryData<TData, TVariables> extends OperationData<
 
       this.previous.observableQueryOptions = {
         ...observableQueryOptions,
-        children: null
+        children: void 0,
       };
       this.currentObservable = this.refreshClient().client.watchQuery({
         ...observableQueryOptions
@@ -249,7 +249,7 @@ export class QueryData<TData, TVariables> extends OperationData<
 
     const newObservableQueryOptions = {
       ...this.prepareObservableQueryOptions(),
-      children: null
+      children: void 0,
     };
 
     if (this.getOptions().skip) {

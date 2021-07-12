@@ -1350,7 +1350,6 @@ describe('QueryManager', () => {
   });
 
   itAsync('supports cache-only fetchPolicy fetching only cached data', (resolve, reject) => {
-    const spy = jest.spyOn(console, "warn").mockImplementation();
     const primeQuery = gql`
       query primeQuery {
         luke: people_one(id: 1) {
@@ -1395,13 +1394,9 @@ describe('QueryManager', () => {
         return handle.result().then(result => {
           expect(result.data['luke'].name).toBe('Luke Skywalker');
           expect(result.data).not.toHaveProperty('vader');
-          expect(spy).toHaveBeenCalledTimes(1);
         });
       })
-      .finally(() => {
-        spy.mockRestore();
-      })
-      .then(resolve, reject)
+      .then(resolve, reject);
   });
 
   itAsync('runs a mutation', (resolve, reject) => {
@@ -5785,8 +5780,8 @@ describe('QueryManager', () => {
     let verbosity: ReturnType<typeof setVerbosity>;
     let spy: any;
     beforeEach(() => {
-      verbosity = setVerbosity("warn");
-      spy = jest.spyOn(console, "warn").mockImplementation();
+      verbosity = setVerbosity("debug");
+      spy = jest.spyOn(console, "debug").mockImplementation();
     });
 
     afterEach(() => {

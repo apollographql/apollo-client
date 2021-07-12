@@ -1349,7 +1349,7 @@ export class QueryManager<TStore> {
           isNonEmptyArray(diff.missing) &&
           !equal(data, {}) &&
           !returnPartialData) {
-        invariant.warn(`Missing cache result fields: ${
+        invariant.debug(`Missing cache result fields: ${
           diff.missing.map(m => m.path.join('.')).join(', ')
         }`, diff.missing);
       }

@@ -109,6 +109,9 @@
 - The `InMemoryCache` version of the `cache.gc` method now supports additional options for removing non-essential (recomputable) result caching data. <br/>
   [@benjamn](https://github.com/benjamn) in [#8421](https://github.com/apollographql/apollo-client/pull/8421)
 
+- Suppress noisy `Missing cache result fields...` warnings by default unless `setLogVerbosity("debug")` called. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8489](https://github.com/apollographql/apollo-client/pull/8489)
+
 ### Documentation
 TBD
 

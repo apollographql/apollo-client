@@ -118,7 +118,9 @@ This function is passed an [`ApolloError`](https://github.com/apollographql/apol
 
 <td>
 
-TODO
+Optional callback for intercepting queries whose cache data has been updated by the mutation, as well as any queries specified in the [`refetchQueries: [...]`](#refetchQueries) list passed to `client.mutate`.
+
+Returning a `Promise` from `onQueryUpdated` will cause the final mutation `Promise` to await the returned `Promise`. Returning `false` causes the query to be ignored.
 
 </td>
 </tr>

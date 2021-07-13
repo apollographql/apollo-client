@@ -106,13 +106,7 @@ This function is passed an [`ApolloError`](https://github.com/apollographql/apol
 
 ###### `onQueryUpdated`
 
-```ts
-<TResult>(
-  observableQuery: ObservableQuery,
-  diff: Cache.DiffResult,
-  lastDiff: Cache.DiffResult | undefined,
-) => boolean | TResult
-```
+`(observableQuery: ObservableQuery, diff: Cache.DiffResult, lastDiff: Cache.DiffResult | undefined) => boolean | TResult`
 
 </td>
 

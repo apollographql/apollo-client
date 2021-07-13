@@ -3,13 +3,13 @@ title: '@apollo/react-components'
 description: API reference
 ---
 
-import QueryOptions from '../../shared/query-options.mdx';
-import QueryResult from '../../shared/query-result.mdx';
-import MutationOptions from '../../shared/mutation-options.mdx';
-import MutationResult from '../../shared/mutation-result.mdx';
-import SubscriptionOptions from '../../shared/subscription-options.mdx';
-import SubscriptionResult from '../../shared/subscription-result.mdx';
-import ApolloProvider from '../../shared/apollo-provider.mdx';
+import QueryOptions2 from '../../shared/query-options.mdx';
+import QueryResult2 from '../../shared/query-result.mdx';
+import MutationOptions2 from '../../shared/mutation-options.mdx';
+import MutationResult2 from '../../shared/mutation-result.mdx';
+import SubscriptionOptions2 from '../../shared/subscription-options.mdx';
+import SubscriptionResult2 from '../../shared/subscription-result.mdx';
+import ApolloProvider2 from '../../shared/apollo-provider.mdx';
 
 ## Installation
 
@@ -23,25 +23,25 @@ npm install @apollo/react-components
 
 The `Query` component accepts the following props. `query` is **required**.
 
-<QueryOptions />
+<QueryOptions2 />
 
 ### Render prop function
 
 The render prop function that you pass to the `children` prop of `Query` is called with an object (`QueryResult`) that has the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
-<QueryResult />
+<QueryResult2 />
 
 ## `Mutation`
 
 The Mutation component accepts the following props. Only `mutation` is **required**.
 
-<MutationOptions />
+<MutationOptions2 />
 
 ### Render prop function
 
 The render prop function that you pass to the `children` prop of `Mutation` is called with the `mutate` function and an object with the mutation result. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
 
-<MutationResult />
+<MutationResult2 />
 
 ## `Subscription`
 
@@ -49,14 +49,14 @@ The render prop function that you pass to the `children` prop of `Mutation` is c
 
 The Subscription component accepts the following props. Only `subscription` is **required**.
 
-<SubscriptionOptions />
+<SubscriptionOptions2 />
 
 ### Render prop function
 
 The render prop function that you pass to the `children` prop of `Subscription` is called with an object that has the following properties.
 
-<SubscriptionResult />
+<SubscriptionResult2 />
 
 ## `ApolloProvider`
 
-<ApolloProvider />
+<ApolloProvider2 />

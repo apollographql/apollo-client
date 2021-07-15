@@ -19,8 +19,8 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     : { subscription };
   const [result, setResult] = useState({
     loading: !updatedOptions.skip,
-    error: undefined,
-    data: undefined
+    error: void 0,
+    data: void 0,
   });
 
   const subscriptionDataRef = useRef<SubscriptionData<TData, TVariables>>();
@@ -48,7 +48,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
   useEffect(() => {
     return () => {
       subscriptionData.cleanup();
-      subscriptionDataRef.current = undefined;
+      subscriptionDataRef.current = void 0;
     };
   }, []);
 

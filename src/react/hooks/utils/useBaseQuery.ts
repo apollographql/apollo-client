@@ -55,8 +55,8 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   const memo = {
     options: {
       ...updatedOptions,
-      onError: undefined,
-      onCompleted: undefined
+      onError: void 0,
+      onCompleted: void 0
     } as QueryHookOptions<TData, TVariables>,
     context,
     tick
@@ -81,7 +81,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
       queryData.cleanup();
       // this effect can run multiple times during a fast-refresh
       // so make sure we clean up the ref
-      queryDataRef.current = undefined;
+      queryDataRef.current = void 0;
     }
   }, []);
 

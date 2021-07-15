@@ -112,6 +112,9 @@
 - Suppress noisy `Missing cache result fields...` warnings by default unless `setLogVerbosity("debug")` called. <br/>
   [@benjamn](https://github.com/benjamn) in [#8489](https://github.com/apollographql/apollo-client/pull/8489)
 
+- Improve interaction between React hooks and React Fast Refresh in development. <br/>
+  [@andreialecu](https://github.com/andreialecu) in [#7952](https://github.com/apollographql/apollo-client/pull/7952)
+
 ### Documentation
 TBD
 

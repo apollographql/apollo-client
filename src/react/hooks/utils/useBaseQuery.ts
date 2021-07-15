@@ -71,7 +71,6 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     ? (result as QueryTuple<TData, TVariables>)[1]
     : (result as QueryResult<TData, TVariables>);
 
-  // @ts-expect-error: __DEV__ is a global exposed by react
   if (__DEV__) {
     // ensure we run an update after refreshing so that we reinitialize
     useAfterFastRefresh(forceUpdate);

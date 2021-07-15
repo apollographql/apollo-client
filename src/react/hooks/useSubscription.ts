@@ -39,7 +39,6 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
   subscriptionData.setOptions(updatedOptions, true);
   subscriptionData.context = context;
 
-  // @ts-expect-error: __DEV__ is a global exposed by react
   if (__DEV__) {
     // ensure we run an update after refreshing so that we can resubscribe
     useAfterFastRefresh(forceUpdate);

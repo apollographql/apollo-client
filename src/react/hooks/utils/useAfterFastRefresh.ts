@@ -9,7 +9,6 @@ import { useEffect, useRef } from "react";
  * @param effectFn a function to run immediately after a fast refresh
  */
 export function useAfterFastRefresh(effectFn: () => unknown) {
-  // @ts-expect-error: __DEV__ is a global exposed by react
   if (__DEV__) {
     const didRefresh = useRef(false);
     useEffect(() => {
@@ -20,7 +19,7 @@ export function useAfterFastRefresh(effectFn: () => unknown) {
     }, []);
 
     useEffect(() => {
-      if (didRefresh?.current === true) {
+      if (didRefresh.current === true) {
         // This block only runs after a fast refresh
         didRefresh.current = false;
         effectFn();

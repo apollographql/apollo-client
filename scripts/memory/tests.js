@@ -6,8 +6,6 @@ const {
   makeVar,
 } = require("@apollo/client/core");
 
-global.__DEV__ = true;
-
 function itAsync(message, testFn) {
   const start = Date.now();
   let timeout;

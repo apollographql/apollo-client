@@ -6,7 +6,6 @@ module.exports = {
     '.(ts|tsx)': 'ts-jest',
   },
   globals: {
-    __DEV__: true,
     'ts-jest': {
       diagnostics: true,
       tsconfig: {

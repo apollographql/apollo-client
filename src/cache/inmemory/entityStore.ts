@@ -417,18 +417,32 @@ export abstract class EntityStore implements NormalizedCache {
   public findChildRefIds(dataId: string): Record<string, true> {
     if (!hasOwn.call(this.refs, dataId)) {
       const found = this.refs[dataId] = Object.create(null);
-      const workSet = new Set([this.data[dataId]]);
+      const root = this.data[dataId];
+      if (!root) return found;
+
+      const workSet = new Set<Record<string | number, any>>([root]);
       // Within the store, only arrays and objects can contain child entity
       // references, so we can prune the traversal using this predicate:
       workSet.forEach(obj => {
         if (isReference(obj)) {
           found[obj.__ref] = true;
-        } else if (isNonNullObject(obj)) {
-          Object.values(obj!)
+          // In rare cases, a { __ref } Reference object may have other fields.
+          // This often indicates a mismerging of References with StoreObjects,
+          // but garbage collection should not be fooled by a stray __ref
+          // property in a StoreObject (ignoring all the other fields just
+          // because the StoreObject looks like a Reference). To avoid this
+          // premature termination of findChildRefIds recursion, we fall through
+          // to the code below, which will handle any other properties of obj.
+        }
+        if (isNonNullObject(obj)) {
+          Object.keys(obj).forEach(key => {
+            const child = obj[key];
             // No need to add primitive values to the workSet, since they cannot
             // contain reference objects.
-            .filter(isNonNullObject)
-            .forEach(workSet.add, workSet);
+            if (isNonNullObject(child)) {
+              workSet.add(child);
+            }
+          });
         }
       });
     }

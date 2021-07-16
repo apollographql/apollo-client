@@ -9,7 +9,7 @@ import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { FieldPolicy, StorageType } from "../policies";
-import { withErrorSpy } from "../../../testing";
+import { withErrorSpy, withWarningSpy } from "../../../testing";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -5048,6 +5048,70 @@ describe("type policies", function () {
         lowerCase: "inveigle",
         titleCase: "Inveigle",
       },
+    });
+  });
+
+  withWarningSpy(it, "readField warns if explicitly passed undefined `from` option", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            fullNameWithDefaults(_, { readField }) {
+              return `${
+                readField<string>({
+                  fieldName: "firstName",
+                })
+              } ${
+                readField<string>("lastName")
+              }`;
+            },
+
+            fullNameWithVoids(_, { readField }) {
+              return `${
+                readField<string>({
+                  fieldName: "firstName",
+                  // If options.from is explicitly passed but undefined,
+                  // readField should not default to reading from the current
+                  // object (see issue #8499).
+                  from: void 0,
+                })
+              } ${
+                // Likewise for the shorthand version of readField.
+                readField<string>("lastName", void 0)
+              }`;
+            },
+          },
+        },
+      },
+    });
+
+    const firstNameLastNameQuery = gql`
+      query {
+        firstName
+        lastName
+      }
+    `;
+
+    const fullNamesQuery = gql`
+      query {
+        fullNameWithVoids
+        fullNameWithDefaults
+      }
+    `;
+
+    cache.writeQuery({
+      query: firstNameLastNameQuery,
+      data: {
+        firstName: "Alan",
+        lastName: "Turing",
+      },
+    });
+
+    expect(cache.readQuery({
+      query: fullNamesQuery,
+    })).toEqual({
+      fullNameWithDefaults: "Alan Turing",
+      fullNameWithVoids: "undefined undefined",
     });
   });
 

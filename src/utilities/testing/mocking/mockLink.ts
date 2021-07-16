@@ -15,17 +15,13 @@ import {
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
   cloneDeep,
-  makeUniqueId,
 } from '../../../utilities';
 
-export type ResultFunction<T> = () => T;
+import {
+  stringifyForDisplay,
+} from '../../../testing';
 
-function stringifyForDisplay(value: any): string {
-  const undefId = makeUniqueId("stringifyForDisplay");
-  return JSON.stringify(value, (key, value) => {
-    return value === void 0 ? undefId : value;
-  }).split(JSON.stringify(undefId)).join("<undefined>");
-}
+export type ResultFunction<T> = () => T;
 
 export interface MockedResponse<TData = Record<string, any>> {
   request: GraphQLRequest;

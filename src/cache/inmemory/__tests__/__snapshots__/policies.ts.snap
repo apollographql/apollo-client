@@ -1389,6 +1389,29 @@ exports[`type policies field policies runs nested merge functions as well as anc
 }
 `;
 
+exports[`type policies readField warns if explicitly passed undefined \`from\` option 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Undefined 'from' passed to readField with arguments [{\\"fieldName\\":\\"firstName\\",\\"from\\":<undefined>}]",
+    ],
+    Array [
+      "Undefined 'from' passed to readField with arguments [\\"lastName\\",<undefined>]",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
 exports[`type policies support inheritance 1`] = `
 Object {
   "Cobra:{\\"tagId\\":\\"Egypt30BC\\"}": Object {

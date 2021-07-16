@@ -5,7 +5,7 @@ import { DocumentNode } from 'graphql';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
 import { Cache } from '../../core/types/Cache';
-import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference, isReference, StoreValue } from '../../../utilities/graphql/storeUtils';
 import { MissingFieldError } from '../..';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -2592,5 +2592,78 @@ describe('EntityStore', () => {
       "1982103558",
       "1449373321",
     ]);
+  });
+
+  it("Refuses to merge { __ref } objects as StoreObjects", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            book: {
+              keyArgs: ["isbn"],
+            },
+          },
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+      },
+    });
+
+    const store = cache["data"];
+
+    const query = gql`
+      query Book($isbn: string) {
+        book(isbn: $isbn) {
+          title
+        }
+      }
+    `;
+
+    const data = {
+      book: {
+        __typename: "Book",
+        isbn: "1449373321",
+        title: "Designing Data-Intensive Applications",
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data,
+      variables: {
+        isbn: data.book.isbn,
+      },
+    });
+
+    const bookId = cache.identify(data.book)!;
+
+    store.merge(
+      bookId,
+      makeReference(bookId) as StoreValue as StoreObject,
+    );
+
+    const snapshot = cache.extract();
+    expect(snapshot).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        'book:{"isbn":"1449373321"}': {
+          __ref: 'Book:{"isbn":"1449373321"}',
+        },
+      },
+      'Book:{"isbn":"1449373321"}': {
+        __typename: "Book",
+        isbn: "1449373321",
+        title: "Designing Data-Intensive Applications",
+      },
+    });
+
+    store.merge(
+      makeReference(bookId) as StoreValue as StoreObject,
+      bookId,
+    );
+
+    expect(cache.extract()).toEqual(snapshot);
   });
 });

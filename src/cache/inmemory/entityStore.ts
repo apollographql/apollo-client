@@ -102,6 +102,10 @@ export abstract class EntityStore implements NormalizedCache {
   ): void {
     let dataId: string | undefined;
 
+    // Convert unexpected references to ID strings.
+    if (isReference(older)) older = older.__ref;
+    if (isReference(newer)) newer = newer.__ref;
+
     const existing: StoreObject | undefined =
       typeof older === "string"
         ? this.lookup(dataId = older)

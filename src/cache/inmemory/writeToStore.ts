@@ -108,7 +108,16 @@ export class StoreWriter {
       const entityRef = makeReference(dataId);
 
       if (mergeTree.map.size) {
-        fields = this.applyMerges(mergeTree, entityRef, fields, context);
+        const applied = this.applyMerges(mergeTree, entityRef, fields, context);
+        if (isReference(applied)) {
+          // Assume References returned by applyMerges have already been merged
+          // into the store. See makeMergeObjectsFunction in policies.ts for an
+          // example of how this can happen.
+          return;
+        }
+        // Otherwise, applyMerges returned a StoreObject, whose fields we should
+        // merge into the store (see store.merge statement below).
+        fields = applied;
       }
 
       if (__DEV__ && !context.overwrite) {
@@ -414,7 +423,7 @@ export class StoreWriter {
     incoming: T,
     context: WriteContext,
     getStorageArgs?: Parameters<EntityStore["getStorage"]>,
-  ): T {
+  ): T | Reference {
     if (mergeTree.map.size && !isReference(incoming)) {
       const e: StoreObject | Reference | undefined = (
         // Items in the same position in different arrays are not

@@ -927,12 +927,19 @@ function makeMergeObjectsFunction(
 
       if (isReference(existing) &&
           storeValueIsStoreObject(incoming)) {
+        // Update the normalized EntityStore for the entity identified by
+        // existing.__ref, preferring/overwriting any fields contributed by the
+        // newer incoming StoreObject.
         store.merge(existing.__ref, incoming);
         return existing;
       }
 
       if (storeValueIsStoreObject(existing) &&
           isReference(incoming)) {
+        // Update the normalized EntityStore for the entity identified by
+        // incoming.__ref, taking fields from the older existing object only if
+        // those fields are not already present in the newer StoreObject
+        // identified by incoming.__ref.
         store.merge(existing, incoming.__ref);
         return incoming;
       }

@@ -13,6 +13,8 @@ import {
   storeKeyNameFromField,
   makeReference,
   isReference,
+  Reference,
+  StoreObject,
 } from '../../../utilities/graphql/storeUtils';
 import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
@@ -2265,6 +2267,164 @@ describe('writing to the store', () => {
         ],
       },
     });
+  });
+
+  it("should not merge { __ref } as StoreObject when mergeObjects used", () => {
+    const merges: Array<{
+      existing: Reference | undefined;
+      incoming: Reference | StoreObject;
+      merged: Reference;
+    }> = [];
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Account: {
+          merge(existing, incoming, { mergeObjects }) {
+            const merged = mergeObjects(existing, incoming);
+            merges.push({ existing, incoming, merged });
+            debugger;
+            return merged;
+          },
+        },
+      },
+    });
+
+    const contactLocationQuery = gql`
+      query {
+        account {
+          contact
+          location
+        }
+      }
+    `;
+
+    const contactOnlyQuery = gql`
+      query {
+        account {
+          contact
+        }
+      }
+    `;
+
+    const locationOnlyQuery = gql`
+      query {
+        account {
+          location
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query: contactLocationQuery,
+      data: {
+        account: {
+          __typename: "Account",
+          contact: "billing@example.com",
+          location: "Exampleville, Ohio",
+        },
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        account: {
+          __typename: "Account",
+          contact: "billing@example.com",
+          location: "Exampleville, Ohio",
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query: contactOnlyQuery,
+      data: {
+        account: {
+          __typename: "Account",
+          id: 12345,
+          contact: "support@example.com",
+        },
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      "Account:12345": {
+        __typename: "Account",
+        id: 12345,
+        contact: "support@example.com",
+        location: "Exampleville, Ohio",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        account: {
+          __ref: "Account:12345",
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query: locationOnlyQuery,
+      data: {
+        account: {
+          __typename: "Account",
+          location: "Nowhere, New Mexico",
+        },
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      "Account:12345": {
+        __typename: "Account",
+        id: 12345,
+        contact: "support@example.com",
+        location: "Nowhere, New Mexico",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        account: {
+          __ref: "Account:12345",
+        },
+      },
+    });
+
+    expect(merges).toEqual([
+     {
+        existing: void 0,
+        incoming: {
+          __typename: "Account",
+          contact: "billing@example.com",
+          location: "Exampleville, Ohio",
+        },
+        merged: {
+          __typename: "Account",
+          contact: "billing@example.com",
+          location: "Exampleville, Ohio",
+        },
+      },
+
+      {
+        existing: {
+          __typename: "Account",
+          contact: "billing@example.com",
+          location: "Exampleville, Ohio",
+        },
+        incoming: {
+          __ref: "Account:12345",
+        },
+        merged: {
+          __ref: "Account:12345",
+        },
+      },
+
+      {
+        existing: { __ref: "Account:12345" },
+        incoming: {
+          __typename: "Account",
+          location: "Nowhere, New Mexico",
+        },
+        merged: { __ref: "Account:12345" },
+      }
+    ]);
   });
 
   it('should not deep-freeze scalar objects', () => {

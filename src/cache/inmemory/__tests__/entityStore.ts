@@ -5,7 +5,7 @@ import { DocumentNode } from 'graphql';
 import { StoreObject } from '../types';
 import { ApolloCache } from '../../core/cache';
 import { Cache } from '../../core/types/Cache';
-import { Reference, makeReference, isReference } from '../../../utilities/graphql/storeUtils';
+import { Reference, makeReference, isReference, StoreValue } from '../../../utilities/graphql/storeUtils';
 import { MissingFieldError } from '../..';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -962,6 +962,76 @@ describe('EntityStore', () => {
     ]);
 
     expect(cache2.extract()).toEqual({});
+  });
+
+  it("cache.gc is not confused by StoreObjects with stray __ref fields", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Person: {
+          keyFields: ["name"],
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        parent {
+          name
+          child {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      parent: {
+        __typename: "Person",
+        name: "Will Smith",
+        child: {
+          __typename: "Person",
+          name: "Jaden Smith",
+        },
+      },
+    };
+
+    cache.writeQuery({ query, data });
+
+    expect(cache.gc()).toEqual([]);
+
+    const willId = cache.identify(data.parent)!;
+    const store = cache["data"];
+    const storeRootData = store["data"];
+    // Hacky way of injecting a stray __ref field into the Will Smith Person
+    // object, clearing store.refs (which was populated by the previous GC).
+    storeRootData[willId]!.__ref = willId;
+    store["refs"] = Object.create(null);
+
+    expect(cache.extract()).toEqual({
+      'Person:{"name":"Jaden Smith"}': {
+        __typename: "Person",
+        name: "Jaden Smith",
+      },
+      'Person:{"name":"Will Smith"}': {
+        __typename: "Person",
+        name: "Will Smith",
+        child: {
+          __ref: 'Person:{"name":"Jaden Smith"}',
+        },
+        // This is the bogus line that makes this Person object look like a
+        // Reference object to the garbage collector.
+        __ref: 'Person:{"name":"Will Smith"}',
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        parent: {
+          __ref: 'Person:{"name":"Will Smith"}',
+        },
+      },
+    });
+
+    // Ensure the garbage collector is not confused by the stray __ref.
+    expect(cache.gc()).toEqual([]);
   });
 
   it("allows evicting specific fields", () => {
@@ -2522,5 +2592,78 @@ describe('EntityStore', () => {
       "1982103558",
       "1449373321",
     ]);
+  });
+
+  it("Refuses to merge { __ref } objects as StoreObjects", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            book: {
+              keyArgs: ["isbn"],
+            },
+          },
+        },
+
+        Book: {
+          keyFields: ["isbn"],
+        },
+      },
+    });
+
+    const store = cache["data"];
+
+    const query = gql`
+      query Book($isbn: string) {
+        book(isbn: $isbn) {
+          title
+        }
+      }
+    `;
+
+    const data = {
+      book: {
+        __typename: "Book",
+        isbn: "1449373321",
+        title: "Designing Data-Intensive Applications",
+      },
+    };
+
+    cache.writeQuery({
+      query,
+      data,
+      variables: {
+        isbn: data.book.isbn,
+      },
+    });
+
+    const bookId = cache.identify(data.book)!;
+
+    store.merge(
+      bookId,
+      makeReference(bookId) as StoreValue as StoreObject,
+    );
+
+    const snapshot = cache.extract();
+    expect(snapshot).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        'book:{"isbn":"1449373321"}': {
+          __ref: 'Book:{"isbn":"1449373321"}',
+        },
+      },
+      'Book:{"isbn":"1449373321"}': {
+        __typename: "Book",
+        isbn: "1449373321",
+        title: "Designing Data-Intensive Applications",
+      },
+    });
+
+    store.merge(
+      makeReference(bookId) as StoreValue as StoreObject,
+      bookId,
+    );
+
+    expect(cache.extract()).toEqual(snapshot);
   });
 });

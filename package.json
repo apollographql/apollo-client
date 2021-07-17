@@ -82,7 +82,7 @@
     "optimism": "^0.16.0",
     "prop-types": "^15.7.2",
     "symbol-observable": "^4.0.0",
-    "ts-invariant": "^0.8.0",
+    "ts-invariant": "^0.9.0",
     "tslib": "^1.10.0",
     "zen-observable": "^0.8.14"
   },

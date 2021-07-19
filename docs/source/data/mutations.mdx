@@ -1,5 +1,6 @@
 ---
-title: Mutations
+title: Mutations in Apollo Client
+sidebar_title: Mutations
 description: Modify data with the useMutation hook
 ---
 
@@ -106,7 +107,7 @@ In this example, our `form`'s `onSubmit` handler calls the **mutate function** (
 
 ### Providing options
 
-The `useMutation` hook accepts an `options` object as its second parameter. Here's an example that provides some default `variables`:
+The `useMutation` hook accepts an `options` object as its second parameter. Here's an example that provides some default values for GraphQL `variables`:
 
 ```js
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
@@ -119,7 +120,7 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
 
 > All supported options are listed in [Options](#options).
 
-You can _also_ provide these options to your mutate function, as demonstrated in [the example above](#example):
+You can _also_ provide options directly to your mutate function, as demonstrated in this snippet from [the example above](#example):
 
 ```js
 addTodo({
@@ -129,9 +130,13 @@ addTodo({
 });
 ```
 
-Here, we're using the `variables` option to provide the values of any GraphQL variables that our mutation requires (specifically, the `text` of the created to-do item).
+Here, we use the `variables` option to provide the values of any GraphQL variables that our mutation requires (specifically, the `text` of the created to-do item).
 
-If you provide the same option to both `useMutation` _and_ your mutate function, the value you provide your mutate function takes precedence. In this case, `variables.text` will end up equal to `input.value`, overriding the `"placeholder"` text. The two `variables` objects are merged shallowly, so `variables.someOtherVariable` is preserved. This preservation is convenient, since it means passing `variables` to the mutate function won't discard other `variables` you passed to the `useMutation` function.
+#### Option precedence
+
+If you provide the same option to both `useMutation` _and_ your mutate function, the mutate function's value takes precedence. In the specific case of the `variables` option, the two objects are merged _shallowly_, which means any variables provided only to `useMutation` are preserved in the resulting object. This helps you set default values for variables.
+
+In [the example snippets above](#providing-options), `input.value` would override `"placeholder"` as the value of the `text` variable. The value of `someOtherVariable` (`1234`) would be preserved.
 
 ### Tracking mutation status
 
@@ -160,28 +165,21 @@ If you're just getting started with Apollo Client, we recommend refetching queri
 
 ### Refetching queries
 
-If you happen to know that certain queries always (or usually) need to be refetched from the network after a particular kind of mutation, you can identify them by passing a `refetchQueries: [...]` array in the mutation options.
+If you know that your app usually needs to refetch certain queries after a particular mutation, you can include a `refetchQueries` array in that mutation's options.
 
-Typically, the elements of the `refetchQueries` array will be the string names of queries you want to refetch. Remember to give your queries unique names if you want to refer to them this way:
+Usually, the elements of the `refetchQueries` array are the string names of the queries you want to refetch (e.g., `"GetTodos"`). The array can also include `DocumentNode` objects parsed with the `gql` function:
 
 ```js
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
-  refetchQueries: ["GetTodos"],
+  refetchQueries: ["GetTodos", MY_OTHER_QUERY],
 });
 ```
 
-You can also specify queries using a `DocumentNode` object, or pass `refetchQueries` to the `addTodo` mutate function, instead of passing it to `useMutation`:
+> To refer to queries by their string name, make sure each of your app's queries has a _unique_ name.
 
-```js
-addTodo({
-  variables: {
-    text: input.value,
-  },
-  refetchQueries: [GET_TODOS],
-})
-```
+You can provide the `refetchQueries` option either to `useMutation` or to the mutate function. For details, see [Option precedence](#option-precedence).
 
-With only one query to refetch, this manual specification of `refetchQueries` may not seem very difficult. However, in larger applications, it can become tricky to guess which queries should be updated after an arbitrary mutation.
+Note that in an app with tens or hundreds of different queries, it becomes much more challenging to determine exactly which queries to refetch after a particular mutation.
 
 ### Updating the cache directly
 

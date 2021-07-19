@@ -1,0 +1,31 @@
+---
+title: Refetching Queries
+sidebar_title: Refetching
+---
+
+import RefetchQueriesOptions from '../../shared/refetchQueries-options.mdx';
+
+Although Apollo Client allows you to make local modifications to previously
+received GraphQL data by updating the cache, sometimes the easiest way to update
+your client-side GraphQL data is to _refetch_ it from the server.
+
+In principle, you could refetch every active query after any client-side update,
+but you can save time and network bandwidth by refetching queries more
+selectively, taking advantage of `InMemoryCache` to determine which watched
+queries may have been invalidated by recent cache updates.
+
+These two approaches (local updates and refetching) work well together: if your
+application displays the results of local cache modifications immediately, you
+can use refetching in the background to obtain the very latest data from the
+server, rerendering the UI only if there are differences between local data and
+refetched data.
+
+Refetching is especially common after a mutation, so `client.mutate` accepts
+options like `refetchQueries` and `onQueryUpdated` to specify which queries
+should be refetched, and how. However, the tools of selective refetching are
+available even if you are not performing a mutation, in the form of the
+`client.refetchQueries` method.
+
+## `client.refetchQueries`
+
+<RefetchQueriesOptions />

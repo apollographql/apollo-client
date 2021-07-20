@@ -28,4 +28,28 @@ available even if you are not performing a mutation, in the form of the
 
 ## `client.refetchQueries`
 
+### Refetch options
+
 <RefetchQueriesOptions />
+
+### Refetch results
+
+The `client.refetchQueries` method collects the `TResult` results returned by
+`onQueryUpdated`, defaulting to `TResult = Promise<ApolloQueryResult<any>>` if
+`onQueryUpdated` is not provided, and combines the results into a single
+`Promise<TResolved[]>` using `Promise.all(results)`.
+
+> Thanks to the `Promise`-unwrapping behavior of `Promise.all`, `TResolved` will
+be the same type as `TResult` except when `TResult` is a
+`PromiseLike<TResolved>` or a `boolean`.
+
+The returned `Promise` object has two other useful properties:
+
+| Property  | Type | Description |
+| - | - | - |
+| `queries` | `ObservableQuery[]` | An array of `ObservableQuery` objects that were refetched |
+| `results` | `TResult[]` | An array of results returned by `onQueryUpdated`, including pending promises |
+
+These two arrays are parallel: they have the same length, and `results[i]` is
+the result returned by `onQueryUpdated` when it was called with the
+`ObservableQuery` given by `queries[i]`, for any index `i`.

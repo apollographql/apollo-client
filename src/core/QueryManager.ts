@@ -1238,7 +1238,7 @@ export class QueryManager<TStore> {
               // options.include.
               includedQueriesById.delete(oq.queryId);
 
-              let result: boolean | InternalRefetchQueriesResult<TResult> =
+              let result: TResult | boolean | Promise<ApolloQueryResult<any>> =
                 onQueryUpdated(oq, diff, lastDiff);
 
               if (result === true) {
@@ -1250,7 +1250,7 @@ export class QueryManager<TStore> {
               // Record the result in the results Map, as long as onQueryUpdated
               // did not return false to skip/ignore this result.
               if (result !== false) {
-                results.set(oq, result);
+                results.set(oq, result as InternalRefetchQueriesResult<TResult>);
               }
 
               // Prevent the normal cache broadcast of this result, since we've
@@ -1271,7 +1271,7 @@ export class QueryManager<TStore> {
 
     if (includedQueriesById.size) {
       includedQueriesById.forEach(({ oq, lastDiff, diff }, queryId) => {
-        let result: undefined | boolean | InternalRefetchQueriesResult<TResult>;
+        let result: TResult | boolean | Promise<ApolloQueryResult<any>> | undefined;
 
         // If onQueryUpdated is provided, we want to use it for all included
         // queries, even the QueryOptions ones.
@@ -1290,7 +1290,7 @@ export class QueryManager<TStore> {
         }
 
         if (result !== false) {
-          results.set(oq, result!);
+          results.set(oq, result as InternalRefetchQueriesResult<TResult>);
         }
 
         if (queryId.indexOf("legacyOneTimeQuery") >= 0) {

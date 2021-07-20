@@ -114,7 +114,14 @@ export interface InternalRefetchQueriesOptions<
 }
 
 export type InternalRefetchQueriesResult<TResult> =
-  TResult | Promise<ApolloQueryResult<any>>;
+  // If onQueryUpdated returns a boolean, that's equivalent to refetching the
+  // query when the boolean is true and skipping the query when false, so the
+  // internal type of refetched results is Promise<ApolloQueryResult<any>>.
+  TResult extends boolean ? Promise<ApolloQueryResult<any>> :
+  // Otherwise, onQueryUpdated returns whatever it returns. If onQueryUpdated is
+  // not provided, TResult defaults to Promise<ApolloQueryResult<any>> (see the
+  // generic type parameters of client.refetchQueries).
+  TResult;
 
 export type InternalRefetchQueriesMap<TResult> =
   Map<ObservableQuery<any>,

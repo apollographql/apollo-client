@@ -147,7 +147,7 @@ This example fetches the same data as [the example for `readQuery`](#readquery) 
 
 ```js
 const todo = client.readFragment({
-  id: 'Todo:5', // The value of the to-do item's unique identifier
+  id: 'Todo:5', // The value of the to-do item's cache ID
   fragment: gql`
     fragment MyTodo on Todo {
       id
@@ -158,7 +158,7 @@ const todo = client.readFragment({
 });
 ```
 
-Unlike `readQuery`, `readFragment` requires an `id` option. This option specifies the unique identifier for the object in your cache. [By default](cache-configuration/#default-identifier-generation), this identifier has the format `<_typename>:<id>` (which is why we provide `Todo:5` above). You can [customize this identifier](./cache-configuration/#customizing-identifier-generation-by-type).
+Unlike `readQuery`, `readFragment` requires an `id` option. This option specifies the cache ID for the object in your cache. [By default](./overview/#2-generate-cache-ids), cache IDs have the format `<_typename>:<id>` (which is why we provide `Todo:5` above). You can [customize this ID](./cache-configuration/#customizing-cache-ids).
 
 In the example above, `readFragment` returns `null` if no `Todo` object with ID `5` exists in the cache, or if the object exists but is missing a value for either `text` or `completed`.
 
@@ -240,7 +240,7 @@ The `modify` method of `InMemoryCache` enables you to directly modify the values
 
 Canonically documented in the [API reference](../api/cache/InMemoryCache/#modify), the `modify` method takes the following parameters:
 
-* The ID of a cached object to modify (which we recommend obtaining with [`cache.identify`](#obtaining-an-objects-custom-id))
+* The ID of a cached object to modify (which we recommend obtaining with [`cache.identify`](#obtaining-an-objects-cache-id))
 * A map of **modifier functions** to execute (one for each field to modify)
 * Optional `broadcast` and `optimistic` boolean values to customize behavior
 
@@ -266,7 +266,7 @@ cache.modify({
 
 When you define a modifier function for a field that contains a scalar, an enum, or a list of these base types, the modifier function is passed the exact existing value for the field. For example, if you define a modifier function for an object's `quantity` field that has current value `5`, your modifier function is passed the value `5`.
 
-**However**, when you define a modifier function for a field that contains an object type or a list of objects, those objects are represented as **references**. Each reference points to its corresponding object in the cache by its identifier. If you return a _different_ reference in your modifier function, you change _which_ other cached object is contained in this field. You _don't_ modify the original cached object's data.
+**However**, when you define a modifier function for a field that contains an object type or a list of objects, those objects are represented as **references**. Each reference points to its corresponding object in the cache by its cache ID. If you return a _different_ reference in your modifier function, you change _which_ other cached object is contained in this field. You _don't_ modify the original cached object's data.
 
 ### Modifier function utilities
 
@@ -295,7 +295,7 @@ cache.modify({
 
 Let's break this down:
 
-* In the `id` field, we use [`cache.identify`](#obtaining-an-objects-custom-id) to obtain the identifier of the cached `Post` object we want to remove a comment from.
+* In the `id` field, we use [`cache.identify`](#obtaining-an-objects-cache-id) to obtain the cache ID of the cached `Post` object we want to remove a comment from.
 
 * In the `fields` field, we provide an object that lists our modifier functions. In this case, we define a single modifier function (for the `comments` field).
 
@@ -431,9 +431,9 @@ cache.modify({
 
 When using this form of `cache.modify`, you can determine the individual field names using `details.fieldName`. This technique works for any modifier function, not just those that return `INVALIDATE`.
 
-## Obtaining an object's custom ID
+## Obtaining an object's cache ID
 
-If a type in your cache uses a [custom identifier](./cache-configuration/#customizing-identifier-generation-by-type) (or even if it doesn't), you can use the `cache.identify` method to obtain the identifier for an object of that type. This method takes an object and computes its ID based on both its `__typename` and its identifier field(s). This means you don't have to keep track of which fields make up each type's identifier.
+If a type in your cache uses a [custom cache ID](./cache-configuration/#customizing-cache-ids) (or even if it doesn't), you can use the `cache.identify` method to obtain the cache ID for an object of that type. This method takes an object and computes its ID based on both its `__typename` and its identifier field(s). This means you don't have to keep track of which fields make up each type's cache ID.
 
 ### Example
 
@@ -442,7 +442,7 @@ Let's say we have a JavaScript representation of a cached GraphQL object, like t
 ```js{3}
 const invisibleManBook = {
   __typename: 'Book',
-  isbn: '9780679601395', // This type's custom identifier
+  isbn: '9780679601395', // The key field for this type's cache ID
   title: 'Invisible Man',
   author: {
     __typename: 'Author',
@@ -451,9 +451,9 @@ const invisibleManBook = {
 };
 ```
 
-If we want to interact with this object in our cache with methods like [`writeFragment`](#writefragment) or [`cache.modify`](#using-cachemodify), we need the object's identifier. Our `Book` type's identifier appears to be custom, because the `id` field isn't present.
+If we want to interact with this object in our cache with methods like [`writeFragment`](#writefragment) or [`cache.modify`](#using-cachemodify), we need the object's cache ID. Our `Book` type's cache ID appears to be custom, because the `id` field isn't present.
 
-Instead of needing to look up that our `Book` type uses the `isbn` field as its identifier, we can use the `cache.identify` method, like so:
+Instead of needing to look up that our `Book` type uses the `isbn` field for its cache ID, we can use the `cache.identify` method, like so:
 
 ```js{8}
 const bookYearFragment = gql`
@@ -471,6 +471,6 @@ const fragmentResult = cache.writeFragment({
 });
 ```
 
-The cache knows that the `Book` type uses the `isbn` field for its identifier, so `cache.identify` can correctly populate the `id` field above.
+The cache knows that the `Book` type uses the `isbn` field for its cache ID, so `cache.identify` can correctly populate the `id` field above.
 
-This example is straightforward because our custom identifier uses a single field (`isbn`). But custom identifiers can consist of _multiple_ fields (such as both `isbn` _and_ `title`). This makes it much more challenging and repetitive to specify an object's custom ID _without_ using `cache.identify`.
+This example is straightforward because our cache ID uses a single field (`isbn`). But custom cache IDs can consist of _multiple_ fields (such as both `isbn` _and_ `title`). This makes it much more challenging and repetitive to specify an object's cache ID _without_ using `cache.identify`.

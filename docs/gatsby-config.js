@@ -37,6 +37,7 @@ module.exports = {
             'data/operation-best-practices'
           ],
           Caching: [
+            'caching/overview',
             'caching/cache-configuration',
             'caching/cache-interaction',
             'caching/garbage-collection',

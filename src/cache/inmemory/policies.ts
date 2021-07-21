@@ -52,6 +52,7 @@ import { WriteContext } from './writeToStore';
 // used by getStoreKeyName. This function is used when computing storeFieldName
 // strings (when no keyArgs has been configured for a field).
 import { canonicalStringify } from './object-canon';
+import { stringifyForDisplay } from '../../testing';
 getStoreKeyName.setStringify(canonicalStringify);
 
 export type TypePolicies = {
@@ -882,14 +883,36 @@ function makeFieldFunctionOptions(
       fieldNameOrOptions: string | ReadFieldOptions,
       from?: StoreObject | Reference,
     ) {
-      const options: ReadFieldOptions =
-        typeof fieldNameOrOptions === "string" ? {
+      let options: ReadFieldOptions;
+      if (typeof fieldNameOrOptions === "string") {
+        options = {
           fieldName: fieldNameOrOptions,
-          from,
-        } : { ...fieldNameOrOptions };
+          // Default to objectOrReference only when no second argument was
+          // passed for the from parameter, not when undefined is explicitly
+          // passed as the second argument.
+          from: arguments.length > 1 ? from : objectOrReference,
+        };
+      } else if (isNonNullObject(fieldNameOrOptions)) {
+        options = { ...fieldNameOrOptions };
+        // Default to objectOrReference only when fieldNameOrOptions.from is
+        // actually omitted, rather than just undefined.
+        if (!hasOwn.call(fieldNameOrOptions, "from")) {
+          options.from = objectOrReference;
+        }
+      } else {
+        invariant.warn(`Unexpected readField arguments: ${
+          stringifyForDisplay(Array.from(arguments))
+        }`);
+        // The readField helper function returns undefined for any missing
+        // fields, so it should also return undefined if the arguments were not
+        // of a type we expected.
+        return;
+      }
 
-      if (void 0 === options.from) {
-        options.from = objectOrReference;
+      if (__DEV__ && options.from === void 0) {
+        invariant.warn(`Undefined 'from' passed to readField with arguments ${
+          stringifyForDisplay(Array.from(arguments))
+        }`);
       }
 
       if (void 0 === options.variables) {

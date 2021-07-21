@@ -59,6 +59,9 @@
 - The [`nextFetchPolicy`](https://github.com/apollographql/apollo-client/pull/6893) option for `client.watchQuery` and `useQuery` will no longer be removed from the `options` object after it has been applied, and instead will continue to be applied any time `options.fetchPolicy` is reset to another value, until/unless the `options.nextFetchPolicy` property is removed from `options`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8465](https://github.com/apollographql/apollo-client/pull/8465)
 
+- Make `readField` default to reading from current object only when the `from` option/argument is actually omitted, not when `from` is passed to `readField` with an undefined value. A warning will be printed when this situation occurs. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8508](https://github.com/apollographql/apollo-client/pull/8508)
+
 ### Improvements
 
 - `InMemoryCache` now _guarantees_ that any two result objects returned by the cache (from `readQuery`, `readFragment`, etc.) will be referentially equal (`===`) if they are deeply equal. Previously, `===` equality was often achievable for results for the same query, on a best-effort basis. Now, equivalent result objects will be automatically shared among the result trees of completely different queries. This guarantee is important for taking full advantage of optimistic updates that correctly guess the final data, and for "pure" UI components that can skip re-rendering when their input data are unchanged. <br/>

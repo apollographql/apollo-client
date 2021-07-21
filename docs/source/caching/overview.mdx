@@ -34,7 +34,7 @@ The Apollo Client cache is highly configurable. You can customize its behavior f
 
 ## How is data stored?
 
-Apollo Client's `InMemoryCache` is a **flat lookup table** of objects that can reference each other. These objects are the same objects that are returned by your GraphQL queries.
+Apollo Client's `InMemoryCache` maintains a **flat lookup table** of objects that can reference each other. These objects accumulate field information from objects that are returned by your GraphQL queries. A single cached object might include fields returned by multiple queries, if those queries fetch _different_ fields of the _same_ object.
 
 The cache is flat, but objects returned by a GraphQL query often _aren't_! In fact, their nesting can be arbitrarily deep. Take a look at this example query response:
 
@@ -216,3 +216,9 @@ After the result is cached, we can view the state of our cache in the Apollo Cli
 Our cache now contains five normalized objects (in addition to the `ROOT_QUERY` object): three `Person` objects and two `Planet` objects.
 
 **Why do we only have two `Planet` objects?** Because two of the three returned `Person` objects have the same `homeworld`. By [normalizing data](#data-normalization) like this, Apollo Client can cache a single copy of an object, and multiple _other_ objects can include _references_ to it (see the `__ref` field of the object in the screenshot above).
+
+## Next steps
+
+Now that you have a basic understanding of how Apollo Client's cache works, learn more about how to [install and configure it](./cache-configuration/).
+
+Then, you can learn how to [read and write data to your cache](./cache-interaction/) directly, without executing a query against your server. This is a powerful option for [local state management](../local-state/local-state-management/).

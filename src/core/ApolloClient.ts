@@ -561,6 +561,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     result.queries = queries;
     result.results = results;
 
+    // If you decide to ignore the result Promise because you're using
+    // result.queries and result.results instead, you shouldn't have to worry
+    // about preventing uncaught rejections for the Promise.all result.
+    result.catch(error => {
+      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error ${error}`);
+    });
+
     return result;
   }
 

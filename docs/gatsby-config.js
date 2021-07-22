@@ -31,6 +31,7 @@ module.exports = {
           'Fetching': [
             'data/queries',
             'data/mutations',
+            'data/refetching',
             'data/subscriptions',
             'data/fragments',
             'data/error-handling',

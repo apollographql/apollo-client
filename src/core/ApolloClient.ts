@@ -536,7 +536,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
-   * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
   public refetchQueries<
     TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
@@ -561,6 +560,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     // Promise.all(results):
     result.queries = queries;
     result.results = results;
+
+    // If you decide to ignore the result Promise because you're using
+    // result.queries and result.results instead, you shouldn't have to worry
+    // about preventing uncaught rejections for the Promise.all result.
+    result.catch(error => {
+      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error ${error}`);
+    });
 
     return result;
   }

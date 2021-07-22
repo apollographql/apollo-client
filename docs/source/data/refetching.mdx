@@ -289,3 +289,22 @@ options or result properties would be useful, please feel free to [open an
 issue](https://github.com/apollographql/apollo-feature-requests/issues) or
 [start a discussion](https://github.com/apollographql/apollo-client/discussions)
 explaining your use case(s).
+
+### Relationship to `client.mutate` options
+
+For refetching after a mutation, the `client.mutate` method supports options
+similar to `client.refetchQueries`, which you should use instead of
+`client.refetchQueries`, because it's important for refetching logic to happen
+at specific times during the mutation process.
+
+For historical reasons, the `client.mutate` options have slightly different
+names from the new `client.refetchQueries` options, but their internal
+implementation is substantially the same, so you can translate between them
+using the following table:
+
+| `client.mutate(options)` | | `client.refetchQueries(options)` |
+| - | - | - |
+| [`options.refetchQueries`](./mutations/#refetching-queries) | ⇔ | `options.include` |
+| [`options.update`](./mutations/#the-update-function) | ⇔ | `options.updateCache` |
+| [`options.onQueryUpdated`](./mutations/#refetching-after-update) | ⇔ | `options.onQueryUpdated` |
+| [`options.awaitRefetchQueries`](./mutations/#awaitrefetchqueries) | ⇔ | just return a `Promise` from `onQueryUpdated` |

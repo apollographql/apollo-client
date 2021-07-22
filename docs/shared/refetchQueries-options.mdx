@@ -10,12 +10,26 @@
 <tr>
 <td colspan="2">
 
+The `client.refetchQueries` method take an `options` object that conforms to the
+following TypeScript interface:
+
 ```ts
 interface RefetchQueriesOptions<
   TCache extends ApolloCache<any>,
-  TResult,
+  TResult = Promise<ApolloQueryResult<any>>,
 > {
+  updateCache?: (cache: TCache) => void;
+  include?: Array<string | DocumentNode> | "all" | "active";
+  onQueryUpdated?: (
+    observableQuery: ObservableQuery<any>,
+    diff: Cache.DiffResult<any>,
+    lastDiff: Cache.DiffResult<any> | undefined,
+  ) => boolean | TResult;
+  optimistic?: boolean;
+}
 ```
+
+Descriptions of these fields can be found in the table below.
 
 </td>
 </tr>

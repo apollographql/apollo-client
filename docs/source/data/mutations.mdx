@@ -197,7 +197,7 @@ In most cases, a mutation response should include any object(s) the mutation mod
 }
 ```
 
-> Apollo Client automatically adds the `__typename` field to your queries and mutations by default.
+> Apollo Client automatically adds the `__typename` field to every object in your queries and mutations by default.
 
 Upon receiving this response object, Apollo Client caches it with key `Todo:5`. If a cached object _already_ exists with this key, Apollo Client overwrites any existing fields that are also included in the mutation response (other existing fields are preserved).
 
@@ -280,7 +280,7 @@ Any changes you make to cached data inside of an `update` function are automatic
 
 An `update` function attempts to replicate a mutation's back-end modifications in your client's local cache. These cache modifications are broadcast to all affected active queries, which updates your UI automatically. If the `update` function does this correctly, your users see the latest data immediately, without needing to await another network round trip.
 
-However, an `update` function might get this replication _wrong_ by setting a cached value incorrectly. You can "double check" your `update` function's modifications by refetching affected active queries on your GraphQL server. To specify _which_ active queries you want to refetch, provide the `onQueryUpdated` option to your mutate function:
+However, an `update` function might get this replication _wrong_ by setting a cached value incorrectly. You can "double check" your `update` function's modifications by refetching affected active queries. To do so, you first provide an `onQueryUpdated` callback function to your mutate function:
 
 ```js{6-11}
 addTodo({
@@ -297,9 +297,9 @@ addTodo({
 })
 ```
 
-After your `update` function completes, Apollo Client calls the `onQueryUpdated` function _once for each active query with cached fields that were updated_. Within `onQueryUpdated`, you can use any custom logic to determine whether you want to refetch a particular active query.
+After your `update` function completes, Apollo Client calls `onQueryUpdated` _once for each active query with cached fields that were updated_. Within `onQueryUpdated`, you can use any custom logic to determine whether you want to refetch the associated query.
 
-To execute an active query from `onQueryUpdated`, call `return observableQuery.refetch()`, as shown above. Otherwise, no return value is required. If a query's response differs from your `update` function's modifications, your cache and UI are both automatically updated again. Otherwise, your users see no change.
+To refetch a query from `onQueryUpdated`, call `return observableQuery.refetch()`, as shown above. Otherwise, no return value is required. If a refetched query's response differs from your `update` function's modifications, your cache and UI are both automatically updated again. Otherwise, your users see no change.
 
 Occasionally, it might be difficult to make your `update` function update all relevant queries. Not every mutation returns enough information for the `update` function to do its job effectively. To make absolutely sure a certain query is included, you can combine `onQueryUpdated` with `refetchQueries: [...]`:
 

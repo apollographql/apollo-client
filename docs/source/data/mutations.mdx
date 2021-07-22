@@ -322,7 +322,7 @@ If `ReallyImportantQuery` was already going to be passed to `onQueryUpdated` tha
 
 If you find you've included more queries than you expected, you can skip or ignore a query by returning `false` from `onQueryUpdated`, after examining the `ObservableQuery` to determine that it doesn't need refetching. Returning a `Promise` from `onQueryUpdated` causes the final `Promise<FetchResult<TData>>` for the mutation to await any promises returned from `onQueryUpated`, eliminating the need for the legacy `awaitRefetchQueries: true` option.
 
-To use the `onQueryUpdated` API without performing a mutation, try the `client.refetchQueries` method. In the standalone `client.refetchQueries` API, the `refetchQueries: [...]` mutation option is called `include: [...]`, and the `update` function is called `updateCache` for clarity. Otherwise, the same internal system powers both `client.refetchQueries` and refetching queries after a mutation.
+To use the `onQueryUpdated` API without performing a mutation, try the [`client.refetchQueries`](./refetching/#clientrefetchqueries) method. In the standalone `client.refetchQueries` API, the `refetchQueries: [...]` mutation option is called `include: [...]`, and the `update` function is called `updateCache` for clarity. Otherwise, the same internal system powers both `client.refetchQueries` and refetching queries after a mutation.
 
 ## `useMutation` API
 

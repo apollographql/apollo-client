@@ -59,7 +59,7 @@ function CommentPageWithData() {
 }
 ```
 
-As this example shows, the value of `optimisticResponse` is an object that matches the shape of the mutation response we expect from the server. Importantly, this includes the `Comment`'s `id` and `__typename` fields. The Apollo Client cache uses these values to generate the comment's [unique cache identifier](../caching/cache-configuration/#default-identifier-generation) (e.g., `Comment:5`).
+As this example shows, the value of `optimisticResponse` is an object that matches the shape of the mutation response we expect from the server. Importantly, this includes the `Comment`'s `id` and `__typename` fields. The Apollo Client cache uses these values to generate the comment's [unique cache identifier](../caching/cache-configuration/#customizing-cache-ids) (e.g., `Comment:5`).
 
 ## Optimistic mutation lifecycle
 

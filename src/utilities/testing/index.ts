@@ -14,4 +14,3 @@ export { stripSymbols } from './stripSymbols';
 export { default as subscribeAndCount } from './subscribeAndCount';
 export { itAsync } from './itAsync';
 export * from './withConsoleSpy';
-export * from './stringifyForDisplay';

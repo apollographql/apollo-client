@@ -15,11 +15,8 @@ import {
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
   cloneDeep,
-} from '../../../utilities';
-
-import {
   stringifyForDisplay,
-} from '../../../testing';
+} from '../../../utilities';
 
 export type ResultFunction<T> = () => T;
 

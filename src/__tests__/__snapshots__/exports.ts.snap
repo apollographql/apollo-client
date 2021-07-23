@@ -312,7 +312,6 @@ Array [
   "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "stringifyForDisplay",
   "stripSymbols",
   "subscribeAndCount",
   "withErrorSpy",
@@ -377,6 +376,7 @@ Array [
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",
+  "stringifyForDisplay",
   "valueToObjectRepresentation",
 ]
 `;

@@ -1,4 +1,4 @@
-import { makeUniqueId } from "../common/makeUniqueId";
+import { makeUniqueId } from "./makeUniqueId";
 
 export function stringifyForDisplay(value: any): string {
   const undefId = makeUniqueId("stringifyForDisplay");

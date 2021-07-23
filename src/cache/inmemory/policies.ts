@@ -22,6 +22,7 @@ import {
   getStoreKeyName,
   canUseWeakMap,
   isNonNullObject,
+  stringifyForDisplay,
 } from '../../utilities';
 import {
   IdGetter,
@@ -52,7 +53,7 @@ import { WriteContext } from './writeToStore';
 // used by getStoreKeyName. This function is used when computing storeFieldName
 // strings (when no keyArgs has been configured for a field).
 import { canonicalStringify } from './object-canon';
-import { stringifyForDisplay } from '../../testing';
+
 getStoreKeyName.setStringify(canonicalStringify);
 
 export type TypePolicies = {

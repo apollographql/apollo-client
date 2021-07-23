@@ -19,6 +19,9 @@
 - Improve standalone `client.refetchQueries` method to support automatic detection of queries needing to be refetched. <br/>
   [@benjamn](https://github.com/benjamn) in [#8000](https://github.com/apollographql/apollo-client/pull/8000)
 
+- Fix remaining barriers to loading [`@apollo/client/core`](https://cdn.jsdelivr.net/npm/@apollo/client@beta/core/+esm) as native ECMAScript modules from a CDN like [esm.run](https://www.jsdelivr.com/esm). Importing `@apollo/client` from a CDN will become possible once we move all React-related dependencies into `@apollo/client/react` in Apollo Client 4. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8266](https://github.com/apollographql/apollo-client/issues/8266)
+
 - `InMemoryCache` supports a new method called `batch`, which is similar to `performTransaction` but takes named options rather than positional parameters. One of these named options is an `onDirty(watch, diff)` callback, which can be used to determine which watched queries were invalidated by the `batch` operation. <br/>
   [@benjamn](https://github.com/benjamn) in [#7819](https://github.com/apollographql/apollo-client/pull/7819)
 

@@ -9,9 +9,9 @@ Apollo Client supports multiple strategies for interacting with cached data:
 
 | Strategy | API | Description |
 |----------|-----|-------------|
-| [Using GraphQL queries](#using-graphql-queries) | `readQuery` / `writeQuery` | Enables you to use standard GraphQL queries for managing both remote and local data. |
-| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` | Enables you to access the fields of any cached object without composing an entire query to reach that object.  |
-| [Directly modifying cached fields](#using-cachemodify) | `cache.modify` | Enables you to manipulate cached data without using GraphQL at all. |
+| [Using GraphQL queries](#using-graphql-queries) | `readQuery` / `writeQuery` | Use standard GraphQL queries for managing both remote and local data. |
+| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` | Access the fields of any cached object without composing an entire query to reach that object.  |
+| [Directly modifying cached fields](#using-cachemodify) | `cache.modify` | Manipulate cached data without using GraphQL at all. |
 
  You can use whichever combination of strategies and methods are most helpful for your use case.
 
@@ -166,13 +166,11 @@ In the example above, `readFragment` returns `null` if no `Todo` object with ID 
 
 ### `writeFragment`
 
-In addition to reading arbitrary data from the Apollo Client cache, you can _write_ arbitrary data to the cache with the `writeQuery` and `writeFragment` methods.
+In addition to reading "random-access" data from the Apollo Client cache with `readFragment`, you can _write_ data to the cache with the `writeFragment` method.
 
-> **Any changes you make to cached data with `writeQuery` and `writeFragment` are  not pushed to your GraphQL server.** If you reload your environment, these changes will disappear.
+> **Any changes you make to cached data with `writeFragment` are not pushed to your GraphQL server.** If you reload your environment, these changes will disappear.
 
-These methods have the same signature as their `read` counterparts, except they require an additional `data` variable.
-
-For example, the following call to `writeFragment` _locally_ updates the `completed` flag for a `Todo` object with an `id` of `5`:
+The `writeFragment` method resembles `readFragment`, except it requires an additional `data` variable. For example, the following call to `writeFragment` updates the `completed` flag for a `Todo` object with an `id` of `5`:
 
 ```js
 client.writeFragment({
@@ -274,7 +272,9 @@ A modifier function can optionally take a second parameter, which is an object t
 
 A couple of these utilities (the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-function-api).
 
-### Example: Removing an item from a list
+### Examples
+
+#### Example: Removing an item from a list
 
 Let's say we have a blog application where each `Post` has an array of `Comment`s. Here's how we might remove a specific `Comment` from a paginated `Post.comments` array:
 
@@ -303,7 +303,7 @@ Let's break this down:
 
 * The modifier function returns an array that filters out all comments with an ID that matches `idToRemove`. The returned array replaces the existing array in the cache.
 
-### Example: Adding an item to a list
+#### Example: Adding an item to a list
 
 Now let's look at _adding_ a `Comment` to a `Post`:
 
@@ -346,9 +346,9 @@ When the `comments` field modifier function is called, it first calls `writeFrag
 
 As a safety check, we then scan the array of existing comment references (`existingCommentRefs`) to make sure that our new isn't already in the list. If it isn't, we add the new comment reference to the list of references, returning the full list to be stored in the cache.
 
-### Example: Updating the cache after a mutation
+#### Example: Updating the cache after a mutation
 
-If you call `writeFragment` with an `options.data` object that the cache is able to identify, based on its `__typename` and primary key fields, you can avoid passing `options.id` to `writeFragment`.
+If you call `writeFragment` with an `options.data` object that the cache is able to identify ( based on its `__typename` and cache ID fields), you can avoid passing `options.id` to `writeFragment`.
 
 Whether you provide `options.id` explicitly or let `writeFragment` figure it out using `options.data`, `writeFragment` returns a `Reference` to the identified object.
 
@@ -384,7 +384,7 @@ In this example, `useMutation` automatically creates a `Comment` and adds it to 
 
 To address this, we use the [`update` callback](../data/mutations/#updating-local-data) of `useMutation` to call `cache.modify`. Like the [previous example](#example-adding-an-item-to-a-list), we add the new comment to the list. _Unlike_ the previous example, the comment was already added to the cache by `useMutation`. Consequently, `cache.writeFragment` returns a reference to the existing object.
 
-### Example: Deleting a field from a cached object
+#### Example: Deleting a field from a cached object
 
 A modifier function's optional second parameter is an object that includes [several helpful utilities](#modifier-function-utilities), such as the `canRead` and `isReference` functions. It also includes a sentinel object called `DELETE`.
 
@@ -401,7 +401,7 @@ cache.modify({
 });
 ```
 
-### Example: Invalidating fields within a cached object
+#### Example: Invalidating fields within a cached object
 
 Normally, changing or deleting a field's value also _invalidates_ the field, causing watched queries to be reread if they previously consumed the field.
 
@@ -418,7 +418,7 @@ cache.modify({
 });
 ```
 
-If you need to invalidate all fields within the given object, you can pass a modifier function as the value of the `fields` option:
+If you need to invalidate _all_ fields within a given object, you can pass a modifier function as the value of the `fields` option:
 
 ```js
 cache.modify({
@@ -429,7 +429,7 @@ cache.modify({
 });
 ```
 
-When using this form of `cache.modify`, you can determine the individual field names using `details.fieldName`. This technique works for any modifier function, not just those that return `INVALIDATE`.
+When using this form of `cache.modify`, you can determine individual field names using `details.fieldName`. This technique works for any modifier function, not just those that return `INVALIDATE`.
 
 ## Obtaining an object's cache ID
 

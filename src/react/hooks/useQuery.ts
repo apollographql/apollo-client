@@ -587,17 +587,11 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
       options: updatedOptions,
       context,
       onNewData() {
-        if (!queryData.ssrInitiated()) {
-          // When new data is received from the `QueryData` object, we want to
-          // force a re-render to make sure the new data is displayed. We can't
-          // force that re-render if we're already rendering however so to be
-          // safe we'll trigger the re-render in a microtask. In case the
-          // component gets unmounted before this callback fires, we re-check
-          // queryDataRef.current.isMounted before calling forceUpdate().
-          Promise.resolve().then(() => queryDataRef.current && queryDataRef.current.isMounted && forceUpdate());
-        } else {
+        if (queryData.ssrInitiated()) {
           // If we're rendering on the server side we can force an update at
           // any point.
+          forceUpdate();
+        } else if (queryDataRef.current && queryDataRef.current.isMounted) {
           forceUpdate();
         }
       }

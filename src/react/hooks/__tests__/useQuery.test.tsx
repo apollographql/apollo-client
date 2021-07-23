@@ -313,7 +313,6 @@ describe('useQuery Hook', () => {
           variables: { something }
         },
         result: { data: CAR_RESULT_DATA },
-        delay: 1000
       }));
 
       let renderCount = 0;
@@ -1310,7 +1309,7 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
-      result.current.fetchMore({
+      act(() => void result.current.fetchMore({
         variables: { limit: 2 },
         updateQuery: (prev, { fetchMoreResult }) => ({
           letters: prev.letters.concat(fetchMoreResult.letters),
@@ -1351,14 +1350,13 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
 
-      result.current.fetchMore({
+      act(() => void result.current.fetchMore({
         variables: { limit: 2 },
         updateQuery: (prev, { fetchMoreResult }) => ({
           letters: prev.letters.concat(fetchMoreResult.letters),
         }),
-      });
+      }));
 
-      await waitForNextUpdate();
       expect(result.current.loading).toBe(true);
       expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
       expect(result.current.data).toEqual({ letters: ab });
@@ -1439,9 +1437,7 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
 
-      result.current.fetchMore({ variables: { limit: 2 } });
-
-      await waitForNextUpdate();
+      act(() => void result.current.fetchMore({ variables: { limit: 2 } }));
       expect(result.current.loading).toBe(true);
       expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
       expect(result.current.data).toEqual({ letters: ab });
@@ -2145,7 +2141,7 @@ describe('useQuery Hook', () => {
         {
           request: { query: mutation },
           error: new Error('Oh no!'),
-          delay: 10,
+          delay: 500,
         }
       ];
 
@@ -2201,13 +2197,15 @@ describe('useQuery Hook', () => {
 
       act(() => void mutate());
       // The mutation ran and is loading the result. The query stays at not
-      // loading as nothing has changed for the query.
+      // loading as nothing has changed for the query, but optimistic data is
+      // rendered.
+
       expect(result.current.mutation[1].loading).toBe(true);
       expect(result.current.query.loading).toBe(false);
-
+      expect(result.current.query.data).toEqual(allCarsData);
       await waitForNextUpdate();
-      // There is a missing update here because mutation and query update in
-      // the same microtask loop.
+      // TODO: There is a missing update here because mutation and query update
+      // in the same microtask loop.
       const previous = result.all[result.all.length - 2];
       if (previous instanceof Error) {
         throw previous;
@@ -2218,15 +2216,6 @@ describe('useQuery Hook', () => {
       expect(previous.mutation[1].loading).toBe(true);
       expect(previous.query.loading).toBe(false);
 
-      // The first part of the mutation has completed using the defined
-      // optimisticResponse data. This means that while the mutation stays in a
-      // loading state, it has made its optimistic data available to the query.
-      // New optimistic data doesn't trigger a query loading state.
-      expect(result.current.mutation[1].loading).toBe(true);
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(allCarsData);
-
-      await waitForNextUpdate();
       // The mutation has completely finished, leaving the query with access to
       // the original cache data.
       expect(result.current.mutation[1].loading).toBe(false);

@@ -1,66 +1,9 @@
 ## Apollo Client 3.4.0 (not yet released)
 
-### Bug fixes
+### New documentation
 
-- In Apollo Client 2.x, a `refetch` operation would always replace existing data in the cache. With the introduction of field policy `merge` functions in Apollo Client 3, existing field values could be inappropriately combined with incoming field values by a custom `merge` function that does not realize a `refetch` has happened.
-
-  To give you more control over this behavior, we have introduced an `overwrite?: boolean = false` option for `cache.writeQuery` and `cache.writeFragment`, and an option called `refetchWritePolicy?: "merge" | "overwrite"` for `client.watchQuery`, `useQuery`, and other functions that accept `WatchQueryOptions`. You can use these options to make sure any `merge` functions involved in cache writes for `refetch` operations get invoked with `undefined` as their first argument, which simulates the absence of any existing data, while still giving the `merge` function a chance to determine the internal representation of the incoming data.
-
-  The default behaviors are `overwrite: true` and `refetchWritePolicy: "overwrite"`, which restores the Apollo Client 2.x behavior, but (if this change causes any problems for your application) you can easily recover the previous merging behavior by setting a default value for `refetchWritePolicy` in `defaultOptions.watchQuery`:
-  ```ts
-  new ApolloClient({
-    defaultOptions: {
-      watchQuery: {
-        refetchWritePolicy: "merge",
-      },
-    },
-  })
-  ```
-  [@benjamn](https://github.com/benjamn) in [#7810](https://github.com/apollographql/apollo-client/pull/7810)
-
-- Make sure the `MockedResponse` `ResultFunction` type is re-exported. <br/>
-  [@hwillson](https://github.com/hwillson) in [#8315](https://github.com/apollographql/apollo-client/pull/8315)
-
-- Fix polling when used with `skip`. <br/>
-  [@brainkim](https://github.com/brainkim) in [#8346](https://github.com/apollographql/apollo-client/pull/8346)
-
-- `InMemoryCache` now coalesces `EntityStore` updates to guarantee only one `store.merge(id, fields)` call per `id` per cache write. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8372](https://github.com/apollographql/apollo-client/pull/8372)
-
-- Fix polling when used with `<React.StrictMode>`. <br/>
-  [@brainkim](https://github.com/brainkim) in [#8414](https://github.com/apollographql/apollo-client/pull/8414)
-
-- Fix the React integration logging `Warning: Can't perform a React state update on an unmounted component`. <br/>
-  [@wuarmin](https://github.com/wuarmin) in [#7745](https://github.com/apollographql/apollo-client/pull/7745)
-
-- Make `ObservableQuery#getCurrentResult` always call `queryInfo.getDiff()`. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8422](https://github.com/apollographql/apollo-client/pull/8422)
-
-- Make `readField` default to reading from current object only when the `from` option/argument is actually omitted, not when `from` is passed to `readField` with an undefined value. A warning will be printed when this situation occurs. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8508](https://github.com/apollographql/apollo-client/pull/8508)
-
-### Potentially disruptive changes
-
-- To avoid retaining sensitive information from mutation root field arguments, Apollo Client v3.4 automatically clears any `ROOT_MUTATION` fields from the cache after each mutation finishes. If you need this information to remain in the cache, you can prevent the removal by passing the `keepRootFields: true` option to `client.mutate`. `ROOT_MUTATION` result data are also passed to the mutation `update` function, so we recommend obtaining the results that way, rather than using `keepRootFields: true`, if possible. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8280](https://github.com/apollographql/apollo-client/pull/8280)
-
-- Internally, Apollo Client now controls the execution of development-only code using the `__DEV__` global variable, rather than `process.env.NODE_ENV`. While this change should not cause any visible differences in behavior, it will increase your minified+gzip bundle size by more than 3.5kB, unless you configure your minifier to replace `__DEV__` with a `true` or `false` constant, the same way you already replace `process.env.NODE_ENV` with a string literal like `"development"` or `"production"`. For an example of configuring a Create React App project without ejecting, see this pull request for our [React Apollo reproduction template](https://github.com/apollographql/react-apollo-error-template/pull/51). <br/>
-  [@benjamn](https://github.com/benjamn) in [#8347](https://github.com/apollographql/apollo-client/pull/8347)
-
-- Internally, Apollo Client now uses namespace syntax (e.g. `import * as React from "react"`) for imports whose types are re-exported (and thus may appear in `.d.ts` files). This change should remove any need to configure `esModuleInterop` or `allowSyntheticDefaultImports` in `tsconfig.json`, but might require updating bundler configurations that specify named exports of the `react` and `prop-types` packages, to include exports like `createContext` and `createElement` ([example](https://github.com/apollographql/apollo-client/commit/16b08e1af9ba9934041298496e167aafb128c15d)). <br/>
-  [@devrelm](https://github.com/devrelm) in [#7742](https://github.com/apollographql/apollo-client/pull/7742)
-
-- Respect `no-cache` fetch policy (by not reading any `data` from the cache) for `loading: true` results triggered by `notifyOnNetworkStatusChange: true`. <br />
-  [@jcreighton](https://github.com/jcreighton) in [#7761](https://github.com/apollographql/apollo-client/pull/7761)
-
-- The TypeScript return types of the `getLastResult` and `getLastError` methods of `ObservableQuery` now correctly include the possibility of returning `undefined`. If you happen to be calling either of these methods directly, you may need to adjust how the calling code handles the methods' possibly-`undefined` results. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8394](https://github.com/apollographql/apollo-client/pull/8394)
-
-- Log non-fatal `invariant.error` message when fields are missing from result objects written into `InMemoryCache`, rather than throwing an exception. While this change relaxes an exception to be merely an error message, which is usually a backwards-compatible change, the error messages are logged in more cases now than the exception was previously thrown, and those new error messages may be worth investigating to discover potential problems in your application. The errors are not displayed for `@client`-only fields, so adding `@client` is one way to handle/hide the errors for local-only fields. Another general strategy is to use a more precise query to write specific subsets of data into the cache, rather than reusing a larger query that contains fields not present in the written `data`. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8416](https://github.com/apollographql/apollo-client/pull/8416)
-
-- The [`nextFetchPolicy`](https://github.com/apollographql/apollo-client/pull/6893) option for `client.watchQuery` and `useQuery` will no longer be removed from the `options` object after it has been applied, and instead will continue to be applied any time `options.fetchPolicy` is reset to another value, until/unless the `options.nextFetchPolicy` property is removed from `options`. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8465](https://github.com/apollographql/apollo-client/pull/8465)
+- [**Refetching queries**](https://deploy-preview-7399--apollo-client-docs.netlify.app/docs/react/data/refetching/) with `client.refetchQueries`. <br/>
+  [@StephenBarlow](https://github.com/StephenBarlow) and [@benjamn](https://github.com/benjamn) in [#8265](https://github.com/apollographql/apollo-client/pull/8265)
 
 ### Improvements
 
@@ -115,10 +58,67 @@
 - Improve interaction between React hooks and React Fast Refresh in development. <br/>
   [@andreialecu](https://github.com/andreialecu) in [#7952](https://github.com/apollographql/apollo-client/pull/7952)
 
-### New documentation
+### Potentially disruptive changes
 
-- [**Refetching queries**](https://deploy-preview-7399--apollo-client-docs.netlify.app/docs/react/data/refetching/) with `client.refetchQueries`. <br/>
-  [@StephenBarlow](https://github.com/StephenBarlow) and [@benjamn](https://github.com/benjamn) in [#8265](https://github.com/apollographql/apollo-client/pull/8265)
+- To avoid retaining sensitive information from mutation root field arguments, Apollo Client v3.4 automatically clears any `ROOT_MUTATION` fields from the cache after each mutation finishes. If you need this information to remain in the cache, you can prevent the removal by passing the `keepRootFields: true` option to `client.mutate`. `ROOT_MUTATION` result data are also passed to the mutation `update` function, so we recommend obtaining the results that way, rather than using `keepRootFields: true`, if possible. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8280](https://github.com/apollographql/apollo-client/pull/8280)
+
+- Internally, Apollo Client now controls the execution of development-only code using the `__DEV__` global variable, rather than `process.env.NODE_ENV`. While this change should not cause any visible differences in behavior, it will increase your minified+gzip bundle size by more than 3.5kB, unless you configure your minifier to replace `__DEV__` with a `true` or `false` constant, the same way you already replace `process.env.NODE_ENV` with a string literal like `"development"` or `"production"`. For an example of configuring a Create React App project without ejecting, see this pull request for our [React Apollo reproduction template](https://github.com/apollographql/react-apollo-error-template/pull/51). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8347](https://github.com/apollographql/apollo-client/pull/8347)
+
+- Internally, Apollo Client now uses namespace syntax (e.g. `import * as React from "react"`) for imports whose types are re-exported (and thus may appear in `.d.ts` files). This change should remove any need to configure `esModuleInterop` or `allowSyntheticDefaultImports` in `tsconfig.json`, but might require updating bundler configurations that specify named exports of the `react` and `prop-types` packages, to include exports like `createContext` and `createElement` ([example](https://github.com/apollographql/apollo-client/commit/16b08e1af9ba9934041298496e167aafb128c15d)). <br/>
+  [@devrelm](https://github.com/devrelm) in [#7742](https://github.com/apollographql/apollo-client/pull/7742)
+
+- Respect `no-cache` fetch policy (by not reading any `data` from the cache) for `loading: true` results triggered by `notifyOnNetworkStatusChange: true`. <br />
+  [@jcreighton](https://github.com/jcreighton) in [#7761](https://github.com/apollographql/apollo-client/pull/7761)
+
+- The TypeScript return types of the `getLastResult` and `getLastError` methods of `ObservableQuery` now correctly include the possibility of returning `undefined`. If you happen to be calling either of these methods directly, you may need to adjust how the calling code handles the methods' possibly-`undefined` results. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8394](https://github.com/apollographql/apollo-client/pull/8394)
+
+- Log non-fatal `invariant.error` message when fields are missing from result objects written into `InMemoryCache`, rather than throwing an exception. While this change relaxes an exception to be merely an error message, which is usually a backwards-compatible change, the error messages are logged in more cases now than the exception was previously thrown, and those new error messages may be worth investigating to discover potential problems in your application. The errors are not displayed for `@client`-only fields, so adding `@client` is one way to handle/hide the errors for local-only fields. Another general strategy is to use a more precise query to write specific subsets of data into the cache, rather than reusing a larger query that contains fields not present in the written `data`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8416](https://github.com/apollographql/apollo-client/pull/8416)
+
+- The [`nextFetchPolicy`](https://github.com/apollographql/apollo-client/pull/6893) option for `client.watchQuery` and `useQuery` will no longer be removed from the `options` object after it has been applied, and instead will continue to be applied any time `options.fetchPolicy` is reset to another value, until/unless the `options.nextFetchPolicy` property is removed from `options`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8465](https://github.com/apollographql/apollo-client/pull/8465)
+
+### Bug fixes
+
+- In Apollo Client 2.x, a `refetch` operation would always replace existing data in the cache. With the introduction of field policy `merge` functions in Apollo Client 3, existing field values could be inappropriately combined with incoming field values by a custom `merge` function that does not realize a `refetch` has happened.
+
+  To give you more control over this behavior, we have introduced an `overwrite?: boolean = false` option for `cache.writeQuery` and `cache.writeFragment`, and an option called `refetchWritePolicy?: "merge" | "overwrite"` for `client.watchQuery`, `useQuery`, and other functions that accept `WatchQueryOptions`. You can use these options to make sure any `merge` functions involved in cache writes for `refetch` operations get invoked with `undefined` as their first argument, which simulates the absence of any existing data, while still giving the `merge` function a chance to determine the internal representation of the incoming data.
+
+  The default behaviors are `overwrite: true` and `refetchWritePolicy: "overwrite"`, which restores the Apollo Client 2.x behavior, but (if this change causes any problems for your application) you can easily recover the previous merging behavior by setting a default value for `refetchWritePolicy` in `defaultOptions.watchQuery`:
+  ```ts
+  new ApolloClient({
+    defaultOptions: {
+      watchQuery: {
+        refetchWritePolicy: "merge",
+      },
+    },
+  })
+  ```
+  [@benjamn](https://github.com/benjamn) in [#7810](https://github.com/apollographql/apollo-client/pull/7810)
+
+- Make sure the `MockedResponse` `ResultFunction` type is re-exported. <br/>
+  [@hwillson](https://github.com/hwillson) in [#8315](https://github.com/apollographql/apollo-client/pull/8315)
+
+- Fix polling when used with `skip`. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8346](https://github.com/apollographql/apollo-client/pull/8346)
+
+- `InMemoryCache` now coalesces `EntityStore` updates to guarantee only one `store.merge(id, fields)` call per `id` per cache write. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8372](https://github.com/apollographql/apollo-client/pull/8372)
+
+- Fix polling when used with `<React.StrictMode>`. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8414](https://github.com/apollographql/apollo-client/pull/8414)
+
+- Fix the React integration logging `Warning: Can't perform a React state update on an unmounted component`. <br/>
+  [@wuarmin](https://github.com/wuarmin) in [#7745](https://github.com/apollographql/apollo-client/pull/7745)
+
+- Make `ObservableQuery#getCurrentResult` always call `queryInfo.getDiff()`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8422](https://github.com/apollographql/apollo-client/pull/8422)
+
+- Make `readField` default to reading from current object only when the `from` option/argument is actually omitted, not when `from` is passed to `readField` with an undefined value. A warning will be printed when this situation occurs. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8508](https://github.com/apollographql/apollo-client/pull/8508)
 
 ## Apollo Client 3.3.21
 

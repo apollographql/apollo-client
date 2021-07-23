@@ -1,15 +1,14 @@
 import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { render, cleanup, wait } from '@testing-library/react';
-
+import { act, render, wait } from '@testing-library/react';
+import { renderHook } from '@testing-library/react-hooks';
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, mockSingleLink } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
-import { act } from 'react-dom/test-utils';
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -39,8 +38,6 @@ describe('useMutation Hook', () => {
 
   const CREATE_TODO_ERROR = 'Failed to create item';
 
-  afterEach(cleanup);
-
   describe('General use', () => {
     it('should handle a simple mutation properly', async () => {
       const variables = {
@@ -57,40 +54,25 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      let renderCount = 0;
-      const Component = () => {
-        const [createTodo, { loading, data }] = useMutation(
-          CREATE_TODO_MUTATION
-        );
-        switch (renderCount) {
-          case 0:
-            expect(loading).toBeFalsy();
-            expect(data).toBeUndefined();
-            createTodo({ variables });
-            break;
-          case 1:
-            expect(loading).toBeTruthy();
-            expect(data).toBeUndefined();
-            break;
-          case 2:
-            expect(loading).toBeFalsy();
-            expect(data).toEqual(CREATE_TODO_RESULT);
-            break;
-          default:
-        }
-        renderCount += 1;
-        return null;
-      };
-
-      render(
-        <MockedProvider mocks={mocks}>
-          <Component />
-        </MockedProvider>
+      const { result, waitForNextUpdate } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
       );
 
-      return wait(() => {
-        expect(renderCount).toBe(3);
-      });
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].data).toBe(undefined);
+      const createTodo = result.current[0];
+      act(() => void createTodo({ variables }));
+      expect(result.current[1].loading).toBe(true);
+      expect(result.current[1].data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].data).toEqual(CREATE_TODO_RESULT);
     });
 
     it('should be able to call mutations as an effect', async () => {
@@ -108,49 +90,33 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      let renderCount = 0;
       const useCreateTodo = () => {
         const [createTodo, { loading, data }] = useMutation(
           CREATE_TODO_MUTATION
         );
-
         useEffect(() => {
           createTodo({ variables });
         }, [variables]);
 
-        switch (renderCount) {
-          case 0:
-            expect(loading).toBeFalsy();
-            expect(data).toBeUndefined();
-            break;
-          case 1:
-            expect(loading).toBeTruthy();
-            expect(data).toBeUndefined();
-            break;
-          case 2:
-            expect(loading).toBeFalsy();
-            expect(data).toEqual(CREATE_TODO_RESULT);
-            break;
-          default:
-        }
-        renderCount += 1;
-        return null;
+        return { loading, data };
       };
 
-      const Component = () => {
-        useCreateTodo();
-        return null;
-      };
-
-      render(
-        <MockedProvider mocks={mocks}>
-          <Component />
-        </MockedProvider>
+      const { result, waitForNextUpdate } = renderHook(
+        () => useCreateTodo(),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
       );
 
-      return wait(() => {
-        expect(renderCount).toBe(3);
-      });
+      // TODO: This misses the first update for some reason.
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(CREATE_TODO_RESULT);
     });
 
     it('should ensure the mutation callback function has a stable identity', async () => {
@@ -168,45 +134,27 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      let mutationFn: any;
-      let renderCount = 0;
-      const Component = () => {
-        const [createTodo, { loading, data }] = useMutation(
-          CREATE_TODO_MUTATION
-        );
-        switch (renderCount) {
-          case 0:
-            mutationFn = createTodo;
-            expect(loading).toBeFalsy();
-            expect(data).toBeUndefined();
-            setTimeout(() => {
-              createTodo({ variables });
-            });
-            break;
-          case 1:
-            expect(mutationFn).toBe(createTodo);
-            expect(loading).toBeTruthy();
-            expect(data).toBeUndefined();
-            break;
-          case 2:
-            expect(loading).toBeFalsy();
-            expect(data).toEqual(CREATE_TODO_RESULT);
-            break;
-          default:
-        }
-        renderCount += 1;
-        return null;
-      };
-
-      render(
-        <MockedProvider mocks={mocks}>
-          <Component />
-        </MockedProvider>
+      const { result, waitForNextUpdate } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
       );
 
-      return wait(() => {
-        expect(renderCount).toBe(3);
-      });
+      const createTodo = result.current[0];
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].data).toBe(undefined);
+      act(() => void createTodo({ variables }));
+      expect(createTodo).toBe(result.current[0]);
+      expect(result.current[1].loading).toBe(true);
+      expect(result.current[1].data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(createTodo).toBe(result.current[0]);
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].data).toEqual(CREATE_TODO_RESULT);
     });
 
     it('should resolve mutate function promise with mutation results', async () => {
@@ -224,37 +172,24 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const Component = () => {
-        const [createTodo] = useMutation<{ createTodo: Todo }>(
-          CREATE_TODO_MUTATION
-        );
-
-        async function doIt() {
-          const { data } = await createTodo({ variables });
-          expect(data).toEqual(CREATE_TODO_RESULT);
-          expect(data!.createTodo.description).toEqual(
-            CREATE_TODO_RESULT.createTodo.description
-          );
-        }
-
-        useEffect(() => {
-          doIt();
-        }, []);
-
-        return null;
-      };
-
-      render(
-        <MockedProvider mocks={mocks}>
-          <Component />
-        </MockedProvider>
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
       );
 
-      return wait();
+      await act(async () => {
+        await expect(result.current[0]({ variables })).resolves.toEqual({
+          data: CREATE_TODO_RESULT,
+        });
+      });
     });
 
     describe('mutate function upon error', () => {
-      itAsync('resolves with the resulting data and errors', async (resolve, reject) => {
+      it('resolves with the resulting data and errors', async () => {
         const variables = {
           description: 'Get milk!'
         };
@@ -272,38 +207,26 @@ describe('useMutation Hook', () => {
           }
         ];
 
-        let fetchResult: any;
-        const Component = () => {
-          const [createTodo] = useMutation<{ createTodo: Todo }>(
-            CREATE_TODO_MUTATION,
-            {
-              onError: error => {
-                expect(error.message).toEqual(CREATE_TODO_ERROR);
-              }
-            }
-          );
-
-          async function runMutation() {
-            fetchResult = await createTodo({ variables });
-          }
-
-          useEffect(() => {
-            runMutation();
-          }, []);
-
-          return null;
-        };
-
-        render(
-          <MockedProvider mocks={mocks}>
-            <Component />
-          </MockedProvider>
+        const onError = jest.fn();
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION, { onError }),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
         );
 
-        await wait(() => {
-          expect(fetchResult.data).toEqual(undefined);
-          expect(fetchResult.errors.message).toEqual(CREATE_TODO_ERROR);
-        }).then(resolve, reject);
+        const createTodo = result.current[0];
+        let fetchResult: any;
+        await act(async () => {
+          fetchResult = await createTodo({ variables });
+        });
+
+        expect(fetchResult.data).toBe(undefined);
+        expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
       });
 
       it(`should reject when errorPolicy is 'none'`, async () => {
@@ -324,36 +247,19 @@ describe('useMutation Hook', () => {
           }
         ];
 
-        const Component = () => {
-          const [createTodo] = useMutation<{ createTodo: Todo }>(
-            CREATE_TODO_MUTATION,
-            { errorPolicy: 'none' }
-          );
-
-          async function doIt() {
-            try {
-              await createTodo({ variables });
-            } catch (error) {
-              expect(error.message).toEqual(
-                expect.stringContaining(CREATE_TODO_ERROR)
-              );
-            }
-          }
-
-          useEffect(() => {
-            doIt();
-          }, []);
-
-          return null;
-        };
-
-        render(
-          <MockedProvider mocks={mocks}>
-            <Component />
-          </MockedProvider>
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: 'none' }),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
         );
 
-        return wait();
+        const createTodo = result.current[0];
+        await act(async () => {
+          await expect(createTodo({ variables })).rejects.toThrow(CREATE_TODO_ERROR);
+        });
       });
 
       it(`should resolve with 'data' and 'error' properties when errorPolicy is 'all'`, async () => {
@@ -374,59 +280,48 @@ describe('useMutation Hook', () => {
           }
         ];
 
-        const Component = () => {
-          const [createTodo] = useMutation<{ createTodo: Todo }>(
-            CREATE_TODO_MUTATION,
-            { errorPolicy: 'all' }
-          );
-
-          async function doIt() {
-            const { data, errors } = await createTodo({ variables });
-
-            expect(data).toEqual(CREATE_TODO_RESULT);
-            expect(data!.createTodo.description).toEqual(
-              CREATE_TODO_RESULT.createTodo.description
-            );
-            expect(errors![0].message).toEqual(
-              expect.stringContaining(CREATE_TODO_ERROR)
-            );
-          }
-
-          useEffect(() => {
-            doIt();
-          }, []);
-
-          return null;
-        };
-
-        render(
-          <MockedProvider mocks={mocks}>
-            <Component />
-          </MockedProvider>
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: 'all' }),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
         );
 
-        return wait();
+        const createTodo = result.current[0];
+
+        let fetchResult: any;
+        await act(async () => {
+          fetchResult = await createTodo({ variables });
+        });
+
+        expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
+        expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
       })
     });
 
     it('should return the current client instance in the result object', async () => {
-      const Component = () => {
-        const [, { client }] = useMutation(CREATE_TODO_MUTATION);
-        expect(client).toBeDefined();
-        expect(client instanceof ApolloClient).toBeTruthy();
-        return null;
-      };
-
-      render(
-        <MockedProvider>
-          <Component />
-        </MockedProvider>
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider>
+            {children}
+          </MockedProvider>
+        )},
       );
-
-      return wait();
+      expect(result.current[1].client).toBeInstanceOf(ApolloClient);
     });
 
     it('should merge provided variables', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          description: 'Get milk!',
+          priority: 'Low',
+          __typename: 'Todo',
+        },
+      };
       const mocks = [
         {
           request: {
@@ -437,46 +332,32 @@ describe('useMutation Hook', () => {
             }
           },
           result: {
-            data: {
-              createTodo: {
-                id: 1,
-                description: 'Get milk!',
-                priority: 'Low',
-                __typename: 'Todo'
-              }
-            }
+            data: CREATE_TODO_DATA,
           }
         }
       ];
 
-      const Component = () => {
-        const [createTodo, result] = useMutation<
+      const { result } = renderHook(
+        () => useMutation<
           { createTodo: Todo },
           { priority?: string, description?: string }
         >(CREATE_TODO_MUTATION, {
           variables: { priority: 'Low' }
-        });
-
-        useEffect(() => {
-          createTodo({ variables: { description: 'Get milk.' } })
-        }, []);
-
-        return (
-          <>
-            {result.data ? JSON.stringify(result.data.createTodo) : null}
-          </>
-        );
-      };
-
-      const {getByText} = render(
-        <MockedProvider mocks={mocks}>
-          <Component />
-        </MockedProvider>
+        }),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
       );
 
-      await wait(() => {
-        getByText('{"id":1,"description":"Get milk!","priority":"Low","__typename":"Todo"}')
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      await act(async () => {
+        fetchResult = await createTodo({ variables: { description: 'Get milk.' }});
       });
+
+      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
     });
   });
 

@@ -87,7 +87,7 @@
     "zen-observable": "^0.8.14"
   },
   "devDependencies": {
-    "@babel/parser": "7.14.7",
+    "@babel/parser": "7.14.8",
     "@graphql-tools/schema": "7.1.5",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@testing-library/react": "9.5.0",

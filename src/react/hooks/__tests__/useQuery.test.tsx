@@ -1314,7 +1314,7 @@ describe('useQuery Hook', () => {
         updateQuery: (prev, { fetchMoreResult }) => ({
           letters: prev.letters.concat(fetchMoreResult.letters),
         }),
-      });
+      }));
 
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);

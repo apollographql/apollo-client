@@ -16,11 +16,9 @@ import {
   TypedDocumentNode,
 } from '../../core';
 import {
-  CommonOptions,
   QueryDataOptions,
   QueryHookOptions,
   QueryResult,
-  QueryLazyOptions,
   ObservableQueryFields,
 } from '../types/types';
 
@@ -32,70 +30,52 @@ import { DocumentType, parser, operationName } from '../parser';
 import { useDeepMemo } from './utils/useDeepMemo';
 import { useAfterFastRefresh } from './utils/useAfterFastRefresh';
 
-type ObservableQueryOptions<TData, TVars> =
-  ReturnType<QueryData<TData, TVars>["prepareObservableQueryOptions"]>;
+function verifyDocumentType(document: DocumentNode, type: DocumentType) {
+  const operation = parser(document);
+  const requiredOperationName = operationName(type);
+  const usedOperationName = operationName(operation.type);
+  invariant(
+    operation.type === type,
+    `Running a ${requiredOperationName} requires a graphql ` +
+      `${requiredOperationName}, but a ${usedOperationName} was used instead.`
+  );
+}
 
-class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVariables> = any> {
+// These are the options which are actually used by
+interface ObservableQueryOptions<TData, TVariables> {
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>; // QueryDataOptions
+  displayName?: string; // QueryFunctionOptions
+  context?: unknown; // BaseQueryOptions/QueryOptions
+  children?: unknown; // QueryDataOptions
+};
+
+class QueryData<TData, TVariables> {
   public isMounted: boolean = false;
-  public previousOptions: CommonOptions<TOptions>
-    = {} as CommonOptions<TOptions>;
   public context: any = {};
-  public client: ApolloClient<object>;
 
-  private options: CommonOptions<TOptions> = {} as CommonOptions<TOptions>;
+  public previousOptions = {} as QueryDataOptions<TData, TVariables>;
 
-  public setOptions(
-    newOptions: CommonOptions<TOptions>,
-    storePrevious: boolean = false
-  ) {
-    if (storePrevious && !equal(this.options, newOptions)) {
+  private options = {} as QueryDataOptions<TData, TVariables>;
+
+  public getOptions(): QueryDataOptions<TData, TVariables> {
+    return this.options;
+  }
+
+  public setOptions(newOptions: QueryDataOptions<TData, TVariables>) {
+    if (!equal(this.options, newOptions)) {
       this.previousOptions = this.options;
     }
+
     this.options = newOptions;
   }
 
-  protected unmount() {
+  private unmount() {
     this.isMounted = false;
   }
 
-  protected refreshClient() {
-    const client =
-      (this.options && this.options.client) ||
-      (this.context && this.context.client);
-
-    invariant(
-      !!client,
-      'Could not find "client" in the context or passed in as an option. ' +
-        'Wrap the root component in an <ApolloProvider>, or pass an ' +
-        'ApolloClient instance in via options.'
-    );
-
-    let isNew = false;
-    if (client !== this.client) {
-      isNew = true;
-      this.client = client;
-      this.cleanup();
-    }
-    return {
-      client: this.client as ApolloClient<object>,
-      isNew
-    };
-  }
-
-  protected verifyDocumentType(document: DocumentNode, type: DocumentType) {
-    const operation = parser(document);
-    const requiredOperationName = operationName(type);
-    const usedOperationName = operationName(operation.type);
-    invariant(
-      operation.type === type,
-      `Running a ${requiredOperationName} requires a graphql ` +
-        `${requiredOperationName}, but a ${usedOperationName} was used instead.`
-    );
-  }
   public onNewData: () => void;
   private currentObservable?: ObservableQuery<TData, TVariables>;
   private currentSubscription?: ObservableSubscription;
-  private lazyOptions?: QueryLazyOptions<TVariables>;
   private previous: {
     client?: ApolloClient<object>;
     query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -111,40 +91,46 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
     context,
     onNewData
   }: {
-    options: TOptions;
+    options: QueryDataOptions<TData, TVariables>;
     context: any;
     onNewData: () => void;
   }) {
-    this.options = options || ({} as CommonOptions<TOptions>);
+    this.options = options || ({} as QueryDataOptions<TData, TVariables>);
     this.context = context || {};
     this.onNewData = onNewData;
   }
 
-  public execute(): QueryResult<TData, TVariables> {
-    this.refreshClient();
+  public execute(client: ApolloClient<object>): QueryResult<TData, TVariables> {
+    const { skip, query } = this.options;
+    if (this.previous.client !== client) {
+      if (this.previous.client) {
+        this.cleanup();
+      }
 
-    const { skip, query } = this.getOptions();
+      this.previous.client = client;
+    }
+
     if (skip || query !== this.previous.query) {
       this.removeQuerySubscription();
       this.removeObservable(!skip);
       this.previous.query = query;
     }
 
-    this.updateObservableQuery();
+    this.updateObservableQuery(client);
 
-    return this.getExecuteSsrResult() || this.getExecuteResult();
+    return this.getExecuteSsrResult(client) || this.getExecuteResult(client);
   }
 
   // For server-side rendering
   public fetchData(): Promise<void> | boolean {
-    const options = this.getOptions();
+    const options = this.options;
     if (options.skip || options.ssr === false) return false;
     return new Promise(resolve => this.startQuerySubscription(resolve));
   }
 
   public afterExecute() {
     this.isMounted = true;
-    const options = this.getOptions();
+    const options = this.options;
     const ssrDisabled = options.ssr === false;
     if (
       this.currentObservable &&
@@ -165,38 +151,22 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
     delete this.previous.result;
   }
 
-  public getOptions() {
-    const options = this.options;
-    if (this.lazyOptions) {
-      options.variables = {
-        ...options.variables,
-        ...this.lazyOptions.variables
-      } as TVariables;
-      options.context = {
-        ...options.context,
-        ...this.lazyOptions.context
-      };
-    }
-
-    return options;
-  }
 
   public ssrInitiated() {
     return this.context && this.context.renderPromises;
   }
 
-  private getExecuteSsrResult() {
-    const { ssr, skip } = this.getOptions();
+  private getExecuteSsrResult(client: ApolloClient<object>) {
+    const { ssr, skip } = this.options;
     const ssrDisabled = ssr === false;
-    const fetchDisabled = this.refreshClient().client.disableNetworkFetches;
-
+    const fetchDisabled = client.disableNetworkFetches;
     const ssrLoading = {
       loading: true,
       networkStatus: NetworkStatus.loading,
       called: true,
       data: undefined,
       stale: false,
-      client: this.client,
+      client,
       ...this.observableQueryFields(),
     } as QueryResult<TData, TVariables>;
 
@@ -208,7 +178,7 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
     }
 
     if (this.ssrInitiated()) {
-      const result = this.getExecuteResult() || ssrLoading;
+      const result = this.getExecuteResult(client) || ssrLoading;
       if (result.loading && !skip) {
         this.context.renderPromises!.addQueryPromise(this, () => null);
       }
@@ -216,9 +186,9 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
     }
   }
 
-  private prepareObservableQueryOptions() {
-    const options = this.getOptions();
-    this.verifyDocumentType(options.query, DocumentType.Query);
+  private prepareObservableQueryOptions(): ObservableQueryOptions<TData, TVariables> {
+    const options = this.options;
+    verifyDocumentType(options.query, DocumentType.Query);
     const displayName = options.displayName || 'Query';
 
     // Set the fetchPolicy to cache-first for network-only and cache-and-network
@@ -238,13 +208,13 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
     };
   }
 
-  private initializeObservableQuery() {
+  private initializeObservableQuery(client: ApolloClient<object>) {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
     if (this.ssrInitiated()) {
       this.currentObservable = this.context!.renderPromises!.getSSRObservable(
-        this.getOptions()
+        this.options,
       );
     }
 
@@ -255,7 +225,8 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
         ...observableQueryOptions,
         children: void 0,
       };
-      this.currentObservable = this.refreshClient().client.watchQuery({
+
+      this.currentObservable = client.watchQuery({
         ...observableQueryOptions
       });
 
@@ -268,10 +239,10 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
     }
   }
 
-  private updateObservableQuery() {
+  private updateObservableQuery(client: ApolloClient<object>) {
     // If we skipped initially, we may not have yet created the observable
     if (!this.currentObservable) {
-      this.initializeObservableQuery();
+      this.initializeObservableQuery(client);
       return;
     }
 
@@ -280,7 +251,7 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
       children: void 0,
     };
 
-    if (this.getOptions().skip) {
+    if (this.options.skip) {
       this.previous.observableQueryOptions = newObservableQueryOptions;
       return;
     }
@@ -306,7 +277,7 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
   // `onNewData` will fallback to the default `QueryData.onNewData` function
   // (which usually leads to a query component re-render).
   private startQuerySubscription(onNewData: () => void = this.onNewData) {
-    if (this.currentSubscription || this.getOptions().skip) return;
+    if (this.currentSubscription || this.options.skip) return;
 
     this.currentSubscription = this.currentObservable!.subscribe({
       next: ({ loading, networkStatus, data }) => {
@@ -363,9 +334,11 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
     }
   }
 
-  private getExecuteResult(): QueryResult<TData, TVariables> {
+  private getExecuteResult(
+    client: ApolloClient<object>,
+  ): QueryResult<TData, TVariables> {
     let result = this.observableQueryFields() as QueryResult<TData, TVariables>;
-    const options = this.getOptions();
+    const options = this.options;
 
     // When skipping a query (ie. we're not querying for data but still want
     // to render children), make sure the `data` is cleared out and
@@ -441,10 +414,9 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
       }
     }
 
-    result.client = this.client;
+    result.client = client;
     // Store options as this.previousOptions.
-    this.setOptions(options, true);
-
+    this.setOptions(options);
     const previousResult = this.previous.result;
 
     this.previous.loading =
@@ -481,7 +453,7 @@ class QueryData<TData, TVariables, TOptions extends QueryDataOptions<TData, TVar
         onCompleted,
         onError,
         skip
-      } = this.getOptions();
+      } = this.options;
 
       // No changes, so we won't call onError/onCompleted.
       if (
@@ -601,7 +573,7 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
   queryData.setOptions(updatedOptions);
   queryData.context = context;
   const result = useDeepMemo(
-    () => queryData.execute(),
+    () => queryData.execute(client),
     [updatedOptions, context, tick],
   );
 

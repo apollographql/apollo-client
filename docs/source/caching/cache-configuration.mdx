@@ -58,7 +58,7 @@ To customize cache behavior, provide an `options` object to the `InMemoryCache` 
 </td>
 <td>
 
-If `true`, the cache automatically adds `__typename` fields to all outgoing queries, removing the need to add them manually.
+If `true`, the cache automatically adds `__typename` fields to all objects in outgoing queries, removing the need to add them manually.
 
 The default value is `true`.
 
@@ -75,7 +75,7 @@ The default value is `true`.
 </td>
 <td>
 
-If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This makes it easier to detect changes to a query's result.
+If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This helps you detect changes to a query's result.
 
 The default value is `true`.
 
@@ -212,13 +212,19 @@ const cache = new InMemoryCache({
 });
 ```
 
-> The `dataIdFromObject` API is included in Apollo Client 3.0 to ease the transition from Apollo Client 2.x. The API might be removed in a future version of `@apollo/client`.
+> The `dataIdFromObject` API is included in Apollo Client 3 to ease the transition from Apollo Client 2.x. The API might be removed in a future version of `@apollo/client`.
 
-Notice that the above function still uses different logic to generate keys based on an object's `__typename`. In the above case, you might as well define `keyFields` arrays for the `Product` and `Person` types via `typePolicies`. Also, this code is sensitive to aliasing mistakes, it does nothing to protect against undefined `object` properties, and accidentally using different key fields at different times can cause inconsistencies in the cache.
+Notice that the above function still uses different logic to generate keys based on an object's `__typename`. In a case like this, you should almost always define `keyFields` arrays for the `Product` and `Person` types via `typePolicies`.
+
+This code also has the following drawbacks:
+
+* It's sensitive to aliasing mistakes.
+* It does nothing to protect against undefined `object` properties.
+* Accidentally using different key fields at different times can cause inconsistencies in the cache.
 
 ### Disabling normalization
 
-You can instruct the `InMemoryCache` _not_ to normalize objects of a certain type. This can be useful for metrics and other transient data that's identified by a timestamp and never receives updates.
+You can instruct the `InMemoryCache` _not_ to normalize objects of a particular type. This can be useful for metrics and other transient data that's identified by a timestamp and never receives updates.
 
 To disable normalization for a type, define a `TypePolicy` for the type (as shown in [Customizing cache IDs](#customizing-cache-ids)) and set the policy's `keyFields` field to `false`.
 
@@ -306,9 +312,9 @@ const equivalentResult = cache.readQuery({
 });
 ```
 
-The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use the same trick for the outermost selection set of every operation, but the `__typename` of the root query or mutation is almost always simply `"Query"` or `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
+The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use the same trick for the outermost selection set of every operation, but the `__typename` of the root query or mutation is almost always `"Query"` or `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
 
-Compared to the `__typename`s of entity objects like `Book`s or `Person`s, which are absolutely vital to proper identification and normalization, the `__typename` of the root query or mutation type is not nearly as useful or important, because those types are singletons with only one instance per client.
+Compared to the `__typename`s of entity objects like `Book` or `Person`, which are vital to proper identification and normalization, the `__typename` of the root query or mutation type is not nearly as useful or important, because those types are singletons with only one instance per client.
 
 ### The `fields` property
 

@@ -56,8 +56,7 @@ export default withApollo(graphql(PROFILE_QUERY, {
 })(Profile));
 ```
 
-> To reset the cache _without_ refetching active queries, use
-`client.clearStore()` instead of `client.resetStore()`.
+> To reset the cache _without_ refetching active queries, use `client.clearStore()` instead of `client.resetStore()`.
 
 ### Responding to cache resets
 

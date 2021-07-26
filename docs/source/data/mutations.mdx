@@ -165,29 +165,25 @@ If you're just getting started with Apollo Client, we recommend refetching queri
 
 ## Refetching queries
 
-If you know that your app usually needs to refetch certain queries after a particular mutation, you can include a `refetchQueries` array in that mutation's options.
+If you know that your app usually needs to refetch certain queries after a particular mutation, you can include a `refetchQueries` array in that mutation's options:
+
+```js{3-6}
+// Refetches two queries after mutation completes
+const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
+  refetchQueries: [
+    GET_POST, // DocumentNode object parsed with gql
+    'GetComments' // Query name
+  ],
+});
+```
 
 Each element in the `refetchQueries` array is one of the following:
 
-* An object with a `query` field that specifies the query to execute, along with a `variables` field if applicable
+* A `DocumentNode` object parsed with the `gql` function
 * The name of a query you've previously executed, as a string (e.g., `GetComments`)
   * To refer to queries by name, make sure each of your app's queries has a _unique_ name.
-  * Queries you refer to by name are executed with their most recently provided set of variables.
 
-```js
-// Refetches two queries after mutation completes
-const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
-  refetchQueries: [{
-    'GetComments', // Query name
-    {
-      query: GET_POST, // Full query document wrapped in gql
-      variables: {     // Variables required for query
-        id: '5'
-      }
-    }
-  }],
-});
-```
+Each included query is executed with its most recently provided set of variables.
 
 You can provide the `refetchQueries` option either to `useMutation` or to the mutate function. For details, see [Option precedence](#option-precedence).
 

@@ -286,7 +286,7 @@ If you discover that some specific additional `client.refetchQueries` input opti
 
 ### Corresponding mutate function options
 
-For refetching after a mutation, mutate functions support [options](./mutations/#mutate) similar to `client.refetchQueries`, which you should use instead of `client.refetchQueries`, because it's important for refetching logic to happen at specific times during the mutation process.
+For refetching after a mutation, mutate functions support [options](./mutations/#result) similar to `client.refetchQueries`, which you should use instead of `client.refetchQueries`, because it's important for refetching logic to happen at specific times during the mutation process.
 
 For historical reasons, mutate function options have slightly different names from the new `client.refetchQueries` options, but their internal implementation is substantially the same, so you can translate between them using the following table:
 

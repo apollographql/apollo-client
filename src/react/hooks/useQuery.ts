@@ -52,18 +52,16 @@ interface ObservableQueryOptions<TData, TVariables> {
 class QueryData<TData, TVariables> {
   public isMounted: boolean = false;
   public context: any = {};
-
-  public previousOptions = {} as QueryDataOptions<TData, TVariables>;
-
   private options = {} as QueryDataOptions<TData, TVariables>;
 
+  // TODO: This is still called by ssr stuff ;_;
   public getOptions(): QueryDataOptions<TData, TVariables> {
     return this.options;
   }
 
   public setOptions(newOptions: QueryDataOptions<TData, TVariables>) {
     if (!equal(this.options, newOptions)) {
-      this.previousOptions = this.options;
+      this.previous.options = this.options;
     }
 
     this.options = newOptions;
@@ -73,7 +71,7 @@ class QueryData<TData, TVariables> {
     this.isMounted = false;
   }
 
-  public onNewData: () => void;
+  private onNewData: () => void;
   private currentObservable?: ObservableQuery<TData, TVariables>;
   private currentSubscription?: ObservableSubscription;
   private previous: {
@@ -141,7 +139,6 @@ class QueryData<TData, TVariables> {
     }
 
     this.handleErrorOrCompleted();
-    this.previousOptions = options;
     return this.unmount.bind(this);
   }
 
@@ -415,7 +412,6 @@ class QueryData<TData, TVariables> {
     }
 
     result.client = client;
-    // Store options as this.previousOptions.
     this.setOptions(options);
     const previousResult = this.previous.result;
 
@@ -457,10 +453,10 @@ class QueryData<TData, TVariables> {
 
       // No changes, so we won't call onError/onCompleted.
       if (
-        this.previousOptions &&
+        this.previous.options &&
         !this.previous.loading &&
-        equal(this.previousOptions.query, query) &&
-        equal(this.previousOptions.variables, variables)
+        equal(this.previous.options.query, query) &&
+        equal(this.previous.options.variables, variables)
       ) {
         return;
       }

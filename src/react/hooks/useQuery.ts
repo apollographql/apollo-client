@@ -83,7 +83,6 @@ class QueryData<TData, TVariables> {
     this.isMounted = false;
   }
 
-  // Called by RenderPromises
   public getOptions(): QueryDataOptions<TData, TVariables> {
     return this.options;
   }
@@ -96,7 +95,6 @@ class QueryData<TData, TVariables> {
     this.options = newOptions;
   }
 
-  // Called by RenderPromises
   public fetchData(): Promise<void> | boolean {
     const options = this.options;
     if (options.skip || options.ssr === false) return false;
@@ -105,38 +103,6 @@ class QueryData<TData, TVariables> {
 
   private ssrInitiated() {
     return this.context && this.context.renderPromises;
-  }
-
-  private getExecuteSsrResult(
-    client: ApolloClient<object>
-  ): QueryResult<TData, TVariables> | undefined {
-    const { ssr, skip } = this.options;
-    const ssrDisabled = ssr === false;
-    const fetchDisabled = client.disableNetworkFetches;
-    const ssrLoading = {
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      called: true,
-      data: undefined,
-      stale: false,
-      client,
-      ...this.observableQueryFields(),
-    } as QueryResult<TData, TVariables>;
-
-    // If SSR has been explicitly disabled, and this function has been called
-    // on the server side, return the default loading state.
-    if (ssrDisabled && (this.ssrInitiated() || fetchDisabled)) {
-      this.previous.result = ssrLoading;
-      return ssrLoading;
-    }
-
-    if (this.ssrInitiated()) {
-      const result = this.getExecuteResult(client) || ssrLoading;
-      if (result.loading && !skip) {
-        this.context.renderPromises!.addQueryPromise(this, () => null);
-      }
-      return result;
-    }
   }
 
   public cleanup() {
@@ -224,9 +190,144 @@ class QueryData<TData, TVariables> {
       }
     }
 
-    // TODO(brian): No.
-    return this.getExecuteSsrResult(client) || this.getExecuteResult(client);
+    // getExecuteSsrResult
+    const { ssr } = this.options;
+    const ssrDisabled = ssr === false;
+    const fetchDisabled = client.disableNetworkFetches;
+    const ssrLoading = {
+      ...this.observableQueryFields(),
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      called: true,
+      data: undefined,
+      stale: false,
+      client,
+    } as QueryResult<TData, TVariables>;
+
+    // If SSR has been explicitly disabled, and this function has been called
+    // on the server side, return the default loading state.
+    if (ssrDisabled && (this.ssrInitiated() || fetchDisabled)) {
+      // TODO(brian): Don’t assign this here.
+      this.previous.result = ssrLoading;
+      return ssrLoading;
+    }
+
+    const result = this.getExecuteResult(client);
+
+    if (this.ssrInitiated() && result.loading && !skip) {
+      this.context.renderPromises!.addQueryPromise(this, () => null);
+    }
+
+    return result;
   }
+
+  private getExecuteResult(
+    client: ApolloClient<object>,
+  ): QueryResult<TData, TVariables> {
+    const result = this.observableQueryFields() as QueryResult<TData, TVariables>;
+    const options = this.options;
+
+    // When skipping a query (ie. we're not querying for data but still want
+    // to render children), make sure the `data` is cleared out and
+    // `loading` is set to `false` (since we aren't loading anything).
+    //
+    // NOTE: We no longer think this is the correct behavior. Skipping should
+    // not automatically set `data` to `undefined`, but instead leave the
+    // previous data in place. In other words, skipping should not mandate
+    // that previously received data is all of a sudden removed. Unfortunately,
+    // changing this is breaking, so we'll have to wait until Apollo Client
+    // 4.0 to address this.
+    if (options.skip) {
+
+      Object.assign(result, {
+        data: undefined,
+        error: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        called: true,
+      });
+    } else if (this.currentObservable) {
+      // Fetch the current result (if any) from the store.
+      const currentResult = this.currentObservable.getCurrentResult();
+      const { data, loading, partial, networkStatus, errors } = currentResult;
+      let { error } = currentResult;
+
+      // Until a set naming convention for networkError and graphQLErrors is
+      // decided upon, we map errors (graphQLErrors) to the error options.
+      if (errors && errors.length > 0) {
+        error = new ApolloError({ graphQLErrors: errors });
+      }
+
+      Object.assign(result, {
+        data,
+        loading,
+        networkStatus,
+        error,
+        called: true
+      });
+
+      if (loading) {
+        // Fall through without modifying result...
+      } else if (error) {
+        Object.assign(result, {
+          data: (this.currentObservable.getLastResult() || ({} as any))
+            .data
+        });
+      } else {
+        const { fetchPolicy } = this.currentObservable.options;
+        const { partialRefetch } = options;
+        if (
+          partialRefetch &&
+          partial &&
+          (!data || Object.keys(data).length === 0) &&
+          fetchPolicy !== 'cache-only'
+        ) {
+          // When a `Query` component is mounted, and a mutation is executed
+          // that returns the same ID as the mounted `Query`, but has less
+          // fields in its result, Apollo Client's `QueryManager` returns the
+          // data as `undefined` since a hit can't be found in the cache.
+          // This can lead to application errors when the UI elements rendered by
+          // the original `Query` component are expecting certain data values to
+          // exist, and they're all of a sudden stripped away. To help avoid
+          // this we'll attempt to refetch the `Query` data.
+          Object.assign(result, {
+            loading: true,
+            networkStatus: NetworkStatus.loading
+          });
+          result.refetch();
+          return result;
+        }
+      }
+    }
+
+    result.client = client;
+    this.setOptions(options);
+    const previousResult = this.previous.result;
+
+    // TODO(brian): WHAT THE FUCK
+    this.previous.loading =
+      previousResult && previousResult.loading || false;
+
+    // Ensure the returned result contains previousData as a separate
+    // property, to give developers the flexibility of leveraging outdated
+    // data while new data is loading from the network. Falling back to
+    // previousResult.previousData when previousResult.data is falsy here
+    // allows result.previousData to persist across multiple results.
+    result.previousData = previousResult &&
+      (previousResult.data || previousResult.previousData);
+
+    // TODO(brian): WHY IS THIS ASSIGNED HERE
+    this.previous.result = result;
+
+    // Any query errors that exist are now available in `result`, so we'll
+    // remove the original errors from the `ObservableQuery` query store to
+    // make sure they aren't re-displayed on subsequent (potentially error
+    // free) requests/responses.
+    this.currentObservable && this.currentObservable.resetQueryStoreErrors();
+
+    return result;
+  }
+
 
   public afterExecute() {
     this.isMounted = true;
@@ -342,114 +443,8 @@ class QueryData<TData, TVariables> {
     });
   }
 
-  private getExecuteResult(
-    client: ApolloClient<object>,
-  ): QueryResult<TData, TVariables> {
-    const result = this.observableQueryFields() as QueryResult<TData, TVariables>;
-    const options = this.options;
-
-    // When skipping a query (ie. we're not querying for data but still want
-    // to render children), make sure the `data` is cleared out and
-    // `loading` is set to `false` (since we aren't loading anything).
-    //
-    // NOTE: We no longer think this is the correct behavior. Skipping should
-    // not automatically set `data` to `undefined`, but instead leave the
-    // previous data in place. In other words, skipping should not mandate
-    // that previously received data is all of a sudden removed. Unfortunately,
-    // changing this is breaking, so we'll have to wait until Apollo Client
-    // 4.0 to address this.
-    if (options.skip) {
-
-      Object.assign(result, {
-        data: undefined,
-        error: undefined,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        called: true,
-      });
-    } else if (this.currentObservable) {
-      // Fetch the current result (if any) from the store.
-      const currentResult = this.currentObservable.getCurrentResult();
-      const { data, loading, partial, networkStatus, errors } = currentResult;
-      let { error } = currentResult;
-
-      // Until a set naming convention for networkError and graphQLErrors is
-      // decided upon, we map errors (graphQLErrors) to the error options.
-      if (errors && errors.length > 0) {
-        error = new ApolloError({ graphQLErrors: errors });
-      }
-
-      Object.assign(result, {
-        data,
-        loading,
-        networkStatus,
-        error,
-        called: true
-      });
-
-      if (loading) {
-        // Fall through without modifying result...
-      } else if (error) {
-        Object.assign(result, {
-          data: (this.currentObservable.getLastResult() || ({} as any))
-            .data
-        });
-      } else {
-        const { fetchPolicy } = this.currentObservable.options;
-        const { partialRefetch } = options;
-        if (
-          partialRefetch &&
-          partial &&
-          (!data || Object.keys(data).length === 0) &&
-          fetchPolicy !== 'cache-only'
-        ) {
-          // When a `Query` component is mounted, and a mutation is executed
-          // that returns the same ID as the mounted `Query`, but has less
-          // fields in its result, Apollo Client's `QueryManager` returns the
-          // data as `undefined` since a hit can't be found in the cache.
-          // This can lead to application errors when the UI elements rendered by
-          // the original `Query` component are expecting certain data values to
-          // exist, and they're all of a sudden stripped away. To help avoid
-          // this we'll attempt to refetch the `Query` data.
-          Object.assign(result, {
-            loading: true,
-            networkStatus: NetworkStatus.loading
-          });
-          result.refetch();
-          return result;
-        }
-      }
-    }
-
-    result.client = client;
-    this.setOptions(options);
-    const previousResult = this.previous.result;
-
-    // TODO(brian): WHAT THE FUCK
-    this.previous.loading =
-      previousResult && previousResult.loading || false;
-
-    // Ensure the returned result contains previousData as a separate
-    // property, to give developers the flexibility of leveraging outdated
-    // data while new data is loading from the network. Falling back to
-    // previousResult.previousData when previousResult.data is falsy here
-    // allows result.previousData to persist across multiple results.
-    result.previousData = previousResult &&
-      (previousResult.data || previousResult.previousData);
-
-    // TODO(brian): WHY IS THIS ASSIGNED HERE
-    this.previous.result = result;
-
-    // Any query errors that exist are now available in `result`, so we'll
-    // remove the original errors from the `ObservableQuery` query store to
-    // make sure they aren't re-displayed on subsequent (potentially error
-    // free) requests/responses.
-    this.currentObservable && this.currentObservable.resetQueryStoreErrors();
-
-    return result;
-  }
-
   // observableQueryFields
+
   private obsRefetch = (variables?: Partial<TVariables>) =>
     this.currentObservable?.refetch(variables);
 

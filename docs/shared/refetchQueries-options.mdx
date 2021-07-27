@@ -1,15 +1,3 @@
-<table class="field-table api-ref">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-
-<tr>
-<td colspan="2">
-
 The `client.refetchQueries` method take an `options` object that conforms to the
 following TypeScript interface:
 
@@ -29,10 +17,16 @@ interface RefetchQueriesOptions<
 }
 ```
 
-Descriptions of these fields can be found in the table below.
+These fields are described below:
 
-</td>
-</tr>
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
 
 <tr>
 <td>
@@ -44,8 +38,7 @@ Descriptions of these fields can be found in the table below.
 
 <td>
 
-Optional function that updates the cache as a way of triggering refetches of
-queries whose data were affected by those cache updates.
+Optional function that updates cached fields to trigger refetches of queries that include those fields.
 
 </td>
 </tr>
@@ -60,10 +53,9 @@ queries whose data were affected by those cache updates.
 
 <td>
 
-Optional array specifying the names or `DocumentNode` objects of queries to be
-refetched.
+Optional array specifying queries to refetch. Each element can be either a query's string name or a `DocumentNode` object.
 
-Analogous to the `options.refetchQueries` array for mutations.
+Analogous to the [`options.refetchQueries`](https://www.apollographql.com/docs/react/data/mutations/#options) array for mutations.
 
 Pass `"active"` (or `"all"`) as a shorthand to refetch all (active) queries.
 
@@ -81,13 +73,14 @@ Pass `"active"` (or `"all"`) as a shorthand to refetch all (active) queries.
 
 <td>
 
-Optional callback function that will be called for each `ObservableQuery`
-affected by `options.updateCache` or specified by `options.include`.
+Optional callback function that's called once for each `ObservableQuery` that's either affected by `options.updateCache` or listed in `options.include` (or both).
 
 If `onQueryUpdated` is not provided, the default implementation returns the
 result of calling `observableQuery.refetch()`. When `onQueryUpdated` is
-provided, it can dynamically decide whether and how each query should be
-refetched. Returning `false` from `onQueryUpdated` will prevent the given query
+provided, it can dynamically decide whether (and how) each query should be
+refetched.
+
+Returning `false` from `onQueryUpdated` prevents the associated query
 from being refetched.
 
 </td>
@@ -103,9 +96,7 @@ from being refetched.
 
 <td>
 
-If `true`, run `options.updateCache` in a temporary optimistic layer of
-`InMemoryCache`, so its modifications can be discarded from the cache after
-observing which fields it invalidated.
+If `true`, the `options.updateCache` function is executed on a temporary optimistic layer of `InMemoryCache`, so its modifications can be discarded from the cache after observing which fields it invalidated.
 
 Defaults to `false`, meaning `options.updateCache` updates the cache in a
 lasting way.

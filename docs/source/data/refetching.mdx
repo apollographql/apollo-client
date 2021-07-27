@@ -65,9 +65,11 @@ An array of `ObservableQuery` objects that were refetched.
 
 <td>
 
-An array of results that were either returned by `onQueryUpdated`, or provided by default in the absence of `onQueryUpdated`, including pending promises. If `onQueryUpdated` returns `false` for a given query, no result is provided for that query.
+An array of results that were either returned by `onQueryUpdated`, or provided by default in the absence of `onQueryUpdated`, including pending promises.
 
-If `onQueryUpdated` returns `true`, the resulting `Promise<ApolloQueryResult<any>>`is included in the `results` array instead of `true`.
+If `onQueryUpdated` returns `false` for a given query, no result is provided for that query.
+
+If `onQueryUpdated` returns `true`, the resulting `Promise<ApolloQueryResult<any>>` is included in the `results` array instead of `true`.
 
 </td>
 </tr>
@@ -284,13 +286,13 @@ In the future, just as additional input options may be added to the `client.refe
 
 If you discover that some specific additional `client.refetchQueries` input options or result properties would be useful, please feel free to [open an issue](https://github.com/apollographql/apollo-feature-requests/issues) or [start a discussion](https://github.com/apollographql/apollo-client/discussions) explaining your use case(s).
 
-### Corresponding mutate function options
+### Corresponding `client.mutate` options
 
-For refetching after a mutation, mutate functions support [options](./mutations/#result) similar to `client.refetchQueries`, which you should use instead of `client.refetchQueries`, because it's important for refetching logic to happen at specific times during the mutation process.
+For refetching after a mutation, `client.mutate` supports [options](./mutations/#options) similar to `client.refetchQueries`, which you should use instead of `client.refetchQueries`, because it's important for refetching logic to happen at specific times during the mutation process.
 
-For historical reasons, mutate function options have slightly different names from the new `client.refetchQueries` options, but their internal implementation is substantially the same, so you can translate between them using the following table:
+For historical reasons, `client.mutate` options have slightly different names from the new `client.refetchQueries` options, but their internal implementation is substantially the same, so you can translate between them using the following table:
 
-| Mutate Function | | `refetchQueries` |
+| `client.mutate(options)` | | `client.refetchQueries(options)` |
 | - | - | - |
 | [`options.refetchQueries`](./mutations/#refetching-queries) | ⇔ | `options.include` |
 | [`options.update`](./mutations/#the-update-function) | ⇔ | `options.updateCache` |

@@ -47,7 +47,7 @@ export class RenderPromises {
   // Get's the cached observable that matches the SSR Query instances query and variables.
   public getSSRObservable<TData, TVariables>(
     props: QueryDataOptions<TData, TVariables>
-  ) {
+  ): ObservableQuery<any, TVariables> | null {
     return this.lookupQueryInfo(props).observable;
   }
 

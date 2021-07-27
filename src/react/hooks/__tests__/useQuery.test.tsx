@@ -2606,114 +2606,97 @@ describe('useQuery Hook', () => {
           switch (operation.operationName) {
             case "A":
               observer.next({ data: aData });
+              observer.complete();
               break;
             case "B":
-              observer.next({ data: bData });
+              setTimeout(() => {
+                observer.next({ data: bData });
+                observer.complete();
+              }, 10);
               break;
           }
-          observer.complete();
         })),
       });
     }
 
-    function check(
+    async function check(
       aFetchPolicy: WatchQueryFetchPolicy,
       bFetchPolicy: WatchQueryFetchPolicy,
     ) {
-      return (
-        resolve: (result: any) => any,
-        reject: (reason: any) => any,
-      ) => {
-        let renderCount = 0;
+      const client = makeClient();
+      const { result, waitForNextUpdate } = renderHook(
+        () => ({
+          a: useQuery(aQuery, { fetchPolicy: aFetchPolicy }),
+          b: useQuery(bQuery, { fetchPolicy: bFetchPolicy }),
+        }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        },
+      );
 
-        function App() {
-          const a = useQuery(aQuery, {
-            fetchPolicy: aFetchPolicy,
-          });
+      expect(result.current.a.loading).toBe(true);
+      expect(result.current.b.loading).toBe(true);
+      expect(result.current.a.data).toBe(undefined);
+      expect(result.current.b.data).toBe(undefined);
 
-          const b = useQuery(bQuery, {
-            fetchPolicy: bFetchPolicy,
-          });
+      await waitForNextUpdate();
+      expect(result.current.a.loading).toBe(false);
+      expect(result.current.b.loading).toBe(true);
+      expect(result.current.a.data).toEqual(aData);
+      expect(result.current.b.data).toBe(undefined);
 
-          switch (++renderCount) {
-            case 1:
-              expect(a.loading).toBe(true);
-              expect(b.loading).toBe(true);
-              expect(a.data).toBeUndefined();
-              expect(b.data).toBeUndefined();
-              break;
-            case 2:
-              expect(a.loading).toBe(false);
-              expect(b.loading).toBe(true);
-              expect(a.data).toEqual(aData);
-              expect(b.data).toBeUndefined();
-              break;
-            case 3:
-              expect(a.loading).toBe(false);
-              expect(b.loading).toBe(false);
-              expect(a.data).toEqual(aData);
-              expect(b.data).toEqual(bData);
-              break;
-            default:
-              reject("too many renders: " + renderCount);
-          }
+      await waitForNextUpdate();
 
-          return null;
-        }
-
-        render(
-          <ApolloProvider client={makeClient()}>
-            <App/>
-          </ApolloProvider>
-        );
-
-        return wait(() => {
-          expect(renderCount).toBe(3);
-        }).then(resolve, reject);
-      };
+      expect(result.current.a.loading).toBe(false);
+      expect(result.current.b.loading).toBe(false);
+      expect(result.current.a.data).toEqual(aData);
+      expect(result.current.b.data).toEqual(bData);
+      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
     }
 
-    itAsync("cache-first for both", check(
+    it("cache-first for both", () => check(
       "cache-first",
       "cache-first",
     ));
 
-    itAsync("cache-first first, cache-and-network second", check(
+    it("cache-first first, cache-and-network second", () => check(
       "cache-first",
       "cache-and-network",
     ));
 
-    itAsync("cache-first first, network-only second", check(
+    it("cache-first first, network-only second", () => check(
       "cache-first",
       "network-only",
     ));
 
-    itAsync("cache-and-network for both", check(
+    it("cache-and-network for both", () => check(
       "cache-and-network",
       "cache-and-network",
     ));
 
-    itAsync("cache-and-network first, cache-first second", check(
+    it("cache-and-network first, cache-first second", () => check(
       "cache-and-network",
       "cache-first",
     ));
 
-    itAsync("cache-and-network first, network-only second", check(
+    it("cache-and-network first, network-only second", () => check(
       "cache-and-network",
       "network-only",
     ));
 
-    itAsync("network-only for both", check(
+    it("network-only for both", () => check(
       "network-only",
       "network-only",
     ));
 
-    itAsync("network-only first, cache-first second", check(
+    it("network-only first, cache-first second", () => check(
       "network-only",
       "cache-first",
     ));
 
-    itAsync("network-only first, cache-and-network second", check(
+    it("network-only first, cache-and-network second", () => check(
       "network-only",
       "cache-and-network",
     ));

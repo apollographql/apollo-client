@@ -1,12 +1,12 @@
 import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
-import { print } from 'graphql';
 
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
 import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
+import { print } from '../print';
 import { ClientParseError } from '../serializeFetchParameter';
 import { ServerParseError } from '../parseAndCheckHttpResponse';
 import { ServerError } from '../../..';
@@ -117,7 +117,7 @@ describe('HttpLink', () => {
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
-            '/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%22params%22%3A%22stub%22%7D&extensions=%7B%22myExtension%22%3A%22foo%22%7D',
+            '/data?query=query%20SampleQuery%7Bstub%7Bid%7D%7D&operationName=SampleQuery&variables=%7B%22params%22%3A%22stub%22%7D&extensions=%7B%22myExtension%22%3A%22foo%22%7D',
           );
         }),
         error: error => done.fail(error),
@@ -139,7 +139,7 @@ describe('HttpLink', () => {
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
-            '/data?foo=bar&query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%7D',
+            '/data?foo=bar&query=query%20SampleQuery%7Bstub%7Bid%7D%7D&operationName=SampleQuery&variables=%7B%7D',
           );
         }),
         error: error => done.fail(error),
@@ -165,7 +165,7 @@ describe('HttpLink', () => {
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
-            '/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%7D',
+            '/data?query=query%20SampleQuery%7Bstub%7Bid%7D%7D&operationName=SampleQuery&variables=%7B%7D',
           );
         }),
       );
@@ -188,7 +188,7 @@ describe('HttpLink', () => {
           expect(body).toBeUndefined();
           expect(method).toBe('GET');
           expect(uri).toBe(
-            '/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D%0A&operationName=SampleQuery&variables=%7B%7D',
+            '/data?query=query%20SampleQuery%7Bstub%7Bid%7D%7D&operationName=SampleQuery&variables=%7B%7D',
           );
         }),
       );

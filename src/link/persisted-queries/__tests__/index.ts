@@ -1,12 +1,12 @@
 import gql from 'graphql-tag';
 import { sha256 } from 'crypto-hash';
-import { print } from 'graphql';
 import { times } from 'lodash';
 import fetch from 'jest-fetch-mock';
 
 import { ApolloLink, execute } from '../../core';
 import { Observable } from '../../../utilities';
 import { createHttpLink } from '../../http/createHttpLink';
+import { print } from '../../http'
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';
 

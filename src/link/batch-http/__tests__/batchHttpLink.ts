@@ -1,10 +1,10 @@
 import fetchMock from 'fetch-mock';
 import gql from 'graphql-tag';
-import { print } from 'graphql';
 
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
 import { Observable } from '../../../utilities/observables/Observable';
+import { print } from '../../http'
 import { BatchHttpLink } from '../batchHttpLink';
 
 const sampleQuery = gql`

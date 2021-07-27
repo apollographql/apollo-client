@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import gql from 'graphql-tag';
-import { print } from 'graphql';
 import { sha256 } from 'crypto-hash';
 import fetch from 'jest-fetch-mock';
 
@@ -9,6 +8,7 @@ import { ApolloProvider } from '../../../react/context';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloClient } from '../../../core/ApolloClient';
 import { createHttpLink } from '../../http/createHttpLink';
+import { print } from '../../http';
 import { graphql } from '../../../react/hoc/graphql';
 import { getDataFromTree } from '../../../react/ssr/getDataFromTree';
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';

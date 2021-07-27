@@ -1,4 +1,3 @@
-import { print } from 'graphql';
 import {
   DocumentNode,
   ExecutionResult,
@@ -7,6 +6,7 @@ import {
 import { invariant } from 'ts-invariant';
 
 import { ApolloLink, Operation } from '../core';
+import { print } from '../http'
 import { Observable, Observer, compact } from '../../utilities';
 
 export const VERSION = 1;

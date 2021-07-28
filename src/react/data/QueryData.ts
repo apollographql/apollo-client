@@ -495,14 +495,14 @@ export class QueryData<TData, TVariables> extends OperationData<
   private obsFetchMore = (
     fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
       FetchMoreOptions<TData, TVariables>
-  ) => this.currentObservable!.fetchMore(fetchMoreOptions);
+  ) => this.currentObservable?.fetchMore(fetchMoreOptions);
 
   private obsUpdateQuery = <TVars = TVariables>(
     mapFn: (
       previousQueryResult: TData,
       options: UpdateQueryOptions<TVars>
     ) => TData
-  ) => this.currentObservable!.updateQuery(mapFn);
+  ) => this.currentObservable?.updateQuery(mapFn);
 
   private obsStartPolling = (pollInterval: number) => {
     this.currentObservable?.startPolling(pollInterval);
@@ -521,7 +521,7 @@ export class QueryData<TData, TVariables> extends OperationData<
       TSubscriptionVariables,
       TSubscriptionData
     >
-  ) => this.currentObservable!.subscribeToMore(options);
+  ) => this.currentObservable?.subscribeToMore(options);
 
   private observableQueryFields() {
     return {

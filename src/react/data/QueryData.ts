@@ -502,7 +502,7 @@ export class QueryData<TData, TVariables> extends OperationData<
       previousQueryResult: TData,
       options: UpdateQueryOptions<TVars>
     ) => TData
-  ) => this.currentObservable!.updateQuery(mapFn);
+  ) => this.currentObservable?.updateQuery(mapFn);
 
   private obsStartPolling = (pollInterval: number) => {
     this.currentObservable?.startPolling(pollInterval);

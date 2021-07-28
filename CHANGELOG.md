@@ -37,7 +37,7 @@
 - The `FetchMoreQueryOptions` type now takes two instead of three type parameters (`<TVariables, TData>`), thanks to using `Partial<TVariables>` instead of `K extends typeof TVariables` and `Pick<TVariables, K>`. <br/>
   [@ArnaudBarre](https://github.com/ArnaudBarre) in [#7476](https://github.com/apollographql/apollo-client/pull/7476)
 
-- Pass `variables` and `context` to a mutation's `update` function <br/>
+- Pass `variables` and `context` to a mutation's `update` function. **Note:** The type of the `update` function is now named `MutationUpdaterFunction` rather than `MutationUpdaterFn`, since the older type was [broken beyond repair](https://github.com/apollographql/apollo-client/issues/8506#issuecomment-881706613). If you are using `MutationUpdaterFn` in your own code, please use `MutationUpdaterFunction` instead. <br/>
   [@jcreighton](https://github.com/jcreighton) in [#7902](https://github.com/apollographql/apollo-client/pull/7902)
 
 - A `resultCacheMaxSize` option may be passed to the `InMemoryCache` constructor to limit the number of result objects that will be retained in memory (to speed up repeated reads), and calling `cache.reset()` now releases all such memory. <br/>

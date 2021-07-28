@@ -158,6 +158,15 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
 
+// @deprecated Use MutationUpdaterFunction instead.
+export type MutationUpdaterFn<T = { [key: string]: any }> = (
+  // The MutationUpdaterFn type is broken because it mistakenly uses the same
+  // type parameter T for both the cache and the mutationResult. Do not use this
+  // type unless you absolutely need it for backwards compatibility.
+  cache: ApolloCache<T>,
+  mutationResult: FetchResult<T>,
+) => void;
+
 export type MutationUpdaterFunction<
   TData,
   TVariables,

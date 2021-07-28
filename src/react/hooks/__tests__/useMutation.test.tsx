@@ -384,10 +384,9 @@ describe('useMutation Hook', () => {
       }
     `;
 
-    itAsync('should be removed by default after the mutation', (resolve, reject) => {
+    it('should be removed by default after the mutation', async () => {
       let timeReadCount = 0;
       let timeMergeCount = 0;
-
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({
@@ -411,111 +410,97 @@ describe('useMutation Hook', () => {
         }),
       });
 
-      let renderCount = 0;
-      function Component() {
-        // This test differs from the following test primarily by *not* passing
-        // keepRootFields: true in the useMutation options.
-        const [mutate, result] = useMutation(mutation);
+      const { result, waitForNextUpdate } = renderHook(
+        () => useMutation(mutation),
+        { wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        )},
+      );
 
-        switch (++renderCount) {
-          case 1: {
-            expect(result.loading).toBe(false);
-            expect(result.called).toBe(false);
-            expect(result.data).toBeUndefined();
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].called).toBe(false);
+      expect(result.current[1].data).toBe(undefined);
+      const mutate = result.current[0];
 
-            mutate({
-              update(cache, {
-                data: {
-                  doSomething: {
-                    __typename,
-                    time,
-                  },
-                },
-              }) {
-                expect(__typename).toBe("MutationPayload");
-                expect(time).toBeInstanceOf(Date);
-                expect(time.getTime()).toBe(startTime);
-                expect(timeReadCount).toBe(1);
-                expect(timeMergeCount).toBe(1);
-                // The contents of the ROOT_MUTATION object exist only briefly,
-                // for the duration of the mutation update, and are removed
-                // after the mutation write is finished.
-                expect(cache.extract()).toEqual({
-                  ROOT_MUTATION: {
-                    __typename: "Mutation",
-                    doSomething: {
-                      __typename: "MutationPayload",
-                      time: startTime,
-                    },
-                  },
-                });
-              },
-            }).then(({
-              data: {
-                doSomething: {
-                  __typename,
-                  time,
-                },
-              },
-            }) => {
-              expect(__typename).toBe("MutationPayload");
-              expect(time).toBeInstanceOf(Date);
-              expect(time.getTime()).toBe(startTime);
-              expect(timeReadCount).toBe(1);
-              expect(timeMergeCount).toBe(1);
-              // The contents of the ROOT_MUTATION object exist only briefly,
-              // for the duration of the mutation update, and are removed after
-              // the mutation write is finished.
-              expect(client.cache.extract()).toEqual({
-                ROOT_MUTATION: {
-                  __typename: "Mutation",
-                },
-              });
-            }).catch(reject);
-
-            break;
-          }
-          case 2: {
-            expect(result.loading).toBe(true);
-            expect(result.called).toBe(true);
-            expect(result.data).toBeUndefined();
-            break;
-          }
-          case 3: {
-            expect(result.loading).toBe(false);
-            expect(result.called).toBe(true);
-            const {
+      let mutationResult: any
+      act(() => {
+        mutationResult = mutate({
+          update(cache, {
+            data: {
               doSomething: {
                 __typename,
                 time,
               },
-            } = result.data;
+            },
+          }) {
             expect(__typename).toBe("MutationPayload");
             expect(time).toBeInstanceOf(Date);
             expect(time.getTime()).toBe(startTime);
-            break;
-          }
-          default:
-            console.log(result);
-            reject("too many renders");
-            break;
-        }
+            expect(timeReadCount).toBe(1);
+            expect(timeMergeCount).toBe(1);
+            // The contents of the ROOT_MUTATION object exist only briefly,
+            // for the duration of the mutation update, and are removed
+            // after the mutation write is finished.
+            expect(cache.extract()).toEqual({
+              ROOT_MUTATION: {
+                __typename: "Mutation",
+                doSomething: {
+                  __typename: "MutationPayload",
+                  time: startTime,
+                },
+              },
+            });
+          },
+        }).then(({
+          data: {
+            doSomething: {
+              __typename,
+              time,
+            },
+          },
+        }) => {
+          expect(__typename).toBe("MutationPayload");
+          expect(time).toBeInstanceOf(Date);
+          expect(time.getTime()).toBe(startTime);
+          expect(timeReadCount).toBe(1);
+          expect(timeMergeCount).toBe(1);
+          // The contents of the ROOT_MUTATION object exist only briefly,
+          // for the duration of the mutation update, and are removed after
+          // the mutation write is finished.
+          expect(client.cache.extract()).toEqual({
+            ROOT_MUTATION: {
+              __typename: "Mutation",
+            },
+          });
+        });
+        mutationResult.catch(() => {});
+      });
 
-        return null;
-      }
+      expect(result.current[1].loading).toBe(true);
+      expect(result.current[1].called).toBe(true);
+      expect(result.current[1].data).toBe(undefined);
 
-      render(
-        <ApolloProvider client={client}>
-          <Component />
-        </ApolloProvider>
-      );
+      await waitForNextUpdate();
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].called).toBe(true);
+      expect(result.current[1].data).toBeDefined();
 
-      return wait(() => {
-        expect(renderCount).toBe(3);
-      }).then(resolve, reject);
+      const {
+        doSomething: {
+          __typename,
+          time,
+        },
+      } = result.current[1].data;
+      expect(__typename).toBe('MutationPayload');
+      expect(time).toBeInstanceOf(Date);
+      expect(time.getTime()).toBe(startTime);
+
+      await expect(mutationResult).resolves.toBe(undefined);
     });
 
-    itAsync('can be preserved by passing keepRootFields: true', (resolve, reject) => {
+    it('can be preserved by passing keepRootFields: true', async () => {
       let timeReadCount = 0;
       let timeMergeCount = 0;
 
@@ -542,117 +527,100 @@ describe('useMutation Hook', () => {
         }),
       });
 
-      let renderCount = 0;
-      function Component() {
-        const [mutate, result] = useMutation(mutation, {
-          // This test differs from the previous test primarily by passing
-          // keepRootFields:true in the useMutation options.
+      const { result, waitForNextUpdate } = renderHook(
+        () => useMutation(mutation, {
           keepRootFields: true,
-        });
+        }),
+        { wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        )},
+      );
 
-        switch (++renderCount) {
-          case 1: {
-            expect(result.loading).toBe(false);
-            expect(result.called).toBe(false);
-            expect(result.data).toBeUndefined();
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].called).toBe(false);
+      expect(result.current[1].data).toBe(undefined);
+      const mutate = result.current[0];
 
-            mutate({
-              update(cache, {
-                data: {
-                  doSomething: {
-                    __typename,
-                    time,
-                  },
-                },
-              }) {
-                expect(__typename).toBe("MutationPayload");
-                expect(time).toBeInstanceOf(Date);
-                expect(time.getTime()).toBe(startTime);
-                expect(timeReadCount).toBe(1);
-                expect(timeMergeCount).toBe(1);
-                expect(cache.extract()).toEqual({
-                  ROOT_MUTATION: {
-                    __typename: "Mutation",
-                    doSomething: {
-                      __typename: "MutationPayload",
-                      time: startTime,
-                    },
-                  },
-                });
-              },
-            }).then(({
-              data: {
-                doSomething: {
-                  __typename,
-                  time,
-                },
-              },
-            }) => {
-              expect(__typename).toBe("MutationPayload");
-              expect(time).toBeInstanceOf(Date);
-              expect(time.getTime()).toBe(startTime);
-              expect(timeReadCount).toBe(1);
-              expect(timeMergeCount).toBe(1);
-
-              expect(client.cache.extract()).toEqual({
-                ROOT_MUTATION: {
-                  __typename: "Mutation",
-                  doSomething: {
-                    __typename: "MutationPayload",
-                    time: startTime,
-                  },
-                },
-              });
-            }).catch(reject);
-
-            break;
-          }
-          case 2: {
-            expect(result.loading).toBe(true);
-            expect(result.called).toBe(true);
-            expect(result.data).toBeUndefined();
-            break;
-          }
-          case 3: {
-            expect(result.loading).toBe(false);
-            expect(result.called).toBe(true);
-            const {
+      let mutationResult: any
+      act(() => {
+        mutationResult = mutate({
+          update(cache, {
+            data: {
               doSomething: {
                 __typename,
                 time,
               },
-            } = result.data;
+            },
+          }) {
             expect(__typename).toBe("MutationPayload");
             expect(time).toBeInstanceOf(Date);
             expect(time.getTime()).toBe(startTime);
-            break;
-          }
-          default:
-            console.log(result);
-            reject("too many renders");
-            break;
-        }
+            expect(timeReadCount).toBe(1);
+            expect(timeMergeCount).toBe(1);
+            expect(cache.extract()).toEqual({
+              ROOT_MUTATION: {
+                __typename: "Mutation",
+                doSomething: {
+                  __typename: "MutationPayload",
+                  time: startTime,
+                },
+              },
+            });
+          },
+        }).then(({
+          data: {
+            doSomething: {
+              __typename,
+              time,
+            },
+          },
+        }) => {
+          expect(__typename).toBe("MutationPayload");
+          expect(time).toBeInstanceOf(Date);
+          expect(time.getTime()).toBe(startTime);
+          expect(timeReadCount).toBe(1);
+          expect(timeMergeCount).toBe(1);
+          expect(client.cache.extract()).toEqual({
+            ROOT_MUTATION: {
+              __typename: "Mutation",
+              doSomething: {
+                __typename: "MutationPayload",
+                time: startTime,
+              },
+            },
+          });
+        });
+      });
 
-        return null;
-      }
+      mutationResult.catch(() => {});
+      expect(result.current[1].loading).toBe(true);
+      expect(result.current[1].called).toBe(true);
+      expect(result.current[1].data).toBe(undefined);
 
-      render(
-        <ApolloProvider client={client}>
-          <Component />
-        </ApolloProvider>
-      );
+      await waitForNextUpdate();
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].called).toBe(true);
+      expect(result.current[1].data).toBeDefined();
 
-      return wait(() => {
-        expect(renderCount).toBe(3);
-      }).then(resolve, reject);
+      const {
+        doSomething: {
+          __typename,
+          time,
+        },
+      } = result.current[1].data;
+      expect(__typename).toBe('MutationPayload');
+      expect(time).toBeInstanceOf(Date);
+      expect(time.getTime()).toBe(startTime);
+
+      await expect(mutationResult).resolves.toBe(undefined);
     });
   });
 
   describe('Update function', () => {
-    itAsync('should be called with the provided variables', (resolve, reject) => {
-      const variables = {
-        description: 'Get milk!'
-      };
+    it('should be called with the provided variables', async () => {
+      const variables = { description: 'Get milk!' };
 
       const mocks = [
         {
@@ -689,9 +657,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      return wait(() => {
-        expect(variablesMatched).toBe(true);
-      }).then(resolve, reject);
+      await wait(() => expect(variablesMatched).toBe(true));
     });
 
     itAsync('should be called with the provided context', (resolve, reject) => {
@@ -929,6 +895,56 @@ describe('useMutation Hook', () => {
   });
 
   describe('refetching queries', () => {
+    const GET_TODOS_QUERY = gql`
+      query getTodos {
+        todos {
+          id
+          description
+          priority
+        }
+      }
+    `;
+
+    const GET_TODOS_RESULT_1 = {
+      todos: [
+        {
+          id: 2,
+          description: 'Walk the dog',
+          priority: 'Medium',
+          __typename: 'Todo'
+        },
+        {
+          id: 3,
+          description: 'Call mom',
+          priority: 'Low',
+          __typename: 'Todo'
+        },
+      ],
+    };
+
+    const GET_TODOS_RESULT_2 = {
+      todos: [
+        {
+          id: 1,
+          description: 'Get milk!',
+          priority: 'High',
+          __typename: 'Todo'
+        },
+        {
+          id: 2,
+          description: 'Walk the dog',
+          priority: 'Medium',
+          __typename: 'Todo'
+        },
+        {
+          id: 3,
+          description: 'Call mom',
+          priority: 'Low',
+          __typename: 'Todo'
+        },
+      ],
+    };
+
     itAsync('can pass onQueryUpdated to useMutation', (resolve, reject) => {
       interface TData {
         todoCount: number;
@@ -1091,56 +1107,6 @@ describe('useMutation Hook', () => {
         });
       })).then(resolve, reject);
     });
-
-    const GET_TODOS_QUERY = gql`
-      query getTodos {
-        todos {
-          id
-          description
-          priority
-        }
-      }
-    `;
-
-    const GET_TODOS_RESULT_1 = {
-      todos: [
-        {
-          id: 2,
-          description: 'Walk the dog',
-          priority: 'Medium',
-          __typename: 'Todo'
-        },
-        {
-          id: 3,
-          description: 'Call mom',
-          priority: 'Low',
-          __typename: 'Todo'
-        },
-      ],
-    };
-
-    const GET_TODOS_RESULT_2 = {
-      todos: [
-        {
-          id: 1,
-          description: 'Get milk!',
-          priority: 'High',
-          __typename: 'Todo'
-        },
-        {
-          id: 2,
-          description: 'Walk the dog',
-          priority: 'Medium',
-          __typename: 'Todo'
-        },
-        {
-          id: 3,
-          description: 'Call mom',
-          priority: 'Low',
-          __typename: 'Todo'
-        },
-      ],
-    };
 
     itAsync('refetchQueries with operation names should update cache', async (resolve, reject) => {
       const variables = { description: 'Get milk!' };

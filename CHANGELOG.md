@@ -1,4 +1,4 @@
-## Apollo Client 3.4.0 (not yet released)
+## Apollo Client 3.4.0
 
 ### New documentation
 

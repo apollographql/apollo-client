@@ -84,6 +84,8 @@
 - The [`nextFetchPolicy`](https://github.com/apollographql/apollo-client/pull/6893) option for `client.watchQuery` and `useQuery` will no longer be removed from the `options` object after it has been applied, and instead will continue to be applied any time `options.fetchPolicy` is reset to another value, until/unless the `options.nextFetchPolicy` property is removed from `options`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8465](https://github.com/apollographql/apollo-client/pull/8465)
 
+- The `fetchMore`, `subscribeToMore`, and `updateQuery` functions returned from the `useQuery` hook may now return undefined in edge cases where the functions are called when the component is unmounted <br/> [@noghartt](https://github.com/noghartt) in [#7980](https://github.com/apollographql/apollo-client/pull/7980).
+
 ### Bug fixes
 
 - In Apollo Client 2.x, a `refetch` operation would always replace existing data in the cache. With the introduction of field policy `merge` functions in Apollo Client 3, existing field values could be inappropriately combined with incoming field values by a custom `merge` function that does not realize a `refetch` has happened.
@@ -122,6 +124,8 @@
 
 - Make `readField` default to reading from current object only when the `from` option/argument is actually omitted, not when `from` is passed to `readField` with an undefined value. A warning will be printed when this situation occurs. <br/>
   [@benjamn](https://github.com/benjamn) in [#8508](https://github.com/apollographql/apollo-client/pull/8508)
+
+- The `fetchMore`, `subscribeToMore`, and `updateQuery` functions no longer throw `undefined` errors <br/> [@noghartt](https://github.com/noghartt) in [#7980](https://github.com/apollographql/apollo-client/pull/7980).
 
 ## Apollo Client 3.3.21
 

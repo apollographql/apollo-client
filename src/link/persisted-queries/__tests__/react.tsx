@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom/server';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom/server';
 import gql from 'graphql-tag';
 import { sha256 } from 'crypto-hash';
 import fetch from 'jest-fetch-mock';

@@ -1,11 +1,9 @@
 ---
-title: Configuring the cache
+title: Configuring the Apollo Client cache
 sidebar_title: Configuration
 ---
 
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
-
-Apollo Client stores the results of its GraphQL queries in a normalized, in-memory cache. This enables your client to respond to future queries for the same data without sending unnecessary network requests.
 
 This article describes cache setup and configuration. To learn how to interact with cached data, see [Reading and writing data to the cache](./cache-interaction).
 
@@ -41,7 +39,7 @@ Although the cache's default behavior is suitable for a wide variety of applicat
 
 To customize cache behavior, provide an `options` object to the `InMemoryCache` constructor. This object supports the following fields:
 
-<table class="field-table">
+<table class="field-table api-ref">
   <thead>
     <tr>
       <th>Name /<br/>Type</th>
@@ -60,7 +58,7 @@ To customize cache behavior, provide an `options` object to the `InMemoryCache` 
 </td>
 <td>
 
-If `true`, the cache automatically adds `__typename` fields to all outgoing queries, removing the need to add them manually.
+If `true`, the cache automatically adds `__typename` fields to all objects in outgoing queries, removing the need to add them manually.
 
 The default value is `true`.
 
@@ -77,7 +75,7 @@ The default value is `true`.
 </td>
 <td>
 
-If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This makes it easier to detect changes to a query's result.
+If `true`, the cache returns an identical (`===`) response object for every execution of the same query, as long as the underlying data remains unchanged. This helps you detect changes to a query's result.
 
 The default value is `true`.
 
@@ -139,52 +137,25 @@ Deprecated in favor of the `keyFields` option of the [`TypePolicy` object](#type
 </tbody>
 </table>
 
+## Customizing cache IDs
 
-## Data normalization
+You can customize how the `InMemoryCache` generates cache IDs for individual types in your schema ([see the default behavior](./overview/#2-generate-cache-ids)). This is helpful especially if a type uses a field (or fields!) _besides_ `id` or `_id` as its unique identifier. 
 
-The `InMemoryCache` **normalizes** query response objects before it saves them to its internal data store. Normalization involves the following steps:
-
-1. The cache [generates a unique ID](#generating-unique-identifiers) for every identifiable object included in the response.
-2. The cache stores the objects by ID in a flat lookup table.
-3. Whenever an incoming object is stored with the same ID as an _existing_ object, the fields of those objects are _merged_.
-    * If the incoming object and the existing object share any fields, the incoming object _overwrites_ the cached values for those fields.
-    * Fields that appear in _only_ the existing object or _only_ the incoming object are preserved.
-
-Normalization constructs a partial copy of your data graph on your client, in a format that's optimized for reading and updating the graph as your application changes state.
-
-### Generating unique identifiers
-
->In Apollo Client 3 and later, the `InMemoryCache` never creates a fallback, "fake" identifier for an object when identifier generation fails or is disabled.
-
-#### Default identifier generation
-
-By default, the `InMemoryCache` generates a unique identifier for any object that includes a `__typename` field. To do so, it combines the object's `__typename` with its `id` or `_id` field (whichever is defined). These two values are separated by a colon (`:`).
-
-For example, an object with a `__typename` of `Task` and an `id` of `14` is assigned a default identifier of `Task:14`.
-
-#### Customizing identifier generation by type
-
-If one of your types defines its primary key with a field _besides_ `id` or `_id`, you can customize how the `InMemoryCache` generates unique identifiers for that type. To do so, you define `TypePolicy` for the type. You specify all of your cache's `typePolicies` in [the `options` object you provide to the `InMemoryCache` constructor](#configuration-options).
+To accomplish this, you define a `TypePolicy` for each type you want to customize. You specify all of your cache's `typePolicies` in [the `options` object you provide to the `InMemoryCache` constructor](#configuration-options).
 
 Include a `keyFields` field in relevant `TypePolicy` objects, like so:
 
 ```ts
 const cache = new InMemoryCache({
   typePolicies: {
-    AllProducts: {
-      // Singleton types that have no identifying field can use an empty
-      // array for their keyFields.
-      keyFields: [],
-    },
     Product: {
-      // In most inventory management systems, a single UPC code uniquely
-      // identifies any product.
+      // In an inventory management system, products might be identified
+      // by their UPC.
       keyFields: ["upc"],
     },
     Person: {
-      // In some user account systems, names or emails alone do not have to
-      // be unique, but the combination of a person's name and email is
-      // uniquely identifying.
+      // In a user account system, the combination of a person's name AND email
+      // address might uniquely identify them.
       keyFields: ["name", "email"],
     },
     Book: {
@@ -192,31 +163,38 @@ const cache = new InMemoryCache({
       // include those nested keyFields by using a nested array of strings:
       keyFields: ["title", "author", ["name"]],
     },
+    AllProducts: {
+      // Singleton types that have no identifying field can use an empty
+      // array for their keyFields.
+      keyFields: [],
+    },
   },
 });
 ```
 
-This example shows three `typePolicies`: one for a `Product` type, one for a `Person` type, and one for a `Book` type. Each `TypePolicy`'s `keyFields` array defines which fields on the type _together_ represent the type's primary key.
+This example shows a variety of `typePolicies` with different `keyFields`:
 
-The `Book` type above uses a _subfield_ as part of its primary key. The `["name"]` item indicates that the `name` field of the _previous_ field in the array (`author`) is part of the primary key. The `Book`'s `author` field must be an object that includes a `name` field for this to be valid.
+* The `Product` type uses its `upc` field as its identifying field.
+* The `Person` type uses the combination of both its `name` _and_ `email` fields.
+* The `Book` type includes a _subfield_ as part of its cache ID.
+    * The `["name"]` item indicates that the `name` field of the _previous_ field in the array (`author`) is part of the cache ID. The `Book`'s `author` field must be an object that includes a `name` field for this to be valid.
+    * A valid cache ID for the `Book` type has the following structure:
+        ``` 
+        Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
+        ```
+* The `AllProducts` type illustrates a special strategy for a **singleton** type. If the cache will only ever contain one `AllProducts` object and that object has _no_ identifying fields, you can provide an empty array for its `keyFields`.
 
-In the example above, the resulting identifier string for a `Book` object has the following structure:
-
-```
-Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
-```
-
-An object's primary key fields are always listed in the same order to ensure uniqueness.
+If an object has multiple `keyFields`, the cache ID always lists those fields in the same order to ensure uniqueness.
 
 Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias).
 
-#### Calculating an object's identifier
+### Calculating an object's cache ID
 
-If you define a custom identifier that uses multiple fields, it can be challenging to calculate and provide that identifier to methods that require it (such as `cache.readFragment`).
+If you define a custom cache ID that uses multiple fields, it can be challenging to calculate and provide that ID to methods that require it (such as `cache.readFragment`).
 
-To help with this, you can use the `cache.identify` method to calculate the identifier for any normalized object you fetch from your cache. See [Obtaining an object's custom ID](./cache-interaction/#obtaining-an-objects-custom-id).
+To help with this, you can use the `cache.identify` method to calculate the cache ID for any normalized object you fetch from your cache. See [Obtaining an object's custom ID](./cache-interaction/#obtaining-an-objects-cache-id).
 
-#### Customizing identifier generation globally
+### Customizing identifier generation globally
 
 If you need to define a single fallback `keyFields` function that isn't specific to any particular `__typename`, you can use the `dataIdFromObject` function that was introduced in Apollo Client 2.x:
 
@@ -234,102 +212,23 @@ const cache = new InMemoryCache({
 });
 ```
 
-> The `dataIdFromObject` API is included in Apollo Client 3.0 to ease the transition from Apollo Client 2.x. The API might be removed in a future version of `@apollo/client`.
+> The `dataIdFromObject` API is included in Apollo Client 3 to ease the transition from Apollo Client 2.x. The API might be removed in a future version of `@apollo/client`.
 
-Notice that the above function still uses different logic to generate keys based on an object's `__typename`. In the above case, you might as well define `keyFields` arrays for the `Product` and `Person` types via `typePolicies`. Also, this code is sensitive to aliasing mistakes, it does nothing to protect against undefined `object` properties, and accidentally using different key fields at different times can cause inconsistencies in the cache.
+Notice that the above function still uses different logic to generate keys based on an object's `__typename`. In a case like this, you should almost always define `keyFields` arrays for the `Product` and `Person` types via `typePolicies`.
+
+This code also has the following drawbacks:
+
+* It's sensitive to aliasing mistakes.
+* It does nothing to protect against undefined `object` properties.
+* Accidentally using different key fields at different times can cause inconsistencies in the cache.
 
 ### Disabling normalization
 
-You can instruct the `InMemoryCache` _not_ to normalize objects of a certain type. This can be useful for metrics and other transient data that's identified by a timestamp and never receives updates.
+You can instruct the `InMemoryCache` _not_ to normalize objects of a particular type. This can be useful for metrics and other transient data that's identified by a timestamp and never receives updates.
 
-To disable normalization for a type, define a `TypePolicy` for the type (as shown in [Customizing identifier generation by type](#customizing-identifier-generation-by-type)) and set the policy's `keyFields` field to `false`.
+To disable normalization for a type, define a `TypePolicy` for the type (as shown in [Customizing cache IDs](#customizing-cache-ids)) and set the policy's `keyFields` field to `false`.
 
 Objects that are not normalized are instead embedded within their _parent_ object in the cache. You can't access these objects directly, but you can access them via their parent.
-
-## Visualizing the cache
-
-To help understand the structure of your cached data, we strongly recommend installing the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools).
-
-This browser extension includes an inspector that enables you to view all of the normalized objects contained in your cache:
-
-<img src="../img/cache-inspector.jpg" class="screenshot" alt="The Cache tab of the Apollo Client Devtools"></img>
-
-### Example
-
-Let's say we use Apollo Client to run the following query on the [SWAPI demo API](https://github.com/graphql/swapi-graphql):
-
-```graphql
-query {
-  allPeople(first:3) { # Return the first 3 items
-    people {
-      id
-      name
-      homeworld {
-        id
-        name
-      }
-    }
-  }
-}
-```
-
-This query returns the following result of three `Person` objects, each with a corresponding `homeworld` (a `Planet` object):
-
-<ExpansionPanel title="Click to expand">
-
-```json
-{
-  "data": {
-    "allPeople": {
-      "people": [
-        {
-          "__typename": "Person",
-          "id": "cGVvcGxlOjE=",
-          "name": "Luke Skywalker",
-          "homeworld": {
-            "__typename": "Planet",
-            "id": "cGxhbmV0czox",
-            "name": "Tatooine"
-          }
-        },
-        {
-          "__typename": "Person",
-          "id": "cGVvcGxlOjI=",
-          "name": "C-3PO",
-          "homeworld": {
-            "__typename": "Planet",
-            "id": "cGxhbmV0czox",
-            "name": "Tatooine"
-          }
-        },
-        {
-          "__typename": "Person",
-          "id": "cGVvcGxlOjM=",
-          "name": "R2-D2",
-          "homeworld": {
-            "__typename": "Planet",
-            "id": "cGxhbmV0czo4",
-            "name": "Naboo"
-          }
-        }
-      ]
-    }
-  }
-}
-```
-
-</ExpansionPanel>
-
-> Notice that each object in the result includes a `__typename` field, even though our query string _didn't_ include this field. That's because Apollo Client _automatically_ queries for every object's `__typename` field.
-
-After the result is cached, we can view the state of our cache in the Apollo Client Devtools:
-
-<img src="../img/cache-inspector.jpg" class="screenshot" alt="The Cache tab of the Apollo Client Devtools"></img>
-
-Our cache now contains five normalized objects (in addition to the `ROOT_QUERY` object): three `Person` objects and two `Planet` objects.
-
-**Why do we only have two `Planet` objects?** Because two of the three returned `Person` objects have the same `homeworld`. By [normalizing data](#data-normalization) like this, Apollo Client can cache a single copy of an object, and multiple _other_ objects can include _references_ to it (see the `__ref` field of the object in the screenshot above).
-
 
 ## `TypePolicy` fields
 
@@ -413,9 +312,9 @@ const equivalentResult = cache.readQuery({
 });
 ```
 
-The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use the same trick for the outermost selection set of every operation, but the `__typename` of the root query or mutation is almost always simply `"Query"` or `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
+The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use the same trick for the outermost selection set of every operation, but the `__typename` of the root query or mutation is almost always `"Query"` or `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
 
-Compared to the `__typename`s of entity objects like `Book`s or `Person`s, which are absolutely vital to proper identification and normalization, the `__typename` of the root query or mutation type is not nearly as useful or important, because those types are singletons with only one instance per client.
+Compared to the `__typename`s of entity objects like `Book` or `Person`, which are vital to proper identification and normalization, the `__typename` of the root query or mutation type is not nearly as useful or important, because those types are singletons with only one instance per client.
 
 ### The `fields` property
 

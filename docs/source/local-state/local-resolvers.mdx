@@ -5,7 +5,7 @@ description: Manage local data with GraphQL like resolvers
 
 > ⚠️ **DEPRECATION WARNING:** Local resolvers are still available in Apollo Client 3, but they are deprecated. We recommend using field policies instead, as described in [Local-only fields](./managing-state-with-field-policies/).
 >
-> Local resolver support will be removed in a future major Apollo Client release. See the [deprecation notice](#deprecation-notice) for details.
+> Local resolver support will be removed from the core of Apollo Client in a future major release, but it will be possible to achieving the functionality of local resolvers using an `ApolloLink`, as described in [this comment](https://github.com/apollographql/apollo-client/issues/8189#issuecomment-857199932).
 
 We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our client application.
 

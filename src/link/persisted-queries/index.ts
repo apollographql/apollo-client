@@ -6,7 +6,7 @@ import {
 import { invariant } from 'ts-invariant';
 
 import { ApolloLink, Operation } from '../core';
-import { print } from '../http'
+import { print } from '../http/print'
 import { Observable, Observer, compact } from '../../utilities';
 
 export const VERSION = 1;

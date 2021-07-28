@@ -18,4 +18,3 @@ export { selectURI } from './selectURI';
 export { createHttpLink } from './createHttpLink';
 export { HttpLink } from './HttpLink';
 export { rewriteURIForGET } from './rewriteURIForGET';
-export { print } from './print';

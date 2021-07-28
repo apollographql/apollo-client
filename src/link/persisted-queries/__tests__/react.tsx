@@ -8,7 +8,7 @@ import { ApolloProvider } from '../../../react/context';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
 import { ApolloClient } from '../../../core/ApolloClient';
 import { createHttpLink } from '../../http/createHttpLink';
-import { print } from '../../http';
+import { print } from '../../http/print';
 import { graphql } from '../../../react/hoc/graphql';
 import { getDataFromTree } from '../../../react/ssr/getDataFromTree';
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';

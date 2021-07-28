@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
 import { Observable } from '../../../utilities/observables/Observable';
-import { print } from '../../http'
+import { print } from '../../http/print'
 import { BatchHttpLink } from '../batchHttpLink';
 
 const sampleQuery = gql`

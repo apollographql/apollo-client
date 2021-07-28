@@ -6,7 +6,7 @@ import fetch from 'jest-fetch-mock';
 import { ApolloLink, execute } from '../../core';
 import { Observable } from '../../../utilities';
 import { createHttpLink } from '../../http/createHttpLink';
-import { print } from '../../http'
+import { print } from '../../http/print'
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';
 

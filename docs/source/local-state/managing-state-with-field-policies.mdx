@@ -97,6 +97,8 @@ You can use Apollo Client to query local state, regardless of how you _store_ th
 * [Reactive variables](#storing-local-state-in-reactive-variables)
 * [The Apollo Client cache itself](#storing-local-state-in-the-cache)
 
+> **Note:** Apollo Client >= 3 no longer recommends the [local resolver](./local-resolvers) approach of using `client.mutate` / `useMutation` combined with an `@client` mutation operation, to [update local state](/local-state/local-resolvers/#local-resolvers). If you want to update local state, we recommend using [`writeQuery`](/caching/cache-interaction/#writequery), [`writeFragment`](/caching/cache-interaction/#writefragment), or [reactive variables](/local-state/reactive-variables/).
+
 ### Storing local state in reactive variables
 
 Apollo Client [reactive variables](./reactive-variables) are great for representing local state:

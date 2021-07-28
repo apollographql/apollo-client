@@ -190,10 +190,8 @@ class QueryData<TData, TVariables> {
       }
     }
 
-    // getExecuteSsrResult
     const { ssr } = this.options;
     const ssrDisabled = ssr === false;
-    const fetchDisabled = client.disableNetworkFetches;
     const ssrLoading = {
       ...this.observableQueryFields(),
       loading: true,
@@ -206,24 +204,12 @@ class QueryData<TData, TVariables> {
 
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    if (ssrDisabled && (this.ssrInitiated() || fetchDisabled)) {
+    if (ssrDisabled && (this.ssrInitiated() || client.disableNetworkFetches)) {
       // TODO(brian): Don’t assign this here.
       this.previous.result = ssrLoading;
       return ssrLoading;
     }
 
-    const result = this.getExecuteResult(client);
-
-    if (this.ssrInitiated() && result.loading && !skip) {
-      this.context.renderPromises!.addQueryPromise(this, () => null);
-    }
-
-    return result;
-  }
-
-  private getExecuteResult(
-    client: ApolloClient<object>,
-  ): QueryResult<TData, TVariables> {
     const result = this.observableQueryFields() as QueryResult<TData, TVariables>;
     const options = this.options;
 
@@ -238,7 +224,6 @@ class QueryData<TData, TVariables> {
     // changing this is breaking, so we'll have to wait until Apollo Client
     // 4.0 to address this.
     if (options.skip) {
-
       Object.assign(result, {
         data: undefined,
         error: undefined,
@@ -304,9 +289,6 @@ class QueryData<TData, TVariables> {
     this.setOptions(options);
     const previousResult = this.previous.result;
 
-    // TODO(brian): WHAT THE FUCK
-    this.previous.loading =
-      previousResult && previousResult.loading || false;
 
     // Ensure the returned result contains previousData as a separate
     // property, to give developers the flexibility of leveraging outdated
@@ -316,18 +298,23 @@ class QueryData<TData, TVariables> {
     result.previousData = previousResult &&
       (previousResult.data || previousResult.previousData);
 
-    // TODO(brian): WHY IS THIS ASSIGNED HERE
-    this.previous.result = result;
-
     // Any query errors that exist are now available in `result`, so we'll
     // remove the original errors from the `ObservableQuery` query store to
     // make sure they aren't re-displayed on subsequent (potentially error
     // free) requests/responses.
     this.currentObservable && this.currentObservable.resetQueryStoreErrors();
 
+    if (this.context.renderPromises && result.loading && !skip) {
+      this.context.renderPromises!.addQueryPromise(this, () => null);
+    }
+
+    // TODO(brian): Stop assigning this here!!!!
+    this.previous.loading =
+      previousResult && previousResult.loading || false;
+    this.previous.result = result;
+
     return result;
   }
-
 
   public afterExecute() {
     this.isMounted = true;
@@ -536,19 +523,19 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
     useAfterFastRefresh(forceUpdate);
   }
 
-  useEffect(() => () => {
-    queryData.cleanup();
-    // this effect can run multiple times during a fast-refresh so make sure
-    // we clean up the ref
-    queryDataRef.current = void 0;
-  }, []);
-
   useEffect(() => queryData.afterExecute(), [
     result.loading,
     result.networkStatus,
     result.error,
     result.data,
   ]);
+
+  useEffect(() => () => {
+    queryData.cleanup();
+    // this effect can run multiple times during a fast-refresh so make sure
+    // we clean up the ref
+    queryDataRef.current = void 0;
+  }, []);
 
   return result;
 }

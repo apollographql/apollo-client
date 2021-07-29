@@ -252,12 +252,12 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 
 ### `nextFetchPolicy`
 
-You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used whenever the query is refetched:
+You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used to determine how the query responds to future cache updates:
 
 ```js{3}
 const { loading, error, data } = useQuery(GET_DOGS, {
   fetchPolicy: "network-only",   // Used for first execution
-  nextFetchPolicy: "cache-first" // Used for all subsequent executions
+  nextFetchPolicy: "cache-first" // Used for subsequent executions
 });
 ```
 

@@ -1,7 +1,8 @@
 import React, { Fragment } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { render, wait, act } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
+import { render, wait } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import {
   ApolloClient,

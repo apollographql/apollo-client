@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { act, render, wait } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
+import { render, wait } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
@@ -110,7 +111,6 @@ describe('useMutation Hook', () => {
         )},
       );
 
-      // TODO: This misses the first update for some reason.
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
@@ -1108,7 +1108,7 @@ describe('useMutation Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result, waitForNextUpdate, waitForValueToChange } = renderHook(
         () => ({
           query: useQuery(GET_TODOS_QUERY),
           mutation: useMutation(CREATE_TODO_MUTATION),
@@ -1138,15 +1138,7 @@ describe('useMutation Hook', () => {
         });
       });
 
-      await waitForNextUpdate();
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(mocks[0].result.data);
-
-      await waitForNextUpdate();
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(mocks[0].result.data);
-
-      await waitForNextUpdate();
+      await waitForValueToChange(() => result.current.query.data);
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[2].result.data);
 

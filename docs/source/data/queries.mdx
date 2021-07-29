@@ -242,13 +242,26 @@ function DelayedQuery() {
 
 By default, the `useQuery` hook checks the Apollo Client cache to see if all the data you requested is already available locally. If all data _is_ available locally, `useQuery` returns that data and _doesn't_ query your GraphQL server. This `cache-first` policy is Apollo Client's default **fetch policy**.
 
-You can optionally specify a different fetch policy for a given query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
+You can specify a different fetch policy for a given query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
 
-```js
+```js{2}
 const { loading, error, data } = useQuery(GET_DOGS, {
-  fetchPolicy: "network-only"
+  fetchPolicy: "network-only" // Doesn't check cache before making a network request
 });
 ```
+
+### `nextFetchPolicy`
+
+You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used whenever the query is refetched:
+
+```js{3}
+const { loading, error, data } = useQuery(GET_DOGS, {
+  fetchPolicy: "network-only",   // Used for first execution
+  nextFetchPolicy: "cache-first" // Used for all subsequent executions
+});
+```
+
+For example, this is helpful if you want a query to always make an initial network request, but you're comfortable reading from the cache after that.
 
 ### Supported fetch policies
 

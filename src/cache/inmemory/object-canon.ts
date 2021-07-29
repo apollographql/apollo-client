@@ -200,6 +200,9 @@ type SortedKeysInfo = {
 // version of JSON.stringify, which automatically sorts object keys.
 export const canonicalStringify = Object.assign(function (value: any): string {
   if (isObjectOrArray(value)) {
+    if (stringifyCanon === void 0) {
+      resetCanonicalStringify();
+    }
     const canonical = stringifyCanon.admit(value);
     let json = stringifyCache.get(canonical);
     if (json === void 0) {
@@ -212,13 +215,14 @@ export const canonicalStringify = Object.assign(function (value: any): string {
   }
   return JSON.stringify(value);
 }, {
-  reset() {
-    stringifyCanon = new ObjectCanon;
-  },
+  reset: resetCanonicalStringify,
 });
 
 // Can be reset by calling canonicalStringify.reset().
-let stringifyCanon = new ObjectCanon;
+let stringifyCanon: ObjectCanon;
+let stringifyCache: WeakMap<object, string>;
 
-// Needs no resetting, thanks to weakness.
-const stringifyCache = new WeakMap<object, string>();
+function resetCanonicalStringify() {
+  stringifyCanon = new ObjectCanon;
+  stringifyCache = new (canUseWeakMap ? WeakMap : Map)();
+}

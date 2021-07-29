@@ -1,3 +1,10 @@
+## Apollo Client 3.4.1
+
+### Bug Fixes
+
+- Initialize `stringifyCanon` lazily, when `canonicalStringify` is first called, fixing `Uncaught ReferenceError: __DEV__ is not defined` errors due to usage of `__DEV__` before declaration. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8557](https://github.com/apollographql/apollo-client/pull/8557)
+
 ## Apollo Client 3.4.0
 
 ### New documentation

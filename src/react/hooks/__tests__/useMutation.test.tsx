@@ -945,7 +945,7 @@ describe('useMutation Hook', () => {
       ],
     };
 
-    itAsync('can pass onQueryUpdated to useMutation', (resolve, reject) => {
+    it('can pass onQueryUpdated to useMutation', async () => {
       interface TData {
         todoCount: number;
       }
@@ -986,7 +986,7 @@ describe('useMutation Hook', () => {
             variables,
           },
           result: { data: CREATE_TODO_RESULT },
-        }).setOnError(reject),
+        }),
       });
 
       // The goal of this test is to make sure onQueryUpdated gets called as
@@ -1000,115 +1000,83 @@ describe('useMutation Hook', () => {
       let resolveOnUpdate: (results: OnQueryUpdatedResults) => any;
       const onUpdatePromise = new Promise<OnQueryUpdatedResults>(resolve => {
         resolveOnUpdate = resolve;
-      });
-      let finishedReobserving = false;
-
-      let renderCount = 0;
-      function Component() {
-        const count = useQuery(countQuery);
-
-        const [createTodo, { loading, data }] =
-          useMutation(CREATE_TODO_MUTATION, {
-            optimisticResponse,
-
-            update(cache, mutationResult) {
-              const result = cache.readQuery({
-                query: countQuery,
-              });
-
-              cache.writeQuery({
-                query: countQuery,
-                data: {
-                  todoCount: (result ? result.todoCount : 0) + 1,
-                },
-              });
-            },
-          });
-
-        switch (++renderCount) {
-          case 1:
-            expect(count.loading).toBe(false);
-            expect(count.data).toEqual({ todoCount: 0 });
-
-            expect(loading).toBeFalsy();
-            expect(data).toBeUndefined();
-
-            act(() => {
-              createTodo({
-                variables,
-                onQueryUpdated(obsQuery, diff) {
-                  return obsQuery.reobserve().then(result => {
-                    finishedReobserving = true;
-                    resolveOnUpdate({ obsQuery, diff, result });
-                    return result;
-                  });
-                },
-              });
-            });
-
-            break;
-          case 2:
-            expect(count.loading).toBe(false);
-            expect(count.data).toEqual({ todoCount: 0 });
-
-            expect(loading).toBeTruthy();
-            expect(data).toBeUndefined();
-
-            expect(finishedReobserving).toBe(false);
-            break;
-          case 3:
-            expect(count.loading).toBe(false);
-            expect(count.data).toEqual({ todoCount: 1 });
-
-            expect(loading).toBe(true);
-            expect(data).toBeUndefined();
-
-            expect(finishedReobserving).toBe(false);
-            break;
-          case 4:
-            expect(count.loading).toBe(false);
-            expect(count.data).toEqual({ todoCount: 1 });
-
-            expect(loading).toBe(false);
-            expect(data).toEqual(CREATE_TODO_RESULT);
-
-            expect(finishedReobserving).toBe(true);
-            break;
-          default:
-            reject("too many renders");
-        }
-
-        return null;
-      }
-
-      render(
-        <ApolloProvider client={client}>
-          <Component />
-        </ApolloProvider>
-      );
-
-      return wait(() => onUpdatePromise.then(results => {
+      }).then((onUpdateResult) => {
         expect(finishedReobserving).toBe(true);
-        expect(renderCount).toBe(4);
-
-        expect(results.diff).toEqual({
+        expect(onUpdateResult.diff).toEqual({
           complete: true,
           result: {
             todoCount: 1,
           },
         });
-
-        expect(results.result).toEqual({
+        expect(onUpdateResult.result).toEqual({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             todoCount: 1,
           },
         });
-      })).then(resolve, reject);
+      });
+
+      onUpdatePromise.catch(() => {});
+
+      let finishedReobserving = false;
+      const { result, waitForNextUpdate } = renderHook(() => ({
+        query: useQuery(countQuery),
+        mutation: useMutation(CREATE_TODO_MUTATION, {
+          optimisticResponse,
+          update(cache) {
+            const result = cache.readQuery({ query: countQuery });
+
+            cache.writeQuery({
+              query: countQuery,
+              data: {
+                todoCount: (result ? result.todoCount : 0) + 1,
+              },
+            });
+          },
+        }),
+      }), {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      });
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual({ todoCount: 0 });
+      expect(result.current.mutation[1].loading).toBe(false);
+      expect(result.current.mutation[1].data).toBe(undefined);
+      const createTodo = result.current.mutation[0];
+      act(() => {
+        createTodo({
+          variables,
+          async onQueryUpdated(obsQuery, diff) {
+            const result = await obsQuery.reobserve();
+            finishedReobserving = true;
+            resolveOnUpdate({ obsQuery, diff, result });
+            return result;
+          },
+        });
+      });
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual({ todoCount: 0 });
+      expect(result.current.mutation[1].loading).toBe(true);
+      expect(result.current.mutation[1].data).toBe(undefined);
+      expect(finishedReobserving).toBe(false);
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual({ todoCount: 1 });
+      expect(result.current.mutation[1].loading).toBe(false);
+      expect(result.current.mutation[1].data).toEqual(CREATE_TODO_RESULT);
+      expect(finishedReobserving).toBe(true);
+
+      await expect(onUpdatePromise).resolves.toBe(undefined);
     });
 
-    itAsync('refetchQueries with operation names should update cache', async (resolve, reject) => {
+    it('refetchQueries with operation names should update cache', async () => {
       const variables = { description: 'Get milk!' };
       const mocks = [
         {
@@ -1134,64 +1102,59 @@ describe('useMutation Hook', () => {
         },
       ];
 
-      const link = mockSingleLink(...mocks).setOnError(reject);
+      const link = mockSingleLink(...mocks);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
       });
 
-      let renderCount = 0;
-      const QueryComponent = () => {
-        const { loading, data } = useQuery(GET_TODOS_QUERY);
-        const [mutate] = useMutation(CREATE_TODO_MUTATION);
-        switch (++renderCount) {
-          case 1:
-            expect(loading).toBe(true);
-            expect(data).toBeUndefined();
-            break;
-          case 2:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[0].result.data);
-            setTimeout(() => {
-              act(() => {
-                mutate({
-                  variables,
-                  refetchQueries: ['getTodos'],
-                });
-              });
-            });
-            break;
-          case 3:
-          case 4:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[0].result.data);
-            break;
-          case 5:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[2].result.data);
-            break;
-          default:
-            reject("too many renders");
-        }
-
-        return null;
-      };
-
-      render(
-        <ApolloProvider client={client}>
-          <QueryComponent />
-        </ApolloProvider>
+      const { result, waitForNextUpdate } = renderHook(
+        () => ({
+          query: useQuery(GET_TODOS_QUERY),
+          mutation: useMutation(CREATE_TODO_MUTATION),
+        }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
       );
 
-      return wait(() => expect(renderCount).toBe(5))
-        .then(() => {
-          expect(client.readQuery({ query: GET_TODOS_QUERY}))
-            .toEqual(mocks[2].result.data);
-        })
-        .then(resolve, reject);
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.data).toBe(undefined);
+      await waitForNextUpdate();
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+      const mutate = result.current.mutation[0];
+      setTimeout(() => {
+        act(() => {
+          mutate({
+            variables,
+            refetchQueries: ['getTodos'],
+          });
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[2].result.data);
+
+      expect(client.readQuery({ query: GET_TODOS_QUERY}))
+        .toEqual(mocks[2].result.data);
     });
 
-    itAsync('refetchQueries with document nodes should update cache', async (resolve, reject) => {
+    it('refetchQueries with document nodes should update cache', async () => {
       const variables = { description: 'Get milk!' };
       const mocks = [
         {
@@ -1217,64 +1180,58 @@ describe('useMutation Hook', () => {
         },
       ];
 
-      const link = mockSingleLink(...mocks).setOnError(reject);
+      const link = mockSingleLink(...mocks);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
       });
 
-      let renderCount = 0;
-      const QueryComponent = () => {
-        const { loading, data } = useQuery(GET_TODOS_QUERY);
-        const [mutate] = useMutation(CREATE_TODO_MUTATION);
-        switch (++renderCount) {
-          case 1:
-            expect(loading).toBe(true);
-            expect(data).toBeUndefined();
-            break;
-          case 2:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[0].result.data);
-            setTimeout(() => {
-              act(() => {
-                mutate({
-                  variables,
-                  refetchQueries: [GET_TODOS_QUERY],
-                });
-              });
-            });
-            break;
-          case 3:
-          case 4:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[0].result.data);
-            break;
-          case 5:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[2].result.data);
-            break;
-          default:
-            reject("too many renders");
-        }
-
-        return null;
-      };
-
-      render(
-        <ApolloProvider client={client}>
-          <QueryComponent />
-        </ApolloProvider>
+      const { result, waitForNextUpdate } = renderHook(
+        () => ({
+          query: useQuery(GET_TODOS_QUERY),
+          mutation: useMutation(CREATE_TODO_MUTATION),
+        }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
       );
 
-      return wait(() => expect(renderCount).toBe(5))
-        .then(() => {
-          expect(client.readQuery({ query: GET_TODOS_QUERY}))
-            .toEqual(mocks[2].result.data);
-        })
-        .then(resolve, reject);
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.data).toBe(undefined);
+      await waitForNextUpdate();
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+      const mutate = result.current.mutation[0];
+      setTimeout(() => {
+        act(() => {
+          mutate({
+            variables,
+            refetchQueries: [GET_TODOS_QUERY],
+          });
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[2].result.data);
+      expect(client.readQuery({ query: GET_TODOS_QUERY }))
+        .toEqual(mocks[2].result.data);
     });
 
-    itAsync('refetchQueries should update cache after unmount', async (resolve, reject) => {
+    it('refetchQueries should update cache after unmount', async () => {
       const variables = { description: 'Get milk!' };
       const mocks = [
         {
@@ -1300,60 +1257,55 @@ describe('useMutation Hook', () => {
         },
       ];
 
-      const link = mockSingleLink(...mocks).setOnError(reject);
+      const link = mockSingleLink(...mocks);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
       });
 
-      let unmount: Function;
-      let renderCount = 0;
-      const QueryComponent = () => {
-        const { loading, data } = useQuery(GET_TODOS_QUERY);
-        const [mutate] = useMutation(CREATE_TODO_MUTATION);
-        switch (++renderCount) {
-          case 1:
-            expect(loading).toBe(true);
-            expect(data).toBeUndefined();
-            break;
-          case 2:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[0].result.data);
-            setTimeout(() => {
-              act(() => {
-                mutate({
-                  variables,
-                  refetchQueries: ['getTodos'],
-                  update() {
-                    unmount();
-                  },
-                });
-              });
-            });
-            break;
-          case 3:
-            expect(loading).toBe(false);
-            expect(data).toEqual(mocks[0].result.data);
-            break;
-          default:
-            reject("too many renders");
-        }
+      const { result, waitForNextUpdate, unmount } = renderHook(
+        () => ({
+          query: useQuery(GET_TODOS_QUERY),
+          mutation: useMutation(CREATE_TODO_MUTATION),
+        }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
 
-        return null;
-      };
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.data).toBe(undefined);
+      await waitForNextUpdate();
 
-      ({unmount} = render(
-        <ApolloProvider client={client}>
-          <QueryComponent />
-        </ApolloProvider>
-      ));
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+      const mutate = result.current.mutation[0];
+      let updateResolve: Function;
+      const updatePromise = new Promise((resolve) => (updateResolve = resolve));
+      setTimeout(() => {
+        act(() => {
+          mutate({
+            variables,
+            refetchQueries: ['getTodos'],
+            update() {
+              unmount();
+              updateResolve();
+            },
+          });
+        });
+      });
 
-      return wait(() => expect(renderCount).toBe(3))
-        .then(() => {
-          expect(client.readQuery({ query: GET_TODOS_QUERY}))
-            .toEqual(mocks[2].result.data);
-        })
-        .then(resolve, reject);
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual(mocks[0].result.data);
+      await updatePromise;
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(client.readQuery({ query: GET_TODOS_QUERY }))
+        .toEqual(mocks[2].result.data);
     });
   });
 });

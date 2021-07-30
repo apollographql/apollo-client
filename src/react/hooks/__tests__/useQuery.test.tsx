@@ -353,6 +353,29 @@ describe('useQuery Hook', () => {
         console.error = consoleError;
       }).then(resolve, reject);
     });
+
+    it('should tear down the query on unmount', async () => {
+      const query = gql`{ hello }`;
+      const client = new ApolloClient({
+        link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
+        cache: new InMemoryCache(),
+      });
+
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>
+          {children}
+        </ApolloProvider>
+      );
+
+      const { unmount } = renderHook(
+        () => useQuery(query),
+        { wrapper },
+      );
+
+      expect(client.getObservableQueries().size).toBe(1);
+      unmount();
+      expect(client.getObservableQueries().size).toBe(0);
+    });
   });
 
   describe('polling', () => {
@@ -2145,9 +2168,9 @@ describe('useQuery Hook', () => {
       expect(linkFn).toHaveBeenCalledTimes(1);
     });
 
-    it('should tear down the query if `skip` is `true`', () => {
+    it('should tear down the query if `skip` is `true`', async () => {
       const client = new ApolloClient({
-        link: new ApolloLink(),
+        link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
         cache: new InMemoryCache(),
       });
 
@@ -2158,11 +2181,11 @@ describe('useQuery Hook', () => {
       );
 
       const { unmount } = renderHook(
-        () => useQuery(query, { skip: false }),
+        () => useQuery(query, { skip: true }),
         { wrapper },
       );
 
-      expect(client.getObservableQueries().size).toBe(1);
+      expect(client.getObservableQueries().size).toBe(0);
       unmount();
       expect(client.getObservableQueries().size).toBe(0);
     });

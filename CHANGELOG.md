@@ -1,3 +1,7 @@
+## Unreleased
+- Fix ssr: false making queries hang <br/>
+  [@brainkim](https://github.com/brainkim) in [#8574](https://github.com/apollographql/apollo-client/pull/8574)
+
 ## Apollo Client 3.4.2
 
 ### Bug Fixes

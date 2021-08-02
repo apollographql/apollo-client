@@ -376,6 +376,31 @@ describe('useQuery Hook', () => {
       unmount();
       expect(client.getObservableQueries().size).toBe(0);
     });
+
+    it('should work with ssr: false', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { ssr: false }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: "world" });
+    });
   });
 
   describe('polling', () => {

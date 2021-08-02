@@ -559,59 +559,59 @@ export function useQuery1<
   invariant(
     !!client,
     'Could not find "client" in the context or passed in as an option. ' +
-      'Wrap the root component in an <ApolloProvider>, or pass an ' +
-      'ApolloClient instance in via options.'
+    'Wrap the root component in an <ApolloProvider>, or pass an ApolloClient' +
+    'ApolloClient instance in via options.',
   );
   verifyDocumentType(query, DocumentType.Query);
-
   const options = useMemo(() => ({...hookOptions, query}), [hookOptions]);
+  const {onCompleted, onError} = options;
   const [obsQuery, setObsQuery] = useState(() => client.watchQuery(options));
   const [result, setResult] = useState(() => obsQuery.getCurrentResult());
-  const previousRef = useRef<{
+  const prevRef = useRef<{
     client: ApolloClient<unknown>,
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: QueryDataOptions<TData, TVariables>,
-    result: ApolloQueryResult<TData> | undefined,
+    result: ApolloQueryResult<TData>,
+    data: TData | undefined,
   }>({
     client,
     query,
     options,
     result,
+    data: undefined,
   });
 
-  const subRef = useRef<ObservableSubscription>();
   useEffect(() => {
     if (
-      previousRef.current.client !== client ||
-      !equal(previousRef.current.query, query)
+      prevRef.current.client !== client ||
+      !equal(prevRef.current.query, query)
     ) {
       setObsQuery(client.watchQuery(options));
     }
 
-    if (!equal(previousRef.current.options, options)) {
+    if (!equal(prevRef.current.options, options)) {
       obsQuery.setOptions({...options, query}).catch(() => {});
       const result = obsQuery.getCurrentResult();
-      previousRef.current.result = result;
+      const previousResult = prevRef.current.result;
+      if (previousResult.data) {
+        prevRef.current.data = previousResult.data;
+      }
+
+      prevRef.current.result = result;
       setResult(result);
     }
 
-    Object.assign(previousRef.current, { client, query, options });
-
-    return () => {
-      if (!subRef.current) {
-        obsQuery['tearDownQuery']();
-      }
-    };
-  }, [client, query, options, obsQuery]);
+    Object.assign(prevRef.current, { client, query, options });
+  }, [obsQuery, client, query, options]);
 
   useEffect(() => {
-    const sub = subRef.current = obsQuery.subscribe(
+    const sub = obsQuery.subscribe(
       () => {
-        // We use `getCurrentResult()` instead of the callback argument
-        // because the values differ slightly. Specifically, loading results
-        // will often have an empty object for data instead of `undefined`.
+        const previousResult = prevRef.current.result;
+        // We use `getCurrentResult()` instead of the callback argument because
+        // the values differ slightly. Specifically, loading results will often
+        // have an empty object (`{}`) for data instead of `undefined`.
         const nextResult = obsQuery.getCurrentResult();
-        const previousResult = previousRef.current.result;
         // Make sure we're not attempting to re-render similar results
         if (
           previousResult &&
@@ -622,7 +622,11 @@ export function useQuery1<
           return;
         }
 
-        previousRef.current.result = nextResult;
+        if (previousResult.data) {
+          prevRef.current.data = previousResult.data;
+        }
+
+        prevRef.current.result = nextResult;
         setResult(nextResult);
       },
       (error) => {
@@ -655,11 +659,23 @@ export function useQuery1<
     subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
   }), [obsQuery]);
 
+  useEffect(() => {
+    if (!result.loading) {
+      if (result.error) {
+        onError?.(result.error);
+      } else {
+        onCompleted?.(result.data);
+      }
+    }
+    // TODO: Do we need to add onCompleted and onError to the dependency array
+  }, [result, onCompleted, onError]);
+
   return {
     ...obsQueryFields,
     variables: obsQuery.variables,
     client,
     called: true,
+    previousData: prevRef.current.data,
     ...result,
   };
 }

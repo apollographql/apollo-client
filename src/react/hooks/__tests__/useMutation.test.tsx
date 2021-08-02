@@ -1199,16 +1199,12 @@ describe('useMutation Hook', () => {
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
-      setTimeout(() => {
-        act(() => {
-          mutate({
-            variables,
-            refetchQueries: [GET_TODOS_QUERY],
-          });
+      act(() => {
+        mutate({
+          variables,
+          refetchQueries: [GET_TODOS_QUERY],
         });
       });
-
-      await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 

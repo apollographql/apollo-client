@@ -2627,18 +2627,20 @@ describe('useQuery Hook', () => {
       return new ApolloClient({
         cache: new InMemoryCache,
         link: new ApolloLink(operation => new Observable(observer => {
-          switch (operation.operationName) {
-            case "A":
-              observer.next({ data: aData });
-              observer.complete();
-              break;
-            case "B":
-              setTimeout(() => {
-                observer.next({ data: bData });
+          setTimeout(() => {
+            switch (operation.operationName) {
+              case "A":
+                observer.next({ data: aData });
                 observer.complete();
-              }, 10);
-              break;
-          }
+                break;
+              case "B":
+                setTimeout(() => {
+                  observer.next({ data: bData });
+                  observer.complete();
+                }, 10);
+                break;
+            }
+          });
         })),
       });
     }

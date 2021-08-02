@@ -324,14 +324,11 @@ class QueryData<TData, TVariables> {
     return result;
   }
 
-  public afterExecute() {
+  public afterExecute(client: ApolloClient<unknown>) {
     this.isMounted = true;
-    const options = this.options;
-    const ssrDisabled = options.ssr === false;
-    // TODO(brian): WHY WOULD this.currentObservable BE UNDEFINED HERE????????
     if (
       this.currentObservable &&
-      !ssrDisabled &&
+      !client.disableNetworkFetches &&
       !(this.context && this.context.renderPromises)
     ) {
       this.startQuerySubscription();
@@ -530,7 +527,7 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
     useAfterFastRefresh(forceUpdate);
   }
 
-  useEffect(() => queryData.afterExecute(), [
+  useEffect(() => queryData.afterExecute(client), [
     result.loading,
     result.networkStatus,
     result.error,
@@ -609,8 +606,8 @@ export function useQuery1<
       () => {
         const previousResult = prevRef.current.result;
         // We use `getCurrentResult()` instead of the callback argument because
-        // the values differ slightly. Specifically, loading results will often
-        // have an empty object (`{}`) for data instead of `undefined`.
+        // the values differ slightly. Specifically, loading results will have
+        // an empty object for data instead of `undefined` for some reason.
         const nextResult = obsQuery.getCurrentResult();
         // Make sure we're not attempting to re-render similar results
         if (

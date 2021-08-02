@@ -65,7 +65,7 @@ These two features are combined to help alleviate [the thundering herd problem](
 
 Instead of the options object, you may pass a function for `delay` and/or `attempts`, which implement custom strategies for each. In both cases the function is given the same arguments (`count`, `operation`, `error`).
 
-The `attempts` function should return a boolean indicating whether the response should be retried. If yes, the `delay` function is then called, and should return the number of milliseconds to delay by.
+The `attempts` function should return a `boolean` (or a `Promise` which resolves to a `boolean`) indicating whether the response should be retried. If yes, the `delay` function is then called, and should return the number of milliseconds to delay by.
 
 ```js
 import { RetryLink } from "@apollo/client/link/retry";

@@ -16,7 +16,7 @@ import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
-import { useQuery } from '../useQuery';
+import { useQuery, useQuery1 } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
@@ -35,7 +35,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query),
+        () => useQuery1(query),
         { wrapper },
       );
 
@@ -61,7 +61,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        () => useQuery(query),
+        () => useQuery1(query),
         { wrapper }
       );
       expect(result.current.loading).toBe(true);
@@ -91,7 +91,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query),
+        () => useQuery1(query),
         { wrapper },
       );
       expect(result.current.loading).toBe(true);
@@ -126,7 +126,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result } = renderHook(
-        () => useQuery(query),
+        () => useQuery1(query),
         { wrapper },
       );
 
@@ -157,7 +157,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ id }) => useQuery(query, { variables: { id }}),
+        ({ id }) => useQuery1(query, { variables: { id }}),
         { wrapper, initialProps: { id: 1 } },
       );
       expect(result.current.loading).toBe(true);
@@ -200,7 +200,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ id }) => useQuery(query, { variables: { id } }),
+        ({ id }) => useQuery1(query, { variables: { id } }),
         { wrapper, initialProps: { id: 1 } },
       );
 
@@ -251,7 +251,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ name }) => useQuery(query, { variables: { name } }),
+        ({ name }) => useQuery1(query, { variables: { name } }),
         { wrapper, initialProps: { name: "" } },
       );
 
@@ -318,7 +318,7 @@ describe('useQuery Hook', () => {
       let renderCount = 0;
 
       const InnerComponent = ({ something }: any) => {
-        const { loading, data } = useQuery(CAR_QUERY, {
+        const { loading, data } = useQuery1(CAR_QUERY, {
           fetchPolicy: 'network-only',
           variables: { something }
         });
@@ -330,7 +330,7 @@ describe('useQuery Hook', () => {
       };
 
       function WrapperComponent({ something }: any) {
-        const { loading } = useQuery(CAR_QUERY, {
+        const { loading } = useQuery1(CAR_QUERY, {
           variables: { something }
         });
         return loading ? null : <InnerComponent something={something + 1} />;
@@ -367,7 +367,7 @@ describe('useQuery Hook', () => {
       );
 
       const { unmount } = renderHook(
-        () => useQuery(query),
+        () => useQuery1(query),
         { wrapper },
       );
 
@@ -548,7 +548,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery1(query, { pollInterval: 10 }),
         { wrapper },
       );
 
@@ -656,7 +656,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery1(query, { pollInterval: 10 }),
         { wrapper },
       );
 
@@ -702,7 +702,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery1(query, { pollInterval: 10 }),
         { wrapper },
       );
 
@@ -745,7 +745,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { pollInterval: 20 }),
+        () => useQuery1(query, { pollInterval: 20 }),
         { wrapper },
       );
 
@@ -788,7 +788,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery(query),
+        () => useQuery1(query),
         { wrapper },
       );
 
@@ -1297,7 +1297,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { variables: { limit: 2 } }),
+        () => useQuery1(query, { variables: { limit: 2 } }),
         { wrapper },
       );
 
@@ -1333,7 +1333,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, {
+        () => useQuery1(query, {
           variables: { limit: 2 },
           notifyOnNetworkStatusChange: true,
         }),
@@ -1385,7 +1385,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { variables: { limit: 2 } }),
+        () => useQuery1(query, { variables: { limit: 2 } }),
         { wrapper },
       );
 
@@ -1421,7 +1421,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, {
+        () => useQuery1(query, {
           variables: { limit: 2 },
           notifyOnNetworkStatusChange: true,
         }),
@@ -1571,7 +1571,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, {
+        () => useQuery1(query, {
           variables: { id: 1 },
           notifyOnNetworkStatusChange: true,
         }),

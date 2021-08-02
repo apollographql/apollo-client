@@ -1,3 +1,10 @@
+## Apollo Client 3.4.2
+
+### Bug Fixes
+
+- Use more default type parameters for mutation-related types in `react/types/types.ts`, to provide smoother backwards compatibility for code using those types explicitly. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8573](https://github.com/apollographql/apollo-client/pull/8573)
+
 ## Apollo Client 3.4.1
 
 ### Bug Fixes

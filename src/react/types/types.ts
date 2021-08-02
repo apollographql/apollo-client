@@ -140,9 +140,9 @@ export type RefetchQueriesFunction = (
 ) => InternalRefetchQueriesInclude;
 
 export interface BaseMutationOptions<
-  TData,
-  TVariables extends OperationVariables,
-  TContext extends DefaultContext = DefaultContext,
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>
 > extends Omit<
   MutationOptions<TData, TVariables, TContext, TCache>,
@@ -156,10 +156,10 @@ export interface BaseMutationOptions<
 }
 
 export interface MutationFunctionOptions<
-  TData,
-  TVariables,
-  TContext,
-  TCache extends ApolloCache<any>,
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -191,19 +191,24 @@ export interface MutationHookOptions<
 }
 
 export interface MutationDataOptions<
-  TData,
-  TVariables extends OperationVariables,
-  TContext extends DefaultContext,
-  TCache extends ApolloCache<any>,
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export type MutationTuple<TData, TVariables, TContext, TCache extends ApolloCache<any>> = [
+export type MutationTuple<
+  TData,
+  TVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+> = [
   (
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
   ) => Promise<FetchResult<TData>>,
-  MutationResult<TData>
+  MutationResult<TData>,
 ];
 
 /* Subscription types */

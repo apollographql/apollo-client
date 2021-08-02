@@ -1,5 +1,8 @@
-## Unreleased
-- Fix ssr: false making queries hang <br/>
+## Apollo Client 3.4.3
+
+### Bug Fixes
+
+- Fix `{ ssr: false }` causing queries to hang on the client. <br/>
   [@brainkim](https://github.com/brainkim) in [#8574](https://github.com/apollographql/apollo-client/pull/8574)
 
 ## Apollo Client 3.4.2

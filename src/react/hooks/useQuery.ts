@@ -206,7 +206,7 @@ class QueryData<TData, TVariables> {
       loading: true,
       networkStatus: NetworkStatus.loading,
       called: true,
-      data: undefined,
+      data: void 0,
       stale: false,
       client,
     } as QueryResult<TData, TVariables>;
@@ -235,8 +235,8 @@ class QueryData<TData, TVariables> {
     // 4.0 to address this.
     if (skip) {
       Object.assign(result, {
-        data: undefined,
-        error: undefined,
+        data: void 0,
+        error: void 0,
         loading: false,
         networkStatus: NetworkStatus.ready,
         called: true,
@@ -587,7 +587,7 @@ export function useQuery1<
     query,
     options,
     result,
-    data: undefined,
+    data: void 0,
   });
 
   useEffect(() => {
@@ -740,8 +740,8 @@ export function useQuery1<
     // changing this is breaking, so we'll have to wait until Apollo Client 4.0
     // to address this.
     result = {
-      data: undefined,
-      error: undefined,
+      data: void 0,
+      error: void 0,
       loading: false,
       networkStatus: NetworkStatus.ready,
     };

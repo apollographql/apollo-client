@@ -1,3 +1,17 @@
+## Apollo Client 3.4.4
+
+### Bug Fixes
+
+- Revert accidental addition of `engines.npm` section to published version of `@apollo/client/package.json`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8578](https://github.com/apollographql/apollo-client/pull/8578)
+
+## Apollo Client 3.4.3
+
+### Bug Fixes
+
+- Fix `{ ssr: false }` causing queries to hang on the client. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8574](https://github.com/apollographql/apollo-client/pull/8574)
+
 ## Apollo Client 3.4.2
 
 ### Bug Fixes

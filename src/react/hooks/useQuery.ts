@@ -544,6 +544,11 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
   return result;
 }
 
+//TODO
+//- Partial Data stuff
+//- Errors
+//- SSR
+
 export function useQuery1<
   TData = any,
   TVariables = OperationVariables,
@@ -560,10 +565,19 @@ export function useQuery1<
     'ApolloClient instance in via options.',
   );
   verifyDocumentType(query, DocumentType.Query);
-  const options = useMemo(() => ({...hookOptions, query}), [hookOptions]);
-  const {onCompleted, onError} = options;
+  const options = useMemo(() => {
+    const { skip, ...options } = { ...hookOptions, query };
+    if (skip) {
+      options.fetchPolicy = 'standby';
+    } else if (!options.fetchPolicy) {
+      options.fetchPolicy = 'cache-first';
+    }
+
+    return options;
+  }, [hookOptions]);
+  const { onCompleted, onError } = options;
   const [obsQuery, setObsQuery] = useState(() => client.watchQuery(options));
-  const [result, setResult] = useState(() => obsQuery.getCurrentResult());
+  let [result, setResult] = useState(() => obsQuery.getCurrentResult());
   const prevRef = useRef<{
     client: ApolloClient<unknown>,
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -587,7 +601,7 @@ export function useQuery1<
     }
 
     if (!equal(prevRef.current.options, options)) {
-      obsQuery.setOptions({...options, query}).catch(() => {});
+      obsQuery.setOptions(options).catch(() => {});
       const result = obsQuery.getCurrentResult();
       const previousResult = prevRef.current.result;
       if (previousResult.data) {
@@ -660,13 +674,31 @@ export function useQuery1<
     if (!result.loading) {
       if (result.error) {
         onError?.(result.error);
-      } else {
+      } else if (result.data) {
         onCompleted?.(result.data);
       }
     }
     // TODO: Do we need to add onCompleted and onError to the dependency array
   }, [result, onCompleted, onError]);
 
+  if (hookOptions?.skip) {
+    // When skipping a query (ie. we're not querying for data but still want to
+    // render children), make sure the `data` is cleared out and `loading` is
+    // set to `false` (since we aren't loading anything).
+    //
+    // NOTE: We no longer think this is the correct behavior. Skipping should
+    // not automatically set `data` to `undefined`, but instead leave the
+    // previous data in place. In other words, skipping should not mandate that
+    // previously received data is all of a sudden removed. Unfortunately,
+    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+    // to address this.
+    result = {
+      data: undefined,
+      error: undefined,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    };
+  }
   return {
     ...obsQueryFields,
     variables: obsQuery.variables,

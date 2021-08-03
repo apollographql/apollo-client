@@ -8,7 +8,7 @@ import { ApolloError } from '../../../../errors';
 import { ApolloLink } from '../../../../link/core';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
-import { itAsync, stripSymbols, MockedProvider, mockSingleLink, withErrorSpy } from '../../../../testing';
+import { itAsync, MockedProvider, mockSingleLink, withErrorSpy } from '../../../../testing';
 import { Query } from '../../Query';
 
 const allPeopleQuery: DocumentNode = gql`
@@ -64,7 +64,7 @@ describe('Query component', () => {
             );
             expect(clientResult).toBe(client);
           } else {
-            expect(stripSymbols(rest)).toMatchSnapshot(
+            expect(rest).toMatchSnapshot(
               'result in render prop'
             );
           }
@@ -246,15 +246,15 @@ describe('Query component', () => {
             try {
               if (count === 1) {
                 // first data
-                expect(stripSymbols(data)).toEqual(data1);
+                expect(data).toEqual(data1);
               }
               if (count === 3) {
                 // second data
-                expect(stripSymbols(data)).toEqual(data2);
+                expect(data).toEqual(data2);
               }
               if (count === 5) {
                 // third data
-                expect(stripSymbols(data)).toEqual(data3);
+                expect(data).toEqual(data3);
               }
             } catch (error) {
               reject(error);
@@ -270,11 +270,11 @@ describe('Query component', () => {
               result
                 .refetch()
                 .then((result1: any) => {
-                  expect(stripSymbols(result1.data)).toEqual(data2);
+                  expect(result1.data).toEqual(data2);
                   return result.refetch({ first: 2 });
                 })
                 .then((result2: any) => {
-                  expect(stripSymbols(result2.data)).toEqual(data3);
+                  expect(result2.data).toEqual(data3);
                 })
                 .catch(reject);
             });
@@ -340,13 +340,13 @@ describe('Query component', () => {
                         : prev,
                   })
                   .then((result2: any) => {
-                    expect(stripSymbols(result2.data)).toEqual(data2);
+                    expect(result2.data).toEqual(data2);
                   })
                   .catch(reject);
               });
             } else if (count === 1) {
               try {
-                expect(stripSymbols(result.data)).toEqual({
+                expect(result.data).toEqual({
                   allPeople: {
                     people: [
                       ...data1.allPeople.people,
@@ -413,11 +413,11 @@ describe('Query component', () => {
 
             try {
               if (count === 0) {
-                expect(stripSymbols(result.data)).toEqual(data1);
+                expect(result.data).toEqual(data1);
               } else if (count === 1) {
-                expect(stripSymbols(result.data)).toEqual(data2);
+                expect(result.data).toEqual(data2);
               } else if (count === 2) {
-                expect(stripSymbols(result.data)).toEqual(data3);
+                expect(result.data).toEqual(data3);
                 setTimeout(unmount);
               }
             } catch (error) {
@@ -470,9 +470,9 @@ describe('Query component', () => {
               return null;
             }
             if (count === 0) {
-              expect(stripSymbols(result.data)).toEqual(data1);
+              expect(result.data).toEqual(data1);
             } else if (count === 1) {
-              expect(stripSymbols(result.data)).toEqual(data2);
+              expect(result.data).toEqual(data2);
               result.stopPolling();
             }
             count++;
@@ -515,7 +515,7 @@ describe('Query component', () => {
 
             if (isUpdated) {
               try {
-                expect(stripSymbols(result.data)).toEqual(data2);
+                expect(result.data).toEqual(data2);
               } catch (error) {
                 reject(error);
               }
@@ -528,7 +528,7 @@ describe('Query component', () => {
                 (prev: any, { variables: variablesUpdate }: any) => {
                   count += 1;
                   try {
-                    expect(stripSymbols(prev)).toEqual(data1);
+                    expect(prev).toEqual(data1);
                     expect(variablesUpdate).toEqual({ first: 2 });
                   } catch (error) {
                     reject(error);
@@ -692,11 +692,11 @@ describe('Query component', () => {
               return null;
             }
             if (count === 0) {
-              expect(stripSymbols(result.data)).toEqual(data1);
+              expect(result.data).toEqual(data1);
             } else if (count === 1) {
-              expect(stripSymbols(result.data)).toEqual(data2);
+              expect(result.data).toEqual(data2);
             } else if (count === 2) {
-              expect(stripSymbols(result.data)).toEqual(data3);
+              expect(result.data).toEqual(data3);
               result.stopPolling();
             }
             count++;
@@ -779,10 +779,10 @@ describe('Query component', () => {
 
         onCompleted(data: Data | {}) {
           if (count === 0) {
-            expect(stripSymbols(data)).toEqual(data1);
+            expect(data).toEqual(data1);
           }
           if (count === 1) {
-            expect(stripSymbols(data)).toEqual(data2);
+            expect(data).toEqual(data2);
           }
           count += 1;
         }
@@ -1020,11 +1020,11 @@ describe('Query component', () => {
                 try {
                   if (count === 0) {
                     expect(variables).toEqual({ first: 1 });
-                    expect(stripSymbols(result.data)).toEqual(data1);
+                    expect(result.data).toEqual(data1);
                   }
                   if (count === 1) {
                     expect(variables).toEqual({ first: 2 });
-                    expect(stripSymbols(result.data)).toEqual(data2);
+                    expect(result.data).toEqual(data2);
                   }
                 } catch (error) {
                   reject(error);
@@ -1089,13 +1089,13 @@ describe('Query component', () => {
                 if (result.loading) return null;
                 try {
                   if (count === 0) {
-                    expect(stripSymbols(result.data)).toEqual(data1);
+                    expect(result.data).toEqual(data1);
                     setTimeout(() => {
                       this.setState({ query: query2 });
                     });
                   }
                   if (count === 1) {
-                    expect(stripSymbols(result.data)).toEqual(data2);
+                    expect(result.data).toEqual(data2);
                   }
                 } catch (error) {
                   reject(error);
@@ -1267,7 +1267,7 @@ describe('Query component', () => {
                       break;
                     case 1:
                       // First response loaded, change state value
-                      expect(stripSymbols(props.data)).toEqual(data1);
+                      expect(props.data).toEqual(data1);
                       expect(open).toBe(false);
                       setTimeout(() => {
                         this.toggle();
@@ -1286,7 +1286,7 @@ describe('Query component', () => {
                       break;
                     case 4:
                       // Second response received, fire another refetch
-                      expect(stripSymbols(props.data)).toEqual(data1);
+                      expect(props.data).toEqual(data1);
                       setTimeout(() => {
                         props.refetch();
                       });
@@ -1297,7 +1297,7 @@ describe('Query component', () => {
                       break;
                     case 6:
                       // Third response received
-                      expect(stripSymbols(props.data)).toEqual(data1);
+                      expect(props.data).toEqual(data1);
                       break;
                     default:
                       reject('Unknown count');
@@ -1414,7 +1414,7 @@ describe('Query component', () => {
                   }
                   // First result is loaded, run a refetch to get the second result
                   // which is an error.
-                  expect(stripSymbols(result.data!.allPeople)).toEqual(
+                  expect(result.data!.allPeople).toEqual(
                     data.allPeople
                   );
                   setTimeout(() => {
@@ -1449,7 +1449,7 @@ describe('Query component', () => {
                     reject('Should have data by this point');
                     break;
                   }
-                  expect(stripSymbols(result.data.allPeople)).toEqual(
+                  expect(result.data.allPeople).toEqual(
                     dataTwo.allPeople
                   );
                   break;
@@ -1776,7 +1776,7 @@ describe('Query component', () => {
             {(result: any) => {
               const { data, loading } = result;
               if (!loading) {
-                expect(stripSymbols(data)).toEqual(allPeopleData);
+                expect(data).toEqual(allPeopleData);
               }
               return null;
             }}

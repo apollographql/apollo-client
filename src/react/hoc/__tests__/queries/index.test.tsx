@@ -8,7 +8,7 @@ import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { ApolloLink } from '../../../../link/core';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps, DataProps } from '../../types';
 
@@ -235,7 +235,7 @@ describe('queries', () => {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
-          expect(stripSymbols(props.data!.allPeople)).toEqual(data.allPeople);
+          expect(props.data!.allPeople).toEqual(data.allPeople);
         }
         render() {
           return null;
@@ -287,8 +287,8 @@ describe('queries', () => {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
-          expect(stripSymbols(props.data!.allPeople)).toEqual(data.allPeople);
-          expect(stripSymbols(props.data!.otherPeople)).toEqual(
+          expect(props.data!.allPeople).toEqual(data.allPeople);
+          expect(props.data!.otherPeople).toEqual(
             data.otherPeople
           );
         }
@@ -337,8 +337,8 @@ describe('queries', () => {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
-          expect(stripSymbols(props.data!.allPeople)).toEqual(data.allPeople);
-          expect(stripSymbols(props.data!.variables)).toEqual(
+          expect(props.data!.allPeople).toEqual(data.allPeople);
+          expect(props.data!.variables).toEqual(
             this.props.data!.variables
           );
         }
@@ -406,7 +406,7 @@ describe('queries', () => {
           const { props } = this;
           try {
             expect(props.data!.loading).toBeFalsy();
-            expect(stripSymbols(props.data!.allPeople)).toEqual(data.allPeople);
+            expect(props.data!.allPeople).toEqual(data.allPeople);
           } catch (error) {
             reject(error);
           }
@@ -456,7 +456,7 @@ describe('queries', () => {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
-          expect(stripSymbols(props.data!.allPeople)).toEqual(data.allPeople);
+          expect(props.data!.allPeople).toEqual(data.allPeople);
         }
         render() {
           return null;
@@ -543,7 +543,7 @@ describe('queries', () => {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
-          expect(stripSymbols(props.data!.allPeople)).toEqual(data.allPeople);
+          expect(props.data!.allPeople).toEqual(data.allPeople);
         }
         render() {
           return <div>{this.props.children}</div>;

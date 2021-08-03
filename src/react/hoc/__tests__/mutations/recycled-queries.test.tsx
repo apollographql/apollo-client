@@ -7,7 +7,7 @@ import { ApolloCache, ApolloClient, MutationUpdaterFunction } from '../../../../
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { MutationFunction } from '../../../types/types';
-import { stripSymbols, mockSingleLink } from '../../../../testing';
+import { mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -145,7 +145,7 @@ describe('graphql(mutation) update queries', () => {
               break;
             case 1:
               expect(this.props.data!.loading).toBeFalsy();
-              expect(stripSymbols(this.props.data!.todo_list)).toEqual({
+              expect(this.props.data!.todo_list).toEqual({
                 id: '123',
                 title: 'how to apollo',
                 tasks: []
@@ -154,7 +154,7 @@ describe('graphql(mutation) update queries', () => {
             case 2:
               expect(this.props.data!.loading).toBeFalsy();
               expect(queryMountCount).toBe(1);
-              expect(stripSymbols(this.props.data!.todo_list)).toEqual({
+              expect(this.props.data!.todo_list).toEqual({
                 id: '123',
                 title: 'how to apollo',
                 tasks: [
@@ -167,7 +167,7 @@ describe('graphql(mutation) update queries', () => {
               });
               break;
             case 3:
-              expect(stripSymbols(this.props.data!.todo_list)).toEqual({
+              expect(this.props.data!.todo_list).toEqual({
                 id: '123',
                 title: 'how to apollo',
                 tasks: [
@@ -346,7 +346,7 @@ describe('graphql(mutation) update queries', () => {
               break;
             case 1:
               expect(this.props.data!.loading).toBeFalsy();
-              expect(stripSymbols(this.props.data!.todo_list)).toEqual({
+              expect(this.props.data!.todo_list).toEqual({
                 id: '123',
                 title: 'how to apollo',
                 tasks: []
@@ -355,13 +355,13 @@ describe('graphql(mutation) update queries', () => {
             case 2:
               expect(this.props.data!.loading).toBeFalsy();
               expect(queryMountCount).toBe(1);
-              expect(stripSymbols(this.props.data!.todo_list)).toEqual(
+              expect(this.props.data!.todo_list).toEqual(
                 updatedData.todo_list
               );
               break;
             case 3:
               expect(this.props.data!.loading).toBeFalsy();
-              expect(stripSymbols(this.props.data!.todo_list)).toEqual(
+              expect(this.props.data!.todo_list).toEqual(
                 updatedData.todo_list
               );
               break;

@@ -27,7 +27,6 @@ import {
 } from '../utilities';
 
 import {
-  stripSymbols,
   itAsync,
   mockSingleLink,
 } from '../testing';
@@ -243,7 +242,7 @@ describe('optimistic mutation results', () => {
 
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
-          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).not.toHaveProperty('Todo99');
         }
 
         resolve();
@@ -308,7 +307,7 @@ describe('optimistic mutation results', () => {
         {
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
             makeReference('Todo66'),
@@ -488,7 +487,7 @@ describe('optimistic mutation results', () => {
 
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
-          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).not.toHaveProperty('Todo99');
         }
 
         resolve();
@@ -553,7 +552,7 @@ describe('optimistic mutation results', () => {
         {
           const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-          expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+          expect(dataInStore).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
           expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
             makeReference('Todo66'),
@@ -1258,7 +1257,7 @@ describe('optimistic mutation results', () => {
       {
         const dataInStore = (client.cache as InMemoryCache).extract(true);
         expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
-        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).not.toHaveProperty('Todo99');
         expect(dataInStore).toHaveProperty('Todo66');
         expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
           makeReference('Todo66'),
@@ -1335,7 +1334,7 @@ describe('optimistic mutation results', () => {
       const promise = from(
         client.watchQuery({ query }) as any as ObservableInput<any>,
       ).pipe(
-        map(value => stripSymbols(value.data.todoList.todos)),
+        map(value => value.data.todoList.todos),
         take(5),
         toArray(),
       ).toPromise();
@@ -1358,7 +1357,7 @@ describe('optimistic mutation results', () => {
       });
 
       const responses = await promise;
-      const defaultTodos = stripSymbols(result.data.todoList.todos);
+      const defaultTodos = result.data.todoList.todos;
 
       expect(responses).toEqual([
         defaultTodos,
@@ -1723,7 +1722,7 @@ describe('optimistic mutation results', () => {
       {
         const dataInStore = (client.cache as InMemoryCache).extract(true);
         expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
-        expect(stripSymbols(dataInStore)).not.toHaveProperty('Todo99');
+        expect(dataInStore).not.toHaveProperty('Todo99');
         expect(dataInStore).toHaveProperty('Todo66');
         expect((dataInStore['TodoList5'] as any).todos).toContainEqual(
           makeReference('Todo66'),
@@ -1816,7 +1815,7 @@ describe('optimistic mutation results', () => {
       const promise = from(
         client.watchQuery({ query }) as any as ObservableInput<any>,
       ).pipe(
-        map(value => stripSymbols(value.data.todoList.todos)),
+        map(value => value.data.todoList.todos),
         take(5),
         toArray(),
       ).toPromise();
@@ -1836,7 +1835,7 @@ describe('optimistic mutation results', () => {
       });
 
       const responses = await promise;
-      const defaultTodos = stripSymbols(result.data.todoList.todos);
+      const defaultTodos = result.data.todoList.todos;
       expect(responses).toEqual([
         defaultTodos,
         [

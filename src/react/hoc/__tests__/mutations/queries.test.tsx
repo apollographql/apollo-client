@@ -8,7 +8,6 @@ import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import {
   itAsync,
-  stripSymbols,
   createMockClient,
   mockSingleLink,
 } from '../../../../testing';
@@ -57,12 +56,12 @@ describe('graphql(mutation) query integration', () => {
           };
 
           this.props.mutate!({ optimisticResponse }).then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(data);
+            expect(result && result.data).toEqual(data);
             mutateFired = true;
           });
 
           const dataInStore = client.cache.extract(true);
-          expect(stripSymbols(dataInStore['Todo:99'])).toEqual(
+          expect(dataInStore['Todo:99']).toEqual(
             optimisticResponse.createTodo
           );
         }
@@ -176,7 +175,7 @@ describe('graphql(mutation) query integration', () => {
         if (!this.props.data.todo_list.tasks.length) {
           act(() => {
             this.props.mutate!().then(result => {
-              expect(stripSymbols(result && result.data)).toEqual(mutationData);
+              expect(result && result.data).toEqual(mutationData);
             });
           });
           return null;
@@ -184,12 +183,12 @@ describe('graphql(mutation) query integration', () => {
 
         switch (++renderCount) {
           case 1:
-            expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
+            expect(this.props.data.todo_list.tasks).toEqual([
               optimisticResponse.createTodo
             ]);
             break;
           case 2:
-            expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
+            expect(this.props.data.todo_list.tasks).toEqual([
               mutationData.createTodo
             ]);
             break;
@@ -294,7 +293,7 @@ describe('graphql(mutation) query integration', () => {
             setTimeout(() => {
               this.props.mutate!()
                 .then(result => {
-                  expect(stripSymbols(result && result.data)).toEqual(
+                  expect(result && result.data).toEqual(
                     mutationData
                   );
                 })
@@ -310,10 +309,10 @@ describe('graphql(mutation) query integration', () => {
       class extends React.Component<ChildProps<Variables, Data>> {
         render() {
           if (count === 1) {
-            expect(stripSymbols(this.props.data!.mini)).toEqual(queryData.mini);
+            expect(this.props.data!.mini).toEqual(queryData.mini);
           }
           if (count === 2) {
-            expect(stripSymbols(this.props.data!.mini)).toEqual(
+            expect(this.props.data!.mini).toEqual(
               mutationData.mini
             );
           }
@@ -386,7 +385,7 @@ describe('graphql(mutation) query integration', () => {
               expect(this.props.result!.loading).toBeFalsy();
               setTimeout(() => {
                 this.props.mutate!().then(result => {
-                  expect(stripSymbols(result && result.data)).toEqual(
+                  expect(result && result.data).toEqual(
                     mutationData
                   );
                 });

@@ -2045,22 +2045,20 @@ describe('Query component', () => {
       const App = () => (
         <ApolloProvider client={client}>
           <Query query={partialQuery} returnPartialData>
-            {({ loading, data }: any) => {
-              if (!loading) {
-                expect(data).toEqual({
-                  cars: [
-                    {
-                      __typename: 'Car',
-                      repairs: [
-                        {
-                          __typename: 'Repair',
-                          date: '2019-05-08',
-                        },
-                      ],
-                    },
-                  ],
-                });
-              }
+            {({ data }: any) => {
+              expect(data).toEqual({
+                cars: [
+                  {
+                    __typename: 'Car',
+                    repairs: [
+                      {
+                        __typename: 'Repair',
+                        date: '2019-05-08',
+                      },
+                    ],
+                  },
+                ],
+              });
               return null;
             }}
           </Query>

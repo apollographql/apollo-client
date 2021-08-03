@@ -31,6 +31,7 @@ packageJson.private = false;
 // Remove package.json items that we don't need to publish
 delete packageJson.scripts;
 delete packageJson.bundlesize;
+delete packageJson.engines;
 
 // The root package.json points to the CJS/ESM source in "dist", to support
 // on-going package development (e.g. running tests, supporting npm link, etc.).

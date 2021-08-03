@@ -5,7 +5,7 @@ import { MockedProvider, mockSingleLink } from '../../../testing';
 import { ApolloClient } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
-import { useApolloClient, useQuery } from '../../hooks';
+import { useApolloClient, useQuery1 as useQuery } from '../../hooks';
 import { render, wait } from '@testing-library/react';
 import { renderToStringWithData } from '..';
 

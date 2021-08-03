@@ -16,7 +16,7 @@ import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
-import { useQuery, useQuery1 } from '../useQuery';
+import { useQuery1 as useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
@@ -35,7 +35,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper },
       );
 
@@ -61,7 +61,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper }
       );
       expect(result.current.loading).toBe(true);
@@ -91,7 +91,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper },
       );
       expect(result.current.loading).toBe(true);
@@ -126,7 +126,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper },
       );
 
@@ -157,7 +157,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ id }) => useQuery1(query, { variables: { id }}),
+        ({ id }) => useQuery(query, { variables: { id }}),
         { wrapper, initialProps: { id: 1 } },
       );
       expect(result.current.loading).toBe(true);
@@ -200,7 +200,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ id }) => useQuery1(query, { variables: { id } }),
+        ({ id }) => useQuery(query, { variables: { id } }),
         { wrapper, initialProps: { id: 1 } },
       );
 
@@ -251,7 +251,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ name }) => useQuery1(query, { variables: { name } }),
+        ({ name }) => useQuery(query, { variables: { name } }),
         { wrapper, initialProps: { name: "" } },
       );
 
@@ -318,7 +318,7 @@ describe('useQuery Hook', () => {
       let renderCount = 0;
 
       const InnerComponent = ({ something }: any) => {
-        const { loading, data } = useQuery1(CAR_QUERY, {
+        const { loading, data } = useQuery(CAR_QUERY, {
           fetchPolicy: 'network-only',
           variables: { something }
         });
@@ -330,7 +330,7 @@ describe('useQuery Hook', () => {
       };
 
       function WrapperComponent({ something }: any) {
-        const { loading } = useQuery1(CAR_QUERY, {
+        const { loading } = useQuery(CAR_QUERY, {
           variables: { something }
         });
         return loading ? null : <InnerComponent something={something + 1} />;
@@ -367,7 +367,7 @@ describe('useQuery Hook', () => {
       );
 
       const { unmount } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper },
       );
 
@@ -548,7 +548,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 10 }),
         { wrapper },
       );
 
@@ -593,7 +593,7 @@ describe('useQuery Hook', () => {
 
       const cache = new InMemoryCache();
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip }) => useQuery1(query, { pollInterval: 10, skip }),
+        ({ skip }) => useQuery(query, { pollInterval: 10, skip }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks} cache={cache}>
@@ -659,7 +659,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery1(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 10 }),
         { wrapper },
       );
 
@@ -705,7 +705,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery1(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 10 }),
         { wrapper },
       );
 
@@ -748,7 +748,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { pollInterval: 20 }),
+        () => useQuery(query, { pollInterval: 20 }),
         { wrapper },
       );
 
@@ -791,7 +791,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper },
       );
 
@@ -833,7 +833,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper },
       );
 
@@ -870,7 +870,7 @@ describe('useQuery Hook', () => {
 
       const onError = jest.fn();
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           onError,
           notifyOnNetworkStatusChange: true,
         }),
@@ -918,7 +918,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        () => useQuery1(query),
+        () => useQuery(query),
         { wrapper },
       );
 
@@ -965,7 +965,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { onError: () => {}, onCompleted: () => {} }),
+        () => useQuery(query, { onError: () => {}, onCompleted: () => {} }),
         { wrapper },
       );
 
@@ -1017,7 +1017,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { notifyOnNetworkStatusChange: true }),
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
 
@@ -1077,7 +1077,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { notifyOnNetworkStatusChange: true }),
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
 
@@ -1142,7 +1142,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { notifyOnNetworkStatusChange: true }),
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
 
@@ -1300,7 +1300,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { variables: { limit: 2 } }),
+        () => useQuery(query, { variables: { limit: 2 } }),
         { wrapper },
       );
 
@@ -1336,7 +1336,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           variables: { limit: 2 },
           notifyOnNetworkStatusChange: true,
         }),
@@ -1388,7 +1388,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { variables: { limit: 2 } }),
+        () => useQuery(query, { variables: { limit: 2 } }),
         { wrapper },
       );
 
@@ -1424,7 +1424,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           variables: { limit: 2 },
           notifyOnNetworkStatusChange: true,
         }),
@@ -1574,7 +1574,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           variables: { id: 1 },
           notifyOnNetworkStatusChange: true,
         }),
@@ -1719,7 +1719,7 @@ describe('useQuery Hook', () => {
         );
 
         const { result, waitForNextUpdate } = renderHook(
-          () => useQuery1(query, {
+          () => useQuery(query, {
             variables: { min: 0, max: 12 },
             notifyOnNetworkStatusChange: true,
             // This is the key line in this test.
@@ -1800,7 +1800,7 @@ describe('useQuery Hook', () => {
         );
 
         const { result, waitForNextUpdate } = renderHook(
-          () => useQuery1(query, {
+          () => useQuery(query, {
             variables: { min: 0, max: 12 },
             notifyOnNetworkStatusChange: true,
             // This is the key line in this test.
@@ -1886,7 +1886,7 @@ describe('useQuery Hook', () => {
         );
 
         const { result, waitForNextUpdate } = renderHook(
-          () => useQuery1(query, {
+          () => useQuery(query, {
             variables: { min: 0, max: 12 },
             notifyOnNetworkStatusChange: true,
             // Intentionally not passing refetchWritePolicy.
@@ -1963,7 +1963,7 @@ describe('useQuery Hook', () => {
 
       const onCompleted = jest.fn();
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           fetchPolicy: 'cache-only',
           onCompleted,
         }),
@@ -1996,7 +1996,7 @@ describe('useQuery Hook', () => {
 
       const onCompleted = jest.fn();
       const { result, rerender, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           onCompleted,
         }),
         { wrapper },
@@ -2038,7 +2038,7 @@ describe('useQuery Hook', () => {
 
       const onCompleted = jest.fn();
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           skip: true,
           onCompleted,
         }),
@@ -2070,7 +2070,7 @@ describe('useQuery Hook', () => {
 
       const onCompleted = jest.fn();
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, {
+        () => useQuery(query, {
           fetchPolicy: 'network-only',
           onCompleted,
         }),
@@ -2186,7 +2186,7 @@ describe('useQuery Hook', () => {
             },
             onError,
           }),
-          query: useQuery1(query),
+          query: useQuery(query),
         }),
         { wrapper },
       );
@@ -2513,7 +2513,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { variables: { id: entityId } }),
+        () => useQuery(query, { variables: { id: entityId } }),
         { wrapper },
       );
 
@@ -2586,7 +2586,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip }) => useQuery1(query, { skip }),
+        ({ skip }) => useQuery(query, { skip }),
         { wrapper, initialProps: { skip: true }  },
       );
 
@@ -2621,7 +2621,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip, variables }) => useQuery1(query, { skip, variables }),
+        ({ skip, variables }) => useQuery(query, { skip, variables }),
         { wrapper, initialProps: { skip: false, variables: undefined as any } },
       );
 
@@ -2651,7 +2651,7 @@ describe('useQuery Hook', () => {
       );
 
       const { unmount } = renderHook(
-        () => useQuery1(query, { skip: true }),
+        () => useQuery(query, { skip: true }),
         { wrapper },
       );
 
@@ -2704,7 +2704,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(carQuery, { variables: { id: 1 } }),
+        () => useQuery(carQuery, { variables: { id: 1 } }),
         { wrapper },
       );
 
@@ -2916,7 +2916,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { notifyOnNetworkStatusChange: true }),
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
 
@@ -3002,7 +3002,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery1(query, { notifyOnNetworkStatusChange: true }),
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
 
@@ -3083,7 +3083,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ gender }) => useQuery1(query, {
+        ({ gender }) => useQuery(query, {
           variables: { gender },
           fetchPolicy: 'network-only',
         }),
@@ -3170,7 +3170,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ canonizeResults }) => useQuery1(query, {
+        ({ canonizeResults }) => useQuery(query, {
           fetchPolicy: 'cache-only',
           canonizeResults,
         }),
@@ -3275,8 +3275,8 @@ describe('useQuery Hook', () => {
       const client = makeClient();
       const { result, waitForNextUpdate } = renderHook(
         () => ({
-          a: useQuery1(aQuery, { fetchPolicy: aFetchPolicy }),
-          b: useQuery1(bQuery, { fetchPolicy: bFetchPolicy }),
+          a: useQuery(aQuery, { fetchPolicy: aFetchPolicy }),
+          b: useQuery(bQuery, { fetchPolicy: bFetchPolicy }),
         }),
         {
           wrapper: ({ children }) => (

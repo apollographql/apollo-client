@@ -2253,18 +2253,18 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const wrapper = ({ children }: any) => (
-        <ApolloProvider client={client}>
-          {children}
-        </ApolloProvider>
-      );
-
       const { result, waitForNextUpdate } = renderHook(
         () => useQuery(query, {
           partialRefetch: true,
           notifyOnNetworkStatusChange: true,
         }),
-        { wrapper },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
       );
 
       expect(result.current.loading).toBe(true);

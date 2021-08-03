@@ -545,7 +545,6 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
 }
 
 //TODO
-//- Partial Data stuff
 //- Errors
 //- SSR
 
@@ -622,13 +621,13 @@ export function useQuery1<
         // We use `getCurrentResult()` instead of the callback argument because
         // the values differ slightly. Specifically, loading results will have
         // an empty object for data instead of `undefined` for some reason.
-        const nextResult = obsQuery.getCurrentResult();
+        const result = obsQuery.getCurrentResult();
         // Make sure we're not attempting to re-render similar results
         if (
           previousResult &&
-          previousResult.loading === nextResult.loading &&
-          previousResult.networkStatus === nextResult.networkStatus &&
-          equal(previousResult.data, nextResult.data)
+          previousResult.loading === result.loading &&
+          previousResult.networkStatus === result.networkStatus &&
+          equal(previousResult.data, result.data)
         ) {
           return;
         }
@@ -637,12 +636,12 @@ export function useQuery1<
           prevRef.current.data = previousResult.data;
         }
 
-        prevRef.current.result = nextResult;
-        setResult(nextResult);
+        prevRef.current.result = result;
+        setResult(result);
       },
       (error) => {
-        throw error;
-        //subscriptionRef.current = undefined;
+        console.log(69);
+        //throw error;
         // Unfortunately, if `lastError` is set in the current
         // `observableQuery` when the subscription is re-created, the
         // subscription will immediately receive the error, which will cause
@@ -653,7 +652,6 @@ export function useQuery1<
         //const lastError = obsQuery.getLastError();
         //const lastResult = obsQuery.getLastResult();
         //obsQuery.resetLastResults();
-        //this.startQuerySubscription();
         //Object.assign(obsQuery, { lastError, lastResult });
       },
     );
@@ -680,6 +678,37 @@ export function useQuery1<
     }
     // TODO: Do we need to add onCompleted and onError to the dependency array
   }, [result, onCompleted, onError]);
+
+
+  // TODO: This effect should be removed when partialRefetch is removed.
+  useEffect(() => {
+    // When a `Query` component is mounted, and a mutation is executed
+    // that returns the same ID as the mounted `Query`, but has less
+    // fields in its result, Apollo Client's `QueryManager` returns the
+    // data as `undefined` since a hit can't be found in the cache.
+    // This can lead to application errors when the UI elements rendered by
+    // the original `Query` component are expecting certain data values to
+    // exist, and they're all of a sudden stripped away. To help avoid
+    // this we'll attempt to refetch the `Query` data.
+    if (
+      hookOptions?.partialRefetch &&
+      result.partial &&
+      (!result.data || Object.keys(result.data).length === 0) &&
+      obsQuery.options.fetchPolicy !== 'cache-only'
+    ) {
+      setResult((result) => ({
+        ...result,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }));
+      setTimeout(() => obsQuery.refetch());
+    }
+  }, [
+    hookOptions?.partialRefetch,
+    result.data,
+    result.partial,
+    obsQuery.options.fetchPolicy,
+  ]);
 
   if (hookOptions?.skip) {
     // When skipping a query (ie. we're not querying for data but still want to

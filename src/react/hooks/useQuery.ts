@@ -545,7 +545,6 @@ export function useQuery<TData = any, TVariables = OperationVariables>(
 }
 
 //TODO
-//- Errors
 //- SSR
 
 export function useQuery1<
@@ -615,47 +614,66 @@ export function useQuery1<
   }, [obsQuery, client, query, options]);
 
   useEffect(() => {
-    const sub = obsQuery.subscribe(
-      () => {
-        const previousResult = prevRef.current.result;
-        // We use `getCurrentResult()` instead of the callback argument because
-        // the values differ slightly. Specifically, loading results will have
-        // an empty object for data instead of `undefined` for some reason.
-        const result = obsQuery.getCurrentResult();
-        // Make sure we're not attempting to re-render similar results
-        if (
-          previousResult &&
-          previousResult.loading === result.loading &&
-          previousResult.networkStatus === result.networkStatus &&
-          equal(previousResult.data, result.data)
-        ) {
-          return;
-        }
+    function onNext() {
+      const previousResult = prevRef.current.result;
+      // We use `getCurrentResult()` instead of the callback argument because
+      // the values differ slightly. Specifically, loading results will have
+      // an empty object for data instead of `undefined` for some reason.
+      const result = obsQuery.getCurrentResult();
+      // Make sure we're not attempting to re-render similar results
+      if (
+        previousResult &&
+        previousResult.loading === result.loading &&
+        previousResult.networkStatus === result.networkStatus &&
+        equal(previousResult.data, result.data)
+      ) {
+        return;
+      }
 
-        if (previousResult.data) {
-          prevRef.current.data = previousResult.data;
-        }
+      if (previousResult.data) {
+        prevRef.current.data = previousResult.data;
+      }
 
-        prevRef.current.result = result;
-        setResult(result);
-      },
-      (error) => {
-        console.log(69);
-        //throw error;
-        // Unfortunately, if `lastError` is set in the current
-        // `observableQuery` when the subscription is re-created, the
-        // subscription will immediately receive the error, which will cause
-        // it to terminate again. To avoid this, we first clear the last
-        // error/result from the `observableQuery` before re-starting the
-        // subscription, and restore it afterwards (so the subscription has a
-        // chance to stay open).
-        //const lastError = obsQuery.getLastError();
-        //const lastResult = obsQuery.getLastResult();
-        //obsQuery.resetLastResults();
-        //Object.assign(obsQuery, { lastError, lastResult });
-      },
-    );
+      prevRef.current.result = result;
+      setResult(result);
+    }
 
+    function onError(error: Error) {
+      const last = obsQuery["last"];
+      sub.unsubscribe();
+      // Unfortunately, if `lastError` is set in the current
+      // `observableQuery` when the subscription is re-created,
+      // the subscription will immediately receive the error, which will
+      // cause it to terminate again. To avoid this, we first clear
+      // the last error/result from the `observableQuery` before re-starting
+      // the subscription, and restore it afterwards (so the subscription
+      // has a chance to stay open).
+      try {
+        obsQuery.resetLastResults();
+        sub = obsQuery.subscribe(onNext, onError);
+      } finally {
+        obsQuery["last"] = last;
+      }
+
+      if (!error.hasOwnProperty('graphQLErrors')) {
+        throw error;
+      }
+
+      const previousResult = prevRef.current.result;
+      if (
+        (previousResult && previousResult.loading) ||
+        !equal(error, previousResult.error)
+      ) {
+        setResult((result) => ({
+          ...result,
+          error: error as ApolloError,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+        }));
+      }
+    }
+
+    let sub = obsQuery.subscribe(onNext, onError);
     return () => sub.unsubscribe();
   }, [obsQuery]);
 
@@ -728,6 +746,7 @@ export function useQuery1<
       networkStatus: NetworkStatus.ready,
     };
   }
+
   return {
     ...obsQueryFields,
     variables: obsQuery.variables,

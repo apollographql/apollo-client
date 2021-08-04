@@ -17,6 +17,7 @@ import {
   isNetworkRequestInFlight,
 } from './networkStatus';
 import { ApolloError } from '../errors';
+import { QueryManager } from './QueryManager';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -85,7 +86,14 @@ export class QueryInfo {
   graphQLErrors?: ReadonlyArray<GraphQLError>;
   stopped = false;
 
-  constructor(private cache: ApolloCache<any>) {
+  private cache: ApolloCache<any>;
+
+  constructor(
+    queryManager: QueryManager<any>,
+    public readonly queryId = queryManager.generateQueryId(),
+  ) {
+    const cache = this.cache = queryManager.cache;
+
     // Track how often cache.evict is called, since we want eviction to
     // override the feud-stopping logic in the markResult method, by
     // causing shouldWrite to return true. Wrapping the cache.evict method

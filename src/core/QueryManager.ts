@@ -619,7 +619,7 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
-    const queryInfo = new QueryInfo(this.cache);
+    const queryInfo = new QueryInfo(this);
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
       queryInfo,
@@ -799,6 +799,7 @@ export class QueryManager<TStore> {
             fetchPolicy: "network-only",
           },
         });
+        invariant(oq.queryId === queryId);
         queryInfo.setObservableQuery(oq);
         queries.set(queryId, oq);
       });
@@ -1469,7 +1470,7 @@ export class QueryManager<TStore> {
 
   private getQuery(queryId: string): QueryInfo {
     if (queryId && !this.queries.has(queryId)) {
-      this.queries.set(queryId, new QueryInfo(this.cache));
+      this.queries.set(queryId, new QueryInfo(this, queryId));
     }
     return this.queries.get(queryId)!;
   }

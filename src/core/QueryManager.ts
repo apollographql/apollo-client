@@ -799,6 +799,7 @@ export class QueryManager<TStore> {
             fetchPolicy: "network-only",
           },
         });
+        invariant(oq.queryId === queryId);
         queryInfo.setObservableQuery(oq);
         queries.set(queryId, oq);
       });

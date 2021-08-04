@@ -17,7 +17,6 @@ import { ApolloError } from '../errors';
 
 import {
   itAsync,
-  stripSymbols,
   subscribeAndCount,
   mockSingleLink,
   withErrorSpy,
@@ -150,7 +149,7 @@ describe('client', () => {
     });
 
     client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
       resolve();
     });
   });
@@ -196,11 +195,11 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     return Promise.all([
@@ -260,17 +259,17 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      return expect(stripSymbols(actualResult.data)).toEqual(result);
+      return expect(actualResult.data).toEqual(result);
     });
 
     const withOverride = client
       .query({ query, variables: override })
       .then(actualResult => {
-        return expect(stripSymbols(actualResult.data)).toEqual(
+        return expect(actualResult.data).toEqual(
           overriddenResult,
         );
       });
@@ -424,7 +423,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(
         (client.cache as InMemoryCache).extract(),
       );
@@ -482,7 +481,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(client.extract());
     }).then(resolve, reject);
   });
@@ -688,7 +687,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then((result: ExecutionResult) => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
     });
   });
 
@@ -831,7 +830,7 @@ describe('client', () => {
 
     handle.subscribe({
       next(result) {
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         resolve();
       },
     });
@@ -884,7 +883,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
+      expect(actualResult.data).toEqual(transformedResult);
     }).then(resolve, reject);
   });
 
@@ -935,7 +934,7 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
+        expect(actualResult.data).toEqual(transformedResult);
       })
       .then(resolve, reject);
   });
@@ -975,7 +974,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1014,7 +1013,7 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(result);
+        expect(actualResult.data).toEqual(result);
       })
       .then(resolve, reject);
   });
@@ -1057,7 +1056,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1093,7 +1092,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1142,7 +1141,7 @@ describe('client', () => {
       }),
     });
     return client.query({ query }).then((actualResult: any) => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1193,7 +1192,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1309,7 +1308,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1334,7 +1333,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1382,8 +1381,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data2);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data2);
     }).then(resolve, reject);
   });
 
@@ -1474,8 +1473,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data);
     });
   });
 
@@ -1522,8 +1521,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data2);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data2);
     });
   });
 
@@ -1639,7 +1638,7 @@ describe('client', () => {
       });
 
       return client.query({ query }).then(result => {
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         expect((client.cache as InMemoryCache).extract()['1']).toEqual({
           id: '1',
           name: 'Luke Skywalker',
@@ -1737,9 +1736,9 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
         } else if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(networkFetch);
+          expect(result.data).toEqual(networkFetch);
           resolve();
         }
       });
@@ -1762,7 +1761,7 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         expect(handleCount).toBe(1);
-        expect(stripSymbols(result.data)).toEqual(networkFetch);
+        expect(result.data).toEqual(networkFetch);
         expect(result.loading).toBe(false);
         resolve();
       });
@@ -1815,7 +1814,7 @@ describe('client', () => {
       let count = 0;
       obs.subscribe({
         next: result => {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
           expect(result.loading).toBe(true);
           count++;
         },
@@ -1853,7 +1852,7 @@ describe('client', () => {
       let handleCalled = false;
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1893,7 +1892,7 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1903,7 +1902,7 @@ describe('client', () => {
           });
         }
         if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(data2);
+          expect(result.data).toEqual(data2);
           resolve();
         }
       });
@@ -1952,7 +1951,7 @@ describe('client', () => {
         // then query for real
         .then(() => client.query({ query, fetchPolicy: 'network-only' }))
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
+          expect(result.data).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
     });
@@ -1972,7 +1971,7 @@ describe('client', () => {
         // then query for real
         .then(() => client.query(options))
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
+          expect(result.data).toEqual({ myNumber: { n: 1 } });
           // Test that options weren't mutated, issue #339
           expect(options).toEqual({
             query,
@@ -1997,12 +1996,12 @@ describe('client', () => {
           return client.query({ query, fetchPolicy: 'network-only' });
         })
         .then(async result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
+          expect(result.data).toEqual({ myNumber: { n: 1 } });
           await new Promise(resolve => setTimeout(resolve, 100));
           return client.query({ query, fetchPolicy: 'network-only' });
         })
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
+          expect(result.data).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
     });
@@ -2160,7 +2159,7 @@ describe('client', () => {
       .mutate({ mutation, errorPolicy: 'ignore' })
       .then(result => {
         expect(result.errors).toBeUndefined();
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         resolve();
       })
       .catch((error: ApolloError) => {
@@ -2403,7 +2402,7 @@ describe('client', () => {
       if (called) {
         expect(onResetStoreOne).toHaveBeenCalled();
       } else {
-        expect(stripSymbols(d.data)).toEqual(data);
+        expect(d.data).toEqual(data);
         called = true;
       }
     });
@@ -2543,7 +2542,7 @@ describe('client', () => {
               // which is an error.
               expect(result.loading).toBeFalsy();
               expect(result.networkStatus).toBe(7);
-              expect(stripSymbols(result.data!.allPeople)).toEqual(
+              expect(result.data!.allPeople).toEqual(
                 data.allPeople,
               );
               setTimeout(() => {
@@ -2572,7 +2571,7 @@ describe('client', () => {
                 reject('Should have data by this point');
                 break;
               }
-              expect(stripSymbols(result.data.allPeople)).toEqual(
+              expect(result.data.allPeople).toEqual(
                 dataTwo.allPeople,
               );
               resolve();
@@ -2721,7 +2720,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -2773,7 +2772,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -2815,7 +2814,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 });
@@ -2859,7 +2858,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -2904,7 +2903,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -2958,7 +2957,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -3282,7 +3281,7 @@ describe('@connection', () => {
       });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
-        const resultData = stripSymbols(result.data);
+        const resultData = result.data;
         if (handleCount === 1) {
           expect(resultData).toEqual(initialData);
         } else if (handleCount === 2) {
@@ -3458,6 +3457,6 @@ function clientRoundtrip(
   });
 
   return client.query({ query, variables }).then(result => {
-    expect(stripSymbols(result.data)).toEqual(data.data);
+    expect(result.data).toEqual(data.data);
   }).then(resolve, reject);
 }

@@ -1,7 +1,6 @@
 // externals
 import gql from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 
 // mocks
 import {
@@ -185,14 +184,14 @@ describe('mutiple results', () => {
         count++;
 
         if (count === 1) {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
           // this should fire the `next` event without this error
           link.simulateResult({
             result: { errors: [new GraphQLError('defer failed')], data: laterData },
           });
         }
         if (count === 2) {
-          expect(stripSymbols(result.data)).toEqual(laterData);
+          expect(result.data).toEqual(laterData);
           expect(result.errors).toBeUndefined();
           // make sure the count doesn't go up by accident
           setTimeout(() => {

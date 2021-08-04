@@ -312,7 +312,6 @@ Array [
   "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "stripSymbols",
   "subscribeAndCount",
   "withErrorSpy",
   "withLogSpy",

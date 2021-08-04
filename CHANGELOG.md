@@ -1,3 +1,10 @@
+## Apollo Client 3.4.5
+
+### Bug Fixes
+
+- Fix double registration bug for mutation `refetchQueries` specified using legacy one-time `refetchQueries: [{ query, variables }]` style. Though the bug is fixed, we recommend using `refetchQueries: [query]` instead (when possible) to refetch an existing query using its `DocumentNode`, rather than creating, executing, and then deleting a new query, as the legacy `{ query, variables }` style unfortunately does. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8586](https://github.com/apollographql/apollo-client/pull/8586)
+
 ## Apollo Client 3.4.4
 
 ### Bug Fixes

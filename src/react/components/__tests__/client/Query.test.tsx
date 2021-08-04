@@ -6,7 +6,7 @@ import { render, wait } from '@testing-library/react';
 import { ApolloClient, NetworkStatus } from '../../../../core';
 import { ApolloError } from '../../../../errors';
 import { ApolloLink } from '../../../../link/core';
-import { InMemoryCache as Cache } from '../../../../cache';
+import { InMemoryCache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
 import { itAsync, MockedProvider, mockSingleLink, withErrorSpy } from '../../../../testing';
 import { Query } from '../../Query';
@@ -40,10 +40,6 @@ const allPeopleMocks = [
 const AllPeopleQuery = Query;
 
 describe('Query component', () => {
-  beforeEach(() => {
-    jest.useRealTimers();
-  });
-
   itAsync('calls the children prop', (resolve, reject) => {
     const link = mockSingleLink({
       request: { query: allPeopleQuery },
@@ -51,7 +47,7 @@ describe('Query component', () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const Component = () => (
@@ -1233,7 +1229,7 @@ describe('Query component', () => {
 
       const client = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       let count = 0;
@@ -1389,7 +1385,7 @@ describe('Query component', () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     let count = 0;
@@ -1523,7 +1519,7 @@ describe('Query component', () => {
 
       const client = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       let count = 0;
@@ -1768,7 +1764,7 @@ describe('Query component', () => {
 
         const client = new ApolloClient({
           link,
-          cache: new Cache({ addTypename: false }),
+          cache: new InMemoryCache({ addTypename: false }),
         });
 
         const Component = () => (
@@ -1805,16 +1801,14 @@ describe('Query component', () => {
 
         const client = new ApolloClient({
           link,
-          cache: new Cache({ addTypename: false }),
+          cache: new InMemoryCache({ addTypename: false }),
         });
 
         const Component = () => (
           <Query query={allPeopleQuery}>
             {(result: any) => {
-              const { data, loading } = result;
-              if (!loading) {
-                expect(data).toBeUndefined();
-              }
+              const { data } = result;
+              expect(data).toBe(undefined);
               return null;
             }}
           </Query>
@@ -1867,7 +1861,7 @@ describe('Query component', () => {
 
       const client = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       let expectCount = 0;
@@ -1925,7 +1919,7 @@ describe('Query component', () => {
     });
 
     it('should not return partial cache data when `returnPartialData` is false', () => {
-      const cache = new Cache();
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),
@@ -1991,7 +1985,7 @@ describe('Query component', () => {
     });
 
     it('should return partial cache data when `returnPartialData` is true', () => {
-      const cache = new Cache();
+      const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
         link: ApolloLink.empty(),

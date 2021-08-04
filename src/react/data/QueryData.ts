@@ -35,7 +35,7 @@ export class QueryData<TData, TVariables> extends OperationData<
   QueryDataOptions<TData, TVariables>
 > {
   public onNewData: () => void;
-  private currentObservable?: ObservableQuery<TData, TVariables>;
+  public currentObservable?: ObservableQuery<TData, TVariables>;
   private currentSubscription?: ObservableSubscription;
   private runLazy: boolean = false;
   private lazyOptions?: QueryLazyOptions<TVariables>;

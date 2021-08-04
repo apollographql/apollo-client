@@ -6,7 +6,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -71,12 +71,12 @@ describe('[queries] api', () => {
             data!
               .refetch()
               .then((result: any) => {
-                expect(stripSymbols(result.data)).toEqual(data1);
+                expect(result.data).toEqual(data1);
                 return data!
                   .refetch({ first: 2 }) // new variables
                   .then((response: any) => {
-                    expect(stripSymbols(response.data)).toEqual(data1);
-                    expect(stripSymbols(data!.allPeople)).toEqual(
+                    expect(response.data).toEqual(data1);
+                    expect(data!.allPeople).toEqual(
                       data1.allPeople
                     );
                     done = true;
@@ -200,7 +200,7 @@ describe('[queries] api', () => {
               })
               .then((result: any) => {
                 try {
-                  expect(stripSymbols(result.data.allPeople.people)).toEqual(
+                  expect(result.data.allPeople.people).toEqual(
                     data1.allPeople.people
                   );
                 } catch (error) {
@@ -208,9 +208,9 @@ describe('[queries] api', () => {
                 }
               });
           } else if (count === 1) {
-            expect(stripSymbols(props.data!.variables)).toEqual(variables);
+            expect(props.data!.variables).toEqual(variables);
             expect(props.data!.loading).toBeFalsy();
-            expect(stripSymbols(props.data!.allPeople!.people)).toEqual(
+            expect(props.data!.allPeople!.people).toEqual(
               data.allPeople.people.concat(data1.allPeople.people)
             );
             done = true;
@@ -313,7 +313,7 @@ describe('[queries] api', () => {
               done = true;
             } else {
               isUpdated = true;
-              expect(stripSymbols(this.props.people)).toEqual(
+              expect(this.props.people).toEqual(
                 data1.allPeople.people
               );
               this.props.getMorePeople!();

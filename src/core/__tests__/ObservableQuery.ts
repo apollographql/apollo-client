@@ -11,7 +11,7 @@ import { ApolloLink } from '../../link/core';
 import { InMemoryCache, NormalizedCacheObject } from '../../cache';
 import { ApolloError } from '../../errors';
 
-import { itAsync, stripSymbols, mockSingleLink, subscribeAndCount } from '../../testing';
+import { itAsync, mockSingleLink, subscribeAndCount } from '../../testing';
 import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
 import mockWatchQuery from '../../utilities/testing/mocking/mockWatchQuery';
 import wrap from '../../utilities/testing/wrap';
@@ -103,10 +103,10 @@ describe('ObservableQuery', () => {
 
         subscribeAndCount(reject, observable, (handleCount, result) => {
           if (handleCount === 1) {
-            expect(stripSymbols(result.data)).toEqual(dataOne);
+            expect(result.data).toEqual(dataOne);
             observable.setOptions({ query, pollInterval: 10 });
           } else if (handleCount === 2) {
-            expect(stripSymbols(result.data)).toEqual(dataTwo);
+            expect(result.data).toEqual(dataTwo);
             observable.stopPolling();
             resolve();
           }
@@ -138,7 +138,7 @@ describe('ObservableQuery', () => {
 
         subscribeAndCount(reject, observable, (handleCount, result) => {
           if (handleCount === 1) {
-            expect(stripSymbols(result.data)).toEqual(dataOne);
+            expect(result.data).toEqual(dataOne);
             observable.setOptions({ query, pollInterval: 0 });
             setTimeout(resolve, 5);
           } else if (handleCount === 2) {
@@ -173,10 +173,10 @@ describe('ObservableQuery', () => {
 
         subscribeAndCount(reject, observable, (handleCount, result) => {
           if (handleCount === 1) {
-            expect(stripSymbols(result.data)).toEqual(dataOne);
+            expect(result.data).toEqual(dataOne);
             observable.setOptions({ query, pollInterval: 10 });
           } else if (handleCount === 2) {
-            expect(stripSymbols(result.data)).toEqual(dataTwo);
+            expect(result.data).toEqual(dataTwo);
             observable.stopPolling();
             resolve();
           }
@@ -381,7 +381,7 @@ describe('ObservableQuery', () => {
         next: result => {
           handleCount++;
           if (handleCount === 1) {
-            expect(stripSymbols(result.data)).toEqual(dataOne);
+            expect(result.data).toEqual(dataOne);
             observable.refetch();
           } else if (handleCount === 3) {
             throw new Error("next shouldn't fire after an error");
@@ -558,7 +558,7 @@ describe('ObservableQuery', () => {
 
       subscribeAndCount(reject, observable, async (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.data).toEqual(data);
           expect(timesFired).toBe(1);
           await observable.setOptions({ query, fetchPolicy: 'standby' });
           // make sure the query didn't get fired again.
@@ -610,7 +610,7 @@ describe('ObservableQuery', () => {
 
         subscribeAndCount(reject, observable, async (handleCount, result) => {
           if (handleCount === 1) {
-            expect(stripSymbols(result.data)).toEqual(data);
+            expect(result.data).toEqual(data);
             expect(timesFired).toBe(1);
             await observable.setOptions({ query, fetchPolicy: 'standby' });
             // make sure the query didn't get fired again.
@@ -672,14 +672,14 @@ describe('ObservableQuery', () => {
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.loading).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(dataOne);
+          expect(result.data).toEqual(dataOne);
           return observable.setVariables(differentVariables);
         } else if (handleCount === 2) {
           expect(result.loading).toBe(true);
           expect(result.networkStatus).toBe(NetworkStatus.setVariables);
         } else if (handleCount === 3) {
           expect(result.loading).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
+          expect(result.data).toEqual(dataTwo);
           resolve();
         }
       });
@@ -701,8 +701,8 @@ describe('ObservableQuery', () => {
 
       subscribeAndCount(reject, observable, async (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(dataOne);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+          expect(result.data).toEqual(dataOne);
+          expect(observable.getCurrentResult().data).toEqual(
             dataOne,
           );
           await observable.setVariables(differentVariables);
@@ -762,8 +762,8 @@ describe('ObservableQuery', () => {
 
       subscribeAndCount(reject, observable, async (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(dataOne);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+          expect(result.data).toEqual(dataOne);
+          expect(observable.getCurrentResult().data).toEqual(
             dataOne,
           );
           await observable.setVariables(differentVariables);
@@ -800,8 +800,8 @@ describe('ObservableQuery', () => {
           observable.setVariables(differentVariables);
           expect(observable.getCurrentResult().errors).toEqual([error]);
         } else if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
-          expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+          expect(result.data).toEqual(dataTwo);
+          expect(observable.getCurrentResult().data).toEqual(
             dataTwo,
           );
           expect(observable.getCurrentResult().loading).toBe(false);
@@ -841,7 +841,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.loading).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(dataOne);
+          expect(result.data).toEqual(dataOne);
           expect(result.networkStatus).toBe(NetworkStatus.ready);
           observable.setVariables(differentVariables);
         } else if (handleCount === 2) {
@@ -850,7 +850,7 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 3) {
           expect(result.loading).toBe(false);
           expect(result.networkStatus).toBe(NetworkStatus.ready);
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
+          expect(result.data).toEqual(dataTwo);
           resolve();
         }
       });
@@ -879,7 +879,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.loading).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(dataOne);
+          expect(result.data).toEqual(dataOne);
           expect(result.networkStatus).toBe(NetworkStatus.ready);
           observable.refetch(differentVariables);
         } else if (handleCount === 2) {
@@ -888,7 +888,7 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 3) {
           expect(result.loading).toBe(false);
           expect(result.networkStatus).toBe(NetworkStatus.ready);
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
+          expect(result.data).toEqual(dataTwo);
           resolve();
         }
       });
@@ -910,7 +910,7 @@ describe('ObservableQuery', () => {
       let errored = false;
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(dataOne);
+          expect(result.data).toEqual(dataOne);
           observable.setVariables(variables);
 
           // Nothing should happen, so we'll wait a moment to check that
@@ -946,7 +946,7 @@ describe('ObservableQuery', () => {
         if (handleCount === 1) {
           expect(result.networkStatus).toBe(NetworkStatus.ready);
           expect(result.loading).toBe(false);
-          expect(stripSymbols(result.data)).toEqual(dataTwo);
+          expect(result.data).toEqual(dataTwo);
           resolve();
         } else {
           reject(new Error("should not deliver more than one result"));
@@ -1492,7 +1492,7 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(reject, observable, () => {
-        expect(stripSymbols(observable.getCurrentResult())).toEqual({
+        expect(observable.getCurrentResult()).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: 7,
@@ -1527,7 +1527,7 @@ describe('ObservableQuery', () => {
       });
 
       return queryManager.query({ query, variables }).then((result: any) => {
-        expect(stripSymbols(result)).toEqual({
+        expect(result).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: 7,
@@ -1536,7 +1536,7 @@ describe('ObservableQuery', () => {
           query,
           variables,
         });
-        expect(stripSymbols(observable.getCurrentResult())).toEqual({
+        expect(observable.getCurrentResult()).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1602,7 +1602,7 @@ describe('ObservableQuery', () => {
       });
 
       return observable.result().then(result => {
-        expect(stripSymbols(result.data)).toEqual(dataOne);
+        expect(result.data).toEqual(dataOne);
         expect(result.errors).toEqual([error]);
         const currentResult = observable.getCurrentResult();
         expect(currentResult.loading).toBe(false);
@@ -1674,7 +1674,7 @@ describe('ObservableQuery', () => {
       });
 
       return observable.result().then(result => {
-        expect(stripSymbols(result.data)).toEqual(dataOne);
+        expect(result.data).toEqual(dataOne);
         expect(result.errors).toBeUndefined();
         const currentResult = observable.getCurrentResult();
         expect(currentResult.loading).toBe(false);
@@ -1824,7 +1824,7 @@ describe('ObservableQuery', () => {
           variables,
           fetchPolicy: 'no-cache',
         });
-        expect(stripSymbols(observable.getCurrentResult())).toEqual({
+        expect(observable.getCurrentResult()).toEqual({
           data: undefined,
           loading: true,
           networkStatus: 1,
@@ -1844,7 +1844,7 @@ describe('ObservableQuery', () => {
               networkStatus,
             });
           } else if (handleCount === 2) {
-            expect(stripSymbols(subResult)).toEqual({
+            expect(subResult).toEqual({
               data: dataTwo,
               loading: false,
               networkStatus: 7,
@@ -1909,7 +1909,7 @@ describe('ObservableQuery', () => {
           });
 
           if (count === 1) {
-            expect(stripSymbols(result)).toEqual({
+            expect(result).toEqual({
               data: dataOne,
               loading: false,
               networkStatus: 7,
@@ -1920,11 +1920,11 @@ describe('ObservableQuery', () => {
               updateQueries,
             });
           } else if (count === 2) {
-            expect(stripSymbols(result.data.people_one)).toEqual(
+            expect(result.data.people_one).toEqual(
               optimisticResponse,
             );
           } else if (count === 3) {
-            expect(stripSymbols(result.data.people_one)).toEqual(mutationData);
+            expect(result.data.people_one).toEqual(mutationData);
             resolve();
           }
         });

@@ -4,7 +4,6 @@ import gql from 'graphql-tag';
 import { Observable } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 
 // mocks
 import { MockSubscriptionLink } from '../../../utilities/testing/mocking/mockSubscriptionLink';
@@ -38,9 +37,9 @@ describe('Link interactions', () => {
       expect(cache).toBeDefined();
       return forward(operation).map(result => {
         setTimeout(() => {
-          const cacheResult = stripSymbols(cache.read({ query }));
+          const cacheResult = cache.read({ query });
           expect(cacheResult).toEqual(initialData);
-          expect(cacheResult).toEqual(stripSymbols(result.data));
+          expect(cacheResult).toEqual(result.data);
           if (count === 1) {
             done();
           }

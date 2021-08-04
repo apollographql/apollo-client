@@ -7,7 +7,7 @@ import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { ApolloLink } from '../../../../link/core';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -175,7 +175,7 @@ describe('[queries] skip', () => {
           count++;
           if (count === 1) expect(props.data!.loading).toBeTruthy();
           if (count === 2)
-            expect(stripSymbols(props.data!.allPeople)).toEqual(data.allPeople);
+            expect(props.data!.allPeople).toEqual(data.allPeople);
           if (count === 2) {
             expect(renderCount).toBe(3);
           }
@@ -535,13 +535,13 @@ describe('[queries] skip', () => {
           } else {
             if (hasSkipped) {
               if (!this.props.data!.loading) {
-                expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+                expect(this.props.data!.allPeople).toEqual(
                   dataTwo.allPeople
                 );
                 done = true;
               }
             } else {
-              expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+              expect(this.props.data!.allPeople).toEqual(
                 dataOne.allPeople
               );
               prevProps.setState({ skip: true });
@@ -768,10 +768,10 @@ describe('[queries] skip', () => {
           const { data } = this.props;
           // loading is true, but data still there
           if (count === 0)
-            expect(stripSymbols(data!.allPeople)).toEqual(data1.allPeople);
+            expect(data!.allPeople).toEqual(data1.allPeople);
           if (count === 1) expect(data).toBeUndefined();
           if (count === 2 && !data!.loading) {
-            expect(stripSymbols(data!.allPeople)).toEqual(data3.allPeople);
+            expect(data!.allPeople).toEqual(data3.allPeople);
           }
         }
         render() {

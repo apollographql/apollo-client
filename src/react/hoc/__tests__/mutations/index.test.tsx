@@ -5,7 +5,6 @@ import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
 import {
-  stripSymbols,
   createMockClient,
   MockedProvider,
 } from '../../../../testing';
@@ -178,7 +177,7 @@ describe('graphql(mutation)', () => {
       class extends React.Component<ChildProps> {
         componentDidMount() {
           this.props.mutate!().then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
+            expect(result && result.data).toEqual(expectedData);
             done();
           });
         }
@@ -217,7 +216,7 @@ describe('graphql(mutation)', () => {
       class extends React.Component<ChildProps<Props>> {
         componentDidMount() {
           this.props.mutate!().then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
+            expect(result && result.data).toEqual(expectedData);
             done();
           });
         }
@@ -270,7 +269,7 @@ describe('graphql(mutation)', () => {
           this.props.mutate!({
             variables: { second: 2 }
           }).then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
+            expect(result && result.data).toEqual(expectedData);
             done();
           });
         }

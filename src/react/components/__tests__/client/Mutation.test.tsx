@@ -7,7 +7,7 @@ import { ApolloClient } from '../../../../core';
 import { ApolloError } from '../../../../errors';
 import { DataProxy, InMemoryCache as Cache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
-import { stripSymbols, MockedProvider, MockLink, mockSingleLink } from '../../../../testing';
+import { MockedProvider, MockLink, mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 
@@ -900,7 +900,7 @@ describe('General Mutation testing', () => {
                 expect(resultQuery.loading).toBe(false);
               } else if (renderCount === 3) {
                 expect(resultMutation.loading).toBe(true);
-                expect(stripSymbols(resultQuery.data)).toEqual(queryData);
+                expect(resultQuery.data).toEqual(queryData);
               } else if (renderCount === 4) {
                 expect(resultMutation.loading).toBe(false);
               }
@@ -1002,7 +1002,7 @@ describe('General Mutation testing', () => {
                   // query refetched
                   expect(resultQuery.loading).toBe(false);
                   expect(resultMutation.loading).toBe(false);
-                  expect(stripSymbols(resultQuery.data)).toEqual(peopleData3);
+                  expect(resultQuery.data).toEqual(peopleData3);
                 }
                 count++;
                 return null;
@@ -1078,7 +1078,7 @@ describe('General Mutation testing', () => {
                 expect(resultQuery.loading).toBe(false);
               } else if (count === 2) {
                 expect(resultMutation.loading).toBe(true);
-                expect(stripSymbols(resultQuery.data)).toEqual(queryData);
+                expect(resultQuery.data).toEqual(queryData);
               } else if (count === 3) {
                 expect(resultMutation.loading).toBe(false);
               }

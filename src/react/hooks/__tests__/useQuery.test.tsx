@@ -437,12 +437,11 @@ describe('useQuery Hook', () => {
         {
           request: { query: query1 },
           result: { data: allPeopleData },
-          delay: 10,
         },
         {
           request: { query: query2 },
           result: { data: allThingsData },
-          delay: 10,
+          delay: 50,
         },
       );
 
@@ -467,6 +466,12 @@ describe('useQuery Hook', () => {
 
       expect(result.current[0].loading).toBe(true);
       expect(result.current[0].data).toBe(undefined);
+      expect(result.current[1].loading).toBe(true);
+      expect(result.current[1].data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current[0].loading).toBe(false);
+      expect(result.current[0].data).toEqual(allPeopleData);
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 

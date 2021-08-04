@@ -437,12 +437,11 @@ describe('useQuery Hook', () => {
         {
           request: { query: query1 },
           result: { data: allPeopleData },
-          delay: 10,
         },
         {
           request: { query: query2 },
           result: { data: allThingsData },
-          delay: 10,
+          delay: 50,
         },
       );
 
@@ -473,6 +472,12 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current[0].loading).toBe(false);
       expect(result.current[0].data).toEqual(allPeopleData);
+      expect(result.current[1].loading).toBe(true);
+      expect(result.current[1].data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current[0].loading).toBe(false);
+      expect(result.current[0].data).toEqual(allPeopleData);
       expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(allThingsData);
 
@@ -481,6 +486,42 @@ describe('useQuery Hook', () => {
       expect(result.current[0].data).toEqual(allPeopleData);
       expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(allThingsData);
+    });
+
+    it('changing queries', async () => {
+      const query1 = gql`query { hello }`;
+      const query2 = gql`query { hello, name }`;
+      const mocks = [
+        {
+          request: { query: query1 },
+          result: { data: { hello: "world" } },
+        },
+        {
+          request: { query: query2 },
+          result: { data: { hello: "world", name: "world" } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const { result, rerender, waitForNextUpdate } = renderHook(
+        ({ query }) => useQuery(query, { pollInterval: 10 }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: { query: query1 },
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      rerender({ query: query2 });
+      expect(result.current.loading).toBe(true);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(mocks[1].result.data);
     });
   });
 

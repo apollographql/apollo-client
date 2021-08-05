@@ -31,6 +31,7 @@ packageJson.private = false;
 // Remove package.json items that we don't need to publish
 delete packageJson.scripts;
 delete packageJson.bundlesize;
+delete packageJson.engines;
 
 // The root package.json points to the CJS/ESM source in "dist", to support
 // on-going package development (e.g. running tests, supporting npm link, etc.).
@@ -62,6 +63,7 @@ fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);
 entryPoints.forEach(function buildPackageJson({
   dirs,
   bundleName = dirs[dirs.length - 1],
+  sideEffects = false,
 }) {
   if (!dirs.length) return;
   fs.writeFileSync(
@@ -71,7 +73,7 @@ entryPoints.forEach(function buildPackageJson({
       main: `${bundleName}.cjs.js`,
       module: 'index.js',
       types: 'index.d.ts',
-      sideEffects: false,
+      sideEffects,
     }, null, 2) + "\n",
   );
 });

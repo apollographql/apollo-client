@@ -3,7 +3,6 @@ import { render, cleanup } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { ApolloProvider } from '../../../context/ApolloProvider';
-import { stripSymbols } from '../../../../utilities/testing/stripSymbols';
 import { createMockClient } from '../../../../utilities/testing/mocking/mockClient';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
@@ -35,7 +34,7 @@ describe('graphql(mutation) lifecycle', () => {
       class extends React.Component<ChildProps<Props>> {
         componentDidMount() {
           this.props.mutate!().then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
+            expect(result && result.data).toEqual(expectedData);
             done();
           });
         }
@@ -125,7 +124,7 @@ describe('graphql(mutation) lifecycle', () => {
       class extends React.Component<ChildProps<{}, {}, Variables>> {
         componentDidMount() {
           this.props.mutate!({ variables: { id: 1 } }).then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
+            expect(result && result.data).toEqual(expectedData);
             done();
           });
         }

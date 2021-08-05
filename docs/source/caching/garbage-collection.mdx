@@ -98,6 +98,6 @@ new InMemoryCache({
 * The `read` function for `Query.ruler` returns a default ruler (Apollo) if the `existingRuler` has been deposed.
 * The `read` function for `Deity.offspring` filters its array to return only offspring that are alive and well in the cache.
 
-Filtering dangling references out of a cached array field (like the `Deity.offspring` example above) is so common that Apollo Client performs this filtering _automatically_ for array fields that don't define a `read` function. You can define a `read` function to override this behavior.
+Filtering dangling references out of a cached list field (like the `Deity.offspring` example above) is so common that the default `read` function for a list field performs this filtering _automatically_. You can define a custom `read` function to override this behavior.
 
 There isn't a similarly common solution for a field that contains a _single_ dangling reference (like the `Query.ruler` example above), so this is where writing a custom `read` function comes in handy most often.

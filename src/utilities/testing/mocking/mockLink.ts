@@ -15,6 +15,7 @@ import {
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
   cloneDeep,
+  stringifyForDisplay,
 } from '../../../utilities';
 
 export type ResultFunction<T> = () => T;
@@ -72,34 +73,41 @@ export class MockLink extends ApolloLink {
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
     const key = requestToKey(operation, this.addTypename);
-    let responseIndex: number = 0;
-    const response = (this.mockedResponsesByKey[key] || []).find(
-      (res, index) => {
-        const requestVariables = operation.variables || {};
-        const mockedResponseVariables = res.request.variables || {};
-        if (equal(requestVariables, mockedResponseVariables)) {
-          responseIndex = index;
-          return true;
-        }
-        return false;
+    const unmatchedVars: Array<Record<string, any>> = [];
+    const requestVariables = operation.variables || {};
+    const mockedResponses = this.mockedResponsesByKey[key];
+    const responseIndex = mockedResponses ? mockedResponses.findIndex((res, index) => {
+      const mockedResponseVars = res.request.variables || {};
+      if (equal(requestVariables, mockedResponseVars)) {
+        return true;
       }
-    );
+      unmatchedVars.push(mockedResponseVars);
+      return false;
+    }) : -1;
+
+    const response = responseIndex >= 0
+      ? mockedResponses[responseIndex]
+      : void 0;
 
     let configError: Error;
 
-    if (!response || typeof responseIndex === 'undefined') {
+    if (!response) {
       configError = new Error(
-        `No more mocked responses for the query: ${print(
-          operation.query
-        )}, variables: ${JSON.stringify(operation.variables)}`
-      );
+`No more mocked responses for the query: ${print(operation.query)}
+Expected variables: ${stringifyForDisplay(operation.variables)}
+${unmatchedVars.length > 0 ? `
+Failed to match ${unmatchedVars.length} mock${
+  unmatchedVars.length === 1 ? "" : "s"
+} for this query, which had the following variables:
+${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
+` : ""}`);
     } else {
-      this.mockedResponsesByKey[key].splice(responseIndex, 1);
+      mockedResponses.splice(responseIndex, 1);
 
       const { newData } = response;
       if (newData) {
         response.result = newData();
-        this.mockedResponsesByKey[key].push(response);
+        mockedResponses.push(response);
       }
 
       if (!response.result && !response.error) {
@@ -151,7 +159,7 @@ export class MockLink extends ApolloLink {
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
     const queryWithoutConnection = removeConnectionDirectiveFromDocument(
-        newMockedResponse.request.query
+      newMockedResponse.request.query
     );
     invariant(queryWithoutConnection, "query is required");
     newMockedResponse.request.query = queryWithoutConnection!;

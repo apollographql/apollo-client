@@ -6,7 +6,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../core';
 import { ApolloProvider } from '../../context';
 import { InMemoryCache as Cache } from '../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../testing';
+import { itAsync, mockSingleLink } from '../../../testing';
 import { graphql } from '../graphql';
 import { ChildProps } from '../types';
 
@@ -128,7 +128,7 @@ describe('client option', () => {
       componentDidUpdate() {
         const { data } = this.props;
         expect(data!.loading).toBeFalsy(); // first data
-        expect(stripSymbols(data!.allPeople)).toEqual({
+        expect(data!.allPeople).toEqual({
           people: [{ name: 'Luke Skywalker' }]
         });
       }

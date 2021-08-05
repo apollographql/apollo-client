@@ -6,7 +6,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -60,7 +60,7 @@ describe('[queries] observableQuery', () => {
         componentDidUpdate() {
           if (count === 2) {
             expect(this.props.data!.loading).toBeFalsy();
-            expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+            expect(this.props.data!.allPeople).toEqual(
               data.allPeople
             );
 
@@ -88,7 +88,7 @@ describe('[queries] observableQuery', () => {
           // be present;
           if (count === 3) {
             expect(this.props.data!.loading).toBeFalsy();
-            expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+            expect(this.props.data!.allPeople).toEqual(
               data.allPeople
             );
           }
@@ -198,7 +198,7 @@ describe('[queries] observableQuery', () => {
             if (variables.first === 1) {
               if (loading) expect(allPeople).toBeUndefined();
               if (!loading) {
-                expect(stripSymbols(allPeople)).toEqual(data.allPeople);
+                expect(allPeople).toEqual(data.allPeople);
               }
             }
 
@@ -206,7 +206,7 @@ describe('[queries] observableQuery', () => {
               // second variables render
               if (loading) expect(allPeople).toBeUndefined();
               if (!loading)
-                expect(stripSymbols(allPeople)).toEqual(data2.allPeople);
+                expect(allPeople).toEqual(data2.allPeople);
             }
           } catch (e) {
             reject(e);
@@ -318,11 +318,11 @@ describe('[queries] observableQuery', () => {
               break;
             case 2:
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(data.allPeople);
+              expect(allPeople).toEqual(data.allPeople);
               break;
             case 3:
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(data.allPeople);
+              expect(allPeople).toEqual(data.allPeople);
               break;
             default: // Do nothing
           }
@@ -445,12 +445,12 @@ describe('[queries] observableQuery', () => {
             }
             if (count === 2) {
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(dataOne.allPeople);
+              expect(allPeople).toEqual(dataOne.allPeople);
               refetch();
             }
             if (count === 3) {
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(dataTwo.allPeople);
+              expect(allPeople).toEqual(dataTwo.allPeople);
             }
             if (count > 3) {
               throw new Error('too many renders');

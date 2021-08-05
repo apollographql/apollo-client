@@ -31,12 +31,14 @@ module.exports = {
           'Fetching': [
             'data/queries',
             'data/mutations',
+            'data/refetching',
             'data/subscriptions',
             'data/fragments',
             'data/error-handling',
             'data/operation-best-practices'
           ],
           Caching: [
+            'caching/overview',
             'caching/cache-configuration',
             'caching/cache-interaction',
             'caching/garbage-collection',

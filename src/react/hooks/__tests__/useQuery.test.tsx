@@ -16,7 +16,7 @@ import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
-import { useQuery1 as useQuery } from '../useQuery';
+import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {

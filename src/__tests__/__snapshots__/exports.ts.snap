@@ -55,7 +55,6 @@ Array [
   "useLazyQuery",
   "useMutation",
   "useQuery",
-  "useQuery1",
   "useReactiveVar",
   "useSubscription",
 ]
@@ -235,7 +234,6 @@ Array [
   "useLazyQuery",
   "useMutation",
   "useQuery",
-  "useQuery1",
   "useReactiveVar",
   "useSubscription",
 ]
@@ -283,7 +281,6 @@ Array [
   "useLazyQuery",
   "useMutation",
   "useQuery",
-  "useQuery1",
   "useReactiveVar",
   "useSubscription",
 ]

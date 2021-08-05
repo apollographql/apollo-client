@@ -5,7 +5,7 @@ import {
   FieldNode,
 } from 'graphql';
 
-import { KeyTrie } from 'optimism';
+import { Trie } from '@wry/trie';
 import { invariant, InvariantError } from 'ts-invariant';
 
 import {
@@ -21,8 +21,15 @@ import {
   isReference,
   getStoreKeyName,
   canUseWeakMap,
+  isNonNullObject,
+  stringifyForDisplay,
 } from '../../utilities';
-import { IdGetter, ReadMergeModifyContext, MergeInfo } from "./types";
+import {
+  IdGetter,
+  MergeInfo,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types";
 import {
   hasOwn,
   fieldNameFromStoreName,
@@ -40,7 +47,14 @@ import {
   ReadFieldOptions,
   CanReadFunction,
 } from '../core/types/common';
-import { FieldValueGetter } from './entityStore';
+import { WriteContext } from './writeToStore';
+
+// Upgrade to a faster version of the default stable JSON.stringify function
+// used by getStoreKeyName. This function is used when computing storeFieldName
+// strings (when no keyArgs has been configured for a field).
+import { canonicalStringify } from './object-canon';
+
+getStoreKeyName.setStringify(canonicalStringify);
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -792,7 +806,7 @@ export class Policies {
     existing: StoreValue,
     incoming: StoreValue,
     { field, typename, merge }: MergeInfo,
-    context: ReadMergeModifyContext,
+    context: WriteContext,
     storage?: StorageType,
   ) {
     if (merge === mergeTrueFn) {
@@ -800,7 +814,7 @@ export class Policies {
       // FieldFunctionOptions object and calling mergeTrueFn, we can
       // simply call mergeObjects, as mergeTrueFn would.
       return makeMergeObjectsFunction(
-        context.store.getFieldValue
+        context.store,
       )(existing as StoreObject,
         incoming as StoreObject);
     }
@@ -808,6 +822,14 @@ export class Policies {
     if (merge === mergeFalseFn) {
       // Likewise for mergeFalseFn, whose implementation is even simpler.
       return incoming;
+    }
+
+    // If cache.writeQuery or cache.writeFragment was called with
+    // options.overwrite set to true, we still call merge functions, but
+    // the existing data is always undefined, so the merge function will
+    // not attempt to combine the incoming data with the existing data.
+    if (context.overwrite) {
+      existing = void 0;
     }
 
     return merge(existing, incoming, makeFieldFunctionOptions(
@@ -844,7 +866,7 @@ function makeFieldFunctionOptions(
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
   const variables = fieldSpec.variables || context.variables;
-  const { getFieldValue, toReference, canRead } = context.store;
+  const { toReference, canRead } = context.store;
 
   return {
     args: argsFromFieldSpecifier(fieldSpec),
@@ -862,14 +884,36 @@ function makeFieldFunctionOptions(
       fieldNameOrOptions: string | ReadFieldOptions,
       from?: StoreObject | Reference,
     ) {
-      const options: ReadFieldOptions =
-        typeof fieldNameOrOptions === "string" ? {
+      let options: ReadFieldOptions;
+      if (typeof fieldNameOrOptions === "string") {
+        options = {
           fieldName: fieldNameOrOptions,
-          from,
-        } : { ...fieldNameOrOptions };
+          // Default to objectOrReference only when no second argument was
+          // passed for the from parameter, not when undefined is explicitly
+          // passed as the second argument.
+          from: arguments.length > 1 ? from : objectOrReference,
+        };
+      } else if (isNonNullObject(fieldNameOrOptions)) {
+        options = { ...fieldNameOrOptions };
+        // Default to objectOrReference only when fieldNameOrOptions.from is
+        // actually omitted, rather than just undefined.
+        if (!hasOwn.call(fieldNameOrOptions, "from")) {
+          options.from = objectOrReference;
+        }
+      } else {
+        invariant.warn(`Unexpected readField arguments: ${
+          stringifyForDisplay(Array.from(arguments))
+        }`);
+        // The readField helper function returns undefined for any missing
+        // fields, so it should also return undefined if the arguments were not
+        // of a type we expected.
+        return;
+      }
 
-      if (void 0 === options.from) {
-        options.from = objectOrReference;
+      if (__DEV__ && options.from === void 0) {
+        invariant.warn(`Undefined 'from' passed to readField with arguments ${
+          stringifyForDisplay(Array.from(arguments))
+        }`);
       }
 
       if (void 0 === options.variables) {
@@ -879,12 +923,12 @@ function makeFieldFunctionOptions(
       return policies.readField<T>(options, context);
     },
 
-    mergeObjects: makeMergeObjectsFunction(getFieldValue),
+    mergeObjects: makeMergeObjectsFunction(context.store),
   };
 }
 
 function makeMergeObjectsFunction(
-  getFieldValue: FieldValueGetter,
+  store: NormalizedCache,
 ): MergeObjectsFunction {
   return function mergeObjects(existing, incoming) {
     if (Array.isArray(existing) || Array.isArray(incoming)) {
@@ -895,19 +939,39 @@ function makeMergeObjectsFunction(
     // custom merge function can easily have the any type, so the type
     // system cannot always enforce the StoreObject | Reference parameter
     // types of options.mergeObjects.
-    if (existing && typeof existing === "object" &&
-        incoming && typeof incoming === "object") {
-      const eType = getFieldValue(existing, "__typename");
-      const iType = getFieldValue(incoming, "__typename");
+    if (isNonNullObject(existing) &&
+        isNonNullObject(incoming)) {
+      const eType = store.getFieldValue(existing, "__typename");
+      const iType = store.getFieldValue(incoming, "__typename");
       const typesDiffer = eType && iType && eType !== iType;
 
-      if (typesDiffer ||
-          !storeValueIsStoreObject(existing) ||
-          !storeValueIsStoreObject(incoming)) {
+      if (typesDiffer) {
         return incoming;
       }
 
-      return { ...existing, ...incoming };
+      if (isReference(existing) &&
+          storeValueIsStoreObject(incoming)) {
+        // Update the normalized EntityStore for the entity identified by
+        // existing.__ref, preferring/overwriting any fields contributed by the
+        // newer incoming StoreObject.
+        store.merge(existing.__ref, incoming);
+        return existing;
+      }
+
+      if (storeValueIsStoreObject(existing) &&
+          isReference(incoming)) {
+        // Update the normalized EntityStore for the entity identified by
+        // incoming.__ref, taking fields from the older existing object only if
+        // those fields are not already present in the newer StoreObject
+        // identified by incoming.__ref.
+        store.merge(existing, incoming.__ref);
+        return incoming;
+      }
+
+      if (storeValueIsStoreObject(existing) &&
+          storeValueIsStoreObject(incoming)) {
+        return { ...existing, ...incoming };
+      }
     }
 
     return incoming;
@@ -927,7 +991,7 @@ function keyArgsFnFromSpecifier(
 function keyFieldsFnFromSpecifier(
   specifier: KeySpecifier,
 ): KeyFieldsFunction {
-  const trie = new KeyTrie<{
+  const trie = new Trie<{
     aliasMap?: AliasMap;
   }>(canUseWeakMap);
 

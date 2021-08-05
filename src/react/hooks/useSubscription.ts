@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useEffect } from 'react';
+import { useContext, useState, useRef, useEffect, useReducer } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -6,19 +6,21 @@ import { SubscriptionHookOptions } from '../types/types';
 import { SubscriptionData } from '../data';
 import { OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
+import { useAfterFastRefresh } from './utils/useAfterFastRefresh';
 
 export function useSubscription<TData = any, TVariables = OperationVariables>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SubscriptionHookOptions<TData, TVariables>
 ) {
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
   const context = useContext(getApolloContext());
   const updatedOptions = options
     ? { ...options, subscription }
     : { subscription };
   const [result, setResult] = useState({
     loading: !updatedOptions.skip,
-    error: undefined,
-    data: undefined
+    error: void 0,
+    data: void 0,
   });
 
   const subscriptionDataRef = useRef<SubscriptionData<TData, TVariables>>();
@@ -37,8 +39,18 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
   subscriptionData.setOptions(updatedOptions, true);
   subscriptionData.context = context;
 
+  if (__DEV__) {
+    // ensure we run an update after refreshing so that we can resubscribe
+    useAfterFastRefresh(forceUpdate);
+  }
+
   useEffect(() => subscriptionData.afterExecute());
-  useEffect(() => subscriptionData.cleanup.bind(subscriptionData), []);
+  useEffect(() => {
+    return () => {
+      subscriptionData.cleanup();
+      subscriptionDataRef.current = void 0;
+    };
+  }, []);
 
   return subscriptionData.execute(result);
 }

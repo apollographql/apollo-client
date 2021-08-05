@@ -6,7 +6,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { DataValue } from '../../types';
 
@@ -138,7 +138,7 @@ describe('[queries] reducer', () => {
 
     class Container extends React.Component<FinalProps> {
       componentDidUpdate() {
-        expect(stripSymbols(this.props.thingy)).toEqual(expectedData.getThing);
+        expect(this.props.thingy).toEqual(expectedData.getThing);
       }
       render() {
         return null;
@@ -207,7 +207,7 @@ describe('[queries] reducer', () => {
     let done = false;
     class Container extends React.Component<FinalProps> {
       componentDidUpdate(nextProps: FinalProps) {
-        expect(stripSymbols(this.props.wrapper.thingy)).toEqual(
+        expect(this.props.wrapper.thingy).toEqual(
           expectedData.getThing
         );
         if (counter === 1) {

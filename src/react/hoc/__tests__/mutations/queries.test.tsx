@@ -1,14 +1,13 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { act, render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient, MutationUpdaterFn } from '../../../../core';
+import { ApolloClient, MutationUpdaterFunction, ApolloCache } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import {
   itAsync,
-  stripSymbols,
   createMockClient,
   mockSingleLink,
 } from '../../../../testing';
@@ -57,12 +56,12 @@ describe('graphql(mutation) query integration', () => {
           };
 
           this.props.mutate!({ optimisticResponse }).then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(data);
+            expect(result && result.data).toEqual(data);
             mutateFired = true;
           });
 
           const dataInStore = client.cache.extract(true);
-          expect(stripSymbols(dataInStore['Todo:99'])).toEqual(
+          expect(dataInStore['Todo:99']).toEqual(
             optimisticResponse.createTodo
           );
         }
@@ -78,7 +77,9 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(mutateFired).toBeTruthy()).then(resolve, reject);
+    return wait(() => {
+      expect(mutateFired).toBeTruthy();
+    }).then(resolve, reject);
   });
 
   itAsync('allows for updating queries from a mutation', (resolve, reject) => {
@@ -131,7 +132,12 @@ describe('graphql(mutation) query integration', () => {
       };
     }
 
-    const update: MutationUpdaterFn = (proxy, result) => {
+    const update: MutationUpdaterFunction<
+      MutationData,
+      Record<string, any>,
+      Record<string, any>,
+      ApolloCache<any>
+    > = (proxy, result) => {
       const data = JSON.parse(
         JSON.stringify(proxy.readQuery<QueryData>({ query }))
       );
@@ -160,33 +166,34 @@ describe('graphql(mutation) query integration', () => {
       options: () => ({ optimisticResponse, update })
     });
 
-    let count = 0;
+    let renderCount = 0;
 
     type ContainerProps = ChildProps<WithQueryChildProps, MutationData>;
     class Container extends React.Component<ContainerProps> {
       render() {
         if (!this.props.data || !this.props.data.todo_list) return null;
         if (!this.props.data.todo_list.tasks.length) {
-          this.props.mutate!().then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(mutationData);
+          act(() => {
+            this.props.mutate!().then(result => {
+              expect(result && result.data).toEqual(mutationData);
+            });
           });
-
-          const dataInStore = cache.extract(true);
-          expect(stripSymbols(dataInStore.ROOT_MUTATION!.createTodo)).toEqual(
-            optimisticResponse.createTodo
-          );
           return null;
         }
 
-        if (count === 0) {
-          count++;
-          expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
-            optimisticResponse.createTodo
-          ]);
-        } else if (count === 1) {
-          expect(stripSymbols(this.props.data.todo_list.tasks)).toEqual([
-            mutationData.createTodo
-          ]);
+        switch (++renderCount) {
+          case 1:
+            expect(this.props.data.todo_list.tasks).toEqual([
+              optimisticResponse.createTodo
+            ]);
+            break;
+          case 2:
+            expect(this.props.data.todo_list.tasks).toEqual([
+              mutationData.createTodo
+            ]);
+            break;
+          default:
+            reject(`too many renders (${renderCount})`);
         }
 
         return null;
@@ -201,7 +208,9 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(1)).then(resolve, reject);
+    return wait(() => {
+      expect(renderCount).toBe(2);
+    }).then(resolve, reject);
   });
 
   itAsync('allows for updating queries from a mutation automatically', (resolve, reject) => {
@@ -281,13 +290,15 @@ describe('graphql(mutation) query integration', () => {
       > {
         render() {
           if (count === 1) {
-            this.props.mutate!()
-              .then(result => {
-                expect(stripSymbols(result && result.data)).toEqual(
-                  mutationData
-                );
-              })
-              .catch(reject);
+            setTimeout(() => {
+              this.props.mutate!()
+                .then(result => {
+                  expect(result && result.data).toEqual(
+                    mutationData
+                  );
+                })
+                .catch(reject);
+            });
           }
           return null;
         }
@@ -298,10 +309,10 @@ describe('graphql(mutation) query integration', () => {
       class extends React.Component<ChildProps<Variables, Data>> {
         render() {
           if (count === 1) {
-            expect(stripSymbols(this.props.data!.mini)).toEqual(queryData.mini);
+            expect(this.props.data!.mini).toEqual(queryData.mini);
           }
           if (count === 2) {
-            expect(stripSymbols(this.props.data!.mini)).toEqual(
+            expect(this.props.data!.mini).toEqual(
               mutationData.mini
             );
           }
@@ -322,7 +333,9 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    return wait(() => {
+      expect(count).toBe(3);
+    }).then(resolve, reject);
   });
 
   it('should be able to override the internal `ignoreResults` setting', async () => {
@@ -372,7 +385,7 @@ describe('graphql(mutation) query integration', () => {
               expect(this.props.result!.loading).toBeFalsy();
               setTimeout(() => {
                 this.props.mutate!().then(result => {
-                  expect(stripSymbols(result && result.data)).toEqual(
+                  expect(result && result.data).toEqual(
                     mutationData
                   );
                 });

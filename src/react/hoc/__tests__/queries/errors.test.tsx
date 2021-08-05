@@ -8,7 +8,7 @@ import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { QueryResult } from '../../../types/types';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { Query } from '../../../components/Query';
 import { graphql } from '../../graphql';
 import { ChildProps, DataValue } from '../../types';
@@ -216,7 +216,7 @@ describe('[queries] errors', () => {
               iteration += 1;
               if (iteration === 1) {
                 // initial loading state is done, we have data
-                expect(stripSymbols(props.data!.allPeople)).toEqual(
+                expect(props.data!.allPeople).toEqual(
                   data.allPeople
                 );
                 props.setVar(2);
@@ -252,7 +252,7 @@ describe('[queries] errors', () => {
   });
 
   it('will not log a warning when there is an error that is not caught in the render method when using query', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       const query: DocumentNode = gql`
         query people {
           allPeople(first: 1) {
@@ -349,7 +349,7 @@ describe('[queries] errors', () => {
           try {
             switch (count++) {
               case 0:
-                expect(stripSymbols(props.data!.allPeople)).toEqual(
+                expect(props.data!.allPeople).toEqual(
                   data.allPeople
                 );
                 setTimeout(() => {
@@ -358,14 +358,14 @@ describe('[queries] errors', () => {
                 break;
               case 1:
                 expect(props.data!.loading).toBeTruthy();
-                expect(stripSymbols(props.data!.allPeople)).toEqual(
+                expect(props.data!.allPeople).toEqual(
                   data.allPeople
                 );
                 break;
               case 2:
                 expect(props.data!.loading).toBeFalsy();
                 expect(props.data!.error).toBeTruthy();
-                expect(stripSymbols(props.data!.allPeople)).toEqual(
+                expect(props.data!.allPeople).toEqual(
                   data.allPeople
                 );
                 break;
@@ -453,7 +453,7 @@ describe('[queries] errors', () => {
               case 4:
                 expect(props.data!.loading).toBeFalsy();
                 expect(props.data!.error).toBeFalsy();
-                expect(stripSymbols(props.data!.allPeople)).toEqual(
+                expect(props.data!.allPeople).toEqual(
                   dataTwo.allPeople
                 );
                 break;

@@ -7,7 +7,6 @@
 // externals
 import gql from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import {
   MockSubscriptionLink
 } from '../../../utilities/testing/mocking/mockSubscriptionLink';
@@ -66,8 +65,8 @@ describe('Subscription lifecycles', () => {
     const sub = observable.subscribe({
       next(result: any) {
         expect(result.loading).toBe(false);
-        expect(stripSymbols(result.data)).toEqual(initialData);
-        expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+        expect(result.data).toEqual(initialData);
+        expect(observable.getCurrentResult().data).toEqual(
           initialData,
         );
 
@@ -89,7 +88,7 @@ describe('Subscription lifecycles', () => {
           // step 4, start new Subscription;
           const recycled = resubscribe();
           const currentResult = recycled.getCurrentResult();
-          expect(stripSymbols(currentResult.data)).toEqual(initialData);
+          expect(currentResult.data).toEqual(initialData);
           done();
         }, 10);
       },

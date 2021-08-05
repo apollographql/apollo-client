@@ -6,7 +6,7 @@ import { render, wait } from '@testing-library/react';
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -171,7 +171,7 @@ describe('[queries] updateQuery', () => {
         public updateQuery: any;
         componentDidUpdate() {
           if (isUpdated) {
-            expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+            expect(this.props.data!.allPeople).toEqual(
               data2.allPeople
             );
             return;
@@ -226,7 +226,7 @@ describe('[queries] updateQuery', () => {
       class extends React.Component<ChildProps<{}, Data>> {
         componentDidUpdate() {
           if (isUpdated) {
-            expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+            expect(this.props.data!.allPeople).toEqual(
               data2.allPeople
             );
             return;

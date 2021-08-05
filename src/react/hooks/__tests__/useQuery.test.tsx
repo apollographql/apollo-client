@@ -1187,6 +1187,66 @@ describe('useQuery Hook', () => {
       expect(catchFn.mock.calls[0][0]).toBeInstanceOf(ApolloError);
       expect(catchFn.mock.calls[0][0].message).toBe('same error');
     });
+
+    it('should call onCompleted when variables change', async () => {
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
+      const mocks = [
+        {
+          request: { query, variables: { first: 1 } },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables: { first: 2 } },
+          result: { data: data2 },
+        },
+      ];
+
+      const onCompleted = jest.fn();
+
+      const { result, rerender, waitForNextUpdate } = renderHook(
+        ({ variables }) => useQuery(query, { variables, onCompleted }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: {
+            variables: { first: 1 },
+          },
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(data1);
+
+      rerender({ variables: { first: 2 } });
+      expect(result.current.loading).toBe(true);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(data2);
+
+      rerender({ variables: { first: 1 } });
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(data1);
+
+      expect(onCompleted).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe('Pagination', () => {
@@ -1536,6 +1596,71 @@ describe('useQuery Hook', () => {
 
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 2' });
+    });
+
+    it('refetching after an error', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: 'world 1' } },
+        },
+        {
+          request: { query },
+          error: new Error('This is an error!'),
+          delay: 10,
+        },
+        {
+          request: { query },
+          result: { data: { hello: 'world 2' } },
+          delay: 10,
+        },
+      ];
+
+      const cache = new InMemoryCache();
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+        }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBe(undefined);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+
+      result.current.refetch();
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(true);
+      expect(result.current.error).toBe(undefined);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+
+      result.current.refetch();
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(true);
+      expect(result.current.error).toBe(undefined);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: 'world 2' });
     });
 
@@ -2144,7 +2269,7 @@ describe('useQuery Hook', () => {
           request: {
             query,
             variables: {
-              someVar: 'abc123'
+              name: 'Luke'
             }
           },
           result: { data: undefined },
@@ -2153,7 +2278,7 @@ describe('useQuery Hook', () => {
           request: {
             query,
             variables: {
-              someVar: 'abc123'
+              name: 'Luke'
             }
           },
           result: { data: peopleData },
@@ -2174,7 +2299,7 @@ describe('useQuery Hook', () => {
 
       const { result, waitForNextUpdate } = renderHook(
         () => useQuery(query, {
-          variables: { someVar: 'abc123' },
+          variables: { name: 'Luke' },
           partialRefetch: true,
           notifyOnNetworkStatusChange: true,
         }),

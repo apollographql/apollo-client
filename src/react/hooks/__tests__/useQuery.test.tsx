@@ -2238,51 +2238,21 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe('Partial refetching', () => {
-    it('should attempt a refetch when the query result was marked as being ' +
-       'partial, the returned data was reset to an empty Object by the ' +
-       'Apollo Client QueryManager (due to a cache miss), and the ' +
-       '`partialRefetch` prop is `true`', async () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const query: DocumentNode = gql`
-        query AllPeople($name: String!) {
-          allPeople(name: $name) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
-      interface Data {
-        allPeople: {
-          people: Array<{ name: string }>;
-        };
-      }
-
-      const peopleData: Data = {
-        allPeople: { people: [{ name: 'Luke Skywalker' }] }
-      };
+  describe('Partial refetch', () => {
+    it('should attempt a refetch when data is missing and partialRefetch is true', async () => {
+      const errorSpy = jest.spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const query = gql`{ hello }`;
 
       const link = mockSingleLink(
         {
-          request: {
-            query,
-            variables: {
-              name: 'Luke'
-            }
-          },
-          result: { data: undefined },
+          request: { query },
+          result: { data: {} },
         },
         {
-          request: {
-            query,
-            variables: {
-              name: 'Luke'
-            }
-          },
-          result: { data: peopleData },
-          delay: 10,
+          request: { query },
+          result: { data: { hello: "world" } },
+          delay: 20,
         }
       );
 
@@ -2299,42 +2269,86 @@ describe('useQuery Hook', () => {
 
       const { result, waitForNextUpdate } = renderHook(
         () => useQuery(query, {
-          variables: { name: 'Luke' },
           partialRefetch: true,
           notifyOnNetworkStatusChange: true,
         }),
         { wrapper },
       );
 
-      // Initial loading render
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
       await waitForNextUpdate();
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
-      const previous = result.all[result.all.length - 2];
-      if (previous instanceof Error) {
-        throw previous;
-      }
-
-      // `data` is missing and `partialRetch` is true, so a refetch
-      // is triggered and loading is set as true again
-      expect(previous.loading).toBe(true);
-      expect(previous.data).toBe(undefined);
-      expect(previous.networkStatus).toBe(NetworkStatus.loading);
-
+      // waitForUpdate seems to miss the erroring render
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
 
-      await waitForNextUpdate();
-      // Refetch has completed
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual(peopleData);
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
 
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world' });
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      errorSpy.mockRestore();
+    });
+
+    it('should attempt a refetch when data is missing, partialRefetch is true and addTypename is false for the cache', async () => {
+      const errorSpy = jest.spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const query = gql`{ hello }`;
+
+      const link = mockSingleLink(
+        {
+          request: { query },
+          result: { data: {} },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+          delay: 20,
+        }
+      );
+
+      const client = new ApolloClient({
+        link,
+        // THIS LINE IS THE ONLY DIFFERENCE FOR THIS TEST
+        cache: new InMemoryCache({ addTypename: false }),
+      });
+
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>
+          {children}
+        </ApolloProvider>
+      );
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {
+          partialRefetch: true,
+          notifyOnNetworkStatusChange: true,
+        }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+
+      await waitForNextUpdate();
+      // waitForUpdate seems to miss the erroring render
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world' });
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       errorSpy.mockRestore();
     });
   });

@@ -90,6 +90,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     queryResult.networkStatus,
     queryResult.error,
     queryResult.data,
+    queryData.currentObservable,
   ]);
 
   return result;

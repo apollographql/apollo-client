@@ -1,6 +1,5 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
 import { Cache } from '../../../cache';
@@ -77,40 +76,34 @@ describe('Cache', () => {
       ],
       proxy => {
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                {
-                  a
-                }
-              `,
-            }),
-          ),
+          proxy.readQuery({
+            query: gql`
+              {
+                a
+              }
+            `,
+          }),
         ).toEqual({ a: 1 });
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                {
-                  b
-                  c
-                }
-              `,
-            }),
-          ),
+          proxy.readQuery({
+            query: gql`
+              {
+                b
+                c
+              }
+            `,
+          }),
         ).toEqual({ b: 2, c: 3 });
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                {
-                  a
-                  b
-                  c
-                }
-              `,
-            }),
-          ),
+          proxy.readQuery({
+            query: gql`
+              {
+                a
+                b
+                c
+              }
+            `,
+          }),
         ).toEqual({ a: 1, b: 2, c: 3 });
       },
     );
@@ -140,58 +133,52 @@ describe('Cache', () => {
       ],
       proxy => {
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                {
-                  a
-                  d {
-                    e
-                  }
+          proxy.readQuery({
+            query: gql`
+              {
+                a
+                d {
+                  e
                 }
-              `,
-            }),
-          ),
+              }
+            `,
+          }),
         ).toEqual({ a: 1, d: { e: 4 } });
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                {
-                  a
-                  d {
-                    e
-                    h {
-                      i
-                    }
+          proxy.readQuery({
+            query: gql`
+              {
+                a
+                d {
+                  e
+                  h {
+                    i
                   }
                 }
-              `,
-            }),
-          ),
+              }
+            `,
+          }),
         ).toEqual({ a: 1, d: { e: 4, h: { i: 7 } } });
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                {
-                  a
-                  b
-                  c
-                  d {
-                    e
-                    f
-                    g
-                    h {
-                      i
-                      j
-                      k
-                    }
+          proxy.readQuery({
+            query: gql`
+              {
+                a
+                b
+                c
+                d {
+                  e
+                  f
+                  g
+                  h {
+                    i
+                    j
+                    k
                   }
                 }
-              `,
-            }),
-          ),
+              }
+            `,
+          }),
         ).toEqual({
           a: 1,
           b: 2,
@@ -213,20 +200,18 @@ describe('Cache', () => {
       ],
       proxy => {
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                query($literal: Boolean, $value: Int) {
-                  a: field(literal: true, value: 42)
-                  b: field(literal: $literal, value: $value)
-                }
-              `,
-              variables: {
-                literal: false,
-                value: 42,
-              },
-            }),
-          ),
+          proxy.readQuery({
+            query: gql`
+              query($literal: Boolean, $value: Int) {
+                a: field(literal: true, value: 42)
+                b: field(literal: $literal, value: $value)
+              }
+            `,
+            variables: {
+              literal: false,
+              value: 42,
+            },
+          }),
         ).toEqual({ a: 1, b: 2 });
       },
     );
@@ -242,19 +227,17 @@ describe('Cache', () => {
       ],
       proxy => {
         expect(
-          stripSymbols(
-            proxy.readQuery({
-              query: gql`
-                query($literal: Boolean, $value: Int) {
-                  a: field(literal: $literal, value: $value)
-                }
-              `,
-              variables: {
-                literal: false,
-                value: null,
-              },
-            }),
-          ),
+          proxy.readQuery({
+            query: gql`
+              query($literal: Boolean, $value: Int) {
+                a: field(literal: $literal, value: $value)
+              }
+            `,
+            variables: {
+              literal: false,
+              value: null,
+            },
+          }),
         ).toEqual({ a: 1 });
       },
     );
@@ -284,7 +267,7 @@ describe('Cache', () => {
         };
 
         const preQueryCopy = cloneDeep(options);
-        expect(stripSymbols(proxy.readQuery(options))).toEqual({ a: 1, b: 2 });
+        expect(proxy.readQuery(options)).toEqual({ a: 1, b: 2 });
         expect(preQueryCopy).toEqual(options);
       },
     );
@@ -398,116 +381,104 @@ describe('Cache', () => {
       ],
       proxy => {
         expect(
-          stripSymbols(
-            proxy.readFragment({
-              id: 'foo',
-              fragment: gql`
-                fragment fragmentFoo on Foo {
-                  e
-                  h {
-                    i
-                  }
+          proxy.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                h {
+                  i
                 }
-              `,
-            }),
-          ),
+              }
+            `,
+          }),
         ).toEqual({ e: 4, h: { i: 7 } });
         expect(
-          stripSymbols(
-            proxy.readFragment({
-              id: 'foo',
-              fragment: gql`
-                fragment fragmentFoo on Foo {
-                  e
-                  f
-                  g
-                  h {
-                    i
-                    j
-                    k
-                  }
+          proxy.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                f
+                g
+                h {
+                  i
+                  j
+                  k
                 }
-              `,
-            }),
-          ),
+              }
+            `,
+          }),
         ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
         expect(
-          stripSymbols(
-            proxy.readFragment({
-              id: 'bar',
-              fragment: gql`
-                fragment fragmentBar on Bar {
-                  i
-                }
-              `,
-            }),
-          ),
+          proxy.readFragment({
+            id: 'bar',
+            fragment: gql`
+              fragment fragmentBar on Bar {
+                i
+              }
+            `,
+          }),
         ).toEqual({ i: 7 });
         expect(
-          stripSymbols(
-            proxy.readFragment({
-              id: 'bar',
-              fragment: gql`
-                fragment fragmentBar on Bar {
-                  i
-                  j
-                  k
-                }
-              `,
-            }),
-          ),
+          proxy.readFragment({
+            id: 'bar',
+            fragment: gql`
+              fragment fragmentBar on Bar {
+                i
+                j
+                k
+              }
+            `,
+          }),
         ).toEqual({ i: 7, j: 8, k: 9 });
         expect(
-          stripSymbols(
-            proxy.readFragment({
-              id: 'foo',
-              fragment: gql`
-                fragment fragmentFoo on Foo {
-                  e
-                  f
-                  g
-                  h {
-                    i
-                    j
-                    k
-                  }
-                }
-
-                fragment fragmentBar on Bar {
+          proxy.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                f
+                g
+                h {
                   i
                   j
                   k
                 }
-              `,
-              fragmentName: 'fragmentFoo',
-            }),
-          ),
+              }
+
+              fragment fragmentBar on Bar {
+                i
+                j
+                k
+              }
+            `,
+            fragmentName: 'fragmentFoo',
+          }),
         ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
         expect(
-          stripSymbols(
-            proxy.readFragment({
-              id: 'bar',
-              fragment: gql`
-                fragment fragmentFoo on Foo {
-                  e
-                  f
-                  g
-                  h {
-                    i
-                    j
-                    k
-                  }
-                }
-
-                fragment fragmentBar on Bar {
+          proxy.readFragment({
+            id: 'bar',
+            fragment: gql`
+              fragment fragmentFoo on Foo {
+                e
+                f
+                g
+                h {
                   i
                   j
                   k
                 }
-              `,
-              fragmentName: 'fragmentBar',
-            }),
-          ),
+              }
+
+              fragment fragmentBar on Bar {
+                i
+                j
+                k
+              }
+            `,
+            fragmentName: 'fragmentBar',
+          }),
         ).toEqual({ i: 7, j: 8, k: 9 });
       },
     );
@@ -525,21 +496,19 @@ describe('Cache', () => {
       ],
       proxy => {
         expect(
-          stripSymbols(
-            proxy.readFragment({
-              id: 'foo',
-              fragment: gql`
-                fragment foo on Foo {
-                  a: field(literal: true, value: 42)
-                  b: field(literal: $literal, value: $value)
-                }
-              `,
-              variables: {
-                literal: false,
-                value: 42,
-              },
-            }),
-          ),
+          proxy.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment foo on Foo {
+                a: field(literal: true, value: 42)
+                b: field(literal: $literal, value: $value)
+              }
+            `,
+            variables: {
+              literal: false,
+              value: 42,
+            },
+          }),
         ).toEqual({ a: 1, b: 2 });
       },
     );
@@ -560,46 +529,40 @@ describe('Cache', () => {
       ],
       (client1, client2, client3) => {
         expect(
-          stripSymbols(
-            client1.readFragment({
-              id: 'foo',
-              fragment: gql`
-                fragment fooFragment on Foo {
-                  a
-                  b
-                  c
-                }
-              `,
-            }),
-          ),
+          client1.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fooFragment on Foo {
+                a
+                b
+                c
+              }
+            `,
+          }),
         ).toEqual(null);
         expect(
-          stripSymbols(
-            client2.readFragment({
-              id: 'foo',
-              fragment: gql`
-                fragment fooFragment on Foo {
-                  a
-                  b
-                  c
-                }
-              `,
-            }),
-          ),
+          client2.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fooFragment on Foo {
+                a
+                b
+                c
+              }
+            `,
+          }),
         ).toEqual(null);
         expect(
-          stripSymbols(
-            client3.readFragment({
-              id: 'foo',
-              fragment: gql`
-                fragment fooFragment on Foo {
-                  a
-                  b
-                  c
-                }
-              `,
-            }),
-          ),
+          client3.readFragment({
+            id: 'foo',
+            fragment: gql`
+              fragment fooFragment on Foo {
+                a
+                b
+                c
+              }
+            `,
+          }),
         ).toEqual({ a: 1, b: 2, c: 3 });
       },
     );
@@ -1290,7 +1253,7 @@ describe('Cache', () => {
           fragment: readWriteFragment,
           id: 'query',
         });
-        expect(stripSymbols(result)).toEqual(data);
+        expect(result).toEqual(data);
       },
     );
 

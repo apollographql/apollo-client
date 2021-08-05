@@ -28,8 +28,16 @@ Object {
       ],
     },
   },
+  "error": undefined,
+  "fetchMore": [Function],
   "loading": false,
   "networkStatus": 7,
+  "previousData": undefined,
+  "refetch": [Function],
+  "startPolling": [Function],
+  "stopPolling": [Function],
+  "subscribeToMore": [Function],
+  "updateQuery": [Function],
   "variables": Object {},
 }
 `;

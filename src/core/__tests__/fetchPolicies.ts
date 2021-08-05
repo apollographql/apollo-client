@@ -5,7 +5,6 @@ import { ApolloLink } from '../../link/core';
 import { InMemoryCache } from '../../cache';
 import { Observable } from '../../utilities';
 import {
-  stripSymbols,
   subscribeAndCount,
   itAsync,
   mockSingleLink,
@@ -109,7 +108,7 @@ describe('network-only', () => {
       () => client
         .query({ fetchPolicy: 'network-only', query })
         .then(actualResult => {
-          expect(stripSymbols(actualResult.data)).toEqual(result);
+          expect(actualResult.data).toEqual(result);
           expect(called).toBe(4);
         }),
     ).then(resolve, reject);
@@ -132,7 +131,7 @@ describe('network-only', () => {
 
     return client.query({ query, fetchPolicy: 'network-only' }).then(
       () => client.query({ query }).then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(result);
+        expect(actualResult.data).toEqual(result);
         expect(called).toBe(2);
       }),
     ).then(resolve, reject);
@@ -161,7 +160,7 @@ describe('network-only', () => {
         didFail = true;
       })
       .then(() => client.query({ query }).then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(result);
+        expect(actualResult.data).toEqual(result);
         // the first error doesn't call .map on the inspector
         expect(called).toBe(3);
         expect(didFail).toBe(true);
@@ -190,7 +189,7 @@ describe('network-only', () => {
       )
       .then(() => {
         return client.query({ query }).then(actualResult => {
-          expect(stripSymbols(actualResult.data)).toEqual(merged);
+          expect(actualResult.data).toEqual(merged);
         });
       })
       .then(resolve, reject);
@@ -262,7 +261,7 @@ describe('no-cache', () => {
 
     return client.query({ query, fetchPolicy: 'no-cache' }).then(
       () => client.query({ query }).then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(result);
+        expect(actualResult.data).toEqual(result);
         // the second query couldn't read anything from the cache
         expect(called).toBe(4);
       }),
@@ -292,7 +291,7 @@ describe('no-cache', () => {
         didFail = true;
       })
       .then(() => client.query({ query }).then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(result);
+        expect(actualResult.data).toEqual(result);
         // the first error doesn't call .map on the inspector
         expect(called).toBe(3);
         expect(didFail).toBe(true);
@@ -319,7 +318,7 @@ describe('no-cache', () => {
       )
       .then(() => {
         return client.query({ query }).then(actualResult => {
-          expect(stripSymbols(actualResult.data)).toEqual(result);
+          expect(actualResult.data).toEqual(result);
         });
       })
       .then(resolve, reject);
@@ -343,7 +342,7 @@ describe('no-cache', () => {
 
       return client.query({ query, fetchPolicy: 'no-cache', notifyOnNetworkStatusChange: true }).then(
         () => client.query({ query }).then(actualResult => {
-          expect(stripSymbols(actualResult.data)).toEqual(result);
+          expect(actualResult.data).toEqual(result);
           // the second query couldn't read anything from the cache
           expect(called).toBe(4);
         }),
@@ -373,7 +372,7 @@ describe('no-cache', () => {
           didFail = true;
         })
         .then(() => client.query({ query }).then(actualResult => {
-          expect(stripSymbols(actualResult.data)).toEqual(result);
+          expect(actualResult.data).toEqual(result);
           // the first error doesn't call .map on the inspector
           expect(called).toBe(3);
           expect(didFail).toBe(true);

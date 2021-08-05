@@ -129,7 +129,7 @@ export class ObservableQuery<
 
     // query information
     this.options = options;
-    this.queryId = queryManager.generateQueryId();
+    this.queryId = queryInfo.queryId || queryManager.generateQueryId();
 
     const opDef = getOperationDefinition(options.query);
     this.queryName = opDef && opDef.name && opDef.name.value;

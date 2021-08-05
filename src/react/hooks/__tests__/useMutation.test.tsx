@@ -1163,12 +1163,14 @@ describe('useMutation Hook', () => {
           result: {
             data: CREATE_TODO_RESULT,
           },
+          delay: 10,
         },
         {
           request: {
             query: GET_TODOS_QUERY,
           },
           result: { data: GET_TODOS_RESULT_2 },
+          delay: 10,
         },
       ];
 

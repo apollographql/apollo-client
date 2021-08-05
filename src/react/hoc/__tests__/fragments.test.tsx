@@ -6,7 +6,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../core';
 import { ApolloProvider } from '../../context';
 import { InMemoryCache as Cache } from '../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../testing';
+import { itAsync, mockSingleLink } from '../../../testing';
 import { graphql } from '../graphql';
 import { ChildProps } from '../types';
 
@@ -40,7 +40,7 @@ describe('fragments', () => {
           componentDidUpdate() {
             const { props } = this;
             expect(props.data!.loading).toBeFalsy();
-            expect(stripSymbols(props.data!.allPeople)).toEqual(
+            expect(props.data!.allPeople).toEqual(
               expectedData.allPeople
             );
           }
@@ -98,7 +98,7 @@ describe('fragments', () => {
       class extends React.Component<ChildProps<{}, Data>> {
         componentDidUpdate() {
           expect(this.props.data!.loading).toBeFalsy();
-          expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+          expect(this.props.data!.allPeople).toEqual(
             data.allPeople
           );
         }

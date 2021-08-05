@@ -275,5 +275,22 @@ For more information, see [Optimistic mutation results](/performance/optimistic-
 
 </td>
 </tr>
+
+<tr>
+<td>
+
+###### `fetchPolicy`
+
+`FetchPolicy`
+</td>
+
+<td>
+
+Provide `no-cache` if the mutation's result should _not_ be written to the Apollo Client cache.
+
+Unlike queries, mutations do not support alternate [fetch policies](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy) besides `no-cache`.
+
+</td>
+</tr>
 </tbody>
 </table>

@@ -224,6 +224,7 @@ export function useQuery<
       }
 
       if (!error.hasOwnProperty('graphQLErrors')) {
+        // The error is not a graphQL error
         throw error;
       }
 
@@ -232,12 +233,13 @@ export function useQuery<
         (previousResult && previousResult.loading) ||
         !equal(error, previousResult.error)
       ) {
-        setResult({
+        prevRef.current.result = {
           data: previousResult.data,
           error: error as ApolloError,
           loading: false,
           networkStatus: NetworkStatus.error,
-        });
+        };
+        setResult(prevRef.current.result);
       }
     }
 
@@ -333,6 +335,12 @@ export function useQuery<
     };
   }
 
+  // TODO: Is this still necessary?
+  // Any query errors that exist are now available in `result`, so we'll
+  // remove the original errors from the `ObservableQuery` query store to
+  // make sure they aren't re-displayed on subsequent (potentially error
+  // free) requests/responses.
+  obsQuery.resetQueryStoreErrors()
   return {
     ...obsQueryFields,
     variables: obsQuery.variables,

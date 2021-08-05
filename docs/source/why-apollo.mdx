@@ -13,7 +13,7 @@ With Apollo's declarative approach to data fetching, all of the logic for retrie
 function Feed() {
   const { loading, error, data } = useQuery(GET_DOGS);
   if (error) return <Error />;
-  if (loading || !data) return <Fetching />;
+  if (loading) return <Fetching />;
 
   return <DogList dogs={data.dogs} />;
 }

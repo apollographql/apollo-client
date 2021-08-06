@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useQuery Hook Missing Fields should log debug messages about MissingFieldErrors from the cache 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing cache result fields: cars.0.vin",
+      Array [
+        [Error: Can't find field 'vin' on Car:1 object],
+      ],
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`useQuery Hook Missing Fields should log debug messages about MissingFieldErrors from the cache 2`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'vin' while writing result {
+  \\"id\\": 1,
+  \\"make\\": \\"Audi\\",
+  \\"model\\": \\"RS8\\",
+  \\"vine\\": \\"DOLLADOLLABILL\\",
+  \\"__typename\\": \\"Car\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;

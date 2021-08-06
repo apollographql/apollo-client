@@ -18,6 +18,7 @@ import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { invariant } from 'ts-invariant';
 
 describe('useQuery Hook', () => {
   describe('General use', () => {
@@ -2339,8 +2340,10 @@ describe('useQuery Hook', () => {
   });
 
   describe('Missing Fields', () => {
-    it('should have errors populated with missing field errors from the cache', async () => {
+    it('should log debug messages about MissingFieldErrors from the cache', async () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const debugSpy = jest.spyOn(invariant, 'debug').mockImplementation(() => {});
+
       const carQuery: DocumentNode = gql`
         query cars($id: Int) {
           cars(id: $id) {
@@ -2390,12 +2393,12 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.clientErrors.length).toEqual(1);
-      expect(result.current.error!.message).toMatch(/Can't find field 'vin' on Car:1/);
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
+      expect(debugSpy).toMatchSnapshot();
+      expect(result.current.error).toBeUndefined();
+      debugSpy.mockRestore();
+
+      expect(errorSpy).toMatchSnapshot();
       errorSpy.mockRestore();
     });
 

@@ -89,6 +89,7 @@ export function useQuery<
     }
 
     if (!obsQuery) {
+      // Is it safe (StrictMode/memory-wise) to call client.watchQuery here?
       obsQuery = client.watchQuery(options);
       if (context.renderPromises) {
         context.renderPromises.registerSSRObservable(
@@ -290,11 +291,6 @@ export function useQuery<
       (!result.data || Object.keys(result.data).length === 0) &&
       obsQuery.options.fetchPolicy !== 'cache-only'
     ) {
-      setResult((result) => ({
-        ...result,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-      }));
       setTimeout(() => obsQuery.refetch());
     }
   }, [

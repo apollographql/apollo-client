@@ -124,11 +124,19 @@ export default [
   ...entryPoints.map(prepareBundle),
   // Convert the ESM entry point to a single CJS bundle.
   prepareCJS(
-    './dist/core/index.js',
+    './dist/index.js',
     './dist/apollo-client.cjs.js',
   ),
-  // Minify that single CJS bundle.
+  // The bundlesize check configured in package.json reflects the total size of
+  // @apollo/client/core (note the /core), rather than @apollo/client, which
+  // currently includes React-related exports that may not be used by all
+  // consumers. We are planning to confine those React exports to
+  // @apollo/client/react in AC4 (see issue #8190).
+  prepareCJS(
+    './dist/core/index.js',
+    './dist/apollo-core.cjs.js',
+  ),
   prepareCJSMinified(
-    './dist/apollo-client.cjs.js',
+    './dist/apollo-core.cjs.js',
   ),
 ];

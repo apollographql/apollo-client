@@ -166,11 +166,16 @@ describe('queries', () => {
       options
     )(({ data }: ChildProps<Variables, Data, Variables>) => {
       expect(data).toBeTruthy();
-      if (count === 0) {
-        expect(data!.variables.someId).toEqual(1);
-      } else if (count === 1) {
-        expect(data!.variables.someId).toEqual(2);
+      switch (count) {
+        case 0:
+        case 1:
+          expect(data!.variables.someId).toEqual(1);
+          break;
+        case 2:
+          expect(data!.variables.someId).toEqual(2);
+          break;
       }
+
       count += 1;
       return null;
     });

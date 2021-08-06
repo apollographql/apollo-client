@@ -2394,11 +2394,24 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
 
-      expect(debugSpy).toMatchSnapshot();
       expect(result.current.error).toBeUndefined();
+      expect(debugSpy).toHaveBeenCalledTimes(1);
+      expect(debugSpy).toHaveBeenLastCalledWith(
+        "Missing cache result fields: cars.0.vin",
+        [new Error("Can't find field 'vin' on Car:1 object")]
+      );
       debugSpy.mockRestore();
 
-      expect(errorSpy).toMatchSnapshot();
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenLastCalledWith(
+        `Missing field 'vin' while writing result ${JSON.stringify({
+          id: 1,
+          make: "Audi",
+          model: "RS8",
+          vine: "DOLLADOLLABILL",
+          __typename: "Car"
+        }, null, 2)}`
+      );
       errorSpy.mockRestore();
     });
 

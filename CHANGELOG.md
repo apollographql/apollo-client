@@ -5,6 +5,14 @@
 - Reevaluate `window.fetch` each time `HttpLink` uses it, if not configured using `options.fetch`. This change enables a variety of strategies for instrumenting `window.fetch`, without requiring those strategies to run before `@apollo/client/link/http` is first imported. <br/>
   [@benjamn](https://github.com/benjamn) in [#8603](https://github.com/apollographql/apollo-client/pull/8603)
 
+### Bug Fixes
+
+- Restore full `@apollo/client/apollo-client.cjs.js` CommonJS bundle for older bundlers.
+
+  > Note that Node.js and CommonJS bundlers typically use the bundles specified by `"main"` fields in our generated `package.json` files, which are all independent and non-overlapping CommonJS modules. However, `apollo-client.cjs.js` is just one big bundle, so mixing imports of `apollo-client.cjs.js` with the other CommonJS bundles is discouraged, as it could trigger the [dual package hazard](https://nodejs.org/api/packages.html#packages_dual_commonjs_es_module_packages). In other words, please don't start using `apollo-client.cjs.js` if you're not already. <br/>
+
+  [@benjamn](https://github.com/benjamn) in [#8592](https://github.com/apollographql/apollo-client/pull/8592)
+
 ## Apollo Client 3.4.5
 
 ### Bug Fixes

@@ -90,7 +90,7 @@
   },
   "devDependencies": {
     "@babel/parser": "7.14.9",
-    "@graphql-tools/schema": "8.0.1",
+    "@graphql-tools/schema": "8.0.3",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@testing-library/react": "9.5.0",
     "@testing-library/react-hooks": "7.0.1",

@@ -41,7 +41,7 @@ export interface WriteContext extends ReadMergeModifyContext {
   overwrite: boolean;
   incomingById: Map<string, {
     fields: StoreObject;
-    mergeTree: MergeTree;
+    mergeTree?: MergeTree;
     selections: Set<SelectionNode>;
   }>;
   clientOnly: boolean;
@@ -107,7 +107,7 @@ export class StoreWriter {
     context.incomingById.forEach(({ fields, mergeTree, selections }, dataId) => {
       const entityRef = makeReference(dataId);
 
-      if (mergeTree.map.size) {
+      if (mergeTree && mergeTree.map.size) {
         const applied = this.applyMerges(mergeTree, entityRef, fields, context);
         if (isReference(applied)) {
           // Assume References returned by applyMerges have already been merged
@@ -131,7 +131,7 @@ export class StoreWriter {
         });
 
         const hasMergeFunction = (storeFieldName: string) => {
-          const childTree = mergeTree.map.get(storeFieldName);
+          const childTree = mergeTree && mergeTree.map.get(storeFieldName);
           return Boolean(childTree && childTree.info && childTree.info.merge);
         };
 
@@ -377,7 +377,10 @@ export class StoreWriter {
       } else {
         context.incomingById.set(dataId, {
           fields: incomingFields,
-          mergeTree,
+          // Save a reference to mergeTree only if it is not empty, because
+          // empty MergeTrees may be recycled by maybeRecycleChildMergeTree and
+          // reused for entirely different parts of the result tree.
+          mergeTree: mergeTreeIsEmpty(mergeTree) ? void 0 : mergeTree,
           selections,
         });
       }

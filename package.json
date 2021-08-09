@@ -54,7 +54,7 @@
   "bundlesize": [
     {
       "name": "apollo-client",
-      "path": "./dist/apollo-client.min.cjs",
+      "path": "./dist/apollo-core.min.cjs",
       "maxSize": "24.6 kB"
     }
   ],
@@ -89,19 +89,19 @@
     "zen-observable-ts": "^1.1.0"
   },
   "devDependencies": {
-    "@babel/parser": "7.14.9",
-    "@graphql-tools/schema": "8.0.1",
+    "@babel/parser": "7.15.2",
+    "@graphql-tools/schema": "8.0.3",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@testing-library/react": "9.5.0",
-    "@testing-library/react-hooks": "^7.0.1",
+    "@testing-library/react-hooks": "7.0.1",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/fetch-mock": "7.3.5",
     "@types/glob": "7.1.4",
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "26.0.24",
-    "@types/lodash": "4.14.171",
-    "@types/node": "16.4.10",
-    "@types/react": "17.0.15",
+    "@types/lodash": "4.14.172",
+    "@types/node": "16.4.13",
+    "@types/react": "17.0.16",
     "@types/react-dom": "17.0.2",
     "@types/recompose": "0.30.8",
     "bundlesize": "0.18.1",
@@ -126,7 +126,7 @@
     "subscriptions-transport-ws": "0.9.19",
     "terser": "5.7.1",
     "ts-jest": "26.5.6",
-    "ts-node": "10.1.0",
+    "ts-node": "10.2.0",
     "typescript": "4.3.5",
     "wait-for-observables": "1.0.3"
   },

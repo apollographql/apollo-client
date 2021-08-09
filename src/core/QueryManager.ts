@@ -31,8 +31,9 @@ import {
   MutationOptions,
   WatchQueryFetchPolicy,
   ErrorPolicy,
+  MutationFetchPolicy,
 } from './watchQueryOptions';
-import { ObservableQuery, applyNextFetchPolicy } from './ObservableQuery';
+import { ObservableQuery, applyNextFetchPolicy, logMissingFieldErrors } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
@@ -162,7 +163,7 @@ export class QueryManager<TStore> {
     update: updateWithProxyFn,
     onQueryUpdated,
     errorPolicy = 'none',
-    fetchPolicy,
+    fetchPolicy = 'network-only',
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>> {
@@ -172,8 +173,9 @@ export class QueryManager<TStore> {
     );
 
     invariant(
-      !fetchPolicy || fetchPolicy === 'no-cache',
-      "Mutations only support a 'no-cache' fetchPolicy. If you don't want to disable the cache, remove your fetchPolicy setting to proceed with the default mutation behavior."
+      fetchPolicy === 'network-only' ||
+      fetchPolicy === 'no-cache',
+      "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
     );
 
     const mutationId = this.generateMutationId();
@@ -321,7 +323,7 @@ export class QueryManager<TStore> {
       result: FetchResult<TData>;
       document: DocumentNode;
       variables?: TVariables;
-      fetchPolicy?: "no-cache";
+      fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
@@ -479,7 +481,7 @@ export class QueryManager<TStore> {
       mutationId: string;
       document: DocumentNode;
       variables?: TVariables;
-      fetchPolicy?: "no-cache";
+      fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>,
@@ -1347,12 +1349,9 @@ export class QueryManager<TStore> {
       const data = diff.result;
 
       if (__DEV__ &&
-          isNonEmptyArray(diff.missing) &&
-          !equal(data, {}) &&
-          !returnPartialData) {
-        invariant.debug(`Missing cache result fields: ${
-          diff.missing.map(m => m.path.join('.')).join(', ')
-        }`, diff.missing);
+          !returnPartialData &&
+          !equal(data, {})) {
+        logMissingFieldErrors(diff.missing);
       }
 
       const fromData = (data: TData | undefined) => Observable.of({

@@ -18,6 +18,7 @@ import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { invariant } from 'ts-invariant';
 
 describe('useQuery Hook', () => {
   describe('General use', () => {
@@ -1391,6 +1392,102 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
     });
+
+    it("regression test for issue #8600", async () => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Country: {
+            fields: {
+              cities: {
+                keyArgs: ['size'],
+                merge(existing, incoming, { args }) {
+                  if (!args) return incoming
+
+                  const items = existing ? existing.slice(0) : []
+
+                  const offset = args.offset ?? 0
+                  for (let i = 0; i < incoming.length; ++i) {
+                    items[offset + i] = incoming[i]
+                  }
+
+                  return items
+                },
+              },
+            },
+          },
+          CityInfo: {
+            merge: true,
+          },
+        },
+      });
+
+      const GET_COUNTRIES = gql`
+        query GetCountries {
+          countries {
+            id
+            ...WithSmallCities
+            ...WithAirQuality
+          }
+        }
+
+        fragment WithSmallCities on Country {
+          biggestCity {
+            id
+          }
+          smallCities: cities(size: SMALL) {
+            id
+          }
+        }
+
+        fragment WithAirQuality on Country {
+          biggestCity {
+            id
+            info {
+              airQuality
+            }
+          }
+        }
+      `;
+
+      const countries = [
+        {
+          __typename: 'Country',
+          id: 123,
+          biggestCity: {
+            __typename: 'City',
+            id: 234,
+            info: {
+              __typename: 'CityInfo',
+              airQuality: 0,
+            },
+          },
+          smallCities: [
+            { __typename: 'City', id: 345 },
+          ],
+        },
+      ];
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={[
+          {
+            request: { query: GET_COUNTRIES },
+            result: { data: { countries } },
+          },
+        ]} cache={cache}>{children}</MockedProvider>
+      );
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(GET_COUNTRIES),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ countries });
+    });
   });
 
   describe('Refetching', () => {
@@ -2339,8 +2436,10 @@ describe('useQuery Hook', () => {
   });
 
   describe('Missing Fields', () => {
-    it('should have errors populated with missing field errors from the cache', async () => {
+    it('should log debug messages about MissingFieldErrors from the cache', async () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const debugSpy = jest.spyOn(invariant, 'debug').mockImplementation(() => {});
+
       const carQuery: DocumentNode = gql`
         query cars($id: Int) {
           cars(id: $id) {
@@ -2390,12 +2489,25 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.clientErrors.length).toEqual(1);
-      expect(result.current.error!.message).toMatch(/Can't find field 'vin' on Car:1/);
+
+      expect(result.current.error).toBeUndefined();
+      expect(debugSpy).toHaveBeenCalledTimes(1);
+      expect(debugSpy).toHaveBeenLastCalledWith(
+        "Missing cache result fields: cars.0.vin",
+        [new Error("Can't find field 'vin' on Car:1 object")]
+      );
+      debugSpy.mockRestore();
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
+      expect(errorSpy).toHaveBeenLastCalledWith(
+        `Missing field 'vin' while writing result ${JSON.stringify({
+          id: 1,
+          make: "Audi",
+          model: "RS8",
+          vine: "DOLLADOLLABILL",
+          __typename: "Car"
+        }, null, 2)}`
+      );
       errorSpy.mockRestore();
     });
 

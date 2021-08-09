@@ -275,5 +275,24 @@ For more information, see [Optimistic mutation results](/performance/optimistic-
 
 </td>
 </tr>
+
+<tr>
+<td>
+
+###### `fetchPolicy`
+
+`MutationFetchPolicy`
+</td>
+
+<td>
+
+Provide `no-cache` if the mutation's result should _not_ be written to the Apollo Client cache.
+
+The default value is `network-only` (which means the result _is_ written to the cache).
+
+Unlike queries, mutations _do not_ support [fetch policies](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
+
+</td>
+</tr>
 </tbody>
 </table>

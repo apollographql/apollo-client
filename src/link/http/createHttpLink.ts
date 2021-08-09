@@ -14,26 +14,25 @@ import {
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError } from '../utils';
+import { maybe } from '../../utilities';
+
+const backupFetch = maybe(() => fetch);
 
 export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   let {
     uri = '/graphql',
     // use default global fetch if nothing passed in
-    fetch: fetcher,
+    fetch: preferredFetch,
     includeExtensions,
     useGETForQueries,
     includeUnusedVariables = false,
     ...requestOptions
   } = linkOptions;
 
-  // dev warnings to ensure fetch is present
-  checkFetcher(fetcher);
-
-  //fetcher is set here rather than the destructuring to ensure fetch is
-  //declared before referencing it. Reference in the destructuring would cause
-  //a ReferenceError
-  if (!fetcher) {
-    fetcher = fetch;
+  if (__DEV__) {
+    // Make sure at least one of preferredFetch, window.fetch, or backupFetch is
+    // defined, so requests won't fail at runtime.
+    checkFetcher(preferredFetch || backupFetch);
   }
 
   const linkConfig = {
@@ -142,7 +141,14 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     return new Observable(observer => {
-      fetcher!(chosenURI, options)
+      // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
+      // fall back to the *current* global window.fetch function (see issue
+      // #7832), or (if all else fails) the backupFetch function we saved when
+      // this module was first evaluated. This last option protects against the
+      // removal of window.fetch, which is unlikely but not impossible.
+      const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
+
+      currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
           return response;

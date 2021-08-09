@@ -1392,6 +1392,102 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
     });
+
+    it("regression test for issue #8600", async () => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Country: {
+            fields: {
+              cities: {
+                keyArgs: ['size'],
+                merge(existing, incoming, { args }) {
+                  if (!args) return incoming
+
+                  const items = existing ? existing.slice(0) : []
+
+                  const offset = args.offset ?? 0
+                  for (let i = 0; i < incoming.length; ++i) {
+                    items[offset + i] = incoming[i]
+                  }
+
+                  return items
+                },
+              },
+            },
+          },
+          CityInfo: {
+            merge: true,
+          },
+        },
+      });
+
+      const GET_COUNTRIES = gql`
+        query GetCountries {
+          countries {
+            id
+            ...WithSmallCities
+            ...WithAirQuality
+          }
+        }
+
+        fragment WithSmallCities on Country {
+          biggestCity {
+            id
+          }
+          smallCities: cities(size: SMALL) {
+            id
+          }
+        }
+
+        fragment WithAirQuality on Country {
+          biggestCity {
+            id
+            info {
+              airQuality
+            }
+          }
+        }
+      `;
+
+      const countries = [
+        {
+          __typename: 'Country',
+          id: 123,
+          biggestCity: {
+            __typename: 'City',
+            id: 234,
+            info: {
+              __typename: 'CityInfo',
+              airQuality: 0,
+            },
+          },
+          smallCities: [
+            { __typename: 'City', id: 345 },
+          ],
+        },
+      ];
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={[
+          {
+            request: { query: GET_COUNTRIES },
+            result: { data: { countries } },
+          },
+        ]} cache={cache}>{children}</MockedProvider>
+      );
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(GET_COUNTRIES),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ countries });
+    });
   });
 
   describe('Refetching', () => {

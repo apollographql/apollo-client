@@ -32,7 +32,7 @@ import {
   WatchQueryFetchPolicy,
   ErrorPolicy,
 } from './watchQueryOptions';
-import { ObservableQuery, applyNextFetchPolicy } from './ObservableQuery';
+import { ObservableQuery, applyNextFetchPolicy, logMissingFieldErrors } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
@@ -1347,12 +1347,9 @@ export class QueryManager<TStore> {
       const data = diff.result;
 
       if (__DEV__ &&
-          isNonEmptyArray(diff.missing) &&
-          !equal(data, {}) &&
-          !returnPartialData) {
-        invariant.debug(`Missing cache result fields: ${
-          diff.missing.map(m => m.path.join('.')).join(', ')
-        }`, diff.missing);
+          !returnPartialData &&
+          !equal(data, {})) {
+        logMissingFieldErrors(diff.missing);
       }
 
       const fromData = (data: TData | undefined) => Observable.of({

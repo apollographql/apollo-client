@@ -24,6 +24,7 @@ import {
   WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
+import { MissingFieldError } from '../cache';
 
 export interface FetchMoreOptions<
   TData = any,
@@ -225,13 +226,14 @@ export class ObservableQuery<
       }
 
       if (
+        __DEV__ &&
         !diff.complete &&
         !this.options.partialRefetch &&
         !result.loading &&
         !result.data &&
         !result.error
       ) {
-        result.error = new ApolloError({ clientErrors: diff.missing });
+        logMissingFieldErrors(diff.missing);
       }
     }
 
@@ -735,6 +737,16 @@ fixObservableSubclass(ObservableQuery);
 
 function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
   invariant.error('Unhandled error', error.message, error.stack);
+}
+
+export function logMissingFieldErrors(
+  missing: MissingFieldError[] | undefined,
+) {
+  if (__DEV__ && isNonEmptyArray(missing)) {
+    invariant.debug(`Missing cache result fields: ${
+      missing.map(m => m.path.join('.')).join(', ')
+    }`, missing);
+  }
 }
 
 // Adopt options.nextFetchPolicy (if defined) as a replacement for

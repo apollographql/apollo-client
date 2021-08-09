@@ -1487,6 +1487,116 @@ describe('writing to the store', () => {
     expect(cache.extract()).toMatchSnapshot();
   });
 
+  it('regression test for issue #8600', () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Country: {
+          fields: {
+            cities: {
+              keyArgs: ['size'],
+              merge(existing, incoming, { args }) {
+                if (!args) return incoming;
+                const items = existing ? existing.slice(0) : [];
+                const offset = args.offset ?? 0;
+                for (let i = 0; i < incoming.length; ++i) {
+                  items[offset + i] = incoming[i];
+                }
+                return items;
+              },
+            },
+          },
+        },
+        CityInfo: {
+          merge: true,
+        },
+      },
+    });
+
+    const GET_COUNTRIES = gql`
+      query GetCountries {
+        countries {
+          id
+          ...WithSmallCities
+          ...WithAirQuality
+        }
+      }
+
+      fragment WithSmallCities on Country {
+        biggestCity {
+          id
+        }
+        smallCities: cities(size: SMALL) {
+          id
+        }
+      }
+
+      fragment WithAirQuality on Country {
+        biggestCity {
+          id
+          info {
+            airQuality
+          }
+        }
+      }
+    `;
+
+    const countries = [
+      {
+        __typename: 'Country',
+        id: 123,
+        biggestCity: {
+          __typename: 'City',
+          id: 234,
+          info: {
+            __typename: 'CityInfo',
+            airQuality: 0,
+          },
+        },
+        smallCities: [
+          { __typename: 'City', id: 345 },
+        ],
+      },
+    ];
+
+    cache.writeQuery({
+      query: GET_COUNTRIES,
+      data: { countries },
+    });
+
+    expect(cache.extract()).toEqual({
+      "City:234": {
+        __typename: "City",
+        id: 234,
+        info: {
+          __typename: "CityInfo",
+          airQuality: 0,
+        },
+      },
+      "City:345": {
+        __typename: "City",
+        id: 345,
+      },
+      "Country:123": {
+        __typename: "Country",
+        id: 123,
+        biggestCity: { __ref: "City:234" },
+        'cities:{"size":"SMALL"}': [
+          { __ref: "City:345" },
+        ],
+      },
+      "ROOT_QUERY": {
+        __typename: "Query",
+        countries: [
+          { __ref: "Country:123" },
+        ],
+      },
+    });
+
+    expect(cache.readQuery({
+      query: GET_COUNTRIES
+    })).toEqual({ countries });
+  });
+
   it('should respect id fields added by fragments', () => {
     const query = gql`
       query ABCQuery {

@@ -1,3 +1,10 @@
+## Apollo Client 3.4.7 (not yet released)
+
+### Bug Fixes
+
+- Fix accidental reuse of recycled `MergeTree` objects in `StoreWriter` class used by `InMemoryCache`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8618](https://github.com/apollographql/apollo-client/pull/8618)
+
 ## Apollo Client 3.4.6
 
 ### Improvements

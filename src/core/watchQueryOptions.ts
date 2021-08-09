@@ -30,6 +30,12 @@ export type FetchPolicy =
 
 export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
 
+export type MutationFetchPolicy = Extract<
+  FetchPolicy,
+  | 'network-only' // default behavior (mutation results written to cache)
+  | 'no-cache'     // alternate behavior (results not written to cache)
+>;
+
 export type RefetchWritePolicy = "merge" | "overwrite";
 
 /**
@@ -297,12 +303,11 @@ export interface MutationOptions<
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /**
-   * Specifies the {@link FetchPolicy} to be used for this query. Mutations only
-   * support a 'no-cache' fetchPolicy. If you don't want to disable the cache,
-   * remove your fetchPolicy setting to proceed with the default mutation
-   * behavior.
+   * Specifies the {@link MutationFetchPolicy} to be used for this query.
+   * Mutations support only 'network-only' and 'no-cache' fetchPolicy strings.
+   * If fetchPolicy is not provided, it defaults to 'network-only'.
    */
-  fetchPolicy?: Extract<FetchPolicy, 'no-cache'>;
+  fetchPolicy?: MutationFetchPolicy;
 
   /**
    * To avoid retaining sensitive information from mutation root field

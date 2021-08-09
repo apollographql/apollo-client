@@ -155,23 +155,27 @@ export function useQuery<
   // This effect is also responsible for checking and updating the obsQuery
   // options whenever they change.
   useEffect(() => {
+    let nextResult: ApolloQueryResult<TData> | undefined;
     if (
       prevRef.current.client !== client ||
       !equal(prevRef.current.query, query)
     ) {
-      setObsQuery(client.watchQuery(options));
+      const obsQuery = client.watchQuery(options);
+      setObsQuery(obsQuery);
+      nextResult = obsQuery.getCurrentResult();
+    } else if (!equal(prevRef.current.options, options)) {
+      obsQuery.setOptions(options).catch(() => {});
+      nextResult = obsQuery.getCurrentResult();
     }
 
-    if (!equal(prevRef.current.options, options)) {
-      obsQuery.setOptions(options).catch(() => {});
-      const result = obsQuery.getCurrentResult();
+    if (nextResult) {
       const previousResult = prevRef.current.result;
       if (previousResult.data) {
         prevRef.current.data = previousResult.data;
       }
 
-      prevRef.current.result = result;
-      setResult(result);
+      prevRef.current.result = nextResult;
+      setResult(nextResult);
     }
 
     Object.assign(prevRef.current, { client, query, options });

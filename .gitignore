@@ -38,6 +38,9 @@ dist
 npm
 !flow-typed/npm
 
+# Unpublished output from @apollo/client build, like bundlesize artifacts
+temp/
+
 # webstorm
 .idea/
 

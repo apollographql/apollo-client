@@ -39,7 +39,7 @@
     "rollup": "rollup -c ./config/rollup.config.js",
     "prepdist": "node ./config/prepareDist.js",
     "resolve": "ts-node-script config/resolveModuleIds.ts",
-    "clean": "rimraf -r dist coverage lib",
+    "clean": "rimraf -r dist coverage lib temp",
     "test": "jest --config ./config/jest.config.js",
     "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",
     "test:ci": "npm run test:coverage && npm run test:memory",
@@ -54,7 +54,7 @@
   "bundlesize": [
     {
       "name": "apollo-client",
-      "path": "./dist/apollo-core.min.cjs",
+      "path": "./temp/bundlesize.min.cjs",
       "maxSize": "24.6 kB"
     }
   ],

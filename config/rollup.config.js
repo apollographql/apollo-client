@@ -134,9 +134,9 @@ export default [
   // @apollo/client/react in AC4 (see issue #8190).
   prepareCJS(
     './dist/core/index.js',
-    './dist/apollo-core.cjs',
+    './temp/bundlesize.cjs',
   ),
   prepareCJSMinified(
-    './dist/apollo-core.cjs',
+    './temp/bundlesize.cjs',
   ),
 ];

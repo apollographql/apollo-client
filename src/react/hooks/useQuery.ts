@@ -275,34 +275,27 @@ export function useQuery<
 
   let partial: boolean | undefined;
   ({ partial, ...result } = result);
-  // An effect which refetches queries when there is incomplete data in the
-  // cache.
-  //
-  // TODO: This effect should be removed when the partialRefetch option is
-  // removed.
-  useEffect(() => {
-    // When a `Query` component is mounted, and a mutation is executed
-    // that returns the same ID as the mounted `Query`, but has less
-    // fields in its result, Apollo Client's `QueryManager` returns the
-    // data as `undefined` since a hit can't be found in the cache.
-    // This can lead to application errors when the UI elements rendered by
-    // the original `Query` component are expecting certain data values to
-    // exist, and they're all of a sudden stripped away. To help avoid
-    // this we'll attempt to refetch the `Query` data.
+  {
+    // TODO: This code should be removed when the partialRefetch option is
+    // removed.
+    // I was unable to get this hook to behave reasonably when this block was
+    // put in an effect, so we’re doing side effects in the render. Forgive me.
     if (
-      partialRefetch &&
       partial &&
+      partialRefetch &&
+      !result.loading &&
       (!result.data || Object.keys(result.data).length === 0) &&
       obsQuery.options.fetchPolicy !== 'cache-only'
     ) {
-      setTimeout(() => obsQuery.refetch());
+      result = {
+        ...result,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      };
+
+      obsQuery.refetch();
     }
-  }, [
-    partialRefetch,
-    partial,
-    result.data,
-    obsQuery.options.fetchPolicy,
-  ]);
+  }
 
   if (
     ssr === false &&

@@ -1785,16 +1785,20 @@ describe('Query component', () => {
   });
 
   describe('Partial refetching', () => {
-    const origConsoleWarn = console.warn;
+    let errorSpy!: ReturnType<typeof jest.spyOn>;
 
-    beforeAll(() => {
-      console.warn = () => null;
+    beforeEach(() => {
+      errorSpy = jest.spyOn(console, 'error')
+        .mockImplementation(() => {});
     });
 
     afterAll(() => {
-      console.warn = origConsoleWarn;
+      errorSpy.mockRestore();
     });
 
+    // TODO(brian): This is a terrible legacy test which is causing console
+    // error calls no matter what I try and I do not want to care about it
+    // anymore :)
     itAsync(
       'should attempt a refetch when the query result was marked as being ' +
         'partial, the returned data was reset to an empty Object by the ' +
@@ -1811,11 +1815,10 @@ describe('Query component', () => {
           }
         `;
 
+        let done = false;
         const allPeopleData = {
           allPeople: { people: [{ name: 'Luke Skywalker' }] },
         };
-        const errorSpy = jest.spyOn(console, 'error')
-          .mockImplementation(() => {});
         const query = allPeopleQuery;
         const link = mockSingleLink(
           { request: { query }, result: { data: {} } },
@@ -1834,6 +1837,9 @@ describe('Query component', () => {
               try {
                 if (!loading) {
                   expect(data).toEqual(allPeopleData);
+                  expect(errorSpy).toHaveBeenCalledTimes(1);
+                  expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
+                  done = true;
                 }
               } catch (err) {
                 reject(err);
@@ -1849,11 +1855,7 @@ describe('Query component', () => {
           </ApolloProvider>
         );
 
-        return wait().then(() => {
-          expect(errorSpy).toHaveBeenCalledTimes(1);
-          expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
-          errorSpy.mockRestore();
-        }).then(resolve, reject);
+        wait(() => done).then(resolve, reject);
       }
     );
 

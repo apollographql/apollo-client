@@ -2240,6 +2240,7 @@ describe('useQuery Hook', () => {
         {
           request: { query },
           result: { data: {} },
+          delay: 20,
         },
         {
           request: { query },
@@ -2269,34 +2270,25 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      const updates = result.all.length;
       await waitForNextUpdate();
-      expect(result.all.length - updates).toBe(2);
-      // waitForUpdate seems to miss the erroring render
-      const previous = result.all[result.all.length - 2];
-      if (previous instanceof Error) {
-        throw previous;
-      }
-
-      expect(previous.loading).toBe(true);
-      expect(previous.error).toBe(undefined);
-      expect(previous.data).toBe(undefined);
-
       expect(result.current.loading).toBe(true);
-      expect(result.current.error).toBe(undefined);
       expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
       expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
+      errorSpy.mockRestore();
 
       await waitForNextUpdate();
+
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      errorSpy.mockRestore();
     });
 
     it('should attempt a refetch when data is missing and partialRefetch is true 2', async () => {
@@ -2317,7 +2309,7 @@ describe('useQuery Hook', () => {
       const errorSpy = jest.spyOn(console, 'error')
         .mockImplementation(() => {});
       const link = mockSingleLink(
-        { request: { query }, result: { data: {} } },
+        { request: { query }, result: { data: {} }, delay: 20 },
         { request: { query }, result: { data }, delay: 20 }
       );
 
@@ -2342,24 +2334,13 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      const updates = result.all.length;
       await waitForNextUpdate();
-      expect(result.all.length - updates).toBe(2);
-      // waitForUpdate seems to miss the erroring render
-      const previous = result.all[result.all.length - 2];
-      if (previous instanceof Error) {
-        throw previous;
-      }
-
-      expect(previous.loading).toBe(true);
-      expect(previous.error).toBe(undefined);
-      expect(previous.data).toBe(undefined);
-
       expect(result.current.loading).toBe(true);
-      expect(result.current.error).toBe(undefined);
       expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
@@ -2369,6 +2350,7 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
     });
 
@@ -2381,6 +2363,7 @@ describe('useQuery Hook', () => {
         {
           request: { query },
           result: { data: {} },
+          delay: 20,
         },
         {
           request: { query },
@@ -2411,22 +2394,12 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      const updates = result.all.length;
       await waitForNextUpdate();
-      expect(result.all.length - updates).toBe(2);
-      // waitForUpdate seems to miss the erroring render
-      const previous = result.all[result.all.length - 2];
-      if (previous instanceof Error) {
-        throw previous;
-      }
-
-      expect(previous.loading).toBe(true);
-      expect(previous.error).toBe(undefined);
-      expect(previous.data).toBe(undefined);
-
       expect(result.current.loading).toBe(true);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.data).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
 
@@ -2435,8 +2408,10 @@ describe('useQuery Hook', () => {
       errorSpy.mockRestore();
 
       await waitForNextUpdate();
+
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
+      expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
     });
   });

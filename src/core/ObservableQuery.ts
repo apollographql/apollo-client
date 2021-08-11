@@ -68,9 +68,12 @@ export class ObservableQuery<
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
   private subscriptions = new Set<ObservableSubscription>();
 
-  private lastResult: ApolloQueryResult<TData> | undefined;
-  private lastResultSnapshot: ApolloQueryResult<TData> | undefined;
-  private lastError: ApolloError | undefined;
+  private last?: {
+    result: ApolloQueryResult<TData>;
+    variables: TVariables;
+    error?: ApolloError;
+  };
+
   private queryInfo: QueryInfo;
 
   private concast?: Concast<ApolloQueryResult<TData>>;
@@ -102,10 +105,11 @@ export class ObservableQuery<
       this.observers.add(observer);
 
       // Deliver most recent error or result.
-      if (this.lastError) {
-        observer.error && observer.error(this.lastError);
-      } else if (this.lastResult) {
-        observer.next && observer.next(this.lastResult);
+      const last = this.last;
+      if (last && last.error) {
+        observer.error && observer.error(last.error);
+      } else if (last && last.result) {
+        observer.next && observer.next(last.result);
       }
 
       // Initiate observation of this query if it hasn't been reported to
@@ -177,12 +181,7 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
-    const {
-      lastResult,
-      options: {
-        fetchPolicy = "cache-first",
-      },
-    } = this;
+    const lastResult = this.getLastResult();
 
     const networkStatus =
       this.queryInfo.networkStatus ||
@@ -209,6 +208,7 @@ export class ObservableQuery<
         result.data = void 0 as any;
       }
 
+      const { fetchPolicy = "cache-first" } = this.options;
       if (diff.complete) {
         // If the diff is complete, and we're using a FetchPolicy that
         // terminates after a complete cache read, we can assume the next
@@ -249,23 +249,21 @@ export class ObservableQuery<
   // Compares newResult to the snapshot we took of this.lastResult when it was
   // first received.
   public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
-    return !equal(this.lastResultSnapshot, newResult);
+    return !this.last || !equal(this.last.result, newResult);
   }
 
   // Returns the last result that observer.next was called with. This is not the same as
   // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
   public getLastResult(): ApolloQueryResult<TData> | undefined {
-    return this.lastResult;
+    return this.last?.result;
   }
 
   public getLastError(): ApolloError | undefined {
-    return this.lastError;
+    return this.last?.error;
   }
 
   public resetLastResults(): void {
-    delete this.lastResult;
-    delete this.lastResultSnapshot;
-    delete this.lastError;
+    delete this.last;
     this.isTornDown = false;
   }
 
@@ -501,7 +499,6 @@ once, rather than every time you call fetchMore.`);
     const { result } = queryManager.cache.diff<TData>({
       query: this.options.query,
       variables: this.variables,
-      previousResult: this.lastResult?.data,
       returnPartialData: true,
       optimistic: false,
     });
@@ -602,15 +599,17 @@ once, rather than every time you call fetchMore.`);
   }
 
   private updateLastResult(newResult: ApolloQueryResult<TData>) {
-    const previousResult = this.lastResult;
-    this.lastResult = newResult;
-    this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-      ? newResult
-      : cloneDeep(newResult);
+    this.last = {
+      ...this.last,
+      result: this.queryManager.assumeImmutableResults
+        ? newResult
+        : cloneDeep(newResult),
+      variables: { ...this.variables } as TVariables,
+    };
     if (!isNonEmptyArray(newResult.errors)) {
-      delete this.lastError;
+      delete this.last.error;
     }
-    return previousResult;
+    return this.last;
   }
 
   public reobserve(
@@ -691,7 +690,7 @@ once, rather than every time you call fetchMore.`);
 
   private observer = {
     next: (result: ApolloQueryResult<TData>) => {
-      if (this.lastError || this.isDifferentFromLastResult(result)) {
+      if (this.getLastError() || this.isDifferentFromLastResult(result)) {
         this.updateLastResult(result);
         iterateObserversSafely(this.observers, 'next', result);
       }
@@ -701,14 +700,14 @@ once, rather than every time you call fetchMore.`);
       // Since we don't get the current result on errors, only the error, we
       // must mirror the updates that occur in QueryStore.markQueryError here
       this.updateLastResult({
-        ...this.lastResult,
+        ...this.getLastResult(),
         error,
         errors: error.graphQLErrors,
         networkStatus: NetworkStatus.error,
         loading: false,
       } as ApolloQueryResult<TData>);
 
-      iterateObserversSafely(this.observers, 'error', this.lastError = error);
+      iterateObserversSafely(this.observers, 'error', this.last!.error = error);
     },
   };
 

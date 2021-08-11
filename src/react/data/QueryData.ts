@@ -323,14 +323,13 @@ export class QueryData<TData, TVariables> extends OperationData<
     // has a chance to stay open).
     const { currentObservable } = this;
     if (currentObservable) {
-      const lastError = currentObservable.getLastError();
-      const lastResult = currentObservable.getLastResult();
-      currentObservable.resetLastResults();
-      this.startQuerySubscription();
-      Object.assign(currentObservable, {
-        lastError,
-        lastResult
-      });
+      const last = currentObservable["last"];
+      try {
+        currentObservable.resetLastResults();
+        this.startQuerySubscription();
+      } finally {
+        currentObservable["last"] = last;
+      }
     }
   }
 

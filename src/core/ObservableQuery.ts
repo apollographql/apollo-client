@@ -183,7 +183,8 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
-    const lastResult = this.getLastResult();
+    // Use the last result as long as the variables match this.variables.
+    const lastResult = this.getLastResult(true);
 
     const networkStatus =
       this.queryInfo.networkStatus ||

@@ -55,8 +55,22 @@ export function useQuery<
   verifyDocumentType(query, DocumentType.Query);
 
   // create watchQueryOptions from hook options
-  const { skip, ssr, partialRefetch, options } = useMemo(() => {
-    const { skip, ssr, partialRefetch, ...options } = { ...hookOptions, query };
+  const {
+    skip,
+    ssr,
+    partialRefetch,
+    onCompleted,
+    onError,
+    options,
+  } = useMemo(() => {
+    const {
+      skip,
+      ssr,
+      partialRefetch,
+      onCompleted,
+      onError,
+      ...options
+    } = { ...hookOptions, query };
     if (skip) {
       options.fetchPolicy = 'standby';
     } else if (
@@ -71,14 +85,13 @@ export function useQuery<
       options.fetchPolicy = 'cache-first';
     } else if (!options.fetchPolicy) {
       // cache-first is the default policy, but we explicitly assign it here so
-      // the cache policies computed based on optiosn can be cleared
+      // the cache policies computed based on options can be cleared
       options.fetchPolicy = 'cache-first';
     }
 
-    return { skip, ssr, partialRefetch, options };
+    return { skip, ssr, partialRefetch, onCompleted, onError, options };
   }, [hookOptions, context.renderPromises]);
 
-  const { onCompleted, onError } = options;
   const [obsQuery, setObsQuery] = useState(() => {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
@@ -112,23 +125,24 @@ export function useQuery<
           // RenderPromises class are query and variables.
           getOptions: () => options,
           fetchData: () => new Promise<void>((resolve) => {
-            const sub = obsQuery!.subscribe(
-              (result) => {
+            const sub = obsQuery!.subscribe({
+              next(result) {
                 if (!result.loading) {
                   resolve()
                   sub.unsubscribe();
                 }
               },
-              () => {
+              error() {
                 resolve();
                 sub.unsubscribe();
               },
-              () => {
+              complete() {
                 resolve();
               },
-            );
+            });
           }),
         } as any,
+        // This callback never seemed to do anything
         () => null,
       );
     }
@@ -275,11 +289,13 @@ export function useQuery<
 
   let partial: boolean | undefined;
   ({ partial, ...result } = result);
+
   {
+    // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION
+    //
     // TODO: This code should be removed when the partialRefetch option is
-    // removed.
-    // I was unable to get this hook to behave reasonably when this block was
-    // put in an effect, so we’re doing side effects in the render. Forgive me.
+    // removed. I was unable to get this hook to behave reasonably in certain
+    // edge cases when this block was put in an effect.
     if (
       partial &&
       partialRefetch &&
@@ -295,11 +311,22 @@ export function useQuery<
 
       obsQuery.refetch();
     }
+
+    // TODO: This is a hack to make sure useLazyQuery executions update the
+    // obsevable query options in ssr mode.
+    if (
+      context.renderPromises &&
+      ssr !== false &&
+      !skip &&
+      obsQuery.getCurrentResult().loading
+    ) {
+      obsQuery.setOptions(options).catch(() => {});
+    }
   }
 
   if (
-    ssr === false &&
-    (context.renderPromises || client.disableNetworkFetches)
+    (context.renderPromises || client.disableNetworkFetches) &&
+    ssr === false
   ) {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.

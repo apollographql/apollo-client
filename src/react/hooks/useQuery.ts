@@ -24,18 +24,7 @@ import {
   QueryResult,
 } from '../types/types';
 
-import { DocumentType, parser, operationName } from '../parser';
-
-function verifyDocumentType(document: DocumentNode, type: DocumentType) {
-  const operation = parser(document);
-  const requiredOperationName = operationName(type);
-  const usedOperationName = operationName(operation.type);
-  invariant(
-    operation.type === type,
-    `Running a ${requiredOperationName} requires a graphql ` +
-      `${requiredOperationName}, but a ${usedOperationName} was used instead.`
-  );
-}
+import { DocumentType, verifyDocumentType } from '../parser';
 
 export function useQuery<
   TData = any,

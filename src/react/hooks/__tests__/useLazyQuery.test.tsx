@@ -225,11 +225,13 @@ describe('useLazyQuery Hook', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { hello: 'world 1' } }
+        result: { data: { hello: 'world 1' } },
+        delay: 20,
       },
       {
         request: { query },
-        result: { data: { hello: 'world 2' } }
+        result: { data: { hello: 'world 2' } },
+        delay: 20,
       },
     ];
 
@@ -260,7 +262,7 @@ describe('useLazyQuery Hook', () => {
     setTimeout(() => execute());
 
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
 
     await waitForNextUpdate();
@@ -271,8 +273,16 @@ describe('useLazyQuery Hook', () => {
   it('should persist previous data when a query is re-run', async () => {
     const query = gql`{ hello }`;
     const mocks = [
-      { request: { query }, result: { data: { hello: 'world 1' } } },
-      { request: { query }, result: { data: { hello: 'world 2' } } },
+      {
+        request: { query },
+        result: { data: { hello: 'world 1' } },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: { data: { hello: 'world 2' } },
+        delay: 20,
+      },
     ];
 
     const { result, waitForNextUpdate } = renderHook(

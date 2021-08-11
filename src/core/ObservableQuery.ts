@@ -202,10 +202,12 @@ export class ObservableQuery<
     if (!this.queryManager.transform(this.options.query).hasForcedResolvers) {
       const diff = this.queryInfo.getDiff();
 
-      result.data = (
-        diff.complete ||
-        this.options.returnPartialData
-      ) ? diff.result : void 0;
+      if (diff.complete || this.options.returnPartialData) {
+        result.data = diff.result;
+      }
+      if (equal(result.data, {})) {
+        result.data = void 0 as any;
+      }
 
       if (diff.complete) {
         // If the diff is complete, and we're using a FetchPolicy that

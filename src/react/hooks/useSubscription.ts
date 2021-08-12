@@ -87,6 +87,8 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
       next(fetchResult) {
         const result = {
           loading: false,
+          // TODO: fetchResult.data can be null but SubscriptionResult.data
+          // expects TData | undefined only
           data: fetchResult.data!,
           error: void 0,
           variables: options?.variables,

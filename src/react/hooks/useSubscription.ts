@@ -1,33 +1,22 @@
-import { useContext, useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { invariant } from 'ts-invariant';
-import { DocumentType, verifyDocumentType } from '../parser';
+import { equal } from '@wry/equality';
 
+import { DocumentType, verifyDocumentType } from '../parser';
 import {
   SubscriptionHookOptions,
   SubscriptionResult
 } from '../types/types';
-
 import { OperationVariables } from '../../core';
-import { getApolloContext } from '../context';
-
-import { equal } from '@wry/equality';
+import { useApolloClient } from './useApolloClient';
 
 export function useSubscription<TData = any, TVariables = OperationVariables>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SubscriptionHookOptions<TData, TVariables>,
 ) {
-  const context = useContext(getApolloContext());
-  const client = options?.client || context.client;
-  invariant(
-    !!client,
-    'Could not find "client" in the context or passed in as an option. ' +
-    'Wrap the root component in an <ApolloProvider>, or pass an ApolloClient' +
-    'ApolloClient instance in via options.',
-  );
+  const client = useApolloClient(options?.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
-
   const [result, setResult] = useState<SubscriptionResult<TData>>({
     loading: !options?.skip,
     error: void 0,

@@ -1,14 +1,6 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { invariant } from 'ts-invariant';
-
 import {
   MutationFunctionOptions,
   MutationHookOptions,
@@ -22,11 +14,11 @@ import {
   mergeOptions,
   OperationVariables,
 } from '../../core';
-import { getApolloContext } from '../context';
 import { equal } from '@wry/equality';
 import { DocumentType, verifyDocumentType } from '../parser';
 import { ApolloError } from '../../errors';
 import { FetchResult } from '../../link/core';
+import { useApolloClient } from './useApolloClient';
 
 export function useMutation<
   TData = any,
@@ -37,14 +29,7 @@ export function useMutation<
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: MutationHookOptions<TData, TVariables, TContext>,
 ): MutationTuple<TData, TVariables, TContext, TCache> {
-  const context = useContext(getApolloContext());
-  const client = options?.client || context.client;
-  invariant(
-    !!client,
-    'Could not find "client" in the context or passed in as an option. ' +
-    'Wrap the root component in an <ApolloProvider>, or pass an ApolloClient' +
-    'ApolloClient instance in via options.',
-  );
+  const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = useState<MutationResult>({
     called: false,

@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { invariant } from 'ts-invariant';
 import { equal } from '@wry/equality';
 import { OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
@@ -25,6 +24,7 @@ import {
 } from '../types/types';
 
 import { DocumentType, verifyDocumentType } from '../parser';
+import { useApolloClient } from './useApolloClient';
 
 export function useQuery<
   TData = any,
@@ -34,15 +34,10 @@ export function useQuery<
   hookOptions?: QueryHookOptions<TData, TVariables>,
 ): QueryResult<TData> {
   const context = useContext(getApolloContext());
-  const client = hookOptions?.client || context.client;
-  invariant(
-    !!client,
-    'Could not find "client" in the context or passed in as an option. ' +
-    'Wrap the root component in an <ApolloProvider>, or pass an ApolloClient' +
-    'ApolloClient instance in via options.',
-  );
+  const client = useApolloClient(hookOptions?.client);
   verifyDocumentType(query, DocumentType.Query);
 
+  // TODO: useMemo is probably not correct here, what if options doesn’t change but the properties do?
   // create watchQueryOptions from hook options
   const {
     skip,

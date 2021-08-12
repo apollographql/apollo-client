@@ -1,18 +1,29 @@
 ---
-title: Improving performance
+title: Improving performance in Apollo Client
+sidebar_title: Improving performance
 ---
+
+import {
+  ExpansionPanel,
+} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 ## Redirecting to cached data
 
-In some cases, a query requests data that already exists in the client cache under a different reference. A very common example of this is when your UI has a list view and a detail view that both use the same data. To avoid re-requesting data that already exists in the cache, see [Cache redirects using field policy `read` functions](../caching/advanced-topics#cache-redirects-using-field-policy-read-functions).
+In some cases, a query might request data that's already present in the Apollo Client cache thanks to a _different_ query that already ran. For example, your UI might have both a list view and a detail view with queries that fetch the same fields from a particular object.
+
+In cases like these, you can avoid sending your server a followup query that fetches identical data. To learn how, see [Cache redirects](../caching/advanced-topics#cache-redirects).
 
 ## Prefetching data
 
-Prefetching is one of the easiest ways to make your application's UI feel a lot faster with Apollo Client. Prefetching simply means loading data into the cache before it needs to be rendered on the screen. Essentially, we want to load all data required for a view as soon as we can guess that a user will navigate to it.
+Prefetching involves executing queries for data _before_ that data needs to be rendered. It helps your application's UI feel more responsive to the user.
 
-We can accomplish this in only a few lines of code by calling `client.query` whenever the user hovers over a link.
+Most of the time, prefetching involves querying for data as soon as you can guess that a user will _probably_ need it.
 
-```jsx
+For example, this code snippet calls `client.query` to execute a query when the user hovers over a particular link (to a page that uses the data returned by the query):
+
+<ExpansionPanel title="Click to expand">
+
+```jsx{19-24}
 function Feed() {
   const { loading, error, data, client } = useQuery(GET_DOGS);
 
@@ -55,12 +66,16 @@ function Feed() {
 }
 ```
 
-All we have to do is access the client in the render prop function and call `client.query` when the user hovers over the link. Once the user clicks on the link, the data will already be available in the Apollo cache, so the user won't see a loading state.
+</ExpansionPanel>
 
-There are a lot of different ways to anticipate that the user will end up needing some data in the UI. In addition to using the hover state, here are some other places you can preload data:
+When the `GET_DOG` query completes, its result is stored in the Apollo Client cache. This means that if the user then clicks the link, the dog's detail page can immediately populate that data from the cache, which feels instantaneous to the user.
 
-1. The next step of a multi-step wizard immediately
-2. The route of a call-to-action button
-3. All of the data for a sub-area of the application, to make navigating within that area instant
+In addition to a mouse hover, here are some other suggestions for situations when prefetching can be helpful:
 
-If you have some other ideas, please send a PR to this article, and maybe add some more code snippets. A special form of prefetching is [store hydration from the server](server-side-rendering/#rehydrating-the-client-side-cache), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
+* During a multi-step flow (such as a wizard), you can preload each _next_ step's data during each _current_ step.
+* If your app's analytics indicate a frequent transition between two particular views, you can use prefetching to optimize for that path.
+* If a region of a page has multiple tabs or slides (such as a carousel), you can preload data for some or all of them to make transitions feel snappier.
+
+A special form of prefetching is [store hydration from the server](./server-side-rendering/#rehydrating-the-client-side-cache), so you might also consider hydrating more data than is actually needed for the first page load to make other interactions faster.
+
+Feel free to submit a PR with suggestions for other preloading opportunities!

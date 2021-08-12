@@ -1,11 +1,17 @@
 ---
 title: Client-side schema
-description: Configure a client-side schema with Apollo Client
+description: Extend your schema with client-specific fields
 ---
 
-You can optionally set a client-side schema to be used with Apollo Client, through the `ApolloClient` constructor `typeDefs` parameter. Your schema should be written in [Schema Definition Language](https://www.apollographql.com/docs/graphql-tools/generate-schema#schema-language). This schema is not used for validation like it is on the server because the `graphql-js` modules for schema validation would dramatically increase your bundle size. Instead, your client-side schema is used for introspection in [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools), where you can explore your schema in GraphiQL.
+You can optionally provide a **client-side schema** to Apollo Client that defines [local-only types and fields](./managing-state-with-field-policies/). You can define completely new types, or extend types from your server's schema with new fields.
 
-The following demonstrates how to configure a client-side schema through the `ApolloClient` constructor:
+As with any GraphQL schema, your client-side schema must be written in [Schema Definition Language](https://www.apollographql.com/docs/apollo-server/schema/schema/#the-schema-definition-language).
+
+The client-side schema is _not_ used to validate operations like it is on the server (the `graphql-js` modules for schema validation would dramatically increase your bundle size). Instead, your client-side schema is used for introspection in the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools), where you can explore your schema in GraphiQL.
+
+## Setup
+
+The following demonstrates how to define a client-side schema and provide it to the `ApolloClient` constructor:
 
 ```js
 import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
@@ -32,6 +38,6 @@ const client = new ApolloClient({
 });
 ```
 
-If you open up Apollo Client Devtools and click on the `GraphiQL` tab, you'll be able to explore your client schema in the "Docs" section. This example doesn't include a remote schema, but if it did, you would be able to see your local queries and mutations alongside your remote ones.
+If you open up the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools) and click on the `GraphiQL` tab, you'll be able to explore your client schema in the "Docs" section. This example doesn't include a remote schema, but if it did, you would be able to see your local queries and mutations alongside your remote ones.
 
-![GraphiQL Console](../assets/client-schema.png)
+<img class="screenshot" alt="GraphiQL in Apollo Devtools" src="../assets/client-schema.png"/>

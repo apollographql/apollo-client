@@ -143,7 +143,7 @@ describe("type policies", function () {
         book {
           title
           writer: author {
-            name
+            alias: name
           }
         }
       }
@@ -152,7 +152,9 @@ describe("type policies", function () {
     const { author, ...rest } = theInformationBookData;
     const aliasBookData = {
       ...rest,
-      writer: author,
+      writer: {
+        alias: author.name,
+      },
     };
 
     cache.writeQuery({
@@ -172,8 +174,9 @@ describe("type policies", function () {
       'Book:{"title":"The Information","author":{"name":"James Gleick"}}': {
         __typename: "Book",
         title: "The Information",
-        // Note that "author" is stored internally, since it's the real name of
-        // the field, despite the "writer: author" alias.
+        // Note that "author" and "name" are stored internally, since they are
+        // the true names of their fields (according to the schema), despite the
+        // writer:author and alias:name aliases.
         author: {
           name: "James Gleick"
         },

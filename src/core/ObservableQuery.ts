@@ -45,6 +45,12 @@ export interface UpdateQueryOptions<TVariables> {
 
 let warnedAboutUpdateQuery = false;
 
+interface Last<TData, TVars> {
+  result: ApolloQueryResult<TData>;
+  variables: TVars;
+  error?: ApolloError;
+}
+
 export class ObservableQuery<
   TData = any,
   TVariables = OperationVariables
@@ -68,11 +74,7 @@ export class ObservableQuery<
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
   private subscriptions = new Set<ObservableSubscription>();
 
-  private last?: {
-    result: ApolloQueryResult<TData>;
-    variables: TVariables;
-    error?: ApolloError;
-  };
+  private last?: Last<TData, TVariables>;
 
   private queryInfo: QueryInfo;
 
@@ -252,14 +254,26 @@ export class ObservableQuery<
     return !this.last || !equal(this.last.result, newResult);
   }
 
-  // Returns the last result that observer.next was called with. This is not the same as
-  // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
-  public getLastResult(): ApolloQueryResult<TData> | undefined {
-    return this.last?.result;
+  private getLast<K extends keyof Last<TData, TVariables>>(
+    key: K,
+    variablesMustMatch?: boolean,
+  ) {
+    const last = this.last;
+    if (last &&
+        last[key] &&
+        (!variablesMustMatch || equal(last!.variables, this.variables))) {
+      return last[key];
+    }
   }
 
-  public getLastError(): ApolloError | undefined {
-    return this.last?.error;
+  // Returns the last result that observer.next was called with. This is not the same as
+  // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
+  public getLastResult(variablesMustMatch?: boolean): ApolloQueryResult<TData> | undefined {
+    return this.getLast("result", variablesMustMatch);
+  }
+
+  public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
+    return this.getLast("error", variablesMustMatch);
   }
 
   public resetLastResults(): void {

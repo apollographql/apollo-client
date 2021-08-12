@@ -234,10 +234,13 @@ export interface BaseSubscriptionOptions<
   onSubscriptionComplete?: () => void;
 }
 
-export interface SubscriptionResult<TData = any> {
+export interface SubscriptionResult<TData = any, TVariables = any> {
   loading: boolean;
   data?: TData;
   error?: ApolloError;
+  // This was added by the legacy useSubscription type, and is tested in unit
+  // tests, but probably shouldn’t be added to the result.
+  variables?: TVariables;
 }
 
 export interface SubscriptionHookOptions<

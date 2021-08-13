@@ -212,10 +212,9 @@ describe('useLazyQuery Hook', () => {
     setTimeout(() => execute({ variables: { id: 2 } }));
 
     await waitForNextUpdate();
-
     expect(result.current[1].loading).toBe(true);
-    await waitForNextUpdate();
 
+    await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'world 2' });
   });
@@ -380,5 +379,83 @@ describe('useLazyQuery Hook', () => {
 
     result.current[1].stopPolling();
     await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+  });
+
+  it('should persist previous data when a query is re-run and variable changes', async () => {
+    const CAR_QUERY_BY_ID = gql`
+      query($id: Int) {
+        car(id: $id) {
+          make
+          model
+        }
+      }
+    `;
+
+    const data1 = {
+      car: {
+        make: 'Audi',
+        model: 'A4',
+        __typename: 'Car',
+      },
+    };
+
+    const data2 = {
+      car: {
+        make: 'Audi',
+        model: 'RS8',
+        __typename: 'Car',
+      },
+    };
+
+    const mocks = [
+      {
+        request: { query: CAR_QUERY_BY_ID, variables: { id: 1 } },
+        result: { data: data1 },
+        delay: 20,
+      },
+      {
+        request: { query: CAR_QUERY_BY_ID, variables: { id: 2 } },
+        result: { data: data2 },
+        delay: 20,
+      },
+    ];
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(CAR_QUERY_BY_ID),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].previousData).toBe(undefined);
+    const execute = result.current[0];
+    setTimeout(() => execute({ variables: { id: 1 }}));
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].previousData).toBe(undefined);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual(data1);
+    expect(result.current[1].previousData).toBe(undefined);
+
+    setTimeout(() => execute({ variables: { id: 2 }}));
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].previousData).toEqual(data1);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual(data2);
+    expect(result.current[1].previousData).toEqual(data1);
   });
 });

@@ -26,7 +26,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   >((lazyOptions?: QueryLazyOptions<TVariables>) => {
     setExecution((execution) => {
       if (execution.called) {
-        result && result.refetch(lazyOptions);
+        result && result.refetch(lazyOptions?.variables);
       }
 
       return { called: true, lazyOptions };
@@ -43,6 +43,15 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   });
 
   if (!execution.called) {
+    result = {
+      ...result,
+      loading: false,
+      data: void 0 as unknown as TData,
+      error: void 0,
+      // TODO: fix the type of result
+      called: false as any,
+    };
+
     for (const key in result) {
       if (typeof (result as any)[key] === 'function') {
         const method = (result as any)[key];
@@ -52,15 +61,6 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
         };
       }
     }
-
-    result = {
-      ...result,
-      loading: false,
-      data: void 0 as unknown as TData,
-      error: void 0,
-      // TODO: fix the type of result
-      called: false as any,
-    };
   }
 
   // TODO: fix the type of result

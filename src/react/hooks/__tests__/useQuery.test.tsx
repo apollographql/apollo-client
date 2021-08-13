@@ -2087,6 +2087,57 @@ describe('useQuery Hook', () => {
       await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
+
+    it('onCompleted should work with polling', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: 'world 1' } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: 'world 2' } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: 'world 3' } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const onCompleted = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {
+          onCompleted,
+          pollInterval: 10,
+        }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 2' });
+      expect(onCompleted).toHaveBeenCalledTimes(2);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 3' });
+      expect(onCompleted).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe('Optimistic data', () => {

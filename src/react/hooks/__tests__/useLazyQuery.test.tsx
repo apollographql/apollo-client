@@ -327,4 +327,58 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].data).toEqual({ hello: 'world 2' });
     expect(result.current[1].previousData).toEqual({ hello: 'world 1' });
   });
+
+  it('should allow for the query to start with polling', async () => {
+    const query = gql`{ hello }`;
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { hello: "world 1" } },
+      },
+      {
+        request: { query },
+        result: { data: { hello: "world 2" } },
+      },
+      {
+        request: { query },
+        result: { data: { hello: "world 3" } },
+      },
+    ];
+
+    const wrapper = ({ children }: any) => (
+      <MockedProvider mocks={mocks}>{children}</MockedProvider>
+    );
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      { wrapper },
+    );
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+
+    setTimeout(() => {
+      result.current[1].startPolling(10);
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({ hello: "world 1" });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({ hello: "world 2" });
+
+    await waitForNextUpdate();
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({ hello: "world 3" });
+
+    result.current[1].stopPolling();
+    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+  });
 });

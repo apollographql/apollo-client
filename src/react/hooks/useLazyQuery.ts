@@ -43,6 +43,16 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   });
 
   if (!execution.called) {
+    for (const key in result) {
+      if (typeof (result as any)[key] === 'function') {
+        const method = (result as any)[key];
+        (result as any)[key] = (...args: any) => {
+          setExecution({ called: true });
+          return method(...args);
+        };
+      }
+    }
+
     result = {
       ...result,
       loading: false,

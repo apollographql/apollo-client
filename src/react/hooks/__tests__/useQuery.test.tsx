@@ -2634,6 +2634,39 @@ describe('useQuery Hook', () => {
       unmount();
       expect(client.getObservableQueries('all').size).toBe(0);
     });
+
+    it('should treat fetchPolicy standby like skip', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: 'world' } },
+        },
+      ];
+      const { result, rerender, waitForNextUpdate } = renderHook(
+        ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: { fetchPolicy: 'standby' as any },
+        },
+      );
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBe(undefined);
+      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+
+      rerender({ fetchPolicy: 'cache-first' });
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBeFalsy();
+      expect(result.current.data).toEqual({ hello: 'world' });
+    });
   });
 
   describe('Missing Fields', () => {

@@ -270,7 +270,7 @@ export function useQuery<
       error: void 0,
       networkStatus: NetworkStatus.loading,
     };
-  } else if (options?.skip) {
+  } else if (options?.skip || options?.fetchPolicy === 'standby') {
     // When skipping a query (ie. we're not querying for data but still want to
     // render children), make sure the `data` is cleared out and `loading` is
     // set to `false` (since we aren't loading anything).

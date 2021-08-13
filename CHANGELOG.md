@@ -1,3 +1,10 @@
+## Apollo Client 3.4.8 (not yet released)
+
+### Bug Fixes
+
+- Fix error thrown by nested `keyFields: ["a", ["b", "c"], "d"]` type policies when writing results into the cache where any of the key fields (`.a`, `.a.b`, `.a.c`, or `.d`) have been renamed by query field alias syntax. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8643](https://github.com/apollographql/apollo-client/pull/8643)
+
 ## Apollo Client 3.4.7
 
 ### Bug Fixes

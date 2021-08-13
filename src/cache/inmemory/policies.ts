@@ -1067,22 +1067,30 @@ function computeKeyObject(
   // so we are careful to build keyObj in the order of keys given in
   // specifier.
   const keyObj = Object.create(null);
-  let prevKey: string | undefined;
+
+  // The lastResponseKey variable tracks keys as seen in actual GraphQL response
+  // objects, potentially affected by aliasing. The lastActualKey variable
+  // tracks the corresponding key after removing aliases.
+  let lastResponseKey: string | undefined;
+  let lastActualKey: string | undefined;
+
   specifier.forEach(s => {
     if (Array.isArray(s)) {
-      if (typeof prevKey === "string") {
+      if (typeof lastActualKey === "string" &&
+          typeof lastResponseKey === "string") {
         const subsets = aliasMap && aliasMap.subsets;
-        const subset = subsets && subsets[prevKey];
-        keyObj[prevKey] = computeKeyObject(response[prevKey], s, strict, subset);
+        const subset = subsets && subsets[lastActualKey];
+        keyObj[lastActualKey] =
+          computeKeyObject(response[lastResponseKey], s, strict, subset);
       }
     } else {
       const aliases = aliasMap && aliasMap.aliases;
       const responseName = aliases && aliases[s] || s;
       if (hasOwn.call(response, responseName)) {
-        keyObj[prevKey = s] = response[responseName];
+        keyObj[lastActualKey = s] = response[lastResponseKey = responseName];
       } else {
         invariant(!strict, `Missing field '${responseName}' while computing key fields`);
-        prevKey = void 0;
+        lastResponseKey = lastActualKey = void 0;
       }
     }
   });

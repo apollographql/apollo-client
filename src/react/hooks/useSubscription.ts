@@ -37,7 +37,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     });
   });
 
-  const ref = useRef({ client, subscription, options, observable });
+  const ref = useRef({ client, subscription, options });
   useEffect(() => {
     let shouldResubscribe = options?.shouldResubscribe;
     if (typeof shouldResubscribe === 'function') {

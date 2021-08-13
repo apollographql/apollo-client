@@ -26,7 +26,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   >((lazyOptions?: QueryLazyOptions<TVariables>) => {
     setExecution((execution) => {
       if (execution.called) {
-        result && result.refetch(execution.lazyOptions);
+        result && result.refetch(lazyOptions);
       }
 
       return { called: true, lazyOptions };

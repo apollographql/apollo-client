@@ -17,7 +17,6 @@ import {
 import { equal } from '@wry/equality';
 import { DocumentType, verifyDocumentType } from '../parser';
 import { ApolloError } from '../../errors';
-import { FetchResult } from '../../link/core';
 import { useApolloClient } from './useApolloClient';
 
 export function useMutation<
@@ -66,61 +65,60 @@ export function useMutation<
       { ...options, mutation },
       executeOptions as any,
     );
-    return client.mutate(clientOptions)
-      .then((response: FetchResult<TData>) => {
-        const { data, errors } = response;
-        const error =
-          errors && errors.length > 0
-            ? new ApolloError({ graphQLErrors: errors })
-            : void 0;
+    return client.mutate(clientOptions).then((response) => {
+      const { data, errors } = response;
+      const error =
+        errors && errors.length > 0
+          ? new ApolloError({ graphQLErrors: errors })
+          : void 0;
 
-        if (mutationId === ref.current.mutationId && !options?.ignoreResults) {
-          const result = {
-            called: true,
-            loading: false,
-            data,
-            error,
-            client,
-          };
+      if (mutationId === ref.current.mutationId && !options?.ignoreResults) {
+        const result = {
+          called: true,
+          loading: false,
+          data,
+          error,
+          client,
+        };
 
-          if (
-            ref.current.isMounted &&
-            !equal(ref.current.result, result)
-          ) {
-            ref.current.result = result;
-            setResult(result);
-          }
+        if (
+          ref.current.isMounted &&
+          !equal(ref.current.result, result)
+        ) {
+          ref.current.result = result;
+          setResult(result);
         }
+      }
 
-        options?.onCompleted?.(data!);
-        return response;
-      }).catch((error) => {
-        if (mutationId === ref.current.mutationId) {
-          const result = {
-            loading: false,
-            error,
-            data: void 0,
-            called: true,
-            client,
-          };
+      options?.onCompleted?.(data!);
+      return response;
+    }).catch((error) => {
+      if (mutationId === ref.current.mutationId) {
+        const result = {
+          loading: false,
+          error,
+          data: void 0,
+          called: true,
+          client,
+        };
 
-          if (
-            ref.current.isMounted &&
-            !equal(ref.current.result, result)
-          ) {
-            ref.current.result = result;
-            setResult(result);
-          }
+        if (
+          ref.current.isMounted &&
+          !equal(ref.current.result, result)
+        ) {
+          ref.current.result = result;
+          setResult(result);
         }
+      }
 
-        if (options?.onError) {
-          options.onError(error);
-          // TODO(brian): why are we returning this here???
-          return { data: void 0, errors: error };
-        }
+      if (options?.onError) {
+        options.onError(error);
+        // TODO(brian): why are we returning this here???
+        return { data: void 0, errors: error };
+      }
 
-        throw error;
-      });
+      throw error;
+    });
   }, [client, options, mutation]);
 
   useEffect(() => () => {

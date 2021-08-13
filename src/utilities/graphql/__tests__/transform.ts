@@ -1,4 +1,4 @@
-import { print } from 'graphql';
+import { print, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
 
@@ -14,7 +14,6 @@ import {
   removeClientSetsFromDocument,
 } from '../transform';
 import { getQueryDefinition } from '../getFromAST';
-import { DocumentNode } from 'graphql';
 
 describe('removeArgumentsFromDocument', () => {
   it('should remove a single variable', () => {

@@ -1,24 +1,17 @@
-import {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { equal } from '@wry/equality';
 import { OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
-  ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
   ObservableQuery,
   DocumentNode,
   TypedDocumentNode,
+  WatchQueryOptions,
 } from '../../core';
 import {
-  QueryDataOptions,
   QueryHookOptions,
   QueryResult,
 } from '../types/types';
@@ -31,75 +24,36 @@ export function useQuery<
   TVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  hookOptions?: QueryHookOptions<TData, TVariables>,
+  options?: QueryHookOptions<TData, TVariables>,
 ): QueryResult<TData> {
   const context = useContext(getApolloContext());
-  const client = useApolloClient(hookOptions?.client);
+  const client = useApolloClient(options?.client);
   verifyDocumentType(query, DocumentType.Query);
-
-  // TODO: useMemo is probably not correct here, what if options doesn’t change but the properties do?
-  // create watchQueryOptions from hook options
-  const {
-    skip,
-    ssr,
-    partialRefetch,
-    onCompleted,
-    onError,
-    options,
-  } = useMemo(() => {
-    const {
-      skip,
-      ssr,
-      partialRefetch,
-      onCompleted,
-      onError,
-      ...options
-    } = { ...hookOptions, query };
-    if (skip) {
-      options.fetchPolicy = 'standby';
-    } else if (
-      context.renderPromises &&
-      (
-        options.fetchPolicy === 'network-only' ||
-        options.fetchPolicy === 'cache-and-network'
-      )
-    ) {
-      // this behavior was added to react-apollo without explanation in this PR
-      // https://github.com/apollographql/react-apollo/pull/1579
-      options.fetchPolicy = 'cache-first';
-    } else if (!options.fetchPolicy) {
-      // cache-first is the default policy, but we explicitly assign it here so
-      // the cache policies computed based on options can be cleared
-      options.fetchPolicy = 'cache-first';
-    }
-
-    return { skip, ssr, partialRefetch, onCompleted, onError, options };
-  }, [hookOptions, context.renderPromises]);
-
   const [obsQuery, setObsQuery] = useState(() => {
+    const watchQueryOptions = createWatchQueryOptions(query, options);
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
     let obsQuery: ObservableQuery<TData, TVariables> | null = null;
     if (context.renderPromises) {
-      obsQuery = context.renderPromises.getSSRObservable(options);
+      obsQuery = context.renderPromises.getSSRObservable(watchQueryOptions);
     }
 
     if (!obsQuery) {
       // Is it safe (StrictMode/memory-wise) to call client.watchQuery here?
-      obsQuery = client.watchQuery(options);
+      obsQuery = client.watchQuery(watchQueryOptions);
       if (context.renderPromises) {
         context.renderPromises.registerSSRObservable(
           obsQuery,
-          options,
+          watchQueryOptions,
         );
       }
     }
 
     if (
       context.renderPromises &&
-      ssr !== false &&
-      !skip &&
+      options?.ssr !== false &&
+      !options?.skip &&
       obsQuery.getCurrentResult().loading
     ) {
       // TODO: This is a legacy API which could probably be cleaned up
@@ -107,7 +61,7 @@ export function useQuery<
         {
           // The only options which seem to actually be used by the
           // RenderPromises class are query and variables.
-          getOptions: () => options,
+          getOptions: () => createWatchQueryOptions(query, options),
           fetchData: () => new Promise<void>((resolve) => {
             const sub = obsQuery!.subscribe({
               next(result) {
@@ -125,7 +79,7 @@ export function useQuery<
               },
             });
           }),
-        } as any,
+        },
         // This callback never seemed to do anything
         () => null,
       );
@@ -134,19 +88,25 @@ export function useQuery<
     return obsQuery;
   });
 
-  let [result, setResult] = useState(() => obsQuery.getCurrentResult());
-  const prevRef = useRef<{
-    client: ApolloClient<unknown>,
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: QueryDataOptions<TData, TVariables>,
-    result: ApolloQueryResult<TData>,
-    data: TData | undefined,
-  }>({
+  let [result, setResult] = useState(() => {
+    const result = obsQuery.getCurrentResult();
+    if (!result.loading) {
+      if (result.data) {
+        options?.onCompleted?.(result.data);
+      } else if (result.error) {
+        options?.onError?.(result.error);
+      }
+    }
+
+    return result;
+  });
+
+  const ref = useRef({
     client,
     query,
     options,
     result,
-    data: void 0,
+    data: void 0 as TData | undefined,
   });
 
   // An effect to recreate the obsQuery whenever the client or query changes.
@@ -155,28 +115,37 @@ export function useQuery<
   useEffect(() => {
     let nextResult: ApolloQueryResult<TData> | undefined;
     if (
-      prevRef.current.client !== client ||
-      !equal(prevRef.current.query, query)
+      ref.current.client !== client ||
+      !equal(ref.current.query, query)
     ) {
-      const obsQuery = client.watchQuery(options);
+      const obsQuery = client.watchQuery(
+        createWatchQueryOptions(query, options),
+      );
       setObsQuery(obsQuery);
       nextResult = obsQuery.getCurrentResult();
-    } else if (!equal(prevRef.current.options, options)) {
-      obsQuery.setOptions(options).catch(() => {});
+    } else if (!equal(ref.current.options, options)) {
+      obsQuery.setOptions(createWatchQueryOptions(query, options))
+        .catch(() => {});
       nextResult = obsQuery.getCurrentResult();
     }
 
     if (nextResult) {
-      const previousResult = prevRef.current.result;
+      const previousResult = ref.current.result;
       if (previousResult.data) {
-        prevRef.current.data = previousResult.data;
+        ref.current.data = previousResult.data;
       }
 
-      prevRef.current.result = nextResult;
-      setResult(nextResult);
+      setResult(ref.current.result = nextResult);
+      if (!nextResult.loading) {
+        if (nextResult.data) {
+          options?.onCompleted?.(nextResult.data);
+        } else if (nextResult.error) {
+          options?.onError?.(nextResult.error);
+        }
+      }
     }
 
-    Object.assign(prevRef.current, { client, query, options });
+    Object.assign(ref.current, { client, query, options });
   }, [obsQuery, client, query, options]);
 
   // An effect to subscribe to the current observable query
@@ -185,11 +154,12 @@ export function useQuery<
       return;
     }
 
+    let subscription = obsQuery.subscribe(onNext, onError);
+    // We use `getCurrentResult()` instead of the callback argument because
+    // the values differ slightly. Specifically, loading results will have
+    // an empty object for data instead of `undefined` for some reason.
     function onNext() {
-      const previousResult = prevRef.current.result;
-      // We use `getCurrentResult()` instead of the callback argument because
-      // the values differ slightly. Specifically, loading results will have
-      // an empty object for data instead of `undefined` for some reason.
+      const previousResult = ref.current.result;
       const result = obsQuery.getCurrentResult();
       // Make sure we're not attempting to re-render similar results
       if (
@@ -202,16 +172,18 @@ export function useQuery<
       }
 
       if (previousResult.data) {
-        prevRef.current.data = previousResult.data;
+        ref.current.data = previousResult.data;
       }
 
-      prevRef.current.result = result;
-      setResult(result);
+      setResult(ref.current.result = result);
+      if (!result.loading) {
+        ref.current.options?.onCompleted?.(result.data);
+      }
     }
 
     function onError(error: Error) {
       const last = obsQuery["last"];
-      sub.unsubscribe();
+      subscription.unsubscribe();
       // Unfortunately, if `lastError` is set in the current
       // `observableQuery` when the subscription is re-created,
       // the subscription will immediately receive the error, which will
@@ -221,55 +193,33 @@ export function useQuery<
       // has a chance to stay open).
       try {
         obsQuery.resetLastResults();
-        sub = obsQuery.subscribe(onNext, onError);
+        subscription = obsQuery.subscribe(onNext, onError);
       } finally {
         obsQuery["last"] = last;
       }
 
       if (!error.hasOwnProperty('graphQLErrors')) {
-        // The error is not a graphQL error
+        // The error is not a GraphQL error
         throw error;
       }
 
-      const previousResult = prevRef.current.result;
+      const previousResult = ref.current.result;
       if (
         (previousResult && previousResult.loading) ||
         !equal(error, previousResult.error)
       ) {
-        prevRef.current.result = {
+        setResult(ref.current.result = {
           data: previousResult.data,
           error: error as ApolloError,
           loading: false,
           networkStatus: NetworkStatus.error,
-        };
-        setResult(prevRef.current.result);
+        });
+        ref.current.options?.onError?.(error as ApolloError);
       }
     }
 
-    let sub = obsQuery.subscribe(onNext, onError);
-    return () => sub.unsubscribe();
-  }, [obsQuery, client.disableNetworkFetches, context.renderPromises]);
-
-  const obsQueryFields = useMemo(() => ({
-    refetch: obsQuery.refetch.bind(obsQuery),
-    fetchMore: obsQuery.fetchMore.bind(obsQuery),
-    updateQuery: obsQuery.updateQuery.bind(obsQuery),
-    startPolling: obsQuery.startPolling.bind(obsQuery),
-    stopPolling: obsQuery.stopPolling.bind(obsQuery),
-    subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
-  }), [obsQuery]);
-
-  // An effect which calls the onCompleted and onError callbacks
-  useEffect(() => {
-    if (!result.loading) {
-      if (result.error) {
-        onError?.(result.error);
-      } else if (result.data) {
-        onCompleted?.(result.data);
-      }
-    }
-    // TODO: Do we need to add onCompleted and onError to the dependency array
-  }, [result, onCompleted, onError]);
+    return () => subscription.unsubscribe();
+  }, [obsQuery, context.renderPromises, client.disableNetworkFetches]);
 
   let partial: boolean | undefined;
   ({ partial, ...result } = result);
@@ -282,7 +232,7 @@ export function useQuery<
     // edge cases when this block was put in an effect.
     if (
       partial &&
-      partialRefetch &&
+      options?.partialRefetch &&
       !result.loading &&
       (!result.data || Object.keys(result.data).length === 0) &&
       obsQuery.options.fetchPolicy !== 'cache-only'
@@ -297,30 +247,30 @@ export function useQuery<
     }
 
     // TODO: This is a hack to make sure useLazyQuery executions update the
-    // obsevable query options in ssr mode.
+    // obsevable query options for ssr.
     if (
       context.renderPromises &&
-      ssr !== false &&
-      !skip &&
-      obsQuery.getCurrentResult().loading
+      options?.ssr !== false &&
+      !options?.skip &&
+      result.loading
     ) {
-      obsQuery.setOptions(options).catch(() => {});
+      obsQuery.setOptions(createWatchQueryOptions(query, options)).catch(() => {});
     }
   }
 
   if (
     (context.renderPromises || client.disableNetworkFetches) &&
-    ssr === false
+    options?.ssr === false
   ) {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    result = prevRef.current.result = {
+    result = ref.current.result = {
       loading: true,
       data: void 0 as unknown as TData,
       error: void 0,
       networkStatus: NetworkStatus.loading,
     };
-  } else if (skip) {
+  } else if (options?.skip) {
     // When skipping a query (ie. we're not querying for data but still want to
     // render children), make sure the `data` is cleared out and `loading` is
     // set to `false` (since we aren't loading anything).
@@ -342,19 +292,66 @@ export function useQuery<
   if (result.errors && result.errors.length) {
     // Until a set naming convention for networkError and graphQLErrors is
     // decided upon, we map errors (graphQLErrors) to the error options.
-    // TODO: Is it possible for both result.error and result.errors to be defined here?
+    // TODO: Is it possible for both result.error and result.errors to be
+    // defined here?
     result = {
       ...result,
       error: result.error || new ApolloError({ graphQLErrors: result.errors }),
     };
   }
 
+  const obsQueryFields = useMemo(() => ({
+    refetch: obsQuery.refetch.bind(obsQuery),
+    fetchMore: obsQuery.fetchMore.bind(obsQuery),
+    updateQuery: obsQuery.updateQuery.bind(obsQuery),
+    startPolling: obsQuery.startPolling.bind(obsQuery),
+    stopPolling: obsQuery.stopPolling.bind(obsQuery),
+    subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
+  }), [obsQuery]);
+
   return {
     ...obsQueryFields,
     variables: obsQuery.variables,
     client,
     called: true,
-    previousData: prevRef.current.data,
+    previousData: ref.current.data,
     ...result,
   };
+}
+
+function createWatchQueryOptions<TData, TVariables>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: QueryHookOptions<TData, TVariables> = {},
+): WatchQueryOptions<TVariables, TData> {
+  // TODO: For some reason, we pass context, which is the React Apollo Context,
+  // into observable queries, and test for that.
+  // removing hook specific options
+  const {
+    skip,
+    ssr,
+    onCompleted,
+    onError,
+    displayName,
+    ...watchQueryOptions
+  } = options;
+
+  if (skip) {
+    watchQueryOptions.fetchPolicy = 'standby';
+  } else if (
+    watchQueryOptions.context?.renderPromises &&
+    (
+      watchQueryOptions.fetchPolicy === 'network-only' ||
+      watchQueryOptions.fetchPolicy === 'cache-and-network'
+    )
+  ) {
+    // this behavior was added to react-apollo without explanation in this PR
+    // https://github.com/apollographql/react-apollo/pull/1579
+    watchQueryOptions.fetchPolicy = 'cache-first';
+  } else if (!watchQueryOptions.fetchPolicy) {
+    // cache-first is the default policy, but we explicitly assign it here so
+    // the cache policies computed based on options can be cleared
+    watchQueryOptions.fetchPolicy = 'cache-first';
+  }
+
+  return { query, ...watchQueryOptions };
 }

@@ -107,26 +107,26 @@ export function useQuery<
     options,
     result,
     data: void 0 as TData | undefined,
+    watchQueryOptions: createWatchQueryOptions(query, options),
   });
 
   // An effect to recreate the obsQuery whenever the client or query changes.
   // This effect is also responsible for checking and updating the obsQuery
   // options whenever they change.
   useEffect(() => {
+    const watchQueryOptions = createWatchQueryOptions(query, options);
     let nextResult: ApolloQueryResult<TData> | undefined;
     if (
       ref.current.client !== client ||
       !equal(ref.current.query, query)
     ) {
-      const obsQuery = client.watchQuery(
-        createWatchQueryOptions(query, options),
-      );
+      const obsQuery = client.watchQuery(watchQueryOptions);
       setObsQuery(obsQuery);
       nextResult = obsQuery.getCurrentResult();
-    } else if (!equal(ref.current.options, options)) {
-      obsQuery.setOptions(createWatchQueryOptions(query, options))
-        .catch(() => {});
+    } else if (!equal(ref.current.watchQueryOptions, watchQueryOptions)) {
+      obsQuery.setOptions(watchQueryOptions).catch(() => {});
       nextResult = obsQuery.getCurrentResult();
+      ref.current.watchQueryOptions = watchQueryOptions;
     }
 
     if (nextResult) {

@@ -7,7 +7,12 @@ import { ApolloClient } from '../../../../core';
 import { ApolloError } from '../../../../errors';
 import { DataProxy, InMemoryCache as Cache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
-import { MockedProvider, MockLink, mockSingleLink } from '../../../../testing';
+import {
+  itAsync,
+  MockedProvider,
+  MockLink,
+  mockSingleLink,
+} from '../../../../testing';
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 
@@ -156,7 +161,7 @@ describe('General Mutation testing', () => {
     expect(spy).toHaveBeenCalledWith(mocksProps[1].result);
   });
 
-  it('performs a mutation', () => new Promise((resolve, reject) => {
+  itAsync('performs a mutation', (resolve, reject) => {
     let count = 0;
     const Component = () => (
       <Mutation mutation={mutation}>
@@ -190,7 +195,7 @@ describe('General Mutation testing', () => {
     );
 
     wait().then(resolve, reject);
-  }));
+  });
 
   it('can bind only the mutation and not rerender by props', done => {
     let count = 0;

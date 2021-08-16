@@ -333,6 +333,7 @@ describe('useLazyQuery Hook', () => {
       {
         request: { query },
         result: { data: { hello: "world 1" } },
+        delay: 10,
       },
       {
         request: { query },
@@ -362,7 +363,6 @@ describe('useLazyQuery Hook', () => {
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toBe(undefined);
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);

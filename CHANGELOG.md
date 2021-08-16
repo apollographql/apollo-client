@@ -5,6 +5,9 @@
 - Fix error thrown by nested `keyFields: ["a", ["b", "c"], "d"]` type policies when writing results into the cache where any of the key fields (`.a`, `.a.b`, `.a.c`, or `.d`) have been renamed by query field alias syntax. <br/>
   [@benjamn](https://github.com/benjamn) in [#8643](https://github.com/apollographql/apollo-client/pull/8643)
 
+- Fix regression from PR [#8422](https://github.com/apollographql/apollo-client/pull/8422) (first released in `@apollo/client@3.4.0-rc.15`) that caused `result.data` to be set to undefined in some cases after `ObservableQuery#getCurrentResult` reads an incomplete result from the cache. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8642](https://github.com/apollographql/apollo-client/pull/8642)
+
 ## Apollo Client 3.4.7
 
 ### Bug Fixes

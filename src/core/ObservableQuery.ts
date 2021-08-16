@@ -267,8 +267,6 @@ export class ObservableQuery<
     }
   }
 
-  // Returns the last result that observer.next was called with. This is not the same as
-  // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
   public getLastResult(variablesMustMatch?: boolean): ApolloQueryResult<TData> | undefined {
     return this.getLast("result", variablesMustMatch);
   }

@@ -1025,7 +1025,6 @@ describe('optimistic mutation results', () => {
     };
 
     itAsync('will insert a single itemAsync to the beginning', async (resolve, reject) => {
-      expect.assertions(7);
       let subscriptionHandle: Subscription;
       const client = await setup(reject, {
         request: { query: mutation },

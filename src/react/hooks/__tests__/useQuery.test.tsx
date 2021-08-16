@@ -18,7 +18,6 @@ import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
-import { invariant } from 'ts-invariant';
 
 describe('useQuery Hook', () => {
   describe('General use', () => {
@@ -2438,7 +2437,6 @@ describe('useQuery Hook', () => {
   describe('Missing Fields', () => {
     it('should log debug messages about MissingFieldErrors from the cache', async () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const debugSpy = jest.spyOn(invariant, 'debug').mockImplementation(() => {});
 
       const carQuery: DocumentNode = gql`
         query cars($id: Int) {
@@ -2488,15 +2486,8 @@ describe('useQuery Hook', () => {
       expect(result.current.error).toBe(undefined);
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
-
+      expect(result.current.data).toEqual(carData);
       expect(result.current.error).toBeUndefined();
-      expect(debugSpy).toHaveBeenCalledTimes(1);
-      expect(debugSpy).toHaveBeenLastCalledWith(
-        "Missing cache result fields: cars.0.vin",
-        [new Error("Can't find field 'vin' on Car:1 object")]
-      );
-      debugSpy.mockRestore();
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
       expect(errorSpy).toHaveBeenLastCalledWith(

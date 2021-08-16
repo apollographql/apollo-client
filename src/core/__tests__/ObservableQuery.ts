@@ -798,7 +798,7 @@ describe('ObservableQuery', () => {
           expect(result.errors).toEqual([error]);
           expect(observable.getCurrentResult().errors).toEqual([error]);
           observable.setVariables(differentVariables);
-          expect(observable.getCurrentResult().errors).toEqual([error]);
+          expect(observable.getCurrentResult().errors).toBeUndefined();
         } else if (handleCount === 2) {
           expect(result.data).toEqual(dataTwo);
           expect(observable.getCurrentResult().data).toEqual(

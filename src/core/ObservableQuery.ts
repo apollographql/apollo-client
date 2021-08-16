@@ -45,9 +45,9 @@ export interface UpdateQueryOptions<TVariables> {
 
 let warnedAboutUpdateQuery = false;
 
-interface Last<TData, TVars> {
+interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
-  variables: TVars;
+  variables?: TVariables;
   error?: ApolloError;
 }
 
@@ -78,7 +78,11 @@ export class ObservableQuery<
 
   private queryInfo: QueryInfo;
 
+  // When this.concast is defined, this.observer is the Observer currently
+  // subscribed to that Concast.
   private concast?: Concast<ApolloQueryResult<TData>>;
+  private observer?: Observer<ApolloQueryResult<TData>>;
+
   private pollingInfo?: {
     interval: number;
     timeout: ReturnType<typeof setTimeout>;
@@ -611,13 +615,16 @@ once, rather than every time you call fetchMore.`);
     poll();
   }
 
-  private updateLastResult(newResult: ApolloQueryResult<TData>) {
+  private updateLastResult(
+    newResult: ApolloQueryResult<TData>,
+    variables = this.variables,
+  ) {
     this.last = {
       ...this.last,
       result: this.queryManager.assumeImmutableResults
         ? newResult
         : cloneDeep(newResult),
-      variables: { ...this.variables } as TVariables,
+      variables: variables && { ...variables },
     };
     if (!isNonEmptyArray(newResult.errors)) {
       delete this.last.error;
@@ -672,6 +679,14 @@ once, rather than every time you call fetchMore.`);
     }
 
     const concast = this.fetch(options, newNetworkStatus);
+    const observer: Observer<ApolloQueryResult<TData>> = {
+      next: result => {
+        this.reportResult(result, options.variables);
+      },
+      error: error => {
+        this.reportError(error, options.variables);
+      },
+    };
 
     if (!useDisposableConcast) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
@@ -679,14 +694,15 @@ once, rather than every time you call fetchMore.`);
       // that we can remove it here without triggering any unsubscriptions,
       // because we just want to ignore the old observable, not prematurely shut
       // it down, since other consumers may be awaiting this.concast.promise.
-      if (this.concast) {
+      if (this.concast && this.observer) {
         this.concast.removeObserver(this.observer, true);
       }
 
       this.concast = concast;
+      this.observer = observer;
     }
 
-    concast.addObserver(this.observer);
+    concast.addObserver(observer);
 
     return concast.promise;
   }
@@ -698,31 +714,40 @@ once, rather than every time you call fetchMore.`);
     // save the fetchMore result as this.lastResult, causing it to be
     // ignored due to the this.isDifferentFromLastResult check in
     // this.observer.next.
-    this.observer.next(this.getCurrentResult(false));
+    this.reportResult(
+      this.getCurrentResult(false),
+      this.variables,
+    );
   }
 
-  private observer = {
-    next: (result: ApolloQueryResult<TData>) => {
-      if (this.getLastError() || this.isDifferentFromLastResult(result)) {
-        this.updateLastResult(result);
-        iterateObserversSafely(this.observers, 'next', result);
-      }
-    },
+  private reportResult(
+    result: ApolloQueryResult<TData>,
+    variables: TVariables | undefined,
+  ) {
+    if (this.getLastError() || this.isDifferentFromLastResult(result)) {
+      this.updateLastResult(result, variables);
+      iterateObserversSafely(this.observers, 'next', result);
+    }
+  }
 
-    error: (error: ApolloError) => {
-      // Since we don't get the current result on errors, only the error, we
-      // must mirror the updates that occur in QueryStore.markQueryError here
-      this.updateLastResult({
-        ...this.getLastResult(),
-        error,
-        errors: error.graphQLErrors,
-        networkStatus: NetworkStatus.error,
-        loading: false,
-      } as ApolloQueryResult<TData>);
+  private reportError(
+    error: ApolloError,
+    variables: TVariables | undefined,
+  ) {
+    // Since we don't get the current result on errors, only the error, we
+    // must mirror the updates that occur in QueryStore.markQueryError here
+    const errorResult = {
+      ...this.getLastResult(),
+      error,
+      errors: error.graphQLErrors,
+      networkStatus: NetworkStatus.error,
+      loading: false,
+    } as ApolloQueryResult<TData>;
 
-      iterateObserversSafely(this.observers, 'error', this.last!.error = error);
-    },
-  };
+    this.updateLastResult(errorResult, variables);
+
+    iterateObserversSafely(this.observers, 'error', this.last!.error = error);
+  }
 
   public hasObservers() {
     return this.observers.size > 0;
@@ -730,9 +755,10 @@ once, rather than every time you call fetchMore.`);
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    if (this.concast) {
+    if (this.concast && this.observer) {
       this.concast.removeObserver(this.observer);
       delete this.concast;
+      delete this.observer;
     }
 
     this.stopPolling();

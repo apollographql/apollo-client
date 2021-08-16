@@ -129,6 +129,63 @@ describe("type policies", function () {
     checkAuthorName(cache);
   });
 
+  it("can specify nested keyFields with alias", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          keyFields: ["title", "author", ["name"]],
+        },
+      },
+    });
+
+    const aliasQuery = gql`
+      query {
+        book {
+          title
+          writer: author {
+            alias: name
+          }
+        }
+      }
+    `;
+
+    const { author, ...rest } = theInformationBookData;
+    const aliasBookData = {
+      ...rest,
+      writer: {
+        alias: author.name,
+      },
+    };
+
+    cache.writeQuery({
+      query: aliasQuery,
+      data: {
+        book: aliasBookData,
+      },
+    });
+
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: {
+          __ref: 'Book:{"title":"The Information","author":{"name":"James Gleick"}}',
+        },
+      },
+      'Book:{"title":"The Information","author":{"name":"James Gleick"}}': {
+        __typename: "Book",
+        title: "The Information",
+        // Note that "author" and "name" are stored internally, since they are
+        // the true names of their fields (according to the schema), despite the
+        // writer:author and alias:name aliases.
+        author: {
+          name: "James Gleick"
+        },
+      },
+    });
+
+    checkAuthorName(cache);
+  });
+
   it("keeps keyFields in specified order", function () {
     const cache = new InMemoryCache({
       typePolicies: {

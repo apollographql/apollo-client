@@ -2590,15 +2590,16 @@ describe('client', () => {
         subscription.unsubscribe();
 
         const lastError = observable.getLastError();
-        const lastResult = observable.getLastResult();
+        expect(lastError).toBeInstanceOf(ApolloError);
+        expect(lastError!.networkError).toEqual(error);
 
+        const lastResult = observable.getLastResult();
         expect(lastResult).toBeTruthy();
         expect(lastResult!.loading).toBe(false);
         expect(lastResult!.networkStatus).toBe(8);
 
         observable.resetLastResults();
         subscription = observable.subscribe(observerOptions);
-        Object.assign(observable, { lastError, lastResult });
 
         // The error arrived, run a refetch to get the third result
         // which should now contain valid data.

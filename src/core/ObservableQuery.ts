@@ -453,27 +453,22 @@ once, rather than every time you call fetchMore.`);
   public setVariables(
     variables: TVariables,
   ): Promise<ApolloQueryResult<TData> | void> {
-    if (equal(this.variables, variables)) {
-      // If we have no observers, then we don't actually want to make a network
-      // request. As soon as someone observes the query, the request will kick
-      // off. For now, we just store any changes. (See #1077)
-      return this.observers.size
-        ? this.result()
-        : Promise.resolve();
+    if (!equal(this.variables, variables)) {
+      this.options.variables = variables;
+      if (this.hasObservers()) {
+        return this.reobserve({
+          // Reset options.fetchPolicy to its original value.
+          fetchPolicy: this.initialFetchPolicy,
+          variables,
+        }, NetworkStatus.setVariables);
+      }
     }
-
-    this.options.variables = variables;
-
-    // See comment above
-    if (!this.observers.size) {
-      return Promise.resolve();
-    }
-
-    return this.reobserve({
-      // Reset options.fetchPolicy to its original value.
-      fetchPolicy: this.initialFetchPolicy,
-      variables,
-    }, NetworkStatus.setVariables);
+    // If we have no observers, then we don't actually want to make a network
+    // request. As soon as someone observes the query, the request will kick
+    // off. For now, we just store any changes. (See #1077)
+    return this.hasObservers()
+      ? this.reobserve()
+      : Promise.resolve();
   }
 
   public updateQuery<TVars = TVariables>(

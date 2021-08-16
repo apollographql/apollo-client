@@ -90,11 +90,11 @@ export function useQuery<
 
   let [result, setResult] = useState(() => {
     const result = obsQuery.getCurrentResult();
-    if (!result.loading) {
-      if (result.data) {
-        options?.onCompleted?.(result.data);
-      } else if (result.error) {
-        options?.onError?.(result.error);
+    if (!result.loading && options) {
+      if (result.error) {
+        options.onError?.(result.error);
+      } else if (result.data) {
+        options.onCompleted?.(result.data);
       }
     }
 
@@ -116,10 +116,7 @@ export function useQuery<
   useEffect(() => {
     const watchQueryOptions = createWatchQueryOptions(query, options);
     let nextResult: ApolloQueryResult<TData> | undefined;
-    if (
-      ref.current.client !== client ||
-      !equal(ref.current.query, query)
-    ) {
+    if (ref.current.client !== client || !equal(ref.current.query, query)) {
       const obsQuery = client.watchQuery(watchQueryOptions);
       setObsQuery(obsQuery);
       nextResult = obsQuery.getCurrentResult();
@@ -136,11 +133,13 @@ export function useQuery<
       }
 
       setResult(ref.current.result = nextResult);
-      if (!nextResult.loading) {
-        if (nextResult.data) {
-          options?.onCompleted?.(nextResult.data);
-        } else if (nextResult.error) {
-          options?.onError?.(nextResult.error);
+      if (!nextResult.loading && options) {
+        if (!result.loading) {
+          if (result.error) {
+            options.onError?.(result.error);
+          } else if (result.data) {
+            options.onCompleted?.(result.data);
+          }
         }
       }
     }

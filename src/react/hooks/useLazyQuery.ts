@@ -11,6 +11,16 @@ import {
 import { useQuery } from './useQuery';
 import { OperationVariables } from '../../core';
 
+// The following methods, when called will execute the query, regardless of
+// whether the useLazyQuery execute function was called before.
+const EAGER_METHODS = [
+  'refetch',
+  'fetchMore',
+  'updateQuery',
+  'startPolling',
+  'subscribeToMore',
+] as const;
+
 export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
@@ -52,14 +62,13 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
       called: false as any,
     };
 
-    for (const key in result) {
-      if (typeof (result as any)[key] === 'function') {
-        const method = (result as any)[key];
-        (result as any)[key] = (...args: any) => {
-          setExecution({ called: true });
-          return method(...args);
-        };
-      }
+
+    for (const key of EAGER_METHODS) {
+      const method = result[key];
+      result[key] = (...args: any) => {
+        setExecution({ called: true });
+        return (method as any)(...args);
+      };
     }
   }
 

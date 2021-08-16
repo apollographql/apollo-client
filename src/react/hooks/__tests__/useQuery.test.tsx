@@ -2721,9 +2721,11 @@ describe('useQuery Hook', () => {
 
     it('should not refetch when skip is true', async () => {
       const query = gql`{ hello }`;
-      const link = ApolloLink.empty();
-      const requestSpy = jest.spyOn(link, 'request');
+      const link = new ApolloLink(() => Observable.of({
+        data: { hello: 'world' },
+      }));
 
+      const requestSpy = jest.spyOn(link, 'request');
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link,
@@ -2742,11 +2744,11 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
-
+      await expect(waitForNextUpdate({ timeout: 20 }))
+        .rejects.toThrow('Timed out');
       result.current.refetch();
-
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitForNextUpdate({ timeout: 20 }))
+        .rejects.toThrow('Timed out');
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
       expect(requestSpy).toHaveBeenCalledTimes(0);

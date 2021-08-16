@@ -305,11 +305,11 @@ export class ObservableQuery<
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
     const { fetchPolicy } = this.options;
-    if (fetchPolicy === 'standby') {
-      // do nothing
+    if (fetchPolicy === 'standby' || fetchPolicy === 'cache-and-network') {
+      reobserveOptions.fetchPolicy = fetchPolicy;
     } else if (fetchPolicy === 'no-cache') {
       reobserveOptions.fetchPolicy = 'no-cache';
-    } else if (fetchPolicy !== 'cache-and-network') {
+    } else {
       reobserveOptions.fetchPolicy = 'network-only';
     }
 

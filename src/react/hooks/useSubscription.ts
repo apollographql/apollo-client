@@ -95,7 +95,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
         };
         setResult(result);
 
-        options?.onSubscriptionData?.({
+        ref.current.options?.onSubscriptionData?.({
           client,
           subscriptionData: result
         });
@@ -109,7 +109,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
         });
       },
       complete() {
-        options?.onSubscriptionComplete?.();
+        ref.current.options?.onSubscriptionComplete?.();
       },
     });
 

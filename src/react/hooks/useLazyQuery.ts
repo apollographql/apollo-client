@@ -16,26 +16,26 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   options?: LazyQueryHookOptions<TData, TVariables>
 ): QueryTuple<TData, TVariables> {
   const [execution, setExecution] = useState<
-    { called: boolean, lazyOptions?: QueryLazyOptions<TVariables> }
+    { called: boolean, options?: QueryLazyOptions<TVariables> }
   >({
     called: false,
   });
 
   const execute = useCallback<
     QueryTuple<TData, TVariables>[0]
-  >((lazyOptions?: QueryLazyOptions<TVariables>) => {
+  >((executeOptions?: QueryLazyOptions<TVariables>) => {
     setExecution((execution) => {
       if (execution.called) {
-        result && result.refetch(lazyOptions?.variables);
+        result && result.refetch(executeOptions?.variables);
       }
 
-      return { called: true, lazyOptions };
+      return { called: true, options: executeOptions };
     });
   }, []);
 
   let result = useQuery<TData, TVariables>(query, {
     ...options,
-    ...execution.lazyOptions,
+    ...execution.options,
     // We don’t set skip to execution.called, because we need useQuery to call
     // addQueryPromise, so that ssr calls waits for execute to be called.
     fetchPolicy: execution.called ? options?.fetchPolicy : 'standby',

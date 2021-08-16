@@ -624,7 +624,7 @@ once, rather than every time you call fetchMore.`);
       result: this.queryManager.assumeImmutableResults
         ? newResult
         : cloneDeep(newResult),
-      variables: variables && { ...variables },
+      variables,
     };
     if (!isNonEmptyArray(newResult.errors)) {
       delete this.last.error;
@@ -678,13 +678,14 @@ once, rather than every time you call fetchMore.`);
       }
     }
 
+    const variables = options.variables && { ...options.variables };
     const concast = this.fetch(options, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
-        this.reportResult(result, options.variables);
+        this.reportResult(result, variables);
       },
       error: error => {
-        this.reportError(error, options.variables);
+        this.reportError(error, variables);
       },
     };
 

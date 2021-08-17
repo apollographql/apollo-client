@@ -387,8 +387,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
+    const { queryInfo } = this;
+    const originalNetworkStatus = queryInfo.networkStatus;
+    queryInfo.networkStatus = NetworkStatus.fetchMore;
     if (combinedOptions.notifyOnNetworkStatusChange) {
-      this.queryInfo.networkStatus = NetworkStatus.fetchMore;
       this.observe();
     }
 
@@ -437,8 +439,25 @@ once, rather than every time you call fetchMore.`);
       return fetchMoreResult as ApolloQueryResult<TData>;
 
     }).finally(() => {
-      this.queryManager.stopQuery(qid);
-      this.reobserve();
+      this.queryManager.removeQuery(qid);
+
+      if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
+        queryInfo.networkStatus = originalNetworkStatus;
+      }
+
+      queryInfo.reset();
+      const queryDataAfterFetchMore = queryInfo.getDiff().result;
+
+      // Instead of calling this.observe(), we deliver the result directly from
+      // the cache, since that's the mechanism by which fetchMore delivers its
+      // results, even for network-only queries.
+      this.reportResult({
+        loading: false,
+        // TODO Ideally this would always be NetworkStatus.fetchMore, though
+        // that would mean isNetworkRequestInFlight would need to be updated.
+        networkStatus: queryInfo.networkStatus || NetworkStatus.fetchMore,
+        data: queryDataAfterFetchMore,
+      }, this.variables);
     });
   }
 
@@ -786,14 +805,14 @@ once, rather than every time you call fetchMore.`);
     return concast.promise;
   }
 
-  // Pass the current result to this.observer.next without applying any
-  // fetch policies.
+  // (Re)deliver the current result to this.observers without applying fetch
+  // policies or making network requests.
   private observe() {
-    // Passing false is important so that this.getCurrentResult doesn't
-    // save the fetchMore result as this.lastResult, causing it to be
-    // ignored due to the this.isDifferentFromLastResult check in
-    // this.observer.next.
     this.reportResult(
+      // Passing false is important so that this.getCurrentResult doesn't
+      // save the fetchMore result as this.lastResult, causing it to be
+      // ignored due to the this.isDifferentFromLastResult check in
+      // this.reportResult.
       this.getCurrentResult(false),
       this.variables,
     );

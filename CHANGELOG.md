@@ -1,17 +1,15 @@
-## Apollo Client 3.5 (unreleased)
+## Apollo Client 3.5.0 (not yet released)
 
-### Bug Fixes
-- `useQuery` and `useLazyQuery` will now have observableQuery methods defined consistently. <br/> [@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+### React Refactoring
 
-- Calling `useLazyQuery` methods like `startPolling` will start the query <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+#### Bug Fixes (due to [@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)):
 
-- Calling the `useLazyQuery` execution function will now behave more like `refetch`. `previousData` will be preserved. <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
-
-- `standby` fetchPolicies will now act like `skip: true` more consistently <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
-
-- Calling `refetch` on a skipped query will have no effect (https://github.com/apollographql/apollo-client/issues/8270). <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
-
-- Improvements to `onError` and `onCompleted` functions, preventing them from firing continuously, and working with polling <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+- The `useQuery` and `useLazyQuery` hooks will now have `ObservableQuery` methods defined consistently.
+- Calling `useLazyQuery` methods like `startPolling` will start the query.
+- Calling the `useLazyQuery` execution function will now behave more like `refetch`. `previousData` will be preserved.
+- `standby` fetchPolicies will now act like `skip: true` more consistently.
+- Calling `refetch` on a skipped query will have no effect (issue [#8270](https://github.com/apollographql/apollo-client/issues/8270)).
+- Prevent `onError` and `onCompleted` functions from firing continuously, and improving their polling behavior.
 
 ## Apollo Client 3.4.8
 

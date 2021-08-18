@@ -16,7 +16,6 @@ import * as linkWS from "../link/ws";
 import * as react from "../react";
 import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
-import * as reactData from "../react/data";
 import * as reactHOC from "../react/hoc";
 import * as reactHooks from "../react/hooks";
 import * as reactParser from "../react/parser";
@@ -56,7 +55,6 @@ describe('exports of public entry points', () => {
   check("@apollo/client/react", react);
   check("@apollo/client/react/components", reactComponents);
   check("@apollo/client/react/context", reactContext);
-  check("@apollo/client/react/data", reactData);
   check("@apollo/client/react/hoc", reactHOC);
   check("@apollo/client/react/hooks", reactHooks);
   check("@apollo/client/react/parser", reactParser);

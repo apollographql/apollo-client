@@ -41,7 +41,7 @@
     "resolve": "ts-node-script config/resolveModuleIds.ts",
     "clean": "rimraf -r dist coverage lib temp",
     "test": "jest --config ./config/jest.config.js",
-    "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",
+    "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999",
     "test:ci": "npm run test:coverage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "test:memory": "cd scripts/memory && npm i && npm test",

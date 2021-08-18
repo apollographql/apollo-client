@@ -77,6 +77,7 @@ describe('graphql(mutation) lifecycle', () => {
     interface Props {
       listId: number;
     }
+
     function options(props: Props) {
       return {
         variables: {

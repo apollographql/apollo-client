@@ -361,28 +361,35 @@ describe('should update', () => {
               {(result: any) => {
                 const { loading, data } = result;
                 try {
-                  if (count === 0) {
-                    expect(loading).toBeTruthy();
-                    expect(data).toBeUndefined();
-                  } else if (count === 1) {
-                    expect(loading).toBeFalsy();
-                    expect(data).toEqual(results[0].result.data);
-                    setTimeout(() => {
-                      this.setState(
-                        {
-                          client: client2
-                        },
-                        () => {
-                          link2.simulateResult(results[1]);
-                        }
-                      );
-                    });
-                  } else if (count === 2) {
-                    expect(loading).toBeTruthy();
-                    expect(data).toBeUndefined();
-                  } else if (count === 3) {
-                    expect(loading).toBeFalsy();
-                    expect(data).toEqual(results[1].result.data);
+                  switch (count) {
+                    case 0:
+                      expect(loading).toBeTruthy();
+                      expect(data).toBeUndefined();
+                      break;
+                    case 1:
+                      setTimeout(() => {
+                        this.setState(
+                          {
+                            client: client2
+                          },
+                          () => {
+                            link2.simulateResult(results[1]);
+                          }
+                        );
+                      });
+                      // fallthrough
+                    case 2:
+                      expect(loading).toBeFalsy();
+                      expect(data).toEqual(results[0].result.data);
+                      break;
+                    case 3:
+                      expect(loading).toBeTruthy();
+                      expect(data).toBeUndefined();
+                      break;
+                    case 4:
+                      expect(loading).toBeFalsy();
+                      expect(data).toEqual(results[1].result.data);
+                      break;
                   }
                 } catch (error) {
                   reject(error);
@@ -401,7 +408,7 @@ describe('should update', () => {
 
     link.simulateResult(results[0]);
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    return wait(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('if the query changes', (resolve, reject) => {
@@ -449,28 +456,35 @@ describe('should update', () => {
             {(result: any) => {
               const { loading, data } = result;
               try {
-                if (count === 0) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 1) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(results[0].result.data);
-                  setTimeout(() => {
-                    this.setState(
-                      {
-                        subscription: subscriptionHero
-                      },
-                      () => {
-                        heroLink.simulateResult(heroResult);
-                      }
-                    );
-                  });
-                } else if (count === 2) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 3) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(heroResult.result.data);
+                switch (count) {
+                  case 0:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 1:
+                    setTimeout(() => {
+                      this.setState(
+                        {
+                          subscription: subscriptionHero
+                        },
+                        () => {
+                          heroLink.simulateResult(heroResult);
+                        }
+                      );
+                    });
+                    // fallthrough
+                  case 2:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(results[0].result.data);
+                    break;
+                  case 3:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 4:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(heroResult.result.data);
+                    break;
                 }
               } catch (error) {
                 reject(error);
@@ -491,7 +505,7 @@ describe('should update', () => {
 
     userLink.simulateResult(results[0]);
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    return wait(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('if the variables change', (resolve, reject) => {
@@ -518,31 +532,7 @@ describe('should update', () => {
       }
     };
 
-    class MockSubscriptionLinkOverride extends MockSubscriptionLink {
-      variables: any;
-      request(req: Operation) {
-        this.variables = req.variables;
-        return super.request(req);
-      }
-
-      simulateResult() {
-        if (this.variables.name === 'Luke Skywalker') {
-          return super.simulateResult({
-            result: {
-              data: dataLuke
-            }
-          });
-        } else if (this.variables.name === 'Han Solo') {
-          return super.simulateResult({
-            result: {
-              data: dataHan
-            }
-          });
-        }
-      }
-    }
-
-    const mockLink = new MockSubscriptionLinkOverride();
+    const mockLink = new MockSubscriptionLink();
 
     const mockClient = new ApolloClient({
       link: mockLink,
@@ -565,28 +555,35 @@ describe('should update', () => {
             {(result: any) => {
               const { loading, data } = result;
               try {
-                if (count === 0) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 1) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(dataLuke);
-                  setTimeout(() => {
-                    this.setState(
-                      {
-                        variables: variablesHan
-                      },
-                      () => {
-                        mockLink.simulateResult();
-                      }
-                    );
-                  });
-                } else if (count === 2) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 3) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(dataHan);
+                switch (count) {
+                  case 0:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 1:
+                    setTimeout(() => {
+                      this.setState(
+                        {
+                          variables: variablesHan
+                        },
+                        () => {
+                          mockLink.simulateResult({ result: { data: dataHan } });
+                        }
+                      );
+                    });
+                    // fallthrough
+                  case 2:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(dataLuke);
+                    break;
+                  case 3:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 4:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(dataHan);
+                    break;
                 }
               } catch (error) {
                 reject(error);
@@ -606,9 +603,9 @@ describe('should update', () => {
       </ApolloProvider>
     );
 
-    mockLink.simulateResult();
+    mockLink.simulateResult({ result: { data: dataLuke } });
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    return wait(() => expect(count).toBe(5)).then(resolve, reject);
   });
 });
 

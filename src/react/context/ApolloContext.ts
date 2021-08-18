@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { ApolloClient } from '../../core';
 import { canUseWeakMap } from '../../utilities';
+import type { RenderPromises } from '../ssr';
 
 export interface ApolloContextValue {
   client?: ApolloClient<object>;
-  renderPromises?: Record<any, any>;
+  renderPromises?: RenderPromises;
 }
 
 // To make sure Apollo Client doesn't create more than one React context

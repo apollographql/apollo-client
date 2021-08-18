@@ -104,29 +104,8 @@ export interface QueryLazyOptions<TVariables> {
   context?: DefaultContext;
 }
 
-type UnexecutedLazyFields = {
-  loading: false;
-  networkStatus: NetworkStatus.ready;
-  called: false;
-  data: undefined;
-  previousData?: undefined;
-}
-
-type Impartial<T> = {
-  [P in keyof T]?: never;
-}
-
-type AbsentLazyResultFields =
-  Omit<
-    Impartial<QueryResult<unknown, unknown>>,
-    keyof UnexecutedLazyFields>
-
-type UnexecutedLazyResult =
-   UnexecutedLazyFields & AbsentLazyResultFields
-
-export type LazyQueryResult<TData, TVariables> =
-  | UnexecutedLazyResult
-  | QueryResult<TData, TVariables>;
+// TODO: Delete this
+export type LazyQueryResult<TData, TVariables> = QueryResult<TData, TVariables>;
 
 export type QueryTuple<TData, TVariables> = [
   (options?: QueryLazyOptions<TVariables>) => void,
@@ -234,10 +213,13 @@ export interface BaseSubscriptionOptions<
   onSubscriptionComplete?: () => void;
 }
 
-export interface SubscriptionResult<TData = any> {
+export interface SubscriptionResult<TData = any, TVariables = any> {
   loading: boolean;
   data?: TData;
   error?: ApolloError;
+  // This was added by the legacy useSubscription type, and is tested in unit
+  // tests, but probably shouldn’t be added to the result.
+  variables?: TVariables;
 }
 
 export interface SubscriptionHookOptions<

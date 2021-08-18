@@ -986,6 +986,7 @@ describe('useMutation Hook', () => {
             variables,
           },
           result: { data: CREATE_TODO_RESULT },
+          delay: 20,
         }),
       });
 
@@ -1065,6 +1066,12 @@ describe('useMutation Hook', () => {
       expect(result.current.mutation[1].loading).toBe(true);
       expect(result.current.mutation[1].data).toBe(undefined);
       expect(finishedReobserving).toBe(false);
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual({ todoCount: 1 });
+      expect(result.current.mutation[1].loading).toBe(true);
+      expect(result.current.mutation[1].data).toBe(undefined);
 
       await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);

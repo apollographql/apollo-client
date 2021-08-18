@@ -50,7 +50,9 @@ export function useMutation<
       TCache
     > = {},
   ) => {
-    if (!ref.current.result.loading && !options?.ignoreResults) {
+
+    const baseOptions = { ...options, mutation };
+    if (!ref.current.result.loading && !baseOptions.ignoreResults) {
       setResult(ref.current.result = {
         loading: true,
         error: void 0,
@@ -62,17 +64,21 @@ export function useMutation<
 
     const mutationId = ++ref.current.mutationId;
     const clientOptions = mergeOptions(
-      { ...options, mutation },
+      baseOptions,
       executeOptions as any,
     );
-    return client.mutate(clientOptions).then((response) => {
+
+    return client.mutate(clientOptions).then((response) =>{
       const { data, errors } = response;
       const error =
         errors && errors.length > 0
           ? new ApolloError({ graphQLErrors: errors })
           : void 0;
 
-      if (mutationId === ref.current.mutationId && !options?.ignoreResults) {
+      if (
+        mutationId === ref.current.mutationId &&
+        !baseOptions.ignoreResults
+      ) {
         const result = {
           called: true,
           loading: false,
@@ -81,19 +87,18 @@ export function useMutation<
           client,
         };
 
-        if (
-          ref.current.isMounted &&
-          !equal(ref.current.result, result)
-        ) {
-          ref.current.result = result;
-          setResult(result);
+        if (ref.current.isMounted && !equal(ref.current.result, result)) {
+          setResult(ref.current.result = result);
         }
       }
 
-      options?.onCompleted?.(data!);
+      baseOptions.onCompleted?.(response.data!);
       return response;
     }).catch((error) => {
-      if (mutationId === ref.current.mutationId) {
+      if (
+        mutationId === ref.current.mutationId &&
+        ref.current.isMounted
+      ) {
         const result = {
           loading: false,
           error,
@@ -102,17 +107,13 @@ export function useMutation<
           client,
         };
 
-        if (
-          ref.current.isMounted &&
-          !equal(ref.current.result, result)
-        ) {
-          ref.current.result = result;
-          setResult(result);
+        if (!equal(ref.current.result, result)) {
+          setResult(ref.current.result = result);
         }
       }
 
-      if (options?.onError) {
-        options.onError(error);
+      if (baseOptions.onError) {
+        baseOptions.onError(error);
         // TODO(brian): why are we returning this here???
         return { data: void 0, errors: error };
       }

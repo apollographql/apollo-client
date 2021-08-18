@@ -1,3 +1,18 @@
+## Apollo Client 3.5 (unreleased)
+
+### Bug Fixes
+- `useQuery` and `useLazyQuery` will now have observableQuery methods defined consistently. <br/> [@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+
+- Calling `useLazyQuery` methods like `startPolling` will start the query <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+
+- Calling the `useLazyQuery` execution function will now behave more like `refetch`. `previousData` will be preserved. <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+
+- `standby` fetchPolicies will now act like `skip: true` more consistently <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+
+- Calling `refetch` on a skipped query will have no effect (https://github.com/apollographql/apollo-client/issues/8270). <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+
+- Improvements to `onError` and `onCompleted` functions, preventing them from firing continuously, and working with polling <br/>[@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)
+
 ## Apollo Client 3.4.8
 
 ### Bug Fixes

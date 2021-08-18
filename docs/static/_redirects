@@ -1,5 +1,3 @@
-/ /docs/react/
-
 # Redirect all 3.0 beta docs to root
 /docs/react/v3.0-beta/* /docs/react/:splat
 

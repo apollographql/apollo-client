@@ -522,6 +522,45 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(mocks[1].result.data);
     });
+
+    it('`cache-and-network` fetch policy', async () => {
+      const query = gql`{ hello }`;
+
+      const cache = new InMemoryCache();
+      const link = mockSingleLink(
+        {
+          request: { query },
+          result: { data: { hello: 'from link' } },
+          delay: 20,
+        },
+      );
+
+      const client = new ApolloClient({
+        link,
+        cache,
+      });
+
+      cache.writeQuery({ query, data: { hello: 'from cache' }});
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { fetchPolicy: 'cache-and-network' }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      // TODO: FIXME
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toEqual({ hello: 'from cache' });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'from link' });
+    });
   });
 
   describe('polling', () => {

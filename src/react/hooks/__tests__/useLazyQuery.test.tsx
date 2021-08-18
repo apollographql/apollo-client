@@ -2,7 +2,9 @@ import React from 'react';
 import gql from 'graphql-tag';
 import { renderHook } from '@testing-library/react-hooks';
 
-import { MockedProvider } from '../../../testing';
+import { ApolloClient, InMemoryCache } from '../../../core';
+import { ApolloProvider } from '../../../react';
+import { MockedProvider, mockSingleLink } from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
 
 describe('useLazyQuery Hook', () => {
@@ -457,5 +459,51 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual(data2);
     expect(result.current[1].previousData).toEqual(data1);
+  });
+
+  it('should work with cache-and-network fetch policy', async () => {
+    const query = gql`{ hello }`;
+
+    const cache = new InMemoryCache();
+    const link = mockSingleLink(
+      {
+        request: { query },
+        result: { data: { hello: 'from link' } },
+        delay: 20,
+      },
+    );
+
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    cache.writeQuery({ query, data: { hello: 'from cache' }});
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query, { fetchPolicy: 'cache-and-network' }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    const execute = result.current[0];
+    setTimeout(() => execute());
+
+    await waitForNextUpdate();
+
+    // TODO: FIXME
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toEqual({ hello: 'from cache' });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({ hello: 'from link' });
   });
 });

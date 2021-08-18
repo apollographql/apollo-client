@@ -1030,6 +1030,87 @@ describe('useQuery Hook', () => {
       await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
     });
 
+    it('should not persist errors when variables change', async () => {
+      const query = gql`
+        query hello($id: ID) {
+          hello(id: $id)
+        }
+      `;
+
+      const mocks = [
+        {
+          request: {
+            query,
+            variables: { id: 1 },
+          },
+          result: {
+            errors: [new GraphQLError('error')]
+          },
+        },
+        {
+          request: {
+            query,
+            variables: { id: 2 },
+          },
+          result: {
+            data: { hello: 'world 2' },
+          },
+        },
+        {
+          request: {
+            query,
+            variables: { id: 1 },
+          },
+          result: {
+            data: { hello: 'world 1' },
+          },
+        },
+      ];
+
+      const { result, rerender, waitForNextUpdate } = renderHook(
+        ({ id }) => useQuery(query, { variables: { id } }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: { id: 1 },
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('error');
+
+      rerender({ id: 2 });
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 2' });
+      expect(result.current.error).toBe(undefined);
+
+      rerender({ id: 1 });
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+      expect(result.current.error).toBe(undefined);
+    });
+
     it('should render multiple errors when refetching', async () => {
       const query = gql`{ hello }`;
       const mocks = [

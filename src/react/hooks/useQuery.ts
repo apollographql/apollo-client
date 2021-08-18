@@ -106,7 +106,7 @@ export function useQuery<
     query,
     options,
     result,
-    data: void 0 as TData | undefined,
+    previousData: void 0 as TData | undefined,
     watchQueryOptions: createWatchQueryOptions(query, options),
   });
 
@@ -129,7 +129,7 @@ export function useQuery<
     if (nextResult) {
       const previousResult = ref.current.result;
       if (previousResult.data) {
-        ref.current.data = previousResult.data;
+        ref.current.previousData = previousResult.data;
       }
 
       setResult(ref.current.result = nextResult);
@@ -171,7 +171,7 @@ export function useQuery<
       }
 
       if (previousResult.data) {
-        ref.current.data = previousResult.data;
+        ref.current.previousData = previousResult.data;
       }
 
       setResult(ref.current.result = result);
@@ -313,7 +313,7 @@ export function useQuery<
     variables: obsQuery.variables,
     client,
     called: true,
-    previousData: ref.current.data,
+    previousData: ref.current.previousData,
     ...result,
   };
 }

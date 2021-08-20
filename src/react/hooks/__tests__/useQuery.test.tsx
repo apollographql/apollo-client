@@ -581,14 +581,17 @@ describe('useQuery Hook', () => {
         {
           request: { query },
           result: { data: { hello: "world 1" } },
+          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
+          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
+          delay: 10,
         },
       ];
 
@@ -680,14 +683,17 @@ describe('useQuery Hook', () => {
         {
           request: { query },
           result: { data: { hello: "world 1" } },
+          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
+          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
+          delay: 10,
         },
       ];
 

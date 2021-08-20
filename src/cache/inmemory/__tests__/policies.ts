@@ -1274,6 +1274,106 @@ describe("type policies", function () {
       });
     }));
 
+    it("can refer to variables in field key shorthand array", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              defaultToNumVariable: {
+                key: ["input", "$num"],
+                read(existing, { args, variables }) {
+                  return existing ?? args?.input ?? variables?.num;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const queryWithInputArg = gql`
+        query WithInputArg($num: Int) {
+          defaultToNumVariable(input: 1234)
+        }
+      `;
+
+      cache.writeQuery({
+        query: queryWithInputArg,
+        data: {
+          defaultToNumVariable: "forced with input and $num",
+        },
+        variables: {
+          num: 1234,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          "__typename": "Query",
+          'defaultToNumVariable:{"input":1234,"$num":1234}': "forced with input and $num",
+        },
+      });
+
+      const queryWithNoArgs = gql`
+        query WithInputArg($num: Int) {
+          defaultToNumVariable
+        }
+      `;
+
+      cache.writeQuery({
+        query: queryWithNoArgs,
+        data: {
+          defaultToNumVariable: "forced with only $num",
+        },
+        variables: {
+          num: 2345,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          "__typename": "Query",
+          'defaultToNumVariable:{"input":1234,"$num":1234}': "forced with input and $num",
+          'defaultToNumVariable:{"$num":2345}': "forced with only $num",
+        },
+      });
+
+      expect(cache.readQuery({
+        query: queryWithInputArg,
+        variables: {
+          num: 1234,
+        },
+      })).toEqual({
+        defaultToNumVariable: "forced with input and $num",
+      });
+
+      expect(cache.readQuery({
+        query: queryWithNoArgs,
+        variables: {
+          num: 2345,
+        },
+      })).toEqual({
+        defaultToNumVariable: "forced with only $num",
+      });
+
+      expect(cache.readQuery({
+        query: queryWithInputArg,
+        variables: {
+          num: 3456,
+        },
+      })).toEqual({
+        defaultToNumVariable: 1234,
+      });
+
+      expect(cache.readQuery({
+        query: queryWithNoArgs,
+        variables: {
+          num: 4567,
+        },
+      })).toEqual({
+        defaultToNumVariable: 4567,
+      });
+    });
+
     it("can use options.storage in read functions", function () {
       const storageSet = new Set<Record<string, any>>();
 

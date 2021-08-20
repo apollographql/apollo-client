@@ -346,7 +346,11 @@ describe("type policies", function () {
           book: theInformationBookData,
         },
       });
-    }).toThrowError("Missing field 'year' while computing key fields");
+    }).toThrowError(
+      `Missing field 'year' while extracting keyFields from ${JSON.stringify(
+        theInformationBookData
+      )}`,
+    );
   });
 
   it("does not clobber previous keyFields with undefined", function () {

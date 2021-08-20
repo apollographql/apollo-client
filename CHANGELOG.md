@@ -1,3 +1,10 @@
+## Apollo Client 3.4.9 (not yet released)
+
+### Bug Fixes
+
+- Fix unhandled `Promise` rejection warnings/errors whose message is `Observable cancelled prematurely`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8676](https://github.com/apollographql/apollo-client/pull/8676)
+
 ## Apollo Client 3.4.8
 
 ### Bug Fixes

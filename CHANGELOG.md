@@ -5,6 +5,9 @@
 - Fix unhandled `Promise` rejection warnings/errors whose message is `Observable cancelled prematurely`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8676](https://github.com/apollographql/apollo-client/pull/8676)
 
+- Enforce that `__DEV__` is polyfilled by every `@apollo/client/*` entry point that uses it. This build step considers not only explicit `__DEV__` usage but also `__DEV__` references injected near `invariant(...)` and `new InvariantError(...)` expressions. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8689](https://github.com/apollographql/apollo-client/pull/8689)
+
 ## Apollo Client 3.4.8
 
 ### Bug Fixes

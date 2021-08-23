@@ -1,7 +1,5 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "../../utilities";
-// Since createHttpLink uses __DEV__, we must be sure to polyfill it.
-invariant("boolean" === typeof DEV, DEV);
+import { checkDEV } from "../../utilities";
+checkDEV();
 
 export {
   parseAndCheckHttpResponse,

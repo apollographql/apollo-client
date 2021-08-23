@@ -1,6 +1,5 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "../utilities";
-invariant("boolean" === typeof DEV, DEV);
+import { checkDEV } from "../utilities";
+checkDEV();
 
 export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';

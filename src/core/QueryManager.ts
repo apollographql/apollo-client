@@ -1127,9 +1127,8 @@ export class QueryManager<TStore> {
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     this.fetchCancelFns.set(queryId, reason => {
-      // Delaying the cancellation using a Promise ensures that the
-      // concast variable has been initialized.
-      Promise.resolve().then(() => concast.cancel(reason));
+      // This delay ensures the concast variable has been initialized.
+      setTimeout(() => concast.cancel(reason));
     });
 
     // A Concast<T> can be created either from an Iterable<Observable<T>>

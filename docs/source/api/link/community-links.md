@@ -18,7 +18,7 @@ Thank you to all the Apollo community members who have contributed custom Apollo
 | [link-http-dataloader](https://github.com/graphcool/http-link-dataloader) | [@graphcool](https://github.com/graphcool) | Batching and caching provided by dataloader. |
 | [@absinthe/socket-apollo-link](https://github.com/absinthe-graphql/absinthe-socket/tree/master/packages/socket-apollo-link) | [@absinthe-graphql](https://github.com/absinthe-graphql) | Communicate over an Absinthe socket. |
 | [apollo-absinthe-upload-link](https://github.com/bytewitchcraft/apollo-absinthe-upload-link) | [@bytewitchcraft](https://github.com/bytewitchcraft) | Enables file uploading to Absinthe backends. |
-| [apollo-link-logger](https://github.com/blackxored/apollo-link-logger) | [@blackxored](https://github.com/blackxored) | Logger that uses similar format to redux-logger and includes performance infomation. |
+| [apollo-link-logger](https://github.com/blackxored/apollo-link-logger) | [@blackxored](https://github.com/blackxored) | Logger that uses similar format to redux-logger and includes performance information. |
 | [apollo-link-queue](https://github.com/helfer/apollo-link-queue) | [@helfer](https://github.com/helfer) | Buffers requests on a toggle, such as an on/offline event. |
 | [apollo-link-optimistic](https://github.com/helfer/apollo-link-optimistic) | [@helfer](https://github.com/helfer) | Returns an immediate optimistic response before returning server results. |
 | [apollo-link-serialize](https://github.com/helfer/apollo-link-serialize) | [@helfer](https://github.com/helfer) | Serializes requests by key to ensure execution order. |

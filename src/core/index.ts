@@ -1,6 +1,7 @@
 /* Core */
 
-import { DEV } from "../utilities";
+import { DEV, checkDEV } from "../utilities";
+checkDEV();
 
 export {
   ApolloClient,

@@ -1,7 +1,6 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "./globals";
-invariant("boolean" === typeof DEV, DEV);
-export { DEV }
+import { DEV, checkDEV } from "./globals";
+export { DEV, checkDEV }
+checkDEV();
 
 export {
   DirectiveInfo,

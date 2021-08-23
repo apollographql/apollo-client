@@ -1,3 +1,6 @@
+import { checkDEV } from "../../utilities";
+checkDEV();
+
 export { ApolloConsumer, ApolloConsumerProps } from './ApolloConsumer';
 export {
   ApolloContextValue,

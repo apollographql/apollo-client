@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
 import { print } from 'graphql';
 
-import { Observable } from '../../../utilities/observables/Observable';
+import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
 import { HttpLink } from '../HttpLink';
@@ -53,8 +53,8 @@ describe('HttpLink', () => {
     const data = { data: { hello: 'world' } };
     const data2 = { data: { hello: 'everyone' } };
     const mockError = { throws: new TypeError('mock me') };
-    let subscriber: ZenObservable.Observer<any>;
-    const subscriptions = new Set<ZenObservable.Subscription>();
+    let subscriber: Observer<any>;
+    const subscriptions = new Set<ObservableSubscription>();
 
     beforeEach(() => {
       fetchMock.restore();

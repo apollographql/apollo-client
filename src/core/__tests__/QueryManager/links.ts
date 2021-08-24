@@ -1,7 +1,7 @@
 // externals
 import gql from 'graphql-tag';
 
-import { Observable } from '../../../utilities/observables/Observable';
+import { Observable, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 
@@ -104,7 +104,7 @@ describe('Link interactions', () => {
     });
 
     let count = 0;
-    let four: ZenObservable.Subscription;
+    let four: ObservableSubscription;
     // first watch
     const one = observable.subscribe(result => count++);
     // second watch
@@ -175,7 +175,7 @@ describe('Link interactions', () => {
     });
 
     let count = 0;
-    let four: ZenObservable.Subscription;
+    let four: ObservableSubscription;
     // first watch
     const one = observable.subscribe(result => count++);
     // second watch

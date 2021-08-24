@@ -11,6 +11,11 @@
 - Calling `refetch` on a skipped query will have no effect (issue [#8270](https://github.com/apollographql/apollo-client/issues/8270)).
 - Prevent `onError` and `onCompleted` functions from firing continuously, and improving their polling behavior.
 
+### Other Bugs Fixed
+
+- Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
+
 ## Apollo Client 3.4.9 (not yet released)
 
 ### Bug Fixes

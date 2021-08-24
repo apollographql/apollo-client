@@ -14,6 +14,7 @@ import {
 // core
 import { QueryManager } from '../../QueryManager';
 import { ObservableQuery } from '../../ObservableQuery';
+import { ObservableSubscription } from '../../../utilities';
 
 describe('Subscription lifecycles', () => {
   it('cleans up and reuses data like QueryRecycler wants', done => {
@@ -48,7 +49,10 @@ describe('Subscription lifecycles', () => {
       fetchPolicy: 'cache-and-network',
     });
 
-    const observableQueries: { observableQuery: ObservableQuery, subscription: ZenObservable.Subscription; }[] = [];
+    const observableQueries: Array<{
+      observableQuery: ObservableQuery;
+      subscription: ObservableSubscription;
+    }> = [];
 
     const resubscribe = () => {
       const { observableQuery, subscription } = observableQueries.pop()!;

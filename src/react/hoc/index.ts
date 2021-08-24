@@ -1,3 +1,6 @@
+import { checkDEV } from "../../utilities";
+checkDEV();
+
 export { graphql } from './graphql';
 
 export { withQuery } from './query-hoc';

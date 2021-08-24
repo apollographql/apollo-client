@@ -31,7 +31,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "tsc",
-    "postbuild": "npm run update-version && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run resolve && npm run verify-version",
+    "postbuild": "npm run update-version && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run resolve && npm run check-DEV && npm run verify-version",
     "update-version": "node config/version.js update",
     "verify-version": "node config/version.js verify",
     "invariants": "ts-node-script config/processInvariants.ts",
@@ -39,6 +39,7 @@
     "rollup": "rollup -c ./config/rollup.config.js",
     "prepdist": "node ./config/prepareDist.js",
     "resolve": "ts-node-script config/resolveModuleIds.ts",
+    "check-DEV": "ts-node-script config/checkDEV.ts",
     "clean": "rimraf -r dist coverage lib",
     "test": "jest --config ./config/jest.config.js",
     "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",

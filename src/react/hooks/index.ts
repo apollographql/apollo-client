@@ -1,3 +1,6 @@
+import { checkDEV } from "../../utilities";
+checkDEV();
+
 export * from './useApolloClient';
 export * from './useLazyQuery';
 export * from './useMutation';

@@ -1,3 +1,6 @@
+import { checkDEV } from "../../utilities";
+checkDEV();
+
 import {
   DocumentNode,
   DefinitionNode,

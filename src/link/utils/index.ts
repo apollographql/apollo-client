@@ -1,3 +1,6 @@
+import { checkDEV } from "../../utilities";
+checkDEV();
+
 export { fromError } from './fromError';
 export { toPromise } from './toPromise';
 export { fromPromise } from './fromPromise';

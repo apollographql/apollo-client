@@ -92,6 +92,12 @@ function partsAfterDist(id) {
   }
 }
 
+exports.getEntryPointDirectory = function (file) {
+  const parts = partsAfterDist(file) || file.split(path.sep);
+  const len = lengthOfLongestEntryPoint(parts);
+  if (len >= 0) return parts.slice(0, len).join(path.sep);
+};
+
 function lengthOfLongestEntryPoint(parts) {
   let node = lookupTrie;
   let longest = -1;

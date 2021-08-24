@@ -152,13 +152,13 @@ describe('abstract cache', () => {
     });
   });
 
-  describe('modifyQuery', () => {
+  describe('updateQuery', () => {
     it('runs the readQuery & writeQuery methods', () => {
       const test = new TestCache();
       test.readQuery = jest.fn();
       test.writeQuery = jest.fn();
 
-      test.modifyQuery({ query }, data => 'foo');
+      test.updateQuery({ query }, data => 'foo');
 
       expect(test.readQuery).toBeCalled();
       expect(test.writeQuery).toBeCalled();
@@ -169,7 +169,7 @@ describe('abstract cache', () => {
       test.readQuery = jest.fn();
       test.writeQuery = jest.fn();
 
-      test.modifyQuery({ query }, data => null);
+      test.updateQuery({ query }, data => null);
 
       expect(test.readQuery).toBeCalled();
       expect(test.writeQuery).not.toBeCalled();
@@ -180,7 +180,7 @@ describe('abstract cache', () => {
       test.readQuery = jest.fn();
       test.writeQuery = jest.fn();
 
-      test.modifyQuery({ query }, data => { return; });
+      test.updateQuery({ query }, data => { return; });
 
       expect(test.readQuery).toBeCalled();
       expect(test.writeQuery).not.toBeCalled();
@@ -188,11 +188,11 @@ describe('abstract cache', () => {
 
     it('calls the readQuery & writeQuery methods with the options object', () => {
       const test = new TestCache();
-      const options: Cache.ModifyQueryOptions<string, any> = { query, broadcast: true, variables: { test: 1 }, optimistic: true, returnPartialData: true };
+      const options: Cache.UpdateQueryOptions<string, any> = { query, broadcast: true, variables: { test: 1 }, optimistic: true, returnPartialData: true };
       test.readQuery = jest.fn();
       test.writeQuery = jest.fn();
 
-      test.modifyQuery(options, data => 'foo');
+      test.updateQuery(options, data => 'foo');
 
       expect(test.readQuery).toBeCalledWith(
         expect.objectContaining(options)
@@ -206,7 +206,7 @@ describe('abstract cache', () => {
     it('returns current value in memory if no update was made', () => {
       const test = new TestCache();
       test.readQuery = jest.fn().mockReturnValue('foo');
-      expect(test.modifyQuery({ query }, data => null)).toBe('foo');
+      expect(test.updateQuery({ query }, data => null)).toBe('foo');
     });
 
     it('returns the updated value in memory if an update was made', () => {
@@ -214,19 +214,19 @@ describe('abstract cache', () => {
       let currentValue = 'foo';
       test.readQuery = jest.fn().mockImplementation(() => currentValue);
       test.writeQuery = jest.fn().mockImplementation(({ data }) => currentValue = data);
-      expect(test.modifyQuery({ query }, data => 'bar')).toBe('bar');
+      expect(test.updateQuery({ query }, data => 'bar')).toBe('bar');
     });
 
-    it('calls modify function with the current value in memory', () => {
+    it('calls update function with the current value in memory', () => {
       const test = new TestCache();
       test.readQuery = jest.fn().mockReturnValue('foo');
-      test.modifyQuery({ query }, data => {
+      test.updateQuery({ query }, data => {
         expect(data).toBe('foo');
       });
     });
   });
 
-  describe('modifyFragment', () => {
+  describe('updateFragment', () => {
     const fragmentId = 'frag';
     const fragment = gql`
       fragment a on b {
@@ -239,7 +239,7 @@ describe('abstract cache', () => {
       test.readFragment = jest.fn();
       test.writeFragment = jest.fn();
 
-      test.modifyFragment({ id: fragmentId, fragment }, data => 'foo');
+      test.updateFragment({ id: fragmentId, fragment }, data => 'foo');
 
       expect(test.readFragment).toBeCalled();
       expect(test.writeFragment).toBeCalled();
@@ -250,7 +250,7 @@ describe('abstract cache', () => {
       test.readFragment = jest.fn();
       test.writeFragment = jest.fn();
 
-      test.modifyFragment({ id: fragmentId, fragment }, data => null);
+      test.updateFragment({ id: fragmentId, fragment }, data => null);
 
       expect(test.readFragment).toBeCalled();
       expect(test.writeFragment).not.toBeCalled();
@@ -261,7 +261,7 @@ describe('abstract cache', () => {
       test.readFragment = jest.fn();
       test.writeFragment = jest.fn();
 
-      test.modifyFragment({ id: fragmentId, fragment }, data => { return; });
+      test.updateFragment({ id: fragmentId, fragment }, data => { return; });
 
       expect(test.readFragment).toBeCalled();
       expect(test.writeFragment).not.toBeCalled();
@@ -269,11 +269,11 @@ describe('abstract cache', () => {
 
     it('calls the readFragment & writeFragment methods with the options object', () => {
       const test = new TestCache();
-      const options: Cache.ModifyFragmentOptions<string, any> = { id: fragmentId, fragment, fragmentName: 'a', broadcast: true, variables: { test: 1 }, optimistic: true, returnPartialData: true };
+      const options: Cache.UpdateFragmentOptions<string, any> = { id: fragmentId, fragment, fragmentName: 'a', broadcast: true, variables: { test: 1 }, optimistic: true, returnPartialData: true };
       test.readFragment = jest.fn();
       test.writeFragment = jest.fn();
 
-      test.modifyFragment(options, data => 'foo');
+      test.updateFragment(options, data => 'foo');
 
       expect(test.readFragment).toBeCalledWith(
         expect.objectContaining(options)
@@ -287,7 +287,7 @@ describe('abstract cache', () => {
     it('returns current value in memory if no update was made', () => {
       const test = new TestCache();
       test.readFragment = jest.fn().mockReturnValue('foo');
-      expect(test.modifyFragment({ id: fragmentId, fragment }, data => { return; })).toBe('foo');
+      expect(test.updateFragment({ id: fragmentId, fragment }, data => { return; })).toBe('foo');
     });
 
     it('returns the updated value in memory if an update was made', () => {
@@ -295,13 +295,13 @@ describe('abstract cache', () => {
       let currentValue = 'foo';
       test.readFragment = jest.fn().mockImplementation(() => currentValue);
       test.writeFragment = jest.fn().mockImplementation(({ data }) => currentValue = data);
-      expect(test.modifyFragment({ id: fragmentId, fragment }, data => 'bar')).toBe('bar');
+      expect(test.updateFragment({ id: fragmentId, fragment }, data => 'bar')).toBe('bar');
     });
 
-    it('calls modify function with the current value in memory', () => {
+    it('calls update function with the current value in memory', () => {
       const test = new TestCache();
       test.readFragment = jest.fn().mockReturnValue('foo');
-      test.modifyFragment({ id: fragmentId, fragment }, data => {
+      test.updateFragment({ id: fragmentId, fragment }, data => {
         expect(data).toBe('foo');
       });
     });

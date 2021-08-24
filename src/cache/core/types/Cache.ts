@@ -92,5 +92,7 @@ export namespace Cache {
   export import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
   export import WriteQueryOptions = DataProxy.WriteQueryOptions;
   export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
+  export import UpdateQueryOptions = DataProxy.UpdateQueryOptions;
+  export import UpdateFragmentOptions = DataProxy.UpdateFragmentOptions;
   export import Fragment = DataProxy.Fragment;
 }

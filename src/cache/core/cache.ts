@@ -166,4 +166,26 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       result: data,
     }));
   }
+
+  public updateQuery<TData = any, TVariables = any>(
+    options: Cache.UpdateQueryOptions<TData, TVariables>,
+    update: (data: TData | null) => TData | null | void,
+  ): TData | null {
+    const value = this.readQuery<TData, TVariables>(options);
+    const data = update(value);
+    if (data === void 0 || data === null) return value;
+    this.writeQuery<TData, TVariables>({ ...options, data });
+    return data;
+  }
+
+  public updateFragment<TData = any, TVariables = any>(
+    options: Cache.UpdateFragmentOptions<TData, TVariables>,
+    update: (data: TData | null) => TData | null | void,
+  ): TData | null {
+    const value = this.readFragment<TData, TVariables>(options);
+    const data = update(value);
+    if (data === void 0 || data === null) return value;
+    this.writeFragment<TData, TVariables>({ ...options, data });
+    return data;
+  }
 }

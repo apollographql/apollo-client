@@ -21,6 +21,7 @@ class TestCache extends ApolloCache<unknown> {
   }
 
   public performTransaction(transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void): void {
+    transaction(this);
   }
 
   public read<T, TVariables = any>(query: Cache.ReadOptions<TVariables>): T | null {

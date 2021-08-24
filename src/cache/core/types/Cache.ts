@@ -54,10 +54,10 @@ export namespace Cache {
     broadcast?: boolean;
   }
 
-  export interface BatchOptions<C extends ApolloCache<any>> {
+  export interface BatchOptions<C extends ApolloCache<any>, U = void> {
     // Same as the first parameter of performTransaction, except the cache
     // argument will have the subclass type rather than ApolloCache.
-    update(cache: C): void;
+    update(cache: C): U;
 
     // Passing a string for this option creates a new optimistic layer, with the
     // given string as its layer.id, just like passing a string for the
@@ -66,7 +66,7 @@ export namespace Cache {
     // against the current top layer of the cache), and passing false is the
     // same as passing null (running the operation against root/non-optimistic
     // cache data).
-    optimistic: string | boolean;
+    optimistic?: string | boolean;
 
     // If you specify the ID of an optimistic layer using this option, that
     // layer will be removed as part of the batch transaction, triggering at

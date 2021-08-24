@@ -59,11 +59,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // provide a default batch implementation that's just another way of calling
   // performTransaction. Subclasses of ApolloCache (such as InMemoryCache) can
   // override the batch method to do more interesting things with its options.
-  public batch(options: Cache.BatchOptions<this>) {
+  public batch<U>(options: Cache.BatchOptions<this, U>): U {
     const optimisticId =
       typeof options.optimistic === "string" ? options.optimistic :
       options.optimistic === false ? null : void 0;
-    this.performTransaction(options.update, optimisticId);
+    let updateResult: U;
+    this.performTransaction(
+      () => updateResult = options.update(this),
+      optimisticId,
+    );
+    return updateResult!;
   }
 
   public abstract performTransaction(

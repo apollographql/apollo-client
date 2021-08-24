@@ -36,6 +36,9 @@
 - A new nested entry point called `@apollo/client/testing/core` has been created. Importing from this entry point instead of `@apollo/client/testing` excludes any React-related dependencies. <br/>
   [@wassim-k](https://github.com/wassim-k) in [#8687](https://github.com/apollographql/apollo-client/pull/8687)
 
+- Make `cache.batch` return the result of calling the `options.update` function. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8696](https://github.com/apollographql/apollo-client/pull/8696)
+
 ### React Refactoring
 
 #### Bug Fixes (due to [@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)):

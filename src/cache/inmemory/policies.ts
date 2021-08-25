@@ -121,6 +121,9 @@ export type FieldKeyFunction = (
   },
 ) => KeySpecifier | false | ReturnType<IdGetter>;
 
+// For backwards compatibility (see PR #8678).
+export type { FieldKeyFunction as KeyArgsFunction }
+
 type FieldKeyResult = Exclude<ReturnType<FieldKeyFunction>, KeySpecifier>;
 
 export type FieldPolicy<

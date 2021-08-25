@@ -67,9 +67,7 @@ In the next step, we'll associate the dropdown with a more sophisticated query t
 
 ## Caching query results
 
-Whenever Apollo Client fetches query results from your server, it automatically **caches**
-those results locally. This makes subsequent executions of the same query
-extremely fast.
+Whenever Apollo Client fetches query results from your server, it automatically **caches** those results locally. This makes subsequent executions of the same query extremely fast.
 
 To see this caching in action, let's build a new component called `DogPhoto`. `DogPhoto` accepts a prop called `breed` that reflects the current value of the dropdown menu in our `Dogs` component:
 
@@ -97,7 +95,7 @@ function DogPhoto({ breed }) {
 }
 ```
 
-Notice that we're providing a configuration option (`variables`) to the `useQuery` hook this time. The `variables` option is an object that contains all of the variables we want to pass to our GraphQL query. In this case, we want to pass the currently selected breed from the dropdown.
+Notice that we're providing a configuration option (`variables`) to the `useQuery` hook this time. The `variables` option is an object that contains all of the variables we want to pass to our GraphQL query. In this case, we want to pass the currently selected `breed` from the dropdown.
 
 Select `bulldog` from the dropdown to see its photo appear. Then switch to another breed, and then switch _back_ to `bulldog`. You'll notice that the bulldog photo loads instantly the second time around. This is the Apollo cache at work!
 
@@ -105,12 +103,11 @@ Next, let's learn some techniques for ensuring that our cached data is fresh.
 
 ## Updating cached query results
 
-Caching query results is handy and easy to do, but sometimes you
-want to make sure that cached data is up to date with your server. Apollo Client supports two strategies for this: **polling** and **refetching**.
+Sometimes, you want to make sure that your query's cached data is up to date with your _server's_ data. Apollo Client supports two strategies for this: **polling** and **refetching**.
 
 ### Polling
 
-Polling provides near-real-time synchronization with your server by causing a query to execute periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
+Polling provides near-real-time synchronization with your server by executing your query periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
 
 ```jsx:title=index.js
 function DogPhoto({ breed }) {
@@ -128,9 +125,9 @@ function DogPhoto({ breed }) {
 }
 ```
 
-By setting the `pollInterval` to 500, you'll fetch the current breed's image from the server every 0.5 seconds. Note that if you set `pollInterval` to `0`, the query will **not** poll.
+By setting `pollInterval` to 500, we fetch the current breed's image from the server every 0.5 seconds. Note that if you set `pollInterval` to `0`, the query does **not** poll.
 
-> You can also start and stop polling dynamically with the `startPolling` and `stopPolling` functions that are returned by the [`useQuery` hook](https://www.apollographql.com/docs/react/api/react/hooks/#usequery).
+> You can also start and stop polling dynamically with the [`startPolling` and `stopPolling` functions](#startpolling) that are returned by the `useQuery` hook.
 
 ### Refetching
 
@@ -144,7 +141,7 @@ You can optionally provide a new `variables` object to
 the `refetch` function. If you don't (as is the case in the following example),
 the query uses the same variables that it used in its previous execution.
 
-```jsx:title=index.js
+```jsx{2,12}:title=index.js
 function DogPhoto({ breed }) {
   const { loading, error, data, refetch } = useQuery(GET_DOG_PHOTO, {
     variables: { breed }
@@ -163,6 +160,18 @@ function DogPhoto({ breed }) {
 ```
 
 Click the button and notice that the UI updates with a new dog photo. Refetching is an excellent way to guarantee fresh data, but it introduces some complexity with loading state. In the next section, we'll cover strategies for handling complex loading and error state.
+
+#### Providing new variables to `refetch`
+
+You call `refetch` with a new set of variables like so:
+
+```jsx
+<button onClick={() => refetch({
+  breed: 'dalmatian' // Always refetches a dalmatian instead of original breed
+})}>Refetch!</button>
+```
+
+If you provide new values for _some_ of your original query's variables but not _all_ of them, `refetch` uses each omitted variable's original value.
 
 ## Inspecting loading states
 
@@ -198,7 +207,7 @@ function DogPhoto({ breed }) {
 }
 ```
 
-Enabling this option will also ensure that the value of `loading` updates accordingly, even if you don't want to leverage the more fine-grained information provided by the `networkStatus` property.
+Enabling this option also ensures that the value of `loading` updates accordingly, even if you don't want to use the more fine-grained information provided by the `networkStatus` property.
 
 The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/main/src/core/networkStatus.ts).
 
@@ -211,25 +220,29 @@ configuration option to the `useQuery` hook. The default value is `none`, which 
 
 If you set `errorPolicy` to `all`, `useQuery` does _not_ discard query response data, allowing you to render partial results.
 
-## Executing queries manually
+For more information, see [Handling operation errors](./error-handling/).
 
-When React mounts and renders a component that calls the `useQuery` hook, Apollo Client automatically executes the specified query. But what if you want to execute a query in response to a different event, such as a user clicking a button?
+## Manual execution with `useLazyQuery`
 
-The `useLazyQuery` hook is perfect for executing queries in response to events
-other than component rendering. This hook acts just like `useQuery`, with one key exception: when `useLazyQuery` is called, it does _not_ immediately execute its associated query. Instead, it returns a function in its result tuple that you can call whenever you're ready to execute the query:
+When React renders a component that calls `useQuery`, Apollo Client _automatically_ executes the corresponding query. But what if you want to execute a query in response to a different event, such as a user clicking a button?
 
-```jsx:title=index.js
+The `useLazyQuery` hook is perfect for executing queries in response to events besides component rendering. Unlike with `useQuery`, when you call `useLazyQuery`, it does _not_ immediately execute its associated query. Instead, it returns a **query function** in its result tuple that you call whenever you're ready to execute the query.
+
+Here's an example:
+
+```jsx{2,5,13}:title=index.js
 import React from 'react';
 import { useLazyQuery } from '@apollo/client';
 
 function DelayedQuery() {
-  const [getDog, { loading, data }] = useLazyQuery(GET_DOG_PHOTO);
+  const [getDog, { loading, error, data }] = useLazyQuery(GET_DOG_PHOTO);
 
   if (loading) return <p>Loading ...</p>;
+  if (error) return `Error! ${error}`;
 
   return (
     <div>
-      {data && data.dog && <img src={data.dog.displayImage} />}
+      {data?.dog && <img src={data.dog.displayImage} />}
       <button onClick={() => getDog({ variables: { breed: 'bulldog' } })}>
         Click me!
       </button>
@@ -237,6 +250,12 @@ function DelayedQuery() {
   );
 }
 ```
+
+The first item in `useLazyQuery`'s return tuple is the query function, and the second item is the same result object returned by `useQuery`.
+
+As shown above, you can pass options to the query function just like you pass them to `useLazyQuery` itself. If you pass a particular option to _both_, the value you pass to the query function takes precedence. This is a handy way to pass _default_ options to `useLazyQuery` and then customize those options in the query function.
+
+For a full list of supported options, see the [API reference](../api/react/hooks/#uselazyquery).
 
 ## Setting a fetch policy
 

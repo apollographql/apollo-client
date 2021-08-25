@@ -1,3 +1,6 @@
+import { checkDEV } from "../../utilities";
+checkDEV();
+
 import { print } from 'graphql';
 import {
   DocumentNode,

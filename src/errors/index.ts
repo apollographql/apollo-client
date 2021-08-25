@@ -1,6 +1,5 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "../utilities";
-invariant("boolean" === typeof DEV, DEV);
+import { checkDEV } from "../utilities";
+checkDEV();
 
 import { GraphQLError } from 'graphql';
 

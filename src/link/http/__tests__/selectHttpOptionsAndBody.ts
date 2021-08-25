@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { createOperation } from '../../utils/createOperation';
 import {
   selectHttpOptionsAndBody,
+  defaultPrinter,
   fallbackHttpConfig,
 } from '../selectHttpOptionsAndBody';
 
@@ -18,6 +19,7 @@ describe('selectHttpOptionsAndBody', () => {
   it('includeQuery allows the query to be ignored', () => {
     const { body } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
+      defaultPrinter,
       { http: { includeQuery: false } },
     );
     expect(body).not.toHaveProperty('query');
@@ -27,6 +29,7 @@ describe('selectHttpOptionsAndBody', () => {
     const extensions = { yo: 'what up' };
     const { body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
+      defaultPrinter,
       { http: { includeExtensions: true } },
     );
     expect(body).toHaveProperty('extensions');
@@ -46,6 +49,7 @@ describe('selectHttpOptionsAndBody', () => {
     const extensions = { yo: 'what up' };
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
+      defaultPrinter,
       fallbackHttpConfig,
     );
 
@@ -76,6 +80,7 @@ describe('selectHttpOptionsAndBody', () => {
 
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
+      defaultPrinter,
       fallbackHttpConfig,
       config,
     );
@@ -101,6 +106,7 @@ describe('selectHttpOptionsAndBody', () => {
     const config = { headers };
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
+      defaultPrinter,
       fallbackHttpConfig,
       config,
     );

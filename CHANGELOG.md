@@ -5,6 +5,22 @@
 - Add `updateQuery` and `updateFragment` methods to `ApolloCache`, simplifying common `readQuery`/`writeQuery` cache update patterns. <br/>
   [@wassim-k](https://github.com/wassim-k) in [#8382](https://github.com/apollographql/apollo-client/pull/8382)
 
+- Field directives and their arguments can now be included along with field argument names when using [field policy `keyArgs: [...]` notation](https://www.apollographql.com/docs/react/pagination/key-args/). For example, if you have a `Query.feed` field that takes an argument called `type` and uses a `@connection(key:...)` directive to keep `feed` data from different queries separate within the cache, you might configure both using the following `InMemoryCache` field policy:
+  ```ts
+  new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          feed: {
+            keyArgs: ["type", "@connection", ["key"]],
+          },
+        },
+      },
+    },
+  })
+  ```
+  [@benjamn](https://github.com/benjamn) in [#8678](https://github.com/apollographql/apollo-client/pull/8678)
+
 ### React Refactoring
 
 #### Bug Fixes (due to [@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)):

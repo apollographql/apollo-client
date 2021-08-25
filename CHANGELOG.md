@@ -1,3 +1,10 @@
+## Apollo Client 3.4.10 (not yet released)
+
+### Improvements
+
+- Warn when calling `refetch({ variables })` instead of `refetch(variables)`, except for queries that declare a variable named `$variables` (uncommon). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8702](https://github.com/apollographql/apollo-client/pull/8702)
+
 ## Apollo Client 3.4.9
 
 ### Bug Fixes

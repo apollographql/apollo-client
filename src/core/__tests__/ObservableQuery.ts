@@ -1365,6 +1365,252 @@ describe('ObservableQuery', () => {
         },
       });
     });
+
+    describe("warnings about refetch({ variables })", () => {
+      itAsync("should warn if passed { variables } and query does not declare any variables", (resolve, reject) => {
+        const consoleWarnSpy = jest.spyOn(console, "warn");
+        consoleWarnSpy.mockImplementation(() => {});
+
+        const queryWithoutVariables = gql`
+          query QueryWithoutVariables {
+            getVars {
+              __typename
+              name
+            }
+          }
+        `;
+
+        function makeMock(...vars: string[]) {
+          const requestWithoutVariables = {
+            query: queryWithoutVariables,
+            variables: {
+              variables: vars,
+            },
+          };
+
+          const resultWithVariables = {
+            data: {
+              getVars: vars.map(name => ({
+                __typename: "Var",
+                name,
+              })),
+            },
+          };
+
+          return {
+            request: requestWithoutVariables,
+            result: resultWithVariables,
+          };
+        }
+
+        const observableWithoutVariables: ObservableQuery<any> = mockWatchQuery(
+          reject,
+          makeMock("a", "b", "c"),
+          makeMock("d", "e"),
+        );
+
+        subscribeAndCount(reject, observableWithoutVariables, (count, result) => {
+          expect(result.error).toBeUndefined();
+
+          if (count === 1) {
+            expect(result.loading).toBe(false);
+            expect(result.data).toEqual({
+              getVars: [
+                { __typename: "Var", name: "a" },
+                { __typename: "Var", name: "b" },
+                { __typename: "Var", name: "c" },
+              ],
+            });
+
+            // It's a common mistake to call refetch({ variables }) when you meant
+            // to call refetch(variables).
+            observableWithoutVariables.refetch({
+              variables: ["d", "e"],
+            }).catch(reject);
+
+          } else if (count === 2) {
+            expect(result.loading).toBe(false);
+            expect(result.data).toEqual({
+              getVars: [
+                { __typename: "Var", name: "d" },
+                { __typename: "Var", name: "e" },
+              ],
+            });
+
+            expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+            expect(consoleWarnSpy).toHaveBeenCalledWith([
+              'Called refetch({"variables":["d","e"]}) for query QueryWithoutVariables, which does not declare a $variables variable.',
+              "Did you mean to call refetch(variables) instead of refetch({ variables })?",
+            ].join("\n"));
+            consoleWarnSpy.mockReset();
+
+            setTimeout(resolve, 10);
+          } else {
+            reject(`too many results (${count})`);
+          }
+        });
+      });
+
+      itAsync("should warn if passed { variables } and query does not declare $variables", (resolve, reject) => {
+        const consoleWarnSpy = jest.spyOn(console, "warn");
+        consoleWarnSpy.mockImplementation(() => {});
+
+        const queryWithVarsVar = gql`
+          query QueryWithVarsVar($vars: [String!]) {
+            getVars(variables: $vars) {
+              __typename
+              name
+            }
+          }
+        `;
+
+        function makeMock(...vars: string[]) {
+          const requestWithVarsVar = {
+            query: queryWithVarsVar,
+            variables: { vars },
+          };
+
+          const resultWithVarsVar = {
+            data: {
+              getVars: vars.map(name => ({
+                __typename: "Var",
+                name,
+              })),
+            },
+          };
+
+          return {
+            request: requestWithVarsVar,
+            result: resultWithVarsVar,
+          };
+        }
+
+        const observableWithVarsVar: ObservableQuery<any> = mockWatchQuery(
+          reject,
+          makeMock("a", "b", "c"),
+          makeMock("d", "e"),
+        );
+
+        subscribeAndCount(error => {
+          expect(error.message).toMatch(
+            'No more mocked responses for the query: query QueryWithVarsVar($vars: [String!])'
+          );
+        }, observableWithVarsVar, (count, result) => {
+          expect(result.error).toBeUndefined();
+
+          if (count === 1) {
+            expect(result.loading).toBe(false);
+            expect(result.data).toEqual({
+              getVars: [
+                { __typename: "Var", name: "a" },
+                { __typename: "Var", name: "b" },
+                { __typename: "Var", name: "c" },
+              ],
+            });
+
+            // It's a common mistake to call refetch({ variables }) when you meant
+            // to call refetch(variables).
+            observableWithVarsVar.refetch({
+              variables: { vars: ["d", "e"] },
+            }).then(result => {
+              reject(`unexpected result ${JSON.stringify(result)}; should have thrown`);
+            }, error => {
+              expect(error.message).toMatch(
+                'No more mocked responses for the query: query QueryWithVarsVar($vars: [String!])'
+              );
+              expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+              expect(consoleWarnSpy).toHaveBeenCalledWith([
+                'Called refetch({"variables":{"vars":["d","e"]}}) for query QueryWithVarsVar, which does not declare a $variables variable.',
+                "Did you mean to call refetch(variables) instead of refetch({ variables })?",
+              ].join("\n"));
+              consoleWarnSpy.mockReset();
+
+              setTimeout(resolve, 10);
+            });
+
+          } else {
+            reject(`one too many (${count}) results: ${JSON.stringify(result)}`);
+          }
+        });
+      });
+
+      itAsync("should not warn if passed { variables } and query declares $variables", (resolve, reject) => {
+        const consoleWarnSpy = jest.spyOn(console, "warn");
+        consoleWarnSpy.mockImplementation(() => {});
+
+        const queryWithVariablesVar = gql`
+          query QueryWithVariablesVar($variables: [String!]) {
+            getVars(variables: $variables) {
+              __typename
+              name
+            }
+          }
+        `;
+
+        function makeMock(...variables: string[]) {
+          const requestWithVariablesVar = {
+            query: queryWithVariablesVar,
+            variables: {
+              variables,
+            },
+          };
+
+          const resultWithVariablesVar = {
+            data: {
+              getVars: variables.map(name => ({
+                __typename: "Var",
+                name,
+              })),
+            },
+          };
+
+          return {
+            request: requestWithVariablesVar,
+            result: resultWithVariablesVar,
+          };
+        }
+
+        const observableWithVariablesVar: ObservableQuery<any> = mockWatchQuery(
+          reject,
+          makeMock("a", "b", "c"),
+          makeMock("d", "e"),
+        );
+
+        subscribeAndCount(reject, observableWithVariablesVar, (count, result) => {
+          expect(result.error).toBeUndefined();
+          if (count === 1) {
+            expect(result.loading).toBe(false);
+            expect(result.data).toEqual({
+              getVars: [
+                { __typename: "Var", name: "a" },
+                { __typename: "Var", name: "b" },
+                { __typename: "Var", name: "c" },
+              ],
+            });
+
+            observableWithVariablesVar.refetch({
+              variables: ["d", "e"],
+            }).catch(reject);
+
+          } else if (count === 2) {
+            expect(result.loading).toBe(false);
+            expect(result.data).toEqual({
+              getVars: [
+                { __typename: "Var", name: "d" },
+                { __typename: "Var", name: "e" },
+              ],
+            });
+
+            expect(consoleWarnSpy).not.toHaveBeenCalled();
+            consoleWarnSpy.mockReset();
+
+            setTimeout(resolve, 10);
+          } else {
+            reject(`too many results (${count})`);
+          }
+        });
+      });
+    });
   });
 
   describe('currentResult', () => {

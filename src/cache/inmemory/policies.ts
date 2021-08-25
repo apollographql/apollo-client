@@ -23,6 +23,7 @@ import {
   canUseWeakMap,
   isNonNullObject,
   stringifyForDisplay,
+  isNonEmptyArray,
 } from '../../utilities';
 import {
   IdGetter,
@@ -119,8 +120,6 @@ export type KeyArgsFunction = (
     variables?: Record<string, any>;
   },
 ) => KeySpecifier | false | ReturnType<IdGetter>;
-
-type KeyArgsResult = Exclude<ReturnType<KeyArgsFunction>, KeySpecifier>;
 
 export type FieldPolicy<
   // The internal representation used to store the field's data in the
@@ -694,7 +693,7 @@ export class Policies {
   public getStoreFieldName(fieldSpec: FieldSpecifier): string {
     const { typename, fieldName } = fieldSpec;
     const policy = this.getFieldPolicy(typename, fieldName, false);
-    let storeFieldName: KeyArgsResult;
+    let storeFieldName: Exclude<ReturnType<KeyArgsFunction>, KeySpecifier>;
 
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
@@ -982,9 +981,22 @@ function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,
 ): KeyArgsFunction {
   return (args, context) => {
-    return args ? `${context.fieldName}:${
-      JSON.stringify(computeKeyObject(args, specifier, false))
-    }` : context.fieldName;
+    let key = context.fieldName;
+
+    const suffix = JSON.stringify(
+      computeKeyArgsObject(specifier, context.field, args, context.variables),
+    );
+
+    // If no arguments were passed to this field, and it didn't have any other
+    // field key contributions from directives or variables, hide the empty :{}
+    // suffix from the field key. However, a field passed no arguments can still
+    // end up with a non-empty :{...} suffix if its key configuration refers to
+    // directives or variables.
+    if (args || suffix !== "{}") {
+      key += ":" + suffix;
+    }
+
+    return key;
   };
 }
 
@@ -1008,7 +1020,7 @@ function keyFieldsFnFromSpecifier(
     }
 
     const keyObject = context.keyObject =
-      computeKeyObject(object, specifier, true, aliasMap);
+      computeKeyFieldsObject(specifier, object, aliasMap);
 
     return `${context.typename}:${JSON.stringify(keyObject)}`;
   };
@@ -1057,11 +1069,10 @@ function makeAliasMap(
   return map;
 }
 
-function computeKeyObject(
-  response: Record<string, any>,
+function computeKeyFieldsObject(
   specifier: KeySpecifier,
-  strict: boolean,
-  aliasMap?: AliasMap,
+  response: Record<string, any>,
+  aliasMap: AliasMap | undefined,
 ): Record<string, any> {
   // The order of adding properties to keyObj affects its JSON serialization,
   // so we are careful to build keyObj in the order of keys given in
@@ -1074,25 +1085,90 @@ function computeKeyObject(
   let lastResponseKey: string | undefined;
   let lastActualKey: string | undefined;
 
+  const aliases = aliasMap && aliasMap.aliases;
+  const subsets = aliasMap && aliasMap.subsets;
+
   specifier.forEach(s => {
     if (Array.isArray(s)) {
       if (typeof lastActualKey === "string" &&
           typeof lastResponseKey === "string") {
-        const subsets = aliasMap && aliasMap.subsets;
-        const subset = subsets && subsets[lastActualKey];
-        keyObj[lastActualKey] =
-          computeKeyObject(response[lastResponseKey], s, strict, subset);
+        keyObj[lastActualKey] = computeKeyFieldsObject(
+          s, // An array of fields names to extract from the previous response
+             // object (response[lastResponseKey]).
+          response[lastResponseKey],
+          subsets && subsets[lastActualKey],
+        );
       }
     } else {
-      const aliases = aliasMap && aliasMap.aliases;
-      const responseName = aliases && aliases[s] || s;
-      if (hasOwn.call(response, responseName)) {
-        keyObj[lastActualKey = s] = response[lastResponseKey = responseName];
-      } else {
-        invariant(!strict, `Missing field '${responseName}' while computing key fields`);
-        lastResponseKey = lastActualKey = void 0;
-      }
+      const responseKey = aliases && aliases[s] || s;
+      invariant(
+        hasOwn.call(response, responseKey),
+        `Missing field '${responseKey}' while computing key fields`,
+      );
+      keyObj[lastActualKey = s] = response[lastResponseKey = responseKey];
     }
   });
+
+  return keyObj;
+}
+
+function computeKeyArgsObject(
+  specifier: KeySpecifier,
+  field: FieldNode | null,
+  source: Record<string, any> | null,
+  variables: Record<string, any> | undefined,
+): Record<string, any> {
+  // The order of adding properties to keyObj affects its JSON serialization,
+  // so we are careful to build keyObj in the order of keys given in
+  // specifier.
+  const keyObj = Object.create(null);
+
+  let last: undefined | {
+    key: string;
+    source: any;
+  };
+
+  specifier.forEach(key => {
+    if (Array.isArray(key)) {
+      if (last) {
+        keyObj[last.key] =
+          computeKeyArgsObject(key, field, last.source, variables);
+      }
+    } else {
+      const firstChar = key.charAt(0);
+
+      if (firstChar === "@") {
+        if (field && isNonEmptyArray(field.directives)) {
+          // TODO Cache this work somehow, a la aliasMap?
+          const directiveName = key.slice(1);
+          // If the directive appears multiple times, only the first
+          // occurrence's arguments will be used. TODO Allow repetition?
+          const d = field.directives.find(d => d.name.value === directiveName);
+          if (d) {
+            last = {
+              key,
+              // Fortunately argumentsObjectFromField works for DirectiveNode!
+              source: keyObj[key] = argumentsObjectFromField(d, variables),
+            };
+            return;
+          }
+        }
+
+      } else if (firstChar === "$") {
+        const variableName = key.slice(1);
+        if (variables && hasOwn.call(variables, variableName)) {
+          last = { key, source: keyObj[key] = variables[variableName] };
+          return;
+        }
+
+      } else if (source && hasOwn.call(source, key)) {
+        last = { key, source: keyObj[key] = source[key] };
+        return;
+      }
+
+      last = void 0;
+    }
+  });
+
   return keyObj;
 }

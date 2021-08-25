@@ -111,7 +111,7 @@ export type TypePolicy = {
   }
 };
 
-export type FieldKeyFunction = (
+export type KeyArgsFunction = (
   args: Record<string, any> | null,
   context: {
     typename: string;
@@ -120,11 +120,6 @@ export type FieldKeyFunction = (
     variables?: Record<string, any>;
   },
 ) => KeySpecifier | false | ReturnType<IdGetter>;
-
-// For backwards compatibility (see PR #8678).
-export type { FieldKeyFunction as KeyArgsFunction }
-
-type FieldKeyResult = Exclude<ReturnType<FieldKeyFunction>, KeySpecifier>;
 
 export type FieldPolicy<
   // The internal representation used to store the field's data in the
@@ -140,9 +135,7 @@ export type FieldPolicy<
   // data and options.args as input. Usually the same as TIncoming.
   TReadResult = TIncoming,
 > = {
-  /** @deprecated use `key` instead of `keyArgs` */
-  keyArgs?: KeySpecifier | FieldKeyFunction | false;
-  key?: KeySpecifier | FieldKeyFunction | false;
+  keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
   merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
 };
@@ -258,7 +251,7 @@ export const defaultDataIdFromObject = (
 };
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
-const simpleFieldKeyFn: FieldKeyFunction = (_args, context) => context.fieldName;
+const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
 
 // These merge functions can be selected by specifying merge:true or
 // merge:false in a field policy.
@@ -277,7 +270,7 @@ export class Policies {
       merge?: FieldMergeFunction<any>;
       fields: {
         [fieldName: string]: {
-          keyFn?: FieldKeyFunction;
+          keyFn?: KeyArgsFunction;
           read?: FieldReadFunction<any>;
           merge?: FieldMergeFunction<any>;
         };
@@ -455,28 +448,17 @@ export class Policies {
         if (typeof incoming === "function") {
           existing.read = incoming;
         } else {
-          // The newer incoming.key configuration is synonymous with the older
-          // incoming.keyArgs one, but we prefer incoming.key since its naming
-          // better reflects the reality that field arguments are not the only
-          // factor contributing to the field's key/identity: directives,
-          // variables, and even aliases can influence the field's key.
-          const {
-            // We use key in the code below, but it defaults to incoming.keyArgs
-            // if incoming.key is undefined.
-            key = incoming.keyArgs,
-            read,
-            merge,
-          } = incoming;
+          const { keyArgs, read, merge } = incoming;
 
           existing.keyFn =
             // Pass false to disable argument-based differentiation of
             // field identities.
-            key === false ? simpleFieldKeyFn :
+            keyArgs === false ? simpleKeyArgsFn :
             // Pass an array of strings to use named arguments to
             // compute a composite identity for the field.
-            Array.isArray(key) ? fieldKeyFnFromSpecifier(key) :
+            Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
             // Pass a function to take full control over field identity.
-            typeof key === "function" ? key :
+            typeof keyArgs === "function" ? keyArgs :
             // Leave existing.keyFn unchanged if above cases fail.
             existing.keyFn;
 
@@ -493,7 +475,7 @@ export class Policies {
           // responsibility for interpreting arguments in and out. This
           // default assumption can always be overridden by specifying
           // keyArgs explicitly in the FieldPolicy.
-          existing.keyFn = existing.keyFn || simpleFieldKeyFn;
+          existing.keyFn = existing.keyFn || simpleKeyArgsFn;
         }
       });
     }
@@ -590,7 +572,7 @@ export class Policies {
     fieldName: string,
     createIfMissing: boolean,
   ): {
-    keyFn?: FieldKeyFunction;
+    keyFn?: KeyArgsFunction;
     read?: FieldReadFunction<any>;
     merge?: FieldMergeFunction<any>;
   } | undefined {
@@ -703,7 +685,7 @@ export class Policies {
     return false;
   }
 
-  public hasFieldKeyConfig(typename: string | undefined, fieldName: string) {
+  public hasKeyArgs(typename: string | undefined, fieldName: string) {
     const policy = this.getFieldPolicy(typename, fieldName, false);
     return !!(policy && policy.keyFn);
   }
@@ -711,11 +693,11 @@ export class Policies {
   public getStoreFieldName(fieldSpec: FieldSpecifier): string {
     const { typename, fieldName } = fieldSpec;
     const policy = this.getFieldPolicy(typename, fieldName, false);
-    let storeFieldName: FieldKeyResult;
+    let storeFieldName: Exclude<ReturnType<KeyArgsFunction>, KeySpecifier>;
 
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
-      const context: Parameters<FieldKeyFunction>[1] = {
+      const context: Parameters<KeyArgsFunction>[1] = {
         typename,
         fieldName,
         field: fieldSpec.field || null,
@@ -725,7 +707,7 @@ export class Policies {
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
-          keyFn = fieldKeyFnFromSpecifier(specifierOrString);
+          keyFn = keyArgsFnFromSpecifier(specifierOrString);
         } else {
           // If the custom keyFn returns a falsy value, fall back to
           // fieldName instead.
@@ -995,14 +977,14 @@ function makeMergeObjectsFunction(
   };
 }
 
-function fieldKeyFnFromSpecifier(
+function keyArgsFnFromSpecifier(
   specifier: KeySpecifier,
-): FieldKeyFunction {
+): KeyArgsFunction {
   return (args, context) => {
     let key = context.fieldName;
 
     const suffix = JSON.stringify(
-      computeFieldKeyObject(specifier, context.field, args, context.variables),
+      computeKeyArgsObject(specifier, context.field, args, context.variables),
     );
 
     // If no arguments were passed to this field, and it didn't have any other
@@ -1130,7 +1112,7 @@ function computeKeyFieldsObject(
   return keyObj;
 }
 
-function computeFieldKeyObject(
+function computeKeyArgsObject(
   specifier: KeySpecifier,
   field: FieldNode | null,
   source: Record<string, any> | null,
@@ -1150,7 +1132,7 @@ function computeFieldKeyObject(
     if (Array.isArray(key)) {
       if (last) {
         keyObj[last.key] =
-          computeFieldKeyObject(key, field, last.source, variables);
+          computeKeyArgsObject(key, field, last.source, variables);
       }
     } else {
       const firstChar = key.charAt(0);

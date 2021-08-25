@@ -159,7 +159,7 @@ export abstract class EntityStore implements NormalizedCache {
             // share the same short fieldName, regardless of arguments.
             const fieldName = fieldNameFromStoreName(storeFieldName);
             if (fieldName !== storeFieldName &&
-                !this.policies.hasFieldKeyConfig(merged.__typename, fieldName)) {
+                !this.policies.hasKeyArgs(merged.__typename, fieldName)) {
               fieldsToDirty[fieldName] = 1;
             }
 

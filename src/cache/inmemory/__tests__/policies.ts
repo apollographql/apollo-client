@@ -8,7 +8,7 @@ import { relayStylePagination } from "../../../utilities";
 import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { itAsync } from '../../../utilities/testing/itAsync';
-import { FieldKeyFunction, FieldPolicy, StorageType } from "../policies";
+import { FieldPolicy, StorageType } from "../policies";
 import { withErrorSpy, withWarningSpy } from "../../../testing";
 
 function reverse(s: string) {
@@ -528,17 +528,13 @@ describe("type policies", function () {
   });
 
   describe("field policies", function () {
-    ["keyArgs",
-     "key",
-    ].forEach(fieldKeyConfigName => it(`can filter arguments using ${
-      fieldKeyConfigName
-    }`, function () {
+    it(`can filter arguments using keyArgs`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {
             fields: {
               book: {
-                [fieldKeyConfigName]: ["isbn"],
+                keyArgs: ["isbn"],
               },
             },
           },
@@ -571,20 +567,16 @@ describe("type policies", function () {
           },
         },
       });
-    }));
+    });
 
-    ["keyArgs",
-     "key",
-    ].forEach(fieldKeyConfigName => it(`can filter arguments using ${
-      fieldKeyConfigName
-    } in non-Query fields`, function () {
+    it(`can filter arguments using keyArgs in non-Query fields`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Book: {
             keyFields: ["isbn"],
             fields: {
               author: {
-                [fieldKeyConfigName]: ["firstName", "lastName"],
+                keyArgs: ["firstName", "lastName"],
               },
             },
           },
@@ -647,13 +639,9 @@ describe("type policies", function () {
 
       const result = cache.readQuery({ query });
       expect(result).toEqual(data);
-    }));
+    });
 
-    ["keyArgs",
-     "key",
-    ].forEach(fieldKeyConfigName => withErrorSpy(it, `assumes ${
-      fieldKeyConfigName
-    }:false when read and merge function present`, function () {
+    withErrorSpy(it, `assumes keyArgs:false when read and merge function present`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           TypeA: {
@@ -667,10 +655,7 @@ describe("type policies", function () {
           TypeB: {
             fields: {
               b: {
-                keyArgs() {
-                  throw new Error(`TypeB.b keyArgs not superseded by ${fieldKeyConfigName}`);
-                },
-                [fieldKeyConfigName]: ["x"],
+                keyArgs: ["x"],
                 read() {
                   return "b";
                 },
@@ -681,10 +666,7 @@ describe("type policies", function () {
           TypeC: {
             fields: {
               c: {
-                keyArgs() {
-                  throw new Error(`TypeC.c keyArgs not superseded by ${fieldKeyConfigName}`);
-                },
-                [fieldKeyConfigName]: false,
+                keyArgs: false,
                 merge(existing, incoming: string) {
                   return reverse(incoming);
                 },
@@ -696,9 +678,6 @@ describe("type policies", function () {
             fields: {
               d: {
                 keyArgs() {
-                  throw new Error(`TypeD.d keyArgs not superseded by ${fieldKeyConfigName}`);
-                },
-                [fieldKeyConfigName]() {
                   return "d";
                 },
                 read(existing: string) {
@@ -842,20 +821,16 @@ describe("type policies", function () {
           }
         ],
       });
-    }));
+    });
 
-    ["keyArgs",
-     "key",
-    ].forEach(fieldKeyConfigName => it(`can include optional arguments in field ${
-      fieldKeyConfigName
-    } policy`, function () {
+    it(`can include optional arguments in field keyArgs policy`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Author: {
             keyFields: ["name"],
             fields: {
               writings: {
-                [fieldKeyConfigName]: ["a", "b", "type"]
+                keyArgs: ["a", "b", "type"]
               },
             },
           },
@@ -1030,24 +1005,16 @@ describe("type policies", function () {
         'writings:{"type":"Book"}',
         "writings:{}",
       ]);
-    }));
+    });
 
-    ["keyArgs",
-     "key",
-    ].forEach(fieldKeyConfigName => it(`can return KeySpecifier arrays from ${
-      fieldKeyConfigName
-    } functions`, function () {
+    it(`can return KeySpecifier arrays from keyArgs functions`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Thread: {
             keyFields: ["tid"],
             fields: {
               comments: {
-                keyArgs() {
-                  throw new Error(`Thread.comments keyArgs not superseded by ${fieldKeyConfigName}`);
-                },
-
-                [fieldKeyConfigName]: ((args, context) => {
+                keyArgs(args, context) {
                   expect(context.typename).toBe("Thread");
                   expect(context.fieldName).toBe("comments");
                   expect(context.field!.name.value).toBe("comments");
@@ -1065,7 +1032,7 @@ describe("type policies", function () {
                       return ["beforeId", "limit"];
                     }
                   }
-                }) as FieldKeyFunction,
+                },
               },
             },
           },
@@ -1161,7 +1128,7 @@ describe("type policies", function () {
           },
         },
       });
-    }));
+    });
 
     // Use several different directives to prove we're not hard-coding support
     // for the @connection directive.
@@ -1176,7 +1143,7 @@ describe("type policies", function () {
           Query: {
             fields: {
               feed: {
-                key: ["@" + directiveName, ["key"], "arg"],
+                keyArgs: ["@" + directiveName, ["key"], "arg"],
               },
             },
           },
@@ -1280,7 +1247,7 @@ describe("type policies", function () {
           Query: {
             fields: {
               defaultToNumVariable: {
-                key: ["input", "$num"],
+                keyArgs: ["input", "$num"],
                 read(existing, { args, variables }) {
                   return existing ?? args?.input ?? variables?.num;
                 },
@@ -2740,11 +2707,7 @@ describe("type policies", function () {
       expect(secretReadAttempted).toBe(true);
     });
 
-    ["keyArgs",
-     "key",
-    ].forEach(fieldKeyConfigName => it(`can define custom merge functions (${
-      fieldKeyConfigName
-    })`, function () {
+    it(`can define custom merge functions and keyArgs simultaneously`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Person: {
@@ -2757,10 +2720,7 @@ describe("type policies", function () {
 
             fields: {
               todos: {
-                keyArgs() {
-                  throw new Error(`Person.todos keyArgs not superseded by ${fieldKeyConfigName}`);
-                },
-                [fieldKeyConfigName]: [],
+                keyArgs: [],
 
                 read(existing: any[], {
                   args,
@@ -2993,7 +2953,7 @@ describe("type policies", function () {
           ],
         },
       });
-    }));
+    });
 
     itAsync("can handle Relay-style pagination without args", (resolve, reject) => {
       const cache = new InMemoryCache({
@@ -4979,11 +4939,7 @@ describe("type policies", function () {
     });
   });
 
-  ["keyArgs",
-    "key",
-  ].forEach(fieldKeyConfigName => it(`allows keyFields and ${
-    fieldKeyConfigName
-  } functions to return false`, function () {
+  it(`allows keyFields and keyArgs functions to return false`, function () {
     const cache = new InMemoryCache({
       typePolicies: {
         Person: {
@@ -4993,9 +4949,6 @@ describe("type policies", function () {
           fields: {
             height: {
               keyArgs() {
-                throw new Error(`Person.height keyArgs not superseded by ${fieldKeyConfigName}`);
-              },
-              [fieldKeyConfigName]() {
                 return false;
               },
               merge(_, height, { args }) {
@@ -5059,7 +5012,7 @@ describe("type policies", function () {
         }],
       },
     });
-  }));
+  });
 
   it("can read from foreign references using read helper", function () {
     const cache = new InMemoryCache({

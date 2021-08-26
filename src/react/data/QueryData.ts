@@ -101,11 +101,7 @@ export class QueryData<TData, TVariables> extends OperationData<
   public afterExecute({ lazy = false }: { lazy?: boolean } = {}) {
     this.isMounted = true;
     const options = this.getOptions();
-    if (
-      this.currentObservable &&
-      !this.ssrInitiated() &&
-      !this.client.disableNetworkFetches
-    ) {
+    if (this.currentObservable && !this.ssrInitiated()) {
       this.startQuerySubscription();
     }
 

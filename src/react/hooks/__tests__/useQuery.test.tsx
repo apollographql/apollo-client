@@ -557,6 +557,74 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'from link' });
     });
+
+    it('should use the cache when in ssrMode and fetchPolicy is `network-only`', async () => {
+      const query = gql`query { hello }`;
+      const link = mockSingleLink(
+        {
+          request: { query },
+          result: { data: { hello: 'from link' } },
+        },
+      );
+
+      const cache = new InMemoryCache();
+      cache.writeQuery({
+        query,
+        data: { hello: 'from cache' },
+      });
+
+      const client = new ApolloClient({ link, cache, ssrMode: true, });
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { fetchPolicy: 'network-only' }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'from cache' });
+
+      await expect(waitForNextUpdate({ timeout: 20 }))
+        .rejects.toThrow('Timed out');
+    });
+
+    it('should not hang when ssrMode is true but the cache is not populated for some reason', async () => {
+      const query = gql`query { hello }`;
+      const link = mockSingleLink(
+        {
+          request: { query },
+          result: { data: { hello: 'from link' } },
+        },
+      );
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+        ssrMode: true,
+      });
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'from link' });
+    });
   });
 
   describe('polling', () => {

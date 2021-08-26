@@ -10,7 +10,6 @@
 - Fix ObservableQuery.getCurrentResult() returning cached data with certain fetch policies. <br/>
   [@brainkim](https://github.com/brainkim) in [#8718](https://github.com/apollographql/apollo-client/pull/8718)
 
-
 ## Apollo Client 3.4.9
 
 ### Bug Fixes

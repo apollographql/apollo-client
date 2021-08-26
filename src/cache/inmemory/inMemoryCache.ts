@@ -4,6 +4,7 @@ import './fixPolyfills';
 import { DocumentNode } from 'graphql';
 import { OptimisticWrapperFunction, wrap } from 'optimism';
 import { equal } from '@wry/equality';
+import { invariant } from 'ts-invariant';
 
 import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';
@@ -334,8 +335,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // sure that none of the primary key fields have been renamed by aliasing.
   // If you pass a Reference object, its __ref ID string will be returned.
   public identify(object: StoreObject | Reference): string | undefined {
-    return isReference(object) ? object.__ref :
-      this.policies.identify(object)[0];
+    if (isReference(object)) return object.__ref;
+    try {
+      return this.policies.identify(object)[0];
+    } catch (e) {
+      invariant.warn(e);
+    }
   }
 
   public evict(options: Cache.EvictOptions): boolean {

@@ -1772,9 +1772,21 @@ describe('EntityStore', () => {
       c: 3,
     })).toBe('ABCs:{"b":2,"a":1,"c":3}');
 
-    expect(() => cache.identify(ABCs)).toThrowError(
-      "Missing field 'b' while computing key fields",
-    );
+    { // TODO Extact this to a helper function.
+      const consoleWarnSpy = jest.spyOn(console, "warn");
+      consoleWarnSpy.mockImplementation(() => {});
+      try {
+        expect(cache.identify(ABCs)).toBeUndefined();
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          new Error(`Missing field 'b' while extracting keyFields from ${
+            JSON.stringify(ABCs)
+          }`),
+        );
+      } finally {
+        consoleWarnSpy.mockRestore();
+      }
+    }
 
     expect(cache.readFragment({
       id: cache.identify({

@@ -1103,7 +1103,9 @@ function computeKeyFieldsObject(
       const responseKey = aliases && aliases[s] || s;
       invariant(
         hasOwn.call(response, responseKey),
-        `Missing field '${responseKey}' while computing key fields`,
+        `Missing field '${responseKey}' while extracting keyFields from ${
+          JSON.stringify(response)
+        }`,
       );
       keyObj[lastActualKey = s] = response[lastResponseKey = responseKey];
     }

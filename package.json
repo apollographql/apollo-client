@@ -56,7 +56,7 @@
     {
       "name": "apollo-client",
       "path": "./temp/bundlesize.min.cjs",
-      "maxSize": "24.9 kB"
+      "maxSize": "24.95 kB"
     }
   ],
   "engines": {

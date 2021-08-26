@@ -13,6 +13,7 @@ import {
   iterateObserversSafely,
   isNonEmptyArray,
   fixObservableSubclass,
+  getQueryDefinition,
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
@@ -25,6 +26,11 @@ import {
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
+
+const {
+  assign,
+  hasOwnProperty,
+} = Object;
 
 export interface FetchMoreOptions<
   TData = any,
@@ -311,6 +317,19 @@ export class ObservableQuery<
       reobserveOptions.fetchPolicy = 'no-cache';
     } else {
       reobserveOptions.fetchPolicy = 'network-only';
+    }
+
+    if (__DEV__ && variables && hasOwnProperty.call(variables, "variables")) {
+      const queryDef = getQueryDefinition(this.options.query);
+      const vars = queryDef.variableDefinitions;
+      if (!vars || !vars.some(v => v.variable.name.value === "variables")) {
+        invariant.warn(`Called refetch(${
+          JSON.stringify(variables)
+        }) for query ${
+          queryDef.name?.value || JSON.stringify(queryDef)
+        }, which does not declare a $variables variable.
+Did you mean to call refetch(variables) instead of refetch({ variables })?`);
+      }
     }
 
     if (variables && !equal(this.options.variables, variables)) {
@@ -659,7 +678,7 @@ once, rather than every time you call fetchMore.`);
       // Disposable Concast fetches receive a shallow copy of this.options
       // (merged with newOptions), leaving this.options unmodified.
       ? compact(this.options, newOptions)
-      : Object.assign(this.options, compact(newOptions));
+      : assign(this.options, compact(newOptions));
 
     if (!useDisposableConcast) {
       // We can skip calling updatePolling if we're not changing this.options.

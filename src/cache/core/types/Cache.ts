@@ -3,9 +3,9 @@ import { Modifier, Modifiers } from './common';
 import { ApolloCache } from '../cache';
 
 export namespace Cache {
-  export type WatchCallback = (
-    diff: Cache.DiffResult<any>,
-    lastDiff?: Cache.DiffResult<any>,
+  export type WatchCallback<TData = any> = (
+    diff: Cache.DiffResult<TData>,
+    lastDiff?: Cache.DiffResult<TData>,
   ) => void;
 
   export interface ReadOptions<TVariables = any, TData = any>
@@ -25,19 +25,23 @@ export namespace Cache {
     result: TResult;
   }
 
-  export interface DiffOptions extends ReadOptions {
+  export interface DiffOptions<
+    TData = any,
+    TVariables = any,
+  > extends ReadOptions<TVariables, TData> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
   }
 
   export interface WatchOptions<
-    Watcher extends object = Record<string, any>
-  > extends ReadOptions {
-    watcher?: Watcher;
+    TData = any,
+    TVariables = any,
+  > extends ReadOptions<TVariables, TData> {
+    watcher?: object;
     immediate?: boolean;
-    callback: WatchCallback;
-    lastDiff?: DiffResult<any>;
+    callback: WatchCallback<TData>;
+    lastDiff?: DiffResult<TData>;
   }
 
   export interface EvictOptions {

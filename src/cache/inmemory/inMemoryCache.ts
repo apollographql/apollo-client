@@ -247,7 +247,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
+  public diff<TData, TVariables = any>(
+    options: Cache.DiffOptions<TData, TVariables>,
+  ): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({
       ...options,
       store: options.optimistic ? this.optimisticData : this.data,
@@ -256,7 +258,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
+  public watch<TData = any, TVariables = any>(
+    watch: Cache.WatchOptions<TData, TVariables>,
+  ): () => void {
     if (!this.watches.size) {
       // In case we previously called forgetCache(this) because
       // this.watches became empty (see below), reattach this cache to any

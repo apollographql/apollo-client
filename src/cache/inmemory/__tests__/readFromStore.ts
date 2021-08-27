@@ -20,7 +20,6 @@ import {
 
 jest.mock('optimism');
 import { wrap } from 'optimism';
-import { withErrorSpy } from '../../../testing';
 
 describe('resultCacheMaxSize', () => {
   const cache = new InMemoryCache();
@@ -1375,7 +1374,7 @@ describe('reading from the store', () => {
     });
   });
 
-  withErrorSpy(it, "propagates eviction signals to parent queries", () => {
+  it("propagates eviction signals to parent queries", () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Deity: {

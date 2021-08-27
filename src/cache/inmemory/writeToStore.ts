@@ -320,8 +320,13 @@ export class StoreWriter {
           });
 
         } else if (
+          __DEV__ &&
           !context.clientOnly &&
-          !addTypenameToDocument.added(selection)
+          !addTypenameToDocument.added(selection) &&
+          // If the field has a read function, it may be a synthetic field or
+          // provide a default value, so its absence from the written data
+          // should not be cause for alarm.
+          !policies.getReadFunction(typename, selection.name.value)
         ) {
           invariant.error(`Missing field '${
             resultKeyNameFromField(selection)

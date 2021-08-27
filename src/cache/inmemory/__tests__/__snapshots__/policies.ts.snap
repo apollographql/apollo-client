@@ -77,24 +77,6 @@ exports[`type policies complains about missing key fields 1`] = `
 }
 `;
 
-exports[`type policies field policies assumes keyArgs:false when read and merge function present 1`] = `
-[MockFunction] {
-  "calls": Array [
-    Array [
-      "Missing field 'a' while writing result {
-  \\"__typename\\": \\"TypeA\\"
-}",
-    ],
-  ],
-  "results": Array [
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-  ],
-}
-`;
-
 exports[`type policies field policies can handle Relay-style pagination 1`] = `
 Object {
   "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
@@ -1254,45 +1236,6 @@ Object {
       "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
     },
   },
-}
-`;
-
-exports[`type policies field policies read and merge can cooperate through options.storage 1`] = `
-[MockFunction] {
-  "calls": Array [
-    Array [
-      "Missing field 'result' while writing result {
-  \\"__typename\\": \\"Job\\",
-  \\"name\\": \\"Job #1\\"
-}",
-    ],
-    Array [
-      "Missing field 'result' while writing result {
-  \\"__typename\\": \\"Job\\",
-  \\"name\\": \\"Job #2\\"
-}",
-    ],
-    Array [
-      "Missing field 'result' while writing result {
-  \\"__typename\\": \\"Job\\",
-  \\"name\\": \\"Job #3\\"
-}",
-    ],
-  ],
-  "results": Array [
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-  ],
 }
 `;
 

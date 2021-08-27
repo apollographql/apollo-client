@@ -783,6 +783,14 @@ export class Policies {
     return existing;
   }
 
+  public getReadFunction(
+    typename: string | undefined,
+    fieldName: string,
+  ): FieldReadFunction | undefined {
+    const policy = this.getFieldPolicy(typename, fieldName, false);
+    return policy && policy.read;
+  }
+
   public getMergeFunction(
     parentTypename: string | undefined,
     fieldName: string,

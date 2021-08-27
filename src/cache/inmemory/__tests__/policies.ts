@@ -645,7 +645,7 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
-    withErrorSpy(it, `assumes keyArgs:false when read and merge function present`, function () {
+    it("assumes keyArgs:false when read and merge function present", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           TypeA: {
@@ -1554,7 +1554,7 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
-    withErrorSpy(it, "read and merge can cooperate through options.storage", function () {
+    it("read and merge can cooperate through options.storage", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {

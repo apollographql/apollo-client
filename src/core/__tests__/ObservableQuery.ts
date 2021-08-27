@@ -2027,7 +2027,7 @@ describe('ObservableQuery', () => {
         });
 
         expect(observable.getCurrentResult()).toEqual({
-          data: dataOne,
+          data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
         });
@@ -2036,7 +2036,7 @@ describe('ObservableQuery', () => {
           if (handleCount === 1) {
             expect(subResult).toEqual({
               loading: true,
-              data: dataOne,
+              data: undefined,
               networkStatus: NetworkStatus.loading,
             });
           } else if (handleCount === 2) {

@@ -523,6 +523,40 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(mocks[1].result.data);
     });
+
+    it('should not use the cache when using `network-only`', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: 'from link' } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      cache.writeQuery({
+        query,
+        data: { hello: 'from cache' },
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { fetchPolicy: 'network-only' }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'from link' });
+    });
   });
 
   describe('polling', () => {

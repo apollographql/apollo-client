@@ -89,7 +89,6 @@ export function mergeOptions<
 export class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public cache: ApolloCache<TCacheShape>;
-  public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions = {};
@@ -100,6 +99,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
   private localState: LocalState<TCacheShape>;
+
+  // This boolean is set by ssr-related options/properties like
+  // options.ssrMode, options.ssrForceFetchDelay, and
+  // options.disableNetworkFetches, and causes network-first fetch policies to
+  // be overridden.
+  private forceCache: boolean = false;
+  private ssrFetchPolicyOverrides =
+    new Map<ObservableQuery, WatchQueryFetchPolicy>();
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -180,14 +187,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     this.link = link;
     this.cache = cache;
-    this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
+    this.forceCache = !!(ssrMode || ssrForceFetchDelay > 0);
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || {};
     this.typeDefs = typeDefs;
 
     if (ssrForceFetchDelay) {
       setTimeout(
-        () => (this.disableNetworkFetches = false),
+        () => (this.forceCache = false),
         ssrForceFetchDelay,
       );
     }
@@ -268,6 +275,24 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     });
   }
 
+  // TODO: deprecate and remove this property?
+  public get disableNetworkFetches(): boolean {
+    return this.forceCache;
+  }
+
+  public set disableNetworkFetches(value: boolean) {
+    this.forceCache = value;
+    this.queryManager.ssrMode = value;
+    if (value) {
+      const overrides = Array.from(this.ssrFetchPolicyOverrides);
+      this.ssrFetchPolicyOverrides.clear();
+      overrides.forEach(
+        ([query, fetchPolicy]) => query.setOptions({ fetchPolicy }),
+      );
+      this.getObservableQueries('all').forEach((oq) => oq['updatePolling']());
+    }
+  }
+
   /**
    * Call this method to terminate any active client processes, making it safe
    * to dispose of this `ApolloClient` instance.
@@ -302,16 +327,26 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       options = mergeOptions(this.defaultOptions.watchQuery, options);
     }
 
+    const { fetchPolicy } = options;
     // XXX Overwriting options is probably not the best way to do this long term...
     if (
-      this.disableNetworkFetches &&
-      (options.fetchPolicy === 'network-only' ||
-        options.fetchPolicy === 'cache-and-network')
+      this.forceCache && (
+        fetchPolicy === 'network-only' ||
+        fetchPolicy === 'cache-and-network'
+      )
     ) {
       options = { ...options, fetchPolicy: 'cache-first' };
     }
 
-    return this.queryManager.watchQuery<T, TVariables>(options);
+    const query = this.queryManager.watchQuery<T, TVariables>(options);
+    if (fetchPolicy !== options.fetchPolicy) {
+      this.ssrFetchPolicyOverrides.set(query, fetchPolicy!);
+      query.subscribe({
+        complete: () => this.ssrFetchPolicyOverrides.delete(query),
+      });
+    }
+
+    return query;
   }
 
   /**

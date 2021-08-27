@@ -79,7 +79,7 @@ export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
   public readonly assumeImmutableResults: boolean;
-  public readonly ssrMode: boolean;
+  public ssrMode: boolean;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};

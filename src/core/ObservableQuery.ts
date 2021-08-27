@@ -27,6 +27,7 @@ import {
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
+import { MissingTree } from '../cache/core/types/common';
 
 const {
   assign,
@@ -816,11 +817,11 @@ function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
 }
 
 export function logMissingFieldErrors(
-  missing: MissingFieldError[] | undefined,
+  missing: MissingFieldError[] | MissingTree | undefined,
 ) {
-  if (__DEV__ && isNonEmptyArray(missing)) {
+  if (__DEV__ && missing) {
     invariant.debug(`Missing cache result fields: ${
-      missing.map(m => m.path.join('.')).join(', ')
+      JSON.stringify(missing)
     }`, missing);
   }
 }

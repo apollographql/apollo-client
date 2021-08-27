@@ -1646,15 +1646,6 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual(snapshot1);
 
-      function makeMissingError(jobNumber: number) {
-        return new MissingFieldError(
-          `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
-          ["jobs", jobNumber - 1, "result"],
-          expect.anything(), // query
-          expect.anything(), // variables
-        );
-      }
-
       expect(cache.diff({
         query,
         optimistic: false,
@@ -1674,9 +1665,24 @@ describe("type policies", function () {
         },
         complete: false,
         missing: [
-          makeMissingError(1),
-          makeMissingError(2),
-          makeMissingError(3),
+          new MissingFieldError(
+            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+            {
+              jobs: {
+                0: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                },
+                1: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #2\"} object",
+                },
+                2: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                },
+              },
+            },
+            expect.anything(), // query
+            expect.anything(), // variables
+          ),
         ],
       });
 
@@ -1732,8 +1738,21 @@ describe("type policies", function () {
         },
         complete: false,
         missing: [
-          makeMissingError(1),
-          makeMissingError(3),
+          new MissingFieldError(
+            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+            {
+              jobs: {
+                0: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                },
+                2: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                },
+              },
+            },
+            expect.anything(), // query
+            expect.anything(), // variables
+          ),
         ],
       });
 
@@ -1796,8 +1815,21 @@ describe("type policies", function () {
         },
         complete: false,
         missing: [
-          makeMissingError(1),
-          makeMissingError(3),
+          new MissingFieldError(
+            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+            {
+              jobs: {
+                0: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                },
+                2: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                },
+              },
+            },
+            expect.anything(), // query
+            expect.anything(), // variables
+          ),
         ],
       });
 

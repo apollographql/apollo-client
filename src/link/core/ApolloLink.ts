@@ -1,4 +1,4 @@
-import { InvariantError, invariant } from 'ts-invariant';
+import { InvariantError, invariant } from '../../utilities/globals';
 
 import { Observable } from '../../utilities';
 import {

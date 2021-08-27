@@ -1,5 +1,4 @@
-import { checkDEV } from "../../utilities";
-checkDEV();
+import { invariant } from '../../utilities/globals';
 
 import { print } from 'graphql';
 import {
@@ -7,7 +6,6 @@ import {
   ExecutionResult,
   GraphQLError,
 } from 'graphql';
-import { invariant } from 'ts-invariant';
 
 import { ApolloLink, Operation } from '../core';
 import { Observable, Observer, compact } from '../../utilities';

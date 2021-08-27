@@ -1,5 +1,4 @@
-import { checkDEV } from "../utilities";
-checkDEV();
+import '../utilities/globals';
 
 export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';

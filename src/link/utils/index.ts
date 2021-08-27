@@ -1,5 +1,4 @@
-import { checkDEV } from "../../utilities";
-checkDEV();
+import '../../utilities/globals';
 
 export { fromError } from './fromError';
 export { toPromise } from './toPromise';

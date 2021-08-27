@@ -1,6 +1,4 @@
-import { DEV, checkDEV } from "./globals";
-export { DEV, checkDEV }
-checkDEV();
+export { DEV, maybe } from './globals';
 
 export {
   DirectiveInfo,
@@ -83,7 +81,6 @@ export {
 export * from './common/mergeDeep';
 export * from './common/cloneDeep';
 export * from './common/maybeDeepFreeze';
-export * from './common/maybe';
 export * from './observables/iteration';
 export * from './observables/asyncMap';
 export * from './observables/Concast';

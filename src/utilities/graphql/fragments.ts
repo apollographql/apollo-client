@@ -1,10 +1,11 @@
+import { invariant, InvariantError } from '../globals';
+
 import {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
   SelectionNode
 } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
 
 /**
  * Returns a query document which adds a single query operation that only

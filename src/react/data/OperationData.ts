@@ -1,6 +1,7 @@
+import { invariant } from '../../utilities/globals';
+
 import { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
-import { invariant } from 'ts-invariant';
 
 import { ApolloClient } from '../../core';
 import { DocumentType, parser, operationName } from '../parser';

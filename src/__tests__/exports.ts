@@ -23,6 +23,7 @@ import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
 import * as utilities from "../utilities";
+import * as utilitiesGlobals from "../utilities/globals";
 
 const entryPoints = require("../../config/entryPoints.js");
 
@@ -63,6 +64,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
   check("@apollo/client/utilities", utilities);
+  check("@apollo/client/utilities/globals", utilitiesGlobals);
 
   it("completeness", () => {
     const { join } = require("path").posix;

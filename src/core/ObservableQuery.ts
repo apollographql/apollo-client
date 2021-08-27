@@ -1,4 +1,5 @@
-import { invariant } from 'ts-invariant';
+import { invariant } from '../utilities/globals';
+
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';

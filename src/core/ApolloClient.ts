@@ -1,5 +1,6 @@
+import { invariant, InvariantError } from '../utilities/globals';
+
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
 
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
 import { ApolloCache, DataProxy } from '../cache';

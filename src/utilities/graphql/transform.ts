@@ -1,3 +1,5 @@
+import { invariant } from '../globals';
+
 import {
   DocumentNode,
   SelectionNode,
@@ -12,7 +14,6 @@ import {
   VariableNode,
   visit,
 } from 'graphql';
-import { invariant } from 'ts-invariant';
 
 import {
   checkDocument,

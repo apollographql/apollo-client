@@ -1,5 +1,4 @@
-import { InvariantError } from 'ts-invariant';
-
+import { InvariantError } from '../../utilities/globals'
 import { GraphQLRequest } from '../core';
 
 export function validateOperation(operation: GraphQLRequest): GraphQLRequest {

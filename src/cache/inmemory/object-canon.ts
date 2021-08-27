@@ -1,3 +1,5 @@
+import "../../utilities/globals";
+
 import { Trie } from "@wry/trie";
 import {
   canUseWeakMap,

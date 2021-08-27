@@ -1,3 +1,4 @@
+import '../../../utilities/globals';
 import { useEffect, useRef } from "react";
 
 /**

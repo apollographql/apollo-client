@@ -1,3 +1,5 @@
+import '../../../utilities/globals';
+
 import { useContext, useEffect, useReducer, useRef } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';

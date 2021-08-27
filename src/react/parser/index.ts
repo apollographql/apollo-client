@@ -1,5 +1,4 @@
-import { checkDEV } from "../../utilities";
-checkDEV();
+import { invariant } from '../../utilities/globals';
 
 import {
   DocumentNode,
@@ -7,7 +6,6 @@ import {
   VariableDefinitionNode,
   OperationDefinitionNode
 } from 'graphql';
-import { invariant } from 'ts-invariant';
 
 export enum DocumentType {
   Query,

@@ -1,3 +1,5 @@
+import '../../utilities/globals';
+
 import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../core';

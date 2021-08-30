@@ -209,7 +209,6 @@ export class ObservableQuery<
     } as ApolloQueryResult<TData>;
 
     const { fetchPolicy = "cache-first" } = this.options;
-    const diff = this.queryInfo.getDiff();
     if (
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.
@@ -224,6 +223,8 @@ export class ObservableQuery<
     ) {
       // Fall through.
     } else {
+      const diff = this.queryInfo.getDiff();
+
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
       }
@@ -232,17 +233,25 @@ export class ObservableQuery<
         result.data = void 0 as any;
       }
 
-      // If the diff is complete, and we're using a FetchPolicy that terminates
-      // after a complete cache read, we can assume the next result we receive
-      // will have NetworkStatus.ready and !loading.
-      if (
-        diff.complete &&
-        result.networkStatus === NetworkStatus.loading &&
-        (fetchPolicy === 'cache-first' ||
-         fetchPolicy === 'cache-only')
-      ) {
-        result.networkStatus = NetworkStatus.ready;
-        result.loading = false;
+      if (diff.complete) {
+        // Similar to setting result.partial to false, but taking advantage of the
+        // falsiness of missing fields.
+        delete result.partial;
+
+        // If the diff is complete, and we're using a FetchPolicy that
+        // terminates after a complete cache read, we can assume the next result
+        // we receive will have NetworkStatus.ready and !loading.
+        if (
+          diff.complete &&
+          result.networkStatus === NetworkStatus.loading &&
+          (fetchPolicy === 'cache-first' ||
+          fetchPolicy === 'cache-only')
+        ) {
+          result.networkStatus = NetworkStatus.ready;
+          result.loading = false;
+        }
+      } else {
+        result.partial = true;
       }
 
       if (
@@ -255,17 +264,6 @@ export class ObservableQuery<
       ) {
         logMissingFieldErrors(diff.missing);
       }
-    }
-
-    if (diff.complete) {
-      // Similar to setting result.partial to false, but taking advantage of the
-      // falsiness of missing fields.
-      delete result.partial;
-    } else if (fetchPolicy !== 'no-cache') {
-      // Since result.partial comes from diff.complete, and we shouldn't be
-      // using cache data to provide a DiffResult when the fetchPolicy is
-      // "no-cache", avoid annotating result.partial for "no-cache" results.
-      result.partial = true;
     }
 
     if (saveAsLastResult) {

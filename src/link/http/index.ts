@@ -11,6 +11,7 @@ export {
 export {
   HttpOptions,
   fallbackHttpConfig,
+  defaultPrinter,
   selectHttpOptionsAndBody,
   UriFunction
 } from './selectHttpOptionsAndBody';

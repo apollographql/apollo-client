@@ -1,6 +1,6 @@
 import fetchMock from 'fetch-mock';
 import gql from 'graphql-tag';
-import { print } from 'graphql';
+import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
@@ -729,6 +729,24 @@ describe('SharedHttpTest', () => {
         const { someOption } = fetchMock.lastCall()![1]! as any;
         expect(someOption).toBe('foo');
         done();
+      }),
+    );
+  });
+
+  it('uses the print option function when defined', done => {
+    const customPrinter = jest.fn(
+      (ast: ASTNode, originalPrint: typeof print) => {
+        return stripIgnoredCharacters(originalPrint(ast));
+      }
+    );
+
+    const httpLink = createHttpLink({ uri: 'data', print: customPrinter });
+
+    execute(httpLink, {
+      query: sampleQuery,
+    }).subscribe(
+      makeCallback(done, () => {
+        expect(customPrinter).toHaveBeenCalledTimes(1);
       }),
     );
   });

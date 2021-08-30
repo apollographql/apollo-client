@@ -161,15 +161,15 @@ The default value is `false`.
 
 <td>
 
-A function to use for transforming a query or mutation AST into a string. It accepts the AST and the original `print` function as arguments and is expected to return a string. This option can be used with `stripIgnoredCharacters` to remove whitespace from queries.
+An optional function to use when transforming a query or mutation `DocumentNode` into a string. It accepts an `ASTNode` (typically a `DocumentNode`) and the original `print` function as arguments, and is expected to return a string. This option can be used with `stripIgnoredCharacters` to remove whitespace from queries.
 
-```
-const customPrinter = (ast: ASTNode, originalPrint: typeof print) => {
-  return stripIgnoredCharacters(originalPrint(ast));
-};
+```js
+import { stripIgnoredCharacters } from 'graphql';
 
-const httpLink = new HttpLink({ uri: '/graphql', print: customPrinter });
-
+const httpLink = new HttpLink({
+  uri: '/graphql',
+  print: (ast, originalPrint) => stripIgnoredCharacters(originalPrint(ast)),
+});
 ```
 
 By default the bare [GraphQL `print` function](https://graphql.org/graphql-js/language/#print) is used.

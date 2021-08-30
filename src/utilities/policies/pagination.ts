@@ -95,8 +95,7 @@ export function relayStylePagination<TNode = Reference>(
     keyArgs,
 
     read(existing, { canRead, readField }) {
-      if (existing === undefined) return undefined;
-      if (existing === null) return null;
+      if (!existing) return existing;
 
       const edges: TRelayEdge<TNode>[] = [];
       let firstEdgeCursor = "";
@@ -134,13 +133,15 @@ export function relayStylePagination<TNode = Reference>(
       };
     },
 
-    merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
-      if (incoming === null) {
-        return null
+    merge(existing, incoming, { args, isReference, readField }) {
+      if (!existing) {
+        existing = makeEmptyData();
       }
-      if (existing === null) {
-        existing = makeEmptyData()
+
+      if (!incoming) {
+        return existing;
       }
+
       const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
         if (isReference(edge = { ...edge })) {
           // In case edge is a Reference, we read out its cursor field and

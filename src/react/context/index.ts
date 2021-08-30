@@ -1,5 +1,4 @@
-import { checkDEV } from "../../utilities";
-checkDEV();
+import '../../utilities/globals';
 
 export { ApolloConsumer, ApolloConsumerProps } from './ApolloConsumer';
 export {

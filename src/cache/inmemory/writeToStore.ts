@@ -1,5 +1,6 @@
+import { invariant, InvariantError } from '../../utilities/globals';
+
 import { SelectionSetNode, FieldNode, SelectionNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
 import {

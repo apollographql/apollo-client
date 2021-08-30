@@ -323,7 +323,6 @@ Array [
   "buildQueryFromSelectionSet",
   "canUseWeakMap",
   "canUseWeakSet",
-  "checkDEV",
   "checkDocument",
   "cloneDeep",
   "compact",
@@ -371,5 +370,16 @@ Array [
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "valueToObjectRepresentation",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
+Array [
+  "DEV",
+  "InvariantError",
+  "checkDEV",
+  "global",
+  "invariant",
+  "maybe",
 ]
 `;

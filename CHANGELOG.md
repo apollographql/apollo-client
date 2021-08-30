@@ -40,12 +40,23 @@
 - Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
 
-## Apollo Client 3.4.10 (not yet released)
+## Apollo Client 3.4.10
 
 ### Improvements
 
 - Warn when calling `refetch({ variables })` instead of `refetch(variables)`, except for queries that declare a variable named `$variables` (uncommon). <br/>
   [@benjamn](https://github.com/benjamn) in [#8702](https://github.com/apollographql/apollo-client/pull/8702)
+
+### Bug Fixes
+
+- Fix `ObservableQuery.getCurrentResult()` returning cached `data` with certain fetch policies. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8718](https://github.com/apollographql/apollo-client/pull/8718)
+
+- Prevent `ssrMode`/`ssrForceFetchDelay` from causing queries to hang. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8709](https://github.com/apollographql/apollo-client/pull/8709)
+
+- Import `@apollo/client/utilities/globals` internally wherever `__DEV__` is used, not just in `@apollo/client/**/index.js` entry points. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8720](https://github.com/apollographql/apollo-client/pull/8720)
 
 ## Apollo Client 3.4.9
 

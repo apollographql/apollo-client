@@ -1,10 +1,11 @@
+import { invariant } from '../../utilities/globals';
+
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
 import { DocumentNode } from 'graphql';
 import { OptimisticWrapperFunction, wrap } from 'optimism';
 import { equal } from '@wry/equality';
-import { invariant } from 'ts-invariant';
 
 import { ApolloCache } from '../core/cache';
 import { Cache } from '../core/types/Cache';

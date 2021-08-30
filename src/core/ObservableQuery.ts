@@ -1,4 +1,5 @@
-import { invariant } from 'ts-invariant';
+import { invariant } from '../utilities/globals';
+
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -207,21 +208,35 @@ export class ObservableQuery<
       networkStatus,
     } as ApolloQueryResult<TData>;
 
-    // If this.options.query has @client(always: true) fields, we cannot trust
-    // diff.result, since it was read from the cache without running local
-    // resolvers (and it's too late to run resolvers now, since we must return a
-    // result synchronously).
-    if (!this.queryManager.transform(this.options.query).hasForcedResolvers) {
+    const { fetchPolicy = "cache-first" } = this.options;
+    // The presence of lastResult means a result has been received and
+    // this.options.variables haven't changed since then, so its absence means
+    // either there hasn't been a result yet (so these policies definitely
+    // should skip the cache) or there's been a result but it was for different
+    // variables (again, skipping the cache seems right).
+    const shouldReturnCachedData = lastResult || (
+      fetchPolicy !== 'network-only' &&
+      fetchPolicy !== 'no-cache' &&
+      fetchPolicy !== 'standby'
+    );
+    if (
+      shouldReturnCachedData &&
+      // If this.options.query has @client(always: true) fields, we cannot
+      // trust diff.result, since it was read from the cache without running
+      // local resolvers (and it's too late to run resolvers now, since we must
+      // return a result synchronously).
+      !this.queryManager.transform(this.options.query).hasForcedResolvers
+    ) {
       const diff = this.queryInfo.getDiff();
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
       }
+
       if (equal(result.data, {})) {
         result.data = void 0 as any;
       }
 
-      const { fetchPolicy = "cache-first" } = this.options;
       if (diff.complete) {
         // If the diff is complete, and we're using a FetchPolicy that
         // terminates after a complete cache read, we can assume the next

@@ -1,5 +1,4 @@
-import { checkDEV } from "../../utilities";
-checkDEV();
+import '../../utilities/globals';
 
 export { empty } from './empty';
 export { from } from './from';

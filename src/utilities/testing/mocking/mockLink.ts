@@ -1,6 +1,7 @@
+import { invariant } from '../../globals';
+
 import { print } from 'graphql';
 import { equal } from '@wry/equality';
-import { invariant } from 'ts-invariant';
 
 import {
   ApolloLink,

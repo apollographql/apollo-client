@@ -1,4 +1,4 @@
-import { InvariantError } from 'ts-invariant';
+import { InvariantError } from '../../utilities/globals';
 
 export const checkFetcher = (fetcher: WindowOrWorkerGlobalScope['fetch'] | undefined) => {
   if (!fetcher && typeof fetch === 'undefined') {

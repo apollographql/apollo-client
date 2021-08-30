@@ -1,10 +1,11 @@
+import { invariant, InvariantError } from '../../utilities/globals';
+
 import {
   DocumentNode,
   FieldNode,
   SelectionSetNode,
 } from 'graphql';
 import { wrap, OptimisticWrapperFunction } from 'optimism';
-import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   isField,

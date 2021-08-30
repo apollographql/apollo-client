@@ -1,3 +1,5 @@
+import { invariant, InvariantError } from '../../utilities/globals';
+
 import {
   InlineFragmentNode,
   FragmentDefinitionNode,
@@ -6,7 +8,6 @@ import {
 } from 'graphql';
 
 import { Trie } from '@wry/trie';
-import { invariant, InvariantError } from 'ts-invariant';
 
 import {
   FragmentMap,

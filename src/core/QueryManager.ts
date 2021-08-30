@@ -1,5 +1,6 @@
+import { invariant, InvariantError } from '../utilities/globals';
+
 import { DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';

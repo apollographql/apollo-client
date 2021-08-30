@@ -7,7 +7,30 @@ eachFile(distDir, (file, relPath) => new Promise((resolve, reject) => {
   fs.readFile(file, "utf8", (error, source) => {
     if (error) return reject(error);
 
-    const output = new Transformer().transform(source, file);
+    const tr = new Transformer;
+    const output = tr.transform(source, file);
+
+    if (
+      /\b__DEV__\b/.test(source) &&
+      // Ignore modules that reside within @apollo/client/utilities/globals.
+      !relPath.startsWith("utilities/globals/")
+    ) {
+      let importsUtilitiesGlobals = false;
+
+      tr.absolutePaths.forEach(absPath => {
+        const distRelativePath =
+          path.relative(distDir, absPath).split(path.sep).join("/");
+        if (distRelativePath === "utilities/globals/index.js") {
+          importsUtilitiesGlobals = true;
+        }
+      });
+
+      if (!importsUtilitiesGlobals) {
+        reject(new Error(`Module ${
+          relPath
+        } uses __DEV__ but does not import @apollo/client/utilities/globals`));
+      }
+    }
 
     if (source === output) {
       resolve(file);
@@ -24,6 +47,8 @@ const n = recast.types.namedTypes;
 type Node = recast.types.namedTypes.Node;
 
 class Transformer {
+  absolutePaths = new Set<string>();
+
   transform(code: string, file: string) {
     const ast = reparse(code);
     const transformer = this;
@@ -103,6 +128,7 @@ class Transformer {
         } : pkg;
       },
     });
+    this.absolutePaths.add(absPath);
     const relPath = path.relative(basedir, absPath);
     const relId = relPath.split(path.sep).join('/');
     return this.isRelative(relId) ? relId : "./" + relId;

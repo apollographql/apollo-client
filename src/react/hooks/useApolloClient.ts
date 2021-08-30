@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant';
+import { invariant } from '../../utilities/globals';
 import { useContext } from 'react';
 import { ApolloClient } from '../../core';
 import { getApolloContext } from '../context';

@@ -149,7 +149,7 @@ export function useQuery<
 
   // An effect to subscribe to the current observable query
   useEffect(() => {
-    if (context.renderPromises || client.disableNetworkFetches) {
+    if (context.renderPromises) {
       return;
     }
 

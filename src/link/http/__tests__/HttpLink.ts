@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
-import { print } from 'graphql';
+import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 
 import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
@@ -883,6 +883,31 @@ describe('HttpLink', () => {
           }));
         },
       }));
+    });
+
+    it('uses the print option function when defined', done => {
+      const customPrinter = jest.fn(
+        (ast: ASTNode, originalPrint: typeof print) => {
+          return stripIgnoredCharacters(originalPrint(ast));
+        }
+      );
+
+      const httpLink = createHttpLink({ uri: 'data', print: customPrinter });
+
+      execute(httpLink, {
+        query: sampleQuery,
+        context: {
+          fetchOptions: { method: 'GET' },
+        },
+      }).subscribe(
+        makeCallback(done, () => {
+          expect(customPrinter).toHaveBeenCalledTimes(1);
+          const [uri] = fetchMock.lastCall()!;
+          expect(uri).toBe(
+            '/data?query=query%20SampleQuery%7Bstub%7Bid%7D%7D&operationName=SampleQuery&variables=%7B%7D',
+          );
+        }),
+      );
     });
 
     it('prioritizes context over setup', done => {

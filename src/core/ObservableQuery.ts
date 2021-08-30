@@ -209,26 +209,21 @@ export class ObservableQuery<
     } as ApolloQueryResult<TData>;
 
     const { fetchPolicy = "cache-first" } = this.options;
-    // The presence of lastResult means a result has been received and
-    // this.options.variables haven't changed since then, so its absence means
-    // either there hasn't been a result yet (so these policies definitely
-    // should skip the cache) or there's been a result but it was for different
-    // variables (again, skipping the cache seems right).
-    const shouldReturnCachedData = lastResult || (
-      fetchPolicy !== 'network-only' &&
-      fetchPolicy !== 'no-cache' &&
-      fetchPolicy !== 'standby'
-    );
+    const diff = this.queryInfo.getDiff();
     if (
-      shouldReturnCachedData &&
+      // These fetch policies should never deliver data from the cache, unless
+      // redelivering a previously delivered result.
+      fetchPolicy === 'network-only' ||
+      fetchPolicy === 'no-cache' ||
+      fetchPolicy === 'standby' ||
       // If this.options.query has @client(always: true) fields, we cannot
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
-      !this.queryManager.transform(this.options.query).hasForcedResolvers
+      this.queryManager.transform(this.options.query).hasForcedResolvers
     ) {
-      const diff = this.queryInfo.getDiff();
-
+      // Fall through.
+    } else {
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
       }
@@ -237,22 +232,17 @@ export class ObservableQuery<
         result.data = void 0 as any;
       }
 
-      if (diff.complete) {
-        // If the diff is complete, and we're using a FetchPolicy that
-        // terminates after a complete cache read, we can assume the next
-        // result we receive will have NetworkStatus.ready and !loading.
-        if (result.networkStatus === NetworkStatus.loading &&
-            (fetchPolicy === 'cache-first' ||
-             fetchPolicy === 'cache-only')) {
-          result.networkStatus = NetworkStatus.ready;
-          result.loading = false;
-        }
-        delete result.partial;
-      } else if (fetchPolicy !== "no-cache") {
-        // Since result.partial comes from diff.complete, and we shouldn't be
-        // using cache data to provide a DiffResult when the fetchPolicy is
-        // "no-cache", avoid annotating result.partial for "no-cache" results.
-        result.partial = true;
+      // If the diff is complete, and we're using a FetchPolicy that terminates
+      // after a complete cache read, we can assume the next result we receive
+      // will have NetworkStatus.ready and !loading.
+      if (
+        diff.complete &&
+        result.networkStatus === NetworkStatus.loading &&
+        (fetchPolicy === 'cache-first' ||
+         fetchPolicy === 'cache-only')
+      ) {
+        result.networkStatus = NetworkStatus.ready;
+        result.loading = false;
       }
 
       if (
@@ -265,6 +255,17 @@ export class ObservableQuery<
       ) {
         logMissingFieldErrors(diff.missing);
       }
+    }
+
+    if (diff.complete) {
+      // Similar to setting result.partial to false, but taking advantage of the
+      // falsiness of missing fields.
+      delete result.partial;
+    } else if (fetchPolicy !== 'no-cache') {
+      // Since result.partial comes from diff.complete, and we shouldn't be
+      // using cache data to provide a DiffResult when the fetchPolicy is
+      // "no-cache", avoid annotating result.partial for "no-cache" results.
+      result.partial = true;
     }
 
     if (saveAsLastResult) {

@@ -155,7 +155,7 @@ const client = new ApolloClient({
     typePolicies: {
       Query: {
         fields: {
-          book {
+          book: {
             read(_, { args, toReference }) {
               return toReference({
                 __typename: 'Book',

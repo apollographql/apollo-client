@@ -186,6 +186,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
+  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]

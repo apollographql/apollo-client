@@ -1,4 +1,6 @@
+/* eslint-disable no-unused-vars */
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useSyncExternalStore } from 'use-sync-external-store';
 import { equal } from '@wry/equality';
 import { OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
@@ -19,6 +21,7 @@ import {
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 
+console.log(useSyncExternalStore);
 export function useQuery<
   TData = any,
   TVariables = OperationVariables,

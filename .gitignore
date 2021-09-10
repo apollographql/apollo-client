@@ -56,3 +56,6 @@ docs/public/*
 junit.xml
 
 .rpt2_cache
+
+# Local Netlify folder
+.netlify

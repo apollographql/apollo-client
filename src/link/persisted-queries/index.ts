@@ -27,7 +27,7 @@ export interface ErrorResponse {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
-namespace PersistedQueryLink {
+export namespace PersistedQueryLink {
   interface BaseOptions {
     disable?: (error: ErrorResponse) => boolean;
     useGETForHashedQueries?: boolean;

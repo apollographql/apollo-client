@@ -8,3 +8,7 @@
   PREFIX_PATHS = "true"
 [context.branch-deploy.environment]
   PREFIX_PATHS = "true"
+[dev]
+  command = "npm run build"
+[context.dev.environment]
+  SKIP_INDEXING = "false"

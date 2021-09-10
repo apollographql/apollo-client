@@ -22,9 +22,9 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 ## Maintainers
 
 - [@benjamn](https://github.com/benjamn) (Apollo)
-- [@hwillson](https://github.com/hwillson) (Apollo)
-- [@jcreighton](https://github.com/jcreighton) (Apollo)
 - [@brainkim](https://github.com/brainkim) (Apollo)
+- [@jcreighton](https://github.com/jcreighton) (Netflix)
+- [@hwillson](https://github.com/hwillson) (Apollo)
 
 ## Who is Apollo?
 

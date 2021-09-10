@@ -326,7 +326,7 @@ addTodo({
 })
 ```
 
-If `ReallyImportantQuery` was already going to be passed to `onQueryUpdated` thanks of your `update` function, then it will only be passed once. Using `refetchQueries: ["ReallyImportantQuery"]` just guarantees the query will be included.
+If `ReallyImportantQuery` was already going to be passed to `onQueryUpdated` thanks to your `update` function, then it will only be passed once. Using `refetchQueries: ["ReallyImportantQuery"]` just guarantees the query will be included.
 
 If you find you've included more queries than you expected, you can skip or ignore a query by returning `false` from `onQueryUpdated`, after examining the `ObservableQuery` to determine that it doesn't need refetching. Returning a `Promise` from `onQueryUpdated` causes the final `Promise<FetchResult<TData>>` for the mutation to await any promises returned from `onQueryUpdated`, eliminating the need for the legacy `awaitRefetchQueries: true` option.
 

@@ -45,6 +45,11 @@
 
 ## Apollo Client 3.4.11 (not yet released)
 
+### Improvements
+
+- Make `@apollo/client/testing` a fully-fledged, independent entry point, instead of re-exporting `@apollo/client/utilities/testing` (which was never an entry point and no longer exists). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8769](https://github.com/apollographql/apollo-client/pull/8769)
+
 ### Bug Fixes
 
 - Fix [Vite](https://vitejs.dev) tree-shaking by calling the `checkDEV()` function (at least once) in the module that exports it, `@apollo/client/utilities/globals/index.ts`. <br/>

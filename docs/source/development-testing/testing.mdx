@@ -69,7 +69,7 @@ it('renders without error', () => {
   const component = TestRenderer.create(
     <MockedProvider mocks={mocks} addTypename={false}>
       <Dog name="Buck" />
-    </MockedProvider>,
+    </MockedProvider>
   );
 
   const tree = component.toJSON();
@@ -87,15 +87,15 @@ const mocks = [
     request: {
       query: GET_DOG_QUERY,
       variables: {
-        name: 'Buck',
+        name: 'Buck'
       },
     },
     result: {
       data: {
-        dog: { id: '1', name: 'Buck', breed: 'bulldog' },
-      },
-    },
-  },
+        dog: { id: '1', name: 'Buck', breed: 'bulldog' }
+      }
+    }
+  }
 ];
 ```
 
@@ -111,10 +111,10 @@ result: () => {
 
   return {
     data: {
-      dog: { id: '1', name: 'Buck', breed: 'bulldog' },
-    },
+      dog: { id: '1', name: 'Buck', breed: 'bulldog' }
+    }
   }
-},
+}
 ```
 
 Combining our code above, we get the following complete test:
@@ -136,17 +136,17 @@ const mocks = [
     },
     result: {
       data: {
-        dog: { id: '1', name: 'Buck', breed: 'bulldog' },
-      },
-    },
-  },
+        dog: { id: '1', name: 'Buck', breed: 'bulldog' }
+      }
+    }
+  }
 ];
 
 it('renders without error', () => {
   const component = TestRenderer.create(
     <MockedProvider mocks={mocks} addTypename={false}>
       <Dog name="Buck" />
-    </MockedProvider>,
+    </MockedProvider>
   );
 
   const tree = component.toJSON();
@@ -186,14 +186,14 @@ it('should render dog', async () => {
       variables: { name: 'Buck' },
     },
     result: {
-      data: { dog: { id: 1, name: 'Buck', breed: 'poodle' } },
-    },
+      data: { dog: { id: 1, name: 'Buck', breed: 'poodle' } }
+    }
   };
 
   const component = TestRenderer.create(
     <MockedProvider mocks={[dogMock]} addTypename={false}>
       <Dog name="Buck" />
-    </MockedProvider>,
+    </MockedProvider>
   );
 
   await new Promise(resolve => setTimeout(resolve, 0)); // highlight-line
@@ -223,15 +223,15 @@ it('should show error UI', async () => {
   const dogMock = {
     request: {
       query: GET_DOG_QUERY,
-      variables: { name: 'Buck' },
+      variables: { name: 'Buck' }
     },
-    error: new Error('An error occurred'),
+    error: new Error('An error occurred')
   };
 
   const component = TestRenderer.create(
     <MockedProvider mocks={[dogMock]} addTypename={false}>
       <Dog name="Buck" />
-    </MockedProvider>,
+    </MockedProvider>
   );
 
   await new Promise(resolve => setTimeout(resolve, 0)); // wait for response
@@ -251,8 +251,8 @@ To simulate GraphQL errors, you define an `errors` field _inside_ a mock's `resu
 const dogMock = {
   // ...
   result: {
-    errors: [new GraphQLError('Error!')],
-  },
+    errors: [new GraphQLError('Error!')]
+  }
 };
 ```
 
@@ -303,7 +303,7 @@ it('should render without error', () => {
   TestRenderer.create(
     <MockedProvider mocks={[]}>
       <DeleteButton />
-    </MockedProvider>,
+    </MockedProvider>
   );
 });
 ```
@@ -319,16 +319,16 @@ it('should render loading state initially', () => {
     {
       request: {
         query: DELETE_DOG_MUTATION,
-        variables: { name: 'Buck' },
+        variables: { name: 'Buck' }
       },
-      result: { data: { deleteDog } },
-    },
+      result: { data: { deleteDog } }
+    }
   ];
 
   const component = TestRenderer.create(
     <MockedProvider mocks={mocks} addTypename={false}>
       <DeleteButton />
-    </MockedProvider>,
+    </MockedProvider>
   );
 
   // find the button and simulate a click
@@ -359,16 +359,16 @@ it('should delete and give visual feedback', async () => {
     {
       request: {
         query: DELETE_DOG_MUTATION,
-        variables: { name: 'Buck' },
+        variables: { name: 'Buck' }
       },
-      result: { data: { deleteDog } },
-    },
+      result: { data: { deleteDog } }
+    }
   ];
 
   const component = TestRenderer.create(
     <MockedProvider mocks={mocks} addTypename={false}>
       <DeleteButton />
-    </MockedProvider>,
+    </MockedProvider>
   );
 
   // find the button and simulate a click
@@ -399,7 +399,7 @@ const cache = new InMemoryCache({
 
 <MockedProvider mocks={mocks} cache={cache}>
   <DeleteButton />
-</MockedProvider>,
+</MockedProvider>
 ```
 
 The following sample specifies `possibleTypes` and `typePolicies` in its cache configuration, both of which must also be specified in relevant tests to prevent unexpected behavior.

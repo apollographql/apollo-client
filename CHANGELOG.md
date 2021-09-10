@@ -1,9 +1,19 @@
-## Apollo Client 3.4.11 (not yet released)
+## Apollo Client 3.4.11
 
 ### Bug Fixes
 
 - Fix [Vite](https://vitejs.dev) tree-shaking by calling the `checkDEV()` function (at least once) in the module that exports it, `@apollo/client/utilities/globals/index.ts`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8767](https://github.com/apollographql/apollo-client/pull/8767)
+
+### Improvements
+
+- Export `PersistedQueryLink` namespace from `@apollo/client/link/persisted-queries`. <br/>
+  [@vedrani](https://github.com/vedrani) in [#8761](https://github.com/apollographql/apollo-client/pull/8761)
+
+### Documentation
+
+- Upgrade docs theme for new Algolia-powered search experience. <br/>
+  [@trevorblades](https://github.com/trevorblades) in [#8768](https://github.com/apollographql/apollo-client/pull/8768)
 
 ## Apollo Client 3.4.10
 

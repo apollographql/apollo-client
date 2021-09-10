@@ -19,3 +19,7 @@ removeTemporaryGlobals();
 export { maybe } from "./maybe";
 export { default as global } from "./global";
 export { invariant, InvariantError }
+
+// Ensure __DEV__ was properly initialized, and prevent tree-shaking bundlers
+// from mistakenly pruning the ./DEV module (see issue #8674).
+checkDEV();

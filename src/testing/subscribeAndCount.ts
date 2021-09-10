@@ -1,7 +1,5 @@
-import { ObservableQuery } from '../../core/ObservableQuery';
-import { ApolloQueryResult, OperationVariables } from '../../core/types';
-import { ObservableSubscription } from '../../utilities/observables/Observable';
-import { asyncMap } from '../../utilities/observables/asyncMap';
+import { ObservableQuery, ApolloQueryResult, OperationVariables } from '../core';
+import { ObservableSubscription, asyncMap } from '../utilities';
 
 export default function subscribeAndCount<
   TData,

@@ -5,7 +5,7 @@ import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 // mocks
 import {
   MockSubscriptionLink
-} from '../../../utilities/testing/mocking/mockSubscriptionLink';
+} from '../../../testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';

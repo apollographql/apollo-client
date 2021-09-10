@@ -18,7 +18,7 @@ import {
 } from '../../../utilities/graphql/storeUtils';
 import { addTypenameToDocument } from '../../../utilities/graphql/transform';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { itAsync } from '../../../utilities/testing/itAsync';
+import { itAsync } from '../../../testing/itAsync';
 import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';

@@ -6,7 +6,7 @@ import { ApolloLink } from '../../../link/core';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 
 // mocks
-import { MockSubscriptionLink } from '../../../utilities/testing/mocking/mockSubscriptionLink';
+import { MockSubscriptionLink } from '../../../testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';

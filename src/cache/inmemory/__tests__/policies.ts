@@ -5,9 +5,9 @@ import { ReactiveVar, makeVar } from "../reactiveVars";
 import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
-import { MockLink } from '../../../utilities/testing/mocking/mockLink';
-import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
-import { itAsync } from '../../../utilities/testing/itAsync';
+import { MockLink } from '../../../testing/mocking/mockLink';
+import subscribeAndCount from '../../../testing/subscribeAndCount';
+import { itAsync } from '../../../testing/itAsync';
 import { FieldPolicy, StorageType } from "../policies";
 import { withErrorSpy, withWarningSpy } from "../../../testing";
 

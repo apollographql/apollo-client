@@ -6,9 +6,9 @@ import { itAsync } from '../../itAsync';
 import { MockedProvider } from '../MockedProvider';
 import { MockedResponse, MockLink } from '../mockLink';
 import { DocumentNode } from 'graphql';
-import { useQuery } from '../../../../react/hooks/useQuery';
-import { InMemoryCache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloLink } from '../../../../link/core';
+import { useQuery } from '../../../react/hooks';
+import { InMemoryCache } from '../../../cache';
+import { ApolloLink } from '../../../link/core';
 
 const variables = {
   username: 'mock_username'

@@ -9,7 +9,7 @@ import gql from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 import {
   MockSubscriptionLink
-} from '../../../utilities/testing/mocking/mockSubscriptionLink';
+} from '../../../testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';

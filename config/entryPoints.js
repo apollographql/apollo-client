@@ -21,9 +21,9 @@ const entryPoints = [
   { dirs: ['react', 'hooks'] },
   { dirs: ['react', 'parser'] },
   { dirs: ['react', 'ssr'] },
+  { dirs: ['testing'], extensions: [".js", ".jsx"] },
   { dirs: ['utilities'] },
   { dirs: ['utilities', 'globals'], sideEffects: true },
-  { dirs: ['testing'], extensions: [".js", ".jsx"] },
 ];
 
 const lookupTrie = Object.create(null);

@@ -12,9 +12,9 @@ import { InMemoryCache, NormalizedCacheObject } from '../../cache';
 import { ApolloError } from '../../errors';
 
 import { itAsync, mockSingleLink, subscribeAndCount } from '../../testing';
-import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
-import mockWatchQuery from '../../utilities/testing/mocking/mockWatchQuery';
-import wrap from '../../utilities/testing/wrap';
+import mockQueryManager from '../../testing/mocking/mockQueryManager';
+import mockWatchQuery from '../../testing/mocking/mockWatchQuery';
+import wrap from '../../testing/wrap';
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchQueryObservable = queryManager.fetchQueryObservable;

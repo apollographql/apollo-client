@@ -3,9 +3,7 @@ import gql from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 
 // mocks
-import {
-  MockSubscriptionLink
-} from '../../../testing/mocking/mockSubscriptionLink';
+import { MockSubscriptionLink } from '../../../testing/core';
 
 // core
 import { QueryManager } from '../../QueryManager';

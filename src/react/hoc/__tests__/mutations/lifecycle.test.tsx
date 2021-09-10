@@ -3,7 +3,7 @@ import { render, cleanup } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { ApolloProvider } from '../../../context/ApolloProvider';
-import { createMockClient } from '../../../../testing/mocking/mockClient';
+import { createMockClient } from '../../../../testing/core';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 

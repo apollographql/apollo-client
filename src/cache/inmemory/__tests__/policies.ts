@@ -5,11 +5,14 @@ import { ReactiveVar, makeVar } from "../reactiveVars";
 import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
-import { MockLink } from '../../../testing/mocking/mockLink';
-import subscribeAndCount from '../../../testing/subscribeAndCount';
-import { itAsync } from '../../../testing/itAsync';
 import { FieldPolicy, StorageType } from "../policies";
-import { withErrorSpy, withWarningSpy } from "../../../testing";
+import {
+  itAsync,
+  withErrorSpy,
+  withWarningSpy,
+  subscribeAndCount,
+  MockLink,
+} from "../../../testing/core";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");

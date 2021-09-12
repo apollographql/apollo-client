@@ -248,7 +248,7 @@ export interface MutationBaseOptions<
    * This function will be called twice over the lifecycle of a mutation. Once
    * at the very beginning if an `optimisticResponse` was provided. The writes
    * created from the optimistic data will be rolled back before the second time
-   * this function is called which is when the mutation has succesfully
+   * this function is called which is when the mutation has successfully
    * resolved. At that point `update` will be called with the *actual* mutation
    * result and those writes will not be rolled back.
    *
@@ -281,7 +281,7 @@ export interface MutationBaseOptions<
    * The context to be passed to the link execution chain. This context will
    * only be used with this mutation. It will not be used with
    * `refetchQueries`. Refetched queries use the context they were
-   * initialized with (since the intitial context is stored as part of the
+   * initialized with (since the initial context is stored as part of the
    * `ObservableQuery` instance). If a specific context is needed when
    * refetching queries, make sure it is configured (via the
    * [query `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))

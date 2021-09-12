@@ -87,7 +87,7 @@ describe('@client @export tests', () => {
 
   it(
     'should store the @client field value in the specified @export ' +
-      'variable, and make it avilable to a subsequent resolver',
+      'variable, and make it available to a subsequent resolver',
     done => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {

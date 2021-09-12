@@ -192,7 +192,7 @@ describe('AST utility functions', () => {
   });
 
   it('should throw if type definitions found in document', () => {
-    const queryWithTypeDefination = gql`
+    const queryWithTypeDefinition = gql`
       fragment authorDetails on Author {
         firstName
         lastName
@@ -209,7 +209,7 @@ describe('AST utility functions', () => {
       }
     `;
     expect(() => {
-      getQueryDefinition(queryWithTypeDefination);
+      getQueryDefinition(queryWithTypeDefinition);
     }).toThrowError(
       'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"',
     );

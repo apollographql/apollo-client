@@ -27,6 +27,9 @@
 - The `HttpLink` constructor now accepts an optional `print` function that can be used to customize how GraphQL `DocumentNode` objects are transformed back into strings before they are sent over the network. <br/>
   [@sarahgp](https://github.com/sarahgp) in [#8699](https://github.com/apollographql/apollo-client/pull/8699)
 
+- Make `@apollo/client/testing` a fully-fledged, independent entry point, instead of re-exporting `@apollo/client/utilities/testing` (which was never an entry point and no longer exists). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8769](https://github.com/apollographql/apollo-client/pull/8769)
+
 - A new nested entry point called `@apollo/client/testing/core` has been created. Importing from this entry point instead of `@apollo/client/testing` excludes any React-related dependencies. <br/>
   [@wassim-k](https://github.com/wassim-k) in [#8687](https://github.com/apollographql/apollo-client/pull/8687)
 
@@ -46,17 +49,22 @@
 - Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
 
-## Apollo Client 3.4.11 (not yet released)
-
-### Improvements
-
-- Make `@apollo/client/testing` a fully-fledged, independent entry point, instead of re-exporting `@apollo/client/utilities/testing` (which was never an entry point and no longer exists). <br/>
-  [@benjamn](https://github.com/benjamn) in [#8769](https://github.com/apollographql/apollo-client/pull/8769)
+## Apollo Client 3.4.11
 
 ### Bug Fixes
 
 - Fix [Vite](https://vitejs.dev) tree-shaking by calling the `checkDEV()` function (at least once) in the module that exports it, `@apollo/client/utilities/globals/index.ts`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8767](https://github.com/apollographql/apollo-client/pull/8767)
+
+### Improvements
+
+- Export `PersistedQueryLink` namespace from `@apollo/client/link/persisted-queries`. <br/>
+  [@vedrani](https://github.com/vedrani) in [#8761](https://github.com/apollographql/apollo-client/pull/8761)
+
+### Documentation
+
+- Upgrade docs theme for new Algolia-powered search experience. <br/>
+  [@trevorblades](https://github.com/trevorblades) in [#8768](https://github.com/apollographql/apollo-client/pull/8768)
 
 ## Apollo Client 3.4.10
 

@@ -363,8 +363,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public reset(): Promise<void> {
     this.init();
-    this.broadcastWatches();
+
+    // Similar to what happens in the unsubscribe function returned by
+    // cache.watch, applied to all current watches.
+    this.watches.forEach(watch => this.maybeBroadcastWatch.forget(watch));
+    this.watches.clear();
+    forgetCache(this);
+
     canonicalStringify.reset();
+
     return Promise.resolve();
   }
 

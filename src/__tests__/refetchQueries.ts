@@ -1,6 +1,6 @@
 import { Subscription } from "zen-observable-ts";
 
-import { itAsync } from '../testing/itAsync';
+import { itAsync } from '../testing';
 import {
   ApolloClient,
   ApolloLink,

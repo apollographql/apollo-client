@@ -6,15 +6,15 @@
 
 // externals
 import gql from 'graphql-tag';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import {
-  MockSubscriptionLink
-} from '../../../testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';
 import { ObservableQuery } from '../../ObservableQuery';
 import { ObservableSubscription } from '../../../utilities';
+import { InMemoryCache } from '../../../cache';
+
+// mocks
+import { MockSubscriptionLink } from '../../../testing/core';
 
 describe('Subscription lifecycles', () => {
   it('cleans up and reuses data like QueryRecycler wants', done => {

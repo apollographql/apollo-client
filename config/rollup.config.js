@@ -127,16 +127,7 @@ export default [
     './dist/index.js',
     './dist/apollo-client.cjs',
   ),
-  // The bundlesize check configured in package.json reflects the total size of
-  // @apollo/client/core (note the /core), rather than @apollo/client, which
-  // currently includes React-related exports that may not be used by all
-  // consumers. We are planning to confine those React exports to
-  // @apollo/client/react in AC4 (see issue #8190).
-  prepareCJS(
-    './dist/core/index.js',
-    './temp/bundlesize.cjs',
-  ),
   prepareCJSMinified(
-    './temp/bundlesize.cjs',
+    './dist/apollo-client.cjs',
   ),
 ];

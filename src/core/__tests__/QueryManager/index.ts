@@ -15,9 +15,9 @@ import {
 } from '../../../cache/inmemory/types';
 
 // mocks
-import mockQueryManager from '../../../utilities/testing/mocking/mockQueryManager';
-import mockWatchQuery from '../../../utilities/testing/mocking/mockWatchQuery';
-import { MockApolloLink, mockSingleLink } from '../../../utilities/testing/mocking/mockLink';
+import mockQueryManager from '../../../testing/mocking/mockQueryManager';
+import mockWatchQuery from '../../../testing/mocking/mockWatchQuery';
+import { MockApolloLink, mockSingleLink } from '../../../testing/mocking/mockLink';
 
 // core
 import { ApolloQueryResult } from '../../types';
@@ -29,12 +29,12 @@ import { QueryManager } from '../../QueryManager';
 import { ApolloError } from '../../../errors';
 
 // testing utils
-import wrap from '../../../utilities/testing/wrap';
+import wrap from '../../../testing/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
-} from '../../../utilities/testing/observableToPromise';
-import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
-import { itAsync } from '../../../utilities/testing/itAsync';
+} from '../../../testing/observableToPromise';
+import subscribeAndCount from '../../../testing/subscribeAndCount';
+import { itAsync } from '../../../testing/itAsync';
 import { ApolloClient } from '../../../core'
 import { mockFetchQuery } from '../ObservableQuery';
 

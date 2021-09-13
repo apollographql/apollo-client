@@ -1,6 +1,5 @@
-import { ObservableQuery } from '../../core/ObservableQuery';
-import { ApolloQueryResult } from '../../core/types';
-import { ObservableSubscription } from '../../utilities/observables/Observable';
+import { ObservableQuery, ApolloQueryResult } from '../core';
+import { ObservableSubscription } from '../utilities';
 
 /**
  *

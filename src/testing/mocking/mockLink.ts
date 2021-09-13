@@ -1,4 +1,4 @@
-import { invariant } from '../../globals';
+import { invariant } from '../../utilities/globals';
 
 import { print } from 'graphql';
 import { equal } from '@wry/equality';
@@ -8,7 +8,7 @@ import {
   Operation,
   GraphQLRequest,
   FetchResult,
-} from '../../../link/core';
+} from '../../link/core';
 
 import {
   Observable,
@@ -17,7 +17,7 @@ import {
   removeConnectionDirectiveFromDocument,
   cloneDeep,
   stringifyForDisplay,
-} from '../../../utilities';
+} from '../../utilities';
 
 export type ResultFunction<T> = () => T;
 

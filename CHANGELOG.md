@@ -1,3 +1,10 @@
+## Apollo Client 3.4.12 (not yet released)
+
+### Bug Fixes
+
+- Improve handling of falsy `existing` and/or `incoming` parameters in `relayStylePagination` field policy helper function. <br/>
+  [@bubba](https://github.com/bubba) and [@benjamn](https://github.com/benjamn) in [#8733](https://github.com/apollographql/apollo-client/pull/8733)
+
 ## Apollo Client 3.4.11
 
 ### Bug Fixes

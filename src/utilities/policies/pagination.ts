@@ -80,9 +80,9 @@ export type TIncomingRelay<TNode> = {
 };
 
 export type RelayFieldPolicy<TNode> = FieldPolicy<
-  TExistingRelay<TNode>,
-  TIncomingRelay<TNode>,
-  TIncomingRelay<TNode>
+  TExistingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null
 >;
 
 // As proof of the flexibility of field policies, this function generates
@@ -95,7 +95,7 @@ export function relayStylePagination<TNode = Reference>(
     keyArgs,
 
     read(existing, { canRead, readField }) {
-      if (!existing) return;
+      if (!existing) return existing;
 
       const edges: TRelayEdge<TNode>[] = [];
       let firstEdgeCursor = "";
@@ -133,7 +133,15 @@ export function relayStylePagination<TNode = Reference>(
       };
     },
 
-    merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
+    merge(existing, incoming, { args, isReference, readField }) {
+      if (!existing) {
+        existing = makeEmptyData();
+      }
+
+      if (!incoming) {
+        return existing;
+      }
+
       const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
         if (isReference(edge = { ...edge })) {
           // In case edge is a Reference, we read out its cursor field and

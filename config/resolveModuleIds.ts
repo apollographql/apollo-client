@@ -13,7 +13,7 @@ eachFile(distDir, (file, relPath) => new Promise((resolve, reject) => {
     if (
       /\b__DEV__\b/.test(source) &&
       // Ignore modules that reside within @apollo/client/utilities/globals.
-      !relPath.startsWith("utilities/globals/")
+      !relPath.startsWith(`utilities${path.sep}globals${path.sep}`)
     ) {
       let importsUtilitiesGlobals = false;
 

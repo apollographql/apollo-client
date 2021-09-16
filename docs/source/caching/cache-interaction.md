@@ -279,10 +279,24 @@ const CommentsPageWithMutations = () => (
             variables: { repoFullName, commentContent },
             update: (store, { data: { submitComment } }) => {
               // Read the data from our cache for this query.
-              const data = store.readQuery({ query: CommentAppQuery });
+              //You can include (if any) query variables as the second param of readQuery 
+               const data = store.readQuery({ query: CommentAppQuery });
+               //deep copying your data to avoid errors as cache objects are immutabe
+               if(!data){
+                data={}
+              }
+              if(!data.comments){
+                data={
+                  ...data,
+                  comments:[]
+                }
+              }
+              
               // Add our comment from the mutation to the end.
-              data.comments.push(submitComment);
+              data.comments=[...data.comments,submitComment];
+              
               // Write our data back to the cache.
+              //notice: if you have any variables passed to the query while doing readQuery; you might want to pass the same variables here too!
               store.writeQuery({ query: CommentAppQuery, data });
             }
           })

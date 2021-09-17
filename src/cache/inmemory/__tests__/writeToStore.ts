@@ -2392,7 +2392,6 @@ describe('writing to the store', () => {
           merge(existing, incoming, { mergeObjects }) {
             const merged = mergeObjects(existing, incoming);
             merges.push({ existing, incoming, merged });
-            debugger;
             return merged;
           },
         },

@@ -49,6 +49,16 @@
 - Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
 
+## Apollo Client 3.4.12 (not yet released)
+
+### Bug Fixes
+
+- Improve handling of falsy `existing` and/or `incoming` parameters in `relayStylePagination` field policy helper function. <br/>
+  [@bubba](https://github.com/bubba) and [@benjamn](https://github.com/benjamn) in [#8733](https://github.com/apollographql/apollo-client/pull/8733)
+
+- Associate Apollo context with `React.createContext` (instead of using a local `WeakMap`) again, so multiple copies of `@apollo/client` (uncommon) can share the same context. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8798](https://github.com/apollographql/apollo-client/pull/8798)
+
 ## Apollo Client 3.4.11
 
 ### Bug Fixes

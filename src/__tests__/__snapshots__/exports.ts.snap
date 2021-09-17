@@ -340,6 +340,7 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",
   "checkDocument",

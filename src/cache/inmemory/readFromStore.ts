@@ -244,6 +244,12 @@ export class StoreReader {
         canonizeResults,
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         merge(a, b) {
+          // We use the same DeepMerger instance throughout the read, so any
+          // merged objects created during this read can be updated later in the
+          // read using in-place/destructive property assignments. Once the read
+          // is finished, these objects will be frozen, but in the meantime it's
+          // good for performance and memory usage if we avoid allocating a new
+          // object for every merged property.
           return merger.merge(a, b);
         },
       },

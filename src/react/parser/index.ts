@@ -37,7 +37,7 @@ export function operationName(type: DocumentType) {
   return name;
 }
 
-// This parser is mostly used to saftey check incoming documents.
+// This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
   const cached = cache.get(document);
   if (cached) return cached;

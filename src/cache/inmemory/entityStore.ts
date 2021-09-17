@@ -568,7 +568,7 @@ class CacheGroup {
         // so the result caching system would do well to "forget everything it
         // knows" about that object. To achieve that kind of invalidation, we
         // not only dirty the associated result cache entry, but also remove it
-        // completely from the dependency graph. For the optimism implmentation
+        // completely from the dependency graph. For the optimism implementation
         // details, see https://github.com/benjamn/optimism/pull/195.
         storeFieldName === "__exists" ? "forget" : "setDirty",
       );

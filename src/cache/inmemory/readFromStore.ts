@@ -111,7 +111,7 @@ function execSelectionSetKeyArgs(
 }
 
 export class StoreReader {
-  // cached version of executeSelectionset
+  // cached version of executeSelectionSet
   private executeSelectionSet: OptimisticWrapperFunction<
     [ExecSelectionSetOptions], // Actual arguments tuple type.
     ExecResult, // Actual return type.

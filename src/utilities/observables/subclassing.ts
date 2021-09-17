@@ -1,4 +1,5 @@
 import { Observable } from "./Observable";
+import { canUseSymbol } from "..";
 
 // Generic implementations of Observable.prototype methods like map and
 // filter need to know how to create a new Observable from an Observable
@@ -17,7 +18,7 @@ export function fixObservableSubclass<
     // can't assign to it with a normal assignment expression.
     Object.defineProperty(subclass, key, { value: Observable });
   }
-  if (typeof Symbol === "function" && Symbol.species) {
+  if (canUseSymbol && Symbol.species) {
     set(Symbol.species);
   }
   // The "@@species" string is used as a fake Symbol.species value in some

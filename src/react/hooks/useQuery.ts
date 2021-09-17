@@ -168,6 +168,7 @@ export function useQuery<
           } as ApolloQueryResult<TData>;
         }
 
+        result = { ...result, partial: undefined };
         previousResult = result;
       }
 
@@ -203,6 +204,7 @@ export function useQuery<
       }
     }
   }, [result]);
+
   if (options?.skip || options?.fetchPolicy === 'standby') {
     // When skipping a query (ie. we're not querying for data but still want to
     // render children), make sure the `data` is cleared out and `loading` is

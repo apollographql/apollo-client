@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals';
 
 import {
   DocumentNode,
@@ -22,7 +22,7 @@ import {
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-  mergeDeepArray,
+  DeepMerger,
   getFragmentFromSelection,
   maybeDeepFreeze,
   isNonNullObject,
@@ -38,7 +38,7 @@ import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityS
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
-import { MissingFieldError } from '../core/types/common';
+import { MissingFieldError, MissingTree } from '../core/types/common';
 import { canonicalStringify, ObjectCanon } from './object-canon';
 
 export type VariableMap = { [name: string]: any };
@@ -48,25 +48,14 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   canonizeResults: boolean;
   fragmentMap: FragmentMap;
-  path: (string | number)[];
+  // General-purpose deep-merge function for use during reads.
+  merge<T>(existing: T, incoming: T): T;
 };
 
 export type ExecResult<R = any> = {
   result: R;
-  missing?: MissingFieldError[];
+  missing?: MissingTree;
 };
-
-function missingFromInvariant(
-  err: InvariantError,
-  context: ReadContext,
-) {
-  return new MissingFieldError(
-    err.message,
-    context.path.slice(),
-    context.query,
-    context.variables,
-  );
-}
 
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
@@ -241,6 +230,7 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
+    const merger = new DeepMerger;
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: rootRef,
@@ -253,20 +243,39 @@ export class StoreReader {
         varString: canonicalStringify(variables),
         canonizeResults,
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        path: [],
+        merge(a, b) {
+          // We use the same DeepMerger instance throughout the read, so any
+          // merged objects created during this read can be updated later in the
+          // read using in-place/destructive property assignments. Once the read
+          // is finished, these objects will be frozen, but in the meantime it's
+          // good for performance and memory usage if we avoid allocating a new
+          // object for every merged property.
+          return merger.merge(a, b);
+        },
       },
     });
 
-    const hasMissingFields =
-      execResult.missing && execResult.missing.length > 0;
-    if (hasMissingFields && !returnPartialData) {
-      throw execResult.missing![0];
+    let missing: MissingFieldError[] | undefined;
+    if (execResult.missing) {
+      // For backwards compatibility we still report an array of
+      // MissingFieldError objects, even though there will only ever be at most
+      // one of them, now that all missing field error messages are grouped
+      // together in the execResult.missing tree.
+      missing = [new MissingFieldError(
+        firstMissing(execResult.missing)!,
+        execResult.missing,
+        query,
+        variables,
+      )];
+      if (!returnPartialData) {
+        throw missing[0];
+      }
     }
 
     return {
       result: execResult.result,
-      missing: execResult.missing,
-      complete: !hasMissingFields,
+      complete: !missing,
+      missing,
     };
   }
 
@@ -306,19 +315,15 @@ export class StoreReader {
         !context.store.has(objectOrReference.__ref)) {
       return {
         result: this.canon.empty,
-        missing: [missingFromInvariant(
-          new InvariantError(
-            `Dangling reference to missing ${objectOrReference.__ref} object`
-          ),
-          context,
-        )],
+        missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
       };
     }
 
     const { variables, policies, store } = context;
-    const objectsToMerge: { [key: string]: any }[] = [];
-    const finalResult: ExecResult = { result: null };
     const typename = store.getFieldValue<string>(objectOrReference, "__typename");
+
+    let result: any = {};
+    let missing: MissingTree | undefined;
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
@@ -326,15 +331,13 @@ export class StoreReader {
       // Ensure we always include a default value for the __typename
       // field, if we have one, and this.config.addTypename is true. Note
       // that this field can be overridden by other merged objects.
-      objectsToMerge.push({ __typename: typename });
+      result = { __typename: typename };
     }
 
-    function getMissing() {
-      return finalResult.missing || (finalResult.missing = []);
-    }
-
-    function handleMissing<T>(result: ExecResult<T>): T {
-      if (result.missing) getMissing().push(...result.missing);
+    function handleMissing<T>(result: ExecResult<T>, resultName: string): T {
+      if (result.missing) {
+        missing = context.merge(missing, { [resultName]: result.missing });
+      }
       return result.result;
     }
 
@@ -354,22 +357,18 @@ export class StoreReader {
         }, context);
 
         const resultName = resultKeyNameFromField(selection);
-        context.path.push(resultName);
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
-            getMissing().push(
-              missingFromInvariant(
-                new InvariantError(`Can't find field '${
-                  selection.name.value
-                }' on ${
-                  isReference(objectOrReference)
-                    ? objectOrReference.__ref + " object"
-                    : "object " + JSON.stringify(objectOrReference, null, 2)
-                }`),
-                context,
-              ),
-            );
+            missing = context.merge(missing, {
+              [resultName]: `Can't find field '${
+                selection.name.value
+              }' on ${
+                isReference(objectOrReference)
+                  ? objectOrReference.__ref + " object"
+                  : "object " + JSON.stringify(objectOrReference, null, 2)
+              }`
+            });
           }
 
         } else if (Array.isArray(fieldValue)) {
@@ -378,7 +377,7 @@ export class StoreReader {
             array: fieldValue,
             enclosingRef,
             context,
-          }));
+          }), resultName);
 
         } else if (!selection.selectionSet) {
           // If the field does not have a selection set, then we handle it
@@ -398,14 +397,12 @@ export class StoreReader {
             objectOrReference: fieldValue as StoreObject | Reference,
             enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
             context,
-          }));
+          }), resultName);
         }
 
         if (fieldValue !== void 0) {
-          objectsToMerge.push({ [resultName]: fieldValue });
+          result = context.merge(result, { [resultName]: fieldValue });
         }
-
-        invariant(context.path.pop() === resultName);
 
       } else {
         const fragment = getFragmentFromSelection(
@@ -419,20 +416,20 @@ export class StoreReader {
       }
     });
 
-    // Perform a single merge at the end so that we can avoid making more
-    // defensive shallow copies than necessary.
-    const merged = mergeDeepArray(objectsToMerge);
-    finalResult.result = context.canonizeResults
-      ? this.canon.admit(merged)
+    const finalResult: ExecResult = { result, missing };
+    const frozen = context.canonizeResults
+      ? this.canon.admit(finalResult)
       // Since this.canon is normally responsible for freezing results (only in
       // development), freeze them manually if canonization is disabled.
-      : maybeDeepFreeze(merged);
+      : maybeDeepFreeze(finalResult);
 
     // Store this result with its selection set so that we can quickly
     // recognize it again in the StoreReader#isFresh method.
-    this.knownResults.set(finalResult.result, selectionSet);
+    if (frozen.result) {
+      this.knownResults.set(frozen.result, selectionSet);
+    }
 
-    return finalResult;
+    return frozen;
   }
 
   // Uncached version of executeSubSelectedArray.
@@ -442,16 +439,12 @@ export class StoreReader {
     enclosingRef,
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
-    let missing: MissingFieldError[] | undefined;
+    let missing: MissingTree | undefined;
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
-        missing = missing || [];
-        missing.push(...childResult.missing);
+        missing = context.merge(missing, { [i]: childResult.missing });
       }
-
-      invariant(context.path.pop() === i);
-
       return childResult.result;
     }
 
@@ -464,8 +457,6 @@ export class StoreReader {
       if (item === null) {
         return null;
       }
-
-      context.path.push(i);
 
       // This is a nested array, recurse
       if (Array.isArray(item)) {
@@ -491,8 +482,6 @@ export class StoreReader {
         assertSelectionSetForIdValue(context.store, field, item);
       }
 
-      invariant(context.path.pop() === i);
-
       return item;
     });
 
@@ -500,6 +489,17 @@ export class StoreReader {
       result: context.canonizeResults ? this.canon.admit(array) : array,
       missing,
     };
+  }
+}
+
+function firstMissing(tree: MissingTree): string | undefined {
+  try {
+    JSON.stringify(tree, (_, value) => {
+      if (typeof value === "string") throw value;
+      return value;
+    });
+  } catch (result) {
+    return result;
   }
 }
 

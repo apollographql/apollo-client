@@ -1296,6 +1296,166 @@ describe('Cache', () => {
     );
   });
 
+  describe("cache.updateQuery and cache.updateFragment", () => {
+    it('should be batched', () => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Person: {
+            keyFields: ["name"],
+          },
+        },
+      });
+
+      type QueryData = {
+        me: {
+          __typename: string;
+          name: string;
+        },
+      };
+
+      const query: TypedDocumentNode<QueryData> = gql`query { me { name } }`;
+      const results: QueryData[] = [];
+
+      const cancel = cache.watch({
+        query,
+        optimistic: true,
+        callback(diff) {
+          results.push(diff.result!);
+        },
+      });
+
+      cache.updateQuery({ query }, data => {
+        expect(data).toBe(null);
+
+        cache.writeQuery({
+          query,
+          data: {
+            me: {
+              __typename: "Person",
+              name: "Ben",
+            },
+          },
+        });
+
+        return {
+          me: {
+            __typename: "Person",
+            name: "Ben Newman",
+          },
+        };
+      });
+
+      expect(results).toEqual([
+        { me: { __typename: "Person", name: "Ben Newman" }},
+      ]);
+
+      expect(cache.extract()).toEqual({
+        'Person:{"name":"Ben Newman"}': {
+          __typename: "Person",
+          name: "Ben Newman",
+        },
+        'Person:{"name":"Ben"}': {
+          __typename: "Person",
+          name: "Ben",
+        },
+        ROOT_QUERY: {
+          __typename: "Query",
+          me: {
+            __ref: 'Person:{"name":"Ben Newman"}',
+          },
+        },
+      });
+
+      const usernameFragment = gql`
+        fragment UsernameFragment on Person {
+          username
+        }
+      `;
+
+      const bnId = cache.identify({
+        __typename: "Person",
+        name: "Ben Newman",
+      });
+
+      cache.updateFragment({
+        id: bnId,
+        fragment: usernameFragment,
+        returnPartialData: true,
+      }, data => {
+        expect(data).toEqual({
+          __typename: "Person",
+        });
+
+        cache.writeQuery({
+          query,
+          data: {
+            me: {
+              __typename: "Person",
+              name: "Brian Kim",
+            },
+          },
+        });
+
+        cache.writeFragment({
+          id: cache.identify({
+            __typename: "Person",
+            name: "Brian Kim",
+          }),
+          fragment: usernameFragment,
+          data: {
+            username: "brainkim",
+          },
+        });
+
+        expect(results.length).toBe(1);
+
+        return {
+          ...data,
+          name: "Ben Newman",
+          username: "benjamn",
+        };
+      });
+
+      // Still just two results, thanks to cache.update{Query,Fragment} using
+      // cache.batch behind the scenes.
+      expect(results).toEqual([
+        { me: { __typename: "Person", name: "Ben Newman" }},
+        { me: { __typename: "Person", name: "Brian Kim" }},
+      ]);
+
+      expect(cache.extract()).toEqual({
+        'Person:{"name":"Ben"}': {
+          __typename: "Person",
+          name: "Ben",
+        },
+        'Person:{"name":"Ben Newman"}': {
+          __typename: "Person",
+          name: "Ben Newman",
+          username: "benjamn",
+        },
+        'Person:{"name":"Brian Kim"}': {
+          __typename: "Person",
+          name: "Brian Kim",
+          username: "brainkim",
+        },
+        ROOT_QUERY: {
+          __typename: "Query",
+          me: {
+            __ref: 'Person:{"name":"Brian Kim"}',
+          },
+        },
+        __META: {
+          extraRootIds: [
+            'Person:{"name":"Ben Newman"}',
+            'Person:{"name":"Brian Kim"}',
+          ],
+        },
+      });
+
+      cancel();
+    });
+  });
+
   describe('cache.restore', () => {
     it('replaces cache.{store{Reader,Writer},maybeBroadcastWatch}', () => {
       const cache = new InMemoryCache;
@@ -1377,7 +1537,7 @@ describe('Cache', () => {
 
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
-      cache.batch({
+      const aUpdateResult = cache.batch({
         update(cache) {
           cache.writeQuery({
             query: aQuery,
@@ -1385,12 +1545,14 @@ describe('Cache', () => {
               a: "ay",
             },
           });
+          return "aQuery updated";
         },
         optimistic: true,
         onWatchUpdated(w, diff) {
           dirtied.set(w, diff);
         },
       });
+      expect(aUpdateResult).toBe("aQuery updated");
 
       expect(dirtied.size).toBe(2);
       expect(dirtied.has(aInfo.watch)).toBe(true);
@@ -1418,7 +1580,7 @@ describe('Cache', () => {
 
       dirtied.clear();
 
-      cache.batch({
+      const bUpdateResult = cache.batch({
         update(cache) {
           cache.writeQuery({
             query: bQuery,
@@ -1426,12 +1588,14 @@ describe('Cache', () => {
               b: "bee",
             },
           });
+          // Not returning anything, so beUpdateResult will be undefined.
         },
         optimistic: true,
         onWatchUpdated(w, diff) {
           dirtied.set(w, diff);
         },
       });
+      expect(bUpdateResult).toBeUndefined();
 
       expect(dirtied.size).toBe(2);
       expect(dirtied.has(aInfo.watch)).toBe(false);
@@ -1653,6 +1817,98 @@ describe('Cache', () => {
       aInfo.cancel();
       abInfo.cancel();
       bInfo.cancel();
+    });
+
+    it("returns options.update result for optimistic and non-optimistic batches", () => {
+      const cache = new InMemoryCache;
+      const expected = Symbol.for("expected");
+
+      expect(cache.batch({
+        optimistic: false,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { value }`,
+            data: { value: 12345 },
+          });
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: false,
+        update(c) {
+          c.reset();
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: false,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { optimistic }`,
+            data: { optimistic: false },
+          });
+          return expected;
+        },
+        onWatchUpdated() {
+          throw new Error("onWatchUpdated should not have been called");
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: true,
+        update(c) {
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: true,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { optimistic }`,
+            data: { optimistic: true },
+          });
+          return expected;
+        },
+        onWatchUpdated() {
+          throw new Error("onWatchUpdated should not have been called");
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        // The optimistic option defaults to true.
+        // optimistic: true,
+        update(c) {
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: "some optimistic ID",
+        update(c) {
+          expect(c.readQuery({
+            query: gql`query { __typename }`,
+          })).toEqual({ __typename: "Query" });
+          return expected;
+        },
+      })).toBe(expected);
+
+      const optimisticId = "some optimistic ID";
+      expect(cache.batch({
+        optimistic: optimisticId,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { optimistic }`,
+            data: { optimistic: optimisticId },
+          });
+          return expected;
+        },
+        onWatchUpdated() {
+          throw new Error("onWatchUpdated should not have been called");
+        },
+      })).toBe(expected);
     });
   });
 

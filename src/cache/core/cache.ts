@@ -14,14 +14,16 @@ export type Transaction<T> = (c: ApolloCache<T>) => void;
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
-  public abstract read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables, T>,
-  ): T | null;
-  public abstract write<TResult = any, TVariables = any>(
-    write: Cache.WriteOptions<TResult, TVariables>,
+  public abstract read<TData = any, TVariables = any>(
+    query: Cache.ReadOptions<TVariables, TData>,
+  ): TData | null;
+  public abstract write<TData = any, TVariables = any>(
+    write: Cache.WriteOptions<TData, TVariables>,
   ): Reference | undefined;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
-  public abstract watch(watch: Cache.WatchOptions): () => void;
+  public abstract watch<TData = any, TVariables = any>(
+    watch: Cache.WatchOptions<TData, TVariables>,
+  ): () => void;
   public abstract reset(): Promise<void>;
 
   // Remove whole objects from the cache by passing just options.id, or
@@ -59,11 +61,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // provide a default batch implementation that's just another way of calling
   // performTransaction. Subclasses of ApolloCache (such as InMemoryCache) can
   // override the batch method to do more interesting things with its options.
-  public batch(options: Cache.BatchOptions<this>) {
+  public batch<U>(options: Cache.BatchOptions<this, U>): U {
     const optimisticId =
       typeof options.optimistic === "string" ? options.optimistic :
       options.optimistic === false ? null : void 0;
-    this.performTransaction(options.update, optimisticId);
+    let updateResult: U;
+    this.performTransaction(
+      () => updateResult = options.update(this),
+      optimisticId,
+    );
+    return updateResult!;
   }
 
   public abstract performTransaction(
@@ -171,21 +178,29 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     options: Cache.UpdateQueryOptions<TData, TVariables>,
     update: (data: TData | null) => TData | null | void,
   ): TData | null {
-    const value = this.readQuery<TData, TVariables>(options);
-    const data = update(value);
-    if (data === void 0 || data === null) return value;
-    this.writeQuery<TData, TVariables>({ ...options, data });
-    return data;
+    return this.batch({
+      update(cache) {
+        const value = cache.readQuery<TData, TVariables>(options);
+        const data = update(value);
+        if (data === void 0 || data === null) return value;
+        cache.writeQuery<TData, TVariables>({ ...options, data });
+        return data;
+      },
+    });
   }
 
   public updateFragment<TData = any, TVariables = any>(
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
     update: (data: TData | null) => TData | null | void,
   ): TData | null {
-    const value = this.readFragment<TData, TVariables>(options);
-    const data = update(value);
-    if (data === void 0 || data === null) return value;
-    this.writeFragment<TData, TVariables>({ ...options, data });
-    return data;
+    return this.batch({
+      update(cache) {
+        const value = cache.readFragment<TData, TVariables>(options);
+        const data = update(value);
+        if (data === void 0 || data === null) return value;
+        cache.writeFragment<TData, TVariables>({ ...options, data });
+        return data;
+      },
+    });
   }
 }

@@ -388,7 +388,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private txCount = 0;
 
-  public batch<U>(options: Cache.BatchOptions<InMemoryCache, U>): U {
+  public batch<TUpdateResult>(
+    options: Cache.BatchOptions<InMemoryCache, TUpdateResult>,
+  ): TUpdateResult {
     const {
       update,
       optimistic = true,
@@ -396,8 +398,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       onWatchUpdated,
     } = options;
 
-    let updateResult: U;
-    const perform = (layer?: EntityStore): U => {
+    let updateResult: TUpdateResult;
+    const perform = (layer?: EntityStore): TUpdateResult => {
       const { data, optimisticData } = this;
       ++this.txCount;
       if (layer) {

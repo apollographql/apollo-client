@@ -58,10 +58,13 @@ export namespace Cache {
     broadcast?: boolean;
   }
 
-  export interface BatchOptions<C extends ApolloCache<any>, U = void> {
+  export interface BatchOptions<
+    TCache extends ApolloCache<any>,
+    TUpdateResult = void,
+  > {
     // Same as the first parameter of performTransaction, except the cache
     // argument will have the subclass type rather than ApolloCache.
-    update(cache: C): U;
+    update(cache: TCache): TUpdateResult;
 
     // Passing a string for this option creates a new optimistic layer, with the
     // given string as its layer.id, just like passing a string for the
@@ -84,7 +87,7 @@ export namespace Cache {
     // this batch operation, pass this optional callback function. Returning
     // false from the callback will prevent broadcasting this result.
     onWatchUpdated?: (
-      this: C,
+      this: TCache,
       watch: Cache.WatchOptions,
       diff: Cache.DiffResult<any>,
       lastDiff: Cache.DiffResult<any> | undefined,

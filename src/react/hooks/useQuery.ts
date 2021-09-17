@@ -25,7 +25,7 @@ export function useQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: QueryHookOptions<TData, TVariables>,
-): QueryResult<TData> {
+): QueryResult<TData, TVariables> {
   const context = useContext(getApolloContext());
   const client = useApolloClient(options?.client);
   verifyDocumentType(query, DocumentType.Query);

@@ -120,7 +120,6 @@ export function useQuery<
 
   const [subscribe, getSnapshot] = useMemo(() => {
     let previousResult: ApolloQueryResult<TData> | undefined;
-    let previousVariables: TVariables | undefined;
     const subscribe = (forceUpdate: () => void) => {
       let subscription = obsQuery.subscribe(forceUpdate, onError);
       function onError(error: Error) {
@@ -162,15 +161,10 @@ export function useQuery<
         !equal(previousResult.data, result.data) ||
         !equal(previousResult.error, result.error)
       ) {
-        if (
-          previousResult &&
-          previousResult.data &&
-          !equal(previousVariables, obsQuery.variables)
-        ) {
-          // TODO: figure out the types
+        if (previousResult) {
           result = {
             ...result,
-            previousData: previousResult.data,
+            previousData: previousResult.data || (previousResult as any).previousData,
           } as ApolloQueryResult<TData>;
         }
 

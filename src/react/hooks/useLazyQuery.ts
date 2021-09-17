@@ -84,7 +84,6 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
       called: false as any,
     };
 
-
     for (const key of EAGER_METHODS) {
       const method = result[key];
       result[key] = (...args: any) => {

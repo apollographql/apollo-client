@@ -261,9 +261,8 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
 
     setTimeout(() => execute());
-
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].loading).toBe(true);
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
 
     await waitForNextUpdate();

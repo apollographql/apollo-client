@@ -5,7 +5,8 @@ function deepFreeze(value: any) {
   const workSet = new Set([value]);
   workSet.forEach(obj => {
     if (isNonNullObject(obj)) {
-      if (!Object.isFrozen(obj)) Object.freeze(obj);
+      // an array buffer view (like UInt8Array) is not freezable, ignoring it
+      if (!Object.isFrozen(obj) && !ArrayBuffer.isView(obj)) Object.freeze(obj);
       Object.getOwnPropertyNames(obj).forEach(name => {
         if (isNonNullObject(obj[name])) workSet.add(obj[name]);
       });

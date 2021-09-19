@@ -14,4 +14,9 @@ describe('maybeDeepFreeze', () => {
     maybeDeepFreeze(foo);
     expect(() => (foo.bar = 1)).toThrow();
   });
+
+  it('should freeze a TypedArray', () => {
+    const foo = {bar: new Uint8Array(1)};
+    maybeDeepFreeze(foo);
+  })
 });

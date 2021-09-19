@@ -100,7 +100,7 @@
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "26.0.24",
     "@types/lodash": "4.14.173",
-    "@types/node": "16.9.2",
+    "@types/node": "16.9.3",
     "@types/react": "17.0.21",
     "@types/react-dom": "17.0.2",
     "@types/recompose": "0.30.8",

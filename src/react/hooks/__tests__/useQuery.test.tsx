@@ -1636,7 +1636,7 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
     });
 
-    it('fetchMore with concatPagnination and notifyOnNetworkStatusChange', async () => {
+    it('fetchMore with concatPagination and notifyOnNetworkStatusChange', async () => {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {

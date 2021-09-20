@@ -851,7 +851,7 @@ export function applyNextFetchPolicy<TData, TVars>(
     // network request, it may be desirable for subsequent network requests to
     // be triggered only if the cache result is incomplete. To that end, the
     // options.nextFetchPolicy option provides an easy way to update
-    // options.fetchPolicy after the intial network request, without having to
+    // options.fetchPolicy after the initial network request, without having to
     // call observableQuery.setOptions.
     options.fetchPolicy = typeof nextFetchPolicy === "function"
       ? nextFetchPolicy.call(options, fetchPolicy)

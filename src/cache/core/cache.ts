@@ -33,7 +33,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // removed from the cache.
   public abstract evict(options: Cache.EvictOptions): boolean;
 
-  // intializer / offline / ssr API
+  // initializer / offline / ssr API
   /**
    * Replaces existing state in the cache (if any) with the values expressed by
    * `serializedState`.

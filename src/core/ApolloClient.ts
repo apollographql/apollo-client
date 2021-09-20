@@ -286,7 +286,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * it uses Apollo's store in order to reactively deliver updates to your query results.
    * <p /><p />
    * For example, suppose you call watchQuery on a GraphQL query that fetches a person's
-   * first and last name and this person has a particular object identifer, provided by
+   * first and last name and this person has a particular object identifier, provided by
    * dataIdFromObject. Later, a different query fetches that same person's
    * first and last name and the first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.

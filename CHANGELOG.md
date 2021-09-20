@@ -5,6 +5,9 @@
 - Fix `componentDidUpate` typo in `withSubscription` higher-order component. <br/>
   [@YarBez](https://github.com/YarBez) in [#7506](https://github.com/apollographql/apollo-client/pull/7506)
 
+- Fix internal `canUseSymbol` import within `@apollo/client/utilities` to avoid breaking bundlers/builds. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8817](https://github.com/apollographql/apollo-client/pull/8817)
+
 ## Apollo Client 3.4.12
 
 ### Bug Fixes

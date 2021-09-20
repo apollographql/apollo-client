@@ -26,4 +26,16 @@ describe('maybeDeepFreeze', () => {
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.oyez)).toBe(false);
   });
+
+  it('should not freeze child properties of unfreezable objects', () => {
+    const result = maybeDeepFreeze({
+      buffer: Object.assign(Buffer.from("oyez"), {
+        doNotFreeze: { please: "thanks" },
+      }),
+    });
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(Object.isFrozen(result.buffer)).toBe(false);
+    expect(Object.isFrozen(result.buffer.doNotFreeze)).toBe(false);
+    expect(result.buffer.doNotFreeze).toEqual({ please: "thanks" });
+  });
 });

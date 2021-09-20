@@ -46,7 +46,8 @@ describe('[queries] lifecycle', () => {
     const Container = graphql<Vars, Data, Vars>(query, {
       options: props => ({
         variables: props,
-        fetchPolicy: count === 0 ? 'cache-and-network' : 'cache-first'
+        fetchPolicy: count === 0 ? 'cache-and-network' : 'cache-first',
+        notifyOnNetworkStatusChange: true,
       })
     })(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
@@ -209,7 +210,10 @@ describe('[queries] lifecycle', () => {
     });
 
     const Container = graphql<Vars, Data, Vars>(query, {
-      options: props => ({ variables: props })
+      options: props => ({
+        variables: props,
+        notifyOnNetworkStatusChange: true,
+      }),
     })(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
@@ -307,7 +311,10 @@ describe('[queries] lifecycle', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    const Container = graphql<Vars, Data, Vars>(query)(
+    const Container = graphql<Vars, Data, Vars>(
+      query,
+      { options: { notifyOnNetworkStatusChange: true } },
+    )(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           try {
@@ -794,11 +801,15 @@ describe('[queries] lifecycle', () => {
         }
 
         render() {
-          count++;
-          const user = this.props.data!.user;
-          const name = user ? user.name : '';
-          if (count === 2) {
-            expect(name).toBe('Luke Skywalker');
+          try {
+            count++;
+            const user = this.props.data!.user;
+            const name = user ? user.name : '';
+            if (count === 3) {
+              expect(name).toBe('Luke Skywalker');
+            }
+          } catch (err) {
+            reject(err);
           }
           return null;
         }
@@ -873,26 +884,30 @@ describe('[queries] lifecycle', () => {
       <ApolloProvider client={client}>
         <QueryComponent query={query}>
           {({ loading, data, refetch }: any) => {
-            if (!loading) {
-              if (!refetched) {
-                expect(data.books[0].name).toEqual('ssrfirst');
-                //setTimeout allows component to mount, which often happens
-                //when waiting  ideally we should be able to call refetch
-                //immediately However the subscription needs to start before
-                //we update the data To get around this issue, we would need
-                //to start the subscription before we render to the page. In
-                //practice, this seems like an uncommon use case, since the
-                //data you get is fresh, so one would wait for an interaction
-                setTimeout(() => {
-                  refetch().then((refetchResult: any) => {
-                    expect(refetchResult.data.books[0].name).toEqual('first');
-                    done = true;
+            try {
+              if (!loading) {
+                if (!refetched) {
+                  expect(data.books[0].name).toEqual('ssrfirst');
+                  //setTimeout allows component to mount, which often happens
+                  //when waiting  ideally we should be able to call refetch
+                  //immediately However the subscription needs to start before
+                  //we update the data To get around this issue, we would need
+                  //to start the subscription before we render to the page. In
+                  //practice, this seems like an uncommon use case, since the
+                  //data you get is fresh, so one would wait for an interaction
+                  setTimeout(() => {
+                    refetch().then((refetchResult: any) => {
+                      expect(refetchResult.data.books[0].name).toEqual('first');
+                      done = true;
+                    });
                   });
-                });
-                refetched = true;
-              } else {
-                expect(data.books[0].name).toEqual('first');
+                  refetched = true;
+                } else {
+                  expect(data.books[0].name).toEqual('first');
+                }
               }
+            } catch (err) {
+              reject(err);
             }
             return <p> stub </p>;
           }}

@@ -15,8 +15,15 @@ describe('maybeDeepFreeze', () => {
     expect(() => (foo.bar = 1)).toThrow();
   });
 
-  it('should freeze a TypedArray', () => {
-    const foo = {bar: new Uint8Array(1)};
-    maybeDeepFreeze(foo);
-  })
+  it('should avoid freezing Uint8Array', () => {
+    const result = maybeDeepFreeze({ array: new Uint8Array(1) });
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(Object.isFrozen(result.array)).toBe(false);
+  });
+
+  it('should avoid freezing Buffer', () => {
+    const result = maybeDeepFreeze({ oyez: Buffer.from("oyez") });
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(Object.isFrozen(result.oyez)).toBe(false);
+  });
 });

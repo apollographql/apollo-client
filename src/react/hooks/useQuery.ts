@@ -83,6 +83,7 @@ export function useQuery<
                 sub.unsubscribe();
               },
               complete() {
+                // TODO: Does this branch ever get called before next() and error()?
                 resolve();
               },
             });
@@ -186,7 +187,7 @@ export function useQuery<
     subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
   }), [obsQuery]);
 
-  let result = useSyncExternalStore(subscribe, getSnapshot);
+  let result = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   useEffect(() => {
     if (
       ref.current.options?.skip ||
@@ -246,12 +247,9 @@ export function useQuery<
 
     // TODO: This is a hack to make sure useLazyQuery executions update the
     // obsevable query options for ssr.
-    if (
-      context.renderPromises &&
-      options?.ssr !== false &&
-      result.loading
-    ) {
-      obsQuery.setOptions(createWatchQueryOptions(query, options)).catch(() => {});
+    if (context.renderPromises && options?.ssr !== false && result.loading) {
+      obsQuery.setOptions(createWatchQueryOptions(query, options))
+        .catch(() => {});
     }
   }
 

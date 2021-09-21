@@ -134,7 +134,7 @@ export function NewRocketForm() {
           <label>Year</label>
           <input
             type="number"
-            name="model"
+            name="year"
             onChange={e => setYear(+e.target.value)}
           />
         </p>

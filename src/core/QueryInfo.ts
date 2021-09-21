@@ -192,14 +192,17 @@ export class QueryInfo {
   }
 
   private getDiffOptions(variables = this.variables): Cache.DiffOptions {
-    const oq = this.observableQuery;
-    return {
+    const options: Cache.DiffOptions = {
       query: this.document!,
       variables,
       returnPartialData: true,
       optimistic: true,
-      canonizeResults: !oq || oq.options.canonizeResults !== false,
     };
+    const canonizeResults = this.observableQuery?.options.canonizeResults;
+    if (typeof canonizeResults === "boolean") {
+      options.canonizeResults = canonizeResults;
+    }
+    return options;
   }
 
   setDiff(diff: Cache.DiffResult<any> | null) {

@@ -231,7 +231,7 @@ export class StoreReader {
     rootId = 'ROOT_QUERY',
     variables,
     returnPartialData = true,
-    canonizeResults = true,
+    canonizeResults = false,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const policies = this.config.cache.policies;
 

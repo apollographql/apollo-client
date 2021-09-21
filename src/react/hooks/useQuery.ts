@@ -168,7 +168,6 @@ export function useQuery<
           } as ApolloQueryResult<TData>;
         }
 
-        result = { ...result, partial: undefined };
         previousResult = result;
       }
 
@@ -205,6 +204,8 @@ export function useQuery<
     }
   }, [result]);
 
+  let partial: boolean | undefined;
+  ({ partial, ...result } = result);
   if (options?.skip || options?.fetchPolicy === 'standby') {
     // When skipping a query (ie. we're not querying for data but still want to
     // render children), make sure the `data` is cleared out and `loading` is
@@ -222,6 +223,36 @@ export function useQuery<
       error: void 0,
       networkStatus: NetworkStatus.ready,
     };
+  } else {
+    // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION
+    // TODO: This code should be removed when the partialRefetch option is
+    // removed. I was unable to get this hook to behave reasonably in certain
+    // edge cases when this block was put in an effect.
+    if (
+      partial &&
+      options?.partialRefetch &&
+      !result.loading &&
+      (!result.data || Object.keys(result.data).length === 0) &&
+      obsQuery.options.fetchPolicy !== 'cache-only'
+    ) {
+      result = {
+        ...result,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      };
+
+      obsQuery.refetch();
+    }
+
+    // TODO: This is a hack to make sure useLazyQuery executions update the
+    // obsevable query options for ssr.
+    if (
+      context.renderPromises &&
+      options?.ssr !== false &&
+      result.loading
+    ) {
+      obsQuery.setOptions(createWatchQueryOptions(query, options)).catch(() => {});
+    }
   }
 
   return {

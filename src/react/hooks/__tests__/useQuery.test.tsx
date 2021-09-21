@@ -2508,7 +2508,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe.skip('Partial refetch', () => {
+  describe('Partial refetch', () => {
     it('should attempt a refetch when data is missing and partialRefetch is true', async () => {
       const errorSpy = jest.spyOn(console, 'error')
         .mockImplementation(() => {});

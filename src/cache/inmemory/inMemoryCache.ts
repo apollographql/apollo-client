@@ -36,6 +36,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
   resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
 }
 
 type BroadcastOptions = Pick<
@@ -48,6 +49,7 @@ const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
+  canonizeResults: false,
   typePolicies: {},
 };
 
@@ -121,6 +123,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
+        canonizeResults: this.config.canonizeResults,
         canon: resetResultIdentities
           ? void 0
           : previousReader && previousReader.canon,

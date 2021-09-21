@@ -86,6 +86,7 @@ export interface StoreReaderConfig {
   cache: InMemoryCache,
   addTypename?: boolean;
   resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
   canon?: ObjectCanon;
 }
 
@@ -128,6 +129,7 @@ export class StoreReader {
     cache: InMemoryCache,
     addTypename: boolean;
     resultCacheMaxSize?: number;
+    canonizeResults: boolean;
   };
 
   private knownResults = new (
@@ -143,6 +145,7 @@ export class StoreReader {
     this.config = {
       ...config,
       addTypename: config.addTypename !== false,
+      canonizeResults: !!config.canonizeResults,
     };
 
     this.canon = config.canon || new ObjectCanon;
@@ -231,7 +234,7 @@ export class StoreReader {
     rootId = 'ROOT_QUERY',
     variables,
     returnPartialData = true,
-    canonizeResults = false,
+    canonizeResults = this.config.canonizeResults,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const policies = this.config.cache.policies;
 

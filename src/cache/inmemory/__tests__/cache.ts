@@ -2013,6 +2013,7 @@ describe("InMemoryCache#modify", () => {
 
   it("should allow invalidation using details.INVALIDATE", () => {
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Book: {
           keyFields: ["isbn"],
@@ -2946,7 +2947,10 @@ describe("ReactiveVar and makeVar", () => {
   it("should work with resultCaching disabled (unusual)", () => {
     const { cache, nameVar, query } = makeCacheAndVar(false);
 
-    const result1 = cache.readQuery({ query });
+    const result1 = cache.readQuery({
+      query,
+      canonizeResults: true,
+    });
     expect(result1).toEqual({
       onCall: {
         __typename: "Person",
@@ -2954,14 +2958,20 @@ describe("ReactiveVar and makeVar", () => {
       },
     });
 
-    const result2 = cache.readQuery({ query });
+    const result2 = cache.readQuery({
+      query,
+      canonizeResults: true,
+    });
     expect(result2).toEqual(result1);
     expect(result2).toBe(result1);
 
     expect(nameVar()).toBe("Ben");
     expect(nameVar("Hugh")).toBe("Hugh");
 
-    const result3 = cache.readQuery({ query });
+    const result3 = cache.readQuery({
+      query,
+      canonizeResults: true,
+    });
     expect(result3).toEqual({
       onCall: {
         __typename: "Person",

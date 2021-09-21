@@ -1377,6 +1377,7 @@ describe('reading from the store', () => {
 
   withErrorSpy(it, "propagates eviction signals to parent queries", () => {
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Deity: {
           keyFields: ["name"],
@@ -1866,7 +1867,9 @@ describe('reading from the store', () => {
   });
 
   it("returns === results for different queries", function () {
-    const cache = new InMemoryCache;
+    const cache = new InMemoryCache({
+      canonizeResults: true,
+    });
 
     const aQuery: TypedDocumentNode<{
       a: string[];

@@ -6,6 +6,7 @@ describe('optimistic cache layers', () => {
   it('return === results for repeated reads', () => {
     const cache = new InMemoryCache({
       resultCaching: true,
+      canonizeResults: true,
       dataIdFromObject(value: any) {
         switch (value && value.__typename) {
           case 'Book':
@@ -204,6 +205,7 @@ describe('optimistic cache layers', () => {
   it('dirties appropriate IDs when optimistic layers are removed', () => {
     const cache = new InMemoryCache({
       resultCaching: true,
+      canonizeResults: true,
       dataIdFromObject(value: any) {
         switch (value && value.__typename) {
           case 'Book':

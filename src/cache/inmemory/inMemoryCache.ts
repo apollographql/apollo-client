@@ -45,13 +45,21 @@ type BroadcastOptions = Pick<
   | "onWatchUpdated"
 >
 
-const defaultConfig: InMemoryCacheConfig = {
+const defaultConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
+  // Thanks to the shouldCanonizeResults helper, this should be the only line
+  // you have to change to reenable canonization by default in the future.
   canonizeResults: false,
-  typePolicies: {},
 };
+
+export function shouldCanonizeResults(
+  config: Pick<InMemoryCacheConfig, "canonizeResults">,
+): boolean {
+  const value = config.canonizeResults;
+  return value === void 0 ? defaultConfig.canonizeResults : value;
+}
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private data: EntityStore;
@@ -123,7 +131,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
-        canonizeResults: this.config.canonizeResults,
+        canonizeResults: shouldCanonizeResults(this.config),
         canon: resetResultIdentities
           ? void 0
           : previousReader && previousReader.canon,

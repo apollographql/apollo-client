@@ -37,7 +37,7 @@ import {
 import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
 import { getTypenameFromStoreObject } from './helpers';
 import { Policies } from './policies';
-import { InMemoryCache } from './inMemoryCache';
+import { shouldCanonizeResults, InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
 import { canonicalStringify, ObjectCanon } from './object-canon';
 
@@ -145,7 +145,7 @@ export class StoreReader {
     this.config = {
       ...config,
       addTypename: config.addTypename !== false,
-      canonizeResults: !!config.canonizeResults,
+      canonizeResults: shouldCanonizeResults(config),
     };
 
     this.canon = config.canon || new ObjectCanon;

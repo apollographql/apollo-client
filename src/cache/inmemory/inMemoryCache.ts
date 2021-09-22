@@ -13,6 +13,7 @@ import {
   StoreObject,
   Reference,
   isReference,
+  compact,
 } from '../../utilities';
 import {
   ApolloReducerConfig,
@@ -87,7 +88,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
-    this.config = { ...defaultConfig, ...config };
+    this.config = compact(defaultConfig, config);
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({

@@ -27,6 +27,7 @@ import {
   maybeDeepFreeze,
   isNonNullObject,
   canUseWeakMap,
+  compact,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
@@ -142,11 +143,10 @@ export class StoreReader {
   }
 
   constructor(config: StoreReaderConfig) {
-    this.config = {
-      ...config,
+    this.config = compact(config, {
       addTypename: config.addTypename !== false,
       canonizeResults: shouldCanonizeResults(config),
-    };
+    });
 
     this.canon = config.canon || new ObjectCanon;
 

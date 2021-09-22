@@ -767,8 +767,10 @@ export class QueryManager<TStore> {
           options: { fetchPolicy },
         } = oq;
 
-        if (fetchPolicy === "standby" || !oq.hasObservers()) {
-          // Skip inactive queries unless include === "all".
+        if (
+          fetchPolicy === "standby" ||
+          (include === "active" && !oq.hasObservers())
+        ) {
           return;
         }
 

@@ -5,6 +5,9 @@
 - Clear `InMemoryCache` `watches` set when `cache.reset()` called. <br/>
   [@benjamn](https://github.com/benjamn) in [#8826](https://github.com/apollographql/apollo-client/pull/8826)
 
+- Stop excluding observerless queries from `refetchQueries: [...]` selection. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8825](https://github.com/apollographql/apollo-client/pull/8825)
+
 ## Apollo Client 3.4.13
 
 ### Bug Fixes

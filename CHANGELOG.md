@@ -1,3 +1,10 @@
+## Apollo Client 3.4.14 (not yet released)
+
+### Bug Fixes
+
+- Clear `InMemoryCache` `watches` set when `cache.reset()` called. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8826](https://github.com/apollographql/apollo-client/pull/8826)
+
 ## Apollo Client 3.4.13
 
 ### Bug Fixes

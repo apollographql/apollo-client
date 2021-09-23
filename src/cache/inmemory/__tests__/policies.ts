@@ -4947,6 +4947,7 @@ describe("type policies", function () {
     function readFirstBookResult() {
       return cache.readQuery<{ author: any }>({
         query: firstBookQuery,
+        canonizeResults: true,
       })!;
     }
 

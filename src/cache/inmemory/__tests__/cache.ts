@@ -10,6 +10,7 @@ import { wrap } from 'optimism';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { ObjectCanon } from '../object-canon';
+import { TypePolicies } from '../policies';
 
 disableFragmentWarnings();
 
@@ -1910,6 +1911,169 @@ describe("InMemoryCache#broadcastWatches", function () {
       // New results:
       received2AllCaps,
     ]);
+  });
+
+  it("should pass WatchOptions through to cache.diff", () => {
+    const typePolicies: TypePolicies = {
+      Query: {
+        fields: {
+          object(_, { variables }) {
+            return { name: variables?.name ?? "UNKNOWN" };
+          },
+        },
+      },
+    };
+
+    const canonicalCache = new InMemoryCache({
+      canonizeResults: true,
+      typePolicies,
+    });
+
+    const nonCanonicalCache = new InMemoryCache({
+      canonizeResults: false,
+      typePolicies,
+    });
+
+    const query = gql`
+      query {
+        object {
+          name
+        }
+      }
+    `;
+
+    const unwatchers = new Set<() => void>();
+
+    type Diff = Cache.DiffResult<{
+      object: {
+        name: string;
+      };
+    }>;
+    const diffs: Record<string, Diff[]> = Object.create(null);
+    function addDiff(name: string, diff: Diff) {
+      (diffs[name] || (diffs[name] = [])).push(diff);
+    }
+
+    const commonWatchOptions = {
+      query,
+      optimistic: true,
+      immediate: true,
+      callback(diff: Diff) {
+        addDiff(diff.result!.object.name, diff);
+      },
+    };
+
+    unwatchers.add(canonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "canonicalByDefault" },
+      // Pass nothing for canonizeResults to let the default for canonicalCache
+      // (true) prevail.
+    }));
+
+    unwatchers.add(nonCanonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "nonCanonicalByDefault" },
+      // Pass nothing for canonizeResults to let the default for
+      // nonCanonicalCache (false) prevail.
+    }));
+
+    unwatchers.add(nonCanonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "canonicalByChoice" },
+      canonizeResults: true, // Override the default.
+    }));
+
+    unwatchers.add(canonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "nonCanonicalByChoice" },
+      canonizeResults: false, // Override the default.
+    }));
+
+    function makeDiff(name: string): Diff {
+      return {
+        complete: true,
+        result: {
+          object: { name },
+        },
+      };
+    }
+
+    const canonicalByDefaultDiff = makeDiff("canonicalByDefault");
+    const nonCanonicalByDefaultDiff = makeDiff("nonCanonicalByDefault");
+    const canonicalByChoiceDiff = makeDiff("canonicalByChoice");
+    const nonCanonicalByChoiceDiff = makeDiff("nonCanonicalByChoice");
+
+    expect(diffs).toEqual({
+      canonicalByDefault: [canonicalByDefaultDiff],
+      nonCanonicalByDefault: [nonCanonicalByDefaultDiff],
+      canonicalByChoice: [canonicalByChoiceDiff],
+      nonCanonicalByChoice: [nonCanonicalByChoiceDiff],
+    });
+
+    [ canonicalCache,
+      nonCanonicalCache,
+    ].forEach(cache => {
+      // Hack: delete every watch.lastDiff, so subsequent results will be
+      // broadcast, even though they are deeply equal to the previous results.
+      cache["watches"].forEach(watch => {
+        delete watch.lastDiff;
+      });
+    });
+
+    // Evict Query.object to invalidate the result cache.
+    canonicalCache.evict({
+      fieldName: "object",
+    });
+    nonCanonicalCache.evict({
+      fieldName: "object",
+    });
+
+    // Every watcher receives the same (deeply equal) Diff a second time.
+    expect(diffs).toEqual({
+      canonicalByDefault: [
+        canonicalByDefaultDiff,
+        canonicalByDefaultDiff,
+      ],
+      nonCanonicalByDefault: [
+        nonCanonicalByDefaultDiff,
+        nonCanonicalByDefaultDiff,
+      ],
+      canonicalByChoice: [
+        canonicalByChoiceDiff,
+        canonicalByChoiceDiff,
+      ],
+      nonCanonicalByChoice: [
+        nonCanonicalByChoiceDiff,
+        nonCanonicalByChoiceDiff,
+      ],
+    });
+
+    function expectCanonical(name: string) {
+      const count = diffs[name].length;
+      const firstDiff = diffs[name][0];
+      for (let i = 1; i < count; ++i) {
+        expect(firstDiff).toEqual(diffs[name][i]);
+        expect(firstDiff.result).toBe(diffs[name][i].result);
+      }
+    }
+
+    function expectNonCanonical(name: string) {
+      const count = diffs[name].length;
+      const firstDiff = diffs[name][0];
+      for (let i = 1; i < count; ++i) {
+        expect(firstDiff).toEqual(diffs[name][i]);
+        expect(firstDiff.result).not.toBe(diffs[name][i].result);
+      }
+    }
+
+    // However, some of the diff.result objects are canonized and thus ===, and
+    // others are deeply equal but not canonized (and thus not ===).
+    expectCanonical("canonicalByDefault");
+    expectCanonical("canonicalByChoice");
+    expectNonCanonical("nonCanonicalByDefault");
+    expectNonCanonical("nonCanonicalByChoice");
+
+    unwatchers.forEach(unwatch => unwatch());
   });
 });
 

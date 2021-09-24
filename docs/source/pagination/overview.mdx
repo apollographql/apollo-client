@@ -4,7 +4,7 @@ description: Overview
 sidebar_title: Overview
 ---
 
-GraphQL enables you to fetch exactly the fields you need from your data graph, with no unnecessary overhead. This helps keep network responses small and fast.
+GraphQL enables you to fetch exactly the fields you need from your graph, with no unnecessary overhead. This helps keep network responses small and fast.
 
 However, GraphQL doesn't automatically _guarantee_ small responses. This is especially apparent when you query a field that contains a **list**. A list can contain infinitely many elements, which can result in an enormous response from a seemingly small query like this one:
 
@@ -16,7 +16,7 @@ query GetBookTitles {
 }
 ```
 
-If your data graph includes thousands or millions of books, this query probably returns _much_ more data than you need. To resolve this issue, GraphQL servers can **paginate** their list fields.
+If your graph includes thousands or millions of books, this query probably returns _much_ more data than you need. To resolve this issue, GraphQL servers can **paginate** their list fields.
 
 When a client queries a paginated list field, the server returns only a portion (or "page") of the list's elements. The client's query includes arguments that indicate _which_ page the server should return:
 

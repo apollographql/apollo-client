@@ -29,7 +29,7 @@ const App = () => (
 
 AppRegistry.registerComponent('MyApplication', () => App);
 ```
-
+Important note: a Network request failed error can pop up sometimes, if that is the case you will need to past in the uri your IP address everytime you fetch from the backend. 
 For more information on setting up Apollo Client, see [Getting started](../get-started/).
 
 ## Example application

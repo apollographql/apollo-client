@@ -36,9 +36,9 @@ import {
   ReadMergeModifyContext,
 } from './types';
 import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
-import { getTypenameFromStoreObject } from './helpers';
+import { getTypenameFromStoreObject, shouldCanonizeResults } from './helpers';
 import { Policies } from './policies';
-import { shouldCanonizeResults, InMemoryCache } from './inMemoryCache';
+import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError } from '../core/types/common';
 import { canonicalStringify, ObjectCanon } from './object-canon';
 

@@ -15,11 +15,13 @@ export {
 } from '../utilities';
 
 export { EntityStore } from './inmemory/entityStore';
-export { fieldNameFromStoreName } from './inmemory/helpers'
+export {
+  fieldNameFromStoreName,
+  defaultDataIdFromObject,
+} from './inmemory/helpers'
 
 export {
   InMemoryCache,
-  InMemoryCacheConfig,
 } from './inmemory/inMemoryCache';
 
 export {
@@ -29,7 +31,6 @@ export {
 } from './inmemory/reactiveVars';
 
 export {
-  defaultDataIdFromObject,
   TypePolicies,
   TypePolicy,
   FieldPolicy,

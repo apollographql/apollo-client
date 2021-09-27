@@ -7,13 +7,20 @@ import {
   Reference,
 } from '../../utilities';
 import { FieldValueGetter } from './entityStore';
-import { KeyFieldsFunction, StorageType, FieldMergeFunction } from './policies';
+import {
+  TypePolicies,
+  PossibleTypesMap,
+  KeyFieldsFunction,
+  StorageType,
+  FieldMergeFunction,
+} from './policies';
 import {
   Modifier,
   Modifiers,
   ToReferenceFunction,
   CanReadFunction,
 } from '../core/types/common';
+
 export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
@@ -116,6 +123,14 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
 };
+
+export interface InMemoryCacheConfig extends ApolloReducerConfig {
+  resultCaching?: boolean;
+  possibleTypes?: PossibleTypesMap;
+  typePolicies?: TypePolicies;
+  resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
+}
 
 export interface MergeInfo {
   field: FieldNode;

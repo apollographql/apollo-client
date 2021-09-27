@@ -37,6 +37,7 @@ import {
   storeValueIsStoreObject,
   selectionSetMatchesResult,
   TypeOrFieldNameRegExp,
+  defaultDataIdFromObject,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
 import { InMemoryCache } from './inMemoryCache';
@@ -65,7 +66,7 @@ export type TypePolicies = {
 // type KeySpecifier = (string | KeySpecifier)[]
 type KeySpecifier = (string | any[])[];
 
-type KeyFieldsContext = {
+export type KeyFieldsContext = {
   typename?: string;
   selectionSet?: SelectionSetNode;
   fragmentMap?: FragmentMap;
@@ -229,28 +230,6 @@ export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
   incoming: SafeReadonly<TIncoming>,
   options: FieldFunctionOptions,
 ) => SafeReadonly<TExisting>;
-
-export const defaultDataIdFromObject = (
-  { __typename, id, _id }: Readonly<StoreObject>,
-  context?: KeyFieldsContext,
-) => {
-  if (typeof __typename === "string") {
-    if (context) {
-      context.keyObject =
-         id !== void 0 ? {  id } :
-        _id !== void 0 ? { _id } :
-        void 0;
-    }
-    // If there is no object.id, fall back to object._id.
-    if (id === void 0) id = _id;
-    if (id !== void 0) {
-      return `${__typename}:${(
-        typeof id === "number" ||
-        typeof id === "string"
-      ) ? id : JSON.stringify(id)}`;
-    }
-  }
-};
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;

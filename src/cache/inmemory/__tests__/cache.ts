@@ -3,7 +3,8 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
 import { Cache } from '../../../cache';
-import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
+import { InMemoryCache } from '../inMemoryCache';
+import { InMemoryCacheConfig } from '../types';
 
 jest.mock('optimism');
 import { wrap } from 'optimism';

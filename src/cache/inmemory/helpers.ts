@@ -1,6 +1,12 @@
 import { SelectionSetNode } from 'graphql';
 
-import { NormalizedCache } from './types';
+import {
+  NormalizedCache,
+  InMemoryCacheConfig,
+} from './types';
+
+import { KeyFieldsContext } from './policies';
+
 import {
   Reference,
   isReference,
@@ -11,11 +17,54 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   isNonNullObject,
+  compact,
 } from '../../utilities';
 
 export const {
   hasOwnProperty: hasOwn,
 } = Object.prototype;
+
+export function defaultDataIdFromObject(
+  { __typename, id, _id }: Readonly<StoreObject>,
+  context?: KeyFieldsContext,
+): string | undefined {
+  if (typeof __typename === "string") {
+    if (context) {
+      context.keyObject =
+         id !== void 0 ? {  id } :
+        _id !== void 0 ? { _id } :
+        void 0;
+    }
+    // If there is no object.id, fall back to object._id.
+    if (id === void 0) id = _id;
+    if (id !== void 0) {
+      return `${__typename}:${(
+        typeof id === "number" ||
+        typeof id === "string"
+      ) ? id : JSON.stringify(id)}`;
+    }
+  }
+}
+
+const defaultConfig = {
+  dataIdFromObject: defaultDataIdFromObject,
+  addTypename: true,
+  resultCaching: true,
+  // Thanks to the shouldCanonizeResults helper, this should be the only line
+  // you have to change to reenable canonization by default in the future.
+  canonizeResults: false,
+};
+
+export function normalizeConfig(config: InMemoryCacheConfig) {
+  return compact(defaultConfig, config);
+}
+
+export function shouldCanonizeResults(
+  config: Pick<InMemoryCacheConfig, "canonizeResults">,
+): boolean {
+  const value = config.canonizeResults;
+  return value === void 0 ? defaultConfig.canonizeResults : value;
+}
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,

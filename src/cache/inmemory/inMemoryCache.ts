@@ -13,54 +13,21 @@ import {
   StoreObject,
   Reference,
   isReference,
-  compact,
 } from '../../utilities';
-import {
-  ApolloReducerConfig,
-  NormalizedCacheObject,
-} from './types';
+import { InMemoryCacheConfig, NormalizedCacheObject } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
 import { makeVar, forgetCache, recallCache } from './reactiveVars';
-import {
-  defaultDataIdFromObject,
-  PossibleTypesMap,
-  Policies,
-  TypePolicies,
-} from './policies';
-import { hasOwn } from './helpers';
+import { Policies } from './policies';
+import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
-
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
-  resultCaching?: boolean;
-  possibleTypes?: PossibleTypesMap;
-  typePolicies?: TypePolicies;
-  resultCacheMaxSize?: number;
-  canonizeResults?: boolean;
-}
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   | "optimistic"
   | "onWatchUpdated"
 >
-
-const defaultConfig = {
-  dataIdFromObject: defaultDataIdFromObject,
-  addTypename: true,
-  resultCaching: true,
-  // Thanks to the shouldCanonizeResults helper, this should be the only line
-  // you have to change to reenable canonization by default in the future.
-  canonizeResults: false,
-};
-
-export function shouldCanonizeResults(
-  config: Pick<InMemoryCacheConfig, "canonizeResults">,
-): boolean {
-  const value = config.canonizeResults;
-  return value === void 0 ? defaultConfig.canonizeResults : value;
-}
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private data: EntityStore;
@@ -88,7 +55,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
-    this.config = compact(defaultConfig, config);
+    this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({

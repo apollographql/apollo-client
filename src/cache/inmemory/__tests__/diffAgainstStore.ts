@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
-import { defaultDataIdFromObject } from '../policies';
+import { defaultDataIdFromObject } from '../helpers';
 import { NormalizedCache, Reference } from '../types';
 import { InMemoryCache } from '../inMemoryCache';
 import {

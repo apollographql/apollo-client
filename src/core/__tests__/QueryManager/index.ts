@@ -8,7 +8,7 @@ import { setVerbosity } from 'ts-invariant';
 
 import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
-import { InMemoryCache, InMemoryCacheConfig } from '../../../cache/inmemory/inMemoryCache';
+import { InMemoryCache, InMemoryCacheConfig } from '../../../cache';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject

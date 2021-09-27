@@ -2,6 +2,9 @@
 
 ### Bug Fixes
 
+- Disable `InMemoryCache` [result object canonization](https://github.com/apollographql/apollo-client/pull/7439) by default, to prevent unexpected memory growth and/or reuse of object references, with multiple ways to reenable it (per-cache, per-query, or a mixture of both). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8822](https://github.com/apollographql/apollo-client/pull/8822)
+
 - Clear `InMemoryCache` `watches` set when `cache.reset()` called. <br/>
   [@benjamn](https://github.com/benjamn) in [#8826](https://github.com/apollographql/apollo-client/pull/8826)
 

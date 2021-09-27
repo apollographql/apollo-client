@@ -170,14 +170,18 @@ describe('EntityStore', () => {
       },
     });
 
-    const resultBeforeGC = cache.readQuery({ query });
+    function read() {
+      return cache.readQuery({ query, canonizeResults: true });
+    }
+
+    const resultBeforeGC = read();
 
     expect(cache.gc().sort()).toEqual([
       'Author:Ray Bradbury',
       'Book:9781451673319',
     ]);
 
-    const resultAfterGC = cache.readQuery({ query });
+    const resultAfterGC = read();
     expect(resultBeforeGC).toBe(resultAfterGC);
 
     expect(cache.extract()).toEqual({
@@ -207,7 +211,7 @@ describe('EntityStore', () => {
       resetResultCache: true,
     })).toEqual([]);
     expect(cache["storeReader"]).not.toBe(originalReader);
-    const resultAfterResetResultCache = cache.readQuery({ query });
+    const resultAfterResetResultCache = read();
     expect(resultAfterResetResultCache).toBe(resultBeforeGC);
     expect(resultAfterResetResultCache).toBe(resultAfterGC);
 
@@ -217,7 +221,7 @@ describe('EntityStore', () => {
       resetResultIdentities: true,
     })).toEqual([]);
 
-    const resultAfterFullGC = cache.readQuery({ query });
+    const resultAfterFullGC = read();
     expect(resultAfterFullGC).toEqual(resultBeforeGC);
     expect(resultAfterFullGC).toEqual(resultAfterGC);
     // These !== relations are triggered by passing resetResultIdentities:true
@@ -225,7 +229,7 @@ describe('EntityStore', () => {
     expect(resultAfterFullGC).not.toBe(resultBeforeGC);
     expect(resultAfterFullGC).not.toBe(resultAfterGC);
     // Result caching immediately begins working again after the intial reset.
-    expect(cache.readQuery({ query })).toBe(resultAfterFullGC);
+    expect(read()).toBe(resultAfterFullGC);
 
     // Go back to the pre-GC snapshot.
     cache.restore(snapshot);
@@ -1049,6 +1053,7 @@ describe('EntityStore', () => {
     `;
 
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -2391,6 +2396,7 @@ describe('EntityStore', () => {
     const isbnsWeHaveRead: string[] = [];
 
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {

@@ -13,6 +13,7 @@ import {
   StoreObject,
   Reference,
   isReference,
+  compact,
 } from '../../utilities';
 import {
   ApolloReducerConfig,
@@ -36,6 +37,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
   resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
 }
 
 type BroadcastOptions = Pick<
@@ -44,12 +46,21 @@ type BroadcastOptions = Pick<
   | "onWatchUpdated"
 >
 
-const defaultConfig: InMemoryCacheConfig = {
+const defaultConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
   resultCaching: true,
-  typePolicies: {},
+  // Thanks to the shouldCanonizeResults helper, this should be the only line
+  // you have to change to reenable canonization by default in the future.
+  canonizeResults: false,
 };
+
+export function shouldCanonizeResults(
+  config: Pick<InMemoryCacheConfig, "canonizeResults">,
+): boolean {
+  const value = config.canonizeResults;
+  return value === void 0 ? defaultConfig.canonizeResults : value;
+}
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private data: EntityStore;
@@ -77,7 +88,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
-    this.config = { ...defaultConfig, ...config };
+    this.config = compact(defaultConfig, config);
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
@@ -121,6 +132,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
+        canonizeResults: shouldCanonizeResults(this.config),
         canon: resetResultIdentities
           ? void 0
           : previousReader && previousReader.canon,

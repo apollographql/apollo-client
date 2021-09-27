@@ -3015,6 +3015,7 @@ describe('useQuery Hook', () => {
   describe('canonical cache results', () => {
     it('can be disabled via useQuery options', async () => {
       const cache = new InMemoryCache({
+        canonizeResults: true,
         typePolicies: {
           Result: {
             keyFields: false,

@@ -834,7 +834,7 @@ describe('QueryManager', () => {
   });
 
   itAsync('will return referentially equivalent data if nothing changed in a refetch', (resolve, reject) => {
-    const request = {
+    const request: WatchQueryOptions = {
       query: gql`
         {
           a
@@ -850,6 +850,7 @@ describe('QueryManager', () => {
         }
       `,
       notifyOnNetworkStatusChange: false,
+      canonizeResults: true,
     };
 
     const data1 = {

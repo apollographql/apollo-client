@@ -11,6 +11,9 @@
 - Stop excluding observerless queries from `refetchQueries: [...]` selection. <br/>
   [@benjamn](https://github.com/benjamn) in [#8825](https://github.com/apollographql/apollo-client/pull/8825)
 
+- Prevent optimistic cache evictions from evicting non-optimistic data. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8829](https://github.com/apollographql/apollo-client/pull/8829)
+
 ## Apollo Client 3.4.13
 
 ### Bug Fixes

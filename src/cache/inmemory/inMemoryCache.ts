@@ -365,7 +365,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // this.txCount still seems like a good idea, for uniformity with
       // the other update methods.
       ++this.txCount;
-      return this.optimisticData.evict(options);
+      // Pass this.data as a limit on the depth of the eviction, so evictions
+      // during optimistic updates (when this.data is temporarily set equal to
+      // this.optimisticData) do not escape their optimistic Layer.
+      return this.optimisticData.evict(options, this.data);
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();

@@ -445,4 +445,161 @@ describe('optimistic cache layers', () => {
     const resultWithoutOptimisticLayers = readWithAuthors();
     expect(resultWithoutOptimisticLayers).toBe(nonOptimisticResult);
   });
+
+  describe("eviction during optimistic updates", function () {
+    it("should not evict from lower layers", function () {
+      const cache = new InMemoryCache();
+
+      const query = gql`
+        query {
+          counter {
+            value
+          }
+        }
+      `;
+
+      function write(value: number) {
+        cache.writeQuery({
+          query,
+          data: {
+            counter: {
+              value,
+            },
+          },
+        });
+      }
+
+      function expectOptimisticCount(value: number) {
+        expect(cache.readQuery({
+          query,
+          optimistic: true,
+        })).toEqual({
+          counter: {
+            value,
+          },
+        });
+
+        expect(cache.extract(true)).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            counter: {
+              value,
+            },
+          },
+        });
+      }
+
+      function expectNonOptimisticCount(value: number) {
+        // Reading non-optimistically returns the original non-optimistic data.
+        expect(cache.readQuery({
+          query,
+          optimistic: false,
+        })).toEqual({
+          counter: {
+            value,
+          },
+        });
+
+        // Extracting non-optimistically shows Query.counter === 0 again.
+        expect(cache.extract(false)).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            counter: {
+              value,
+            },
+          },
+        });
+      }
+
+      write(0);
+      expectOptimisticCount(0);
+      expectNonOptimisticCount(0);
+
+      cache.batch({
+        optimistic: "layer 1",
+        update() {
+          write(1);
+          expectOptimisticCount(1);
+          // Within the update function, non-optimistic cache reads come from
+          // the current optimistic layer, so we read 1 here instead of 0.
+          expectNonOptimisticCount(1);
+        },
+      });
+      expectOptimisticCount(1);
+      // Now that we're out of the update function, the non-optimistic data is
+      // back to looking as it always did.
+      expectNonOptimisticCount(0);
+
+      cache.batch({
+        optimistic: "layer 2",
+        update() {
+          write(2);
+          expectOptimisticCount(2);
+        },
+      });
+      expectOptimisticCount(2);
+
+      cache.batch({
+        optimistic: "layer 3",
+        update() {
+          write(3);
+          expectOptimisticCount(3);
+
+          expect(cache.evict({
+            fieldName: "counter",
+          })).toBe(true);
+
+          expectOptimisticEviction();
+        },
+      });
+
+      function expectOptimisticEviction() {
+        // Reading optimistically fails because the data have been evicted,
+        // though only optimistically.
+        expect(cache.readQuery({
+          query,
+          optimistic: true,
+        })).toBe(null);
+
+        // Extracting optimistically shows Query.counter undefined.
+        expect(cache.extract(true)).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            counter: void 0,
+          },
+        });
+      }
+
+      expectOptimisticEviction();
+
+      cache.removeOptimistic("layer 2");
+
+      // Nothing changes because "layer 2" was not the top layer.
+      expectOptimisticEviction();
+
+      // Original data still intact, of course.
+      expectNonOptimisticCount(0);
+
+      cache.removeOptimistic("layer 3");
+
+      // Since we removed layers 2 and then 3, only layer 1 is left.
+      expectOptimisticCount(1);
+      expectNonOptimisticCount(0);
+
+      // Since this eviction is not happening inside an optimistic update
+      // function, it evicts the Query.counter field from both the optimistic
+      // layer (1) and the root layer.
+      expect(cache.evict({
+        fieldName: "counter",
+      })).toBe(true);
+
+      expectOptimisticEviction();
+
+      cache.removeOptimistic("layer 1");
+
+      // There are no optimistic layers now, but the root/non-optimistic layer
+      // also exhibits the eviction.
+      expectOptimisticEviction();
+    });
+  });
 });

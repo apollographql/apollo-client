@@ -1,3 +1,10 @@
+## Apollo Client 3.4.15 (not yet released)
+
+### Bug Fixes
+
+- Require calling `cache.reset({ discardWatches: true })` to make `cache.reset` discard `cache.watches`, restoring behavior broken in v3.4.14 by [#8826](https://github.com/apollographql/apollo-client/pull/8826). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8852](https://github.com/apollographql/apollo-client/pull/8852)
+
 ## Apollo Client 3.4.14
 
 ### Bug Fixes

@@ -14,6 +14,9 @@
 - Prevent optimistic cache evictions from evicting non-optimistic data. <br/>
   [@benjamn](https://github.com/benjamn) in [#8829](https://github.com/apollographql/apollo-client/pull/8829)
 
+- Ensure `cache.broadcastWatch` passes all relevant `WatchOptions` to `cache.diff` as `DiffOptions`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8832](https://github.com/apollographql/apollo-client/pull/8832)
+
 ## Apollo Client 3.4.13
 
 ### Bug Fixes

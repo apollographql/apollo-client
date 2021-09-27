@@ -539,11 +539,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     options?: BroadcastOptions,
   ) {
     const { lastDiff } = c;
-    const diff = this.diff<any>({
-      query: c.query,
-      variables: c.variables,
-      optimistic: c.optimistic,
-    });
+
+    // Both WatchOptions and DiffOptions extend ReadOptions, and DiffOptions
+    // currently requires no additional properties, so we can use c (a
+    // WatchOptions object) as DiffOptions, without having to allocate a new
+    // object, and without having to enumerate the relevant properties (query,
+    // variables, etc.) explicitly. There will be some additional properties
+    // (lastDiff, callback, etc.), but cache.diff ignores them.
+    const diff = this.diff<any>(c);
 
     if (options) {
       if (c.optimistic &&

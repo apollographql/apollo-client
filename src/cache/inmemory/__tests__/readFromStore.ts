@@ -724,7 +724,7 @@ describe('reading from the store', () => {
     expect(missing).toEqual([
       new MissingFieldError(
         `Can't find field 'missing' on object ${JSON.stringify({
-          present: "also here",
+          present: "here",
         }, null, 2)}`,
         {
           normal: {

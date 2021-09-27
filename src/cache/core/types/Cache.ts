@@ -47,6 +47,12 @@ export namespace Cache {
     broadcast?: boolean;
   }
 
+  // Although you can call cache.reset() without options, its behavior can be
+  // configured by passing a Cache.ResetOptions object.
+  export interface ResetOptions {
+    discardWatches?: boolean;
+  }
+
   export interface ModifyOptions {
     id?: string;
     fields: Modifiers | Modifier<any>;

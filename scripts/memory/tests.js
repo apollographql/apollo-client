@@ -155,13 +155,18 @@ describe("garbage collection", () => {
           },
         },
       },
+      // Explicitly disable canonization to test that it can be overridden.
+      canonizeResults: false,
     });
 
     const client = new ApolloClient({ cache });
 
     (function () {
       const query = gql`query { local }`;
-      const obsQuery = client.watchQuery({ query });
+      const obsQuery = client.watchQuery({
+        query,
+        canonizeResults: true,
+      });
 
       function register(suffix) {
         const reader = cache["storeReader"];
@@ -177,16 +182,18 @@ describe("garbage collection", () => {
             local: "hello",
           });
 
-          assert.strictEqual(
-            cache.readQuery({ query }),
-            result.data,
-          );
+          const read = () => cache.readQuery({
+            query,
+            canonizeResults: true,
+          });
+
+          assert.strictEqual(read(), result.data);
 
           assert.deepStrictEqual(cache.gc(), []);
 
           // Nothing changes because we merely called cache.gc().
           assert.strictEqual(
-            cache.readQuery({ query }),
+            read(),
             result.data,
           );
 
@@ -199,7 +206,7 @@ describe("garbage collection", () => {
 
           register(2);
 
-          const dataAfterResetWithSameCanon = cache.readQuery({ query });
+          const dataAfterResetWithSameCanon = read();
           assert.strictEqual(dataAfterResetWithSameCanon, result.data);
 
           assert.deepStrictEqual(cache.gc({
@@ -211,7 +218,7 @@ describe("garbage collection", () => {
 
           register(3);
 
-          const dataAfterFullReset = cache.readQuery({ query });
+          const dataAfterFullReset = read();
           assert.notStrictEqual(dataAfterFullReset, result.data);
           assert.deepStrictEqual(dataAfterFullReset, result.data);
 

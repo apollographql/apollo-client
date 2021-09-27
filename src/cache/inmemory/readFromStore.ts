@@ -27,6 +27,7 @@ import {
   maybeDeepFreeze,
   isNonNullObject,
   canUseWeakMap,
+  compact,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
@@ -35,7 +36,7 @@ import {
   ReadMergeModifyContext,
 } from './types';
 import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
-import { getTypenameFromStoreObject } from './helpers';
+import { getTypenameFromStoreObject, shouldCanonizeResults } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError, MissingTree } from '../core/types/common';
@@ -75,6 +76,7 @@ export interface StoreReaderConfig {
   cache: InMemoryCache,
   addTypename?: boolean;
   resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
   canon?: ObjectCanon;
 }
 
@@ -117,6 +119,7 @@ export class StoreReader {
     cache: InMemoryCache,
     addTypename: boolean;
     resultCacheMaxSize?: number;
+    canonizeResults: boolean;
   };
 
   private knownResults = new (
@@ -129,10 +132,10 @@ export class StoreReader {
   }
 
   constructor(config: StoreReaderConfig) {
-    this.config = {
-      ...config,
+    this.config = compact(config, {
       addTypename: config.addTypename !== false,
-    };
+      canonizeResults: shouldCanonizeResults(config),
+    });
 
     this.canon = config.canon || new ObjectCanon;
 
@@ -220,7 +223,7 @@ export class StoreReader {
     rootId = 'ROOT_QUERY',
     variables,
     returnPartialData = true,
-    canonizeResults = true,
+    canonizeResults = this.config.canonizeResults,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const policies = this.config.cache.policies;
 

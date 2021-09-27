@@ -521,6 +521,82 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
+  itAsync('includes queries named in refetchQueries even if they have no observers', async (resolve, reject) => {
+    const client = makeClient();
+
+    const aObs = client.watchQuery({ query: aQuery });
+    const bObs = client.watchQuery({ query: bQuery });
+    const abObs = client.watchQuery({ query: abQuery });
+
+    // These ObservableQuery objects have no observers yet, but should
+    // nevertheless be refetched if identified explicitly in an options.include
+    // array passed to client.refetchQueries.
+    expect(aObs.hasObservers()).toBe(false);
+    expect(bObs.hasObservers()).toBe(false);
+    expect(abObs.hasObservers()).toBe(false);
+
+    const activeResults = await client.refetchQueries({
+      include: ["A", abQuery],
+
+      onQueryUpdated(obs, diff) {
+        if (obs === aObs) {
+          expect(diff.complete).toBe(false);
+          expect(diff.result).toEqual({});
+        } else if (obs === abObs) {
+          expect(diff.complete).toBe(false);
+          expect(diff.result).toEqual({});
+        } else {
+          reject(`unexpected ObservableQuery ${
+            obs.queryId
+          } with name ${obs.queryName}`);
+        }
+        return Promise.resolve(diff.result);
+      },
+    });
+
+    sortObjects(activeResults);
+    expect(activeResults).toEqual([
+      {},
+      {},
+    ]);
+
+    subs.push(abObs.subscribe({
+      next(result) {
+        expect(result.data).toEqual({ a: "A", b: "B" });
+
+        client.refetchQueries({
+          include: [aQuery, "B"],
+
+          onQueryUpdated(obs, diff) {
+            if (obs === aObs) {
+              expect(diff.result).toEqual({ a: "A" });
+            } else if (obs === bObs) {
+              expect(diff.result).toEqual({ b: "B" });
+            } else if (obs === abObs) {
+              expect(diff.result).toEqual({ a: "A", b: "B" });
+            } else {
+              reject(`unexpected ObservableQuery ${
+                obs.queryId
+              } with name ${obs.queryName}`);
+            }
+            return Promise.resolve(diff.result);
+          },
+
+        }).then(resultsAfterSubscribe => {
+          sortObjects(resultsAfterSubscribe);
+          expect(resultsAfterSubscribe).toEqual([
+            { a: "A" },
+            { b: "B" },
+          ]);
+
+          unsubscribe();
+        }).then(resolve, reject);
+      },
+    }));
+
+    expect(abObs.hasObservers()).toBe(true);
+  });
+
   itAsync('should not include unwatched single queries', async (resolve, reject) => {
     const client = makeClient();
     const [

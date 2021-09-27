@@ -16,42 +16,20 @@ import {
   Reference,
   isReference,
 } from '../../utilities';
-import {
-  ApolloReducerConfig,
-  NormalizedCacheObject,
-} from './types';
+import { InMemoryCacheConfig, NormalizedCacheObject } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
 import { makeVar, forgetCache, recallCache } from './reactiveVars';
-import {
-  defaultDataIdFromObject,
-  PossibleTypesMap,
-  Policies,
-  TypePolicies,
-} from './policies';
-import { hasOwn } from './helpers';
+import { Policies } from './policies';
+import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
-
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
-  resultCaching?: boolean;
-  possibleTypes?: PossibleTypesMap;
-  typePolicies?: TypePolicies;
-  resultCacheMaxSize?: number;
-}
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   | "optimistic"
   | "onWatchUpdated"
 >
-
-const defaultConfig: InMemoryCacheConfig = {
-  dataIdFromObject: defaultDataIdFromObject,
-  addTypename: true,
-  resultCaching: true,
-  typePolicies: {},
-};
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private data: EntityStore;
@@ -79,7 +57,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
-    this.config = { ...defaultConfig, ...config };
+    this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
@@ -123,6 +101,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
+        canonizeResults: shouldCanonizeResults(this.config),
         canon: resetResultIdentities
           ? void 0
           : previousReader && previousReader.canon,
@@ -363,7 +342,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // this.txCount still seems like a good idea, for uniformity with
       // the other update methods.
       ++this.txCount;
-      return this.optimisticData.evict(options);
+      // Pass this.data as a limit on the depth of the eviction, so evictions
+      // during optimistic updates (when this.data is temporarily set equal to
+      // this.optimisticData) do not escape their optimistic Layer.
+      return this.optimisticData.evict(options, this.data);
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();
@@ -373,8 +355,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public reset(): Promise<void> {
     this.init();
-    this.broadcastWatches();
+
+    // Similar to what happens in the unsubscribe function returned by
+    // cache.watch, applied to all current watches.
+    this.watches.forEach(watch => this.maybeBroadcastWatch.forget(watch));
+    this.watches.clear();
+    forgetCache(this);
+
     canonicalStringify.reset();
+
     return Promise.resolve();
   }
 
@@ -532,11 +521,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     options?: BroadcastOptions,
   ) {
     const { lastDiff } = c;
-    const diff = this.diff<any>({
-      query: c.query,
-      variables: c.variables,
-      optimistic: c.optimistic,
-    });
+
+    // Both WatchOptions and DiffOptions extend ReadOptions, and DiffOptions
+    // currently requires no additional properties, so we can use c (a
+    // WatchOptions object) as DiffOptions, without having to allocate a new
+    // object, and without having to enumerate the relevant properties (query,
+    // variables, etc.) explicitly. There will be some additional properties
+    // (lastDiff, callback, etc.), but cache.diff ignores them.
+    const diff = this.diff<any>(c);
 
     if (options) {
       if (c.optimistic &&

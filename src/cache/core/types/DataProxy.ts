@@ -70,7 +70,7 @@ export namespace DataProxy {
     /**
      * Whether to canonize cache results before returning them. Canonization
      * takes some extra time, but it speeds up future deep equality comparisons.
-     * Defaults to true.
+     * Defaults to false.
      */
     canonizeResults?: boolean;
   }
@@ -91,7 +91,7 @@ export namespace DataProxy {
     /**
      * Whether to canonize cache results before returning them. Canonization
      * takes some extra time, but it speeds up future deep equality comparisons.
-     * Defaults to true.
+     * Defaults to false.
      */
     canonizeResults?: boolean;
   }

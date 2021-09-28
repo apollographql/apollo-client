@@ -218,6 +218,12 @@ export const canonicalStringify = Object.assign(function (value: any): string {
   return JSON.stringify(value);
 }, {
   reset: resetCanonicalStringify,
+  canonize<T>(value: T): T {
+    if (stringifyCanon === void 0) {
+      resetCanonicalStringify();
+    }
+    return stringifyCanon.admit(value);
+  },
 });
 
 // Can be reset by calling canonicalStringify.reset().

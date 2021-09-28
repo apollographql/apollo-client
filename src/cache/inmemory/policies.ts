@@ -1095,7 +1095,15 @@ function computeKeyFieldsObject(
           JSON.stringify(response)
         }`,
       );
-      keyObj[lastActualKey = s] = response[lastResponseKey = responseKey];
+      const child = response[lastResponseKey = responseKey];
+      keyObj[lastActualKey = s] = isNonNullObject(child)
+        // In case there is no nested specifier array to dictate the
+        // stringification ordering of this child object, stringify it
+        // canonically/stably. If there is a nested specifier array, it will be
+        // used to rewrite this child object in the specified order, in the next
+        // forEach iteration.
+        ? canonicalStringify.canonize(child)
+        : child;
     }
   });
 

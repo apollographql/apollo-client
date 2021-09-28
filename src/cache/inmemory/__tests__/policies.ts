@@ -224,6 +224,99 @@ describe("type policies", function () {
     checkAuthorName(cache);
   });
 
+  it("serializes nested keyFields objects in stable order", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          // If you explicitly specify the order of author sub-fields, there
+          // will be no ambiguity about how the author object should be
+          // serialized. However, cache IDs should at least be stably
+          // stringified if the child property names are omitted, as below.
+          // keyFields: ["title", "author", ["firstName", "lastName"]],
+          keyFields: ["title", "author"],
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        book {
+          title
+          writer: author {
+            first: firstName
+            lastName
+          }
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: {
+          __typename: "Book",
+          writer: {
+            // The order of fields shouldn't matter here, since cache
+            // identification will stringify them in a stable order.
+            first: "Rebecca",
+            lastName: "Schwarzlose",
+            __typename: "Person",
+          },
+          title: "Brainscapes",
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: {
+          __typename: "Book",
+          title: "The Science of Can and Can't",
+          writer: {
+            // The order of fields shouldn't matter here, since cache
+            // identification will stringify them in a stable order.
+            lastName: "Marletto",
+            __typename: "Person",
+            first: "Chiarra",
+          },
+        },
+      },
+    });
+
+    expect(cache.extract(true)).toEqual({
+      // The order of the author object's __typename, firstName, and lastName
+      // fields has been determined by our keyFields configuration and stable
+      // stringification.
+      'Book:{"title":"Brainscapes","author":{"__typename":"Person","firstName":"Rebecca","lastName":"Schwarzlose"}}': {
+        __typename: "Book",
+        title: "Brainscapes",
+        author: {
+          __typename: "Person",
+          firstName: "Rebecca",
+          lastName: "Schwarzlose",
+        },
+      },
+      // Again, __typename, firstName, and then lastName, despite the different
+      // order of keys in the data we wrote.
+      'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}': {
+        __typename: "Book",
+        title: "The Science of Can and Can't",
+        author: {
+          __typename: "Person",
+          firstName: "Chiarra",
+          lastName: "Marletto",
+        },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: {
+          __ref: 'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}',
+        },
+      },
+    });
+  });
+
   it("accepts keyFields functions", function () {
     const cache = new InMemoryCache({
       typePolicies: {

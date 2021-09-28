@@ -242,8 +242,8 @@ describe("type policies", function () {
       query {
         book {
           title
-          author {
-            firstName
+          writer: author {
+            first: firstName
             lastName
           }
         }
@@ -255,10 +255,10 @@ describe("type policies", function () {
       data: {
         book: {
           __typename: "Book",
-          author: {
+          writer: {
             // The order of fields shouldn't matter here, since cache
             // identification will stringify them in a stable order.
-            firstName: "Rebecca",
+            first: "Rebecca",
             lastName: "Schwarzlose",
             __typename: "Person",
           },
@@ -273,12 +273,12 @@ describe("type policies", function () {
         book: {
           __typename: "Book",
           title: "The Science of Can and Can't",
-          author: {
+          writer: {
             // The order of fields shouldn't matter here, since cache
             // identification will stringify them in a stable order.
             lastName: "Marletto",
             __typename: "Person",
-            firstName: "Chiarra",
+            first: "Chiarra",
           },
         },
       },

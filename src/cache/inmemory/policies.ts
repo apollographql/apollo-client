@@ -1018,6 +1018,8 @@ type AliasMap = {
   // Map from store key to corresponding response key. Undefined when there are
   // no aliased fields in this selection set.
   aliases?: Record<string, string>;
+  // Map in the reverse direction.
+  actuals?: Record<string, string>;
   // Map from store key to AliasMap correponding to a child selection set.
   // Undefined when there are no child selection sets.
   subsets?: Record<string, AliasMap>;
@@ -1038,7 +1040,9 @@ function makeAliasMap(
           const storeKey = selection.name.value;
           if (storeKey !== responseKey) {
             const aliases = map.aliases || (map.aliases = Object.create(null));
+            const actuals = map.actuals || (map.actuals = Object.create(null));
             aliases[storeKey] = responseKey;
+            actuals[responseKey] = storeKey;
           }
         }
         if (selection.selectionSet) {
@@ -1076,7 +1080,7 @@ function computeKeyFieldsObject(
   const aliases = aliasMap && aliasMap.aliases;
   const subsets = aliasMap && aliasMap.subsets;
 
-  specifier.forEach(s => {
+  function handle(s: KeySpecifier) {
     if (Array.isArray(s)) {
       if (typeof lastActualKey === "string" &&
           typeof lastResponseKey === "string") {
@@ -1086,26 +1090,59 @@ function computeKeyFieldsObject(
           response[lastResponseKey],
           subsets && subsets[lastActualKey],
         );
+
+        // Prevent the final checkLastResponseValue() call from doing anything,
+        // since we've handled this object.
+        lastActualKey = lastResponseKey = void 0;
       }
     } else {
+      // In case the last response value was an object, and the current
+      // specifier s is not an array that applies to that object, synthesize a
+      // sorted specifier array for the previous object before continuing.
+      checkLastResponseValue();
+
       const responseKey = aliases && aliases[s] || s;
+
       invariant(
         hasOwn.call(response, responseKey),
         `Missing field '${responseKey}' while extracting keyFields from ${
           JSON.stringify(response)
         }`,
       );
-      const child = response[lastResponseKey = responseKey];
-      keyObj[lastActualKey = s] = isNonNullObject(child)
-        // In case there is no nested specifier array to dictate the
-        // stringification ordering of this child object, stringify it
-        // canonically/stably. If there is a nested specifier array, it will be
-        // used to rewrite this child object in the specified order, in the next
-        // forEach iteration.
-        ? canonicalStringify.canonize(child)
-        : child;
+
+      keyObj[lastActualKey = s] = response[lastResponseKey = responseKey];
     }
-  });
+  }
+
+  function checkLastResponseValue() {
+    const lastResponseValue =
+      typeof lastResponseKey === "string" &&
+      typeof lastActualKey === "string" &&
+      response[lastResponseKey];
+    if (
+      isNonNullObject(lastResponseValue) &&
+      !Array.isArray(lastResponseValue)
+    ) {
+      // If the last response value was a non-array object, synthesize a stable
+      // specifier array for it (taking aliases into account), and recurse by
+      // calling the handle function with that specifier array.
+      const keys = Object.keys(lastResponseValue);
+      const subset = subsets && subsets[lastActualKey!];
+      const actuals = subset && subset.actuals;
+      if (actuals) {
+        for (let i = 0, len = keys.length; i < len; ++i) {
+          keys[i] = actuals[keys[i]] || keys[i];
+        }
+      }
+      handle(keys.sort());
+    }
+  }
+
+  specifier.forEach(handle);
+
+  // In case the last response value was an object, but there was no final
+  // specifier array, synthesize one here.
+  checkLastResponseValue();
 
   return keyObj;
 }

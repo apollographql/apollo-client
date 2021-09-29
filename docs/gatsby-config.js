@@ -9,6 +9,7 @@ module.exports = {
         root: __dirname,
         pathPrefix: '/docs/react',
         algoliaIndexName: 'react',
+        algoliaFilters: ['docset:react', 'docset:server'],
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',

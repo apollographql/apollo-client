@@ -7,12 +7,8 @@ import {
   FieldNode,
 } from 'graphql';
 
-import { Trie } from '@wry/trie';
-
 import {
   FragmentMap,
-  getFragmentFromSelection,
-  isField,
   getTypenameFromResult,
   storeKeyNameFromField,
   StoreValue,
@@ -21,10 +17,8 @@ import {
   Reference,
   isReference,
   getStoreKeyName,
-  canUseWeakMap,
   isNonNullObject,
   stringifyForDisplay,
-  isNonEmptyArray,
 } from '../../utilities';
 import {
   IdGetter,
@@ -56,6 +50,7 @@ import { WriteContext } from './writeToStore';
 // used by getStoreKeyName. This function is used when computing storeFieldName
 // strings (when no keyArgs has been configured for a field).
 import { canonicalStringify } from './object-canon';
+import { KeyExtractor } from './key-extractor';
 
 getStoreKeyName.setStringify(canonicalStringify);
 
@@ -63,9 +58,7 @@ export type TypePolicies = {
   [__typename: string]: TypePolicy;
 }
 
-// TypeScript 3.7 will allow recursive type aliases, so this should work:
-// type KeySpecifier = (string | KeySpecifier)[]
-type KeySpecifier = (string | any[])[];
+export type KeySpecifier = (string | KeySpecifier)[];
 
 export type KeyFieldsContext = {
   typename?: string;
@@ -281,6 +274,8 @@ export class Policies {
 
   public readonly usingPossibleTypes = false;
 
+  private keyExtractor = new KeyExtractor;
+
   constructor(private config: {
     cache: InMemoryCache;
     dataIdFromObject?: KeyFieldsFunction;
@@ -340,7 +335,7 @@ export class Policies {
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
       if (Array.isArray(specifierOrId)) {
-        keyFn = keyFieldsFnFromSpecifier(specifierOrId);
+        keyFn = this.keyExtractor.keyFieldsFnFromSpecifier(specifierOrId);
       } else {
         id = specifierOrId;
         break;
@@ -414,7 +409,7 @@ export class Policies {
       keyFields === false ? nullKeyFieldsFn :
       // Pass an array of strings to use those fields to compute a
       // composite ID for objects of this typename.
-      Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
+      Array.isArray(keyFields) ? this.keyExtractor.keyFieldsFnFromSpecifier(keyFields) :
       // Pass a function to take full control over identification.
       typeof keyFields === "function" ? keyFields :
       // Leave existing.keyFn unchanged if above cases fail.
@@ -436,7 +431,7 @@ export class Policies {
             keyArgs === false ? simpleKeyArgsFn :
             // Pass an array of strings to use named arguments to
             // compute a composite identity for the field.
-            Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
+            Array.isArray(keyArgs) ? this.keyExtractor.keyArgsFnFromSpecifier(keyArgs) :
             // Pass a function to take full control over field identity.
             typeof keyArgs === "function" ? keyArgs :
             // Leave existing.keyFn unchanged if above cases fail.
@@ -687,7 +682,7 @@ export class Policies {
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
-          keyFn = keyArgsFnFromSpecifier(specifierOrString);
+          keyFn = this.keyExtractor.keyArgsFnFromSpecifier(specifierOrString);
         } else {
           // If the custom keyFn returns a falsy value, fall back to
           // fieldName instead.
@@ -963,247 +958,4 @@ function makeMergeObjectsFunction(
 
     return incoming;
   };
-}
-
-function keyArgsFnFromSpecifier(
-  specifier: KeySpecifier,
-): KeyArgsFunction {
-  return (args, context) => {
-    let key = context.fieldName;
-
-    const suffix = JSON.stringify(
-      computeKeyArgsObject(specifier, context.field, args, context.variables),
-    );
-
-    // If no arguments were passed to this field, and it didn't have any other
-    // field key contributions from directives or variables, hide the empty :{}
-    // suffix from the field key. However, a field passed no arguments can still
-    // end up with a non-empty :{...} suffix if its key configuration refers to
-    // directives or variables.
-    if (args || suffix !== "{}") {
-      key += ":" + suffix;
-    }
-
-    return key;
-  };
-}
-
-function keyFieldsFnFromSpecifier(
-  specifier: KeySpecifier,
-): KeyFieldsFunction {
-  const trie = new Trie<{
-    aliasMap?: AliasMap;
-  }>(canUseWeakMap);
-
-  return (object, context) => {
-    let aliasMap: AliasMap | undefined;
-    if (context.selectionSet && context.fragmentMap) {
-      const info = trie.lookupArray([
-        context.selectionSet,
-        context.fragmentMap,
-      ]);
-      aliasMap = info.aliasMap || (
-        info.aliasMap = makeAliasMap(context.selectionSet, context.fragmentMap)
-      );
-    }
-
-    const keyObject = context.keyObject =
-      computeKeyFieldsObject(specifier, object, aliasMap);
-
-    return `${context.typename}:${JSON.stringify(keyObject)}`;
-  };
-}
-
-type AliasMap = {
-  // Map from store key to corresponding response key. Undefined when there are
-  // no aliased fields in this selection set.
-  aliases?: Record<string, string>;
-  // Map in the reverse direction.
-  actuals?: Record<string, string>;
-  // Map from store key to AliasMap correponding to a child selection set.
-  // Undefined when there are no child selection sets.
-  subsets?: Record<string, AliasMap>;
-};
-
-function makeAliasMap(
-  selectionSet: SelectionSetNode,
-  fragmentMap: FragmentMap,
-): AliasMap {
-  let map: AliasMap = Object.create(null);
-  // TODO Cache this work, perhaps by storing selectionSet._aliasMap?
-  const workQueue = new Set([selectionSet]);
-  workQueue.forEach(selectionSet => {
-    selectionSet.selections.forEach(selection => {
-      if (isField(selection)) {
-        if (selection.alias) {
-          const responseKey = selection.alias.value;
-          const storeKey = selection.name.value;
-          if (storeKey !== responseKey) {
-            const aliases = map.aliases || (map.aliases = Object.create(null));
-            const actuals = map.actuals || (map.actuals = Object.create(null));
-            aliases[storeKey] = responseKey;
-            actuals[responseKey] = storeKey;
-          }
-        }
-        if (selection.selectionSet) {
-          const subsets = map.subsets || (map.subsets = Object.create(null));
-          subsets[selection.name.value] =
-            makeAliasMap(selection.selectionSet, fragmentMap);
-        }
-      } else {
-        const fragment = getFragmentFromSelection(selection, fragmentMap);
-        if (fragment) {
-          workQueue.add(fragment.selectionSet);
-        }
-      }
-    });
-  });
-  return map;
-}
-
-function computeKeyFieldsObject(
-  specifier: KeySpecifier,
-  response: Record<string, any>,
-  aliasMap: AliasMap | undefined,
-): Record<string, any> {
-  // The order of adding properties to keyObj affects its JSON serialization,
-  // so we are careful to build keyObj in the order of keys given in
-  // specifier.
-  const keyObj = Object.create(null);
-
-  // The lastResponseKey variable tracks keys as seen in actual GraphQL response
-  // objects, potentially affected by aliasing. The lastActualKey variable
-  // tracks the corresponding key after removing aliases.
-  let lastResponseKey: string | undefined;
-  let lastActualKey: string | undefined;
-
-  const aliases = aliasMap && aliasMap.aliases;
-  const subsets = aliasMap && aliasMap.subsets;
-
-  function handle(s: KeySpecifier) {
-    if (Array.isArray(s)) {
-      if (typeof lastActualKey === "string" &&
-          typeof lastResponseKey === "string") {
-        keyObj[lastActualKey] = computeKeyFieldsObject(
-          s, // An array of fields names to extract from the previous response
-             // object (response[lastResponseKey]).
-          response[lastResponseKey],
-          subsets && subsets[lastActualKey],
-        );
-
-        // Prevent the final checkLastResponseValue() call from doing anything,
-        // since we've handled this object.
-        lastActualKey = lastResponseKey = void 0;
-      }
-    } else {
-      // In case the last response value was an object, and the current
-      // specifier s is not an array that applies to that object, synthesize a
-      // sorted specifier array for the previous object before continuing.
-      checkLastResponseValue();
-
-      const responseKey = aliases && aliases[s] || s;
-
-      invariant(
-        hasOwn.call(response, responseKey),
-        `Missing field '${responseKey}' while extracting keyFields from ${
-          JSON.stringify(response)
-        }`,
-      );
-
-      keyObj[lastActualKey = s] = response[lastResponseKey = responseKey];
-    }
-  }
-
-  function checkLastResponseValue() {
-    const lastResponseValue =
-      typeof lastResponseKey === "string" &&
-      typeof lastActualKey === "string" &&
-      response[lastResponseKey];
-    if (
-      isNonNullObject(lastResponseValue) &&
-      !Array.isArray(lastResponseValue)
-    ) {
-      // If the last response value was a non-array object, synthesize a stable
-      // specifier array for it (taking aliases into account), and recurse by
-      // calling the handle function with that specifier array.
-      const keys = Object.keys(lastResponseValue);
-      const subset = subsets && subsets[lastActualKey!];
-      const actuals = subset && subset.actuals;
-      if (actuals) {
-        for (let i = 0, len = keys.length; i < len; ++i) {
-          keys[i] = actuals[keys[i]] || keys[i];
-        }
-      }
-      handle(keys.sort());
-    }
-  }
-
-  specifier.forEach(handle);
-
-  // In case the last response value was an object, but there was no final
-  // specifier array, synthesize one here.
-  checkLastResponseValue();
-
-  return keyObj;
-}
-
-function computeKeyArgsObject(
-  specifier: KeySpecifier,
-  field: FieldNode | null,
-  source: Record<string, any> | null,
-  variables: Record<string, any> | undefined,
-): Record<string, any> {
-  // The order of adding properties to keyObj affects its JSON serialization,
-  // so we are careful to build keyObj in the order of keys given in
-  // specifier.
-  const keyObj = Object.create(null);
-
-  let last: undefined | {
-    key: string;
-    source: any;
-  };
-
-  specifier.forEach(key => {
-    if (Array.isArray(key)) {
-      if (last) {
-        keyObj[last.key] =
-          computeKeyArgsObject(key, field, last.source, variables);
-      }
-    } else {
-      const firstChar = key.charAt(0);
-
-      if (firstChar === "@") {
-        if (field && isNonEmptyArray(field.directives)) {
-          // TODO Cache this work somehow, a la aliasMap?
-          const directiveName = key.slice(1);
-          // If the directive appears multiple times, only the first
-          // occurrence's arguments will be used. TODO Allow repetition?
-          const d = field.directives.find(d => d.name.value === directiveName);
-          if (d) {
-            last = {
-              key,
-              // Fortunately argumentsObjectFromField works for DirectiveNode!
-              source: keyObj[key] = argumentsObjectFromField(d, variables),
-            };
-            return;
-          }
-        }
-
-      } else if (firstChar === "$") {
-        const variableName = key.slice(1);
-        if (variables && hasOwn.call(variables, variableName)) {
-          last = { key, source: keyObj[key] = variables[variableName] };
-          return;
-        }
-
-      } else if (source && hasOwn.call(source, key)) {
-        last = { key, source: keyObj[key] = source[key] };
-        return;
-      }
-
-      last = void 0;
-    }
-  });
-
-  return keyObj;
 }

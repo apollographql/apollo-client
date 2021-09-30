@@ -696,7 +696,9 @@ export class QueryManager<TStore> {
     if (queryInfo) queryInfo.stop();
   }
 
-  public clearStore(): Promise<void> {
+  public clearStore(options: Cache.ResetOptions = {
+    discardWatches: true,
+  }): Promise<void> {
     // Before we have sent the reset action to the store, we can no longer
     // rely on the results returned by in-flight requests since these may
     // depend on values that previously existed in the data portion of the
@@ -721,19 +723,7 @@ export class QueryManager<TStore> {
     }
 
     // begin removing data from the store
-    return this.cache.reset();
-  }
-
-  public resetStore(): Promise<ApolloQueryResult<any>[]> {
-    // Similarly, we have to have to refetch each of the queries currently being
-    // observed. We refetch instead of error'ing on these since the assumption is that
-    // resetting the store doesn't eliminate the need for the queries currently being
-    // watched. If there is an existing query in flight when the store is reset,
-    // the promise for it will be rejected and its results will not be written to the
-    // store.
-    return this.clearStore().then(() => {
-      return this.reFetchObservableQueries();
-    });
+    return this.cache.reset(options);
   }
 
   public getObservableQueries(

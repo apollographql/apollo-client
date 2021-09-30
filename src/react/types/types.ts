@@ -108,7 +108,7 @@ export interface QueryLazyOptions<TVariables> {
 export type LazyQueryResult<TData, TVariables> = QueryResult<TData, TVariables>;
 
 export type QueryTuple<TData, TVariables> = [
-  (options?: QueryLazyOptions<TVariables>) => void,
+  (options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
   LazyQueryResult<TData, TVariables>
 ];
 

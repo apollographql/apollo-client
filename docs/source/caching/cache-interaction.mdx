@@ -3,6 +3,10 @@ title: Reading and writing data to the cache
 sidebar_title: Reading and writing
 ---
 
+import {
+  ExpansionPanel,
+} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
+
 You can read and write data directly to the Apollo Client cache, _without_ communicating with your GraphQL server. You can interact with data that you previously fetched from your server, _and_ with data that's only available [locally](../local-state/local-state-management/).
 
 Apollo Client supports multiple strategies for interacting with cached data:
@@ -62,7 +66,7 @@ If your cache contains data for _all_ of the query's fields, `readQuery` returns
 
 > Apollo Client automatically queries for every object's `__typename`, even if you don't include this field in your query string.
 
-**Do not modify the returned object directly.** The same object might be returned to multiple components. To update data in the cache, instead create a replacement object and pass it to [`writeQuery`](#writequery).
+**Do not modify the returned object directly.** The same object might be returned to multiple components. To update data in the cache, see [Combining reads and writes](#combining-reads-and-writes).
 
 If the cache is missing data for _any_ of the query's fields, `readQuery` returns `null`. It does _not_ attempt to fetch data from your GraphQL server.
 
@@ -158,7 +162,7 @@ const todo = client.readFragment({
 });
 ```
 
-Unlike `readQuery`, `readFragment` requires an `id` option. This option specifies the cache ID for the object in your cache. [By default](./overview/#2-generate-cache-ids), cache IDs have the format `<_typename>:<id>` (which is why we provide `Todo:5` above). You can [customize this ID](./cache-configuration/#customizing-cache-ids).
+Unlike `readQuery`, `readFragment` requires an `id` option. This option specifies the cache ID for the object in your cache. [By default](./overview/#2-generate-cache-ids), cache IDs have the format `<__typename>:<id>` (which is why we provide `Todo:5` above). You can [customize this ID](./cache-configuration/#customizing-cache-ids).
 
 In the example above, `readFragment` returns `null` if no `Todo` object with ID `5` exists in the cache, or if the object exists but is missing a value for either `text` or `completed`.
 
@@ -190,7 +194,9 @@ All subscribers to the Apollo Client cache (including all active queries) see th
 
 ## Combining reads and writes
 
-You can combine `readQuery` and `writeQuery` (or `readFragment` and `writeFragment`) to fetch currently cached data and make selective modifications to it. The example below creates a new `Todo` item and adds it to your cached to-do list. Remember, this addition is _not_ sent to your remote server.
+You can combine `readQuery` and `writeQuery` (or `readFragment` and `writeFragment`) to fetch currently cached data and make selective modifications to it. The following example creates a new `Todo` item and adds it to your cached to-do list. Remember, this addition is _not_ sent to your remote server.
+
+<ExpansionPanel title="Click to expand">
 
 ```js
 // Query that fetches all existing to-do items
@@ -224,16 +230,46 @@ client.writeQuery({
 });
 ```
 
-As a convenience, you can use `cache.updateQuery` and `cache.updateFragment`, which is passed a callback with read data, and writes the result.
+</ExpansionPanel>
 
-```js
-// Marks all todos in the cache as completed.
+### Using `updateQuery` and `updateFragment`
+
+> These methods are available in Apollo Client 3.5 and later.
+
+As a convenience, you can use `cache.updateQuery` or `cache.updateFragment` to combine reading and writing cached data with a single method call:
+
+```js{12-17}
+// Query to fetch all todo items
+const query = gql`
+  query MyTodoAppQuery {
+    todos {
+      id
+      text
+      completed
+    }
+  }
+`;
+
+// Set all todos in the cache as completed
 cache.updateQuery({ query }, (data) => ({
   data: {
     todos: data.todos.map((todo) => ({ ...todo, completed: true }))
   }
 }));
 ```
+
+Each of these methods takes two parameters:
+
+* The same `options` parameter as its `read` method counterpart (which always includes a `query` or `fragment`)
+* An **update function**
+
+After either method fetches data from the cache, it calls its update function and passes it the cached `data`. The update function can then return a value to _replace_ that `data` in the cache. In the example above, every cached `Todo` object has its `completed` field set to `true` (and other fields remain unchanged).
+
+If the update function shouldn't make _any_ changes to the cached data, it can return `undefined`.
+
+The update function's return value is passed to either `writeQuery` or `writeFragment`, which modifies the cached data.
+
+> See the full API reference for [`cache.updateQuery`](../api/cache/InMemoryCache/#updatequery) and [`cache.updateFragment`](../api/cache/InMemoryCache/#updatefragment).
 
 ## Using `cache.modify`
 

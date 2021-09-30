@@ -7,11 +7,14 @@ api_reference: true
 
 Methods of the `InMemoryCache` class (the cache used by almost every instance of [`ApolloClient`](../core/ApolloClient/)) are documented here.
 
+> Before reading about individual methods, see [Caching in Apollo Client](../../caching/overview/).
+
 ## `readQuery`
 
 Executes a GraphQL query directly against the cache and returns its result (or `null` if the query cannot be fulfilled):
 
 ```js
+// Query a cached Todo object with id 5
 const { todo } = cache.readQuery({
   query: gql`
     query ReadTodo {
@@ -162,10 +165,11 @@ readQuery<QueryType, TVariables = any>(
 Writes data to the cache in the shape of a provided GraphQL query. Returns a `Reference` to the written object or `undefined` if the write failed.
 
 ```js
+// Create or modify a cached Todo object with id 5
 cache.writeQuery({
   query: gql`
-    query ReadTodo {
-      todo(id: 5) {
+    query ReadTodo($id: ID!) {
+      todo(id: $id) {
         id
         text
         completed
@@ -251,7 +255,7 @@ A map of any GraphQL variable names and values required by `query`.
 </td>
 <td>
 
-The `id` of the root object to use with the query.
+The `id` of the root object to use with `query`.
 
 The default value is `ROOT_QUERY`, which is the ID of the root query object.
 
@@ -303,15 +307,18 @@ writeQuery<TData = any, TVariables = any>(
 
 ## `updateQuery`
 
-Updates data in the cache in the shape of a provided GraphQL query. Returns the resulting updated result or `null` if the write failed.
+> This method is available in Apollo Client 3.5 and later.
 
-If `undefined` is returned from the update function, nothing will be written to the cache.
+Fetches data from the cache in the shape of a provided GraphQL query, then _updates_ that cached data according to a provided update function.
+
+Returns the updated result or `null` if the update failed.
 
 ```js
-cache.updateQuery({
+// Fetches a Todo object with id 5 and flips its `completed` boolean
+cache.updateQuery({ // options object
   query: gql`
-    query ReadTodo {
-      todo(id: 5) {
+    query ReadTodo($id: ID!) {
+      todo(id: $id) {
         id
         text
         completed
@@ -321,7 +328,7 @@ cache.updateQuery({
   variables: {
     id: 5
   }
-}, (data) => ({
+}, (data) => ({ // update function
   todo: {
     ...data.todo,
     completed: !data.todo.completed
@@ -329,7 +336,7 @@ cache.updateQuery({
 }));
 ```
 
-Takes an `options` object and a callback function as parameters. Supported fields of this object are described below.
+Takes an `options` object and an update function as parameters (both described below).
 
 ### Options
 
@@ -352,11 +359,11 @@ Takes an `options` object and a callback function as parameters. Supported field
 </td>
 <td>
 
-**Required.** The GraphQL query that defines the shape of the data to write. Created by wrapping a query string in the `gql` template literal.
+**Required.** The GraphQL query that defines the shape of the data to fetch. Created by wrapping a query string in the `gql` template literal.
 </td>
 </tr>
 
-<tr class="required">
+<tr>
 <td>
 
 ###### `variables`
@@ -379,11 +386,11 @@ A map of any GraphQL variable names and values required by `query`.
 </td>
 <td>
 
-The `id` of the root object to use with the query.
+The `id` of the root object to use with `query`.
 
 The default value is `ROOT_QUERY`, which is the ID of the root query object.
 
-By specifying the ID of another cached object, you can modify arbitrary cached data without conforming to the structure of your schema's supported queries. This enables `writeQuery` to behave similarly to [`writeFragment`](#writefragment).
+By specifying the ID of another cached object, you can modify arbitrary cached data without conforming to the structure of your schema's supported queries. This enables `updateQuery` to behave similarly to [`updateFragment`](#updatefragment).
 </td>
 </tr>
 
@@ -421,11 +428,11 @@ The default value is `false`.
 </tbody>
 </table>
 
-#### Update function API
+### `updateQuery` update function
 
-An update function takes a cached query’s current value and returns the value that should replace it, or `undefined` if no change should be made.
+The update function of `updateQuery` takes a query's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
-The first parameter passed to the update function is the current cached value of the query.
+The returned value is automatically passed to [`writeQuery`](#writequery), which modifies the cached data.
 
 ### Signature
 
@@ -753,18 +760,26 @@ writeFragment<TData = any, TVariables = any>(
 
 ## `updateFragment`
 
-Updates data in the cache in the shape of a provided GraphQL fragment:
+> This method is available in Apollo Client 3.5 and later.
+
+Fetches data from the cache in the shape of a provided GraphQL fragment, then _updates_ that cached data according to a provided update function.
+
+Returns the updated result or `null` if the update failed.
 
 ```js
-const todo = cache.updateFragment({
+// Fetches a Todo object with id 5 and sets its `completed` boolean to true
+const todo = cache.updateFragment({ // options object
   id: '5', // The value of the to-do item's unique identifier
   fragment: gql`
     fragment MyTodo on Todo {
       completed
     }
   `,
-}, (data) => ({ ...data, completed: true }));
+}, (data) => ({ ...data, completed: true }) // update function
+);
 ```
+
+Takes an `options` object and an update function as parameters (both described below).
 
 ### Options
 
@@ -787,9 +802,9 @@ const todo = cache.updateFragment({
 </td>
 <td>
 
-**Required.** The ID of the cached object that this call is writing a fragment to.
+**Required.** The ID of the cached object that this call is reading a fragment of.
 
-If the cache does not contain an object with the specified ID, `writeFragment` returns `null`.
+If the cache does not contain an object with the specified ID, `updateFragment` returns `null`.
 </td>
 </tr>
 
@@ -803,7 +818,7 @@ If the cache does not contain an object with the specified ID, `writeFragment` r
 </td>
 <td>
 
-**Required.** A GraphQL document created with the `gql` template literal tag that includes the fragment to write.
+**Required.** A GraphQL document created with the `gql` template literal tag that includes the fragment to read.
 
 If the document includes more than one fragment, you must also provide [`fragmentName`](#fragmentname) to indicate which to use.
 </td>
@@ -872,11 +887,11 @@ The default value is `false`.
 </tbody>
 </table>
 
-#### Update function API
+### `updateFragment` update function
 
-An update function takes a cached fragment’s current value and returns the value that should replace it, or `undefined` if no change should be made.
+The update function of `updateFragment` takes a fragment's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
-The first parameter passed to the update function is the current cached value of the fragment.
+The returned value is automatically passed to [`writeFragment`](#writefragment), which modifies the cached data.
 
 ### Signature
 

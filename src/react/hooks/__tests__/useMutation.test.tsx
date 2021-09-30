@@ -359,6 +359,61 @@ describe('useMutation Hook', () => {
 
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
     });
+
+    it('should be possible to reset the mutation', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            }
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          }
+        }
+      ];
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useMutation<
+          { createTodo: Todo },
+          { priority: string, description: string }
+        >(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      await act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+        });
+      });
+
+      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+      setTimeout(() => {
+        result.current[1].reset();
+      });
+
+      await waitForNextUpdate();
+      expect(result.current[1].data).toBe(undefined);
+    });
   });
 
   describe('ROOT_MUTATION cache data', () => {

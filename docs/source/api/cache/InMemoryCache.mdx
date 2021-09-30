@@ -168,8 +168,8 @@ Writes data to the cache in the shape of a provided GraphQL query. Returns a `Re
 // Create or modify a cached Todo object with id 5
 cache.writeQuery({
   query: gql`
-    query ReadTodo {
-      todo($id: ID!) {
+    query ReadTodo($id: ID!) {
+      todo(id: $id) {
         id
         text
         completed
@@ -887,7 +887,7 @@ The default value is `false`.
 
 The update function takes a cached fragment's current value and returns the value that should replace it, or `undefined` if no change should be made.
 
-The first parameter passed to the update function is the current cached value of the query.
+The first parameter passed to the update function is the current cached value of the fragment.
 
 ### Signature
 

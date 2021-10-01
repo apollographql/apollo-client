@@ -28,11 +28,13 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 
 ## Who is Apollo?
 
-[Apollo Graph, Inc.](https://apollographql.com/) creates industry-leading tools for building applications with GraphQL:
+[Apollo](https://apollographql.com/) builds open-source software and a graph platform to unify GraphQL across your apps and services. We help you ship faster with:
 
-- [Apollo Client](https://www.apollographql.com/apollo-client/) – The most popular GraphQL client for the web. Apollo also builds and maintains [Apollo iOS](https://github.com/apollographql/apollo-ios) and [Apollo Android](https://github.com/apollographql/apollo-android).
-- [Apollo Server](https://www.apollographql.com/docs/apollo-server/) – Build a production-ready JavaScript GraphQL server with a schema-first approach.
-- [Apollo Studio](https://www.apollographql.com/studio/develop/) – A turnkey portal for GraphQL developers, featuring a powerful GraphQL IDE (the [Apollo Explorer](https://www.apollographql.com/docs/studio/explorer/)), metrics reporting, schema search, and documentation.
-- [Apollo Federation](https://www.apollographql.com/apollo-federation) – Create and manage a single data graph composed of subgraphs that can be developed independently.
+* [Apollo Studio](https://www.apollographql.com/studio/develop/) – A free, end-to-end platform for managing your GraphQL lifecycle. Track your GraphQL schemas in a hosted registry to create a source of truth for everything in your graph. Studio provides an IDE (Apollo Explorer) so you can explore data, collaborate on queries, observe usage, and safely make schema changes.
+* [Apollo Federation](https://www.apollographql.com/apollo-federation) – The industry-standard open architecture for building a distributed graph. Use Apollo’s open-source gateway to compose a unified graph from multiple subgraphs, determine a query plan, and route requests across your services.
+* [Apollo Client](https://www.apollographql.com/apollo-client/) – The most popular GraphQL client for the web. Apollo also builds and maintains [Apollo iOS](https://github.com/apollographql/apollo-ios) and [Apollo Android](https://github.com/apollographql/apollo-android).
+* [Apollo Server](https://www.apollographql.com/docs/apollo-server/) – A production-ready JavaScript GraphQL server that connects to any microservice, API, or database. Compatible with all popular JavaScript frameworks and deployable in serverless environments.
 
-We are fully committed to advancing the frontier of graph development with open-source libraries, hosted software tooling, developer extensions, and community contributions.
+## Learn how to build with Apollo
+
+Check out the [Odyssey](https://odyssey.apollographql.com/) learning platform, the perfect place to start your GraphQL journey with videos and interactive code challenges. Join the [Apollo Community](https://community.apollographql.com/) to interact with and get technical help from the GraphQL community.

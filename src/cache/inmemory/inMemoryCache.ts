@@ -353,16 +353,26 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public reset(): Promise<void> {
+  public reset(options?: Cache.ResetOptions): Promise<void> {
     this.init();
 
-    // Similar to what happens in the unsubscribe function returned by
-    // cache.watch, applied to all current watches.
-    this.watches.forEach(watch => this.maybeBroadcastWatch.forget(watch));
-    this.watches.clear();
-    forgetCache(this);
-
     canonicalStringify.reset();
+
+    if (options && options.discardWatches) {
+      // Similar to what happens in the unsubscribe function returned by
+      // cache.watch, applied to all current watches.
+      this.watches.forEach(watch => this.maybeBroadcastWatch.forget(watch));
+      this.watches.clear();
+      forgetCache(this);
+    } else {
+      // Calling this.init() above unblocks all maybeBroadcastWatch caching, so
+      // this.broadcastWatches() triggers a broadcast to every current watcher
+      // (letting them know their data is now missing). This default behavior is
+      // convenient because it means the watches do not have to be manually
+      // reestablished after resetting the cache. To prevent this broadcast and
+      // cancel all watches, pass true for options.discardWatches.
+      this.broadcastWatches();
+    }
 
     return Promise.resolve();
   }

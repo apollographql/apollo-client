@@ -3495,7 +3495,7 @@ describe("ReactiveVar and makeVar", () => {
       d: 2,
     });
 
-    cache.reset();
+    cache.reset({ discardWatches: true });
     expect(cache["watches"].size).toBe(0);
 
     expect(diffCounts).toEqual({
@@ -3546,7 +3546,7 @@ describe("ReactiveVar and makeVar", () => {
       f: 2,
     });
 
-    cache.reset();
+    cache.reset({ discardWatches: true });
     expect(cache["watches"].size).toBe(0);
 
     nameVar("Danielle");

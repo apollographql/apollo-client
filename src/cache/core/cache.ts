@@ -24,7 +24,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public abstract watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>,
   ): () => void;
-  public abstract reset(): Promise<void>;
+
+  // Empty the cache and restart all current watches (unless
+  // options.discardWatches is true).
+  public abstract reset(options?: Cache.ResetOptions): Promise<void>;
 
   // Remove whole objects from the cache by passing just options.id, or
   // specific fields by passing options.field and/or options.args. If no

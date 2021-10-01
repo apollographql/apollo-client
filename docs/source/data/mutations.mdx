@@ -332,6 +332,33 @@ If you find you've included more queries than you expected, you can skip or igno
 
 To use the `onQueryUpdated` API without performing a mutation, try the [`client.refetchQueries`](./refetching/#clientrefetchqueries) method. In the standalone `client.refetchQueries` API, the `refetchQueries: [...]` mutation option is called `include: [...]`, and the `update` function is called `updateCache` for clarity. Otherwise, the same internal system powers both `client.refetchQueries` and refetching queries after a mutation.
 
+### Resetting mutation results
+
+Similar to the functions available from `useQuery` results, the mutation result has a `reset` function, which can be used to reset the mutation result to its initial state. This function can be used to allow the user to dismiss mutation data or errors in the UI.
+
+```js
+function LoginPage () {
+  const [loginMutation, loginResult] = useMutation(LOGIN_MUTATION);
+
+  return (
+    <>
+      <form>
+        <input class="login"/>
+        <input class="password"/>
+        <button onclick={login}>Login</button>
+      </form>
+      {
+        loginResult.error &&
+        <LoginFailedMessageWindow
+          message={loginResult.error.message}
+          onDismiss={() => loginResult.reset()}
+        />
+      }
+    </>
+  );
+}
+```
+
 ## `useMutation` API
 
 Supported options and result fields for the `useMutation` hook are listed below.

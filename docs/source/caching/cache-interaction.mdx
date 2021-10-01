@@ -260,12 +260,14 @@ cache.updateQuery({ query }, (data) => ({
 
 Each of these methods takes two parameters:
 
-* The same `options` parameter as its `read` method counterpart (which includes a `query` or `fragment`)
+* The same `options` parameter as its `read` method counterpart (which always includes a `query` or `fragment`)
 * An **update function**
 
 After either method fetches data from the cache, it calls its update function and passes it the cached `data`. The update function can then return a value to _replace_ that `data` in the cache. In the example above, every cached `Todo` object has its `completed` field set to `true` (and other fields remain unchanged).
 
 If the update function shouldn't make _any_ changes to the cached data, it can return `undefined`.
+
+The update function's return value is passed to either `writeQuery` or `writeFragment`, which modifies the cached data.
 
 > See the full API reference for [`cache.updateQuery`](../api/cache/InMemoryCache/#updatequery) and [`cache.updateFragment`](../api/cache/InMemoryCache/#updatefragment).
 

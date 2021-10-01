@@ -307,6 +307,8 @@ writeQuery<TData = any, TVariables = any>(
 
 ## `updateQuery`
 
+> This method is available in Apollo Client 3.5 and later.
+
 Fetches data from the cache in the shape of a provided GraphQL query, then _updates_ that cached data according to a provided update function.
 
 Returns the updated result or `null` if the update failed.
@@ -426,11 +428,11 @@ The default value is `false`.
 </tbody>
 </table>
 
-### Update function API
+### `updateQuery` update function
 
-The update function takes a cached query's current value and returns the value that should replace it, or `undefined` if no change should be made.
+The update function of `updateQuery` takes a query's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
-The first parameter passed to the update function is the current cached value of the query.
+The returned value is automatically passed to [`writeQuery`](#writequery), which modifies the cached data.
 
 ### Signature
 
@@ -758,6 +760,8 @@ writeFragment<TData = any, TVariables = any>(
 
 ## `updateFragment`
 
+> This method is available in Apollo Client 3.5 and later.
+
 Fetches data from the cache in the shape of a provided GraphQL fragment, then _updates_ that cached data according to a provided update function.
 
 Returns the updated result or `null` if the update failed.
@@ -883,11 +887,11 @@ The default value is `false`.
 </tbody>
 </table>
 
-### Update function API
+### `updateFragment` update function
 
-The update function takes a cached fragment's current value and returns the value that should replace it, or `undefined` if no change should be made.
+The update function of `updateFragment` takes a fragment's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
-The first parameter passed to the update function is the current cached value of the fragment.
+The returned value is automatically passed to [`writeFragment`](#writefragment), which modifies the cached data.
 
 ### Signature
 

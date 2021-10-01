@@ -506,4 +506,42 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'from link' });
   });
+
+  it('should return a promise from the execution function which resolves with the result', async () => {
+    const query = gql`{ hello }`;
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { hello: 'world' } },
+        delay: 20,
+      },
+    ];
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      },
+    );
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    const execute = result.current[0];
+    const mock = jest.fn();
+    setTimeout(() => mock(execute()));
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({ hello: 'world' });
+
+    expect(mock).toHaveBeenCalledTimes(1);
+    expect(mock.mock.calls[0][0]).toBeInstanceOf(Promise);
+    expect(await mock.mock.calls[0][0]).toEqual(result.current[1]);
+  });
 });

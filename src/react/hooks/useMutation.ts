@@ -30,7 +30,7 @@ export function useMutation<
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
-  const [result, setResult] = useState<MutationResult>({
+  const [result, setResult] = useState<Omit<MutationResult, 'reset'>>({
     called: false,
     loading: false,
     client,
@@ -122,9 +122,14 @@ export function useMutation<
     });
   }, [client, options, mutation]);
 
+  const reset = useCallback(() => {
+    setResult({ called: false, loading: false, client });
+  }, []);
+
   useEffect(() => () => {
     ref.current.isMounted = false;
   }, []);
 
-  return [execute, result];
+
+  return [execute, { reset, ...result }];
 }

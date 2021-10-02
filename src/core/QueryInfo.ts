@@ -350,7 +350,9 @@ export class QueryInfo {
     options: Pick<WatchQueryOptions,
       | "variables"
       | "fetchPolicy"
-      | "errorPolicy">,
+      | "errorPolicy"
+      | "disableNormalization"
+      >,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
     this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
@@ -378,6 +380,7 @@ export class QueryInfo {
               data: result.data as T,
               variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+              disableNormalization: options.disableNormalization,
             });
 
             this.lastWrite = {

@@ -1030,7 +1030,9 @@ export class QueryManager<TStore> {
       | "variables"
       | "context"
       | "fetchPolicy"
-      | "errorPolicy">,
+      | "errorPolicy"
+      | "disableNormalization"
+      >,
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = queryInfo.lastRequestId = this.generateRequestId();
 
@@ -1103,6 +1105,7 @@ export class QueryManager<TStore> {
       returnPartialData = false,
       notifyOnNetworkStatusChange = false,
       context = {},
+      disableNormalization = false,
     } = options;
 
     const normalized = Object.assign({}, options, {
@@ -1113,6 +1116,7 @@ export class QueryManager<TStore> {
       returnPartialData,
       notifyOnNetworkStatusChange,
       context,
+      disableNormalization
     });
 
     const fromVariables = (variables: TVars) => {
@@ -1328,6 +1332,7 @@ export class QueryManager<TStore> {
       returnPartialData,
       context,
       notifyOnNetworkStatusChange,
+      disableNormalization,
     }: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
@@ -1391,6 +1396,7 @@ export class QueryManager<TStore> {
         context,
         fetchPolicy,
         errorPolicy,
+        disableNormalization,
       });
 
     const shouldNotify =

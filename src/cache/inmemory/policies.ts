@@ -312,6 +312,7 @@ export class Policies {
     object: StoreObject,
     selectionSet?: SelectionSetNode,
     fragmentMap?: FragmentMap,
+    disableNormalization?: boolean
   ): [string?, StoreObject?] {
     // TODO Use an AliasMap here?
     const typename = selectionSet && fragmentMap
@@ -337,7 +338,8 @@ export class Policies {
     let id: KeyFieldsResult;
 
     const policy = typename && this.getTypePolicy(typename);
-    let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
+
+    let keyFn = disableNormalization ? () => false as const : policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
       if (Array.isArray(specifierOrId)) {

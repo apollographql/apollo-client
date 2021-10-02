@@ -110,6 +110,8 @@ export namespace DataProxy {
      * incoming data (default: false).
      */
     overwrite?: boolean;
+
+    disableNormalization?: boolean
   }
 
   export interface WriteQueryOptions<TData, TVariables>

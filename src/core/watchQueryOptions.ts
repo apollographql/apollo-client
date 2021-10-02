@@ -109,6 +109,10 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
    * Defaults to false.
    */
   canonizeResults?: boolean;
+
+  /** trying to disable use of noramized cache */
+
+  disableNormalization?: boolean // default to false
 }
 
 /**

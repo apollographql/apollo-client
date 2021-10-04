@@ -151,6 +151,41 @@ if (error) return `Submission error! ${error.message}`;
 
 > The `useMutation` hook also supports `onCompleted` and `onError` options if you prefer to use callbacks. [See the API reference.](../api/react/hooks/#options-2)
 
+### Resetting mutation status
+
+The mutation result object returned by `useMutation` includes a [`reset` function](#reset):
+
+```js
+const [login, { data, loading, error, reset }] = useMutation(LOGIN_MUTATION);
+```
+
+Call `reset` to reset the mutation's result to its initial state (i.e., _before_ the mutate function was called). You can use this to enable users to dismiss mutation result data or errors in the UI.
+
+> Calling `reset` does _not_ remove any cached data returned by the mutation's execution. It only affects the state associated with the `useMutation` hook, causing the corresponding component to rerender.
+
+```js{2,15}
+function LoginPage () {
+  const [login, { error, reset }] = useMutation(LOGIN_MUTATION);
+
+  return (
+    <>
+      <form>
+        <input class="login"/>
+        <input class="password"/>
+        <button onclick={login}>Login</button>
+      </form>
+      {
+        error &&
+        <LoginFailedMessageWindow
+          message={error.message}
+          onDismiss={() => reset()}
+        />
+      }
+    </>
+  );
+}
+```
+
 ## Updating local data
 
 When you execute a mutation, you modify back-end data. Usually, you then want to update your _locally cached_ data to reflect the back-end modification. For example, if you execute a mutation to add an item to your to-do list, you also want that item to appear in your cached copy of the list.

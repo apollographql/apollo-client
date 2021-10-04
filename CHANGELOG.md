@@ -11,6 +11,9 @@
 - Avoid importing `isType` from the `graphql` package internally, to prevent bundlers from including as much as 3.4kB of unnecessary code. <br/>
   [@benjamn](https://github.com/benjamn) in [#8891](https://github.com/apollographql/apollo-client/pull/8891)
 
+- Make `client.resetStore` and `client.clearStore` pass appropriate `discardWatches` option to `cache.reset`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8873](https://github.com/apollographql/apollo-client/pull/8873)
+
 ## Apollo Client 3.4.15
 
 ### Bug Fixes

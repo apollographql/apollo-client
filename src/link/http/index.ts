@@ -1,3 +1,5 @@
+import '../../utilities/globals';
+
 export {
   parseAndCheckHttpResponse,
   ServerParseError

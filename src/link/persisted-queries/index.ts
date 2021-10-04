@@ -1,10 +1,11 @@
+import { invariant } from '../../utilities/globals';
+
 import { print } from 'graphql';
 import {
   DocumentNode,
   ExecutionResult,
   GraphQLError,
 } from 'graphql';
-import { invariant } from 'ts-invariant';
 
 import { ApolloLink, Operation } from '../core';
 import { Observable, Observer, compact } from '../../utilities';
@@ -21,7 +22,7 @@ export interface ErrorResponse {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
-namespace PersistedQueryLink {
+export namespace PersistedQueryLink {
   interface BaseOptions {
     disable?: (error: ErrorResponse) => boolean;
     useGETForHashedQueries?: boolean;
@@ -185,6 +186,12 @@ export const createPersistedQueryLink = (
               http: {
                 includeQuery: true,
                 includeExtensions: supportsPersistedQueries,
+              },
+              fetchOptions: {
+                // Since we're including the full query, which may be
+                // large, we should send it in the body of a POST request.
+                // See issue #7456.
+                method: 'POST',
               },
             });
             if (setFetchOptions) {

@@ -46,6 +46,30 @@ function makeRegistry(callback, reject) {
   return registry;
 }
 
+// This is not technically a memory-related test, but it depends on the build
+// artifacts generated in the ../../dist directory by `npm run build`, which is
+// an assumption shared by the other tests in this file.
+describe("@apollo/client/apollo-client.cjs.js", () => {
+  it("can be imported as a single CommonJS bundle (issue #8592)", () => {
+    const bundle = require("@apollo/client/apollo-client.cjs.js");
+
+    // Very basic test that requiring the bundle worked.
+    assert.strictEqual(typeof bundle.ApolloClient, "function");
+    assert.strictEqual(typeof bundle.InMemoryCache, "function");
+
+    // TODO This will change in AC4 when we move all React exports to the
+    // @apollo/client/react entry point (see issue #8190).
+    assert.strictEqual(typeof bundle.ApolloProvider, "function");
+
+    // The CommonJS bundles referred to by the "main" fields in the various
+    // package.json files that we generate during `npm run build` are all
+    // independent, non-overlapping bundles, but apollo-client.cjs.js is its own
+    // bundle, so importing it duplicates everything.
+    assert.notStrictEqual(bundle.ApolloClient, ApolloClient);
+    assert.notStrictEqual(bundle.InMemoryCache, InMemoryCache);
+  });
+});
+
 describe("garbage collection", () => {
   itAsync("should collect client.cache after client.stop()", (resolve, reject) => {
     const expectedKeys = new Set([
@@ -93,6 +117,115 @@ describe("garbage collection", () => {
         },
       }),
     }));
+  });
+
+  itAsync("should release cache.storeReader if requested via cache.gc", (resolve, reject) => {
+    const expectedKeys = {
+      __proto__: null,
+      StoreReader1: true,
+      ObjectCanon1: true,
+      StoreReader2: true,
+      ObjectCanon2: true,
+      StoreReader3: false,
+      ObjectCanon3: false,
+    };
+
+    const registry = makeRegistry(key => {
+      // Referring to client here should keep the client itself alive
+      // until after the ObservableQuery is (or should have been)
+      // collected. Collecting the ObservableQuery just because the whole
+      // client instance was collected is not interesting.
+      assert.strictEqual(client instanceof ApolloClient, true);
+      if (key in expectedKeys) {
+        assert.strictEqual(expectedKeys[key], true, key);
+      }
+      delete expectedKeys[key];
+      if (Object.keys(expectedKeys).every(key => !expectedKeys[key])) {
+        setTimeout(resolve, 100);
+      }
+    }, reject);
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            local() {
+              return "hello";
+            },
+          },
+        },
+      },
+      // Explicitly disable canonization to test that it can be overridden.
+      canonizeResults: false,
+    });
+
+    const client = new ApolloClient({ cache });
+
+    (function () {
+      const query = gql`query { local }`;
+      const obsQuery = client.watchQuery({
+        query,
+        canonizeResults: true,
+      });
+
+      function register(suffix) {
+        const reader = cache["storeReader"];
+        registry.register(reader, "StoreReader" + suffix);
+        registry.register(reader.canon, "ObjectCanon" + suffix);
+      }
+
+      register(1);
+
+      const sub = obsQuery.subscribe({
+        next(result) {
+          assert.deepStrictEqual(result.data, {
+            local: "hello",
+          });
+
+          const read = () => cache.readQuery({
+            query,
+            canonizeResults: true,
+          });
+
+          assert.strictEqual(read(), result.data);
+
+          assert.deepStrictEqual(cache.gc(), []);
+
+          // Nothing changes because we merely called cache.gc().
+          assert.strictEqual(
+            read(),
+            result.data,
+          );
+
+          assert.deepStrictEqual(cache.gc({
+            // Now reset the result cache but preserve reader.canon, so the
+            // results will be === even though they have to be recomputed.
+            resetResultCache: true,
+            resetResultIdentities: false,
+          }), []);
+
+          register(2);
+
+          const dataAfterResetWithSameCanon = read();
+          assert.strictEqual(dataAfterResetWithSameCanon, result.data);
+
+          assert.deepStrictEqual(cache.gc({
+            // Finally, do a full reset of the result caching system, including
+            // discarding reader.canon, so === result identity is lost.
+            resetResultCache: true,
+            resetResultIdentities: true,
+          }), []);
+
+          register(3);
+
+          const dataAfterFullReset = read();
+          assert.notStrictEqual(dataAfterFullReset, result.data);
+          assert.deepStrictEqual(dataAfterFullReset, result.data);
+
+          sub.unsubscribe();
+        },
+      });
+    })();
   });
 
   itAsync("should collect ObservableQuery after tear-down", (resolve, reject) => {
@@ -175,6 +308,9 @@ describe("garbage collection", () => {
       // won't be garbage collected before this function runs, so we can
       // verify that renderPromises.clear() was called by getDataFromTree.
       assert.strictEqual(renderPromisesSet.size, 1);
+      renderPromisesSet.forEach(rp => {
+        assert.strictEqual(rp.stopped, true);
+      });
 
       if (expectedKeys.delete(key) && !expectedKeys.size) {
         resolve();

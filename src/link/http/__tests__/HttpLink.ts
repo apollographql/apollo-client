@@ -11,6 +11,7 @@ import { ClientParseError } from '../serializeFetchParameter';
 import { ServerParseError } from '../parseAndCheckHttpResponse';
 import { ServerError } from '../../..';
 import DoneCallback = jest.DoneCallback;
+import { voidFetchDuringEachTest } from './helpers';
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -53,6 +54,7 @@ describe('HttpLink', () => {
     const data2 = { data: { hello: 'everyone' } };
     const mockError = { throws: new TypeError('mock me') };
     let subscriber: ZenObservable.Observer<any>;
+    const subscriptions = new Set<ZenObservable.Subscription>();
 
     beforeEach(() => {
       fetchMock.restore();
@@ -73,10 +75,17 @@ describe('HttpLink', () => {
         error,
         complete,
       };
+
+      subscriptions.clear();
     });
 
     afterEach(() => {
       fetchMock.restore();
+      if (subscriptions.size) {
+        // Tests within this describe block can add subscriptions to this Set
+        // that they want to be canceled/unsubscribed after the test finishes.
+        subscriptions.forEach(sub => sub.unsubscribe());
+      }
     });
 
     it('does not need any constructor arguments', () => {
@@ -829,6 +838,53 @@ describe('HttpLink', () => {
       );
     });
 
+    it('uses the latest window.fetch function if options.fetch not configured', done => {
+      const httpLink = createHttpLink({ uri: 'data' });
+
+      const fetch = window.fetch;
+      expect(typeof fetch).toBe('function');
+
+      const fetchSpy = jest.spyOn(window, 'fetch');
+      fetchSpy.mockImplementation(() => Promise.resolve<Response>({
+        text() {
+          return Promise.resolve(JSON.stringify({
+            data: { hello: "from spy" },
+          }));
+        },
+      } as Response));
+
+      const spyFn = window.fetch;
+      expect(spyFn).not.toBe(fetch);
+
+      subscriptions.add(execute(httpLink, {
+        query: sampleQuery,
+      }).subscribe({
+        error: done.fail,
+
+        next(result) {
+          expect(fetchSpy).toHaveBeenCalledTimes(1);
+          expect(result).toEqual({
+            data: { hello: "from spy" },
+          });
+
+          fetchSpy.mockRestore();
+          expect(window.fetch).toBe(fetch);
+
+          subscriptions.add(execute(httpLink, {
+            query: sampleQuery,
+          }).subscribe({
+            error: done.fail,
+            next(result) {
+              expect(result).toEqual({
+                data: { hello: "world" },
+              });
+              done();
+            },
+          }));
+        },
+      }));
+    });
+
     it('prioritizes context over setup', done => {
       const variables = { params: 'stub' };
       const middleware = new ApolloLink((operation, forward) => {
@@ -907,15 +963,7 @@ describe('HttpLink', () => {
   });
 
   describe('Dev warnings', () => {
-    let oldFetch: WindowOrWorkerGlobalScope['fetch'];;
-    beforeEach(() => {
-      oldFetch = window.fetch;
-      delete window.fetch;
-    });
-
-    afterEach(() => {
-      window.fetch = oldFetch;
-    });
+    voidFetchDuringEachTest();
 
     it('warns if fetch is undeclared', done => {
       try {

@@ -1,7 +1,12 @@
+import '../utilities/globals';
+
 export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';
 export { DataProxy } from './core/types/DataProxy';
-export { MissingFieldError } from './core/types/common';
+export {
+  MissingFieldError,
+  ReadFieldOptions
+} from './core/types/common';
 
 export {
   Reference,
@@ -9,9 +14,14 @@ export {
   makeReference,
 } from '../utilities';
 
+export { EntityStore } from './inmemory/entityStore';
+export {
+  fieldNameFromStoreName,
+  defaultDataIdFromObject,
+} from './inmemory/helpers'
+
 export {
   InMemoryCache,
-  InMemoryCacheConfig,
 } from './inmemory/inMemoryCache';
 
 export {
@@ -21,7 +31,6 @@ export {
 } from './inmemory/reactiveVars';
 
 export {
-  defaultDataIdFromObject,
   TypePolicies,
   TypePolicy,
   FieldPolicy,
@@ -29,6 +38,11 @@ export {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
+  Policies,
 } from './inmemory/policies';
+
+export {
+  canonicalStringify,
+} from './inmemory/object-canon';
 
 export * from './inmemory/types';

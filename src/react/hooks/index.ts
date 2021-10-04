@@ -1,3 +1,5 @@
+import '../../utilities/globals';
+
 export * from './useApolloClient';
 export * from './useLazyQuery';
 export * from './useMutation';

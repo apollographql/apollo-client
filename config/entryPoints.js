@@ -23,6 +23,7 @@ const entryPoints = [
   { dirs: ['react', 'parser'] },
   { dirs: ['react', 'ssr'] },
   { dirs: ['utilities'] },
+  { dirs: ['utilities', 'globals'], sideEffects: true },
   { dirs: ['testing'], extensions: [".js", ".jsx"] },
 ];
 
@@ -88,6 +89,12 @@ function partsAfterDist(id) {
     return parts.slice(distIndex + 1);
   }
 }
+
+exports.getEntryPointDirectory = function (file) {
+  const parts = partsAfterDist(file) || file.split(path.sep);
+  const len = lengthOfLongestEntryPoint(parts);
+  if (len >= 0) return parts.slice(0, len).join(path.sep);
+};
 
 function lengthOfLongestEntryPoint(parts) {
   let node = lookupTrie;

@@ -1,13 +1,15 @@
 const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
 
 module.exports = {
-  pathPrefix: '/docs/react',
   plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
         ...themeOptions,
         root: __dirname,
+        pathPrefix: '/docs/react',
+        algoliaIndexName: 'react',
+        algoliaFilters: ['docset:react', 'docset:server'],
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
@@ -31,11 +33,14 @@ module.exports = {
           'Fetching': [
             'data/queries',
             'data/mutations',
+            'data/refetching',
             'data/subscriptions',
             'data/fragments',
             'data/error-handling',
+            'data/operation-best-practices'
           ],
           Caching: [
+            'caching/overview',
             'caching/cache-configuration',
             'caching/cache-interaction',
             'caching/garbage-collection',

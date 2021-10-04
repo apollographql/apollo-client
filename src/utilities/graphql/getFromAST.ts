@@ -1,11 +1,11 @@
+import { invariant, InvariantError } from '../globals';
+
 import {
   DocumentNode,
   OperationDefinitionNode,
   FragmentDefinitionNode,
   ValueNode,
 } from 'graphql';
-
-import { invariant, InvariantError } from 'ts-invariant';
 
 import { valueToObjectRepresentation } from './storeUtils';
 

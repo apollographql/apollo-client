@@ -1,5 +1,7 @@
 /* Core */
 
+import { DEV } from '../utilities/globals';
+
 export {
   ApolloClient,
   ApolloClientOptions,
@@ -10,6 +12,7 @@ export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
+  applyNextFetchPolicy,
 } from './ObservableQuery';
 export {
   QueryOptions,
@@ -21,7 +24,6 @@ export {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  MutationUpdaterFn,
 } from './watchQueryOptions';
 export { NetworkStatus } from './networkStatus';
 export * from './types';
@@ -89,7 +91,7 @@ export {
 // Note that all invariant.* logging is hidden in production.
 import { setVerbosity } from "ts-invariant";
 export { setVerbosity as setLogVerbosity }
-setVerbosity("log");
+setVerbosity(DEV ? "log" : "silent");
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.
@@ -103,11 +105,10 @@ setVerbosity("log");
 // workaround of pulling the extra properties off the `gql` function,
 // then re-exporting them separately, helps keeps bundlers happy without any
 // additional config changes.
-import gql from 'graphql-tag';
-export const {
+export {
+  gql,
   resetCaches,
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
-  disableExperimentalFragmentVariables
-} = gql;
-export { gql };
+  disableExperimentalFragmentVariables,
+} from 'graphql-tag';

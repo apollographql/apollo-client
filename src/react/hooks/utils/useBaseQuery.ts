@@ -1,3 +1,5 @@
+import '../../../utilities/globals';
+
 import { useContext, useEffect, useReducer, useRef } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -12,6 +14,7 @@ import { QueryData } from '../../data';
 import { useDeepMemo } from './useDeepMemo';
 import { OperationVariables } from '../../../core';
 import { getApolloContext } from '../../context';
+import { useAfterFastRefresh } from './useAfterFastRefresh';
 
 export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -34,8 +37,8 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
           // force that re-render if we're already rendering however so to be
           // safe we'll trigger the re-render in a microtask. In case the
           // component gets unmounted before this callback fires, we re-check
-          // queryDataRef.current before calling forceUpdate().
-          Promise.resolve().then(() => queryDataRef.current && forceUpdate());
+          // queryDataRef.current.isMounted before calling forceUpdate().
+          Promise.resolve().then(() => queryDataRef.current && queryDataRef.current.isMounted && forceUpdate());
         } else {
           // If we're rendering on the server side we can force an update at
           // any point.
@@ -54,8 +57,8 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
   const memo = {
     options: {
       ...updatedOptions,
-      onError: undefined,
-      onCompleted: undefined
+      onError: void 0,
+      onCompleted: void 0
     } as QueryHookOptions<TData, TVariables>,
     context,
     tick
@@ -70,8 +73,18 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     ? (result as QueryTuple<TData, TVariables>)[1]
     : (result as QueryResult<TData, TVariables>);
 
+  if (__DEV__) {
+    // ensure we run an update after refreshing so that we reinitialize
+    useAfterFastRefresh(forceUpdate);
+  }
+
   useEffect(() => {
-    return () => queryData.cleanup();
+    return () => {
+      queryData.cleanup();
+      // this effect can run multiple times during a fast-refresh
+      // so make sure we clean up the ref
+      queryDataRef.current = void 0;
+    }
   }, []);
 
   useEffect(() => queryData.afterExecute({ lazy }), [
@@ -79,6 +92,7 @@ export function useBaseQuery<TData = any, TVariables = OperationVariables>(
     queryResult.networkStatus,
     queryResult.error,
     queryResult.data,
+    queryData.currentObservable,
   ]);
 
   return result;

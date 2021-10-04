@@ -1,3 +1,5 @@
+export { DEV, maybe } from './globals';
+
 export {
   DirectiveInfo,
   InclusionDirectives,
@@ -33,6 +35,7 @@ export {
   Directives,
   VariableValue,
   makeReference,
+  isDocumentNode,
   isReference,
   isField,
   isInlineFragment,
@@ -83,6 +86,11 @@ export * from './observables/asyncMap';
 export * from './observables/Concast';
 export * from './observables/subclassing';
 export * from './common/arrays';
+export * from './common/objects';
 export * from './common/errorHandling';
 export * from './common/canUse';
 export * from './common/compact';
+export * from './common/makeUniqueId';
+export * from './common/stringifyForDisplay';
+
+export * from './types/IsStrictlyAny';

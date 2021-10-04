@@ -80,9 +80,9 @@ export type TIncomingRelay<TNode> = {
 };
 
 export type RelayFieldPolicy<TNode> = FieldPolicy<
-  TExistingRelay<TNode>,
-  TIncomingRelay<TNode>,
-  TIncomingRelay<TNode>
+  TExistingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null
 >;
 
 // As proof of the flexibility of field policies, this function generates
@@ -95,22 +95,27 @@ export function relayStylePagination<TNode = Reference>(
     keyArgs,
 
     read(existing, { canRead, readField }) {
-      if (!existing) return;
+      if (!existing) return existing;
 
       const edges: TRelayEdge<TNode>[] = [];
-      let startCursor = "";
-      let endCursor = "";
+      let firstEdgeCursor = "";
+      let lastEdgeCursor = "";
       existing.edges.forEach(edge => {
         // Edges themselves could be Reference objects, so it's important
         // to use readField to access the edge.edge.node property.
         if (canRead(readField("node", edge))) {
           edges.push(edge);
           if (edge.cursor) {
-            startCursor = startCursor || edge.cursor;
-            endCursor = edge.cursor;
+            firstEdgeCursor = firstEdgeCursor || edge.cursor || "";
+            lastEdgeCursor = edge.cursor || lastEdgeCursor;
           }
         }
       });
+
+      const {
+        startCursor,
+        endCursor,
+      } = existing.pageInfo || {};
 
       return {
         // Some implementations return additional Connection fields, such
@@ -120,13 +125,23 @@ export function relayStylePagination<TNode = Reference>(
         edges,
         pageInfo: {
           ...existing.pageInfo,
-          startCursor,
-          endCursor,
+          // If existing.pageInfo.{start,end}Cursor are undefined or "", default
+          // to firstEdgeCursor and/or lastEdgeCursor.
+          startCursor: startCursor || firstEdgeCursor,
+          endCursor: endCursor || lastEdgeCursor,
         },
       };
     },
 
-    merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
+    merge(existing, incoming, { args, isReference, readField }) {
+      if (!existing) {
+        existing = makeEmptyData();
+      }
+
+      if (!incoming) {
+        return existing;
+      }
+
       const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
         if (isReference(edge = { ...edge })) {
           // In case edge is a Reference, we read out its cursor field and

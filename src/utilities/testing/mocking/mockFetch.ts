@@ -88,7 +88,7 @@ export class MockFetch {
 
   // Returns a "fetch" function equivalent that mocks the given responses.
   // The function by returned by this should be tacked onto the global scope
-  // inorder to test functions that use "fetch".
+  // in order to test functions that use "fetch".
   public getFetch() {
     return this.fetch.bind(this);
   }

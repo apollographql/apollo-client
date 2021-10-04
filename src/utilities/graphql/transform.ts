@@ -1,3 +1,5 @@
+import { invariant } from '../globals';
+
 import {
   DocumentNode,
   SelectionNode,
@@ -12,7 +14,6 @@ import {
   VariableNode,
   visit,
 } from 'graphql';
-import { invariant } from 'ts-invariant';
 
 import {
   checkDocument,
@@ -209,7 +210,9 @@ export function removeDirectivesFromDocument(
   return modifiedDoc;
 }
 
-export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
+export const addTypenameToDocument = Object.assign(function (
+  doc: DocumentNode
+): DocumentNode {
   return visit(checkDocument(doc), {
     SelectionSet: {
       enter(node, _key, parent) {
@@ -259,14 +262,11 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
       },
     },
   });
-}
-
-export interface addTypenameToDocument {
-  added(field: FieldNode): boolean;
-}
-addTypenameToDocument.added = function (field: FieldNode) {
-  return field === TYPENAME_FIELD;
-};
+}, {
+  added(field: FieldNode): boolean {
+    return field === TYPENAME_FIELD;
+  },
+});
 
 const connectionRemoveConfig = {
   test: (directive: DirectiveNode) => {

@@ -9,6 +9,7 @@ import { MockLink } from '../../../utilities/testing/mocking/mockLink';
 import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
 import { itAsync } from '../../../utilities/testing/itAsync';
 import { FieldPolicy, StorageType } from "../policies";
+import { withErrorSpy, withWarningSpy } from "../../../testing";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -119,6 +120,63 @@ describe("type policies", function () {
       'Book:{"title":"The Information","author":{"name":"James Gleick"}}': {
         __typename: "Book",
         title: "The Information",
+        author: {
+          name: "James Gleick"
+        },
+      },
+    });
+
+    checkAuthorName(cache);
+  });
+
+  it("can specify nested keyFields with alias", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          keyFields: ["title", "author", ["name"]],
+        },
+      },
+    });
+
+    const aliasQuery = gql`
+      query {
+        book {
+          title
+          writer: author {
+            alias: name
+          }
+        }
+      }
+    `;
+
+    const { author, ...rest } = theInformationBookData;
+    const aliasBookData = {
+      ...rest,
+      writer: {
+        alias: author.name,
+      },
+    };
+
+    cache.writeQuery({
+      query: aliasQuery,
+      data: {
+        book: aliasBookData,
+      },
+    });
+
+    expect(cache.extract(true)).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: {
+          __ref: 'Book:{"title":"The Information","author":{"name":"James Gleick"}}',
+        },
+      },
+      'Book:{"title":"The Information","author":{"name":"James Gleick"}}': {
+        __typename: "Book",
+        title: "The Information",
+        // Note that "author" and "name" are stored internally, since they are
+        // the true names of their fields (according to the schema), despite the
+        // writer:author and alias:name aliases.
         author: {
           name: "James Gleick"
         },
@@ -253,7 +311,7 @@ describe("type policies", function () {
     checkAuthorName(cache);
   });
 
-  it("complains about missing key fields", function () {
+  withErrorSpy(it, "complains about missing key fields", function () {
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -316,6 +374,29 @@ describe("type policies", function () {
       __typename: "Movie",
       id: "3993d4118143",
     })).toBe("MotionPicture::3993d4118143");
+  });
+
+  it("does not remove previous typePolicies", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            foo: () => 'foo'
+          }
+        },
+      },
+    });
+
+    cache.policies.addTypePolicies({
+      Query: {
+        fields: {
+          bar: () => 'bar'
+        }
+      },
+    });
+
+    expect(cache.readQuery({ query: gql` { foo } ` })).toEqual({foo: "foo"});
+    expect(cache.readQuery({ query: gql` { bar } ` })).toEqual({bar: "bar"});
   });
 
   it("support inheritance", function () {
@@ -560,7 +641,7 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
-    it("assumes keyArgs:false when read and merge function present", function () {
+    withErrorSpy(it, "assumes keyArgs:false when read and merge function present", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           TypeA: {
@@ -769,7 +850,7 @@ describe("type policies", function () {
         },
       };
 
-      function check<TData, TVars>(
+      function check<TData extends typeof data, TVars>(
         query: DocumentNode | TypedDocumentNode<TData, TVars>,
         variables?: TVars,
       ) {
@@ -1258,7 +1339,7 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
-    it("read and merge can cooperate through options.storage", function () {
+    withErrorSpy(it, "read and merge can cooperate through options.storage", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {
@@ -1352,7 +1433,6 @@ describe("type policies", function () {
           `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
           ["jobs", jobNumber - 1, "result"],
           expect.anything(), // query
-          false, // clientOnly
           expect.anything(), // variables
         );
       }
@@ -1900,7 +1980,7 @@ describe("type policies", function () {
       });
     });
 
-    it("readField helper function calls custom read functions", function () {
+    withErrorSpy(it, "readField helper function calls custom read functions", function () {
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
       const ownTimes: Record<string, ReactiveVar<number>> = {
@@ -3077,6 +3157,7 @@ describe("type policies", function () {
           node: {
             __typename: "SearchableItem",
             displayLabel: "James Turrell: Light knows when we’re looking",
+            description: "<placeholder for unknown description>",
           },
         },
       ];
@@ -3438,7 +3519,7 @@ describe("type policies", function () {
                 edges,
                 pageInfo: {
                   __typename: "PageInfo",
-                  startCursor: thirdPageInfo.startCursor,
+                  startCursor: fourthPageInfo.startCursor,
                   endCursor: fifthPageInfo.endCursor,
                   hasPreviousPage: false,
                   hasNextPage: true,
@@ -3506,7 +3587,7 @@ describe("type policies", function () {
       });
     });
 
-    it("runs nested merge functions as well as ancestors", function () {
+    withErrorSpy(it, "runs nested merge functions as well as ancestors", function () {
       let eventMergeCount = 0;
       let attendeeMergeCount = 0;
 
@@ -4294,6 +4375,188 @@ describe("type policies", function () {
       expect(personMergeCount).toBe(3);
     });
 
+    it("can force merging references with non-normalized objects", function () {
+      const nameQuery = gql`
+        query GetName {
+          viewer {
+            name
+          }
+        }
+      `;
+
+      const emailQuery = gql`
+        query GetEmail {
+          viewer {
+            id
+            email
+          }
+        }
+      `;
+
+      check(new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              viewer: {
+                merge: true,
+              },
+            },
+          },
+        },
+      }));
+
+      check(new InMemoryCache({
+        typePolicies: {
+          User: {
+            merge: true,
+          },
+        },
+      }));
+
+      function check(cache: InMemoryCache) {
+        // Write nameQuery first, so the existing data will be a
+        // non-normalized object when we write emailQuery next.
+        cache.writeQuery({
+          query: nameQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              name: "Alice",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __typename: "User",
+              name: "Alice",
+            },
+          },
+        });
+
+        cache.writeQuery({
+          query: emailQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              id: 12345,
+              email: "alice@example.com",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __ref: "User:12345",
+            },
+          },
+          "User:12345": {
+            __typename: "User",
+            name: "Alice",
+            id: 12345,
+            email: "alice@example.com",
+          },
+        });
+
+        expect(cache.readQuery({
+          query: nameQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            name: "Alice",
+          },
+        });
+
+        expect(cache.readQuery({
+          query: emailQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            id: 12345,
+            email: "alice@example.com",
+          },
+        });
+
+        cache.reset();
+        expect(cache.extract()).toEqual({});
+
+        // Write emailQuery first, so the existing data will be a
+        // normalized reference when we write nameQuery next.
+        cache.writeQuery({
+          query: emailQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              id: 12345,
+              email: "alice@example.com",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          "User:12345": {
+            id: 12345,
+            __typename: "User",
+            email: "alice@example.com"
+          },
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __ref: "User:12345",
+            },
+          },
+        });
+
+        cache.writeQuery({
+          query: nameQuery,
+          data: {
+            viewer: {
+              __typename: "User",
+              name: "Alice",
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          "User:12345": {
+            id: 12345,
+            __typename: "User",
+            email: "alice@example.com",
+            name: "Alice",
+          },
+          ROOT_QUERY: {
+            __typename: "Query",
+            viewer: {
+              __ref: "User:12345",
+            },
+          },
+        });
+
+        expect(cache.readQuery({
+          query: nameQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            name: "Alice",
+          },
+        });
+
+        expect(cache.readQuery({
+          query: emailQuery,
+        })).toEqual({
+          viewer: {
+            __typename: "User",
+            id: 12345,
+            email: "alice@example.com",
+          },
+        });
+      }
+    });
+
     it("can force merging with inherited field merge function", function () {
       let authorMergeCount = 0;
 
@@ -4684,6 +4947,7 @@ describe("type policies", function () {
     function readFirstBookResult() {
       return cache.readQuery<{ author: any }>({
         query: firstBookQuery,
+        canonizeResults: true,
       })!;
     }
 
@@ -4767,19 +5031,8 @@ describe("type policies", function () {
     });
 
     const thirdFirstBookResult = readFirstBookResult();
-
-    // A change in VW's books field triggers rereading of result objects
-    // that previously involved her books field.
-    expect(thirdFirstBookResult).not.toBe(secondFirstBookResult);
-
-    // However, since the new Book was not the earliest published, the
-    // second and third results are structurally the same.
     expect(thirdFirstBookResult).toEqual(secondFirstBookResult);
-
-    // In fact, the original author.firstBook object has been reused!
-    expect(thirdFirstBookResult.author.firstBook).toBe(
-      secondFirstBookResult.author.firstBook,
-    );
+    expect(thirdFirstBookResult).toBe(secondFirstBookResult);
   });
 
   it("readField can read fields with arguments", function () {
@@ -4853,6 +5106,70 @@ describe("type policies", function () {
         lowerCase: "inveigle",
         titleCase: "Inveigle",
       },
+    });
+  });
+
+  withWarningSpy(it, "readField warns if explicitly passed undefined `from` option", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            fullNameWithDefaults(_, { readField }) {
+              return `${
+                readField<string>({
+                  fieldName: "firstName",
+                })
+              } ${
+                readField<string>("lastName")
+              }`;
+            },
+
+            fullNameWithVoids(_, { readField }) {
+              return `${
+                readField<string>({
+                  fieldName: "firstName",
+                  // If options.from is explicitly passed but undefined,
+                  // readField should not default to reading from the current
+                  // object (see issue #8499).
+                  from: void 0,
+                })
+              } ${
+                // Likewise for the shorthand version of readField.
+                readField<string>("lastName", void 0)
+              }`;
+            },
+          },
+        },
+      },
+    });
+
+    const firstNameLastNameQuery = gql`
+      query {
+        firstName
+        lastName
+      }
+    `;
+
+    const fullNamesQuery = gql`
+      query {
+        fullNameWithVoids
+        fullNameWithDefaults
+      }
+    `;
+
+    cache.writeQuery({
+      query: firstNameLastNameQuery,
+      data: {
+        firstName: "Alan",
+        lastName: "Turing",
+      },
+    });
+
+    expect(cache.readQuery({
+      query: fullNamesQuery,
+    })).toEqual({
+      fullNameWithDefaults: "Alan Turing",
+      fullNameWithVoids: "undefined undefined",
     });
   });
 

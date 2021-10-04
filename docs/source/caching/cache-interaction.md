@@ -9,8 +9,8 @@ Apollo Client supports multiple strategies for interacting with cached data:
 
 | Strategy | API | Description |
 |----------|-----|-------------|
-| [Using GraphQL queries](#using-graphql-queries) | `readQuery` / `writeQuery` | Use standard GraphQL queries for managing both remote and local data. |
-| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` | Access the fields of any cached object without composing an entire query to reach that object.  |
+| [Using GraphQL queries](#using-graphql-queries) | `readQuery` / `writeQuery` / `updateQuery` | Use standard GraphQL queries for managing both remote and local data. |
+| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` / `updateFragment` | Access the fields of any cached object without composing an entire query to reach that object.  |
 | [Directly modifying cached fields](#using-cachemodify) | `cache.modify` | Manipulate cached data without using GraphQL at all. |
 
  You can use whichever combination of strategies and methods are most helpful for your use case.
@@ -107,13 +107,13 @@ Note the following about `writeQuery`:
     * The query can include fields that are _not_ present in your schema.
     * You can (but usually shouldn't) provide values for schema fields that are _invalid_ according to your schema.
 
-#### Editing existing data 
+#### Editing existing data
 
 In the example above, if your cache _already_ contains a `Todo` object with ID `5`, `writeQuery` overwrites the fields that are included in `data` (other fields are preserved):
 
 ```js{6-7,17-18}
 // BEFORE
-{ 
+{
   'Todo:5': {
     __typename: 'Todo',
     id: 5,
@@ -124,7 +124,7 @@ In the example above, if your cache _already_ contains a `Todo` object with ID `
 }
 
 // AFTER
-{ 
+{
   'Todo:5': {
     __typename: 'Todo',
     id: 5,
@@ -222,6 +222,17 @@ client.writeQuery({
     todos: [...data.todos, myNewTodo],
   },
 });
+```
+
+As a convenience, you can use `cache.updateQuery` and `cache.updateFragment`, which is passed a callback with read data, and writes the result.
+
+```js
+// Marks all todos in the cache as completed.
+cache.updateQuery({ query }, (data) => ({
+  data: {
+    todos: data.todos.map((todo) => ({ ...todo, completed: true }))
+  }
+}));
 ```
 
 ## Using `cache.modify`

@@ -1,4 +1,4 @@
-## Apollo Client 3.5.0 (not yet released)
+## Apollo Client 3.5.0 (release candidate)
 
 ### Improvements
 

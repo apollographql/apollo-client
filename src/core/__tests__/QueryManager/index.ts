@@ -47,6 +47,12 @@ interface MockedMutation {
   config?: ApolloReducerConfig;
 }
 
+export function resetStore(qm: QueryManager<any>) {
+  return qm.clearStore({
+    discardWatches: false,
+  }).then(() => qm.reFetchObservableQueries());
+}
+
 describe('QueryManager', () => {
   // Standard "get id from object" method.
   const dataIdFromObject = (object: any) => {
@@ -3384,7 +3390,7 @@ describe('QueryManager', () => {
         observable.subscribe({ next: () => null });
         observable2.subscribe({ next: () => null });
 
-        return queryManager.resetStore().then(() => {
+        return resetStore(queryManager).then(() => {
           const result = getCurrentQueryResult(observable);
           expect(result.partial).toBe(false);
           expect(result.data).toEqual(dataChanged);
@@ -3401,7 +3407,7 @@ describe('QueryManager', () => {
         link: mockSingleLink().setOnError(reject),
       });
 
-      queryManager.resetStore();
+      resetStore(queryManager);
 
       expect(
         queryManager.cache.extract(),
@@ -3460,7 +3466,7 @@ describe('QueryManager', () => {
           expect(result.data).toEqual(data);
           expect(timesFired).toBe(1);
           // reset the store after data has returned
-          queryManager.resetStore();
+          resetStore(queryManager);
         },
         result => {
           // only refetch once and make sure data has changed
@@ -3508,7 +3514,7 @@ describe('QueryManager', () => {
 
         // at this point the observable query has been torn down
         // because observableToPromise unsubscribe before resolving
-        queryManager.resetStore();
+        resetStore(queryManager);
 
         setTimeout(() => {
           expect(timesFired).toBe(1);
@@ -3560,7 +3566,7 @@ describe('QueryManager', () => {
         result => {
           expect(result.data).toEqual(data);
           expect(timesFired).toBe(1);
-          queryManager.resetStore().catch(reject);
+          resetStore(queryManager).catch(reject);
         },
         result => {
           expect(result.data).toEqual(data);
@@ -3602,7 +3608,7 @@ describe('QueryManager', () => {
         .catch(e => reject('Exception thrown for stopped query'));
 
       queryManager.removeQuery(queryId);
-      queryManager.resetStore().then(resolve, reject);
+      resetStore(queryManager).then(resolve, reject);
     });
 
     itAsync('should throw an error on an inflight fetch query if the store is reset', (resolve, reject) => {
@@ -3636,7 +3642,7 @@ describe('QueryManager', () => {
         });
       // Need to delay the reset at least until the fetchRequest method
       // has had a chance to enter this request into fetchQueryRejectFns.
-      setTimeout(() => queryManager.resetStore(), 100);
+      setTimeout(() => resetStore(queryManager), 100);
     });
 
     itAsync('should call refetch on a mocked Observable if the store is reset', (resolve, reject) => {
@@ -3662,7 +3668,7 @@ describe('QueryManager', () => {
       obs.subscribe({});
       obs.refetch = resolve as any;
 
-      queryManager.resetStore();
+      resetStore(queryManager);
     });
 
     itAsync('should not call refetch on a cache-only Observable if the store is reset', (resolve, reject) => {
@@ -3693,7 +3699,7 @@ describe('QueryManager', () => {
         return null as never;
       };
 
-      queryManager.resetStore();
+      resetStore(queryManager);
 
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
@@ -3729,7 +3735,7 @@ describe('QueryManager', () => {
         return null as never;
       };
 
-      queryManager.resetStore();
+      resetStore(queryManager);
 
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
@@ -3763,7 +3769,7 @@ describe('QueryManager', () => {
         return null as never;
       };
 
-      queryManager.resetStore();
+      resetStore(queryManager);
 
       setTimeout(() => {
         expect(refetchCount).toEqual(0);
@@ -3792,7 +3798,7 @@ describe('QueryManager', () => {
         () =>
           new Observable(observer => {
             // reset the store as soon as we hear about the query
-            queryManager.resetStore();
+            resetStore(queryManager);
             observer.next({ data });
             return;
           }),
@@ -4546,7 +4552,7 @@ describe('QueryManager', () => {
                 expect(result.loading).toBe(false);
                 expect(result.data).toEqual(data1);
                 setTimeout(() => {
-                  queryManager.resetStore();
+                  resetStore(queryManager);
                 }, 0);
                 break;
               case 1:

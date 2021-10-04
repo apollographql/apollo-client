@@ -15,6 +15,7 @@ import { itAsync, mockSingleLink, subscribeAndCount } from '../../testing';
 import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
 import mockWatchQuery from '../../utilities/testing/mocking/mockWatchQuery';
 import wrap from '../../utilities/testing/wrap';
+import { resetStore } from './QueryManager';
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchQueryObservable = queryManager.fetchQueryObservable;
@@ -459,7 +460,7 @@ describe('ObservableQuery', () => {
           expect(timesFired).toBe(1);
           // set policy to be cache-only but data is found
           await observable.setOptions({ fetchPolicy: 'cache-only' });
-          await queryManager.resetStore();
+          await resetStore(queryManager);
         } else if (handleCount === 2) {
           expect(result.data).toEqual({});
           expect(result.loading).toBe(false);

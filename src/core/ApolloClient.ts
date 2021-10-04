@@ -470,7 +470,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
     return Promise.resolve()
-      .then(() => this.queryManager.clearStore())
+      .then(() => this.queryManager.clearStore({
+        discardWatches: false,
+      }))
       .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
       .then(() => this.reFetchObservableQueries());
   }
@@ -481,7 +483,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public clearStore(): Promise<any[]> {
     return Promise.resolve()
-      .then(() => this.queryManager.clearStore())
+      .then(() => this.queryManager.clearStore({
+        discardWatches: true,
+      }))
       .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())));
   }
 

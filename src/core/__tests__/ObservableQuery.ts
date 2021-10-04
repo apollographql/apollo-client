@@ -16,6 +16,8 @@ import mockQueryManager from '../../testing/core/mocking/mockQueryManager';
 import mockWatchQuery from '../../testing/core/mocking/mockWatchQuery';
 import wrap from '../../testing/core/wrap';
 
+import { resetStore } from './QueryManager';
+
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchQueryObservable = queryManager.fetchQueryObservable;
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] =
@@ -459,7 +461,7 @@ describe('ObservableQuery', () => {
           expect(timesFired).toBe(1);
           // set policy to be cache-only but data is found
           await observable.setOptions({ fetchPolicy: 'cache-only' });
-          await queryManager.resetStore();
+          await resetStore(queryManager);
         } else if (handleCount === 2) {
           expect(result.data).toEqual({});
           expect(result.loading).toBe(false);

@@ -226,12 +226,15 @@ export function extractKeyPath(
     })) {
       return result;
     }
-    invariant(
-      result && hasOwn.call(result, schemaKey),
-      `Missing field '${schemaKey}' while extracting keyFields from ${
-        JSON.stringify(result)
-      }`,
-    );
+    // TODO This should be in the keyFields path extraction function, not here.
+    if (aliasMap) {
+      invariant(
+        result && hasOwn.call(result, schemaKey),
+        `Missing field '${schemaKey}' while extracting keyFields from ${
+          JSON.stringify(result)
+        }`,
+      );
+    }
     aliasMap = resultKeyMap && resultKeyMap[schemaKey];
     return result = result && result[schemaKey];
   }, object);

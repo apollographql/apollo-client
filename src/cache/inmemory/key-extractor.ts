@@ -103,68 +103,68 @@ export class KeyExtractor {
       return `${context.typename}:${JSON.stringify(context.keyObject)}`;
     };
   }
+}
 
-  public keyArgsFnFromSpecifier(specifier: KeySpecifier): KeyArgsFunction {
-    return (args, { field, variables, fieldName }) => {
-      const collected = collectSpecifierPaths(specifier, keyPath => {
-        const firstKey = keyPath[0];
-        const firstChar = firstKey.charAt(0);
-        if (firstChar === "@") {
-          if (field && isNonEmptyArray(field.directives)) {
-            // TODO Cache this work somehow, a la aliasMap?
-            const directiveName = firstKey.slice(1);
-            // If the directive appears multiple times, only the first
-            // occurrence's arguments will be used. TODO Allow repetition?
-            const d = field.directives.find(d => d.name.value === directiveName);
-            if (d) {
-              // Fortunately argumentsObjectFromField works for DirectiveNode!
-              const directiveArgs = argumentsObjectFromField(d, variables);
-              return directiveArgs ? extractKeyPath(
-                directiveArgs,
-                keyPath.slice(1),
-                null,
-              ) : void 0;
-            }
+export function keyArgsFnFromSpecifier(specifier: KeySpecifier): KeyArgsFunction {
+  return (args, { field, variables, fieldName }) => {
+    const collected = collectSpecifierPaths(specifier, keyPath => {
+      const firstKey = keyPath[0];
+      const firstChar = firstKey.charAt(0);
+      if (firstChar === "@") {
+        if (field && isNonEmptyArray(field.directives)) {
+          // TODO Cache this work somehow, a la aliasMap?
+          const directiveName = firstKey.slice(1);
+          // If the directive appears multiple times, only the first
+          // occurrence's arguments will be used. TODO Allow repetition?
+          const d = field.directives.find(d => d.name.value === directiveName);
+          if (d) {
+            // Fortunately argumentsObjectFromField works for DirectiveNode!
+            const directiveArgs = argumentsObjectFromField(d, variables);
+            return directiveArgs ? extractKeyPath(
+              directiveArgs,
+              keyPath.slice(1),
+              null,
+            ) : void 0;
           }
-          // If the key started with @ but there was no corresponding
-          // directive, we want to omit this value from the key object, not
-          // fall through to treating @whatever as a normal argument name.
-          return;
         }
-
-        if (firstChar === "$") {
-          const variableName = firstKey.slice(1);
-          if (variables && hasOwn.call(variables, variableName)) {
-            const variableValue = variables[variableName];
-            return isNonNullObject(variableValue)
-              ? extractKeyPath(variableValue, keyPath.slice(1), null)
-              : variableValue;
-          }
-          // If the key started with $ but there was no corresponding
-          // variable, we want to omit this value from the key object, not
-          // fall through to treating $whatever as a normal argument name.
-          return;
-        }
-
-        if (args) {
-          return extractKeyPath(args, keyPath, null);
-        }
-      });
-
-      const suffix = JSON.stringify(collected);
-
-      // If no arguments were passed to this field, and it didn't have any other
-      // field key contributions from directives or variables, hide the empty
-      // :{} suffix from the field key. However, a field passed no arguments can
-      // still end up with a non-empty :{...} suffix if its key configuration
-      // refers to directives or variables.
-      if (args || suffix !== "{}") {
-        fieldName += ":" + suffix;
+        // If the key started with @ but there was no corresponding
+        // directive, we want to omit this value from the key object, not
+        // fall through to treating @whatever as a normal argument name.
+        return;
       }
 
-      return fieldName;
-    };
-  }
+      if (firstChar === "$") {
+        const variableName = firstKey.slice(1);
+        if (variables && hasOwn.call(variables, variableName)) {
+          const variableValue = variables[variableName];
+          return isNonNullObject(variableValue)
+            ? extractKeyPath(variableValue, keyPath.slice(1), null)
+            : variableValue;
+        }
+        // If the key started with $ but there was no corresponding
+        // variable, we want to omit this value from the key object, not
+        // fall through to treating $whatever as a normal argument name.
+        return;
+      }
+
+      if (args) {
+        return extractKeyPath(args, keyPath, null);
+      }
+    });
+
+    const suffix = JSON.stringify(collected);
+
+    // If no arguments were passed to this field, and it didn't have any other
+    // field key contributions from directives or variables, hide the empty
+    // :{} suffix from the field key. However, a field passed no arguments can
+    // still end up with a non-empty :{...} suffix if its key configuration
+    // refers to directives or variables.
+    if (args || suffix !== "{}") {
+      fieldName += ":" + suffix;
+    }
+
+    return fieldName;
+  };
 }
 
 export function collectSpecifierPaths(

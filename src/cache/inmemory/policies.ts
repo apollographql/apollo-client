@@ -50,7 +50,7 @@ import { WriteContext } from './writeToStore';
 // used by getStoreKeyName. This function is used when computing storeFieldName
 // strings (when no keyArgs has been configured for a field).
 import { canonicalStringify } from './object-canon';
-import { KeyExtractor } from './key-extractor';
+import { keyArgsFnFromSpecifier, KeyExtractor } from './key-extractor';
 
 getStoreKeyName.setStringify(canonicalStringify);
 
@@ -431,7 +431,7 @@ export class Policies {
             keyArgs === false ? simpleKeyArgsFn :
             // Pass an array of strings to use named arguments to
             // compute a composite identity for the field.
-            Array.isArray(keyArgs) ? this.keyExtractor.keyArgsFnFromSpecifier(keyArgs) :
+            Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
             // Pass a function to take full control over field identity.
             typeof keyArgs === "function" ? keyArgs :
             // Leave existing.keyFn unchanged if above cases fail.
@@ -682,7 +682,7 @@ export class Policies {
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
         if (Array.isArray(specifierOrString)) {
-          keyFn = this.keyExtractor.keyArgsFnFromSpecifier(specifierOrString);
+          keyFn = keyArgsFnFromSpecifier(specifierOrString);
         } else {
           // If the custom keyFn returns a falsy value, fall back to
           // fieldName instead.

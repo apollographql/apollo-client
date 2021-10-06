@@ -167,7 +167,7 @@ export class KeyExtractor {
   }
 }
 
-function collectSpecifierPaths(
+export function collectSpecifierPaths(
   specifier: KeySpecifier,
   extractor: (path: string[]) => any,
 ) {
@@ -186,7 +186,7 @@ function collectSpecifierPaths(
   }, Object.create(null));
 }
 
-function getSpecifierPaths(spec: KeySpecifier & {
+export function getSpecifierPaths(spec: KeySpecifier & {
   paths?: string[][];
 }): string[][] {
   if (!spec.paths) {
@@ -210,7 +210,7 @@ function getSpecifierPaths(spec: KeySpecifier & {
   return spec.paths!;
 }
 
-function extractKeyPath(
+export function extractKeyPath(
   object: Record<string, any>,
   path: string[],
   aliasMap: AliasMap | null,

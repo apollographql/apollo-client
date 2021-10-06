@@ -42,12 +42,16 @@ function makeEmptyAliasMap(): AliasMap {
   };
 }
 
-// TODO Initialize this lazily and don't let it leak.
-const aliasMapTrie = new Trie<{
+type AliasMapTrie = Trie<{
   aliasMap?: AliasMap;
-}>(canUseWeakMap);
+}>;
+
+export function makeAliasMapTrie(): AliasMapTrie {
+  return new Trie(canUseWeakMap);
+}
 
 function getAliasMap(
+  aliasMapTrie: AliasMapTrie,
   selectionSet: KeyFieldsContext["selectionSet"],
   fragmentMap: KeyFieldsContext["fragmentMap"],
 ): AliasMap {
@@ -56,6 +60,7 @@ function getAliasMap(
   }
 
   const info = aliasMapTrie.lookup(selectionSet, fragmentMap);
+
   if (!info.aliasMap) {
     const aliasMap: AliasMap = info.aliasMap = makeEmptyAliasMap();
     const workQueue = new Set([selectionSet]);
@@ -70,7 +75,7 @@ function getAliasMap(
           // TODO Make sure nulls are merged correctly.
           aliases[resultKey] = selection.selectionSet ? merger.merge(
             aliases[resultKey] || Object.create(null),
-            getAliasMap(selection.selectionSet, fragmentMap),
+            getAliasMap(aliasMapTrie, selection.selectionSet, fragmentMap),
           ) : aliases[resultKey] || null;
           if (resultKey !== schemaKey) {
             aliasMap.actuals[resultKey] = schemaKey;
@@ -88,9 +93,13 @@ function getAliasMap(
   return info.aliasMap!;
 }
 
-export function keyFieldsFnFromSpecifier(specifier: KeySpecifier): KeyFieldsFunction {
+export function keyFieldsFnFromSpecifier(
+  specifier: KeySpecifier,
+  aliasMapTrie: AliasMapTrie,
+): KeyFieldsFunction {
   return (object, context) => {
     const aliasMap = getAliasMap(
+      aliasMapTrie,
       context.selectionSet,
       context.fragmentMap,
     );

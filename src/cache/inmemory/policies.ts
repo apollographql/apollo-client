@@ -50,7 +50,11 @@ import { WriteContext } from './writeToStore';
 // used by getStoreKeyName. This function is used when computing storeFieldName
 // strings (when no keyArgs has been configured for a field).
 import { canonicalStringify } from './object-canon';
-import { keyArgsFnFromSpecifier, keyFieldsFnFromSpecifier } from './key-extractor';
+import {
+  keyFieldsFnFromSpecifier,
+  keyArgsFnFromSpecifier,
+  makeAliasMapTrie,
+} from './key-extractor';
 
 getStoreKeyName.setStringify(canonicalStringify);
 
@@ -267,6 +271,8 @@ export class Policies {
   // means no fuzzy subtype checking will happen in fragmentMatches.
   private fuzzySubtypes = new Map<string, RegExp>();
 
+  private aliasMapTrie = makeAliasMapTrie();
+
   public readonly cache: InMemoryCache;
 
   public readonly rootIdsByTypename: Record<string, string> = Object.create(null);
@@ -333,7 +339,7 @@ export class Policies {
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
       if (Array.isArray(specifierOrId)) {
-        keyFn = keyFieldsFnFromSpecifier(specifierOrId);
+        keyFn = keyFieldsFnFromSpecifier(specifierOrId, this.aliasMapTrie);
       } else {
         id = specifierOrId;
         break;
@@ -407,7 +413,7 @@ export class Policies {
       keyFields === false ? nullKeyFieldsFn :
       // Pass an array of strings to use those fields to compute a
       // composite ID for objects of this typename.
-      Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
+      Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields, this.aliasMapTrie) :
       // Pass a function to take full control over identification.
       typeof keyFields === "function" ? keyFields :
       // Leave existing.keyFn unchanged if above cases fail.

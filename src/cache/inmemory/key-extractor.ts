@@ -89,15 +89,34 @@ function getAliasMap(
 }
 
 export function keyFieldsFnFromSpecifier(specifier: KeySpecifier): KeyFieldsFunction {
-  return (object, context) => `${context.typename}:${JSON.stringify(
-    context.keyObject = collectSpecifierPaths(
+  return (object, context) => {
+    const aliasMap = getAliasMap(
+      context.selectionSet,
+      context.fragmentMap,
+    );
+
+    const keyObject = context.keyObject = collectSpecifierPaths(
       specifier,
-      schemaKeyPath => extractKeyPath(object, schemaKeyPath, getAliasMap(
-        context.selectionSet,
-        context.fragmentMap,
-      )),
-    ),
-  )}`;
+      schemaKeyPath => {
+        const extracted = extractKeyPath(
+          object,
+          schemaKeyPath,
+          aliasMap,
+        );
+
+        invariant(
+          extracted !== void 0,
+          `Missing field '${schemaKeyPath.join('.')}' while extracting keyFields from ${
+            JSON.stringify(object)
+          }`,
+        );
+
+        return extracted;
+      },
+    );
+
+    return `${context.typename}:${JSON.stringify(keyObject)}`;
+  };
 }
 
 export function keyArgsFnFromSpecifier(specifier: KeySpecifier): KeyArgsFunction {
@@ -220,15 +239,6 @@ export function extractKeyPath(
       }
     })) {
       return result;
-    }
-    // TODO This should be in the keyFields path extraction function, not here.
-    if (aliasMap) {
-      invariant(
-        result && hasOwn.call(result, schemaKey),
-        `Missing field '${schemaKey}' while extracting keyFields from ${
-          JSON.stringify(result)
-        }`,
-      );
     }
     aliasMap = resultKeyMap && resultKeyMap[schemaKey];
     return result = result && result[schemaKey];

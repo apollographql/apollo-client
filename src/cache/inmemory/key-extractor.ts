@@ -42,67 +42,62 @@ function makeEmptyAliasMap(): AliasMap {
   };
 }
 
-export class KeyExtractor {
-  private aliasMapTrie = new Trie<{
-    aliasMap?: AliasMap;
-  }>(canUseWeakMap);
+// TODO Initialize this lazily and don't let it leak.
+const aliasMapTrie = new Trie<{
+  aliasMap?: AliasMap;
+}>(canUseWeakMap);
 
-  private getAliasMap(
-    selectionSet: KeyFieldsContext["selectionSet"],
-    fragmentMap: KeyFieldsContext["fragmentMap"],
-  ): AliasMap {
-    if (!selectionSet || !fragmentMap) {
-      return makeEmptyAliasMap();
-    }
-
-    const info = this.aliasMapTrie.lookup(selectionSet, fragmentMap);
-    if (!info.aliasMap) {
-      const aliasMap: AliasMap = info.aliasMap = makeEmptyAliasMap();
-      const workQueue = new Set([selectionSet]);
-      const merger = new DeepMerger;
-      workQueue.forEach(selectionSet => {
-        selectionSet.selections.forEach(selection => {
-          if (isField(selection)) {
-            const schemaKey = selection.name.value;
-            const resultKey = resultKeyNameFromField(selection);
-            const aliases = aliasMap.aliases[schemaKey] ||
-              (aliasMap.aliases[schemaKey] = Object.create(null));
-            // TODO Make sure nulls are merged correctly.
-            aliases[resultKey] = selection.selectionSet ? merger.merge(
-              aliases[resultKey] || Object.create(null),
-              this.getAliasMap(selection.selectionSet, fragmentMap),
-            ) : aliases[resultKey] || null;
-            if (resultKey !== schemaKey) {
-              aliasMap.actuals[resultKey] = schemaKey;
-            }
-          } else {
-            const fragment = getFragmentFromSelection(selection, fragmentMap);
-            if (fragment) {
-              workQueue.add(fragment.selectionSet);
-            }
-          }
-        });
-      });
-    }
-
-    return info.aliasMap!;
+function getAliasMap(
+  selectionSet: KeyFieldsContext["selectionSet"],
+  fragmentMap: KeyFieldsContext["fragmentMap"],
+): AliasMap {
+  if (!selectionSet || !fragmentMap) {
+    return makeEmptyAliasMap();
   }
 
-  public keyFieldsFnFromSpecifier(specifier: KeySpecifier): KeyFieldsFunction {
-    return (object, context) => {
-      const aliasMap = this.getAliasMap(
+  const info = aliasMapTrie.lookup(selectionSet, fragmentMap);
+  if (!info.aliasMap) {
+    const aliasMap: AliasMap = info.aliasMap = makeEmptyAliasMap();
+    const workQueue = new Set([selectionSet]);
+    const merger = new DeepMerger;
+    workQueue.forEach(selectionSet => {
+      selectionSet.selections.forEach(selection => {
+        if (isField(selection)) {
+          const schemaKey = selection.name.value;
+          const resultKey = resultKeyNameFromField(selection);
+          const aliases = aliasMap.aliases[schemaKey] ||
+            (aliasMap.aliases[schemaKey] = Object.create(null));
+          // TODO Make sure nulls are merged correctly.
+          aliases[resultKey] = selection.selectionSet ? merger.merge(
+            aliases[resultKey] || Object.create(null),
+            getAliasMap(selection.selectionSet, fragmentMap),
+          ) : aliases[resultKey] || null;
+          if (resultKey !== schemaKey) {
+            aliasMap.actuals[resultKey] = schemaKey;
+          }
+        } else {
+          const fragment = getFragmentFromSelection(selection, fragmentMap);
+          if (fragment) {
+            workQueue.add(fragment.selectionSet);
+          }
+        }
+      });
+    });
+  }
+
+  return info.aliasMap!;
+}
+
+export function keyFieldsFnFromSpecifier(specifier: KeySpecifier): KeyFieldsFunction {
+  return (object, context) => `${context.typename}:${JSON.stringify(
+    context.keyObject = collectSpecifierPaths(
+      specifier,
+      schemaKeyPath => extractKeyPath(object, schemaKeyPath, getAliasMap(
         context.selectionSet,
         context.fragmentMap,
-      );
-
-      context.keyObject = collectSpecifierPaths(
-        specifier,
-        schemaKeyPath => extractKeyPath(object, schemaKeyPath, aliasMap),
-      );
-
-      return `${context.typename}:${JSON.stringify(context.keyObject)}`;
-    };
-  }
+      )),
+    ),
+  )}`;
 }
 
 export function keyArgsFnFromSpecifier(specifier: KeySpecifier): KeyArgsFunction {
@@ -175,12 +170,12 @@ export function collectSpecifierPaths(
   // merge the results together, with appropriate ancestor context.
   const merger = new DeepMerger;
   return getSpecifierPaths(specifier).reduce((collected, path) => {
-    let result = extractor(path);
-    if (result !== void 0) {
+    let toMerge = extractor(path);
+    if (toMerge !== void 0) {
       for (let i = path.length - 1; i >= 0; --i) {
-        result = { [path[i]]: result };
+        toMerge = { [path[i]]: toMerge };
       }
-      return merger.merge(collected, result);
+      collected = merger.merge(collected, toMerge);
     }
     return collected;
   }, Object.create(null));
@@ -243,9 +238,9 @@ export function extractKeyPath(
     const keys = Object.keys(extracted);
 
     if (aliasMap && aliasMap.actuals) {
-      // Since the keys array will contain result keys rather than store keys,
-      // we need to translate back to store keys before calling handleSpecifier
-      // with the store key array.
+      // Since the keys array will contain result keys rather than schema keys,
+      // we need to translate back to schema keys before calling
+      // collectSpecifierPaths with the sorted schema key array.
       for (let i = 0, { length } = keys; i < length; ++i) {
         keys[i] = aliasMap.actuals[keys[i]] || keys[i];
       }

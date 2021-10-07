@@ -239,18 +239,8 @@ export function extractKeyPath(
   aliasMap: AliasMap | null,
 ): any {
   const extracted = path.reduce((result, schemaKey) => {
-    const resultKeyMap = aliasMap && aliasMap.aliases[schemaKey];
-    if (resultKeyMap && Object.keys(resultKeyMap).some(resultKey => {
-      if (result && hasOwn.call(result, resultKey)) {
-        aliasMap = resultKeyMap[resultKey];
-        result = result[resultKey];
-        return true;
-      }
-    })) {
-      return result;
-    }
-    aliasMap = resultKeyMap && resultKeyMap[schemaKey];
-    return result = result && result[schemaKey];
+    [result, aliasMap] = extractSchemaKey(result, schemaKey, aliasMap);
+    return result;
   }, object);
 
   if (isNonNullObject(extracted) && !Array.isArray(extracted)) {
@@ -272,4 +262,31 @@ export function extractKeyPath(
   }
 
   return extracted;
+}
+
+function extractSchemaKey(
+  object: Record<string, any>,
+  schemaKey: string,
+  aliasMap: AliasMap | null,
+): [any, AliasMap | null] {
+  let key = schemaKey;
+  let nextAliasMap: AliasMap | null = null;
+
+  if (aliasMap) {
+    const resultKeyMap = aliasMap.aliases[key];
+    if (resultKeyMap) {
+      Object.keys(resultKeyMap).some(resultKey => {
+        if (hasOwn.call(object, resultKey)) {
+          key = resultKey;
+          return true;
+        }
+      });
+      nextAliasMap = resultKeyMap[key];
+    }
+  }
+
+  return [
+    object[key],
+    nextAliasMap,
+  ];
 }

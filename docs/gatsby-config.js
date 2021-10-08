@@ -1,4 +1,4 @@
-const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
+const {mermaidOptions, ...themeOptions} = require('gatsby-theme-apollo-docs/theme-options');
 
 module.exports = {
   plugins: [
@@ -23,6 +23,12 @@ module.exports = {
             '/v2/api/apollo-client/',
           ],
         },
+        gatsbyRemarkPlugins: [
+          {
+            resolve: 'gatsby-remark-mermaid',
+            options: { mermaidOptions }
+          }
+        ],
         sidebarCategories: {
           null: [
             'index',

@@ -234,8 +234,21 @@ export class QueryInfo {
         // full reobservation, since oq.reobserve might make a network
         // request, and we don't want to trigger network requests for
         // optimistic updates.
-        if (this.getDiff().fromOptimisticTransaction) {
+        const diff = this.getDiff();
+        if (diff.fromOptimisticTransaction) {
           oq["observe"]();
+        } else if (diff.complete) {
+          const { fetchPolicy, nextFetchPolicy } = oq.options;
+          oq.reobserve({
+            fetchPolicy: "cache-first",
+            nextFetchPolicy(...args) {
+              this.nextFetchPolicy = nextFetchPolicy;
+              if (typeof nextFetchPolicy === "function") {
+                return nextFetchPolicy.apply(this, args);
+              }
+              return fetchPolicy!;
+            },
+          });
         } else {
           oq.reobserve();
         }

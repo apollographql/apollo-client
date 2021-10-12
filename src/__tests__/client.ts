@@ -3374,12 +3374,9 @@ describe('@connection', () => {
         } else if (handleCount === 4) {
           expect(result.data).toEqual({ count: "secondary" });
           expect(nextFetchPolicyCallCount).toBe(3);
+          client.cache.evict({ fieldName: "count" });
         } else if (handleCount === 5) {
           expect(result.data).toEqual({ count: 1 });
-          expect(nextFetchPolicyCallCount).toBe(3);
-          client.cache.evict({ fieldName: "count" });
-        } else if (handleCount === 6) {
-          expect(result.data).toEqual({ count: 2 });
           expect(nextFetchPolicyCallCount).toBe(4);
           expect(obs.options.fetchPolicy).toBe("cache-first");
           setTimeout(resolve, 50);

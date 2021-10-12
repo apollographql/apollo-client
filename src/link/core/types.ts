@@ -21,7 +21,7 @@ export interface ExecutionPatchResult<
   data?: TData | null;
   path?: ReadonlyArray<string | number>;
   label?: string;
-  hasNext: boolean;
+  hasNext?: boolean;
   extensions?: TExtensions;
 }
 

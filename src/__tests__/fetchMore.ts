@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 
 import {
   ApolloClient,
+  ApolloLink,
   ApolloQueryResult,
   NetworkStatus,
   ObservableQuery,
@@ -10,11 +11,13 @@ import {
 } from '../core';
 
 import {
+  Observable,
   offsetLimitPagination,
   concatPagination,
 } from '../utilities';
 
 import {
+  ApolloCache,
   InMemoryCache,
   InMemoryCacheConfig,
   FieldMergeFunction,
@@ -531,6 +534,550 @@ describe('fetchMore on an observable query', () => {
         }
       });
     });
+  });
+
+  describe("fetchMore interaction with network fetch policies", () => {
+    const tasks = [
+      { __typename: "Task", id: 1, text: "first task" },
+      { __typename: "Task", id: 2, text: "second task" },
+      { __typename: "Task", id: 3, text: "third task" },
+      { __typename: "Task", id: 4, text: "fourth task" },
+      { __typename: "Task", id: 5, text: "fifth task" },
+      { __typename: "Task", id: 6, text: "sixth task" },
+      { __typename: "Task", id: 7, text: "seventh task" },
+      { __typename: "Task", id: 8, text: "eighth task" },
+    ];
+
+    const query = gql`
+      query GetTODOs {
+        TODO {
+          id
+          text
+        }
+      }
+    `;
+
+    function makeClient(): {
+      client: ApolloClient<any>;
+      linkRequests: Array<{
+        operationName: string,
+        offset: number;
+        limit: number;
+      }>;
+    } {
+      const linkRequests: Array<{
+        operationName: string,
+        offset: number;
+        limit: number;
+      }> = [];
+
+      const client = new ApolloClient({
+        link: new ApolloLink(operation => new Observable(observer => {
+          const {
+            variables: {
+              offset = 0,
+              limit = 2,
+            },
+          } = operation;
+
+          linkRequests.push({
+            operationName: operation.operationName,
+            offset,
+            limit,
+          });
+
+          observer.next({
+            data: {
+              TODO: tasks.slice(offset, offset + limit),
+            },
+          });
+
+          observer.complete();
+        })),
+
+        cache: new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                TODO: concatPagination(),
+              }
+            }
+          }
+        })
+      });
+
+      return {
+        client,
+        linkRequests,
+      };
+    }
+
+    function checkCacheExtract1234678(cache: ApolloCache<any>) {
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          TODO: [
+            { __ref: "Task:1" },
+            { __ref: "Task:2" },
+            { __ref: "Task:3" },
+            { __ref: "Task:4" },
+            { __ref: "Task:6" },
+            { __ref: "Task:7" },
+            { __ref: "Task:8" },
+          ],
+        },
+        "Task:1": tasks[0],
+        "Task:2": tasks[1],
+        "Task:3": tasks[2],
+        "Task:4": tasks[3],
+        "Task:6": tasks[5],
+        "Task:7": tasks[6],
+        "Task:8": tasks[7],
+      });
+    }
+
+    itAsync("cache-and-network", (resolve, reject) => {
+      const { client, linkRequests } = makeClient();
+
+      const observable = client.watchQuery({
+        query,
+        fetchPolicy: "cache-and-network",
+        variables: {
+          offset: 0,
+          limit: 2,
+        },
+      });
+
+      expect(linkRequests.length).toBe(0);
+
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 2),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+          ]);
+
+          observable.fetchMore({
+            variables: {
+              offset: 2,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(2, 4),
+              },
+            });
+          }).catch(reject);
+
+        } else if (count === 2) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 4),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+          ]);
+
+          return observable.fetchMore({
+            variables: {
+              offset: 5,
+              limit: 3,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(5, 8),
+              },
+            });
+          });
+
+        } else if (count === 3) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: [
+                ...tasks.slice(0, 4),
+                ...tasks.slice(5, 8),
+              ],
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+            { operationName: "GetTODOs", offset: 5, limit: 3 },
+          ]);
+
+          checkCacheExtract1234678(client.cache);
+
+          // Wait 20ms to allow unexpected results to be delivered, failing in
+          // the else block below.
+          setTimeout(resolve, 20);
+        } else {
+          reject(`too many results (${count})`);
+        }
+      });
+    });
+
+    itAsync("cache-and-network with notifyOnNetworkStatusChange: true", (resolve, reject) => {
+      const { client, linkRequests } = makeClient();
+
+      const observable = client.watchQuery({
+        query,
+        fetchPolicy: "cache-and-network",
+        notifyOnNetworkStatusChange: true,
+        variables: {
+          offset: 0,
+          limit: 2,
+        },
+      });
+
+      expect(linkRequests.length).toBe(0);
+
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 2),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+          ]);
+
+          observable.fetchMore({
+            variables: {
+              offset: 2,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(2, 4),
+              },
+            });
+          }).catch(reject);
+
+        } else if (count === 2) {
+          expect(result).toEqual({
+            loading: true,
+            networkStatus: NetworkStatus.fetchMore,
+            data: {
+              TODO: tasks.slice(0, 2),
+            },
+          });
+
+        } else if (count === 3) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 4),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+          ]);
+
+          return observable.fetchMore({
+            variables: {
+              offset: 5,
+              limit: 3,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(5, 8),
+              },
+            });
+          });
+
+        } else if (count === 4) {
+          expect(result).toEqual({
+            loading: true,
+            networkStatus: NetworkStatus.fetchMore,
+            data: {
+              TODO: tasks.slice(0, 4),
+            },
+          });
+
+        } else if (count === 5) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: [
+                ...tasks.slice(0, 4),
+                ...tasks.slice(5, 8),
+              ],
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+            { operationName: "GetTODOs", offset: 5, limit: 3 },
+          ]);
+
+          checkCacheExtract1234678(client.cache);
+
+          // Wait 20ms to allow unexpected results to be delivered, failing in
+          // the else block below.
+          setTimeout(resolve, 20);
+        } else {
+          reject(`too many results (${count})`);
+        }
+      });
+    });
+
+    itAsync("network-only", (resolve, reject) => {
+      const { client, linkRequests } = makeClient();
+
+      const observable = client.watchQuery({
+        query,
+        fetchPolicy: "network-only",
+        variables: {
+          offset: 0,
+          limit: 2,
+        },
+      });
+
+      expect(linkRequests.length).toBe(0);
+
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 2),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+          ]);
+
+          observable.fetchMore({
+            variables: {
+              offset: 2,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(2, 4),
+              },
+            });
+          }).catch(reject);
+
+        } else if (count === 2) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 4),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+          ]);
+
+          return observable.fetchMore({
+            variables: {
+              offset: 5,
+              limit: 3,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(5, 8),
+              },
+            });
+          });
+
+        } else if (count === 3) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: [
+                ...tasks.slice(0, 4),
+                ...tasks.slice(5, 8),
+              ],
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+            { operationName: "GetTODOs", offset: 5, limit: 3 },
+          ]);
+
+          checkCacheExtract1234678(client.cache);
+
+          // Wait 20ms to allow unexpected results to be delivered, failing in
+          // the else block below.
+          setTimeout(resolve, 20);
+        } else {
+          reject(`too many results (${count})`);
+        }
+      });
+    });
+
+    itAsync("network-only with notifyOnNetworkStatusChange: true", (resolve, reject) => {
+      const { client, linkRequests } = makeClient();
+
+      const observable = client.watchQuery({
+        query,
+        fetchPolicy: "network-only",
+        notifyOnNetworkStatusChange: true,
+        variables: {
+          offset: 0,
+          limit: 2,
+        },
+      });
+
+      expect(linkRequests.length).toBe(0);
+
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 2),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+          ]);
+
+          observable.fetchMore({
+            variables: {
+              offset: 2,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(2, 4),
+              },
+            });
+          }).catch(reject);
+
+        } else if (count === 2) {
+          expect(result).toEqual({
+            loading: true,
+            networkStatus: NetworkStatus.fetchMore,
+            data: {
+              TODO: tasks.slice(0, 2),
+            },
+          });
+
+        } else if (count === 3) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: tasks.slice(0, 4),
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+          ]);
+
+          return observable.fetchMore({
+            variables: {
+              offset: 5,
+              limit: 3,
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: tasks.slice(5, 8),
+              },
+            });
+          });
+
+        } else if (count === 4) {
+          expect(result).toEqual({
+            loading: true,
+            networkStatus: NetworkStatus.fetchMore,
+            data: {
+              TODO: tasks.slice(0, 4),
+            },
+          });
+
+        } else if (count === 5) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              TODO: [
+                ...tasks.slice(0, 4),
+                ...tasks.slice(5, 8),
+              ],
+            },
+          });
+
+          expect(linkRequests).toEqual([
+            { operationName: "GetTODOs", offset: 0, limit: 2 },
+            { operationName: "GetTODOs", offset: 2, limit: 2 },
+            { operationName: "GetTODOs", offset: 5, limit: 3 },
+          ]);
+
+          checkCacheExtract1234678(client.cache);
+
+          // Wait 20ms to allow unexpected results to be delivered, failing in
+          // the else block below.
+          setTimeout(resolve, 20);
+        } else {
+          reject(`too many results (${count})`);
+        }
+      });
+    });
+
+    // itAsync("no-cache", (resolve, reject) => {
+    //   const client = makeClient();
+    //   resolve();
+    // });
   });
 
   itAsync('fetchMore passes new args to field merge function', (resolve, reject) => {

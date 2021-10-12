@@ -29,6 +29,17 @@ const sampleMutation = gql`
   }
 `;
 
+const sampleDeferredQuery  = gql`
+  query SampleDeferredQuery {
+    stub {
+      id
+      ... on Stub @defer {
+        name
+      }
+    }
+  }
+`;
+
 function makeCallback<TArgs extends any[]>(
   resolve: () => void,
   reject: (error: Error) => void,
@@ -1227,6 +1238,44 @@ describe('HttpLink', () => {
           expect(e.response).toBeDefined();
           expect(e.bodyText).toBe('{');
         }),
+      );
+    });
+  });
+
+  describe('multipart responses', () => {
+    itAsync('works', (resolve, reject) => {
+      const body = [
+        '---',
+        'Content-Type: application/json; charset=utf-8',
+        'Content-Length: 43',
+        '',
+        '{"data":{"stub":{"id":"0"}},"hasNext":true}',
+        '---',
+        'Content-Type: application/json; charset=utf-8',
+        'Content-Length: 58',
+        '',
+        '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+        '-----',
+      ].join("\r\n");
+      fetchMock.mock('*', {
+        status: 200,
+        body,
+        headers: {
+          'Content-Type': 'multipart/mixed',
+        },
+      });
+
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          resolve();
+        },
+        err => {
+          reject(err);
+        },
       );
     });
   });

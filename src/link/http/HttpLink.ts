@@ -140,8 +140,9 @@ function readJSONBody(
     .catch(err => handleError(err, observer));
 }
 
-function readMultipartBody(
+function readMultipartWHATWGStream(
   response: Response,
+  body: ReadableStream<Uint8Array>,
   boundary: string,
   observer: Observer<any>,
 ) {
@@ -150,11 +151,12 @@ function readMultipartBody(
   let buffer = '';
   const messageBoundary = '--' + boundary;
   // TODO: End message boundary
-  const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+  const reader = body.getReader();
   (function read() {
     reader.read()
       .then(iteration => {
         if (iteration.done) {
+          observer.complete?.();
           return;
         }
 
@@ -189,6 +191,62 @@ function readMultipartBody(
       })
       .catch(err => handleError(err, observer));
   })();
+}
+
+function readMultipartNodeStream(
+  ..._args: any[]
+) {
+  throw new Error("TODO");
+}
+
+function readMultipartBuffer(
+  response: Response,
+  buffer: Uint8Array | Buffer,
+  boundary: string,
+  observer: Observer<any>,
+) {
+  let text: string;
+  if (buffer.toString.length > 0) {
+    text = buffer.toString('utf8');
+  } else {
+    const decoder = new TextDecoder('utf8');
+    text = decoder.decode(buffer);
+  }
+
+  readMultipartString(response, text, boundary, observer);
+}
+
+function readMultipartString(
+  response: Response,
+  text: string,
+  boundary: string,
+  observer: Observer<any>,
+) {
+  let buffer = text;
+  const messageBoundary = '--' + boundary;
+  let bi = buffer.indexOf(messageBoundary);
+  while (bi > -1) {
+    let message: string;
+    [message, buffer] = [
+      buffer.slice(0, bi),
+      buffer.slice(bi + messageBoundary.length),
+    ];
+
+    if (message.trim()) {
+      const i = message.indexOf("\r\n\r\n");
+      const headers = parseHeaders(message.slice(0, i));
+      const contentType = headers.get('content-type');
+      if (contentType !== null && contentType.indexOf('application/json') === -1) {
+        throw new Error('Unsupported patch content type');
+      }
+
+      const body = message.slice(i);
+      const result = parseJSONBody(response, body);
+      observer.next?.(result);
+    }
+
+    bi = buffer.indexOf(messageBoundary);
+  }
 }
 
 export class HttpLink extends ApolloLink {
@@ -333,24 +391,27 @@ export class HttpLink extends ApolloLink {
             const contentType = response.headers?.get('content-type');
             if (contentType !== null && /^multipart\/mixed/.test(contentType)) {
               const boundary = parseMultipartBoundary(contentType!);
-              // TODO: use ducktyping rather than instanceof
-              if (response.body instanceof ReadableStream) {
-                readMultipartBody(response, boundary, observer);
-              // TODO: detect and handle node streams
-              } else if (response.body) {
-                throw new Error('TODO');
+              if (response.body === null) {
+                throw new Error("Missing body");
+              } else if (typeof response.body.tee === "function") {
+                // WHATWG Stream
+                readMultipartWHATWGStream(response, response.body, boundary, observer);
+              } else if (typeof (response.body as any).on === "function") {
+                readMultipartNodeStream(response, response.body, boundary, observer);
+              } else if (typeof response.body === 'string') {
+                readMultipartString(response, response.body, boundary, observer);
+              } else if (typeof (response.body as any).byteLength === 'number') {
+                readMultipartBuffer(response, (response.body as any), boundary, observer);
+              } else {
+                throw new Error(
+                  'Streaming bodies not supported by provided fetch implementation',
+                );
               }
-
-              throw new Error(
-                'Streaming bodies not supported by provided fetch implementation',
-              );
             } else {
               readJSONBody(response, operation, observer);
             }
           })
-          // TODO: handle fetch errors closer to the fetcher stuff
           .catch(err => handleError(err, observer));
-
         return () => {
           if (controller) controller.abort();
         };

@@ -354,7 +354,7 @@ export class ObservableQuery<
           ...fetchMoreOptions.variables,
         },
       }),
-      fetchPolicy: 'network-only',
+      fetchPolicy: 'no-cache',
     } as WatchQueryOptions;
 
     const qid = this.queryManager.generateQueryId();

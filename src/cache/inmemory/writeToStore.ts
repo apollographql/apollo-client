@@ -1,7 +1,14 @@
 import { invariant, InvariantError } from '../../utilities/globals';
-
-import { SelectionSetNode, FieldNode, SelectionNode } from 'graphql';
 import { equal } from '@wry/equality';
+import { Trie } from '@wry/trie';
+import {
+  SelectionSetNode,
+  FieldNode,
+  SelectionNode,
+  InlineFragmentNode,
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
+} from 'graphql';
 
 import {
   createFragmentMap,
@@ -21,6 +28,7 @@ import {
   shouldInclude,
   cloneDeep,
   addTypenameToDocument,
+  isNonEmptyArray,
 } from '../../utilities';
 
 import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
@@ -41,10 +49,12 @@ export interface WriteContext extends ReadMergeModifyContext {
   // If true, merge functions will be called with undefined existing data.
   overwrite: boolean;
   incomingById: Map<string, {
-    fields: StoreObject;
+    storeObject: StoreObject;
     mergeTree?: MergeTree;
-    selections: Set<SelectionNode>;
+    fieldNodes: Set<FieldNode>;
   }>;
+  // Directive metadata for @client (and eventually @defer). We could use a
+  // bitfield for this information to save some space, if that matters.
   clientOnly: boolean;
 };
 
@@ -105,11 +115,11 @@ export class StoreWriter {
 
     // So far, the store has not been modified, so now it's time to process
     // context.incomingById and merge those incoming fields into context.store.
-    context.incomingById.forEach(({ fields, mergeTree, selections }, dataId) => {
+    context.incomingById.forEach(({ storeObject, mergeTree, fieldNodes }, dataId) => {
       const entityRef = makeReference(dataId);
 
       if (mergeTree && mergeTree.map.size) {
-        const applied = this.applyMerges(mergeTree, entityRef, fields, context);
+        const applied = this.applyMerges(mergeTree, entityRef, storeObject, context);
         if (isReference(applied)) {
           // Assume References returned by applyMerges have already been merged
           // into the store. See makeMergeObjectsFunction in policies.ts for an
@@ -118,25 +128,28 @@ export class StoreWriter {
         }
         // Otherwise, applyMerges returned a StoreObject, whose fields we should
         // merge into the store (see store.merge statement below).
-        fields = applied;
+        storeObject = applied;
       }
 
       if (__DEV__ && !context.overwrite) {
-        const hasSelectionSet = (storeFieldName: string) =>
-          fieldsWithSelectionSets.has(fieldNameFromStoreName(storeFieldName));
-        const fieldsWithSelectionSets = new Set<string>();
-        selections.forEach(selection => {
-          if (isField(selection) && selection.selectionSet) {
-            fieldsWithSelectionSets.add(selection.name.value);
+        const fieldsWithSelectionSets: Record<string, true> = Object.create(null);
+        fieldNodes.forEach(field => {
+          if (field.selectionSet) {
+            fieldsWithSelectionSets[field.name.value] = true;
           }
         });
+
+        const hasSelectionSet = (storeFieldName: string) =>
+          fieldsWithSelectionSets[
+            fieldNameFromStoreName(storeFieldName)
+          ] === true;
 
         const hasMergeFunction = (storeFieldName: string) => {
           const childTree = mergeTree && mergeTree.map.get(storeFieldName);
           return Boolean(childTree && childTree.info && childTree.info.merge);
         };
 
-        Object.keys(fields).forEach(storeFieldName => {
+        Object.keys(storeObject).forEach(storeFieldName => {
           // If a merge function was defined for this field, trust that it
           // did the right thing about (not) clobbering data. If the field
           // has no selection set, it's a scalar field, so it doesn't need
@@ -145,7 +158,7 @@ export class StoreWriter {
               !hasMergeFunction(storeFieldName)) {
             warnAboutDataLoss(
               entityRef,
-              fields,
+              storeObject,
               storeFieldName,
               context.store,
             );
@@ -153,7 +166,7 @@ export class StoreWriter {
         });
       }
 
-      store.merge(dataId, fields);
+      store.merge(dataId, storeObject);
     });
 
     // Any IDs written explicitly to the cache will be retained as
@@ -234,20 +247,41 @@ export class StoreWriter {
       incomingFields.__typename = typename;
     }
 
-    const selections = new Set(selectionSet.selections);
+    const fieldNodeSet = new Set<FieldNode>();
 
-    selections.forEach(selection => {
-      if (!shouldInclude(selection, context.variables)) return;
+    this.flattenFields(
+      selectionSet,
+      // This WriteContext will be the default context value for fields returned
+      // by the flattenFields method, but some fields may be assigned a modified
+      // context, depending on the presence of @client and other directives.
+      context,
+      // These two callback functions may be called many times during
+      // flattenFields, providing a filtering abstraction that saves us from
+      // passing certain information explicitly to flattenFields, such as
+      // typename, result, and context.{fragmentMap,variables}.
+      selection => shouldInclude(selection, context.variables),
+      inlineOrSpread => {
+        const inlineOrDefinition =
+          getFragmentFromSelection(inlineOrSpread, context.fragmentMap);
+        if (inlineOrDefinition &&
+            policies.fragmentMatches(
+              inlineOrDefinition, typename, result, context.variables)) {
+          // Returning an InlineFragmentNode | FragmentDefinitionNode allows
+          // flattenFields to make useful assumptions about the type of the
+          // fragment (namely, that it is not a FragmentSpreadNode).
+          return inlineOrDefinition;
+        }
+        // Returning undefined means the fragment could not be resolved in
+        // context.fragmentMap or did not match the given typename, and thus
+        // should not contribute its selections to the parent selection set.
+      },
 
-      if (isField(selection)) {
+    ).forEach((context, selection) => {
+      if (isField(selection)) { // Always true, but cheap to check.
         const resultFieldKey = resultKeyNameFromField(selection);
         const value = result[resultFieldKey];
 
-        const wasClientOnly = context.clientOnly;
-        context.clientOnly = wasClientOnly || !!(
-          selection.directives &&
-          selection.directives.some(d => d.name.value === "client")
-        );
+        fieldNodeSet.add(selection);
 
         if (value !== void 0) {
           const storeFieldName = policies.getStoreFieldName({
@@ -294,7 +328,7 @@ export class StoreWriter {
             // other problems, such as issue #8370.
             if (!childTypename && isReference(incomingValue)) {
               const info = context.incomingById.get(incomingValue.__ref);
-              childTypename = info && info.fields.__typename;
+              childTypename = info && info.storeObject.__typename;
             }
           }
 
@@ -335,59 +369,23 @@ export class StoreWriter {
             JSON.stringify(result, null, 2)
           }`.substring(0, 1000));
         }
-
-        context.clientOnly = wasClientOnly;
-
-      } else {
-        // This is not a field, so it must be a fragment, either inline or named
-        const fragment = getFragmentFromSelection(
-          selection,
-          context.fragmentMap,
-        );
-
-        if (fragment &&
-            // By passing result and context.variables, we enable
-            // policies.fragmentMatches to bend the rules when typename is
-            // not a known subtype of the fragment type condition, but the
-            // result object contains all the keys requested by the
-            // fragment, which strongly suggests the fragment probably
-            // matched. This fuzzy matching behavior must be enabled by
-            // including a regular expression string (such as ".*" or
-            // "Prefix.*" or ".*Suffix") in the possibleTypes array for
-            // specific supertypes; otherwise, all matching remains exact.
-            // Fuzzy matches are remembered by the Policies object and
-            // later used when reading from the cache. Since there is no
-            // incoming result object to check when reading, reading does
-            // not involve the same fuzzy inference, so the StoreReader
-            // class calls policies.fragmentMatches without passing result
-            // or context.variables. The flexibility of fuzzy matching
-            // allows existing clients to accommodate previously unknown
-            // __typename strings produced by server/schema changes, which
-            // would otherwise be breaking changes.
-            policies.fragmentMatches(fragment, typename, result, context.variables)) {
-          fragment.selectionSet.selections.forEach(selections.add, selections);
-        }
       }
     });
 
     if ("string" === typeof dataId) {
       const previous = context.incomingById.get(dataId);
       if (previous) {
-        previous.fields = context.merge(previous.fields, incomingFields);
+        previous.storeObject = context.merge(previous.storeObject, incomingFields);
         previous.mergeTree = mergeMergeTrees(previous.mergeTree, mergeTree);
-        // Add all previous SelectionNode objects, rather than creating a new
-        // Set, since the original unmerged selections Set is not going to be
-        // needed again (only the merged Set).
-        previous.selections.forEach(selections.add, selections);
-        previous.selections = selections;
+        fieldNodeSet.forEach(field => previous.fieldNodes.add(field));
       } else {
         context.incomingById.set(dataId, {
-          fields: incomingFields,
+          storeObject: incomingFields,
           // Save a reference to mergeTree only if it is not empty, because
           // empty MergeTrees may be recycled by maybeRecycleChildMergeTree and
           // reused for entirely different parts of the result tree.
           mergeTree: mergeTreeIsEmpty(mergeTree) ? void 0 : mergeTree,
-          selections,
+          fieldNodes: fieldNodeSet,
         });
       }
       return makeReference(dataId);
@@ -424,6 +422,98 @@ export class StoreWriter {
       context,
       mergeTree,
     });
+  }
+
+  // Implements https://spec.graphql.org/draft/#sec-Field-Collection, but with
+  // some additions for tracking @client (and soon @defer) directives.
+  private flattenFields(
+    selectionSet: SelectionSetNode,
+    context: WriteContext,
+    include: (selection: SelectionNode) => boolean,
+    matchFragment: (
+      selection: InlineFragmentNode | FragmentSpreadNode,
+    ) => InlineFragmentNode | FragmentDefinitionNode | undefined,
+  ): Map<FieldNode, WriteContext> {
+    const fieldMap = new Map<FieldNode, WriteContext>();
+
+    const limitingTrie = new Trie<{
+      // Since there are only two combinations of clientOnly values, we should
+      // need at most two versions of context, including the one originally
+      // passed to flattenFields. To avoid creating multiple copies of any given
+      // context configuration, we cache the contexts in limitingTrie according
+      // to their clientOnly value.
+      context?: WriteContext;
+      // Tracks whether (clientOnly, selectionSet) has been flattened before.
+      // The GraphQL specification only uses the fragment name for skipping
+      // previously visited fragments, but the top-level fragment selection set
+      // corresponds 1:1 with the fagment name (and is slightly easier too work
+      // with), and we need to consider different clientOnly values as well,
+      // potentially revisiting selection sets that were previously visited with
+      // different inherited @client statuses.
+      visited?: Boolean;
+    }>(false); // No need for WeakMap, since limitingTrie does not escape.
+
+    limitingTrie.lookup(
+      context.clientOnly,
+    ).context = context;
+
+    (function flatten(
+      selectionSet: SelectionSetNode,
+      inheritedClientOnly: boolean,
+    ) {
+      const visitedNode = limitingTrie.lookup(
+        // Because we take inheritedClientOnly into consideration here (in
+        // addition to selectionSet), it's possible for the same selection set
+        // to be flattened more than once, if it appears in the query with
+        // different @client configurations.
+        inheritedClientOnly,
+        selectionSet,
+      );
+      if (visitedNode.visited) return;
+      visitedNode.visited = true;
+
+      selectionSet.selections.forEach(selection => {
+        if (!include(selection)) return;
+
+        let clientOnly = inheritedClientOnly;
+        if (
+          !clientOnly &&
+          isNonEmptyArray(selection.directives)
+        ) {
+          selection.directives.forEach(dir => {
+            const name = dir.name.value;
+            if (name === "client") clientOnly = true;
+          });
+        }
+
+        if (isField(selection)) {
+          const existing = fieldMap.get(selection);
+          if (existing) {
+            // If this field has been visited along another recursive path
+            // before, the final context should have clientOnly set to true only
+            // if *all* paths have the directive (hence the &&).
+            clientOnly = clientOnly && existing.clientOnly;
+          }
+
+          const contextNode = limitingTrie.lookup(clientOnly);
+          fieldMap.set(
+            selection,
+            contextNode.context || (contextNode.context = {
+              ...context,
+              clientOnly,
+            }),
+          );
+
+        } else {
+          const fragment = matchFragment(selection);
+          if (fragment) {
+            flatten(fragment.selectionSet, clientOnly);
+          }
+        }
+      });
+    })(selectionSet, false);
+
+    return fieldMap;
   }
 
   private applyMerges<T extends StoreValue>(

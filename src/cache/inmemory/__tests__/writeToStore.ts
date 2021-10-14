@@ -15,14 +15,20 @@ import {
   isReference,
   Reference,
   StoreObject,
-} from '../../../utilities/graphql/storeUtils';
-import { addTypenameToDocument } from '../../../utilities/graphql/transform';
-import { cloneDeep } from '../../../utilities/common/cloneDeep';
+  addTypenameToDocument,
+  cloneDeep,
+  createFragmentMap,
+  getFragmentDefinitions,
+  getMainDefinition,
+  shouldInclude,
+  getFragmentFromSelection,
+} from '../../../utilities';
 import { itAsync } from '../../../testing/core';
-import { StoreWriter } from '../writeToStore';
+import { StoreWriter, WriteContext } from '../writeToStore';
 import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
 import { withErrorSpy, withWarningSpy } from '../../../testing';
+import { TypedDocumentNode } from '../../../core'
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -2914,6 +2920,217 @@ describe('writing to the store', () => {
           name: "piebaldism",
         },
       ],
+    });
+  });
+
+  describe("StoreWriter", () => {
+    it("flattenFields flattens fields with appropriate clientOnly context", () => {
+      const writer = new StoreWriter(new InMemoryCache());
+
+      function check(
+        query: TypedDocumentNode<{
+          aField: string;
+          bField: string;
+          rootField: string;
+        }>,
+        expectedClientOnlyValues: Record<string, boolean>,
+      ) {
+        const { selectionSet } = getMainDefinition(query);
+        const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
+
+        const flat = writer["flattenFields"](
+          selectionSet,
+          { fragmentMap,
+            clientOnly: false,
+          } as WriteContext,
+          shouldInclude,
+          inlineOrSpread => {
+            const inlineOrDefinition =
+              getFragmentFromSelection(inlineOrSpread, fragmentMap);
+            if (inlineOrDefinition &&
+                inlineOrDefinition.typeCondition &&
+                inlineOrDefinition.typeCondition.name.value === "Query") {
+              return inlineOrDefinition;
+            }
+          },
+        );
+
+        expect(flat.size).toBe(3);
+
+        flat.forEach((context, field) => {
+          expect(expectedClientOnlyValues).toHaveProperty(field.name.value);
+          expect(context.clientOnly).toBe(
+            expectedClientOnlyValues[field.name.value]
+          );
+        });
+      }
+
+      check(gql`
+        query Q {
+          ...FragAB @client
+          ...FragB
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        aField: true,
+        bField: false,
+        rootField: false,
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        aField: true,
+        bField: false,
+        rootField: false,
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField @client
+        }
+      `, {
+        aField: true,
+        bField: true,
+        rootField: false,
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          rootField
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField @client
+        }
+      `, {
+        aField: false,
+        bField: true,
+        rootField: false,
+      });
+
+      check(gql`
+        query Q {
+          rootField @client
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @client
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        aField: false,
+        bField: false,
+        rootField: true,
+      });
+
+      check(gql`
+        query Q {
+          rootField @client
+          ...FragB @client
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        aField: false,
+        bField: true,
+        rootField: true,
+      });
+
+      check(gql`
+        query Q {
+          rootField @client
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @client
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        aField: false,
+        bField: false,
+        rootField: true,
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        aField: true,
+        bField: true,
+        rootField: false,
+      });
     });
   });
 });

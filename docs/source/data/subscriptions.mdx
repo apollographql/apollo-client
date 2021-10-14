@@ -189,7 +189,7 @@ The following example component uses the subscription we defined earlier to rend
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscriptionAdded($postID: ID!) {
+  subscription OnCommentAdded($postID: ID!) {
     commentAdded(postID: $postID) {
       id
       content

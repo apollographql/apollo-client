@@ -53,7 +53,7 @@ const COMMENTS_SUBSCRIPTION = gql`
 `;
 ```
 
-When Apollo Client executes the `onCommentAdded` subscription, it establishes a connection to your GraphQL server and listens for response data. Unlike with a query, there is no expectation that the server will immediately process and return a response. Instead, your server only pushes data to your client when a particular event occurs on your backend.
+When Apollo Client executes the `OnCommentAdded` subscription, it establishes a connection to your GraphQL server and listens for response data. Unlike with a query, there is no expectation that the server will immediately process and return a response. Instead, your server only pushes data to your client when a particular event occurs on your backend.
 
 Whenever your GraphQL server _does_ push data to a subscribing client, that data conforms to the structure of the executed subscription, just like it does for a query:
 
@@ -189,7 +189,7 @@ The following example component uses the subscription we defined earlier to rend
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
-  subscription OnCommentAdded($postID: ID!) {
+  subscriptionAdded($postID: ID!) {
     commentAdded(postID: $postID) {
       id
       content

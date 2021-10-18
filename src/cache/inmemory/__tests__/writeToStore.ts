@@ -22,7 +22,7 @@ import { itAsync } from '../../../testing/core';
 import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
-import { withErrorSpy } from '../../../testing';
+import { withErrorSpy, withWarningSpy } from '../../../testing';
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -1835,21 +1835,7 @@ describe('writing to the store', () => {
   });
 
   describe('"Cache data maybe lost..." warnings', () => {
-    const { warn } = console;
-    let warnings: any[][] = [];
-
-    beforeEach(() => {
-      warnings.length = 0;
-      console.warn = (...args: any[]) => {
-        warnings.push(args);
-      };
-    });
-
-    afterEach(() => {
-      console.warn = warn;
-    });
-
-    it("should not warn when scalar fields are updated", () => {
+    withWarningSpy(it, "should not warn when scalar fields are updated", () => {
       const cache = new InMemoryCache;
 
       const query = gql`
@@ -1858,8 +1844,6 @@ describe('writing to the store', () => {
           currentTime(tz: "UTC-5")
         }
       `;
-
-      expect(warnings).toEqual([]);
 
       const date = new Date(1601053713081);
 
@@ -1879,7 +1863,6 @@ describe('writing to the store', () => {
       });
 
       expect(cache.extract()).toMatchSnapshot();
-      expect(warnings).toEqual([]);
 
       cache.writeQuery({
         query,
@@ -1896,7 +1879,6 @@ describe('writing to the store', () => {
       });
 
       expect(cache.extract()).toMatchSnapshot();
-      expect(warnings).toEqual([]);
     });
   });
 
@@ -1960,7 +1942,7 @@ describe('writing to the store', () => {
       });
     });
 
-    it('should warn when it receives the wrong data inside a fragment', () => {
+    withErrorSpy(it, 'should warn when it receives the wrong data inside a fragment', () => {
       const queryWithInterface = gql`
         query {
           todos {
@@ -2058,9 +2040,8 @@ describe('writing to the store', () => {
         todos: null,
       });
     });
-    it('should not warn if a field is defered', () => {
-      let originalWarn = console.warn;
-      console.warn = jest.fn((...args) => {});
+
+    withErrorSpy(it, 'should not warn if a field is defered', () => {
       const defered = gql`
         query LazyLoad {
           id
@@ -2084,8 +2065,6 @@ describe('writing to the store', () => {
       });
 
       expect((newStore as any).lookup('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
-      expect(console.warn).not.toBeCalled();
-      console.warn = originalWarn;
     });
   });
 

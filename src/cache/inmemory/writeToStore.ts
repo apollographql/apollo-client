@@ -278,100 +278,97 @@ export class StoreWriter {
         // should not contribute its selections to the parent selection set.
       },
 
-    ).forEach((context, selection) => {
-      if (isField(selection)) { // Always true, but cheap to check.
-        const resultFieldKey = resultKeyNameFromField(selection);
-        const value = result[resultFieldKey];
+    ).forEach((context, field) => {
+      const resultFieldKey = resultKeyNameFromField(field);
+      const value = result[resultFieldKey];
 
-        fieldNodeSet.add(selection);
+      fieldNodeSet.add(field);
 
-        if (value !== void 0) {
-          const storeFieldName = policies.getStoreFieldName({
-            typename,
-            fieldName: selection.name.value,
-            field: selection,
-            variables: context.variables,
-          });
+      if (value !== void 0) {
+        const storeFieldName = policies.getStoreFieldName({
+          typename,
+          fieldName: field.name.value,
+          field,
+          variables: context.variables,
+        });
 
-          const childTree = getChildMergeTree(mergeTree, storeFieldName);
+        const childTree = getChildMergeTree(mergeTree, storeFieldName);
 
-          let incomingValue =
-            this.processFieldValue(value, selection, context, childTree);
+        let incomingValue =
+          this.processFieldValue(value, field, context, childTree);
 
-          // To determine if this field holds a child object with a merge
-          // function defined in its type policy (see PR #7070), we need to
-          // figure out the child object's __typename.
-          let childTypename: string | undefined;
+        // To determine if this field holds a child object with a merge function
+        // defined in its type policy (see PR #7070), we need to figure out the
+        // child object's __typename.
+        let childTypename: string | undefined;
 
-          // The field's value can be an object that has a __typename only if
-          // the field has a selection set. Otherwise incomingValue is scalar.
-          if (selection.selectionSet) {
-            // We attempt to find the child __typename first in context.store,
-            // but the child object may not exist in the store yet, likely
-            // because it's being written for the first time, during this very
-            // call to writeToStore. Note: if incomingValue is a non-normalized
-            // StoreObject (not a Reference), getFieldValue will read from that
-            // object's properties to find its __typename.
-            childTypename = context.store.getFieldValue<string>(
-              incomingValue as StoreObject | Reference,
-              "__typename",
-            );
-
-            // If the child object is being written for the first time, but
-            // incomingValue is a Reference, then the entity that Reference
-            // identifies should have an entry in context.incomingById, which
-            // likely contains a __typename field we can use. After all, how
-            // could we know the object's ID if it had no __typename? If we
-            // wrote data into context.store as each processSelectionSet call
-            // finished processing an entity object, the child object would
-            // already be in context.store, so we wouldn't need this extra
-            // check, but holding all context.store.merge calls until after
-            // we've finished all processSelectionSet work is cleaner and solves
-            // other problems, such as issue #8370.
-            if (!childTypename && isReference(incomingValue)) {
-              const info = context.incomingById.get(incomingValue.__ref);
-              childTypename = info && info.storeObject.__typename;
-            }
-          }
-
-          const merge = policies.getMergeFunction(
-            typename,
-            selection.name.value,
-            childTypename,
+        // The field's value can be an object that has a __typename only if the
+        // field has a selection set. Otherwise incomingValue is scalar.
+        if (field.selectionSet) {
+          // We attempt to find the child __typename first in context.store, but
+          // the child object may not exist in the store yet, likely because
+          // it's being written for the first time, during this very call to
+          // writeToStore. Note: if incomingValue is a non-normalized
+          // StoreObject (not a Reference), getFieldValue will read from that
+          // object's properties to find its __typename.
+          childTypename = context.store.getFieldValue<string>(
+            incomingValue as StoreObject | Reference,
+            "__typename",
           );
 
-          if (merge) {
-            childTree.info = {
-              // TODO Check compatibility against any existing
-              // childTree.field?
-              field: selection,
-              typename,
-              merge,
-            };
-          } else {
-            maybeRecycleChildMergeTree(mergeTree, storeFieldName);
+          // If the child object is being written for the first time, but
+          // incomingValue is a Reference, then the entity that Reference
+          // identifies should have an entry in context.incomingById, which
+          // likely contains a __typename field we can use. After all, how could
+          // we know the object's ID if it had no __typename? If we wrote data
+          // into context.store as each processSelectionSet call finished
+          // processing an entity object, the child object would already be in
+          // context.store, so we wouldn't need this extra check, but holding
+          // all context.store.merge calls until after we've finished all
+          // processSelectionSet work is cleaner and solves other problems, such
+          // as issue #8370.
+          if (!childTypename && isReference(incomingValue)) {
+            const info = context.incomingById.get(incomingValue.__ref);
+            childTypename = info && info.storeObject.__typename;
           }
-
-          incomingFields = context.merge(incomingFields, {
-            [storeFieldName]: incomingValue,
-          });
-
-        } else if (
-          __DEV__ &&
-          !context.clientOnly &&
-          !context.deferred &&
-          !addTypenameToDocument.added(selection) &&
-          // If the field has a read function, it may be a synthetic field or
-          // provide a default value, so its absence from the written data
-          // should not be cause for alarm.
-          !policies.getReadFunction(typename, selection.name.value)
-        ) {
-          invariant.error(`Missing field '${
-            resultKeyNameFromField(selection)
-          }' while writing result ${
-            JSON.stringify(result, null, 2)
-          }`.substring(0, 1000));
         }
+
+        const merge = policies.getMergeFunction(
+          typename,
+          field.name.value,
+          childTypename,
+        );
+
+        if (merge) {
+          childTree.info = {
+            // TODO Check compatibility against any existing childTree.field?
+            field,
+            typename,
+            merge,
+          };
+        } else {
+          maybeRecycleChildMergeTree(mergeTree, storeFieldName);
+        }
+
+        incomingFields = context.merge(incomingFields, {
+          [storeFieldName]: incomingValue,
+        });
+
+      } else if (
+        __DEV__ &&
+        !context.clientOnly &&
+        !context.deferred &&
+        !addTypenameToDocument.added(field) &&
+        // If the field has a read function, it may be a synthetic field or
+        // provide a default value, so its absence from the written data should
+        // not be cause for alarm.
+        !policies.getReadFunction(typename, field.name.value)
+      ) {
+        invariant.error(`Missing field '${
+          resultKeyNameFromField(field)
+        }' while writing result ${
+          JSON.stringify(result, null, 2)
+        }`.substring(0, 1000));
       }
     });
 

@@ -51,7 +51,7 @@ export interface WriteContext extends ReadMergeModifyContext {
   incomingById: Map<string, {
     storeObject: StoreObject;
     mergeTree?: MergeTree;
-    fieldNodes: Set<FieldNode>;
+    fieldNodeSet: Set<FieldNode>;
   }>;
   // Directive metadata for @client and @defer. We could use a bitfield for this
   // information to save some space, if that matters.
@@ -117,7 +117,7 @@ export class StoreWriter {
 
     // So far, the store has not been modified, so now it's time to process
     // context.incomingById and merge those incoming fields into context.store.
-    context.incomingById.forEach(({ storeObject, mergeTree, fieldNodes }, dataId) => {
+    context.incomingById.forEach(({ storeObject, mergeTree, fieldNodeSet }, dataId) => {
       const entityRef = makeReference(dataId);
 
       if (mergeTree && mergeTree.map.size) {
@@ -135,7 +135,7 @@ export class StoreWriter {
 
       if (__DEV__ && !context.overwrite) {
         const fieldsWithSelectionSets: Record<string, true> = Object.create(null);
-        fieldNodes.forEach(field => {
+        fieldNodeSet.forEach(field => {
           if (field.selectionSet) {
             fieldsWithSelectionSets[field.name.value] = true;
           }
@@ -229,12 +229,12 @@ export class StoreWriter {
 
     // This variable will be repeatedly updated using context.merge to
     // accumulate all fields that need to be written into the store.
-    let incomingFields: StoreObject = Object.create(null);
+    let incoming: StoreObject = Object.create(null);
 
     // Write any key fields that were used during identification, even if
     // they were not mentioned in the original query.
     if (keyObject) {
-      incomingFields = context.merge(incomingFields, keyObject);
+      incoming = context.merge(incoming, keyObject);
     }
 
     // If typename was not passed in, infer it. Note that typename is
@@ -246,7 +246,7 @@ export class StoreWriter {
       (dataId && context.store.get(dataId, "__typename") as string);
 
     if ("string" === typeof typename) {
-      incomingFields.__typename = typename;
+      incoming.__typename = typename;
     }
 
     const fieldNodeSet = new Set<FieldNode>();
@@ -350,7 +350,7 @@ export class StoreWriter {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
         }
 
-        incomingFields = context.merge(incomingFields, {
+        incoming = context.merge(incoming, {
           [storeFieldName]: incomingValue,
         });
 
@@ -375,23 +375,23 @@ export class StoreWriter {
     if ("string" === typeof dataId) {
       const previous = context.incomingById.get(dataId);
       if (previous) {
-        previous.storeObject = context.merge(previous.storeObject, incomingFields);
+        previous.storeObject = context.merge(previous.storeObject, incoming);
         previous.mergeTree = mergeMergeTrees(previous.mergeTree, mergeTree);
-        fieldNodeSet.forEach(field => previous.fieldNodes.add(field));
+        fieldNodeSet.forEach(field => previous.fieldNodeSet.add(field));
       } else {
         context.incomingById.set(dataId, {
-          storeObject: incomingFields,
+          storeObject: incoming,
           // Save a reference to mergeTree only if it is not empty, because
           // empty MergeTrees may be recycled by maybeRecycleChildMergeTree and
           // reused for entirely different parts of the result tree.
           mergeTree: mergeTreeIsEmpty(mergeTree) ? void 0 : mergeTree,
-          fieldNodes: fieldNodeSet,
+          fieldNodeSet,
         });
       }
       return makeReference(dataId);
     }
 
-    return incomingFields;
+    return incoming;
   }
 
   private processFieldValue(

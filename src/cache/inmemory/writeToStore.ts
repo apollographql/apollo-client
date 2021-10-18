@@ -53,9 +53,10 @@ export interface WriteContext extends ReadMergeModifyContext {
     mergeTree?: MergeTree;
     fieldNodes: Set<FieldNode>;
   }>;
-  // Directive metadata for @client (and eventually @defer). We could use a
-  // bitfield for this information to save some space, if that matters.
+  // Directive metadata for @client and @defer. We could use a bitfield for this
+  // information to save some space, if that matters.
   clientOnly: boolean;
+  deferred: boolean;
 };
 
 interface ProcessSelectionSetOptions {
@@ -99,6 +100,7 @@ export class StoreWriter {
       overwrite: !!overwrite,
       incomingById: new Map,
       clientOnly: false,
+      deferred: false,
     };
 
     const ref = this.processSelectionSet({
@@ -357,6 +359,7 @@ export class StoreWriter {
         } else if (
           __DEV__ &&
           !context.clientOnly &&
+          !context.deferred &&
           !addTypenameToDocument.added(selection) &&
           // If the field has a read function, it may be a synthetic field or
           // provide a default value, so its absence from the written data
@@ -425,7 +428,7 @@ export class StoreWriter {
   }
 
   // Implements https://spec.graphql.org/draft/#sec-Field-Collection, but with
-  // some additions for tracking @client (and soon @defer) directives.
+  // some additions for tracking @client and @defer directives.
   private flattenFields(
     selectionSet: SelectionSetNode,
     context: WriteContext,
@@ -437,36 +440,41 @@ export class StoreWriter {
     const fieldMap = new Map<FieldNode, WriteContext>();
 
     const limitingTrie = new Trie<{
-      // Since there are only two combinations of clientOnly values, we should
-      // need at most two versions of context, including the one originally
-      // passed to flattenFields. To avoid creating multiple copies of any given
-      // context configuration, we cache the contexts in limitingTrie according
-      // to their clientOnly value.
+      // Since there are only four combinations of clientOnly and deferred
+      // values, we should need at most four versions of context, including the
+      // one originally passed to flattenFields. To avoid creating multiple
+      // copies of any given context configuration, we cache the contexts in
+      // limitingTrie according to their clientOnly and deferred values (always
+      // in that order).
       context?: WriteContext;
-      // Tracks whether (clientOnly, selectionSet) has been flattened before.
-      // The GraphQL specification only uses the fragment name for skipping
-      // previously visited fragments, but the top-level fragment selection set
-      // corresponds 1:1 with the fagment name (and is slightly easier too work
-      // with), and we need to consider different clientOnly values as well,
-      // potentially revisiting selection sets that were previously visited with
-      // different inherited @client statuses.
+      // Tracks whether (clientOnly, deferred, selectionSet) has been flattened
+      // before. The GraphQL specification only uses the fragment name for
+      // skipping previously visited fragments, but the top-level fragment
+      // selection set corresponds 1:1 with the fagment name (and is slightly
+      // easier too work with), and we need to consider clientOnly and deferred
+      // values as well, potentially revisiting selection sets that were
+      // previously visited with different inherited configurations of those
+      // directives.
       visited?: Boolean;
     }>(false); // No need for WeakMap, since limitingTrie does not escape.
 
     limitingTrie.lookup(
       context.clientOnly,
+      context.deferred,
     ).context = context;
 
     (function flatten(
       selectionSet: SelectionSetNode,
       inheritedClientOnly: boolean,
+      inheritedDeferred: boolean,
     ) {
       const visitedNode = limitingTrie.lookup(
-        // Because we take inheritedClientOnly into consideration here (in
-        // addition to selectionSet), it's possible for the same selection set
-        // to be flattened more than once, if it appears in the query with
-        // different @client configurations.
+        // Because we take inheritedClientOnly and inheritedDeferred into
+        // consideration here (in addition to selectionSet), it's possible for
+        // the same selection set to be flattened more than once, if it appears
+        // in the query with different @client and/or @directive configurations.
         inheritedClientOnly,
+        inheritedDeferred,
         selectionSet,
       );
       if (visitedNode.visited) return;
@@ -476,13 +484,18 @@ export class StoreWriter {
         if (!include(selection)) return;
 
         let clientOnly = inheritedClientOnly;
+        let deferred = inheritedDeferred;
         if (
-          !clientOnly &&
+          // Since the presence of @client or @defer on this field can only
+          // cause clientOnly or deferred to become true, we can skip the
+          // forEach loop if both clientOnly and deferred are already true.
+          !(clientOnly && deferred) &&
           isNonEmptyArray(selection.directives)
         ) {
           selection.directives.forEach(dir => {
             const name = dir.name.value;
             if (name === "client") clientOnly = true;
+            if (name === "defer") deferred = true;
           });
         }
 
@@ -490,28 +503,30 @@ export class StoreWriter {
           const existing = fieldMap.get(selection);
           if (existing) {
             // If this field has been visited along another recursive path
-            // before, the final context should have clientOnly set to true only
-            // if *all* paths have the directive (hence the &&).
+            // before, the final context should have clientOnly or deferred set
+            // to true only if *all* paths have the directive (hence the &&).
             clientOnly = clientOnly && existing.clientOnly;
+            deferred = deferred && existing.deferred;
           }
 
-          const contextNode = limitingTrie.lookup(clientOnly);
+          const contextNode = limitingTrie.lookup(clientOnly, deferred);
           fieldMap.set(
             selection,
             contextNode.context || (contextNode.context = {
               ...context,
               clientOnly,
+              deferred,
             }),
           );
 
         } else {
           const fragment = matchFragment(selection);
           if (fragment) {
-            flatten(fragment.selectionSet, clientOnly);
+            flatten(fragment.selectionSet, clientOnly, deferred);
           }
         }
       });
-    })(selectionSet, false);
+    })(selectionSet, false, false);
 
     return fieldMap;
   }

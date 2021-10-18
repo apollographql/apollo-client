@@ -2942,6 +2942,7 @@ describe('writing to the store', () => {
           selectionSet,
           { fragmentMap,
             clientOnly: false,
+            deferred: false,
           } as WriteContext,
           shouldInclude,
           inlineOrSpread => {

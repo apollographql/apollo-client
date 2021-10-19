@@ -15,7 +15,13 @@ import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
-import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
+import {
+  itAsync,
+  MockLink,
+  MockedProvider,
+  mockSingleLink,
+  MockSubscriptionLink,
+} from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
@@ -3673,5 +3679,353 @@ describe('useQuery Hook', () => {
       "network-only",
       "cache-and-network",
     ));
+  });
+
+  describe('defer/stream', () => {
+    it('should handle deferred queries', async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: 'Hello world',
+                __typename: 'Greeting',
+              },
+            }
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+        },
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              recipient: {
+                name: 'Alice',
+                __typename: 'Person',
+              },
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: {
+            name: 'Alice',
+            __typename: 'Person',
+          },
+        },
+      });
+    });
+
+    it('should handle deferred queries in lists', async () => {
+      const query = gql`
+        {
+          greetings {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greetings: [
+                { message: 'Hello world', __typename: 'Greeting' },
+                { message: 'Hello again', __typename: 'Greeting' },
+              ],
+            },
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          { message: 'Hello world', __typename: 'Greeting' },
+          { message: 'Hello again', __typename: 'Greeting' },
+        ],
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              recipient: {
+                name: 'Alice',
+                __typename: 'Person',
+              },
+              __typename: 'Greeting',
+            },
+            path: ['greetings', 0],
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          {
+            message: 'Hello world',
+            __typename: 'Greeting',
+            recipient: { name: 'Alice', __typename: 'Person' },
+          },
+          { message: 'Hello again', __typename: 'Greeting' },
+        ],
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              recipient: {
+                name: 'Bob',
+                __typename: 'Person',
+              },
+              __typename: 'Greeting',
+            },
+            path: ['greetings', 1],
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          {
+            message: 'Hello world',
+            __typename: 'Greeting',
+            recipient: { name: 'Alice', __typename: 'Person' },
+          },
+          {
+            message: 'Hello again',
+            __typename: 'Greeting',
+            recipient: { name: 'Bob', __typename: 'Person' },
+          },
+        ],
+      });
+    });
+
+    it('should handle deferred queries with fetch policy no-cache', async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {fetchPolicy: 'no-cache'}),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: 'Hello world',
+                __typename: 'Greeting',
+              },
+            }
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+        },
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              recipient: {
+                name: 'Alice',
+                __typename: 'Person',
+              },
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: {
+            name: 'Alice',
+            __typename: 'Person',
+          },
+        },
+      });
+    });
+
+    it('should handle streamed queries', async () => {
+      const query = gql`
+        {
+          alphabet @stream(initialCount: 10)
+        }
+      `;
+
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              alphabet: alphabet.slice(0, 10).split(''),
+            }
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        alphabet: alphabet.slice(0, 10).split(''),
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: alphabet[10] as any,
+            path: ['alphabet', 10],
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        alphabet: alphabet.slice(0, 11).split(''),
+      });
+    });
   });
 });

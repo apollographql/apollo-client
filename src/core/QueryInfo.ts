@@ -358,7 +358,13 @@ export class QueryInfo {
       setIn(
         diff.diff.result,
         result.path as Array<string | number>,
-        (value: any) => ({ ...value, ...result.data }),
+        (value: any) => {
+          if (value == null) {
+            return result.data;
+          }
+
+          return { ...value, ...result.data };
+        },
       );
       result.data = diff.diff.result;
       result.path = undefined;

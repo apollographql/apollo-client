@@ -3175,5 +3175,198 @@ describe('writing to the store', () => {
         deferred: false,
       });
     });
+
+    it("flattenFields flattens fields with appropriate @defer context", () => {
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField @defer
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          rootField
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField @defer
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          rootField @defer
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @defer
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          rootField @defer
+          ...FragB @defer
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          rootField @defer
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @defer
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+      });
+    });
   });
 });

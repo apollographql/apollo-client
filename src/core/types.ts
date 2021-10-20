@@ -1,8 +1,8 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import { DocumentNode } from 'graphql';
 
 import { ApolloCache } from '../cache';
 import { FetchResult } from '../link/core';
-import { ApolloError } from '../errors';
+import { ApolloError, GraphQLErrors } from '../errors';
 import { QueryInfo } from './QueryInfo';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';
@@ -134,7 +134,7 @@ export type OperationVariables = Record<string, any>;
 
 export type ApolloQueryResult<T> = {
   data: T;
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: GraphQLErrors;
   error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;

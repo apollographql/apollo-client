@@ -1,4 +1,4 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
@@ -16,7 +16,7 @@ import {
   NetworkStatus,
   isNetworkRequestInFlight,
 } from './networkStatus';
-import { ApolloError } from '../errors';
+import { ApolloError, GraphQLErrors, NetworkError } from '../errors';
 import { QueryManager } from './QueryManager';
 
 export type QueryStoreValue = Pick<QueryInfo,
@@ -30,7 +30,7 @@ export const enum CacheWriteBehavior {
   FORBID,
   OVERWRITE,
   MERGE,
-};
+}
 
 const destructiveMethodCounts = new (
   canUseWeakMap ? WeakMap : Map
@@ -82,8 +82,8 @@ export class QueryInfo {
   subscriptions = new Set<ObservableSubscription>();
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
-  networkError?: Error | null;
-  graphQLErrors?: ReadonlyArray<GraphQLError>;
+  networkError?: NetworkError;
+  graphQLErrors?: GraphQLErrors;
   stopped = false;
 
   private cache: ApolloCache<any>;

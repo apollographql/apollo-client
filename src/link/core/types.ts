@@ -28,7 +28,7 @@ export interface FetchResult<
   data?: TData | null;
   extensions?: E;
   context?: C;
-};
+}
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 

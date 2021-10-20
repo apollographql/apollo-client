@@ -127,12 +127,12 @@ A `networkError` can contain additional fields, such as a GraphQL object in the 
 
 ## Ignoring errors
 
-If you want to conditionally ignore errors, you can set `response.errors = null;` within the error handler:
+If you want to conditionally ignore errors, you can set `response.errors = undefined;` within the error handler:
 
 ```js
 onError(({ response, operation }) => {
-  if (operation.operationName === "IgnoreErrorsQuery") {
-    response.errors = null;
+  if (response && operation.operationName === "IgnoreErrorsQuery") {
+    response.errors = undefined;
   }
 });
 ```

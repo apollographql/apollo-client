@@ -45,7 +45,7 @@ export class ApolloError extends Error {
   public message: string;
   public graphQLErrors: GraphQLErrors;
   public clientErrors: ReadonlyArray<Error>;
-  public networkError: Error | ServerParseError | ServerError | null;
+  public networkError: NetworkError;
 
   // An object that can be used to provide some additional information
   // about an error, e.g. specifying the type of error this is. Used
@@ -62,9 +62,9 @@ export class ApolloError extends Error {
     errorMessage,
     extraInfo,
   }: {
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: GraphQLErrors;
     clientErrors?: ReadonlyArray<Error>;
-    networkError?: Error | ServerParseError | ServerError | null;
+    networkError?: NetworkError;
     errorMessage?: string;
     extraInfo?: any;
   }) {

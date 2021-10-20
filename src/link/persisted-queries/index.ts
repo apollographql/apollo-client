@@ -1,13 +1,10 @@
 import { invariant } from '../../utilities/globals';
 
 import { print } from 'graphql';
-import {
-  DocumentNode,
-  ExecutionResult,
-  GraphQLError,
-} from 'graphql';
+import { DocumentNode, ExecutionResult } from 'graphql';
 
 import { ApolloLink, Operation } from '../core';
+import { GraphQLErrors, NetworkError } from '../../errors';
 import {
   Observable,
   Observer,
@@ -18,8 +15,8 @@ import {
 export const VERSION = 1;
 
 export interface ErrorResponse {
-  graphQLErrors?: readonly GraphQLError[];
-  networkError?: Error;
+  graphQLErrors?: GraphQLErrors;
+  networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;
 }
@@ -31,17 +28,17 @@ export namespace PersistedQueryLink {
   interface BaseOptions {
     disable?: (error: ErrorResponse) => boolean;
     useGETForHashedQueries?: boolean;
-  };
+  }
 
   interface SHA256Options extends BaseOptions {
     sha256: SHA256Function;
     generateHash?: never;
-  };
+  }
 
   interface GenerateHashOptions extends BaseOptions {
     sha256?: never;
     generateHash: GenerateHashFunction;
-  };
+  }
 
   export type Options = SHA256Options | GenerateHashOptions;
 }
@@ -158,7 +155,7 @@ export const createPersistedQueryLink = (
         {
           response,
           networkError,
-        }: { response?: ExecutionResult; networkError?: Error },
+        }: { response?: ExecutionResult; networkError?: NetworkError },
         cb: () => void,
       ) => {
         if (!retried && ((response && response.errors) || networkError)) {

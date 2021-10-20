@@ -2924,48 +2924,66 @@ describe('writing to the store', () => {
   });
 
   describe("StoreWriter", () => {
-    it("flattenFields flattens fields with appropriate clientOnly context", () => {
-      const writer = new StoreWriter(new InMemoryCache());
+    const writer = new StoreWriter(new InMemoryCache());
 
-      function check(
-        query: TypedDocumentNode<{
-          aField: string;
-          bField: string;
-          rootField: string;
-        }>,
-        expectedClientOnlyValues: Record<string, boolean>,
-      ) {
-        const { selectionSet } = getMainDefinition(query);
-        const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
+    function check(
+      query: TypedDocumentNode<{
+        aField: string;
+        bField: string;
+        rootField: string;
+      }>,
+      expectedContextValues: {
+        clientOnly: Record<string, boolean> | boolean;
+        deferred: Record<string, boolean> | boolean;
+      },
+    ) {
+      const { selectionSet } = getMainDefinition(query);
+      const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
 
-        const flat = writer["flattenFields"](
-          selectionSet,
-          { fragmentMap,
-            clientOnly: false,
-            deferred: false,
-          } as WriteContext,
-          shouldInclude,
-          inlineOrSpread => {
-            const inlineOrDefinition =
-              getFragmentFromSelection(inlineOrSpread, fragmentMap);
-            if (inlineOrDefinition &&
-                inlineOrDefinition.typeCondition &&
-                inlineOrDefinition.typeCondition.name.value === "Query") {
-              return inlineOrDefinition;
-            }
-          },
-        );
+      const flat = writer["flattenFields"](
+        selectionSet,
+        { fragmentMap,
+          clientOnly: false,
+          deferred: false,
+        } as WriteContext,
+        shouldInclude,
+        inlineOrSpread => {
+          const inlineOrDefinition =
+            getFragmentFromSelection(inlineOrSpread, fragmentMap);
+          if (inlineOrDefinition &&
+              inlineOrDefinition.typeCondition &&
+              inlineOrDefinition.typeCondition.name.value === "Query") {
+            return inlineOrDefinition;
+          }
+        },
+      );
 
-        expect(flat.size).toBe(3);
+      expect(flat.size).toBe(3);
 
-        flat.forEach((context, field) => {
-          expect(expectedClientOnlyValues).toHaveProperty(field.name.value);
+      flat.forEach((context, field) => {
+        const fieldName = field.name.value;
+
+        if (typeof expectedContextValues.clientOnly === "boolean") {
+          expect(context.clientOnly).toBe(expectedContextValues.clientOnly);
+        } else {
+          expect(expectedContextValues.clientOnly).toHaveProperty(fieldName);
           expect(context.clientOnly).toBe(
-            expectedClientOnlyValues[field.name.value]
+            expectedContextValues.clientOnly[fieldName]
           );
-        });
-      }
+        }
 
+        if (typeof expectedContextValues.deferred === "boolean") {
+          expect(context.deferred).toBe(expectedContextValues.deferred);
+        } else {
+          expect(expectedContextValues.deferred).toHaveProperty(fieldName);
+          expect(context.deferred).toBe(
+            expectedContextValues.deferred[fieldName]
+          );
+        }
+      });
+    }
+
+    it("flattenFields flattens fields with appropriate @client context", () => {
       check(gql`
         query Q {
           ...FragAB @client
@@ -2982,9 +3000,12 @@ describe('writing to the store', () => {
           bField
         }
       `, {
-        aField: true,
-        bField: false,
-        rootField: false,
+        clientOnly: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+        deferred: false,
       });
 
       check(gql`
@@ -3003,9 +3024,12 @@ describe('writing to the store', () => {
           bField
         }
       `, {
-        aField: true,
-        bField: false,
-        rootField: false,
+        clientOnly: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+        deferred: false,
       });
 
       check(gql`
@@ -3024,9 +3048,12 @@ describe('writing to the store', () => {
           bField @client
         }
       `, {
-        aField: true,
-        bField: true,
-        rootField: false,
+        clientOnly: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+        deferred: false,
       });
 
       check(gql`
@@ -3045,9 +3072,12 @@ describe('writing to the store', () => {
           bField @client
         }
       `, {
-        aField: false,
-        bField: true,
-        rootField: false,
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: false,
       });
 
       check(gql`
@@ -3066,9 +3096,12 @@ describe('writing to the store', () => {
           bField
         }
       `, {
-        aField: false,
-        bField: false,
-        rootField: true,
+        clientOnly: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+        deferred: false,
       });
 
       check(gql`
@@ -3087,9 +3120,12 @@ describe('writing to the store', () => {
           bField
         }
       `, {
-        aField: false,
-        bField: true,
-        rootField: true,
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+        deferred: false,
       });
 
       check(gql`
@@ -3108,9 +3144,12 @@ describe('writing to the store', () => {
           bField
         }
       `, {
-        aField: false,
-        bField: false,
-        rootField: true,
+        clientOnly: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+        deferred: false,
       });
 
       check(gql`
@@ -3128,9 +3167,12 @@ describe('writing to the store', () => {
           bField
         }
       `, {
-        aField: true,
-        bField: true,
-        rootField: false,
+        clientOnly: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+        deferred: false,
       });
     });
   });

@@ -3368,5 +3368,148 @@ describe('writing to the store', () => {
         },
       });
     });
+
+    it("flattenFields flattens fields mixing @client and @defer", () => {
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer @client
+          ...FragB @client
+          rootField @client @defer
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: true,
+          bField: true,
+          rootField: true,
+        },
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB
+          ...FragB @client
+          rootField @defer
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField @defer
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @skip(if: true)
+          rootField @client
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          aField @defer
+          ...FragAB @include(if: false)
+          ...FragB @client
+          rootField @defer
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: true,
+        },
+      });
+    });
   });
 });

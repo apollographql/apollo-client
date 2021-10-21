@@ -4,10 +4,6 @@ import { Trie } from '@wry/trie';
 import {
   SelectionSetNode,
   FieldNode,
-  SelectionNode,
-  InlineFragmentNode,
-  FragmentDefinitionNode,
-  FragmentSpreadNode,
 } from 'graphql';
 
 import {
@@ -253,31 +249,12 @@ export class StoreWriter {
 
     this.flattenFields(
       selectionSet,
+      result,
       // This WriteContext will be the default context value for fields returned
       // by the flattenFields method, but some fields may be assigned a modified
       // context, depending on the presence of @client and other directives.
       context,
-      // These two callback functions may be called many times during
-      // flattenFields, providing a filtering abstraction that saves us from
-      // passing certain information explicitly to flattenFields, such as
-      // typename, result, and context.{fragmentMap,variables}.
-      selection => shouldInclude(selection, context.variables),
-      inlineOrSpread => {
-        const inlineOrDefinition =
-          getFragmentFromSelection(inlineOrSpread, context.fragmentMap);
-        if (inlineOrDefinition &&
-            policies.fragmentMatches(
-              inlineOrDefinition, typename, result, context.variables)) {
-          // Returning an InlineFragmentNode | FragmentDefinitionNode allows
-          // flattenFields to make useful assumptions about the type of the
-          // fragment (namely, that it is not a FragmentSpreadNode).
-          return inlineOrDefinition;
-        }
-        // Returning undefined means the fragment could not be resolved in
-        // context.fragmentMap or did not match the given typename, and thus
-        // should not contribute its selections to the parent selection set.
-      },
-
+      typename,
     ).forEach((context, field) => {
       const resultFieldKey = resultKeyNameFromField(field);
       const value = result[resultFieldKey];
@@ -428,13 +405,12 @@ export class StoreWriter {
   // some additions for tracking @client and @defer directives.
   private flattenFields(
     selectionSet: SelectionSetNode,
+    result: Record<string, any>,
     context: WriteContext,
-    include: (selection: SelectionNode) => boolean,
-    matchFragment: (
-      selection: InlineFragmentNode | FragmentSpreadNode,
-    ) => InlineFragmentNode | FragmentDefinitionNode | undefined,
+    typename = getTypenameFromResult(result, selectionSet, context.fragmentMap),
   ): Map<FieldNode, WriteContext> {
     const fieldMap = new Map<FieldNode, WriteContext>();
+    const { policies } = this.cache;
 
     const limitingTrie = new Trie<{
       // Since there are only four combinations of clientOnly and deferred
@@ -452,7 +428,7 @@ export class StoreWriter {
       // values as well, potentially revisiting selection sets that were
       // previously visited with different inherited configurations of those
       // directives.
-      visited?: Boolean;
+      visited?: boolean;
     }>(false); // No need for WeakMap, since limitingTrie does not escape.
 
     limitingTrie.lookup(
@@ -461,6 +437,7 @@ export class StoreWriter {
     ).context = context;
 
     (function flatten(
+      this: void,
       selectionSet: SelectionSetNode,
       inheritedClientOnly: boolean,
       inheritedDeferred: boolean,
@@ -478,7 +455,7 @@ export class StoreWriter {
       visitedNode.visited = true;
 
       selectionSet.selections.forEach(selection => {
-        if (!include(selection)) return;
+        if (!shouldInclude(selection, context.variables)) return;
 
         let clientOnly = inheritedClientOnly;
         let deferred = inheritedDeferred;
@@ -517,8 +494,11 @@ export class StoreWriter {
           );
 
         } else {
-          const fragment = matchFragment(selection);
-          if (fragment) {
+          const fragment =
+            getFragmentFromSelection(selection, context.fragmentMap);
+          if (fragment &&
+              policies.fragmentMatches(
+                fragment, typename, result, context.variables)) {
             flatten(fragment.selectionSet, clientOnly, deferred);
           }
         }

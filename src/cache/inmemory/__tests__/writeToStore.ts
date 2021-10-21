@@ -20,8 +20,6 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,
-  shouldInclude,
-  getFragmentFromSelection,
 } from '../../../utilities';
 import { itAsync } from '../../../testing/core';
 import { StoreWriter, WriteContext } from '../writeToStore';
@@ -2940,23 +2938,16 @@ describe('writing to the store', () => {
       const { selectionSet } = getMainDefinition(query);
       const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
 
-      const flat = writer["flattenFields"](
-        selectionSet,
-        { fragmentMap,
-          clientOnly: false,
-          deferred: false,
-        } as WriteContext,
-        shouldInclude,
-        inlineOrSpread => {
-          const inlineOrDefinition =
-            getFragmentFromSelection(inlineOrSpread, fragmentMap);
-          if (inlineOrDefinition &&
-              inlineOrDefinition.typeCondition &&
-              inlineOrDefinition.typeCondition.name.value === "Query") {
-            return inlineOrDefinition;
-          }
-        },
-      );
+      const flat = writer["flattenFields"](selectionSet, {
+        __typename: "Query",
+        aField: "a",
+        bField: "b",
+        rootField: "root",
+      }, {
+        fragmentMap,
+        clientOnly: false,
+        deferred: false,
+      } as WriteContext);
 
       expect(flat.size).toBe(3);
 

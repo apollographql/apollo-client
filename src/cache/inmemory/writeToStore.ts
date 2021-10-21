@@ -436,19 +436,30 @@ export class StoreWriter {
       context.deferred,
     ).context = context;
 
+    function getOrCreateContext(
+      clientOnly: WriteContext["clientOnly"],
+      deferred: WriteContext["deferred"],
+    ): WriteContext {
+      const contextNode = limitingTrie.lookup(clientOnly, deferred);
+      return contextNode.context || (contextNode.context = {
+        ...context,
+        clientOnly,
+        deferred,
+      });
+    }
+
     (function flatten(
       this: void,
       selectionSet: SelectionSetNode,
-      inheritedClientOnly: boolean,
-      inheritedDeferred: boolean,
+      inheritedContext: WriteContext,
     ) {
       const visitedNode = limitingTrie.lookup(
         // Because we take inheritedClientOnly and inheritedDeferred into
         // consideration here (in addition to selectionSet), it's possible for
         // the same selection set to be flattened more than once, if it appears
         // in the query with different @client and/or @directive configurations.
-        inheritedClientOnly,
-        inheritedDeferred,
+        inheritedContext.clientOnly,
+        inheritedContext.deferred,
         selectionSet,
       );
       if (visitedNode.visited) return;
@@ -457,8 +468,7 @@ export class StoreWriter {
       selectionSet.selections.forEach(selection => {
         if (!shouldInclude(selection, context.variables)) return;
 
-        let clientOnly = inheritedClientOnly;
-        let deferred = inheritedDeferred;
+        let { clientOnly, deferred } = inheritedContext;
         if (
           // Since the presence of @client or @defer on this field can only
           // cause clientOnly or deferred to become true, we can skip the
@@ -483,27 +493,24 @@ export class StoreWriter {
             deferred = deferred && existing.deferred;
           }
 
-          const contextNode = limitingTrie.lookup(clientOnly, deferred);
-          fieldMap.set(
-            selection,
-            contextNode.context || (contextNode.context = {
-              ...context,
-              clientOnly,
-              deferred,
-            }),
-          );
+          fieldMap.set(selection, getOrCreateContext(clientOnly, deferred));
 
         } else {
           const fragment =
             getFragmentFromSelection(selection, context.fragmentMap);
+
           if (fragment &&
               policies.fragmentMatches(
                 fragment, typename, result, context.variables)) {
-            flatten(fragment.selectionSet, clientOnly, deferred);
+
+            flatten(
+              fragment.selectionSet,
+              getOrCreateContext(clientOnly, deferred),
+            );
           }
         }
       });
-    })(selectionSet, false, false);
+    })(selectionSet, context);
 
     return fieldMap;
   }

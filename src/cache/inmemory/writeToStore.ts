@@ -25,6 +25,7 @@ import {
   cloneDeep,
   addTypenameToDocument,
   isNonEmptyArray,
+  argumentsObjectFromField,
 } from '../../utilities';
 
 import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
@@ -479,7 +480,14 @@ export class StoreWriter {
           selection.directives.forEach(dir => {
             const name = dir.name.value;
             if (name === "client") clientOnly = true;
-            if (name === "defer") deferred = true;
+            if (name === "defer") {
+              const args = argumentsObjectFromField(dir, context.variables);
+              // The @defer directive takes an optional args.if boolean
+              // argument, similar to @include(if: boolean).
+              deferred = !args || (args as { if?: boolean }).if !== false;
+              // TODO In the future, we may want to record args.label using
+              // context.deferred, if a label is specified.
+            }
           });
         }
 

@@ -2947,6 +2947,7 @@ describe('writing to the store', () => {
         fragmentMap,
         clientOnly: false,
         deferred: false,
+        flavors: new Map,
       });
 
       expect(flat.size).toBe(3);

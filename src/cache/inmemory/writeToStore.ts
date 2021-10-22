@@ -51,10 +51,44 @@ export interface WriteContext extends ReadMergeModifyContext {
     fieldNodeSet: Set<FieldNode>;
   }>;
   // Directive metadata for @client and @defer. We could use a bitfield for this
-  // information to save some space, if that matters.
+  // information to save some space, and use that bitfield number as the keys in
+  // the context.flavors Map.
   clientOnly: boolean;
   deferred: boolean;
+  flavors: Map<string, FlavorableWriteContext>;
 };
+
+type FlavorableWriteContext = Pick<
+  WriteContext,
+  | "clientOnly"
+  | "deferred"
+  | "flavors"
+>;
+
+// Since there are only four possible combinations of context.clientOnly and
+// context.deferred values, we should need at most four "flavors" of any given
+// WriteContext. To avoid creating multiple copies of the same context, we cache
+// the contexts in the context.flavors Map (shared by all flavors) according to
+// their clientOnly and deferred values (always in that order).
+function getContextFlavor<TContext extends FlavorableWriteContext>(
+  context: TContext,
+  clientOnly: TContext["clientOnly"],
+  deferred: TContext["deferred"],
+): TContext {
+  const key = `${clientOnly}${deferred}`;
+  let flavored = context.flavors.get(key);
+  if (!flavored) {
+    context.flavors.set(key, flavored = (
+      context.clientOnly === clientOnly &&
+      context.deferred === deferred
+    ) ? context : {
+      ...context,
+      clientOnly,
+      deferred,
+    });
+  }
+  return flavored as TContext;
+}
 
 interface ProcessSelectionSetOptions {
   dataId?: string,
@@ -98,6 +132,7 @@ export class StoreWriter {
       incomingById: new Map,
       clientOnly: false,
       deferred: false,
+      flavors: new Map,
     };
 
     const ref = this.processSelectionSet({
@@ -272,8 +307,16 @@ export class StoreWriter {
 
         const childTree = getChildMergeTree(mergeTree, storeFieldName);
 
-        let incomingValue =
-          this.processFieldValue(value, field, context, childTree);
+        let incomingValue = this.processFieldValue(
+          value,
+          field,
+          // Reset context.clientOnly and context.deferred to their default
+          // values before processing nested selection sets.
+          field.selectionSet
+            ? getContextFlavor(context, false, false)
+            : context,
+          childTree,
+        );
 
         // To determine if this field holds a child object with a merge function
         // defined in its type policy (see PR #7070), we need to figure out the
@@ -408,6 +451,7 @@ export class StoreWriter {
     WriteContext,
     | "clientOnly"
     | "deferred"
+    | "flavors"
     | "fragmentMap"
     | "variables"
   >>(
@@ -420,14 +464,7 @@ export class StoreWriter {
     const { policies } = this.cache;
 
     const limitingTrie = new Trie<{
-      // Since there are only four combinations of clientOnly and deferred
-      // values, we should need at most four versions of context, including the
-      // one originally passed to flattenFields. To avoid creating multiple
-      // copies of any given context configuration, we cache the contexts in
-      // limitingTrie according to their clientOnly and deferred values (always
-      // in that order).
-      context?: TContext;
-      // Tracks whether (clientOnly, deferred, selectionSet) has been flattened
+      // Tracks whether (selectionSet, clientOnly, deferred) has been flattened
       // before. The GraphQL specification only uses the fragment name for
       // skipping previously visited fragments, but the top-level fragment
       // selection set corresponds 1:1 with the fagment name (and is slightly
@@ -438,36 +475,19 @@ export class StoreWriter {
       visited?: boolean;
     }>(false); // No need for WeakMap, since limitingTrie does not escape.
 
-    limitingTrie.lookup(
-      context.clientOnly,
-      context.deferred,
-    ).context = context;
-
-    function getOrCreateContext(
-      clientOnly: TContext["clientOnly"],
-      deferred: TContext["deferred"],
-    ): TContext {
-      const contextNode = limitingTrie.lookup(clientOnly, deferred);
-      return contextNode.context || (contextNode.context = {
-        ...context,
-        clientOnly,
-        deferred,
-      });
-    }
-
     (function flatten(
       this: void,
       selectionSet: SelectionSetNode,
       inheritedContext: TContext,
     ) {
       const visitedNode = limitingTrie.lookup(
+        selectionSet,
         // Because we take inheritedClientOnly and inheritedDeferred into
         // consideration here (in addition to selectionSet), it's possible for
         // the same selection set to be flattened more than once, if it appears
         // in the query with different @client and/or @directive configurations.
         inheritedContext.clientOnly,
         inheritedContext.deferred,
-        selectionSet,
       );
       if (visitedNode.visited) return;
       visitedNode.visited = true;
@@ -507,7 +527,10 @@ export class StoreWriter {
             deferred = deferred && existing.deferred;
           }
 
-          fieldMap.set(selection, getOrCreateContext(clientOnly, deferred));
+          fieldMap.set(
+            selection,
+            getContextFlavor(context, clientOnly, deferred),
+          );
 
         } else {
           const fragment =
@@ -519,7 +542,7 @@ export class StoreWriter {
 
             flatten(
               fragment.selectionSet,
-              getOrCreateContext(clientOnly, deferred),
+              getContextFlavor(context, clientOnly, deferred),
             );
           }
         }

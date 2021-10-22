@@ -67,8 +67,23 @@ exports[`type policies complains about missing key fields 1`] = `
   }
 }",
     ],
+    Array [
+      "Missing field 'year' while writing result {
+  \\"__typename\\": \\"Book\\",
+  \\"isbn\\": \\"1400096235\\",
+  \\"title\\": \\"The Information\\",
+  \\"subtitle\\": \\"A History, a Theory, a Flood\\",
+  \\"author\\": {
+    \\"name\\": \\"James Gleick\\"
+  }
+}",
+    ],
   ],
   "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
     Object {
       "type": "return",
       "value": undefined,

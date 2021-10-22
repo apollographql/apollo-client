@@ -2948,6 +2948,10 @@ describe('writing to the store', () => {
         clientOnly: false,
         deferred: false,
         flavors: new Map,
+        variables: {
+          true: true,
+          false: false,
+        },
       });
 
       expect(flat.size).toBe(3);
@@ -3500,6 +3504,106 @@ describe('writing to the store', () => {
           aField: true,
           bField: false,
           rootField: true,
+        },
+      });
+    });
+
+    it("flattenFields understands conditional @defer(if: boolean)", () => {
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @defer(if: false)
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField @defer(if: true)
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @defer(if: $true)
+          rootField @defer(if: $true)
+        }
+
+        fragment FragAB on Query {
+          aField @defer(if: $false)
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer(if: $false)
+          ...FragB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer(if: true)
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB
+          ...FragB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer
+        }
+
+        fragment FragB on Query {
+          bField @defer(if: false)
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          // The bField is deferred despite having @defer(if: false), because it
+          // inherits the @defer directives from above.
+          bField: true,
+          rootField: false,
         },
       });
     });

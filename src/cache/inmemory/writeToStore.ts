@@ -509,8 +509,12 @@ export class StoreWriter {
             if (name === "defer") {
               const args = argumentsObjectFromField(dir, context.variables);
               // The @defer directive takes an optional args.if boolean
-              // argument, similar to @include(if: boolean).
-              deferred = !args || (args as { if?: boolean }).if !== false;
+              // argument, similar to @include(if: boolean). Note that
+              // @defer(if: false) does not make context.deferred false, but
+              // instead behaves as if there was no @defer directive.
+              if (!args || (args as { if?: boolean }).if !== false) {
+                deferred = true;
+              }
               // TODO In the future, we may want to record args.label using
               // context.deferred, if a label is specified.
             }

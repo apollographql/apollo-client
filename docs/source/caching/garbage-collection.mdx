@@ -15,7 +15,26 @@ The `gc` method removes all objects from the normalized cache that are not **rea
 cache.gc();
 ```
 
- To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
+To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
+
+In addition to pruning your GraphQL data, `cache.gc` can also release memory that the cache uses to preserve unchanged parts of previous cache results:
+
+```js
+cache.gc({ resetResultCache: true })
+```
+
+Freeing this memory temporarily slows down cache reads, because those reads don't benefit from any previous reading work.
+
+If you're using the [`canonizeResults: true`](../api/cache/InMemoryCache/#canonizeresults) option, `cache.gc` can also reset the memory used for looking up canonical result objects:
+
+```js
+cache.gc({
+  resetResultCache: true,
+  resetResultIdentities: true,
+})
+```
+
+These additional `cache.gc` options can be useful for investigating memory usage patterns or leaks. Before taking heap snapshots or recording allocation timelines, it's a good idea to force _JavaScript_ garbage collection using your browser's devtools, to ensure memory released by the cache has been fully collected and returned to the heap.
 
 ### Configuring garbage collection
 
@@ -57,7 +76,7 @@ You can customize behavior for dangling references by defining a custom [`read` 
 
 * Filter the referenced object out of a list of available objects
 * Set the field's value to `null`
-* Return a particular default value 
+* Return a particular default value
 
 Every `read` function is passed a `canRead` function that helps it detect when its field currently contains a dangling reference.
 

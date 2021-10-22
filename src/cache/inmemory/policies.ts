@@ -309,13 +309,20 @@ export class Policies {
 
   public identify(
     object: StoreObject,
-    selectionSet?: SelectionSetNode,
-    fragmentMap?: FragmentMap,
+    context?: KeyFieldsContext,
   ): [string?, StoreObject?] {
     // TODO Use an AliasMap here?
-    const typename = selectionSet && fragmentMap
-      ? getTypenameFromResult(object, selectionSet, fragmentMap)
+    const typename = (
+      context &&
+      context.selectionSet &&
+      context.fragmentMap
+    ) ? getTypenameFromResult(object, context.selectionSet, context.fragmentMap)
       : object.__typename;
+
+    context = {
+      ...context,
+      typename,
+    };
 
     // It should be possible to write root Query fields with
     // writeFragment, using { __typename: "Query", ... } as the data, but
@@ -326,12 +333,6 @@ export class Policies {
     if (typename === this.rootTypenamesById.ROOT_QUERY) {
       return ["ROOT_QUERY"];
     }
-
-    const context: KeyFieldsContext = {
-      typename,
-      selectionSet,
-      fragmentMap,
-    };
 
     let id: KeyFieldsResult;
 

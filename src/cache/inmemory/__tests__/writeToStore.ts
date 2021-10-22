@@ -22,7 +22,7 @@ import {
   getMainDefinition,
 } from '../../../utilities';
 import { itAsync } from '../../../testing/core';
-import { StoreWriter, WriteContext } from '../writeToStore';
+import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
 import { withErrorSpy, withWarningSpy } from '../../../testing';
@@ -2947,7 +2947,7 @@ describe('writing to the store', () => {
         fragmentMap,
         clientOnly: false,
         deferred: false,
-      } as WriteContext);
+      });
 
       expect(flat.size).toBe(3);
 

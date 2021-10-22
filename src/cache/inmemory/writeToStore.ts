@@ -404,13 +404,19 @@ export class StoreWriter {
 
   // Implements https://spec.graphql.org/draft/#sec-Field-Collection, but with
   // some additions for tracking @client and @defer directives.
-  private flattenFields(
+  private flattenFields<TContext extends Pick<
+    WriteContext,
+    | "clientOnly"
+    | "deferred"
+    | "fragmentMap"
+    | "variables"
+  >>(
     selectionSet: SelectionSetNode,
     result: Record<string, any>,
-    context: WriteContext,
+    context: TContext,
     typename = getTypenameFromResult(result, selectionSet, context.fragmentMap),
-  ): Map<FieldNode, WriteContext> {
-    const fieldMap = new Map<FieldNode, WriteContext>();
+  ): Map<FieldNode, TContext> {
+    const fieldMap = new Map<FieldNode, TContext>();
     const { policies } = this.cache;
 
     const limitingTrie = new Trie<{
@@ -420,7 +426,7 @@ export class StoreWriter {
       // copies of any given context configuration, we cache the contexts in
       // limitingTrie according to their clientOnly and deferred values (always
       // in that order).
-      context?: WriteContext;
+      context?: TContext;
       // Tracks whether (clientOnly, deferred, selectionSet) has been flattened
       // before. The GraphQL specification only uses the fragment name for
       // skipping previously visited fragments, but the top-level fragment
@@ -438,9 +444,9 @@ export class StoreWriter {
     ).context = context;
 
     function getOrCreateContext(
-      clientOnly: WriteContext["clientOnly"],
-      deferred: WriteContext["deferred"],
-    ): WriteContext {
+      clientOnly: TContext["clientOnly"],
+      deferred: TContext["deferred"],
+    ): TContext {
       const contextNode = limitingTrie.lookup(clientOnly, deferred);
       return contextNode.context || (contextNode.context = {
         ...context,
@@ -452,7 +458,7 @@ export class StoreWriter {
     (function flatten(
       this: void,
       selectionSet: SelectionSetNode,
-      inheritedContext: WriteContext,
+      inheritedContext: TContext,
     ) {
       const visitedNode = limitingTrie.lookup(
         // Because we take inheritedClientOnly and inheritedDeferred into

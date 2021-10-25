@@ -9,7 +9,6 @@ import {
 
 import {
   FragmentMap,
-  getTypenameFromResult,
   storeKeyNameFromField,
   StoreValue,
   StoreObject,
@@ -63,13 +62,37 @@ export type TypePolicies = {
 export type KeySpecifier = (string | KeySpecifier)[];
 
 export type KeyFieldsContext = {
-  typename?: string;
+  // The __typename of the incoming object, even if the __typename field was
+  // aliased to another name in the raw result object. May be undefined when
+  // dataIdFromObject is called for objects without __typename fields.
+  typename: string | undefined;
+
+  // The object to be identified, after processing to remove aliases and
+  // normalize identifiable child objects with references.
+  storeObject: StoreObject;
+
+  // Handy tool for reading additional fields from context.storeObject, either
+  // readField("fieldName") to read storeObject[fieldName], or readField("name",
+  // objectOrReference) to read from another object or Reference. If you read a
+  // field with a read function, that function will be invoked.
+  readField: ReadFieldFunction;
+
+  // If you are writing a custom keyFields function, and you plan to use the raw
+  // result object passed as the first argument, you may also need access to the
+  // selection set and available fragments for this object, just in case any
+  // fields have aliases. Since this logic is tricky to get right, and these
+  // context properties are not even always provided (for example, they are
+  // omitted when calling cache.identify(object), where object is assumed to be
+  // a StoreObject), we recommend you use context.storeObject (which has already
+  // been de-aliased) and context.readField (which can read from references as
+  // well as objects) instead of the raw result object in your keyFields
+  // functions, or just rely on the internal implementation of keyFields:[...]
+  // syntax to get these details right for you.
   selectionSet?: SelectionSetNode;
   fragmentMap?: FragmentMap;
-  storeObject: StoreObject;
-  readField?: ReadFieldFunction;
-  // May be set by the KeyFieldsFunction to report fields that were involved
-  // in computing the ID. Never passed in by the caller.
+
+  // Internal. May be set by the KeyFieldsFunction to report fields that were
+  // involved in computing the ID. Never passed in by the caller.
   keyObject?: Record<string, any>;
 };
 
@@ -306,31 +329,39 @@ export class Policies {
 
   public identify(
     object: StoreObject,
-    context?: KeyFieldsContext,
+    partialContext?: Partial<KeyFieldsContext>,
   ): [string?, StoreObject?] {
-    // TODO Use an AliasMap here?
-    const typename = (
-      context &&
-      context.selectionSet &&
-      context.fragmentMap
-    ) ? getTypenameFromResult(object, context.selectionSet, context.fragmentMap)
-      : object.__typename;
+    const policies = this;
 
-    context = {
-      typename,
-      storeObject: object,
-      ...context,
-    };
+    const typename = partialContext && (
+      partialContext.typename ||
+      partialContext.storeObject?.__typename
+    ) || object.__typename;
 
-    // It should be possible to write root Query fields with
-    // writeFragment, using { __typename: "Query", ... } as the data, but
-    // it does not make sense to allow the same identification behavior
-    // for the Mutation and Subscription types, since application code
-    // should never be writing directly to (or reading directly from)
-    // those root objects.
+    // It should be possible to write root Query fields with writeFragment,
+    // using { __typename: "Query", ... } as the data, but it does not make
+    // sense to allow the same identification behavior for the Mutation and
+    // Subscription types, since application code should never be writing
+    // directly to (or reading directly from) those root objects.
     if (typename === this.rootTypenamesById.ROOT_QUERY) {
       return ["ROOT_QUERY"];
     }
+
+    // Default context.storeObject to object if not otherwise provided.
+    const storeObject = partialContext && partialContext.storeObject || object;
+
+    const context: KeyFieldsContext = {
+      ...partialContext,
+      typename,
+      storeObject,
+      readField: partialContext && partialContext.readField || function () {
+        const options = normalizeReadFieldOptions(arguments, storeObject);
+        return policies.readField(options, {
+          store: policies.cache["data"],
+          variables: options.variables,
+        });
+      },
+    };
 
     let id: KeyFieldsResult;
 
@@ -878,7 +909,7 @@ function makeFieldFunctionOptions(
 export function normalizeReadFieldOptions(
   readFieldArgs: IArguments,
   objectOrReference: StoreObject | Reference | undefined,
-  variables: ReadMergeModifyContext["variables"],
+  variables?: ReadMergeModifyContext["variables"],
 ): ReadFieldOptions {
   const {
     0: fieldNameOrOptions,

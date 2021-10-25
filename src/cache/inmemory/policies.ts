@@ -865,69 +865,57 @@ function makeFieldFunctionOptions(
     storage,
     cache: policies.cache,
     canRead,
-    readField: makeReadFieldFunction(
-      policies,
-      objectOrReference,
-      context,
-    ),
+    readField<T>() {
+      return policies.readField<T>(
+        normalizeReadFieldOptions(arguments, objectOrReference, context),
+        context,
+      );
+    },
     mergeObjects: makeMergeObjectsFunction(context.store),
   };
 }
 
-export function makeReadFieldFunction(
-  policies: Policies,
+export function normalizeReadFieldOptions(
+  readFieldArgs: IArguments,
   objectOrReference: StoreObject | Reference | undefined,
-  context: ReadMergeModifyContext,
-): ReadFieldFunction & {
-  normalizeOptions(args: IArguments): ReadFieldOptions;
-} {
-  function normalizeOptions(readFieldArgs: IArguments): ReadFieldOptions {
-    const {
-      0: fieldNameOrOptions,
-      1: from,
-      length: argc,
-    } = readFieldArgs;
+  variables: ReadMergeModifyContext["variables"],
+): ReadFieldOptions {
+  const {
+    0: fieldNameOrOptions,
+    1: from,
+    length: argc,
+  } = readFieldArgs;
 
-    let options: ReadFieldOptions;
+  let options: ReadFieldOptions;
 
-    if (typeof fieldNameOrOptions === "string") {
-      options = {
-        fieldName: fieldNameOrOptions,
-        // Default to objectOrReference only when no second argument was
-        // passed for the from parameter, not when undefined is explicitly
-        // passed as the second argument.
-        from: argc > 1 ? from : objectOrReference,
-      };
-    } else {
-      options = { ...fieldNameOrOptions };
-      // Default to objectOrReference only when fieldNameOrOptions.from is
-      // actually omitted, rather than just undefined.
-      if (!hasOwn.call(options, "from")) {
-        options.from = objectOrReference;
-      }
+  if (typeof fieldNameOrOptions === "string") {
+    options = {
+      fieldName: fieldNameOrOptions,
+      // Default to objectOrReference only when no second argument was
+      // passed for the from parameter, not when undefined is explicitly
+      // passed as the second argument.
+      from: argc > 1 ? from : objectOrReference,
+    };
+  } else {
+    options = { ...fieldNameOrOptions };
+    // Default to objectOrReference only when fieldNameOrOptions.from is
+    // actually omitted, rather than just undefined.
+    if (!hasOwn.call(options, "from")) {
+      options.from = objectOrReference;
     }
-
-    if (__DEV__ && options.from === void 0) {
-      invariant.warn(`Undefined 'from' passed to readField with arguments ${
-        stringifyForDisplay(Array.from(readFieldArgs))
-      }`);
-    }
-
-    if (void 0 === options.variables) {
-      options.variables = context.variables;
-    }
-
-    return options;
   }
 
-  return Object.assign(function readField<T>() {
-    return policies.readField<T>(
-      normalizeOptions(arguments),
-      context,
-    );
-  }, {
-    normalizeOptions,
-  });
+  if (__DEV__ && options.from === void 0) {
+    invariant.warn(`Undefined 'from' passed to readField with arguments ${
+      stringifyForDisplay(Array.from(readFieldArgs))
+    }`);
+  }
+
+  if (void 0 === options.variables) {
+    options.variables = variables;
+  }
+
+  return options;
 }
 
 function makeMergeObjectsFunction(

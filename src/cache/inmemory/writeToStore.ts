@@ -35,8 +35,8 @@ import { InMemoryCache } from './inMemoryCache';
 import { EntityStore } from './entityStore';
 import { Cache } from '../../core';
 import { canonicalStringify } from './object-canon';
-import { makeReadFieldFunction } from './policies';
-import { ReadFieldFunction, ReadFieldOptions } from '../core/types/common';
+import { normalizeReadFieldOptions } from './policies';
+import { ReadFieldFunction } from '../core/types/common';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -242,24 +242,36 @@ export class StoreWriter {
       incoming.__typename = typename;
     }
 
-    let lazyReadField: undefined | ReturnType<typeof makeReadFieldFunction>;
+    // This readField function will be passed as context.readField in the
+    // KeyFieldsContext object created within policies.identify (called below).
+    // In addition to reading from the existing context.store (thanks to the
+    // policies.readField(options, context) line at the very bottom), this
+    // version of readField can read from Reference objects that are currently
+    // pending in context.incomingById, which is important whenever keyFields
+    // need to be extracted from a child object that processSelectionSet has
+    // turned into a Reference.
     const readField: ReadFieldFunction = function (this: void) {
-      const read = lazyReadField || (
-        lazyReadField = makeReadFieldFunction(policies, incoming, context));
-
-      const options: ReadFieldOptions = read.normalizeOptions(arguments);
+      const options = normalizeReadFieldOptions(
+        arguments,
+        incoming,
+        context.variables,
+      );
 
       if (isReference(options.from)) {
         const info = context.incomingById.get(options.from.__ref);
         if (info) {
-          const result = read({ ...options, from: info.storeObject });
+          const result = policies.readField({
+            ...options,
+            from: info.storeObject
+          }, context);
+
           if (result !== void 0) {
             return result;
           }
         }
       }
 
-      return read(options);
+      return policies.readField(options, context);
     };
 
     const fieldNodeSet = new Set<FieldNode>();

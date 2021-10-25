@@ -879,40 +879,38 @@ export function makeReadFieldFunction(
   policies: Policies,
   objectOrReference: StoreObject | Reference | undefined,
   context: ReadMergeModifyContext,
-): ReadFieldFunction {
-  return function readField<T>(
-    fieldNameOrOptions: string | ReadFieldOptions,
-    from?: StoreObject | Reference,
-  ) {
+): ReadFieldFunction & {
+  normalizeOptions(args: IArguments): ReadFieldOptions;
+} {
+  function normalizeOptions(readFieldArgs: IArguments): ReadFieldOptions {
+    const {
+      0: fieldNameOrOptions,
+      1: from,
+      length: argc,
+    } = readFieldArgs;
+
     let options: ReadFieldOptions;
+
     if (typeof fieldNameOrOptions === "string") {
       options = {
         fieldName: fieldNameOrOptions,
         // Default to objectOrReference only when no second argument was
         // passed for the from parameter, not when undefined is explicitly
         // passed as the second argument.
-        from: arguments.length > 1 ? from : objectOrReference,
+        from: argc > 1 ? from : objectOrReference,
       };
-    } else if (isNonNullObject(fieldNameOrOptions)) {
+    } else {
       options = { ...fieldNameOrOptions };
       // Default to objectOrReference only when fieldNameOrOptions.from is
       // actually omitted, rather than just undefined.
-      if (!hasOwn.call(fieldNameOrOptions, "from")) {
+      if (!hasOwn.call(options, "from")) {
         options.from = objectOrReference;
       }
-    } else {
-      invariant.warn(`Unexpected readField arguments: ${
-        stringifyForDisplay(Array.from(arguments))
-      }`);
-      // The readField helper function returns undefined for any missing
-      // fields, so it should also return undefined if the arguments were not
-      // of a type we expected.
-      return;
     }
 
     if (__DEV__ && options.from === void 0) {
       invariant.warn(`Undefined 'from' passed to readField with arguments ${
-        stringifyForDisplay(Array.from(arguments))
+        stringifyForDisplay(Array.from(readFieldArgs))
       }`);
     }
 
@@ -920,8 +918,17 @@ export function makeReadFieldFunction(
       options.variables = context.variables;
     }
 
-    return policies.readField<T>(options, context);
+    return options;
   }
+
+  return Object.assign(function readField<T>() {
+    return policies.readField<T>(
+      normalizeOptions(arguments),
+      context,
+    );
+  }, {
+    normalizeOptions,
+  });
 }
 
 function makeMergeObjectsFunction(

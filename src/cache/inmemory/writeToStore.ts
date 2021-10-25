@@ -35,6 +35,8 @@ import { InMemoryCache } from './inMemoryCache';
 import { EntityStore } from './entityStore';
 import { Cache } from '../../core';
 import { canonicalStringify } from './object-canon';
+import { makeReadFieldFunction } from './policies';
+import { ReadFieldFunction, ReadFieldOptions } from '../core/types/common';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -281,6 +283,26 @@ export class StoreWriter {
       incoming.__typename = typename;
     }
 
+    let lazyReadField: undefined | ReturnType<typeof makeReadFieldFunction>;
+    const readField: ReadFieldFunction = function (this: void) {
+      const read = lazyReadField || (
+        lazyReadField = makeReadFieldFunction(policies, incoming, context));
+
+      const options: ReadFieldOptions = read.normalizeOptions(arguments);
+
+      if (isReference(options.from)) {
+        const info = context.incomingById.get(options.from.__ref);
+        if (info) {
+          const result = read({ ...options, from: info.storeObject });
+          if (result !== void 0) {
+            return result;
+          }
+        }
+      }
+
+      return read(options);
+    };
+
     const fieldNodeSet = new Set<FieldNode>();
 
     this.flattenFields(
@@ -325,33 +347,10 @@ export class StoreWriter {
 
         // The field's value can be an object that has a __typename only if the
         // field has a selection set. Otherwise incomingValue is scalar.
-        if (field.selectionSet) {
-          // We attempt to find the child __typename first in context.store, but
-          // the child object may not exist in the store yet, likely because
-          // it's being written for the first time, during this very call to
-          // writeToStore. Note: if incomingValue is a non-normalized
-          // StoreObject (not a Reference), getFieldValue will read from that
-          // object's properties to find its __typename.
-          childTypename = context.store.getFieldValue<string>(
-            incomingValue as StoreObject | Reference,
-            "__typename",
-          );
-
-          // If the child object is being written for the first time, but
-          // incomingValue is a Reference, then the entity that Reference
-          // identifies should have an entry in context.incomingById, which
-          // likely contains a __typename field we can use. After all, how could
-          // we know the object's ID if it had no __typename? If we wrote data
-          // into context.store as each processSelectionSet call finished
-          // processing an entity object, the child object would already be in
-          // context.store, so we wouldn't need this extra check, but holding
-          // all context.store.merge calls until after we've finished all
-          // processSelectionSet work is cleaner and solves other problems, such
-          // as issue #8370.
-          if (!childTypename && isReference(incomingValue)) {
-            const info = context.incomingById.get(incomingValue.__ref);
-            childTypename = info && info.storeObject.__typename;
-          }
+        if (field.selectionSet &&
+            (isReference(incomingValue) ||
+             storeValueIsStoreObject(incomingValue))) {
+          childTypename = readField<string>("__typename", incomingValue);
         }
 
         const merge = policies.getMergeFunction(

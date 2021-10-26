@@ -15,17 +15,12 @@ import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError, throwServerError } from '../utils';
 import { maybe } from '../../utilities';
+import type {Readable} from "stream";
 
 const backupFetch = maybe(() => fetch);
 const { hasOwnProperty } = Object.prototype;
 
 function parseMultipartBoundary(contentType: string) {
-  const boundary = contentType.split('boundary=')[1];
-  if (boundary) {
-    return boundary.replace(/^('|")/, '').replace(/('|")$/, '');
-  }
-
-  return '-';
 }
 
 function parseHeaders(headerText: string): Headers {
@@ -103,7 +98,6 @@ function handleError(err: any, observer: Observer<any>) {
   observer.error?.(err);
 }
 
-// TODO: naming
 function readJSONBody(
   response: Response,
   operation: Operation,
@@ -140,77 +134,167 @@ function readJSONBody(
     .catch(err => handleError(err, observer));
 }
 
-function readMultipartWHATWGStream(
+function readMultipartBody(
   response: Response,
-  body: ReadableStream<Uint8Array>,
+  // TODO: Use this in error messages
+  _operation: Operation,
+  observer: Observer<any>,
+) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !/^multipart\/mixed/.test(contentType)) {
+    throw new Error("Invalid multipart content type");
+  }
+
+  // TODO: better parsing of boundary attribute?
+  let boundary = contentType.split('boundary=')[1];
+  if (boundary) {
+    boundary = boundary.replace(/^('|")/, '').replace(/('|")$/, '');
+  } else {
+    boundary = '-';
+  }
+
+  // response.body can be one of many things depending on the environment, so
+  // we try to handle all of these cases.
+  if (response.body === null) {
+    throw new Error("Missing body");
+  } else if (typeof response.body.tee === "function") {
+    // WHATWG Stream
+    readMultipartWebStream(response, response.body, boundary, observer);
+  } else if (typeof (response.body as any).on === "function") {
+    readMultipartNodeStream(response, response.body, boundary, observer);
+  } else if (typeof response.body === 'string') {
+    readMultipartString(response, response.body, boundary, observer);
+  } else if (typeof (response.body as any).byteLength === 'number') {
+    readMultipartBuffer(response, (response.body as any), boundary, observer);
+  } else {
+    throw new Error(
+      'Streaming bodies not supported by provided fetch implementation',
+    );
+  }
+}
+
+
+function readMultipartWebStream(
+  response: Response,
+  // Not sure if the string case is possible but we’ll handle it anyways.
+  body: ReadableStream<Uint8Array | string>,
   boundary: string,
   observer: Observer<any>,
 ) {
-  // TODO: does this have to polyfilled? If there is a body, then there is likely a decoder.
-  const decoder = new TextDecoder('utf8');
+  // TODO: What if TextDecoder isn’t defined globally?
+  const decoder = new TextDecoder('utf-8');
   let buffer = '';
   const messageBoundary = '--' + boundary;
-  // TODO: End message boundary
+  // TODO: End message boundary???
   const reader = body.getReader();
   (function read() {
-    reader.read()
-      .then(iteration => {
-        if (iteration.done) {
-          observer.complete?.();
-          return;
-        }
+    reader.read().then(iteration => {
+      if (iteration.done) {
+        observer.complete?.();
+        return;
+      }
 
-        const chunk = decoder.decode(iteration.value);
-        buffer += chunk;
+      const chunk = typeof iteration.value === "string"
+        ? iteration.value
+        : decoder.decode(iteration.value);
+      buffer += chunk;
 
-        let bi = buffer.indexOf(messageBoundary);
-        while (bi > -1) {
-          let message: string;
-          [message, buffer] = [
-            buffer.slice(0, bi),
-            buffer.slice(bi + messageBoundary.length),
-          ];
+      // buffer index
+      let bi = buffer.indexOf(messageBoundary);
+      while (bi > -1) {
+        let message: string;
+        [message, buffer] = [
+          buffer.slice(0, bi),
+          buffer.slice(bi + messageBoundary.length),
+        ];
 
-          if (message.trim()) {
-            const i = message.indexOf("\r\n\r\n");
-            const headers = parseHeaders(message.slice(0, i));
-            const contentType = headers.get('content-type');
-            if (contentType !== null && contentType.indexOf('application/json') === -1) {
-              throw new Error('Unsupported patch content type');
-            }
-
-            const body = message.slice(i);
-            const result = parseJSONBody(response, body);
-            observer.next?.(result);
+        if (message.trim()) {
+          const i = message.indexOf("\r\n\r\n");
+          const headers = parseHeaders(message.slice(0, i));
+          const contentType = headers.get('content-type');
+          if (contentType !== null && contentType.indexOf('application/json') === -1) {
+            // TODO: handle this case
+            throw new Error('Unsupported patch content type');
           }
 
-          bi = buffer.indexOf(messageBoundary);
+          const body = message.slice(i);
+          // body here doesn’t make sense because it will be a readable stream
+          const result = parseJSONBody(response, body);
+          observer.next?.(result);
         }
 
-        read();
-      })
-      .catch(err => handleError(err, observer));
+        bi = buffer.indexOf(messageBoundary);
+      }
+
+      read();
+    }).catch(err => handleError(err, observer));
   })();
 }
 
 function readMultipartNodeStream(
-  ..._args: any[]
+  response: Response,
+  body: Readable,
+  boundary: string,
+  observer: Observer<any>,
 ) {
-  throw new Error("TODO");
+  let buffer = '';
+  const messageBoundary = '--' + boundary;
+  body.on('data', (chunk) => {
+    chunk = typeof chunk === "string"
+      ? chunk
+      : chunk.toString("utf8");
+    // buffer index
+    buffer += chunk;
+    let bi = buffer.indexOf(messageBoundary);
+    // TODO: deduplicate logic with readMultipartWebStream
+    while (bi > -1) {
+      let message: string;
+      [message, buffer] = [
+        buffer.slice(0, bi),
+        buffer.slice(bi + messageBoundary.length),
+      ];
+
+      if (message.trim()) {
+        const i = message.indexOf("\r\n\r\n");
+        const headers = parseHeaders(message.slice(0, i));
+        const contentType = headers.get('content-type');
+        if (contentType !== null && contentType.indexOf('application/json') === -1) {
+          // TODO: handle this case
+          observer.error?.(Error('Unsupported patch content type'));
+          return;
+        }
+
+        const body = message.slice(i);
+        // body here doesn’t make sense because it will be a readable stream
+        const result = parseJSONBody(response, body);
+        observer.next?.(result);
+      }
+
+      bi = buffer.indexOf(messageBoundary);
+    }
+  });
+
+  body.on("error", (err) => {
+    observer.error?.(err);
+  });
+  body.on("end", () => {
+    observer.complete?.();
+  });
 }
 
 function readMultipartBuffer(
   response: Response,
-  buffer: Uint8Array | Buffer,
+  body: Uint8Array | Buffer,
   boundary: string,
   observer: Observer<any>,
 ) {
   let text: string;
-  if (buffer.toString.length > 0) {
-    text = buffer.toString('utf8');
+  if (body.toString.length > 0) {
+    // Node buffer
+    text = body.toString('utf8');
   } else {
     const decoder = new TextDecoder('utf8');
-    text = decoder.decode(buffer);
+    text = decoder.decode(body);
   }
 
   readMultipartString(response, text, boundary, observer);
@@ -218,11 +302,11 @@ function readMultipartBuffer(
 
 function readMultipartString(
   response: Response,
-  text: string,
+  body: string,
   boundary: string,
   observer: Observer<any>,
 ) {
-  let buffer = text;
+  let buffer = body;
   const messageBoundary = '--' + boundary;
   let bi = buffer.indexOf(messageBoundary);
   while (bi > -1) {
@@ -247,6 +331,8 @@ function readMultipartString(
 
     bi = buffer.indexOf(messageBoundary);
   }
+
+  observer.complete?.();
 }
 
 export class HttpLink extends ApolloLink {
@@ -390,23 +476,7 @@ export class HttpLink extends ApolloLink {
             operation.setContext({ response });
             const contentType = response.headers?.get('content-type');
             if (contentType !== null && /^multipart\/mixed/.test(contentType)) {
-              const boundary = parseMultipartBoundary(contentType!);
-              if (response.body === null) {
-                throw new Error("Missing body");
-              } else if (typeof response.body.tee === "function") {
-                // WHATWG Stream
-                readMultipartWHATWGStream(response, response.body, boundary, observer);
-              } else if (typeof (response.body as any).on === "function") {
-                readMultipartNodeStream(response, response.body, boundary, observer);
-              } else if (typeof response.body === 'string') {
-                readMultipartString(response, response.body, boundary, observer);
-              } else if (typeof (response.body as any).byteLength === 'number') {
-                readMultipartBuffer(response, (response.body as any), boundary, observer);
-              } else {
-                throw new Error(
-                  'Streaming bodies not supported by provided fetch implementation',
-                );
-              }
+              readMultipartBody(response, operation, observer);
             } else {
               readJSONBody(response, operation, observer);
             }

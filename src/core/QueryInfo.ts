@@ -366,6 +366,7 @@ export class QueryInfo {
           return { ...value, ...result.data };
         },
       );
+
       result.data = diff.diff.result;
       result.path = undefined;
     }
@@ -492,6 +493,7 @@ export function shouldWriteResult<T>(
   return writeWithErrors;
 }
 
+// TODO: stop this function from throwing cryptic errors.
 function setIn(
   obj: Record<string, any>,
   path: Array<string | number>,

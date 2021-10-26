@@ -136,7 +136,8 @@
     "typescript": "4.5.2",
     "use-sync-external-store": "1.0.0-rc.0",
     "wait-for-observables": "1.0.3",
-    "whatwg-fetch": "3.6.2"
+    "web-streams-polyfill": "^3.1.1",
+    "whatwg-fetch": "^3.6.2"
   },
   "publishConfig": {
     "access": "public"

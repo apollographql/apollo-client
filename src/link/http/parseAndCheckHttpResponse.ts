@@ -15,6 +15,14 @@ export function parseAndCheckHttpResponse(
   return (response: Response) => response
     .text()
     .then(bodyText => {
+      if (response.status >= 300) {
+        // Network error
+        throwServerError(
+          response,
+          bodyText,
+          `Response not successful: Received status code ${response.status}`,
+        );
+      }
       try {
         return JSON.parse(bodyText);
       } catch (err) {
@@ -27,15 +35,6 @@ export function parseAndCheckHttpResponse(
       }
     })
     .then((result: any) => {
-      if (response.status >= 300) {
-        // Network error
-        throwServerError(
-          response,
-          result,
-          `Response not successful: Received status code ${response.status}`,
-        );
-      }
-
       if (
         !Array.isArray(result) &&
         !hasOwnProperty.call(result, 'data') &&

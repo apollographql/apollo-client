@@ -44,7 +44,7 @@ export interface QueryFunctionOptions<
 > extends BaseQueryOptions<TVariables> {
   displayName?: string;
   skip?: boolean;
-  onCompleted?: (data: TData) => void;
+  onCompleted?: (data: TData | null) => void;
   onError?: (error: ApolloError) => void;
 }
 

@@ -1202,7 +1202,7 @@ describe('HttpLink', () => {
     const unparsableJson = jest.fn(() => Promise.resolve(body));
     it('throws an error if response is unparsable', done => {
       fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 400, text: unparsableJson }),
+        Promise.resolve({ status: 200, text: unparsableJson }),
       );
       const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
@@ -1212,7 +1212,7 @@ describe('HttpLink', () => {
         },
         makeCallback(done, (e: ServerParseError) => {
           expect(e.message).toMatch(/JSON/);
-          expect(e.statusCode).toBe(400);
+          expect(e.statusCode).toBe(200);
           expect(e.response).toBeDefined();
           expect(e.bodyText).toBe(body);
         }),

@@ -17,12 +17,20 @@ export function parseAndCheckHttpResponse(
     .then(bodyText => {
       if (response.status >= 300) {
         // Network error
+        const getResult = () => {
+          try {
+            return JSON.parse(bodyText);
+          } catch (err) {
+            return bodyText
+          }
+        }
         throwServerError(
           response,
-          bodyText,
+          getResult(),
           `Response not successful: Received status code ${response.status}`,
         );
       }
+
       try {
         return JSON.parse(bodyText);
       } catch (err) {

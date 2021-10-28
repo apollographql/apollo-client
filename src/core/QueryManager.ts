@@ -1248,9 +1248,9 @@ export class QueryManager<TStore> {
                 results.set(oq, result as InternalRefetchQueriesResult<TResult>);
               }
 
-              // Prevent the normal cache broadcast of this result, since we've
-              // already handled it.
-              return false;
+              // Allow the default cache broadcast to happen, except when
+              // onQueryUpdated returns false.
+              return result;
             }
 
             if (onQueryUpdated !== null) {

@@ -4176,7 +4176,8 @@ describe('useQuery Hook', () => {
           result: {
             data: {
               alphabet: alphabet.slice(0, 10).split(''),
-            }
+            },
+            hasNext: true,
           },
         });
       });
@@ -4192,6 +4193,7 @@ describe('useQuery Hook', () => {
           result: {
             data: alphabet[10] as any,
             path: ['alphabet', 10],
+            hasNext: true,
           },
         });
       });
@@ -4200,6 +4202,22 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({
         alphabet: alphabet.slice(0, 11).split(''),
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: alphabet[11] as any,
+            path: ['alphabet', 11],
+            hasNext: false,
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        alphabet: alphabet.slice(0, 12).split(''),
       });
     });
   });

@@ -20,6 +20,7 @@ import type { Readable } from 'stream';
 const backupFetch = maybe(() => fetch);
 const { hasOwnProperty } = Object.prototype;
 
+// Headers is a DOM global
 function parseHeaders(headerText: string): Headers {
   const headersInit: Record<string, string> = {};
   headerText.split('\n').forEach(line => {

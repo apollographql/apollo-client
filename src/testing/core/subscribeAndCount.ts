@@ -12,7 +12,7 @@ export default function subscribeAndCount<T>(
 
   const subscription = asyncMap(
     observable,
-    (result: T) => {
+    (result) => {
       // All previous asynchronous callbacks must complete before cb can
       // be invoked with this result.
       return queue = queue.then(() => {

@@ -15,13 +15,10 @@ import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError, throwServerError } from '../utils';
 import { maybe } from '../../utilities';
-import type {Readable} from "stream";
+import type { Readable } from 'stream';
 
 const backupFetch = maybe(() => fetch);
 const { hasOwnProperty } = Object.prototype;
-
-function parseMultipartBoundary(contentType: string) {
-}
 
 function parseHeaders(headerText: string): Headers {
   const headersInit: Record<string, string> = {};
@@ -98,7 +95,7 @@ function handleError(err: any, observer: Observer<any>) {
   observer.error?.(err);
 }
 
-function readJSONBody(
+function readJsonBody(
   response: Response,
   operation: Operation,
   observer: Observer<any>,
@@ -136,8 +133,6 @@ function readJSONBody(
 
 function readMultipartBody(
   response: Response,
-  // TODO: Use this in error messages
-  _operation: Operation,
   observer: Observer<any>,
 ) {
   const contentType = response.headers.get("content-type");
@@ -161,7 +156,12 @@ function readMultipartBody(
     // WHATWG Stream
     readMultipartWebStream(response, response.body, boundary, observer);
   } else if (typeof (response.body as any).on === "function") {
-    readMultipartNodeStream(response, response.body, boundary, observer);
+    readMultipartNodeStream(
+      response,
+      response.body as unknown as Readable,
+      boundary,
+      observer,
+    );
   } else if (typeof response.body === 'string') {
     readMultipartString(response, response.body, boundary, observer);
   } else if (typeof (response.body as any).byteLength === 'number') {
@@ -259,9 +259,10 @@ function readMultipartNodeStream(
         const headers = parseHeaders(message.slice(0, i));
         const contentType = headers.get('content-type');
         if (contentType !== null && contentType.indexOf('application/json') === -1) {
-          // TODO: handle this case
           observer.error?.(Error('Unsupported patch content type'));
           return;
+        } else if (contentType === null) {
+          console.log("Is this always the case?");
         }
 
         const body = message.slice(i);
@@ -290,7 +291,7 @@ function readMultipartBuffer(
 ) {
   let text: string;
   if (body.toString.length > 0) {
-    // Node buffer
+    // Node buffer because toString() takes multiple arguments
     text = body.toString('utf8');
   } else {
     const decoder = new TextDecoder('utf8');
@@ -423,7 +424,10 @@ export class HttpLink extends ApolloLink {
             // enough to silence server-side errors about the variable being
             // unused, so variable definitions do not count as usage.
             // https://spec.graphql.org/draft/#sec-All-Variables-Used
-            if (parent && (parent as VariableDefinitionNode).kind !== 'VariableDefinition') {
+            if (
+              parent &&
+              (parent as VariableDefinitionNode).kind !== 'VariableDefinition'
+            ) {
               unusedNames.delete(node.name.value);
             }
           },
@@ -476,9 +480,9 @@ export class HttpLink extends ApolloLink {
             operation.setContext({ response });
             const contentType = response.headers?.get('content-type');
             if (contentType !== null && /^multipart\/mixed/.test(contentType)) {
-              readMultipartBody(response, operation, observer);
+              readMultipartBody(response, observer);
             } else {
-              readJSONBody(response, operation, observer);
+              readJsonBody(response, operation, observer);
             }
           })
           .catch(err => handleError(err, observer));

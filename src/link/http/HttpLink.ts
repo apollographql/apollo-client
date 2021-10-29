@@ -262,8 +262,6 @@ function readMultipartNodeStream(
         if (contentType !== null && contentType.indexOf('application/json') === -1) {
           observer.error?.(Error('Unsupported patch content type'));
           return;
-        } else if (contentType === null) {
-          console.log("Is this always the case?");
         }
 
         const body = message.slice(i);

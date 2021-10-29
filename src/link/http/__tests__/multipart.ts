@@ -142,8 +142,42 @@ describe('multipart responses', () => {
         const lines = body1.split("\r\n");
         try {
           for (const line of lines) {
-            await new Promise((resolve) => setTimeout(resolve, 10));
             controller.enqueue(line + "\r\n");
+          }
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    // jest fetch mock does not handle web streams for some reason.
+    const fetch = jest.fn(async () => ({
+      status: 200,
+      body: stream,
+      // TODO: Use a real headers object
+      headers: new Map([['content-type', 'multipart/mixed']]),
+    }));
+
+    const link = new HttpLink({
+      fetch: fetch as any,
+    });
+
+    const observable = execute(link, { query: sampleDeferredQuery });
+    matchesResults(resolve, reject, observable, results1);
+  });
+
+  itAsync('can handle whatwg stream bodies with arbitrary splits', (resolve, reject) => {
+    const stream = new ReadableStream({
+      async start(controller) {
+        let chunks: Array<string> = [];
+        let chunkSize = 15;
+        for (let i = 0; i < body1.length; i += chunkSize) {
+          chunks.push(body1.slice(i, i + chunkSize));
+        }
+
+        try {
+          for (const chunk of chunks) {
+            controller.enqueue(chunk);
           }
         } finally {
           controller.close();
@@ -169,6 +203,29 @@ describe('multipart responses', () => {
 
   itAsync('can handle node stream bodies', (resolve, reject) => {
     const stream = Readable.from(body1.split("\r\n").map((line) => line + "\r\n"));
+
+    // jest fetch mock does not handle node streams either...
+    const fetch = jest.fn(async () => ({
+      status: 200,
+      body: stream,
+      // TODO: Use a real headers object
+      headers: new Map([['content-type', 'multipart/mixed']]),
+    }));
+    const link = new HttpLink({
+      fetch: fetch as any,
+    });
+
+    const observable = execute(link, { query: sampleDeferredQuery });
+    matchesResults(resolve, reject, observable, results1);
+  });
+
+  itAsync('can handle node stream bodies with arbitrary splits', (resolve, reject) => {
+    let chunks: Array<string> = [];
+    let chunkSize = 15;
+    for (let i = 0; i < body1.length; i += chunkSize) {
+      chunks.push(body1.slice(i, i + chunkSize));
+    }
+    const stream = Readable.from(chunks);
 
     // jest fetch mock does not handle node streams either...
     const fetch = jest.fn(async () => ({

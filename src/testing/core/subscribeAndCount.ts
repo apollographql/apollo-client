@@ -1,13 +1,10 @@
-import { ObservableQuery, ApolloQueryResult, OperationVariables } from '../../core';
 import { ObservableSubscription, asyncMap } from '../../utilities';
+import type { Observable } from 'zen-observable-ts';
 
-export default function subscribeAndCount<
-  TData,
-  TVariables = OperationVariables,
->(
+export default function subscribeAndCount<T>(
   reject: (reason: any) => any,
-  observable: ObservableQuery<TData, TVariables>,
-  cb: (handleCount: number, result: ApolloQueryResult<TData>) => any,
+  observable: Observable<T>,
+  cb: (handleCount: number, result: T) => any,
 ): ObservableSubscription {
   // Use a Promise queue to prevent callbacks from being run out of order.
   let queue = Promise.resolve();
@@ -15,7 +12,7 @@ export default function subscribeAndCount<
 
   const subscription = asyncMap(
     observable,
-    (result: ApolloQueryResult<TData>) => {
+    (result: T) => {
       // All previous asynchronous callbacks must complete before cb can
       // be invoked with this result.
       return queue = queue.then(() => {

@@ -32,7 +32,7 @@ const sampleMutation = gql`
   }
 `;
 
-const sampleDeferredQuery  = gql`
+const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
     stub {
       id

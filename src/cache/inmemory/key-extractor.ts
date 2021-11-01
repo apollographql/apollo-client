@@ -19,9 +19,7 @@ export function keyFieldsFnFromSpecifier(
 ): KeyFieldsFunction {
   return (object, context) => {
     const extract: typeof extractKey =
-      context.readField
-        ? (from, key) => context.readField!(key, from)
-        : extractKey;
+      (from, key) => context.readField(key, from);
 
     const keyObject = context.keyObject = collectSpecifierPaths(
       specifier,

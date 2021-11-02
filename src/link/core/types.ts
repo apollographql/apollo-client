@@ -22,13 +22,11 @@ export interface Operation {
 
 export interface FetchResult<
   TData = { [key: string]: any },
-  C = Record<string, any>,
-  E = Record<string, any>
-> extends ExecutionResult {
-  data?: TData | null;
-  extensions?: E;
-  context?: C;
-};
+  TContext = Record<string, any>,
+  TExtensions = Record<string, any>
+> extends ExecutionResult<TData, TExtensions> {
+  context?: TContext;
+}
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 

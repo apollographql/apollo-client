@@ -65,6 +65,13 @@
 - Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
 
+## Apollo Client 3.4.17 (not yet released)
+
+### Improvements
+
+- Allow `TOptions extends FieldFunctionOptions` to be passed as final (optional) type parameter of `FieldPolicy` type. <br/>
+  [@VictorGaiva](https://github.com/VictorGaiva) in [#9000](https://github.com/apollographql/apollo-client/pull/9000)
+
 ## Apollo Client 3.4.16
 
 ### Improvements

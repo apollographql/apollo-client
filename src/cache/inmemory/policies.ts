@@ -156,10 +156,13 @@ export type FieldPolicy<
   // The type that the read function actually returns, using TExisting
   // data and options.args as input. Usually the same as TIncoming.
   TReadResult = TIncoming,
+  // Allows FieldFunctionOptions definition to be overwritten by the
+  // developer
+  TOptions extends FieldFunctionOptions = FieldFunctionOptions
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TExisting, TReadResult>;
-  merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
+  read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
+  merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
 };
 
 export type StorageType = Record<string, any>;
@@ -229,7 +232,11 @@ type MergeObjectsFunction = <T extends StoreObject | Reference>(
   incoming: T,
 ) => T;
 
-export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
+export type FieldReadFunction<
+  TExisting = any,
+  TReadResult = TExisting,
+  TOptions extends FieldFunctionOptions = FieldFunctionOptions
+> = (
   // When reading a field, one often needs to know about any existing
   // value stored for that field. If the field is read before any value
   // has been written to the cache, this existing parameter will be
@@ -239,15 +246,21 @@ export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
   // developer to annotate it with a type, without also having to provide
   // a whole new type for the options object.
   existing: SafeReadonly<TExisting> | undefined,
-  options: FieldFunctionOptions,
+  options: TOptions,
 ) => TReadResult | undefined;
 
-export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
+export type FieldMergeFunction<
+  TExisting = any,
+  TIncoming = TExisting,
+  // Passing the whole FieldFunctionOptions makes the current definition
+  // independent from its implementation
+  TOptions extends FieldFunctionOptions = FieldFunctionOptions
+> = (
   existing: SafeReadonly<TExisting> | undefined,
   // The incoming parameter needs to be positional as well, for the same
   // reasons discussed in FieldReadFunction above.
   incoming: SafeReadonly<TIncoming>,
-  options: FieldFunctionOptions,
+  options: TOptions,
 ) => SafeReadonly<TExisting>;
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;

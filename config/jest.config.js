@@ -17,4 +17,5 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   testURL: 'http://localhost',
   setupFiles: ['<rootDir>/config/jest/setup.ts'],
+  testEnvironment: 'jsdom',
 };

@@ -18,7 +18,7 @@ describe('toPromise', () => {
 
   it('return error call as Promise rejection', () => {
     return toPromise(fromError(error))
-      .then(fail)
+      .then(() => { throw "should not have thrown" })
       .catch(actualError => expect(error).toEqual(actualError));
   });
 

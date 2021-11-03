@@ -214,7 +214,7 @@ describe('subscriptions', () => {
       </ApolloProvider>
     );
 
-    jest.runTimersToTime(230);
+    jest.advanceTimersByTime(230);
   });
 
   it('resubscribes to a subscription', done => {

@@ -6,7 +6,7 @@ describe('fromError', () => {
     const error = new Error('I always error');
     const observable = fromError(error);
     return toPromise(observable)
-      .then(fail)
+      .then(() => { throw "should not have thrown" })
       .catch(actualError => expect(error).toEqual(actualError));
   });
 });

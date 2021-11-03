@@ -29,7 +29,7 @@ describe('Basic functionality', () => {
 
     let counter = 0;
     expect.assertions(2);
-    return client.subscribe({ query }).forEach(item => {
+    client.subscribe({ query }).forEach(item => {
       expect(item).toMatchObject({ data: { field: ++counter } });
       if (counter === 2) {
         done();

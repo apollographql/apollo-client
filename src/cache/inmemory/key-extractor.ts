@@ -14,10 +14,31 @@ import {
   KeyArgsFunction,
 } from "./policies";
 
+// Mapping from JSON-encoded KeySpecifier strings to associated information.
+const specifierInfoCache: Record<string, {
+  paths?: string[][];
+  keyFieldsFn?: KeyFieldsFunction;
+  keyArgsFn?: KeyArgsFunction;
+}> = Object.create(null);
+
+function lookupSpecifierInfo(spec: KeySpecifier) {
+  // It's safe to encode KeySpecifier arrays with JSON.stringify, since they're
+  // just arrays of strings or nested KeySpecifier arrays, and the order of the
+  // array elements is important (and suitably preserved by JSON.stringify).
+  const cacheKey = JSON.stringify(spec);
+  return specifierInfoCache[cacheKey] ||
+    (specifierInfoCache[cacheKey] = Object.create(null));
+}
+
 export function keyFieldsFnFromSpecifier(
   specifier: KeySpecifier,
 ): KeyFieldsFunction {
-  return (object, context) => {
+  const info = lookupSpecifierInfo(specifier);
+
+  return info.keyFieldsFn || (info.keyFieldsFn = (
+    object,
+    context,
+  ) => {
     const extract: typeof extractKey =
       (from, key) => context.readField(key, from);
 
@@ -62,7 +83,7 @@ export function keyFieldsFnFromSpecifier(
     );
 
     return `${context.typename}:${JSON.stringify(keyObject)}`;
-  };
+  });
 }
 
 // The keyArgs extraction process is roughly analogous to keyFields extraction,
@@ -73,7 +94,13 @@ export function keyFieldsFnFromSpecifier(
 // function to collectSpecifierPaths, reusing the shared extractKeyPath helper
 // wherever possible.
 export function keyArgsFnFromSpecifier(specifier: KeySpecifier): KeyArgsFunction {
-  return (args, { field, variables, fieldName }) => {
+  const info = lookupSpecifierInfo(specifier);
+
+  return info.keyArgsFn || (info.keyArgsFn = (args, {
+    field,
+    variables,
+    fieldName,
+  }) => {
     const collected = collectSpecifierPaths(specifier, keyPath => {
       const firstKey = keyPath[0];
       const firstChar = firstKey.charAt(0);
@@ -138,7 +165,7 @@ export function keyArgsFnFromSpecifier(specifier: KeySpecifier): KeyArgsFunction
     }
 
     return fieldName;
-  };
+  });
 }
 
 export function collectSpecifierPaths(
@@ -162,11 +189,11 @@ export function collectSpecifierPaths(
   }, Object.create(null));
 }
 
-export function getSpecifierPaths(spec: KeySpecifier & {
-  paths?: string[][];
-}): string[][] {
-  if (!spec.paths) {
-    const paths: string[][] = spec.paths = [];
+export function getSpecifierPaths(spec: KeySpecifier): string[][] {
+  const info = lookupSpecifierInfo(spec);
+
+  if (!info.paths) {
+    const paths: string[][] = info.paths = [];
     const currentPath: string[] = [];
 
     spec.forEach((s, i) => {
@@ -183,7 +210,7 @@ export function getSpecifierPaths(spec: KeySpecifier & {
     });
   }
 
-  return spec.paths!;
+  return info.paths!;
 }
 
 function extractKey<

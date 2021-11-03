@@ -191,23 +191,23 @@ export function extractKeyPath(
   path: string[],
   extract?: typeof extractKey,
 ): any {
-  return (function normalize<T>(value: T): T {
-    // Usually the extracted value will be a scalar value, since most primary
-    // key fields are scalar, but just in case we get an object or an array, we
-    // need to do some normalization of the order of (nested) keys.
-    if (isNonNullObject(value)) {
-      if (Array.isArray(value)) {
-        return value.map(normalize) as any;
-      }
-      return collectSpecifierPaths(
-        Object.keys(value).sort(),
-        path => extractKeyPath(value, path),
-      );
+  return normalize(path.reduce(extract || extractKey, object));
+}
+
+function normalize<T>(value: T): T {
+  // Usually the extracted value will be a scalar value, since most primary
+  // key fields are scalar, but just in case we get an object or an array, we
+  // need to do some normalization of the order of (nested) keys.
+  if (isNonNullObject(value)) {
+    if (Array.isArray(value)) {
+      return value.map(normalize) as any;
     }
-    return value;
-  })(
-    path.reduce(extract || extractKey, object)
-  );
+    return collectSpecifierPaths(
+      Object.keys(value).sort(),
+      path => extractKeyPath(value, path),
+    );
+  }
+  return value;
 }
 
 function extractKey(

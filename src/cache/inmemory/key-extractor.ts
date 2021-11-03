@@ -186,12 +186,35 @@ export function getSpecifierPaths(spec: KeySpecifier & {
   return spec.paths!;
 }
 
+function extractKey<
+  TObj extends Record<string, any>,
+  TKey extends string,
+>(object: TObj, key: TKey): TObj[TKey] | undefined {
+  return object[key];
+}
+
 export function extractKeyPath(
   object: Record<string, any>,
   path: string[],
   extract?: typeof extractKey,
 ): any {
-  return normalize(path.reduce(extract || extractKey, object));
+  // For each key in path, extract the corresponding child property from obj,
+  // flattening arrays if encountered (uncommon for keyFields and keyArgs, but
+  // possible). The final result of path.reduce is normalized so unexpected leaf
+  // objects have their keys safely sorted. That final result is difficult to
+  // type as anything other than any. You're welcome to try to improve the
+  // return type, but keep in mind extractKeyPath is not a public function
+  // (exported only for testing), so the effort may not be worthwhile unless the
+  // limited set of actual callers (see above) pass arguments that TypeScript
+  // can statically type. If we know only that path is some array of strings
+  // (and not, say, a specific tuple of statically known strings), any (or
+  // possibly unknown) is the honest answer.
+  extract = extract || extractKey;
+  return normalize(path.reduce(function reducer(obj, key): any {
+    return Array.isArray(obj)
+      ? obj.map(child => reducer(child, key))
+      : obj && extract!(obj, key);
+  }, object));
 }
 
 function normalize<T>(value: T): T {
@@ -208,13 +231,4 @@ function normalize<T>(value: T): T {
     ) as T;
   }
   return value;
-}
-
-function extractKey(
-  object: Record<string, any>,
-  key: string,
-): any {
-  return Array.isArray(object)
-    ? object.map(child => extractKey(child, key))
-    : object[key];
 }

@@ -144,7 +144,7 @@ export function keyArgsFnFromSpecifier(specifier: KeySpecifier): KeyArgsFunction
 export function collectSpecifierPaths(
   specifier: KeySpecifier,
   extractor: (path: string[]) => any,
-) {
+): Record<string, any> {
   // For each path specified by specifier, invoke the extractor, and repeatedly
   // merge the results together, with appropriate ancestor context.
   const merger = new DeepMerger;
@@ -205,7 +205,7 @@ function normalize<T>(value: T): T {
     return collectSpecifierPaths(
       Object.keys(value).sort(),
       path => extractKeyPath(value, path),
-    );
+    ) as T;
   }
   return value;
 }

@@ -197,7 +197,7 @@ describe('General Mutation testing', () => {
     wait().then(resolve, reject);
   });
 
-  it('can bind only the mutation and not rerender by props', done => {
+  itAsync('can bind only the mutation and not rerender by props', (resolve, reject) => {
     let count = 0;
     const Component = () => (
       <Mutation mutation={mutation} ignoreResults>
@@ -208,11 +208,11 @@ describe('General Mutation testing', () => {
             setTimeout(() => {
               createTodo().then((r: any) => {
                 expect(r!.data).toEqual(data);
-                done();
+                resolve();
               });
             });
           } else if (count === 1) {
-            done.fail('rerender happened with ignoreResults turned on');
+            reject('rerender happened with ignoreResults turned on');
           }
           count++;
           return <div />;
@@ -1379,7 +1379,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  it('errors when changing from mutation to a query', done => {
+  itAsync('errors when changing from mutation to a query', (resolve, reject) => {
     const query = gql`
       query todos {
         todos {
@@ -1400,7 +1400,7 @@ describe('General Mutation testing', () => {
               'was used instead.'
           )
         );
-        done();
+        resolve();
       }
       render() {
         return (
@@ -1458,7 +1458,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  it('errors when changing from mutation to a subscription', done => {
+  itAsync('errors when changing from mutation to a subscription', (resolve, reject) => {
     const subscription = gql`
       subscription todos {
         todos {
@@ -1479,7 +1479,7 @@ describe('General Mutation testing', () => {
               'Subscription was used instead.'
           )
         );
-        done();
+        resolve();
       }
 
       render() {
@@ -1512,14 +1512,14 @@ describe('General Mutation testing', () => {
   });
 
   describe('after it has been unmounted', () => {
-    it('calls the onCompleted prop after the mutation is complete', done => {
+    itAsync('calls the onCompleted prop after the mutation is complete', (resolve, reject) => {
       let success = false;
       const onCompletedFn = jest.fn();
       const checker = () => {
         setTimeout(() => {
           success = true;
           expect(onCompletedFn).toHaveBeenCalledWith(data);
-          done();
+          resolve();
         }, 100);
       };
 
@@ -1555,7 +1555,7 @@ describe('General Mutation testing', () => {
       );
 
       setTimeout(() => {
-        if (!success) done.fail('timeout passed');
+        if (!success) reject('timeout passed');
       }, 500);
     });
   });

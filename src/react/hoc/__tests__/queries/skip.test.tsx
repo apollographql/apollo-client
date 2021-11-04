@@ -62,7 +62,7 @@ describe('[queries] skip', () => {
         done = true;
         return;
       }
-      fail(new Error('query ran even though skip present'));
+      reject(new Error('query ran even though skip present'));
     }, 25);
 
     return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
@@ -291,10 +291,10 @@ describe('[queries] skip', () => {
         return;
       }
       if (optionsCalled) {
-        fail(new Error('options ran even though skip present'));
+        reject(new Error('options ran even though skip present'));
         return;
       }
-      fail(new Error('query ran even though skip present'));
+      reject(new Error('query ran even though skip present'));
     }, 25);
 
     return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
@@ -414,7 +414,7 @@ describe('[queries] skip', () => {
         done = true;
         return;
       }
-      fail(new Error('query ran even though skip present'));
+      reject(new Error('query ran even though skip present'));
     }, 25);
 
     return wait(() => expect(done).toBeTruthy()).then(resolve, reject);

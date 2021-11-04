@@ -743,7 +743,7 @@ describe('Query component', () => {
       return wait(() => expect(count).toBe(POLL_COUNT)).then(resolve, reject);
     });
 
-    it('skip', (done) => {
+    itAsync('skip', (resolve, reject) => {
       const Component = () => (
         <Query query={allPeopleQuery} skip>
           {(result: any) => {
@@ -751,9 +751,9 @@ describe('Query component', () => {
               expect(result.loading).toBeFalsy();
               expect(result.data).toBe(undefined);
               expect(result.error).toBe(undefined);
-              done();
+              resolve();
             } catch (error) {
-              done.fail(error);
+              reject(error);
             }
             return null;
           }}

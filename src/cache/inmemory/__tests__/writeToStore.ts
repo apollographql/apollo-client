@@ -1658,7 +1658,7 @@ describe('writing to the store', () => {
     expect(cache.extract()).toMatchSnapshot();
   });
 
-  it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {
+  itAsync('should allow a union of objects of a different type, when overwriting a generated id with a real id', (resolve, reject) => {
     const dataWithPlaceholder = {
       author: {
         hello: 'Foo',
@@ -1714,7 +1714,7 @@ describe('writing to the store', () => {
                     expect(incoming).toEqual(dataWithPlaceholder.author);
                     break;
                   default:
-                    fail("unreached");
+                    reject("unreached");
                 }
                 return incoming;
               },
@@ -1783,6 +1783,8 @@ describe('writing to the store', () => {
         },
       },
     });
+
+    resolve();
   });
 
   it('does not swallow errors other than field errors', () => {

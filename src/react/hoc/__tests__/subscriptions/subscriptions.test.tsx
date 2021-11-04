@@ -7,7 +7,7 @@ import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { ApolloLink } from '../../../../link/core';
-import { MockSubscriptionLink } from '../../../../testing';
+import { itAsync, MockSubscriptionLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -108,7 +108,7 @@ describe('subscriptions', () => {
     );
   });
 
-  it('does not swallow children errors', done => {
+  itAsync('does not swallow children errors', (resolve, reject) => {
     const query: DocumentNode = gql`
       subscription UserInfo {
         user {
@@ -132,7 +132,7 @@ describe('subscriptions', () => {
       componentDidCatch(e: any) {
         expect(e.name).toMatch(/TypeError/);
         expect(e.message).toMatch(/bar is not a function/);
-        done();
+        resolve();
       }
 
       render() {
@@ -149,7 +149,7 @@ describe('subscriptions', () => {
     );
   });
 
-  it('executes a subscription', done => {
+  itAsync('executes a subscription', (resolve, reject) => {
     jest.useFakeTimers();
 
     const query: DocumentNode = gql`
@@ -177,7 +177,7 @@ describe('subscriptions', () => {
           switch (count) {
             case 0:
               expect(loading).toBeTruthy();
-              done();
+              resolve();
               break;
             case 1:
               expect(loading).toBeFalsy();
@@ -214,10 +214,10 @@ describe('subscriptions', () => {
       </ApolloProvider>
     );
 
-    jest.runTimersToTime(230);
+    jest.advanceTimersByTime(230);
   });
 
-  it('resubscribes to a subscription', done => {
+  itAsync('resubscribes to a subscription', (resolve, reject) => {
     //we make an extra Hoc which will trigger the inner HoC to resubscribe
     //these are the results for the outer subscription
     const triggerResults = [
@@ -310,10 +310,10 @@ describe('subscriptions', () => {
                 expect(user).toEqual(
                   results3[2].result.data.user
                 );
-                done();
+                resolve();
               }
             } catch (e) {
-              done.fail(e);
+              reject(e);
             }
 
             count++;

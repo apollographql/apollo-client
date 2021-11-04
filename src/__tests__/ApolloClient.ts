@@ -12,7 +12,7 @@ import { Observable } from '../utilities';
 import { ApolloLink } from '../link/core';
 import { HttpLink } from '../link/http';
 import { InMemoryCache } from '../cache';
-import { withErrorSpy } from '../testing';
+import { itAsync, withErrorSpy } from '../testing';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 describe('ApolloClient', () => {
@@ -1192,7 +1192,7 @@ describe('ApolloClient', () => {
           result.data?.people.friends[0].id;
         });
 
-        it('with a replacement of nested array (wq)', done => {
+        itAsync('with a replacement of nested array (wq)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1236,13 +1236,13 @@ describe('ApolloClient', () => {
                   expectation,
                 );
                 subscription.unsubscribe();
-                done();
+                resolve();
               }
             },
           });
         });
 
-        it('with a value change inside a nested array (wq)', done => {
+        itAsync('with a value change inside a nested array (wq)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1277,7 +1277,7 @@ describe('ApolloClient', () => {
 
                 setTimeout(() => {
                   if (count === 1)
-                    done.fail(
+                    reject(
                       new Error(
                         'writeFragment did not re-call observable with next value',
                       ),
@@ -1301,14 +1301,14 @@ describe('ApolloClient', () => {
                 const readFriends = client.readQuery<Data>({ query })!.people.friends;
                 expect(readFriends[0]).toEqual(expectation0);
                 expect(readFriends[1]).toEqual(expectation1);
-                done();
+                resolve();
               }
             },
           });
         });
       });
       describe('using writeFragment', () => {
-        it('with a replacement of nested array (wf)', done => {
+        itAsync('with a replacement of nested array (wf)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1341,7 +1341,7 @@ describe('ApolloClient', () => {
 
                 setTimeout(() => {
                   if (count === 1)
-                    done.fail(
+                    reject(
                       new Error(
                         'writeFragment did not re-call observable with next value',
                       ),
@@ -1353,13 +1353,13 @@ describe('ApolloClient', () => {
                 expect(result.data!.people.friends).toEqual([
                   bestFriend,
                 ]);
-                done();
+                resolve();
               }
             },
           });
         });
 
-        it('with a value change inside a nested array (wf)', done => {
+        itAsync('with a value change inside a nested array (wf)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1395,7 +1395,7 @@ describe('ApolloClient', () => {
 
                 setTimeout(() => {
                   if (count === 1)
-                    done.fail(
+                    reject(
                       new Error(
                         'writeFragment did not re-call observable with next value',
                       ),
@@ -1413,7 +1413,7 @@ describe('ApolloClient', () => {
                   ...badFriend,
                   type: 'okayest',
                 });
-                done();
+                resolve();
               }
             },
           });

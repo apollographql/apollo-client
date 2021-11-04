@@ -4,9 +4,10 @@ import { Observable } from '../../utilities';
 import { ApolloLink } from '../../link/core';
 import { ApolloClient } from '../../core';
 import { InMemoryCache } from '../../cache';
+import { itAsync } from '../../testing';
 
 describe('Basic functionality', () => {
-  it('should not break subscriptions', done => {
+  itAsync('should not break subscriptions', (resolve, reject) => {
     const query = gql`
       subscription {
         field
@@ -32,12 +33,12 @@ describe('Basic functionality', () => {
     client.subscribe({ query }).forEach(item => {
       expect(item).toMatchObject({ data: { field: ++counter } });
       if (counter === 2) {
-        done();
+        resolve();
       }
     });
   });
 
-  it('should be able to mix @client fields with subscription results', done => {
+  itAsync('should be able to mix @client fields with subscription results', (resolve, reject) => {
     const query = gql`
       subscription {
         field
@@ -76,12 +77,12 @@ describe('Basic functionality', () => {
             },
           });
         } catch (error) {
-          done.fail(error);
+          reject(error);
         }
         resultCounter += 1;
       },
       complete() {
-        done();
+        resolve();
       }
     });
   });

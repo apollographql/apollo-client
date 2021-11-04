@@ -1,4 +1,5 @@
 import { Observable } from '../../../utilities/observables/Observable';
+import { itAsync } from '../../../testing';
 import { toPromise } from '../toPromise';
 import { fromError } from '../fromError';
 
@@ -35,11 +36,11 @@ describe('toPromise', () => {
       console.warn = _warn;
     });
 
-    it('return error call as Promise rejection', done => {
+    itAsync('return error call as Promise rejection', (resolve, reject) => {
       toPromise(Observable.of(data, data)).then(result => {
         expect(data).toEqual(result);
         expect(spy).toHaveBeenCalled();
-        done();
+        resolve();
       });
     });
   });

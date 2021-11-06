@@ -1,7 +1,7 @@
 [build]
   base    = "docs"
   publish = "docs/public"
-  command = "npm run types && gatsby build"
+  command = "cd .. && npm i && npm run build && cd docs && npm i && npm run types && gatsby build"
 [build.environment]
   NPM_VERSION = "6"
 [context.production.environment]

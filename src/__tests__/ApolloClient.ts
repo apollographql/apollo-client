@@ -7,6 +7,7 @@ import {
   QueryOptions,
   makeReference,
 } from '../core';
+import { Kind } from "graphql";
 
 import { Observable } from '../utilities';
 import { ApolloLink } from '../link/core';
@@ -2241,7 +2242,7 @@ describe('ApolloClient', () => {
         cache: new InMemoryCache(),
         defaultOptions: {
           query: {
-            query: {kind: 'Document', definitions: []},
+            query: {kind: Kind.DOCUMENT, definitions: []},
             variables: {foo: 'bar'},
             errorPolicy: 'none',
             context: null,

@@ -14,7 +14,6 @@ exports[`General use should error if the query in the mock and component do not 
     __typename
   }
 }
-
 Expected variables: {"username":"mock_username"}
 ]
 `;
@@ -26,7 +25,6 @@ exports[`General use should error if the variables do not deep equal 1`] = `
     __typename
   }
 }
-
 Expected variables: {"username":"some_user","age":42}
 
 Failed to match 1 mock for this query, which had the following variables:
@@ -41,7 +39,6 @@ exports[`General use should error if the variables in the mock and component do 
     __typename
   }
 }
-
 Expected variables: {"username":"other_user","age":<undefined>}
 
 Failed to match 1 mock for this query, which had the following variables:
@@ -67,7 +64,7 @@ Object {
 
 exports[`General use should pipe exceptions thrown in custom onError functions through the link chain 1`] = `[Error: oh no!]`;
 
-exports[`General use should return "Mocked response should contain" errors in response 1`] = `[Error: Mocked response should contain either result or error: {"query":"query GetUser($username: String!) {\\n  user(username: $username) {\\n    id\\n    __typename\\n  }\\n}\\n"}]`;
+exports[`General use should return "Mocked response should contain" errors in response 1`] = `[Error: Mocked response should contain either result or error: {"query":"query GetUser($username: String!) {\\n  user(username: $username) {\\n    id\\n    __typename\\n  }\\n}"}]`;
 
 exports[`General use should return "No more mocked responses" errors in response 1`] = `
 [Error: No more mocked responses for the query: query GetUser($username: String!) {
@@ -76,7 +73,6 @@ exports[`General use should return "No more mocked responses" errors in response
     __typename
   }
 }
-
 Expected variables: {}
 ]
 `;
@@ -88,7 +84,6 @@ exports[`General use should support custom error handling using setOnError 1`] =
     __typename
   }
 }
-
 Expected variables: {"username":"mock_username"}
 ]
 `;

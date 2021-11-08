@@ -1,4 +1,4 @@
-## Apollo Client 3.5.0 (release candidate)
+## Apollo Client 3.5.0 (2021-11-08)
 
 ### Improvements
 
@@ -44,6 +44,9 @@
 
 - The `NetworkError` and `ErrorResponse` types have been changed to align more closely. <br/>
   [@korywka](https://github.com/korywka) in [#8424](https://github.com/apollographql/apollo-client/pull/8424)
+
+- Include `graphql@16` in peer deps. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8997](https://github.com/apollographql/apollo-client/pull/8997)
 
 ### React Refactoring
 

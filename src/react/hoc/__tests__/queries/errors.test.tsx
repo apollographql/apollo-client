@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
+// @ts-ignore
 import { withState } from './recomposeWithState.js';
 import { DocumentNode } from 'graphql';
 
@@ -214,24 +215,36 @@ describe('[queries] errors', () => {
             componentDidUpdate() {
               const { props } = this;
               iteration += 1;
-              if (iteration === 1) {
-                // initial loading state is done, we have data
-                expect(props.data!.allPeople).toEqual(
-                  data.allPeople
-                );
-                props.setVar(2);
-              } else if (iteration === 2) {
-                // variables have changed, wee are loading again but also have data
-                expect(props.data!.loading).toBeTruthy();
-              } else if (iteration === 3) {
-                // the second request had an error!
-                expect(props.data!.error).toBeTruthy();
-                expect(props.data!.error!.networkError).toBeTruthy();
-                // // We need to set a timeout to ensure the unhandled rejection is swept up
-                setTimeout(() => {
-                  expect(unhandled.length).toEqual(0);
-                  done = true;
-                });
+              try {
+                if (iteration === 1) {
+                  // initial loading state is done, we have data
+                  expect(props.data!.allPeople).toEqual(
+                    data.allPeople
+                  );
+                  props.setVar(2);
+                } else if (iteration === 2) {
+                  expect(props.data!.allPeople).toEqual(
+                    data.allPeople
+                  );
+                } else if (iteration === 3) {
+                  // variables have changed, wee are loading again but also have data
+                  expect(props.data!.loading).toBeTruthy();
+                } else if (iteration === 4) {
+                  // the second request had an error!
+                  expect(props.data!.error).toBeTruthy();
+                  expect(props.data!.error!.networkError).toBeTruthy();
+                  // // We need to set a timeout to ensure the unhandled rejection is swept up
+                  setTimeout(() => {
+                    try {
+                      expect(unhandled.length).toEqual(0);
+                    } catch (err) {
+                      reject(err);
+                    }
+                    done = true;
+                  });
+                }
+              } catch (err) {
+                reject(err);
               }
             }
             render() {

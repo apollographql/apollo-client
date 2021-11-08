@@ -7,6 +7,7 @@ import {
   parseAndCheckHttpResponse,
   checkFetcher,
   selectHttpOptionsAndBody,
+  defaultPrinter,
   fallbackHttpConfig,
   HttpOptions,
   createSignalIfSupported,
@@ -37,6 +38,7 @@ export class BatchHttpLink extends ApolloLink {
       uri = '/graphql',
       // use default global fetch if nothing is passed in
       fetch: fetcher,
+      print = defaultPrinter,
       includeExtensions,
       batchInterval,
       batchDebounce,
@@ -96,6 +98,7 @@ export class BatchHttpLink extends ApolloLink {
       const optsAndBody = operations.map(operation =>
         selectHttpOptionsAndBody(
           operation,
+          print,
           fallbackHttpConfig,
           linkConfig,
           contextConfig,

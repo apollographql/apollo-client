@@ -7,7 +7,7 @@ import { ApolloClient } from '../../../core';
 import { ApolloProvider } from '../../context';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloLink } from '../../../link/core';
-import { mockSingleLink } from '../../../testing';
+import { itAsync, mockSingleLink } from '../../../testing';
 import { graphql } from '../graphql';
 import { ChildProps, DataValue } from '../types';
 import { withApollo } from '../withApollo';
@@ -273,7 +273,7 @@ describe('shared operations', () => {
     );
   });
 
-  it('allows options to take an object', done => {
+  itAsync('allows options to take an object', (resolve, reject) => {
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -316,10 +316,10 @@ describe('shared operations', () => {
 
     setTimeout(() => {
       if (!queryExecuted) {
-        done();
+        resolve();
         return;
       }
-      fail(new Error('query ran even though skip present'));
+      reject(new Error('query ran even though skip present'));
     }, 25);
   });
 

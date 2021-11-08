@@ -1,4 +1,3 @@
-export { MockedProvider, MockedProviderProps } from './mocking/MockedProvider';
 export {
   MockLink,
   mockSingleLink,

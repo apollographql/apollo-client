@@ -1,2 +1,3 @@
 import '../utilities/globals';
-export * from '../utilities/testing';
+export { MockedProvider, MockedProviderProps } from './react/MockedProvider';
+export * from './core';

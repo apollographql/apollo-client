@@ -9,6 +9,7 @@ import { Observable } from '../../../utilities';
 import { createHttpLink } from '../../http/createHttpLink';
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';
+import { itAsync } from '../../../testing';
 
 global.fetch = fetch;
 
@@ -46,7 +47,7 @@ describe('happy path', () => {
     hash = hash || await sha256(queryString);
   });
 
-  it('sends a sha256 hash of the query under extensions', done => {
+  itAsync('sends a sha256 hash of the query under extensions', (resolve, reject) => {
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
     execute(link, { query, variables }).subscribe(result => {
@@ -65,11 +66,11 @@ describe('happy path', () => {
           },
         }),
       );
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
-  it('sends a version along with the request', done => {
+  itAsync('sends a version along with the request', (resolve, reject) => {
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
@@ -79,11 +80,11 @@ describe('happy path', () => {
       expect(uri).toEqual('/graphql');
       const parsed = JSON.parse(request!.body!.toString());
       expect(parsed.extensions.persistedQuery.version).toBe(VERSION);
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
-  it('memoizes between requests', done => {
+  itAsync('memoizes between requests', (resolve, reject) => {
     fetch.mockResponseOnce(response);
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
@@ -98,12 +99,12 @@ describe('happy path', () => {
         const secondRun = new Date().valueOf() - secondStart.valueOf();
         expect(firstRun).toBeGreaterThan(secondRun);
         expect(result2.data).toEqual(data);
-        done();
-      }, done.fail);
-    }, done.fail);
+        resolve();
+      }, reject);
+    }, reject);
   });
 
-  it('supports loading the hash from other method', done => {
+  itAsync('supports loading the hash from other method', (resolve, reject) => {
     fetch.mockResponseOnce(response);
     const generateHash =
       (query: any) => Promise.resolve('foo');
@@ -117,21 +118,21 @@ describe('happy path', () => {
       expect(uri).toEqual('/graphql');
       const parsed = JSON.parse(request!.body!.toString());
       expect(parsed.extensions.persistedQuery.sha256Hash).toBe('foo');
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
-  it('errors if unable to convert to sha256', done => {
+  itAsync('errors if unable to convert to sha256', (resolve, reject) => {
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
-    execute(link, { query: '1234', variables } as any).subscribe(done.fail as any, error => {
+    execute(link, { query: '1234', variables } as any).subscribe(reject as any, error => {
       expect(error.message).toMatch(/Invalid AST Node/);
-      done();
+      resolve();
     });
   });
 
-  it('unsubscribes correctly', done => {
+  itAsync('unsubscribes correctly', (resolve, reject) => {
     const delay = new ApolloLink(() => {
       return new Observable(ob => {
         setTimeout(() => {
@@ -143,32 +144,33 @@ describe('happy path', () => {
     const link = createPersistedQuery({ sha256 }).concat(delay);
 
     const sub = execute(link, { query, variables }).subscribe(
-      done.fail as any,
-      done.fail,
-      done.fail,
+      reject,
+      reject,
+      reject,
     );
 
     setTimeout(() => {
       sub.unsubscribe();
-      done();
+      resolve();
     }, 10);
   });
 
-  it('should error if `sha256` and `generateHash` options are both missing', () => {
+  itAsync('should error if `sha256` and `generateHash` options are both missing', (resolve, reject) => {
     const createPersistedQueryFn = createPersistedQuery as any;
     try {
       createPersistedQueryFn();
-      fail('should have thrown an error');
+      reject('should have thrown an error');
     } catch (error) {
       expect(
         error.message.indexOf(
           'Missing/invalid "sha256" or "generateHash" function'
         )
       ).toBe(0);
+      resolve();
     }
   });
 
-  it('should error if `sha256` or `generateHash` options are not functions', () => {
+  itAsync('should error if `sha256` or `generateHash` options are not functions', (resolve, reject) => {
     const createPersistedQueryFn = createPersistedQuery as any;
     [
       { sha256: 'ooops' },
@@ -176,18 +178,19 @@ describe('happy path', () => {
     ].forEach(options => {
       try {
         createPersistedQueryFn(options);
-        fail('should have thrown an error');
+        reject('should have thrown an error');
       } catch (error) {
         expect(
           error.message.indexOf(
             'Missing/invalid "sha256" or "generateHash" function'
           )
         ).toBe(0);
+        resolve();
       }
     });
   });
 
-  it('should work with a synchronous SHA-256 function', done => {
+  itAsync('should work with a synchronous SHA-256 function', (resolve, reject) => {
     const crypto = require('crypto');
     const sha256Hash = crypto.createHmac('sha256', queryString).digest('hex');
 
@@ -214,8 +217,8 @@ describe('happy path', () => {
           },
         }),
       );
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 });
 
@@ -226,7 +229,7 @@ describe('failure path', () => {
     hash = hash || await sha256(queryString);
   });
 
-  it('correctly identifies the error shape from the server', done => {
+  itAsync('correctly identifies the error shape from the server', (resolve, reject) => {
     fetch.mockResponseOnce(errorResponse);
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
@@ -239,11 +242,11 @@ describe('failure path', () => {
       expect(
         JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash,
       ).toBe(hash);
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
-  it('sends GET for the first response only with useGETForHashedQueries', done => {
+  itAsync('sends GET for the first response only with useGETForHashedQueries', (resolve, reject) => {
     fetch.mockResponseOnce(errorResponse);
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256, useGETForHashedQueries: true }).concat(
@@ -260,11 +263,11 @@ describe('failure path', () => {
       expect(
         JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash,
       ).toBe(hash);
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
-  it('sends POST for both requests without useGETForHashedQueries', done => {
+  itAsync('sends POST for both requests without useGETForHashedQueries', (resolve, reject) => {
     fetch.mockResponseOnce(errorResponse);
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256 }).concat(
@@ -297,12 +300,12 @@ describe('failure path', () => {
           },
         },
       });
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
   // https://github.com/apollographql/apollo-client/pull/7456
-  it('forces POST request when sending full query', done => {
+  itAsync('forces POST request when sending full query', (resolve, reject) => {
     fetch.mockResponseOnce(giveUpResponse);
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({
@@ -339,11 +342,11 @@ describe('failure path', () => {
         query: queryString,
         variables,
       });
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
-  it('does not try again after receiving NotSupported error', done => {
+  itAsync('does not try again after receiving NotSupported error', (resolve, reject) => {
     fetch.mockResponseOnce(giveUpResponse);
     fetch.mockResponseOnce(response);
 
@@ -364,12 +367,12 @@ describe('failure path', () => {
         const [, success] = fetch.mock.calls[2];
         expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
         expect(JSON.parse(success!.body!.toString()).extensions).toBeUndefined();
-        done();
-      }, done.fail);
-    }, done.fail);
+        resolve();
+      }, reject);
+    }, reject);
   });
 
-  it('works with multiple errors', done => {
+  itAsync('works with multiple errors', (resolve, reject) => {
     fetch.mockResponseOnce(multiResponse);
     fetch.mockResponseOnce(response);
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
@@ -382,11 +385,11 @@ describe('failure path', () => {
       expect(
         JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash,
       ).toBe(hash);
-      done();
-    }, done.fail);
+      resolve();
+    }, reject);
   });
 
-  it('handles a 500 network error and still retries', done => {
+  itAsync('handles a 500 network error and still retries', (resolve, reject) => {
     let failed = false;
     fetch.mockResponseOnce(response);
 
@@ -420,12 +423,12 @@ describe('failure path', () => {
         const [, success] = fetch.mock.calls[1];
         expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
         expect(JSON.parse(success!.body!.toString()).extensions).toBeUndefined();
-        done();
-      }, done.fail);
-    }, done.fail);
+        resolve();
+      }, reject);
+    }, reject);
   });
 
-  it('handles a 400 network error and still retries', done => {
+  itAsync('handles a 400 network error and still retries', (resolve, reject) => {
     let failed = false;
     fetch.mockResponseOnce(response);
 
@@ -459,12 +462,12 @@ describe('failure path', () => {
         const [, success] = fetch.mock.calls[1];
         expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
         expect(JSON.parse(success!.body!.toString()).extensions).toBeUndefined();
-        done();
-      }, done.fail);
-    }, done.fail);
+        resolve();
+      }, reject);
+    }, reject);
   });
 
-  it('only retries a 400 network error once', done => {
+  itAsync('only retries a 400 network error once', (resolve, reject) => {
     let fetchCalls = 0;
     const fetcher = () => {
       fetchCalls++;
@@ -479,10 +482,10 @@ describe('failure path', () => {
     );
 
     execute(link, { query, variables }).subscribe(
-      result => done.fail,
+      result => reject,
       error => {
         expect(fetchCalls).toBe(2);
-        done();
+        resolve();
       },
     );
   });

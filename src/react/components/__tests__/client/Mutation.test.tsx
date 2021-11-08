@@ -7,7 +7,12 @@ import { ApolloClient } from '../../../../core';
 import { ApolloError } from '../../../../errors';
 import { DataProxy, InMemoryCache as Cache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
-import { MockedProvider, MockLink, mockSingleLink } from '../../../../testing';
+import {
+  itAsync,
+  MockedProvider,
+  MockLink,
+  mockSingleLink,
+} from '../../../../testing';
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 
@@ -156,24 +161,28 @@ describe('General Mutation testing', () => {
     expect(spy).toHaveBeenCalledWith(mocksProps[1].result);
   });
 
-  it('performs a mutation', async () => {
+  itAsync('performs a mutation', (resolve, reject) => {
     let count = 0;
     const Component = () => (
       <Mutation mutation={mutation}>
         {(createTodo: any, result: any) => {
-          if (count === 0) {
-            expect(result.loading).toEqual(false);
-            expect(result.called).toEqual(false);
-            createTodo();
-          } else if (count === 1) {
-            expect(result.called).toEqual(true);
-            expect(result.loading).toEqual(true);
-          } else if (count === 2) {
-            expect(result.called).toEqual(true);
-            expect(result.loading).toEqual(false);
-            expect(result.data).toEqual(data);
+          try {
+            if (count === 0) {
+              expect(result.loading).toEqual(false);
+              expect(result.called).toEqual(false);
+              createTodo();
+            } else if (count === 1) {
+              expect(result.called).toEqual(true);
+              expect(result.loading).toEqual(true);
+            } else if (count === 2) {
+              expect(result.called).toEqual(true);
+              expect(result.loading).toEqual(false);
+              expect(result.data).toEqual(data);
+            }
+            count++;
+          } catch (err) {
+            reject(err);
           }
-          count++;
           return <div />;
         }}
       </Mutation>
@@ -185,10 +194,10 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    await wait();
+    wait().then(resolve, reject);
   });
 
-  it('can bind only the mutation and not rerender by props', done => {
+  itAsync('can bind only the mutation and not rerender by props', (resolve, reject) => {
     let count = 0;
     const Component = () => (
       <Mutation mutation={mutation} ignoreResults>
@@ -199,11 +208,11 @@ describe('General Mutation testing', () => {
             setTimeout(() => {
               createTodo().then((r: any) => {
                 expect(r!.data).toEqual(data);
-                done();
+                resolve();
               });
             });
           } else if (count === 1) {
-            done.fail('rerender happened with ignoreResults turned on');
+            reject('rerender happened with ignoreResults turned on');
           }
           count++;
           return <div />;
@@ -922,7 +931,7 @@ describe('General Mutation testing', () => {
     });
   });
 
-  it('allows a refetchQueries prop as string and variables have updated', async () => {
+  it('allows a refetchQueries prop as string and variables have updated', async () => new Promise((resolve, reject) => {
     const query = gql`
       query people($first: Int) {
         allPeople(first: $first) {
@@ -978,33 +987,42 @@ describe('General Mutation testing', () => {
           {(createTodo: any, resultMutation: any) => (
             <Query query={query} variables={variables}>
               {(resultQuery: any) => {
-                if (count === 0) {
-                  // "first: 1" loading
-                  expect(resultQuery.loading).toBe(true);
-                } else if (count === 1) {
-                  // "first: 1" loaded
-                  expect(resultQuery.loading).toBe(false);
-                  setTimeout(() => setVariables({ first: 2 }));
-                } else if (count === 2) {
-                  // "first: 2" loading
-                  expect(resultQuery.loading).toBe(true);
-                } else if (count === 3) {
-                  // "first: 2" loaded
-                  expect(resultQuery.loading).toBe(false);
-                  setTimeout(() => createTodo());
-                } else if (count === 4) {
-                  // mutation loading
-                  expect(resultMutation.loading).toBe(true);
-                } else if (count === 5) {
-                  // mutation loaded
-                  expect(resultMutation.loading).toBe(false);
-                } else if (count === 6) {
-                  // query refetched
-                  expect(resultQuery.loading).toBe(false);
-                  expect(resultMutation.loading).toBe(false);
-                  expect(resultQuery.data).toEqual(peopleData3);
+                try {
+                  if (count === 0) {
+                    // "first: 1" loading
+                    expect(resultQuery.loading).toBe(true);
+                  } else if (count === 1) {
+                    // "first: 1" loaded
+                    expect(resultQuery.loading).toBe(false);
+                    expect(resultQuery.data).toEqual(peopleData1);
+                    setTimeout(() => setVariables({ first: 2 }));
+                  } else if (count === 2) {
+                    expect(resultQuery.loading).toBe(false);
+                    expect(resultQuery.data).toEqual(peopleData1);
+                  } else if (count === 3) {
+                    // "first: 2" loading
+                    expect(resultQuery.loading).toBe(true);
+                  } else if (count === 4) {
+                    // "first: 2" loaded
+                    expect(resultQuery.loading).toBe(false);
+                    expect(resultQuery.data).toEqual(peopleData2);
+                    setTimeout(() => createTodo());
+                  } else if (count === 5) {
+                    // mutation loading
+                    expect(resultMutation.loading).toBe(true);
+                  } else if (count === 6) {
+                    // mutation loaded
+                    expect(resultMutation.loading).toBe(false);
+                  } else if (count === 7) {
+                    // query refetched
+                    expect(resultQuery.loading).toBe(false);
+                    expect(resultMutation.loading).toBe(false);
+                    expect(resultQuery.data).toEqual(peopleData3);
+                  }
+                  count++;
+                } catch (err) {
+                  reject(err);
                 }
-                count++;
                 return null;
               }}
             </Query>
@@ -1019,12 +1037,12 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    await wait(() => {
-      expect(count).toBe(7);
-    });
-  });
+    wait(() => {
+      expect(count).toBe(8);
+    }).then(resolve, reject);
+  }));
 
-  it('allows refetchQueries to be passed to the mutate function', async () => {
+  it('allows refetchQueries to be passed to the mutate function', () => new Promise((resolve, reject) => {
     const query = gql`
       query getTodo {
         todo {
@@ -1071,18 +1089,22 @@ describe('General Mutation testing', () => {
         {(createTodo: any, resultMutation: any) => (
           <Query query={query}>
             {(resultQuery: any) => {
-              if (count === 0) {
-                setTimeout(() => createTodo({ refetchQueries }), 10);
-              } else if (count === 1) {
-                expect(resultMutation.loading).toBe(false);
-                expect(resultQuery.loading).toBe(false);
-              } else if (count === 2) {
-                expect(resultMutation.loading).toBe(true);
-                expect(resultQuery.data).toEqual(queryData);
-              } else if (count === 3) {
-                expect(resultMutation.loading).toBe(false);
+              try {
+                if (count === 0) {
+                  setTimeout(() => createTodo({ refetchQueries }), 10);
+                } else if (count === 1) {
+                  expect(resultMutation.loading).toBe(false);
+                  expect(resultQuery.loading).toBe(false);
+                } else if (count === 2) {
+                  expect(resultMutation.loading).toBe(true);
+                  expect(resultQuery.data).toEqual(queryData);
+                } else if (count === 3) {
+                  expect(resultMutation.loading).toBe(false);
+                }
+                count++;
+              } catch (err) {
+                reject(err);
               }
-              count++;
               return null;
             }}
           </Query>
@@ -1096,10 +1118,10 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    await wait(() => {
+    wait(() => {
       expect(count).toBe(4);
-    });
-  });
+    }).then(resolve, reject);
+  }));
 
   it('has an update prop for updating the store after the mutation', async () => {
     const update = (_proxy: DataProxy, response: ExecutionResult) => {
@@ -1357,7 +1379,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  it('errors when changing from mutation to a query', done => {
+  itAsync('errors when changing from mutation to a query', (resolve, reject) => {
     const query = gql`
       query todos {
         todos {
@@ -1378,7 +1400,7 @@ describe('General Mutation testing', () => {
               'was used instead.'
           )
         );
-        done();
+        resolve();
       }
       render() {
         return (
@@ -1436,7 +1458,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  it('errors when changing from mutation to a subscription', done => {
+  itAsync('errors when changing from mutation to a subscription', (resolve, reject) => {
     const subscription = gql`
       subscription todos {
         todos {
@@ -1457,7 +1479,7 @@ describe('General Mutation testing', () => {
               'Subscription was used instead.'
           )
         );
-        done();
+        resolve();
       }
 
       render() {
@@ -1490,14 +1512,14 @@ describe('General Mutation testing', () => {
   });
 
   describe('after it has been unmounted', () => {
-    it('calls the onCompleted prop after the mutation is complete', done => {
+    itAsync('calls the onCompleted prop after the mutation is complete', (resolve, reject) => {
       let success = false;
       const onCompletedFn = jest.fn();
       const checker = () => {
         setTimeout(() => {
           success = true;
           expect(onCompletedFn).toHaveBeenCalledWith(data);
-          done();
+          resolve();
         }, 100);
       };
 
@@ -1533,7 +1555,7 @@ describe('General Mutation testing', () => {
       );
 
       setTimeout(() => {
-        if (!success) done.fail('timeout passed');
+        if (!success) reject('timeout passed');
       }, 500);
     });
   });

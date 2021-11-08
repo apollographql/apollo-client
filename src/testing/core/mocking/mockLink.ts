@@ -1,4 +1,4 @@
-import { invariant } from '../../globals';
+import { invariant } from '../../../utilities/globals';
 
 import { print } from 'graphql';
 import { equal } from '@wry/equality';

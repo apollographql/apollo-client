@@ -1,6 +1,10 @@
-import { print } from 'graphql';
+import { ASTNode, print } from 'graphql';
 
 import { Operation } from '../core';
+
+export interface Printer {
+  (node: ASTNode, originalPrint: typeof print): string
+};
 
 export interface UriFunction {
   (operation: Operation): string;
@@ -65,6 +69,11 @@ export interface HttpOptions {
    * from the GraphQL specification by not strictly enforcing that rule.
    */
   includeUnusedVariables?: boolean;
+  /**
+   * A function to substitute for the default query print function. Can be
+   * used to apply changes to the results of the print function.
+   */
+   print?: Printer;
 }
 
 export interface HttpQueryOptions {
@@ -100,8 +109,11 @@ export const fallbackHttpConfig = {
   options: defaultOptions,
 };
 
+export const defaultPrinter: Printer = (ast, printer) => printer(ast);
+
 export const selectHttpOptionsAndBody = (
   operation: Operation,
+  printer: Printer,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
 ) => {
@@ -140,7 +152,7 @@ export const selectHttpOptionsAndBody = (
   if (http.includeExtensions) (body as any).extensions = extensions;
 
   // not sending the query (i.e persisted queries)
-  if (http.includeQuery) (body as any).query = print(query);
+  if (http.includeQuery) (body as any).query = printer(query, print);
 
   return {
     options,

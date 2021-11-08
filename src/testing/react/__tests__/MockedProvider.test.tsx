@@ -1,14 +1,13 @@
 import React from 'react';
+import { DocumentNode } from 'graphql';
 import { render, wait } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { itAsync } from '../../itAsync';
+import { itAsync, MockedResponse, MockLink } from '../../core';
 import { MockedProvider } from '../MockedProvider';
-import { MockedResponse, MockLink } from '../mockLink';
-import { DocumentNode } from 'graphql';
-import { useQuery } from '../../../../react/hooks/useQuery';
-import { InMemoryCache } from '../../../../cache/inmemory/inMemoryCache';
-import { ApolloLink } from '../../../../link/core';
+import { useQuery } from '../../../react/hooks';
+import { InMemoryCache } from '../../../cache';
+import { ApolloLink } from '../../../link/core';
 
 const variables = {
   username: 'mock_username'

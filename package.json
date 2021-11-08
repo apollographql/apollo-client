@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.4.17",
+  "version": "3.5.0",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -13,7 +13,7 @@
   ],
   "author": "packages@apollographql.com",
   "license": "MIT",
-  "main": "./dist/main.cjs.js",
+  "main": "./dist/main.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -39,9 +39,9 @@
     "rollup": "rollup -c ./config/rollup.config.js",
     "prepdist": "node ./config/prepareDist.js",
     "resolve": "ts-node-script config/resolveModuleIds.ts",
-    "clean": "rimraf -r dist coverage lib",
+    "clean": "rimraf -r dist coverage lib temp",
     "test": "jest --config ./config/jest.config.js",
-    "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",
+    "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999",
     "test:ci": "npm run test:coverage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "test:memory": "cd scripts/memory && npm i && npm test",
@@ -49,20 +49,20 @@
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
     "bundlesize": "npm run build && bundlesize",
     "predeploy": "npm run build",
-    "deploy": "cd dist && npm publish --tag latest"
+    "deploy": "cd dist && npm publish"
   },
   "bundlesize": [
     {
       "name": "apollo-client",
-      "path": "./dist/apollo-client.cjs.min.js",
-      "maxSize": "28.5 kB"
+      "path": "./dist/apollo-client.min.cjs",
+      "maxSize": "28.45 kB"
     }
   ],
   "engines": {
-    "npm": "^7.20.3"
+    "npm": "^7.20.3 || ^8.0.0"
   },
   "peerDependencies": {
-    "graphql": "^14.0.0 || ^15.0.0",
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0",
     "react": "^16.8.0 || ^17.0.0",
     "subscriptions-transport-ws": "^0.9.0 || ^0.11.0"
   },
@@ -81,12 +81,13 @@
     "@wry/trie": "^0.3.0",
     "graphql-tag": "^2.12.3",
     "hoist-non-react-statics": "^3.3.2",
+    "npm": "^7.24.2",
     "optimism": "^0.16.1",
     "prop-types": "^15.7.2",
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.9.0",
     "tslib": "^2.3.0",
-    "zen-observable-ts": "~1.1.0"
+    "zen-observable-ts": "^1.2.0"
   },
   "devDependencies": {
     "@babel/parser": "7.16.2",
@@ -98,7 +99,7 @@
     "@types/fetch-mock": "7.3.5",
     "@types/glob": "7.2.0",
     "@types/hoist-non-react-statics": "3.3.1",
-    "@types/jest": "26.0.24",
+    "@types/jest": "27.0.2",
     "@types/lodash": "4.14.176",
     "@types/node": "16.11.6",
     "@types/react": "17.0.34",
@@ -108,10 +109,10 @@
     "crypto-hash": "1.3.0",
     "fetch-mock": "9.11.0",
     "glob": "7.2.0",
-    "graphql": "15.7.2",
-    "jest": "26.6.3",
+    "graphql": "^16.0.0",
+    "jest": "27.3.1",
     "jest-fetch-mock": "3.0.3",
-    "jest-junit": "12.3.0",
+    "jest-junit": "13.0.0",
     "lodash": "4.17.21",
     "react": "17.0.2",
     "react-dom": "17.0.2",
@@ -123,7 +124,7 @@
     "rxjs": "6.6.7",
     "subscriptions-transport-ws": "0.11.0",
     "terser": "5.9.0",
-    "ts-jest": "26.5.6",
+    "ts-jest": "27.0.7",
     "ts-node": "10.4.0",
     "typescript": "4.4.4",
     "wait-for-observables": "1.0.3",

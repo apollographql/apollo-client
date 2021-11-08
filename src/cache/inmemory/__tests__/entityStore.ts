@@ -1327,14 +1327,13 @@ describe('EntityStore', () => {
       },
       missing: [
         new MissingFieldError(
-          'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-          ["authorOfBook", "hobby"],
-          expect.anything(), // query
-          expect.anything(), // variables
-        ),
-        new MissingFieldError(
-          'Can\'t find field \'publisherOfBook\' on ROOT_QUERY object',
-          ["publisherOfBook"],
+          "Can't find field 'hobby' on Author:{\"name\":\"Ted Chiang\"} object",
+          {
+            publisherOfBook: "Can't find field 'publisherOfBook' on ROOT_QUERY object",
+            authorOfBook: {
+              hobby: "Can't find field 'hobby' on Author:{\"name\":\"Ted Chiang\"} object",
+            },
+          },
           expect.anything(), // query
           expect.anything(), // variables
         ),
@@ -1777,9 +1776,21 @@ describe('EntityStore', () => {
       c: 3,
     })).toBe('ABCs:{"b":2,"a":1,"c":3}');
 
-    expect(() => cache.identify(ABCs)).toThrowError(
-      "Missing field 'b' while computing key fields",
-    );
+    { // TODO Extact this to a helper function.
+      const consoleWarnSpy = jest.spyOn(console, "warn");
+      consoleWarnSpy.mockImplementation(() => {});
+      try {
+        expect(cache.identify(ABCs)).toBeUndefined();
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          new Error(`Missing field 'b' while extracting keyFields from ${
+            JSON.stringify(ABCs)
+          }`),
+        );
+      } finally {
+        consoleWarnSpy.mockRestore();
+      }
+    }
 
     expect(cache.readFragment({
       id: cache.identify({
@@ -1927,7 +1938,11 @@ describe('EntityStore', () => {
     const missing = [
       new MissingFieldError(
         "Dangling reference to missing Author:2 object",
-        ["book", "author"],
+        {
+          book: {
+            author: "Dangling reference to missing Author:2 object",
+          },
+        },
         expect.anything(), // query
         expect.anything(), // variables
       ),
@@ -2196,7 +2211,11 @@ describe('EntityStore', () => {
       missing: [
         new MissingFieldError(
           'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-          ["book", "title"],
+          {
+            book: {
+              title: 'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
+            },
+          },
           expect.anything(), // query
           expect.anything(), // variables
         ),

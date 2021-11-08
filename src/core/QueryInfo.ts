@@ -295,7 +295,7 @@ export class QueryInfo {
   // updateWatch method.
   private cancel() {}
 
-  private lastWatch?: Cache.WatchOptions<QueryInfo>;
+  private lastWatch?: Cache.WatchOptions;
 
   private updateWatch(variables = this.variables) {
     const oq = this.observableQuery;
@@ -303,7 +303,7 @@ export class QueryInfo {
       return;
     }
 
-    const watchOptions: Cache.WatchOptions<QueryInfo> = {
+    const watchOptions: Cache.WatchOptions = {
       // Although this.getDiffOptions returns Cache.DiffOptions instead of
       // Cache.WatchOptions, all the overlapping options should be the same, so
       // we can reuse getDiffOptions here, for consistency.

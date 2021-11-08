@@ -8,7 +8,12 @@ import {
 } from 'graphql';
 
 import { ApolloLink, Operation } from '../core';
-import { Observable, Observer, compact } from '../../utilities';
+import {
+  Observable,
+  Observer,
+  ObservableSubscription,
+  compact,
+} from '../../utilities';
 
 export const VERSION = 1;
 
@@ -145,7 +150,7 @@ export const createPersistedQueryLink = (
     const { query } = operation;
 
     return new Observable((observer: Observer<ExecutionResult>) => {
-      let subscription: ZenObservable.Subscription;
+      let subscription: ObservableSubscription;
       let retried = false;
       let originalFetchOptions: any;
       let setFetchOptions = false;

@@ -1,3 +1,73 @@
+## Apollo Client 3.5.0 (2021-11-08)
+
+### Improvements
+
+- Add `updateQuery` and `updateFragment` methods to `ApolloCache`, simplifying common `readQuery`/`writeQuery` cache update patterns. <br/>
+  [@wassim-k](https://github.com/wassim-k) in [#8382](https://github.com/apollographql/apollo-client/pull/8382)
+
+- Field directives and their arguments can now be included along with field argument names when using [field policy `keyArgs: [...]` notation](https://www.apollographql.com/docs/react/pagination/key-args/). For example, if you have a `Query.feed` field that takes an argument called `type` and uses a `@connection(key:...)` directive to keep `feed` data from different queries separate within the cache, you might configure both using the following `InMemoryCache` field policy:
+  ```ts
+  new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          feed: {
+            keyArgs: ["type", "@connection", ["key"]],
+          },
+        },
+      },
+    },
+  })
+  ```
+  [@benjamn](https://github.com/benjamn) in [#8678](https://github.com/apollographql/apollo-client/pull/8678)
+
+- Report single `MissingFieldError` instead of a potentially very large `MissingFieldError[]` array for incomplete cache reads, improving performance and memory usage. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8734](https://github.com/apollographql/apollo-client/pull/8734)
+
+- When writing results into `InMemoryCache`, each written object is now identified using `policies.identify` _after_ traversing the fields of the object (rather than before), simplifying identification and reducing duplicate work. If you have custom `keyFields` functions, they still receive the raw result object as their first parameter, but the `KeyFieldsContext` parameter now provides `context.storeObject` (the `StoreObject` just processed by `processSelectionSet`) and `context.readField` (a helper function for reading fields from `context.storeObject` and any `Reference`s it might contain, similar to `readField` for `read`, `merge`, and `cache.modify` functions). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8996](https://github.com/apollographql/apollo-client/pull/8996)
+
+- Ensure `cache.identify` never throws when primary key fields are missing, and include the source object in the error message when `keyFields` processing fails. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8679](https://github.com/apollographql/apollo-client/pull/8679)
+
+- The `HttpLink` constructor now accepts an optional `print` function that can be used to customize how GraphQL `DocumentNode` objects are transformed back into strings before they are sent over the network. <br/>
+  [@sarahgp](https://github.com/sarahgp) in [#8699](https://github.com/apollographql/apollo-client/pull/8699)
+
+- Make `@apollo/client/testing` a fully-fledged, independent entry point, instead of re-exporting `@apollo/client/utilities/testing` (which was never an entry point and no longer exists). <br/>
+  [@benjamn](https://github.com/benjamn) in [#8769](https://github.com/apollographql/apollo-client/pull/8769)
+
+- A new nested entry point called `@apollo/client/testing/core` has been created. Importing from this entry point instead of `@apollo/client/testing` excludes any React-related dependencies. <br/>
+  [@wassim-k](https://github.com/wassim-k) in [#8687](https://github.com/apollographql/apollo-client/pull/8687)
+
+- Make `cache.batch` return the result of calling the `options.update` function. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8696](https://github.com/apollographql/apollo-client/pull/8696)
+
+- The `NetworkError` and `ErrorResponse` types have been changed to align more closely. <br/>
+  [@korywka](https://github.com/korywka) in [#8424](https://github.com/apollographql/apollo-client/pull/8424)
+
+- Include `graphql@16` in peer deps. <br/>
+  [@brainkim](https://github.com/brainkim) in [#8997](https://github.com/apollographql/apollo-client/pull/8997)
+
+### React Refactoring
+
+#### Improvements (due to [@brainkim](https://github.com/brainkim) in [#8875](https://github.com/apollographql/apollo-client/pull/8875)):
+- The `useLazyQuery` function now returns a promise with the result.
+- The `useMutation` result now exposes a method which can be reset.
+
+#### Bug Fixes (due to [@brainkim](https://github.com/brainkim) in [#8596](https://github.com/apollographql/apollo-client/pull/8596)):
+
+- The `useQuery` and `useLazyQuery` hooks will now have `ObservableQuery` methods defined consistently.
+- Calling `useLazyQuery` methods like `startPolling` will start the query.
+- Calling the `useLazyQuery` execution function will now behave more like `refetch`. `previousData` will be preserved.
+- `standby` fetchPolicies will now act like `skip: true` more consistently.
+- Calling `refetch` on a skipped query will have no effect (issue [#8270](https://github.com/apollographql/apollo-client/issues/8270)).
+- Prevent `onError` and `onCompleted` functions from firing continuously, and improving their polling behavior.
+
+### Other Bugs Fixed
+
+- Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
+
 ## Apollo Client 3.4.17 (2021-11-08)
 
 ### Improvements

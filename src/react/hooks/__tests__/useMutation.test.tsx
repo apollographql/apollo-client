@@ -6,7 +6,7 @@ import { render, wait } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { itAsync, MockedProvider, mockSingleLink } from '../../../testing';
+import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
@@ -358,6 +358,61 @@ describe('useMutation Hook', () => {
       });
 
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+    });
+
+    it('should be possible to reset the mutation', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            }
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          }
+        }
+      ];
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useMutation<
+          { createTodo: Todo },
+          { priority: string, description: string }
+        >(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      await act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+        });
+      });
+
+      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+      setTimeout(() => {
+        result.current[1].reset();
+      });
+
+      await waitForNextUpdate();
+      expect(result.current[1].data).toBe(undefined);
     });
   });
 
@@ -986,6 +1041,7 @@ describe('useMutation Hook', () => {
             variables,
           },
           result: { data: CREATE_TODO_RESULT },
+          delay: 20,
         }),
       });
 
@@ -1065,6 +1121,12 @@ describe('useMutation Hook', () => {
       expect(result.current.mutation[1].loading).toBe(true);
       expect(result.current.mutation[1].data).toBe(undefined);
       expect(finishedReobserving).toBe(false);
+
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual({ todoCount: 1 });
+      expect(result.current.mutation[1].loading).toBe(true);
+      expect(result.current.mutation[1].data).toBe(undefined);
 
       await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
@@ -1296,6 +1358,298 @@ describe('useMutation Hook', () => {
       await new Promise((resolve) => setTimeout(resolve));
       expect(client.readQuery({ query: GET_TODOS_QUERY }))
         .toEqual(mocks[2].result.data);
+    });
+
+    itAsync("using onQueryUpdated callback should not prevent cache broadcast", async (resolve, reject) => {
+      // Mutating this array makes the tests below much more difficult to reason
+      // about, so instead we reassign the numbersArray variable to remove
+      // elements, without mutating the previous array object.
+      let numbersArray: ReadonlyArray<{ id: string; value: number }> = [
+        { id: '1', value: 324 },
+        { id: '2', value: 729 },
+        { id: '3', value: 987 },
+        { id: '4', value: 344 },
+        { id: '5', value: 72 },
+        { id: '6', value: 899 },
+        { id: '7', value: 222 },
+      ];
+
+      type TNumbersQuery = {
+        numbers: {
+          __typename: "NumbersResult";
+          id: string;
+          sum: number;
+          numbersArray: ReadonlyArray<{
+            id: string;
+            value: number;
+          }>;
+        };
+      };
+
+      function getNumbersData(): TNumbersQuery {
+        return {
+          numbers: {
+            __typename: "NumbersResult",
+            id: "numbersId",
+            numbersArray,
+            sum: numbersArray.reduce((sum, b) => sum + b.value, 0),
+          },
+        };
+      }
+
+      const link = new ApolloLink((operation) => {
+        return new Observable(observer => {
+          const { operationName } = operation;
+          if (operationName === "NumbersQuery") {
+            observer.next({
+              data: getNumbersData(),
+            });
+          } else if (operationName === "RemoveNumberMutation") {
+            const last = numbersArray[numbersArray.length - 1];
+            numbersArray = numbersArray.slice(0, -1);
+            observer.next({
+              data: {
+                removeLastNumber: last,
+              },
+            });
+          }
+          setTimeout(() => {
+            observer.complete();
+          }, 50);
+        });
+      });
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            NumbersResult: {
+              fields: {
+                numbersArray: { merge: false },
+                sum(_, { readField }) {
+                  const numbersArray =
+                    readField<TNumbersQuery["numbers"]["numbersArray"]>("numbersArray");
+                  return (numbersArray || []).reduce(
+                    (sum, item) => sum + item.value,
+                    0,
+                  );
+                },
+              },
+            },
+          },
+        }),
+      });
+
+      const NumbersQuery: TypedDocumentNode<TNumbersQuery> = gql`
+        query NumbersQuery {
+          numbers {
+            id
+            sum
+            numbersArray {
+              id
+              value
+            }
+          }
+        }
+      `;
+
+      const RemoveNumberMutation = gql`
+        mutation RemoveNumberMutation {
+          removeLastNumber {
+            id
+          }
+        }
+      `;
+
+      const { result, waitForNextUpdate } = renderHook(() => ({
+        query: useQuery(NumbersQuery, {
+          notifyOnNetworkStatusChange: true,
+        }),
+
+        mutation: useMutation(RemoveNumberMutation, {
+          update(cache) {
+            const oldData = cache.readQuery({ query: NumbersQuery });
+            cache.writeQuery({
+              query: NumbersQuery,
+              data: oldData ? {
+                ...oldData,
+                numbers: {
+                  ...oldData.numbers,
+                  numbersArray: oldData.numbers.numbersArray.slice(0, -1),
+                },
+              } : {
+                numbers: {
+                  __typename: "NumbersResult",
+                  id: "numbersId",
+                  sum: 0,
+                  numbersArray: [],
+                },
+              },
+            });
+          },
+        }),
+      }), {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      });
+
+      const obsQueryMap = client.getObservableQueries();
+      expect(obsQueryMap.size).toBe(1);
+      const observedResults: Array<{ data: TNumbersQuery }> = [];
+      subscribeAndCount(reject, obsQueryMap.values().next().value, (
+        count,
+        result: { data: TNumbersQuery },
+      ) => {
+        observedResults.push(result);
+        expect(observedResults.length).toBe(count);
+        const data = getNumbersData();
+
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
+
+        } else if (count === 2) {
+          expect(data.numbers.numbersArray.length).toBe(7);
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data,
+          });
+
+        } else if (count === 3) {
+          expect(data.numbers.numbersArray.length).toBe(6);
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data,
+          });
+
+        } else if (count === 4) {
+          expect(data.numbers.numbersArray.length).toBe(5);
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data,
+          });
+
+          // This line is the only way to finish this test successfully.
+          setTimeout(resolve, 50);
+
+        } else {
+          // If we did not return false from the final onQueryUpdated function,
+          // we would receive an additional result here.
+          reject(`too many renders (${count}); final result: ${
+            JSON.stringify(result)
+          }`);
+        }
+      });
+
+      expect(observedResults).toEqual([]);
+
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.mutation[1].loading).toBe(false);
+      expect(result.current.mutation[1].called).toBe(false);
+      await waitForNextUpdate();
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.mutation[1].loading).toBe(false);
+      expect(result.current.mutation[1].called).toBe(false);
+
+      expect(numbersArray[numbersArray.length - 1]).toEqual({
+        id: '7',
+        value: 222,
+      });
+
+      const [mutate] = result.current.mutation;
+      await act(async () => {
+        expect(await mutate(
+          // Not passing an onQueryUpdated callback should allow cache
+          // broadcasts to propagate as normal. The point of this test is to
+          // demonstrate that *adding* onQueryUpdated should not prevent cache
+          // broadcasts (see below for where we test that).
+        )).toEqual({
+          data: {
+            removeLastNumber: {
+              id: '7',
+            },
+          },
+        });
+      });
+
+      expect(numbersArray[numbersArray.length - 1]).toEqual({
+        id: '6',
+        value: 899,
+      });
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.mutation[1].loading).toBe(false);
+      expect(result.current.mutation[1].called).toBe(true);
+
+      await act(async () => {
+        expect(await mutate({
+          // Adding this onQueryUpdated callback, which merely examines the
+          // updated query and its DiffResult, should not change the broadcast
+          // behavior of the ObservableQuery.
+          onQueryUpdated(oq, diff) {
+            expect(oq.queryName).toBe("NumbersQuery");
+            expect(diff.result.numbers.numbersArray.length).toBe(5);
+            expect(diff.result.numbers.sum).toBe(2456);
+          },
+        })).toEqual({
+          data: {
+            removeLastNumber: {
+              id: '6',
+            },
+          },
+        });
+      });
+
+      expect(numbersArray[numbersArray.length - 1]).toEqual({
+        id: '5',
+        value: 72,
+      });
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.mutation[1].loading).toBe(false);
+      expect(result.current.mutation[1].called).toBe(true);
+
+      await act(async () => {
+        expect(await mutate({
+          onQueryUpdated(oq, diff) {
+            expect(oq.queryName).toBe("NumbersQuery");
+            expect(diff.result.numbers.numbersArray.length).toBe(4);
+            expect(diff.result.numbers.sum).toBe(2384);
+            // Returning false from onQueryUpdated prevents the cache broadcast.
+            return false;
+          },
+        })).toEqual({
+          data: {
+            removeLastNumber: {
+              id: '5',
+            },
+          },
+        });
+      });
+
+      expect(numbersArray[numbersArray.length - 1]).toEqual({
+        id: '4',
+        value: 344,
+      });
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.mutation[1].loading).toBe(false);
+      expect(result.current.mutation[1].called).toBe(true);
     });
   });
 });

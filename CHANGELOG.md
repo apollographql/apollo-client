@@ -68,7 +68,7 @@
 - Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
   [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
 
-## Apollo Client 3.4.17 (not yet released)
+## Apollo Client 3.4.17 (2021-11-08)
 
 ### Improvements
 

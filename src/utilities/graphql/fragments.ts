@@ -5,11 +5,11 @@ import {
   FragmentDefinitionNode,
   InlineFragmentNode,
   SelectionNode,
-  OperationTypeNode,
 } from 'graphql';
 
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type Kind = any;
+type OperationTypeNode = any;
 /**
  * Returns a query document which adds a single query operation that only
  * spreads the target fragment inside of it.

@@ -1,3 +1,6 @@
+## Apollo Client 3.5.1 (unreleased)
+- Remove npm from dependencies, and avoid referencing graphql-js enum value <br/> [@brainkim](https://github.com/brainkim) in [#9030](https://github.com/apollographql/apollo-client/pull/9030)
+
 ## Apollo Client 3.5.0 (2021-11-08)
 
 ### Improvements

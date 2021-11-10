@@ -135,7 +135,7 @@ describe('useMutation Hook', () => {
       ];
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useMutation(CREATE_TODO_MUTATION),
+        () => useMutation(CREATE_TODO_MUTATION, {}),
         { wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
             {children}

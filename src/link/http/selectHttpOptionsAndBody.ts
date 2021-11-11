@@ -40,7 +40,7 @@ export interface HttpOptions {
   /**
    * An object representing values to be sent as headers on the request.
    */
-  headers?: any;
+  headers?: Record<string, string>;
 
   /**
    * The credentials policy you want to use for the fetch call.
@@ -84,7 +84,7 @@ export interface HttpQueryOptions {
 export interface HttpConfig {
   http?: HttpQueryOptions;
   options?: any;
-  headers?: any;
+  headers?: Record<string, string>;
   credentials?: any;
 }
 

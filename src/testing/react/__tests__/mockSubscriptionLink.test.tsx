@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { MockSubscriptionLink } from '../../core';
@@ -62,7 +62,7 @@ describe('mockSubscriptionLink', () => {
       </ApolloProvider>
     );
 
-    return wait(() => {
+    return waitFor(() => {
       expect(renderCountA).toBe(results.length + 1);
       expect(renderCountB).toBe(results.length + 1);
     }, { timeout: 1000 });

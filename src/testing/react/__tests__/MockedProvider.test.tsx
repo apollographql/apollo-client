@@ -1,6 +1,6 @@
 import React from 'react';
 import { DocumentNode } from 'graphql';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { itAsync, MockedResponse, MockLink } from '../../core';
@@ -76,10 +76,12 @@ describe('General use', () => {
   });
 
   itAsync('should mock the data', (resolve, reject) => {
+    let finished = false;
     function Component({ username }: Variables) {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(data!.user).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -90,14 +92,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should allow querying with the typename', (resolve, reject) => {
+    let finished = false;
     function Component({ username }: Variables) {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(data!.user).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -118,10 +124,13 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should allow using a custom cache', (resolve, reject) => {
+    let finished = false;
     const cache = new InMemoryCache();
     cache.writeQuery({
       query,
@@ -133,6 +142,7 @@ describe('General use', () => {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(data).toMatchObject({ user });
+        finished = true;
       }
       return null;
     }
@@ -143,14 +153,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should error if the variables in the mock and component do not match', (resolve, reject) => {
+    let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(error).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -166,14 +180,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should error if the variables do not deep equal', (resolve, reject) => {
+    let finished = false
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(error).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -202,14 +220,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should not error if the variables match but have different order', (resolve, reject) => {
+    let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(data).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -238,14 +260,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should support mocking a network error', (resolve, reject) => {
+    let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(error).toEqual(new Error('something went wrong'));
+        finished = true;
       }
       return null;
     }
@@ -266,14 +292,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should error if the query in the mock and component do not match', (resolve, reject) => {
+    let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(error).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -300,7 +330,9 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   it('should pass down props prop in mock as props for the component', () => {
@@ -332,6 +364,7 @@ describe('General use', () => {
   });
 
   itAsync('should support returning mocked results from a function', (resolve, reject) => {
+    let finished = false;
     let resultReturned = false;
 
     const testUser = {
@@ -344,6 +377,7 @@ describe('General use', () => {
       if (!loading) {
         expect(data!.user).toEqual(testUser);
         expect(resultReturned).toBe(true);
+        finished = true;
       }
       return null;
     }
@@ -385,14 +419,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true)
+    }).then(resolve, reject);
   });
 
   itAsync('should return "No more mocked responses" errors in response', (resolve, reject) => {
+    let finished = false;
     function Component() {
       const { loading, error } = useQuery(query);
       if (!loading) {
         expect(error).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -405,7 +443,8 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
+      expect(finished).toBe(true);
       // The "No more mocked responses" error should not be thrown as an
       // uncaught exception.
       expect(errorThrown).toBeFalsy();
@@ -413,10 +452,12 @@ describe('General use', () => {
   });
 
   itAsync('should return "Mocked response should contain" errors in response', (resolve, reject) => {
+    let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(error).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -436,7 +477,8 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
+      expect(finished).toBe(true);
       // The "Mocked response should contain" error should not be thrown as an
       // uncaught exception.
       expect(errorThrown).toBeFalsy();
@@ -444,6 +486,7 @@ describe('General use', () => {
   });
 
   itAsync('should support custom error handling using setOnError', (resolve, reject) => {
+    let finished = false;
     function Component({ ...variables }: Variables) {
       useQuery<Data, Variables>(query, { variables });
       return null;
@@ -452,6 +495,7 @@ describe('General use', () => {
     const mockLink = new MockLink([]);
     mockLink.setOnError(error => {
       expect(error).toMatchSnapshot();
+      finished = true;
     });
     const link = ApolloLink.from([errorLink, mockLink]);
 
@@ -461,14 +505,18 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should pipe exceptions thrown in custom onError functions through the link chain', (resolve, reject) => {
+    let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
       if (!loading) {
         expect(error).toMatchSnapshot();
+        finished = true;
       }
       return null;
     }
@@ -485,12 +533,15 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 });
 
 describe('@client testing', () => {
   itAsync('should support @client fields with a custom cache', (resolve, reject) => {
+    let finished = false;
     const cache = new InMemoryCache();
 
     cache.writeQuery({
@@ -516,6 +567,7 @@ describe('@client testing', () => {
       if (!loading) {
         expect(data!.networkStatus.__typename).toEqual('NetworkStatus');
         expect(data!.networkStatus.isOnline).toEqual(true);
+        finished = true;
       }
       return null;
     }
@@ -526,10 +578,13 @@ describe('@client testing', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should support @client fields with field policies', (resolve, reject) => {
+    let finished = false;
     const cache = new InMemoryCache({
       typePolicies: {
         Query: {
@@ -554,6 +609,7 @@ describe('@client testing', () => {
       if (!loading) {
         expect(data!.networkStatus.__typename).toEqual('NetworkStatus');
         expect(data!.networkStatus.isOnline).toEqual(true);
+        finished = true;
       }
       return null;
     }
@@ -564,6 +620,8 @@ describe('@client testing', () => {
       </MockedProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
   });
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 // @ts-ignore
 import { withState } from './recomposeWithState.js';
@@ -26,6 +26,7 @@ describe('[queries] errors', () => {
 
   // errors
   itAsync('does not swallow children errors', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -48,6 +49,7 @@ describe('[queries] errors', () => {
     class ErrorBoundary extends React.Component {
       componentDidCatch(e: Error) {
         expect(e.message).toMatch(/bar is not a function/);
+        done = true;
       }
 
       render() {
@@ -68,10 +70,12 @@ describe('[queries] errors', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 
-  itAsync('can unmount without error', (resolve, reject) => {
+  it('can unmount without error', () => {
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -104,11 +108,10 @@ describe('[queries] errors', () => {
     } catch (e) {
       throw new Error(e);
     }
-
-    return wait().then(resolve, reject);
   });
 
   itAsync('passes any GraphQL errors in props', (resolve, reject) => {
+    let done = false
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -133,6 +136,7 @@ describe('[queries] errors', () => {
           const { data } = this.props;
           expect(data!.error).toBeTruthy();
           expect(data!.error!.networkError).toBeTruthy();
+          done = true
         }
         render() {
           return null;
@@ -146,7 +150,9 @@ describe('[queries] errors', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 
   describe('uncaught exceptions', () => {
@@ -260,7 +266,7 @@ describe('[queries] errors', () => {
         </ApolloProvider>
       );
 
-      return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+      waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
     });
   });
 
@@ -310,7 +316,6 @@ describe('[queries] errors', () => {
                 // Noop. Don’t handle the error so a warning will be logged to the console.
                 expect(renderCount).toBe(2);
                 expect(errorMock.mock.calls.length).toBe(0);
-                resolve();
                 break;
               default:
                 throw new Error('Too many renders.');
@@ -329,6 +334,10 @@ describe('[queries] errors', () => {
           <UnhandledErrorComponent />
         </ApolloProvider>
       );
+
+      waitFor(() => {
+        expect(renderCount).toBe(2);
+      }).then(resolve, reject);
     }));
 
   itAsync('passes any cached data when there is a GraphQL error', (resolve, reject) => {
@@ -402,7 +411,7 @@ describe('[queries] errors', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync('can refetch after there was a network error', (resolve, reject) => {
@@ -490,7 +499,7 @@ describe('[queries] errors', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(5)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('does not throw/console.err an error after a component that received a network error is unmounted', (resolve, reject) => {
@@ -609,7 +618,7 @@ describe('[queries] errors', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('correctly sets loading state on remount after a network error', (resolve, reject) => {
@@ -698,11 +707,12 @@ describe('[queries] errors', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   describe('errorPolicy', () => {
     itAsync('passes any GraphQL errors in props along with data', (resolve, reject) => {
+      let done = false;
       const query: DocumentNode = gql`
         query people {
           allPeople(first: 1) {
@@ -740,6 +750,7 @@ describe('[queries] errors', () => {
               'this is an error'
             );
             expect(data).toMatchObject({ allPeople: { people: null } });
+            done = true;
           }
           render() {
             return null;
@@ -753,10 +764,13 @@ describe('[queries] errors', () => {
         </ApolloProvider>
       );
 
-      return wait().then(resolve, reject);
+      waitFor(() => {
+        expect(done).toBe(true);
+      }).then(resolve, reject);
     });
 
     itAsync('passes any GraphQL errors in props along with data [component]', (resolve, reject) => {
+      let done = false;
       const query: DocumentNode = gql`
         query people {
           allPeople(first: 1) {
@@ -791,6 +805,7 @@ describe('[queries] errors', () => {
             'this is an error'
           );
           expect(props.data!.allPeople!).toMatchObject({ people: null });
+          done = true;
         }
         render() {
           return null;
@@ -805,7 +820,9 @@ describe('[queries] errors', () => {
         </ApolloProvider>
       );
 
-      return wait().then(resolve, reject);
+      waitFor(() => {
+        expect(done).toBe(true);
+      }).then(resolve, reject);
     });
   });
 });

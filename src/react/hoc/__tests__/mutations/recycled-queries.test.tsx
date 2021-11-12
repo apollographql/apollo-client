@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -236,7 +236,7 @@ describe('graphql(mutation) update queries', () => {
       }, 6);
     }, 5);
 
-    return wait(() => {
+    await waitFor(() => {
       expect(queryRenderCount).toBe(4);
     });
   });
@@ -399,7 +399,7 @@ describe('graphql(mutation) update queries', () => {
       );
     });
 
-    return wait(() => {
+    await waitFor(() => {
       expect(queryRenderCount).toBe(4);
     });
   });

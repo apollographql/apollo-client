@@ -1,6 +1,6 @@
 import React from 'react';
 import gql from 'graphql-tag';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../core';
 import { InMemoryCache as Cache } from '../../../../cache';
@@ -85,7 +85,7 @@ itAsync('executes the subscription', (resolve, reject) => {
     </ApolloProvider>
   );
 
-  return wait(() => expect(renderCount).toBe(5)).then(resolve, reject);
+  waitFor(() => expect(renderCount).toBe(5)).then(resolve, reject);
 });
 
 itAsync('calls onSubscriptionData if given', (resolve, reject) => {
@@ -114,7 +114,7 @@ itAsync('calls onSubscriptionData if given', (resolve, reject) => {
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  return wait(() => expect(count).toBe(4)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(4)).then(resolve, reject);
 });
 
 itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => {
@@ -144,7 +144,7 @@ itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => 
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+  waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
 });
 
 itAsync('executes subscription for the variables passed in the props', (resolve, reject) => {
@@ -210,7 +210,7 @@ itAsync('executes subscription for the variables passed in the props', (resolve,
 
   mockLink.simulateResult(results[0]);
 
-  return wait(() => expect(count).toBe(2)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(2)).then(resolve, reject);
 });
 
 itAsync('does not execute if variables have not changed', (resolve, reject) => {
@@ -281,7 +281,7 @@ itAsync('does not execute if variables have not changed', (resolve, reject) => {
 
   mockLink.simulateResult(results[0]);
 
-  return wait(() => expect(count).toBe(3)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(3)).then(resolve, reject);
 });
 
 itAsync('renders an error', (resolve, reject) => {
@@ -336,7 +336,7 @@ itAsync('renders an error', (resolve, reject) => {
 
   link.simulateResult(subscriptionError);
 
-  return wait(() => expect(count).toBe(2)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(2)).then(resolve, reject);
 });
 
 describe('should update', () => {
@@ -408,7 +408,7 @@ describe('should update', () => {
 
     link.simulateResult(results[0]);
 
-    return wait(() => expect(count).toBe(5)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('if the query changes', (resolve, reject) => {
@@ -505,7 +505,7 @@ describe('should update', () => {
 
     userLink.simulateResult(results[0]);
 
-    return wait(() => expect(count).toBe(5)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('if the variables change', (resolve, reject) => {
@@ -605,7 +605,7 @@ describe('should update', () => {
 
     mockLink.simulateResult({ result: { data: dataLuke } });
 
-    return wait(() => expect(count).toBe(5)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 });
 
@@ -722,7 +722,7 @@ describe('should not update', () => {
 
     mockLink.simulateResult();
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   itAsync('if shouldResubscribe returns false', (resolve, reject) => {
@@ -798,6 +798,6 @@ describe('should not update', () => {
 
     mockLink.simulateResult();
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 });

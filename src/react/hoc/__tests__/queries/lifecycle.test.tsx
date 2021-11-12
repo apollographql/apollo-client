@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -110,7 +110,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   itAsync('rebuilds the queries on prop change when using `options`', (resolve, reject) => {
@@ -171,7 +171,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
       expect(firstRun).toBeFalsy();
       expect(isDone).toBeTruthy();
     }).then(resolve, reject);
@@ -273,7 +273,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   itAsync('reruns the queries on prop change when using passed props', (resolve, reject) => {
@@ -369,7 +369,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   itAsync('stays subscribed to updates after irrelevant prop changes', (resolve, reject) => {
@@ -460,7 +460,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync('correctly rebuilds props on remount', (resolve, reject) => {
@@ -524,7 +524,7 @@ describe('[queries] lifecycle', () => {
 
     rerender = render(app).rerender;
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('will re-execute a query when the client changes', (resolve, reject) => {
@@ -744,7 +744,7 @@ describe('[queries] lifecycle', () => {
 
     render(<ClientSwitcher />);
 
-    return wait(() => expect(count).toBe(16)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(16)).then(resolve, reject);
   });
 
   itAsync('handles synchronous racecondition with prefilled data from the server', (resolve, reject) => {
@@ -811,7 +811,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('handles asynchronous racecondition with prefilled data from the server', async (resolve, reject) => {
@@ -902,7 +902,7 @@ describe('[queries] lifecycle', () => {
 
     expect(render(ApolloApp).container).toMatchSnapshot();
 
-    return wait(() => {
+    waitFor(() => {
       expect(done).toBeTruthy();
     }).then(resolve, reject);
   });

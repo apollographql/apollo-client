@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -102,10 +102,11 @@ describe('[queries] api', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('exposes subscribeToMore as part of the props api', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -132,6 +133,7 @@ describe('[queries] api', () => {
           if (data && !data.loading) {
             expect(data!.subscribeToMore).toBeTruthy();
             expect(data!.subscribeToMore instanceof Function).toBeTruthy();
+            done = true;
           }
           return null;
         }
@@ -144,7 +146,7 @@ describe('[queries] api', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('exposes fetchMore as part of the props api', (resolve, reject) => {
@@ -234,7 +236,7 @@ describe('[queries] api', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('reruns props function after query results change via fetchMore', (resolve, reject) => {
@@ -331,6 +333,6 @@ describe('[queries] api', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBe(true)).then(resolve, reject);
+    waitFor(() => expect(done).toBe(true)).then(resolve, reject);
   });
 });

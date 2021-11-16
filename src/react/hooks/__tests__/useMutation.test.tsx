@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
@@ -712,7 +712,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      await wait(() => expect(variablesMatched).toBe(true));
+      await waitFor(() => expect(variablesMatched).toBe(true));
     });
 
     itAsync('should be called with the provided context', (resolve, reject) => {
@@ -758,7 +758,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      return wait(() => {
+      return waitFor(() => {
         expect(foundContext).toBe(true);
       }).then(resolve, reject);
     });
@@ -804,7 +804,7 @@ describe('useMutation Hook', () => {
           </MockedProvider>
         );
 
-        return wait(() => {
+        return waitFor(() => {
           expect(checkedContext).toBe(true);
         }).then(resolve, reject);
       });
@@ -883,7 +883,7 @@ describe('useMutation Hook', () => {
         </ApolloProvider>
       );
 
-      return wait(() => {
+      return waitFor(() => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
@@ -942,7 +942,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      return wait(() => {
+      return waitFor(() => {
         expect(contextFn).toHaveBeenCalledTimes(2);
         expect(contextFn).toHaveBeenCalledWith(context);
       }).then(resolve, reject);

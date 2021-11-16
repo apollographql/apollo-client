@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -53,10 +53,10 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
-  itAsync('should set the initial networkStatus to 1 (loading)', (resolve, reject) => {
+  it('should set the initial networkStatus to 1 (loading)', () => {
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -89,16 +89,17 @@ describe('[queries] loading', () => {
       }
     }
 
-    render(
+    const { unmount } = render(
       <ApolloProvider client={client}>
         <Container />
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    unmount()
   });
 
   itAsync('should set the networkStatus to 7 (ready) when the query is loaded', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -124,6 +125,7 @@ describe('[queries] loading', () => {
       class extends React.Component<ChildProps> {
         componentDidUpdate() {
           expect(this.props.data!.networkStatus).toBe(7);
+          done = true;
         }
 
         render() {
@@ -138,7 +140,9 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('should set the networkStatus to 2 (setVariables) when the query variables are changed', (resolve, reject) => {
@@ -265,7 +269,7 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    wait(() => expect(done).toBe(true)).then(resolve, reject);
+    waitFor(() => expect(done).toBe(true)).then(resolve, reject);
   });
 
   itAsync('resets the loading state after a refetched query', (resolve, reject) => {
@@ -334,7 +338,7 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync('correctly sets loading state on remounted network-only query', (resolve, reject) => {
@@ -409,7 +413,7 @@ describe('[queries] loading', () => {
 
     render(App);
 
-    return wait(() => expect(count).toBe(5)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('correctly sets loading state on remounted component with changed variables', (resolve, reject) => {
@@ -491,7 +495,7 @@ describe('[queries] loading', () => {
 
     const { unmount } = render(renderFn(1));
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync('correctly sets loading state on remounted component with changed variables (alt)', (resolve, reject) => {
@@ -562,7 +566,7 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   itAsync('correctly sets loading state on component with changed variables and unchanged result', (resolve, reject) => {
@@ -675,7 +679,7 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(5)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync(
@@ -797,7 +801,7 @@ describe('[queries] loading', () => {
         </ApolloProvider>
       );
 
-      return wait(() => expect(count).toBe(5)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(5)).then(resolve, reject);
     }
   );
 });

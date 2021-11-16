@@ -1,3 +1,7 @@
+## Apollo Client 3.6 (not yet released)
+
+- TODO
+
 ## Apollo Client 3.5.2 (2021-11-10)
 
 - Fix useMutation execute function returning non-identical execution functions when passing similar options. <br/>

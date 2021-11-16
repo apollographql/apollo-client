@@ -33,6 +33,6 @@
     ]
   },
   "devDependencies": {
-    "serve": "12.0.1"
+    "serve": "13.0.2"
   }
 }

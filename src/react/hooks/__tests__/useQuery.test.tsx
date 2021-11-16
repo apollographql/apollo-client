@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import {
   ApolloClient,
@@ -125,12 +125,13 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result } = renderHook(
+      const { result, unmount } = renderHook(
         () => useQuery(query),
         { wrapper },
       );
 
       expect(result.current.called).toBe(true);
+      unmount();
     });
 
     it('should work with variables', async () => {
@@ -346,8 +347,8 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      wait(() => {
-        expect(renderCount).toBe(3);
+      waitFor(() => {
+        expect(renderCount).toBe(6);
       }).finally(() => {
         console.error = consoleError;
       }).then(resolve, reject);
@@ -3597,7 +3598,7 @@ describe('useQuery Hook', () => {
       bFetchPolicy: WatchQueryFetchPolicy,
     ) {
       const client = makeClient();
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => ({
           a: useQuery(aQuery, { fetchPolicy: aFetchPolicy }),
           b: useQuery(bQuery, { fetchPolicy: bFetchPolicy }),
@@ -3614,19 +3615,12 @@ describe('useQuery Hook', () => {
       expect(result.current.a.data).toBe(undefined);
       expect(result.current.b.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.a.loading).toBe(false);
-      expect(result.current.b.loading).toBe(true);
-      expect(result.current.a.data).toEqual(aData);
-      expect(result.current.b.data).toBe(undefined);
-
-      await waitForNextUpdate();
-
-      expect(result.current.a.loading).toBe(false);
-      expect(result.current.b.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.a.loading).toBe(false);
+        expect(result.current.b.loading).toBe(false);
+      });
       expect(result.current.a.data).toEqual(aData);
       expect(result.current.b.data).toEqual(bData);
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
     }
 
     it("cache-first for both", () => check(

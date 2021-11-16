@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -65,7 +65,7 @@ describe('[queries] skip', () => {
       reject(new Error('query ran even though skip present'));
     }, 25);
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('continues to not subscribe to a skipped query when props change', (resolve, reject) => {
@@ -122,7 +122,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('supports using props for skipping which are used in options', (resolve, reject) => {
@@ -218,7 +218,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync("doesn't run options or props when skipped, including option.client", (resolve, reject) => {
@@ -297,7 +297,7 @@ describe('[queries] skip', () => {
       reject(new Error('query ran even though skip present'));
     }, 25);
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync("doesn't run options or props when skipped even if the component updates", (resolve, reject) => {
@@ -366,7 +366,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('allows you to skip a query without running it (alternate syntax)', (resolve, reject) => {
@@ -417,7 +417,7 @@ describe('[queries] skip', () => {
       reject(new Error('query ran even though skip present'));
     }, 25);
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   // test the case of skip:false -> skip:true -> skip:false to make sure things
@@ -485,7 +485,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(hasSkipped).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(hasSkipped).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('allows you to skip then unskip a query with new options (top-level syntax)', (resolve, reject) => {
@@ -584,7 +584,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   it('allows you to skip then unskip a query with opts syntax', () => new Promise((resolve, reject) => {
@@ -739,7 +739,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    wait(() => expect(count).toEqual(9)).then(resolve, reject);
+    waitFor(() => expect(count).toEqual(9)).then(resolve, reject);
   }));
 
   it('removes the injected props if skip becomes true', async () => {
@@ -822,7 +822,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    await wait(() => {
+    await waitFor(() => {
       expect(count).toEqual(2);
     });
   });
@@ -880,6 +880,6 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 });

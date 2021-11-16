@@ -3,6 +3,9 @@
 - Avoid rewriting non-relative imported module specifiers in `config/rewriteModuleIds.ts` script, thereby allowing bundlers to resolve those imports as they see fit. <br/>
   [@benjamn](https://github.com/benjamn) in [#9073](https://github.com/apollographql/apollo-client/pull/9073)
 
+- Ensure only current file is matched when running VSCode debugger. <br/>
+  [@eps1lon](https://github.com/eps1lon) in [#9050](https://github.com/apollographql/apollo-client/pull/9050)
+
 ## Apollo Client 3.5.2 (2021-11-10)
 
 - Fix useMutation execute function returning non-identical execution functions when passing similar options. <br/>

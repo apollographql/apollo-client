@@ -198,7 +198,7 @@ describe('useMutation Hook', () => {
           {
             request: {
               query: CREATE_TODO_MUTATION,
-              variables
+              variables,
             },
             result: {
               data: CREATE_TODO_RESULT,
@@ -413,6 +413,116 @@ describe('useMutation Hook', () => {
 
       await waitForNextUpdate();
       expect(result.current[1].data).toBe(undefined);
+    });
+  });
+
+  describe('Callbacks', () => {
+    it('should allow passing an onCompleted handler to the execution function', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            }
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          },
+        }
+      ];
+
+      const { result } = renderHook(
+        () => useMutation<
+          { createTodo: Todo },
+          { priority: string, description: string }
+        >(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const onCompleted = jest.fn();
+      const onError = jest.fn();
+      await act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+          onCompleted,
+          onError,
+        });
+      });
+
+      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+      expect(onCompleted).toHaveBeenCalledWith(CREATE_TODO_DATA);
+      expect(onError).toHaveBeenCalledTimes(0);
+    });
+
+    it('should allow passing an onError handler to the execution function', async () => {
+      const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            },
+          },
+          result: {
+            errors,
+          },
+        }
+      ];
+
+      const { result } = renderHook(
+        () => useMutation<
+          { createTodo: Todo },
+          { priority: string, description: string }
+        >(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const onCompleted = jest.fn();
+      const onError = jest.fn();
+      await act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+          onCompleted,
+          onError,
+        });
+      });
+
+      expect(fetchResult).toEqual({
+        data: undefined,
+        // Not sure why we unwrap errors here.
+        errors: errors[0],
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(errors[0]);
     });
   });
 

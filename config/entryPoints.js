@@ -17,14 +17,14 @@ const entryPoints = [
   { dirs: ['react'] },
   { dirs: ['react', 'components'] },
   { dirs: ['react', 'context'] },
-  { dirs: ['react', 'data'] },
   { dirs: ['react', 'hoc'] },
   { dirs: ['react', 'hooks'] },
   { dirs: ['react', 'parser'] },
   { dirs: ['react', 'ssr'] },
+  { dirs: ['testing'], extensions: [".js", ".jsx"] },
+  { dirs: ['testing', 'core'] },
   { dirs: ['utilities'] },
   { dirs: ['utilities', 'globals'], sideEffects: true },
-  { dirs: ['testing'], extensions: [".js", ".jsx"] },
 ];
 
 const lookupTrie = Object.create(null);

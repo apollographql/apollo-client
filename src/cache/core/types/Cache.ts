@@ -3,9 +3,9 @@ import { Modifier, Modifiers } from './common';
 import { ApolloCache } from '../cache';
 
 export namespace Cache {
-  export type WatchCallback = (
-    diff: Cache.DiffResult<any>,
-    lastDiff?: Cache.DiffResult<any>,
+  export type WatchCallback<TData = any> = (
+    diff: Cache.DiffResult<TData>,
+    lastDiff?: Cache.DiffResult<TData>,
   ) => void;
 
   export interface ReadOptions<TVariables = any, TData = any>
@@ -25,19 +25,23 @@ export namespace Cache {
     result: TResult;
   }
 
-  export interface DiffOptions extends ReadOptions {
+  export interface DiffOptions<
+    TData = any,
+    TVariables = any,
+  > extends ReadOptions<TVariables, TData> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
   }
 
   export interface WatchOptions<
-    Watcher extends object = Record<string, any>
-  > extends ReadOptions {
-    watcher?: Watcher;
+    TData = any,
+    TVariables = any,
+  > extends ReadOptions<TVariables, TData> {
+    watcher?: object;
     immediate?: boolean;
-    callback: WatchCallback;
-    lastDiff?: DiffResult<any>;
+    callback: WatchCallback<TData>;
+    lastDiff?: DiffResult<TData>;
   }
 
   export interface EvictOptions {
@@ -60,10 +64,13 @@ export namespace Cache {
     broadcast?: boolean;
   }
 
-  export interface BatchOptions<C extends ApolloCache<any>> {
+  export interface BatchOptions<
+    TCache extends ApolloCache<any>,
+    TUpdateResult = void,
+  > {
     // Same as the first parameter of performTransaction, except the cache
     // argument will have the subclass type rather than ApolloCache.
-    update(cache: C): void;
+    update(cache: TCache): TUpdateResult;
 
     // Passing a string for this option creates a new optimistic layer, with the
     // given string as its layer.id, just like passing a string for the
@@ -72,7 +79,7 @@ export namespace Cache {
     // against the current top layer of the cache), and passing false is the
     // same as passing null (running the operation against root/non-optimistic
     // cache data).
-    optimistic: string | boolean;
+    optimistic?: string | boolean;
 
     // If you specify the ID of an optimistic layer using this option, that
     // layer will be removed as part of the batch transaction, triggering at
@@ -86,7 +93,7 @@ export namespace Cache {
     // this batch operation, pass this optional callback function. Returning
     // false from the callback will prevent broadcasting this result.
     onWatchUpdated?: (
-      this: C,
+      this: TCache,
       watch: Cache.WatchOptions,
       diff: Cache.DiffResult<any>,
       lastDiff: Cache.DiffResult<any> | undefined,
@@ -98,5 +105,7 @@ export namespace Cache {
   export import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
   export import WriteQueryOptions = DataProxy.WriteQueryOptions;
   export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
+  export import UpdateQueryOptions = DataProxy.UpdateQueryOptions;
+  export import UpdateFragmentOptions = DataProxy.UpdateFragmentOptions;
   export import Fragment = DataProxy.Fragment;
 }

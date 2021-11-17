@@ -10,6 +10,7 @@ import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';
 import { checkFetcher } from './checkFetcher';
 import {
   selectHttpOptionsAndBody,
+  defaultPrinter,
   fallbackHttpConfig,
   HttpOptions
 } from './selectHttpOptionsAndBody';
@@ -25,6 +26,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     uri = '/graphql',
     // use default global fetch if nothing passed in
     fetch: preferredFetch,
+    print = defaultPrinter,
     includeExtensions,
     useGETForQueries,
     includeUnusedVariables = false,
@@ -82,6 +84,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     //uses fallback, link, and then context to build options
     const { options, body } = selectHttpOptionsAndBody(
       operation,
+      print,
       fallbackHttpConfig,
       linkConfig,
       contextConfig,

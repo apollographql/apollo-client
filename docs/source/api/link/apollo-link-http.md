@@ -151,6 +151,31 @@ The default value is `false`.
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `print`
+
+`Function`
+</td>
+
+<td>
+
+An optional function to use when transforming a query or mutation `DocumentNode` into a string. It accepts an `ASTNode` (typically a `DocumentNode`) and the original `print` function as arguments, and is expected to return a string. This option can be used with `stripIgnoredCharacters` to remove whitespace from queries.
+
+```js
+import { stripIgnoredCharacters } from 'graphql';
+
+const httpLink = new HttpLink({
+  uri: '/graphql',
+  print: (ast, originalPrint) => stripIgnoredCharacters(originalPrint(ast)),
+});
+```
+
+By default the bare [GraphQL `print` function](https://graphql.org/graphql-js/language/#print) is used.
+</td>
+</tr>
+
 </tbody>
 </table>
 

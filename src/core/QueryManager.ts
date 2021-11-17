@@ -1,6 +1,8 @@
 import { invariant, InvariantError } from '../utilities/globals';
 
 import { DocumentNode } from 'graphql';
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
@@ -572,7 +574,7 @@ export class QueryManager<TStore> {
           definitions: transformed.definitions.map(def => {
             if (def.kind === "OperationDefinition" &&
                 def.operation !== "query") {
-              return { ...def, operation: "query" };
+              return { ...def, operation: "query" as OperationTypeNode };
             }
             return def;
           }),
@@ -1248,9 +1250,9 @@ export class QueryManager<TStore> {
                 results.set(oq, result as InternalRefetchQueriesResult<TResult>);
               }
 
-              // Prevent the normal cache broadcast of this result, since we've
-              // already handled it.
-              return false;
+              // Allow the default cache broadcast to happen, except when
+              // onQueryUpdated returns false.
+              return result;
             }
 
             if (onQueryUpdated !== null) {

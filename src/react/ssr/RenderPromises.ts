@@ -2,7 +2,13 @@ import { DocumentNode } from 'graphql';
 
 import { ObservableQuery } from '../../core';
 import { QueryDataOptions } from '../types/types';
-import { QueryData } from '../data/QueryData';
+
+// TODO: A vestigial interface from when hooks were implemented with utility
+// classes, which should be deleted in the future.
+interface QueryData {
+  getOptions(): any;
+  fetchData(): Promise<void>;
+}
 
 type QueryInfo = {
   seen: boolean;
@@ -47,12 +53,12 @@ export class RenderPromises {
   // Get's the cached observable that matches the SSR Query instances query and variables.
   public getSSRObservable<TData, TVariables>(
     props: QueryDataOptions<TData, TVariables>
-  ) {
+  ): ObservableQuery<any, TVariables> | null {
     return this.lookupQueryInfo(props).observable;
   }
 
-  public addQueryPromise<TData, TVariables>(
-    queryInstance: QueryData<TData, TVariables>,
+  public addQueryPromise(
+    queryInstance: QueryData,
     finish: () => React.ReactNode
   ): React.ReactNode {
     if (!this.stopped) {

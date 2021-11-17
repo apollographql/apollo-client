@@ -16,12 +16,12 @@ import * as linkWS from "../link/ws";
 import * as react from "../react";
 import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
-import * as reactData from "../react/data";
 import * as reactHOC from "../react/hoc";
 import * as reactHooks from "../react/hooks";
 import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
+import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
 
@@ -57,12 +57,12 @@ describe('exports of public entry points', () => {
   check("@apollo/client/react", react);
   check("@apollo/client/react/components", reactComponents);
   check("@apollo/client/react/context", reactContext);
-  check("@apollo/client/react/data", reactData);
   check("@apollo/client/react/hoc", reactHOC);
   check("@apollo/client/react/hooks", reactHooks);
   check("@apollo/client/react/parser", reactParser);
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
+  check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
 

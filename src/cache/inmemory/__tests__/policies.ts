@@ -5,11 +5,14 @@ import { ReactiveVar, makeVar } from "../reactiveVars";
 import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination } from "../../../utilities";
-import { MockLink } from '../../../utilities/testing/mocking/mockLink';
-import subscribeAndCount from '../../../utilities/testing/subscribeAndCount';
-import { itAsync } from '../../../utilities/testing/itAsync';
 import { FieldPolicy, StorageType } from "../policies";
-import { withErrorSpy, withWarningSpy } from "../../../testing";
+import {
+  itAsync,
+  withErrorSpy,
+  withWarningSpy,
+  subscribeAndCount,
+  MockLink,
+} from "../../../testing/core";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -221,6 +224,99 @@ describe("type policies", function () {
     checkAuthorName(cache);
   });
 
+  it("serializes nested keyFields objects in stable order", function () {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Book: {
+          // If you explicitly specify the order of author sub-fields, there
+          // will be no ambiguity about how the author object should be
+          // serialized. However, cache IDs should at least be stably
+          // stringified if the child property names are omitted, as below.
+          // keyFields: ["title", "author", ["firstName", "lastName"]],
+          keyFields: ["title", "author"],
+        },
+      },
+    });
+
+    const query = gql`
+      query {
+        book {
+          title
+          writer: author {
+            first: firstName
+            lastName
+          }
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: {
+          __typename: "Book",
+          writer: {
+            // The order of fields shouldn't matter here, since cache
+            // identification will stringify them in a stable order.
+            first: "Rebecca",
+            lastName: "Schwarzlose",
+            __typename: "Person",
+          },
+          title: "Brainscapes",
+        },
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        book: {
+          __typename: "Book",
+          title: "The Science of Can and Can't",
+          writer: {
+            // The order of fields shouldn't matter here, since cache
+            // identification will stringify them in a stable order.
+            lastName: "Marletto",
+            __typename: "Person",
+            first: "Chiarra",
+          },
+        },
+      },
+    });
+
+    expect(cache.extract(true)).toEqual({
+      // The order of the author object's __typename, firstName, and lastName
+      // fields has been determined by our keyFields configuration and stable
+      // stringification.
+      'Book:{"title":"Brainscapes","author":{"__typename":"Person","firstName":"Rebecca","lastName":"Schwarzlose"}}': {
+        __typename: "Book",
+        title: "Brainscapes",
+        author: {
+          __typename: "Person",
+          firstName: "Rebecca",
+          lastName: "Schwarzlose",
+        },
+      },
+      // Again, __typename, firstName, and then lastName, despite the different
+      // order of keys in the data we wrote.
+      'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}': {
+        __typename: "Book",
+        title: "The Science of Can and Can't",
+        author: {
+          __typename: "Person",
+          firstName: "Chiarra",
+          lastName: "Marletto",
+        },
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        book: {
+          __ref: 'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}',
+        },
+      },
+    });
+  });
+
   it("accepts keyFields functions", function () {
     const cache = new InMemoryCache({
       typePolicies: {
@@ -346,7 +442,11 @@ describe("type policies", function () {
           book: theInformationBookData,
         },
       });
-    }).toThrowError("Missing field 'year' while computing key fields");
+    }).toThrowError(
+      `Missing field 'year' while extracting keyFields from ${JSON.stringify(
+        theInformationBookData
+      )}`,
+    );
   });
 
   it("does not clobber previous keyFields with undefined", function () {
@@ -528,7 +628,7 @@ describe("type policies", function () {
   });
 
   describe("field policies", function () {
-    it("can filter key arguments", function () {
+    it(`can filter arguments using keyArgs`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {
@@ -569,7 +669,7 @@ describe("type policies", function () {
       });
     });
 
-    it("can filter key arguments in non-Query fields", function () {
+    it(`can filter arguments using keyArgs in non-Query fields`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Book: {
@@ -641,7 +741,7 @@ describe("type policies", function () {
       expect(result).toEqual(data);
     });
 
-    withErrorSpy(it, "assumes keyArgs:false when read and merge function present", function () {
+    it("assumes keyArgs:false when read and merge function present", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           TypeA: {
@@ -823,7 +923,7 @@ describe("type policies", function () {
       });
     });
 
-    it("can include optional arguments in keyArgs", function () {
+    it(`can include optional arguments in field keyArgs policy`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Author: {
@@ -1007,7 +1107,7 @@ describe("type policies", function () {
       ]);
     });
 
-    it("can return KeySpecifier arrays from keyArgs functions", function () {
+    it(`can return KeySpecifier arrays from keyArgs functions`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Thread: {
@@ -1127,6 +1227,217 @@ describe("type policies", function () {
             name: "Hobbes",
           },
         },
+      });
+    });
+
+    // Use several different directives to prove we're not hard-coding support
+    // for the @connection directive.
+    ["connection",
+     "directive",
+     "misdirective",
+    ].forEach(directiveName => it(`can refer to directive @${
+      directiveName
+    } in field key shorthand array`, function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              feed: {
+                keyArgs: ["@" + directiveName, ["key"], "arg"],
+              },
+            },
+          },
+        },
+      });
+
+      const helloTokens = [
+        { __typename: "Token", text: "Hello" },
+        { __typename: "Token", text: "World" },
+        { __typename: "Token", text: "!" },
+      ];
+
+      cache.writeQuery({
+        query: gql`
+          query FeedQuery($num: Int) {
+            feed(arg: $num) @${directiveName}(key: "asdf", ignored: "boo") {
+              text
+            }
+          }
+        `,
+        variables: {
+          num: 1234,
+        },
+        data: {
+          feed: helloTokens,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          "__typename": "Query",
+          [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]: helloTokens,
+        },
+      });
+
+      const farewellTokens = [
+        { __typename: "Token", text: "farewell" },
+        { __typename: "Token", text: "cruel" },
+        { __typename: "Token", text: "world" },
+      ];
+
+      cache.writeQuery({
+        query: gql`
+          query FeedQuery($num: Int) {
+            feed(arg: $num) {
+              text
+            }
+          }
+        `,
+        variables: {
+          num: 2345,
+        },
+        data: {
+          feed: farewellTokens,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          "__typename": "Query",
+          [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]: helloTokens,
+          'feed:{"arg":2345}': farewellTokens,
+        },
+      });
+
+      const directivesTokens = [
+        { __typename: "Token", text: "directives" },
+        { __typename: "Token", text: "consuming" },
+        { __typename: "Token", text: "variables" },
+      ];
+
+      cache.writeQuery({
+        query: gql`
+          query FeedQuery($num: Int) {
+            feed @${directiveName}(key: $num, ignored: "boo") {
+              text
+            }
+          }
+        `,
+        variables: {
+          num: 3456,
+        },
+        data: {
+          feed: directivesTokens,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          "__typename": "Query",
+          [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]: helloTokens,
+          'feed:{"arg":2345}': farewellTokens,
+          [`feed:{"@${directiveName}":{"key":3456}}`]: directivesTokens,
+        },
+      });
+    }));
+
+    it("can refer to variables in field key shorthand array", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              defaultToNumVariable: {
+                keyArgs: ["input", "$num"],
+                read(existing, { args, variables }) {
+                  return existing ?? args?.input ?? variables?.num;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const queryWithInputArg = gql`
+        query WithInputArg($num: Int) {
+          defaultToNumVariable(input: 1234)
+        }
+      `;
+
+      cache.writeQuery({
+        query: queryWithInputArg,
+        data: {
+          defaultToNumVariable: "forced with input and $num",
+        },
+        variables: {
+          num: 1234,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          "__typename": "Query",
+          'defaultToNumVariable:{"input":1234,"$num":1234}': "forced with input and $num",
+        },
+      });
+
+      const queryWithNoArgs = gql`
+        query WithInputArg($num: Int) {
+          defaultToNumVariable
+        }
+      `;
+
+      cache.writeQuery({
+        query: queryWithNoArgs,
+        data: {
+          defaultToNumVariable: "forced with only $num",
+        },
+        variables: {
+          num: 2345,
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          "__typename": "Query",
+          'defaultToNumVariable:{"input":1234,"$num":1234}': "forced with input and $num",
+          'defaultToNumVariable:{"$num":2345}': "forced with only $num",
+        },
+      });
+
+      expect(cache.readQuery({
+        query: queryWithInputArg,
+        variables: {
+          num: 1234,
+        },
+      })).toEqual({
+        defaultToNumVariable: "forced with input and $num",
+      });
+
+      expect(cache.readQuery({
+        query: queryWithNoArgs,
+        variables: {
+          num: 2345,
+        },
+      })).toEqual({
+        defaultToNumVariable: "forced with only $num",
+      });
+
+      expect(cache.readQuery({
+        query: queryWithInputArg,
+        variables: {
+          num: 3456,
+        },
+      })).toEqual({
+        defaultToNumVariable: 1234,
+      });
+
+      expect(cache.readQuery({
+        query: queryWithNoArgs,
+        variables: {
+          num: 4567,
+        },
+      })).toEqual({
+        defaultToNumVariable: 4567,
       });
     });
 
@@ -1339,7 +1650,7 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
-    withErrorSpy(it, "read and merge can cooperate through options.storage", function () {
+    it("read and merge can cooperate through options.storage", function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {
@@ -1428,15 +1739,6 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual(snapshot1);
 
-      function makeMissingError(jobNumber: number) {
-        return new MissingFieldError(
-          `Can't find field 'result' on Job:{"name":"Job #${jobNumber}"} object`,
-          ["jobs", jobNumber - 1, "result"],
-          expect.anything(), // query
-          expect.anything(), // variables
-        );
-      }
-
       expect(cache.diff({
         query,
         optimistic: false,
@@ -1456,9 +1758,24 @@ describe("type policies", function () {
         },
         complete: false,
         missing: [
-          makeMissingError(1),
-          makeMissingError(2),
-          makeMissingError(3),
+          new MissingFieldError(
+            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+            {
+              jobs: {
+                0: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                },
+                1: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #2\"} object",
+                },
+                2: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                },
+              },
+            },
+            expect.anything(), // query
+            expect.anything(), // variables
+          ),
         ],
       });
 
@@ -1514,8 +1831,21 @@ describe("type policies", function () {
         },
         complete: false,
         missing: [
-          makeMissingError(1),
-          makeMissingError(3),
+          new MissingFieldError(
+            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+            {
+              jobs: {
+                0: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                },
+                2: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                },
+              },
+            },
+            expect.anything(), // query
+            expect.anything(), // variables
+          ),
         ],
       });
 
@@ -1578,8 +1908,21 @@ describe("type policies", function () {
         },
         complete: false,
         missing: [
-          makeMissingError(1),
-          makeMissingError(3),
+          new MissingFieldError(
+            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+            {
+              jobs: {
+                0: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                },
+                2: {
+                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                },
+              },
+            },
+            expect.anything(), // query
+            expect.anything(), // variables
+          ),
         ],
       });
 
@@ -2496,7 +2839,7 @@ describe("type policies", function () {
       expect(secretReadAttempted).toBe(true);
     });
 
-    it("can define custom merge functions", function () {
+    it(`can define custom merge functions and keyArgs simultaneously`, function () {
       const cache = new InMemoryCache({
         typePolicies: {
           Person: {
@@ -4728,7 +5071,7 @@ describe("type policies", function () {
     });
   });
 
-  it("allows keyFields and keyArgs functions to return false", function () {
+  it(`allows keyFields and keyArgs functions to return false`, function () {
     const cache = new InMemoryCache({
       typePolicies: {
         Person: {

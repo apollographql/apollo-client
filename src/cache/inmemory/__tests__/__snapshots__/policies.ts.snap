@@ -67,26 +67,23 @@ exports[`type policies complains about missing key fields 1`] = `
   }
 }",
     ],
+    Array [
+      "Missing field 'year' while writing result {
+  \\"__typename\\": \\"Book\\",
+  \\"isbn\\": \\"1400096235\\",
+  \\"title\\": \\"The Information\\",
+  \\"subtitle\\": \\"A History, a Theory, a Flood\\",
+  \\"author\\": {
+    \\"name\\": \\"James Gleick\\"
+  }
+}",
+    ],
   ],
   "results": Array [
     Object {
       "type": "return",
       "value": undefined,
     },
-  ],
-}
-`;
-
-exports[`type policies field policies assumes keyArgs:false when read and merge function present 1`] = `
-[MockFunction] {
-  "calls": Array [
-    Array [
-      "Missing field 'a' while writing result {
-  \\"__typename\\": \\"TypeA\\"
-}",
-    ],
-  ],
-  "results": Array [
     Object {
       "type": "return",
       "value": undefined,
@@ -885,7 +882,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 1`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 1`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -907,7 +904,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 2`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 2`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -936,7 +933,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 3`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 3`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -972,7 +969,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 4`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 4`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1015,7 +1012,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 5`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 5`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1065,7 +1062,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 6`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 6`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1122,7 +1119,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 7`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 7`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1186,7 +1183,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 8`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 8`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1254,45 +1251,6 @@ Object {
       "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
     },
   },
-}
-`;
-
-exports[`type policies field policies read and merge can cooperate through options.storage 1`] = `
-[MockFunction] {
-  "calls": Array [
-    Array [
-      "Missing field 'result' while writing result {
-  \\"__typename\\": \\"Job\\",
-  \\"name\\": \\"Job #1\\"
-}",
-    ],
-    Array [
-      "Missing field 'result' while writing result {
-  \\"__typename\\": \\"Job\\",
-  \\"name\\": \\"Job #2\\"
-}",
-    ],
-    Array [
-      "Missing field 'result' while writing result {
-  \\"__typename\\": \\"Job\\",
-  \\"name\\": \\"Job #3\\"
-}",
-    ],
-  ],
-  "results": Array [
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-  ],
 }
 `;
 

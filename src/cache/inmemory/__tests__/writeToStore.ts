@@ -15,14 +15,18 @@ import {
   isReference,
   Reference,
   StoreObject,
-} from '../../../utilities/graphql/storeUtils';
-import { addTypenameToDocument } from '../../../utilities/graphql/transform';
-import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { itAsync } from '../../../utilities/testing/itAsync';
+  addTypenameToDocument,
+  cloneDeep,
+  createFragmentMap,
+  getFragmentDefinitions,
+  getMainDefinition,
+} from '../../../utilities';
+import { itAsync } from '../../../testing/core';
 import { StoreWriter } from '../writeToStore';
 import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
-import { withErrorSpy } from '../../../testing';
+import { withErrorSpy, withWarningSpy } from '../../../testing';
+import { TypedDocumentNode } from '../../../core'
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -1654,7 +1658,7 @@ describe('writing to the store', () => {
     expect(cache.extract()).toMatchSnapshot();
   });
 
-  it('should allow a union of objects of a different type, when overwriting a generated id with a real id', () => {
+  itAsync('should allow a union of objects of a different type, when overwriting a generated id with a real id', (resolve, reject) => {
     const dataWithPlaceholder = {
       author: {
         hello: 'Foo',
@@ -1710,7 +1714,7 @@ describe('writing to the store', () => {
                     expect(incoming).toEqual(dataWithPlaceholder.author);
                     break;
                   default:
-                    fail("unreached");
+                    reject("unreached");
                 }
                 return incoming;
               },
@@ -1779,6 +1783,8 @@ describe('writing to the store', () => {
         },
       },
     });
+
+    resolve();
   });
 
   it('does not swallow errors other than field errors', () => {
@@ -1835,21 +1841,7 @@ describe('writing to the store', () => {
   });
 
   describe('"Cache data maybe lost..." warnings', () => {
-    const { warn } = console;
-    let warnings: any[][] = [];
-
-    beforeEach(() => {
-      warnings.length = 0;
-      console.warn = (...args: any[]) => {
-        warnings.push(args);
-      };
-    });
-
-    afterEach(() => {
-      console.warn = warn;
-    });
-
-    it("should not warn when scalar fields are updated", () => {
+    withWarningSpy(it, "should not warn when scalar fields are updated", () => {
       const cache = new InMemoryCache;
 
       const query = gql`
@@ -1858,8 +1850,6 @@ describe('writing to the store', () => {
           currentTime(tz: "UTC-5")
         }
       `;
-
-      expect(warnings).toEqual([]);
 
       const date = new Date(1601053713081);
 
@@ -1879,7 +1869,6 @@ describe('writing to the store', () => {
       });
 
       expect(cache.extract()).toMatchSnapshot();
-      expect(warnings).toEqual([]);
 
       cache.writeQuery({
         query,
@@ -1896,7 +1885,6 @@ describe('writing to the store', () => {
       });
 
       expect(cache.extract()).toMatchSnapshot();
-      expect(warnings).toEqual([]);
     });
   });
 
@@ -1960,7 +1948,7 @@ describe('writing to the store', () => {
       });
     });
 
-    it('should warn when it receives the wrong data inside a fragment', () => {
+    withErrorSpy(it, 'should warn when it receives the wrong data inside a fragment', () => {
       const queryWithInterface = gql`
         query {
           todos {
@@ -2058,9 +2046,8 @@ describe('writing to the store', () => {
         todos: null,
       });
     });
-    it('should not warn if a field is defered', () => {
-      let originalWarn = console.warn;
-      console.warn = jest.fn((...args) => {});
+
+    withErrorSpy(it, 'should not warn if a field is defered', () => {
       const defered = gql`
         query LazyLoad {
           id
@@ -2084,8 +2071,6 @@ describe('writing to the store', () => {
       });
 
       expect((newStore as any).lookup('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
-      expect(console.warn).not.toBeCalled();
-      console.warn = originalWarn;
     });
   });
 
@@ -2935,6 +2920,694 @@ describe('writing to the store', () => {
           name: "piebaldism",
         },
       ],
+    });
+  });
+
+  describe("StoreWriter", () => {
+    const writer = new StoreWriter(new InMemoryCache());
+
+    function check(
+      query: TypedDocumentNode<{
+        aField: string;
+        bField: string;
+        rootField: string;
+      }>,
+      expectedContextValues: {
+        clientOnly: Record<string, boolean> | boolean;
+        deferred: Record<string, boolean> | boolean;
+      },
+    ) {
+      const { selectionSet } = getMainDefinition(query);
+      const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
+
+      const flat = writer["flattenFields"](selectionSet, {
+        __typename: "Query",
+        aField: "a",
+        bField: "b",
+        rootField: "root",
+      }, {
+        fragmentMap,
+        clientOnly: false,
+        deferred: false,
+        flavors: new Map,
+        variables: {
+          true: true,
+          false: false,
+        },
+      });
+
+      expect(flat.size).toBe(3);
+
+      flat.forEach((context, field) => {
+        const fieldName = field.name.value;
+
+        if (typeof expectedContextValues.clientOnly === "boolean") {
+          expect(context.clientOnly).toBe(expectedContextValues.clientOnly);
+        } else {
+          expect(expectedContextValues.clientOnly).toHaveProperty(fieldName);
+          expect(context.clientOnly).toBe(
+            expectedContextValues.clientOnly[fieldName]
+          );
+        }
+
+        if (typeof expectedContextValues.deferred === "boolean") {
+          expect(context.deferred).toBe(expectedContextValues.deferred);
+        } else {
+          expect(expectedContextValues.deferred).toHaveProperty(fieldName);
+          expect(context.deferred).toBe(
+            expectedContextValues.deferred[fieldName]
+          );
+        }
+      });
+    }
+
+    it("flattenFields flattens fields with appropriate @client context", () => {
+      check(gql`
+        query Q {
+          ...FragAB @client
+          ...FragB
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+        deferred: false,
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+        deferred: false,
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField @client
+        }
+      `, {
+        clientOnly: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+        deferred: false,
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          rootField
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField @client
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: false,
+      });
+
+      check(gql`
+        query Q {
+          rootField @client
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @client
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+        deferred: false,
+      });
+
+      check(gql`
+        query Q {
+          rootField @client
+          ...FragB @client
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+        deferred: false,
+      });
+
+      check(gql`
+        query Q {
+          rootField @client
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @client
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+        deferred: false,
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+        deferred: false,
+      });
+    });
+
+    it("flattenFields flattens fields with appropriate @defer context", () => {
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          ...FragAB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField @defer
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragB
+          rootField
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField @defer
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          rootField @defer
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @defer
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          rootField @defer
+          ...FragB @defer
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          rootField @defer
+          ...FragB
+          ...FragAB
+        }
+
+        fragment FragAB on Query {
+          ...FragB @defer
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: false,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          ...FragB
+          aField
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+      });
+    });
+
+    it("flattenFields flattens fields mixing @client and @defer", () => {
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @client
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer @client
+          ...FragB @client
+          rootField @client @defer
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: true,
+          bField: true,
+          rootField: true,
+        },
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB
+          ...FragB @client
+          rootField @defer
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField @defer
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @skip(if: true)
+          rootField @client
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @client
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: true,
+        },
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          aField @defer
+          ...FragAB @include(if: false)
+          ...FragB @client
+          rootField @defer
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: true,
+        },
+      });
+    });
+
+    it("flattenFields understands conditional @defer(if: boolean)", () => {
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @defer(if: false)
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField @defer(if: true)
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: false,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer
+          ...FragB @defer(if: $true)
+          rootField @defer(if: $true)
+        }
+
+        fragment FragAB on Query {
+          aField @defer(if: $false)
+          ...FragB
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: true,
+          bField: true,
+          rootField: true,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB @defer(if: $false)
+          ...FragB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer(if: true)
+        }
+
+        fragment FragB on Query {
+          bField
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          bField: true,
+          rootField: false,
+        },
+      });
+
+      check(gql`
+        query Q {
+          ...FragAB
+          ...FragB @defer
+          rootField
+        }
+
+        fragment FragAB on Query {
+          aField
+          ...FragB @defer
+        }
+
+        fragment FragB on Query {
+          bField @defer(if: false)
+        }
+      `, {
+        clientOnly: false,
+        deferred: {
+          aField: false,
+          // The bField is deferred despite having @defer(if: false), because it
+          // inherits the @defer directives from above.
+          bField: true,
+          rootField: false,
+        },
+      });
     });
   });
 });

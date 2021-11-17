@@ -82,12 +82,12 @@ class Transformer {
     return id.startsWith("./") || id.startsWith("../");
   }
 
-  normalizeSourceString(file: string, source: Node | null | undefined) {
+  normalizeSourceString(file: string, source?: Node | null) {
     if (source && n.StringLiteral.check(source) && this.isRelative(source.value)) {
       try {
         source.value = this.normalizeId(source.value, file);
       } catch (error) {
-        console.error(`Failed to resolve ${source.value} in ${file}`);
+        console.error(`Failed to resolve ${source.value} in ${file} with error ${error}`);
         process.exit(1);
       }
     }
@@ -97,6 +97,7 @@ class Transformer {
     const basedir = path.dirname(file);
     const absPath = resolve.sync(id, {
       basedir,
+      extensions: [".mjs", ".js"],
       packageFilter(pkg) {
         return pkg.module ? {
           ...pkg,

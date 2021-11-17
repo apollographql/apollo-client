@@ -22,6 +22,7 @@ Array [
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -97,6 +98,7 @@ Array [
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -175,6 +177,7 @@ Array [
   "checkFetcher",
   "createHttpLink",
   "createSignalIfSupported",
+  "defaultPrinter",
   "fallbackHttpConfig",
   "parseAndCheckHttpResponse",
   "rewriteURIForGET",
@@ -257,15 +260,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/data 1`] = `
-Array [
-  "MutationData",
-  "OperationData",
-  "QueryData",
-  "SubscriptionData",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
 Array [
   "graphql",
@@ -292,6 +286,7 @@ Array [
   "DocumentType",
   "operationName",
   "parser",
+  "verifyDocumentType",
 ]
 `;
 
@@ -309,6 +304,21 @@ Array [
   "MockLink",
   "MockSubscriptionLink",
   "MockedProvider",
+  "createMockClient",
+  "itAsync",
+  "mockObservableLink",
+  "mockSingleLink",
+  "subscribeAndCount",
+  "withErrorSpy",
+  "withLogSpy",
+  "withWarningSpy",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/core 1`] = `
+Array [
+  "MockLink",
+  "MockSubscriptionLink",
   "createMockClient",
   "itAsync",
   "mockObservableLink",

@@ -90,7 +90,7 @@ const FEED_QUERY = gql`
   }
 `;
 ```
-in Apollo Client, you would use the following query:
+in Apollo Client, you would typically use the following query (the same query without the `@connection(...)` directive):
 ```js
 const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
@@ -120,13 +120,78 @@ const cache = new InMemoryCache({
   },
 })
 ```
+
+If the `Query.feed` field does not have an argument like `type` that you can use in `keyArgs: [...]`, then it may make sense to use the `@connection` directive after all:
+```js
+const FEED_QUERY = gql`
+  query Feed($offset: Int, $limit: Int, $feedKey: String) {
+    feed(offset: $offset, limit: $limit) @connection(key: $feedKey) {
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+`;
+```
+If you execute this query with different values for the `$feedKey` variable, those feed results will be stored separately in the cache, whereas normally they would all be stored in the same list.
+
+When choosing a `keyArgs` configuration for this `Query.feed` field, you should include the `@connection` directive as if it was an argument (the `@` tells `InMemoryCache` you mean a directive):
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["@connection", ["key"]],
+        },
+      },
+    },
+  },
+})
+```
+
+With this configuration, your cache will use a `feed:{"@connection":{"key":...}}` key rather than just `feed` to store separate `{ edges, pageInfo }` objects within the `ROOT_QUERY` object:
+```js
+expect(cache.extract()).toEqual({
+  ROOT_QUERY: {
+    __typename: "Query",
+    'feed:{"@connection":{"key":"some feed key"}}': { edges, pageInfo },
+    'feed:{"@connection":{"key":"another feed key"}}': { edges, pageInfo },
+    'feed:{"@connection":{"key":"yet another key"}}': { edges, pageInfo },
+    // ...
+  },
+})
+```
+
+The `["key"]` in `keyArgs: ["@connection", ["key"]]` means only the `key` argument to the `@connection` directive will be considered, and any other arguments (like `filter`) will be ignored. Passing just `key` to `@connection` is usually adequate, but if you are tempted to pass a `filter: ["someArg", "anotherArg"]` argument as well, you should instead include those argument names directly in `keyArgs`:
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["someArg", "anotherArg", "@connection", ["key"]],
+        },
+      },
+    },
+  },
+})
+```
+If any of these arguments or directives are not provided for the current query, they will be omitted from the field key automatically, without error. This means it is generally safe to include more arguments or directives in `keyArgs` than you expect to receive in all cases.
+
+> As mentioned above, if a `keyArgs` array is insufficient to specify your desired field keys, you can alternatively pass a function for `keyArgs`, which takes the `args` object and a `{ typename, field, fieldName, variables }` context parameter, and can either return a string or return a dynamically-generated `keyArgs` array.
+
 Although `keyArgs` (and `@connection`) are useful for more than just paginated fields, it's worth noting that `relayStylePagination` configures `keyArgs: false` by default. You can reconfigure this `keyArgs` behavior by passing an alternate value to `relayStylePagination`:
 ```js
 const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
-        feed: relayStylePagination(["type"]),
+        feed: relayStylePagination(["type", "@connection", ["key"]]),
       },
     },
   },

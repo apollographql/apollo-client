@@ -1,4 +1,4 @@
-## Apollo Client 3.5.3 (not yet released)
+## Apollo Client 3.5.3 (2021-11-17)
 
 - Avoid rewriting non-relative imported module specifiers in `config/rewriteModuleIds.ts` script, thereby allowing bundlers to resolve those imports as they see fit. <br/>
   [@benjamn](https://github.com/benjamn) in [#9073](https://github.com/apollographql/apollo-client/pull/9073)

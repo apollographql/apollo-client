@@ -2,6 +2,21 @@
 
 - Restore the ability to pass `onError()` and `onCompleted()` to the mutation execution function. <br/> [@brainkim](https://github.com/brainkim) in [#9076](https://github.com/apollographql/apollo-client/pull/9076)
 
+- Work around webpack 5 errors of the form
+  ```
+  The request 'ts-invariant/process' failed to resolve only because it was resolved as fully specified
+  ```
+  by ensuring
+  ```js
+  import { remove } from 'ts-invariant/process'
+  ```
+  is internally written to
+  ```js
+  import { remove } from 'ts-invariant/process/index.js'
+  ```
+  in the ECMAScript module `@apollo/client/utilities/globals/fix-graphql.js`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9083](https://github.com/apollographql/apollo-client/pull/9083)
+
 ## Apollo Client 3.5.3 (2021-11-17)
 
 - Avoid rewriting non-relative imported module specifiers in `config/rewriteModuleIds.ts` script, thereby allowing bundlers to resolve those imports as they see fit. <br/>

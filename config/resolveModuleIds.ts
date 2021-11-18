@@ -3,6 +3,18 @@ import * as path from "path";
 import resolve from "resolve";
 import { distDir, eachFile, reparse, reprint } from './helpers';
 
+// The primary goal of the 'npm run resolve' script is to make ECMAScript
+// modules exposed by Apollo Client easier to consume natively in web browsers,
+// without bundling, and without help from package.json files. It accomplishes
+// this goal by rewriting internal ./ and ../ (relative) imports to refer to a
+// specific ESM module (not a directory), including its file extension. Because
+// of this limited goal, this script only touches ESM modules that have .js file
+// extensions, not .cjs CommonJS bundles.
+
+// A secondary goal of this script is to enforce that any module using the
+// __DEV__ global constant imports the @apollo/client/utilities/globals polyfill
+// module first.
+
 eachFile(distDir, (file, relPath) => new Promise((resolve, reject) => {
   fs.readFile(file, "utf8", (error, source) => {
     if (error) return reject(error);
@@ -83,12 +95,25 @@ class Transformer {
   }
 
   normalizeSourceString(file: string, source?: Node | null) {
-    if (source && n.StringLiteral.check(source) && this.isRelative(source.value)) {
-      try {
-        source.value = this.normalizeId(source.value, file);
-      } catch (error) {
-        console.error(`Failed to resolve ${source.value} in ${file} with error ${error}`);
-        process.exit(1);
+    if (source && n.StringLiteral.check(source)) {
+      // We mostly only worry about normalizing _relative_ module identifiers,
+      // which start with a ./ or ../ and refer to other modules within the
+      // @apollo/client package, but we also manually normalize one non-relative
+      // identifier, ts-invariant/process, to prevent webpack 5 errors
+      // containing the phrase "failed to resolve only because it was resolved
+      // as fully specified," referring to webpack's resolve.fullySpecified
+      // option, which is apparently now true by default when the enclosing
+      // package's package.json file has "type": "module" (which became true for
+      // Apollo Client in v3.5).
+      if (source.value.split("/", 2).join("/") === "ts-invariant/process") {
+        source.value = "ts-invariant/process/index.js";
+      } else if (this.isRelative(source.value)) {
+        try {
+          source.value = this.normalizeId(source.value, file);
+        } catch (error) {
+          console.error(`Failed to resolve ${source.value} in ${file} with error ${error}`);
+          process.exit(1);
+        }
       }
     }
   }

@@ -1,4 +1,4 @@
-## Apollo Client 3.5.4 (unreleased)
+## Apollo Client 3.5.4 (2021-11-19)
 
 ### Notices
 

@@ -25,15 +25,7 @@
   ```
   The request 'ts-invariant/process' failed to resolve only because it was resolved as fully specified
   ```
-  by ensuring
-  ```js
-  import { remove } from 'ts-invariant/process'
-  ```
-  is internally written to
-  ```js
-  import { remove } from 'ts-invariant/process/index.js'
-  ```
-  in the ECMAScript module `@apollo/client/utilities/globals/fix-graphql.js`. <br/>
+  by ensuring `import ... from 'ts-invariant/process'` is internally written to `import ... from 'ts-invariant/process/index.js'`. <br/>
   [@benjamn](https://github.com/benjamn) in [#9083](https://github.com/apollographql/apollo-client/pull/9083)
 
 ## Apollo Client 3.5.3 (2021-11-17)

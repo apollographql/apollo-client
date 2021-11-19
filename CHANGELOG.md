@@ -1,5 +1,24 @@
 ## Apollo Client 3.5.4 (unreleased)
 
+### Notices
+
+- [Relevant if you use Apollo Client with React Native] Since Apollo Client v3.5.0, CommonJS bundles provided by `@apollo/client` use a `.cjs` file extension rather than `.cjs.js`, so Node.js won't interpret them as ECMAScript modules. While this change should be an implementation detail, it may cause problems for the [Metro bundler](https://facebook.github.io/metro/) used by React Native, whose [`resolver.sourceExts`](https://facebook.github.io/metro/docs/configuration#sourceexts) configuration does not include the `cjs` extension by default.
+
+  As a workaround until [this issue](https://github.com/facebook/metro/issues/535) is resolved, you can configure Metro to understand the `.cjs` file extension by creating a `metro.config.js` file in the root of your React Native project:
+  ```js
+  const { getDefaultConfig } = require("metro-config");
+  const { resolver: defaultResolver } = getDefaultConfig.getDefaultValues();
+  exports.resolver = {
+    ...defaultResolver,
+    sourceExts: [
+      ...defaultResolver.sourceExts,
+      "cjs",
+    ],
+  };
+  ```
+
+### Improvements
+
 - Restore the ability to pass `onError()` and `onCompleted()` to the mutation execution function. <br/> [@brainkim](https://github.com/brainkim) in [#9076](https://github.com/apollographql/apollo-client/pull/9076)
 
 - Work around webpack 5 errors of the form

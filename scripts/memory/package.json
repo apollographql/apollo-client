@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@apollo/client": "file:../../dist",
-    "graphql": "^15.5.0"
+    "graphql": "^16.0.0"
   },
   "devDependencies": {
     "mocha": "9.0.3"

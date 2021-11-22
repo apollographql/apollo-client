@@ -111,12 +111,25 @@ export const fallbackHttpConfig = {
 
 export const defaultPrinter: Printer = (ast, printer) => printer(ast);
 
-export const selectHttpOptionsAndBody = (
+export function selectHttpOptionsAndBody(
+  operation: Operation,
+  fallbackConfig: HttpConfig,
+  ...configs: Array<HttpConfig>
+) {
+  return selectHttpOptionsAndBodyInternal(
+    operation,
+    defaultPrinter,
+    fallbackConfig,
+    ...configs,
+  );
+}
+
+export function selectHttpOptionsAndBodyInternal(
   operation: Operation,
   printer: Printer,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
-) => {
+) {
   let options: HttpConfig & Record<string, any> = {
     ...fallbackConfig.options,
     headers: fallbackConfig.headers,

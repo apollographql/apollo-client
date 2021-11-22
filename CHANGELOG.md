@@ -96,6 +96,9 @@
 - Include `graphql@16` in peer deps. <br/>
   [@brainkim](https://github.com/brainkim) in [#8997](https://github.com/apollographql/apollo-client/pull/8997)
 
+- Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
+
 ### React Refactoring
 
 #### Improvements (due to [@brainkim](https://github.com/brainkim) in [#8875](https://github.com/apollographql/apollo-client/pull/8875)):
@@ -110,11 +113,6 @@
 - `standby` fetchPolicies will now act like `skip: true` more consistently.
 - Calling `refetch` on a skipped query will have no effect (issue [#8270](https://github.com/apollographql/apollo-client/issues/8270)).
 - Prevent `onError` and `onCompleted` functions from firing continuously, and improving their polling behavior.
-
-### Other Bugs Fixed
-
-- Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
 
 ## Apollo Client 3.4.17 (2021-11-08)
 

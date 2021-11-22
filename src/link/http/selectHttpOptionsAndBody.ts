@@ -116,10 +116,10 @@ export function selectHttpOptionsAndBody(
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
 ) {
+  configs.unshift(fallbackConfig);
   return selectHttpOptionsAndBodyInternal(
     operation,
     defaultPrinter,
-    fallbackConfig,
     ...configs,
   );
 }
@@ -127,20 +127,11 @@ export function selectHttpOptionsAndBody(
 export function selectHttpOptionsAndBodyInternal(
   operation: Operation,
   printer: Printer,
-  fallbackConfig: HttpConfig,
-  ...configs: Array<HttpConfig>
+  ...configs: HttpConfig[]
 ) {
-  let options: HttpConfig & Record<string, any> = {
-    ...fallbackConfig.options,
-    headers: fallbackConfig.headers,
-    credentials: fallbackConfig.credentials,
-  };
-  let http: HttpQueryOptions = fallbackConfig.http || {};
+  let options = {} as HttpConfig & Record<string, any>;
+  let http = {} as HttpQueryOptions;
 
-  /*
-   * use the rest of the configs to populate the options
-   * configs later in the list will overwrite earlier fields
-   */
   configs.forEach(config => {
     options = {
       ...options,
@@ -150,7 +141,10 @@ export function selectHttpOptionsAndBodyInternal(
         ...headersToLowerCase(config.headers),
       },
     };
-    if (config.credentials) options.credentials = config.credentials;
+
+    if (config.credentials) {
+      options.credentials = config.credentials;
+    }
 
     http = {
       ...http,

@@ -4,7 +4,7 @@
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "types": "typedoc ../src/index.ts --json ./docs/src/gatsby-theme-apollo-docs/docs.json"
+    "types": "cd .. && typedoc --json ./docs/src/gatsby-theme-apollo-docs/docs.json ./src/index.ts"
   },
   "dependencies": {
     "gatsby": "2.32.13",

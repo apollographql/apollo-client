@@ -13,6 +13,7 @@ export {
   fallbackHttpConfig,
   defaultPrinter,
   selectHttpOptionsAndBody,
+  selectHttpOptionsAndBodyInternal, // needed by ../batch-http but not public
   UriFunction
 } from './selectHttpOptionsAndBody';
 export { checkFetcher } from './checkFetcher';

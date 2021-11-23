@@ -46,6 +46,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -118,6 +119,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -182,6 +184,7 @@ Array [
   "parseAndCheckHttpResponse",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
 ]

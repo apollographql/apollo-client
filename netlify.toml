@@ -1,9 +1,12 @@
 [build]
   base    = "docs"
   publish = "docs/public"
-  command = "cd .. && npm i && npm run build && cd docs && npm i && npm run types && gatsby build"
+  # Start with running npm@7 in the root apollo-client directory, but downgrade
+  # back to npm@6 for working in the docs/ directory.
+  command = "cd .. && npm i && cd docs && npm i --global npm@6 npm i && npm run types && gatsby build"
 [build.environment]
-  NPM_VERSION = "6"
+  # Downgraded to 6 after the 'npm i --global npm@6' command runs (above).
+  NPM_VERSION = "7"
 [context.production.environment]
   PREFIX_PATHS = "true"
 [context.branch-deploy.environment]

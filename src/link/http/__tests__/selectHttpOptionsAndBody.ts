@@ -4,7 +4,7 @@ import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 import { createOperation } from '../../utils/createOperation';
 import {
   selectHttpOptionsAndBody,
-  defaultPrinter,
+  selectHttpOptionsAndBodyInternal,
   fallbackHttpConfig,
 } from '../selectHttpOptionsAndBody';
 
@@ -20,7 +20,6 @@ describe('selectHttpOptionsAndBody', () => {
   it('includeQuery allows the query to be ignored', () => {
     const { body } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
-      defaultPrinter,
       { http: { includeQuery: false } },
     );
     expect(body).not.toHaveProperty('query');
@@ -30,7 +29,6 @@ describe('selectHttpOptionsAndBody', () => {
     const extensions = { yo: 'what up' };
     const { body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
-      defaultPrinter,
       { http: { includeExtensions: true } },
     );
     expect(body).toHaveProperty('extensions');
@@ -50,7 +48,6 @@ describe('selectHttpOptionsAndBody', () => {
     const extensions = { yo: 'what up' };
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
-      defaultPrinter,
       fallbackHttpConfig,
     );
 
@@ -81,7 +78,6 @@ describe('selectHttpOptionsAndBody', () => {
 
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
-      defaultPrinter,
       fallbackHttpConfig,
       config,
     );
@@ -107,7 +103,6 @@ describe('selectHttpOptionsAndBody', () => {
     const config = { headers };
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
-      defaultPrinter,
       fallbackHttpConfig,
       config,
     );
@@ -122,18 +117,16 @@ describe('selectHttpOptionsAndBody', () => {
   });
 
   it('applies custom printer function when provided', () => {
-
     const customPrinter = (ast: ASTNode, originalPrint: typeof print) => {
       return stripIgnoredCharacters(originalPrint(ast));
     };
 
-    const { body } = selectHttpOptionsAndBody(
+    const { body } = selectHttpOptionsAndBodyInternal(
       createOperation({}, { query }),
       customPrinter,
       fallbackHttpConfig,
     );
 
     expect(body.query).toBe('query SampleQuery{stub{id}}');
-
   });
 });

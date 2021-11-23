@@ -6,7 +6,7 @@ import {
   selectURI,
   parseAndCheckHttpResponse,
   checkFetcher,
-  selectHttpOptionsAndBody,
+  selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
   HttpOptions,
@@ -96,7 +96,7 @@ export class BatchHttpLink extends ApolloLink {
 
       //uses fallback, link, and then context to build options
       const optsAndBody = operations.map(operation =>
-        selectHttpOptionsAndBody(
+        selectHttpOptionsAndBodyInternal(
           operation,
           print,
           fallbackHttpConfig,

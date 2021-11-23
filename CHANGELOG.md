@@ -5,6 +5,13 @@
 - Tentatively reimplement `useQuery` and `useLazyQuery` to use the [proposed `useSyncExternalStore` API](https://github.com/reactwg/react-18/discussions/86) from React 18. <br/>
   [@brainkim](https://github.com/brainkim) in [#8785](https://github.com/apollographql/apollo-client/pull/8785)
 
+## Apollo Client 3.5.5 (2021-11-23)
+
+### Bug Fixes
+
+- Remove `printer: Printer` positional parameter from publicly-exported `selectHttpOptionsAndBody` function, whose addition in [#8699](https://github.com/apollographql/apollo-client/pull/8699) was a breaking change (starting in Apollo Client 3.5.0) for direct consumers of `selectHttpOptionsAndBody`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9103](https://github.com/apollographql/apollo-client/pull/9103)
+
 ## Apollo Client 3.5.4 (2021-11-19)
 
 ### Notices

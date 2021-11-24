@@ -252,9 +252,7 @@ const query = gql`
 
 // Set all todos in the cache as completed
 cache.updateQuery({ query }, (data) => ({
-  data: {
-    todos: data.todos.map((todo) => ({ ...todo, completed: true }))
-  }
+  todos: data.todos.map((todo) => ({ ...todo, completed: true }))
 }));
 ```
 

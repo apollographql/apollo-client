@@ -22,13 +22,22 @@ export type MissingTree = string | {
   readonly [key: string]: MissingTree;
 };
 
-export class MissingFieldError {
+export class MissingFieldError extends Error {
   constructor(
     public readonly message: string,
     public readonly path: MissingTree | Array<string | number>,
     public readonly query: DocumentNode,
     public readonly variables?: Record<string, any>,
-  ) {}
+  ) {
+    // 'Error' breaks prototype chain here
+    super(message);
+
+    // restore prototype chain
+    const actualProto = new.target.prototype;
+
+    if (Object.setPrototypeOf) { Object.setPrototypeOf(this, actualProto); }
+    else { this.__proto__ = actualProto; }
+  }
 }
 
 export interface FieldSpecifier {

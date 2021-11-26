@@ -4899,10 +4899,11 @@ describe('QueryManager', () => {
           error.message.includes(refetchError?.message);
 
         if (isRefetchError) {
-          return setTimeout(() => {
+          setTimeout(() => {
             expect(isRefetchErrorCaught).toBe(true);
             resolve();
           }, 10);
+          return;
         }
 
         reject(error);

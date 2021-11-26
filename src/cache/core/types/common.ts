@@ -32,11 +32,9 @@ export class MissingFieldError extends Error {
     // 'Error' breaks prototype chain here
     super(message);
 
-    // restore prototype chain
-    const actualProto = new.target.prototype;
-
-    if (Object.setPrototypeOf) { Object.setPrototypeOf(this, actualProto); }
-    else { this.__proto__ = actualProto; }
+    // We're not using `Object.setPrototypeOf` here as it isn't fully
+    // supported on Android (see issue #3236).
+    (this as any).__proto__ = MissingFieldError.prototype;
   }
 }
 

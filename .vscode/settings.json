@@ -7,5 +7,25 @@
   "typescript.tsdk": "../node_modules/typescript/lib",
   "cSpell.enableFiletypes": [
     "mdx"
-  ]
+  ],
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#737b13",
+    "activityBar.activeBorder": "#0d4d53",
+    "activityBar.background": "#737b13",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#0d4d53",
+    "activityBarBadge.foreground": "#e7e7e7",
+    "sash.hoverBorder": "#737b13",
+    "statusBar.background": "#4a4f0c",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#737b13",
+    "statusBarItem.remoteBackground": "#4a4f0c",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#4a4f0c",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#4a4f0c99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#4a4f0c"
 }

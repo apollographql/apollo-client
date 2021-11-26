@@ -1,4 +1,6 @@
-import { DefinitionNode } from 'graphql';
+import '../../utilities/globals';
+
+import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../core';
 import { Observable } from '../../utilities';
@@ -7,32 +9,34 @@ import { selectURI } from './selectURI';
 import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';
 import { checkFetcher } from './checkFetcher';
 import {
-  selectHttpOptionsAndBody,
+  selectHttpOptionsAndBodyInternal,
+  defaultPrinter,
   fallbackHttpConfig,
   HttpOptions
 } from './selectHttpOptionsAndBody';
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError } from '../utils';
+import { maybe } from '../../utilities';
+
+const backupFetch = maybe(() => fetch);
 
 export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   let {
     uri = '/graphql',
     // use default global fetch if nothing passed in
-    fetch: fetcher,
+    fetch: preferredFetch,
+    print = defaultPrinter,
     includeExtensions,
     useGETForQueries,
+    includeUnusedVariables = false,
     ...requestOptions
   } = linkOptions;
 
-  // dev warnings to ensure fetch is present
-  checkFetcher(fetcher);
-
-  //fetcher is set here rather than the destructuring to ensure fetch is
-  //declared before referencing it. Reference in the destructuring would cause
-  //a ReferenceError
-  if (!fetcher) {
-    fetcher = fetch;
+  if (__DEV__) {
+    // Make sure at least one of preferredFetch, window.fetch, or backupFetch is
+    // defined, so requests won't fail at runtime.
+    checkFetcher(preferredFetch || backupFetch);
   }
 
   const linkConfig = {
@@ -78,12 +82,36 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     };
 
     //uses fallback, link, and then context to build options
-    const { options, body } = selectHttpOptionsAndBody(
+    const { options, body } = selectHttpOptionsAndBodyInternal(
       operation,
+      print,
       fallbackHttpConfig,
       linkConfig,
       contextConfig,
     );
+
+    if (body.variables && !includeUnusedVariables) {
+      const unusedNames = new Set(Object.keys(body.variables));
+      visit(operation.query, {
+        Variable(node, _key, parent) {
+          // A variable type definition at the top level of a query is not
+          // enough to silence server-side errors about the variable being
+          // unused, so variable definitions do not count as usage.
+          // https://spec.graphql.org/draft/#sec-All-Variables-Used
+          if (parent && (parent as VariableDefinitionNode).kind !== 'VariableDefinition') {
+            unusedNames.delete(node.name.value);
+          }
+        },
+      });
+      if (unusedNames.size) {
+        // Make a shallow copy of body.variables (with keys in the same
+        // order) and then delete unused variables from the copy.
+        body.variables = { ...body.variables };
+        unusedNames.forEach(name => {
+          delete body.variables![name];
+        });
+      }
+    }
 
     let controller: any;
     if (!(options as any).signal) {
@@ -118,7 +146,14 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     return new Observable(observer => {
-      fetcher!(chosenURI, options)
+      // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
+      // fall back to the *current* global window.fetch function (see issue
+      // #7832), or (if all else fails) the backupFetch function we saved when
+      // this module was first evaluated. This last option protects against the
+      // removal of window.fetch, which is unlikely but not impossible.
+      const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
+
+      currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
           return response;

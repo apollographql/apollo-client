@@ -5,7 +5,7 @@ description: Manage local data with GraphQL like resolvers
 
 > ⚠️ **DEPRECATION WARNING:** Local resolvers are still available in Apollo Client 3, but they are deprecated. We recommend using field policies instead, as described in [Local-only fields](./managing-state-with-field-policies/).
 >
-> Local resolver support will be removed in a future major Apollo Client release. See the [deprecation notice](#deprecation-notice) for details.
+> Local resolver support will be removed from the core of Apollo Client in a future major release, but it will be possible to achieving the functionality of local resolvers using an `ApolloLink`, as described in [this comment](https://github.com/apollographql/apollo-client/issues/8189#issuecomment-857199932).
 
 We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our client application.
 
@@ -562,7 +562,7 @@ Pulling `@client` field values directly out of the cache isn't quite as flexible
 
 ### Working with fetch policies
 
-Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](../api/core/ApolloClient/#apolloclient-functions) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request. Let's look at an example:
+Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](../data/queries/#setting-a-fetch-policy) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request. Let's look at an example:
 
 ```jsx
 import React, { Fragment } from "react";

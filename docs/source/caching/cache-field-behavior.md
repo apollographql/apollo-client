@@ -9,7 +9,7 @@ You can customize how a particular field in your Apollo Client cache is read and
 * A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
 * An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
-You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whatever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the type that contains the field. The following example defines a field policy for the `name` field of a `Person` type: 
+You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whatever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the type that contains the field. The following example defines a field policy for the `name` field of a `Person` type:
 
 ```ts{5-10}
 const cache = new InMemoryCache({
@@ -86,7 +86,7 @@ const cache = new InMemoryCache({
     Person: {
       fields: {
         userId() {
-          return localStorage.loggedInUserId;
+          return localStorage.getItem("loggedInUserId");
         },
       },
     },
@@ -168,7 +168,7 @@ In such situations, the cache defaults to _replacing_ the existing `favoriteBook
 
 You could fix this problem by modifying your queries to request an `id` field for the `favoriteBook.author` objects, or by specifying custom `keyFields` in the `Author` type policy, such as `["name", "dateOfBirth"]`. Providing the cache with this information allows it to know when two `Author` objects represent the same logical entity, so it can safely merge their fields. This solution is recommended, when feasible.
 
-However, you may encounter situations where your data graph does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
+However, you may encounter situations where your graph does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
 
 In such situations, you can define a custom `merge` function for the `author` field within the type policy for `Book`:
 
@@ -269,6 +269,33 @@ const cache = new InMemoryCache({
 
 In summary, the `Book.author` policy above allows the cache to safely merge the `author` objects of any two `Book` objects that have the same identity.
 
+#### Configuring `merge` functions for types rather than fields
+
+Beginning with Apollo Client 3.3, you can avoid having to configure `merge` functions for lots of different fields that might hold an `Author` object, and instead put the `merge` configuration in the `Author` type policy:
+
+```ts{13}
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        // No longer necessary!
+        // author: {
+        //   merge: true,
+        // },
+      },
+    },
+
+    Author: {
+      merge: true,
+    },
+  },
+});
+```
+
+These configurations have the same behavior, but putting the `merge: true` in the `Author` type policy is shorter and easier to maintain, especially when `Author` objects could appear in lots of different fields besides `Book.author`.
+
+Remember that mergeable objects will only be merged with existing objects occupying the same field of the same parent object, and only when the `__typename` of the objects is the same. If you really need to work around these rules, you can write a custom `merge` function to do whatever you want, but `merge: true` follows these rules.
+
 ### Merging arrays of non-normalized objects
 
 Once you're comfortable with the ideas and recommendations from the previous section, consider what happens when a `Book` can have multiple authors:
@@ -356,7 +383,7 @@ Now that you've hidden the details behind a reusable abstraction, it no longer m
 
 ### Handling pagination
 
-When a field holds an array, it's often useful to [paginate](/data/pagination/) that array's results, because the total result set can be arbitrarily large.
+When a field holds an array, it's often useful to [paginate](../pagination/overview/) that array's results, because the total result set can be arbitrarily large.
 
 Typically, a query includes pagination arguments that specify:
 

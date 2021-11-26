@@ -1,4 +1,4 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
 import {
@@ -7,13 +7,20 @@ import {
   Reference,
 } from '../../utilities';
 import { FieldValueGetter } from './entityStore';
-import { KeyFieldsFunction } from './policies';
+import {
+  TypePolicies,
+  PossibleTypesMap,
+  KeyFieldsFunction,
+  StorageType,
+  FieldMergeFunction,
+} from './policies';
 import {
   Modifier,
   Modifiers,
   ToReferenceFunction,
   CanReadFunction,
 } from '../core/types/common';
+
 export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
@@ -33,7 +40,13 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
-  merge(dataId: string, incoming: StoreObject): void;
+
+  // The store.merge method allows either argument to be a string ID, but
+  // the other argument has to be a StoreObject. Either way, newer fields
+  // always take precedence over older fields.
+  merge(olderId: string, newerObject: StoreObject): void;
+  merge(olderObject: StoreObject, newerId: string): void;
+
   modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
@@ -62,6 +75,11 @@ export interface NormalizedCache {
   getFieldValue: FieldValueGetter;
   toReference: ToReferenceFunction;
   canRead: CanReadFunction;
+
+  getStorage(
+    idOrObj: string | StoreObject,
+    ...storeFieldNames: (string | number)[]
+  ): StorageType;
 }
 
 /**
@@ -69,6 +87,15 @@ export interface NormalizedCache {
  * a flattened representation of query result trees.
  */
 export interface NormalizedCacheObject {
+  __META?: {
+    // Well-known singleton IDs like ROOT_QUERY and ROOT_MUTATION are
+    // always considered to be root IDs during cache.gc garbage
+    // collection, but other IDs can become roots if they are written
+    // directly with cache.writeFragment or retained explicitly with
+    // cache.retain. When such IDs exist, we include them in the __META
+    // section so that they can survive cache.{extract,restore}.
+    extraRootIds: string[];
+  };
   [dataId: string]: StoreObject | undefined;
 }
 
@@ -83,6 +110,7 @@ export type ReadQueryOptions = {
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;
+  canonizeResults?: boolean;
   rootId?: string;
   config?: ApolloReducerConfig;
 };
@@ -94,6 +122,25 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
+};
+
+export interface InMemoryCacheConfig extends ApolloReducerConfig {
+  resultCaching?: boolean;
+  possibleTypes?: PossibleTypesMap;
+  typePolicies?: TypePolicies;
+  resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
+}
+
+export interface MergeInfo {
+  field: FieldNode;
+  typename: string | undefined;
+  merge: FieldMergeFunction;
+};
+
+export interface MergeTree {
+  info?: MergeInfo;
+  map: Map<string | number, MergeTree>;
 };
 
 export interface ReadMergeModifyContext {

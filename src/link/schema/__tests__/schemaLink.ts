@@ -1,8 +1,9 @@
-import { makeExecutableSchema } from 'graphql-tools';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import gql from 'graphql-tag';
 
 import { execute } from '../../core/execute';
 import { SchemaLink } from '../';
+import { itAsync } from '../../../testing';
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -25,8 +26,6 @@ type Query {
 const schema = makeExecutableSchema({ typeDefs });
 
 describe('SchemaLink', () => {
-  const mockError = { throws: new TypeError('mock me') };
-
   it('raises warning if called with concat', () => {
     const link = new SchemaLink({ schema });
     const _warn = console.warn;
@@ -48,7 +47,7 @@ describe('SchemaLink', () => {
     expect(link.schema).toEqual(schema);
   });
 
-  it('calls next and then complete', done => {
+  itAsync('calls next and then complete', (resolve, reject) => {
     const next = jest.fn();
     const link = new SchemaLink({ schema });
     const observable = execute(link, {
@@ -56,35 +55,42 @@ describe('SchemaLink', () => {
     });
     observable.subscribe({
       next,
-      error: error => expect(false),
+      error: () => {
+        throw new Error('Received error')
+      },
       complete: () => {
         expect(next).toHaveBeenCalledTimes(1);
-        done();
+        resolve();
       },
     });
   });
 
-  it('calls error when fetch fails', done => {
-    const badSchema = makeExecutableSchema({ typeDefs });
-
-    const link = new SchemaLink({ schema: badSchema });
+  itAsync('calls error when fetch fails', (resolve, reject) => {
+    const link = new SchemaLink({
+      validate: true,
+      schema: makeExecutableSchema({
+        typeDefs,
+        resolvers: {
+          Query: {
+            sampleQuery() {
+              throw new Error('Unauthorized');
+            }
+          }
+        }
+      }),
+    });
     const observable = execute(link, {
       query: sampleQuery,
     });
-    observable.subscribe(
-      result => expect(false),
-      error => {
-        expect(error).toEqual(mockError.throws);
-        done();
-      },
-      () => {
-        expect(false);
-        done();
-      },
-    );
+    observable.subscribe(result => {
+      expect(result.errors).toBeTruthy()
+      expect(result.errors!.length).toBe(1)
+      expect(result.errors![0].message).toMatch(/Unauthorized/)
+      resolve();
+    });
   });
 
-  it('supports query which is executed synchronously', done => {
+  itAsync('supports query which is executed synchronously', (resolve, reject) => {
     const next = jest.fn();
     const link = new SchemaLink({ schema });
     const introspectionQuery = gql`
@@ -101,15 +107,17 @@ describe('SchemaLink', () => {
     });
     observable.subscribe(
       next,
-      error => expect(false),
+      () => {
+        throw new Error('Received error')
+      },
       () => {
         expect(next).toHaveBeenCalledTimes(1);
-        done();
+        resolve();
       },
     );
   });
 
-  it('passes operation context into execute with context function', done => {
+  itAsync('passes operation context into execute with context function', (resolve, reject) => {
     const next = jest.fn();
     const contextValue = { some: 'value' };
     const contextProvider = jest.fn(operation => operation.getContext());
@@ -119,7 +127,7 @@ describe('SchemaLink', () => {
           try {
             expect(context).toEqual(contextValue);
           } catch (error) {
-            done.fail('Should pass context into resolver');
+            reject('Should pass context into resolver');
           }
         },
       },
@@ -138,27 +146,27 @@ describe('SchemaLink', () => {
     });
     observable.subscribe(
       next,
-      error => done.fail("Shouldn't call onError"),
+      error => reject("Shouldn't call onError"),
       () => {
         try {
           expect(next).toHaveBeenCalledTimes(1);
           expect(contextProvider).toHaveBeenCalledTimes(1);
-          done();
+          resolve();
         } catch (e) {
-          done.fail(e);
+          reject(e);
         }
       },
     );
   });
 
-  it('passes static context into execute', done => {
+  itAsync('passes static context into execute', (resolve, reject) => {
     const next = jest.fn();
     const contextValue = { some: 'value' };
     const resolver = jest.fn((root, args, context) => {
       try {
         expect(context).toEqual(contextValue);
       } catch (error) {
-        done.fail('Should pass context into resolver');
+        reject('Should pass context into resolver');
       }
     });
 
@@ -180,16 +188,38 @@ describe('SchemaLink', () => {
     });
     observable.subscribe(
       next,
-      error => done.fail("Shouldn't call onError"),
+      error => reject("Shouldn't call onError"),
       () => {
         try {
           expect(next).toHaveBeenCalledTimes(1);
           expect(resolver).toHaveBeenCalledTimes(1);
-          done();
+          resolve();
         } catch (e) {
-          done.fail(e);
+          reject(e);
         }
       },
     );
+  });
+
+  itAsync('reports errors for unknown queries', (resolve, reject) => {
+    const link = new SchemaLink({
+      validate: true,
+      schema: makeExecutableSchema({
+        typeDefs,
+      }),
+    });
+    const observable = execute(link, {
+      query: gql`
+        query {
+          unknown
+        }
+      `
+    });
+    observable.subscribe(result => {
+      expect(result.errors).toBeTruthy()
+      expect(result.errors!.length).toBe(1)
+      expect(result.errors![0].message).toMatch(/Cannot query field "unknown"/)
+      resolve();
+    });
   });
 });

@@ -1,5 +1,6 @@
-import { Observable, Observer, ObservableSubscription } from "./Observable";
+import { Observable, Observer, ObservableSubscription, Subscriber } from "./Observable";
 import { iterateObserversSafely } from "./iteration";
+import { fixObservableSubclass } from "./subclassing";
 
 type MaybeAsync<T> = T | PromiseLike<T>;
 
@@ -55,7 +56,7 @@ export class Concast<T> extends Observable<T> {
 
   // Not only can the individual elements of the iterable be promises, but
   // also the iterable itself can be wrapped in a promise.
-  constructor(sources: MaybeAsync<ConcastSourcesIterable<T>>) {
+  constructor(sources: MaybeAsync<ConcastSourcesIterable<T>> | Subscriber<T>) {
     super(observer => {
       this.addObserver(observer);
       return () => this.removeObserver(observer);
@@ -65,6 +66,13 @@ export class Concast<T> extends Observable<T> {
     // acceptable to pay no attention to this.promise if you're consuming
     // the results through the normal observable API.
     this.promise.catch(_ => {});
+
+    // If someone accidentally tries to create a Concast using a subscriber
+    // function, recover by creating an Observable from that subscriber and
+    // using it as the source.
+    if (typeof sources === "function") {
+      sources = [new Observable(sources)];
+    }
 
     if (isPromiseLike(sources)) {
       sources.then(
@@ -92,29 +100,37 @@ export class Concast<T> extends Observable<T> {
     // source observable. It's tempting to do this step lazily in
     // addObserver, but this.promise can be accessed without calling
     // addObserver, so consumption needs to begin eagerly.
-    this.handlers.complete!();
+    this.handlers.complete();
   }
+
+  private deliverLastMessage(observer: Observer<T>) {
+    if (this.latest) {
+      const nextOrError = this.latest[0];
+      const method = observer[nextOrError];
+      if (method) {
+        method.call(observer, this.latest[1]);
+      }
+      // If the subscription is already closed, and the last message was
+      // a 'next' message, simulate delivery of the final 'complete'
+      // message again.
+      if (this.sub === null &&
+          nextOrError === "next" &&
+          observer.complete) {
+        observer.complete();
+      }
+    }
+  }
+
+  // Note: cleanup observers do not count towards this total.
+  private addCount = 0;
 
   public addObserver(observer: Observer<T>) {
     if (!this.observers.has(observer)) {
       // Immediately deliver the most recent message, so we can always
       // be sure all observers have the latest information.
-      if (this.latest) {
-        const nextOrError = this.latest[0];
-        const method = observer[nextOrError];
-        if (method) {
-          method.call(observer, this.latest[1]);
-        }
-        // If the subscription is already closed, and the last message was
-        // a 'next' message, simulate delivery of the final 'complete'
-        // message again.
-        if (this.sub === null &&
-            nextOrError === "next" &&
-            observer.complete) {
-          observer.complete();
-        }
-      }
+      this.deliverLastMessage(observer);
       this.observers.add(observer);
+      ++this.addCount;
     }
   }
 
@@ -123,22 +139,19 @@ export class Concast<T> extends Observable<T> {
     quietly?: boolean,
   ) {
     if (this.observers.delete(observer) &&
-        this.observers.size < 1) {
-      if (quietly) return;
-      if (this.sub) {
-        this.sub.unsubscribe();
-        // In case anyone happens to be listening to this.promise, after
-        // this.observers has become empty.
-        this.reject(new Error("Observable cancelled prematurely"));
-      }
-      this.sub = null;
+        --this.addCount < 1 &&
+        !quietly) {
+      // In case there are still any cleanup observers in this.observers,
+      // and no error or completion has been broadcast yet, make sure
+      // those observers receive an error that terminates them.
+      this.handlers.error(new Error("Observable cancelled prematurely"));
     }
   }
 
   // Any Concast object can be trivially converted to a Promise, without
   // having to create a new wrapper Observable. This promise provides an
   // easy way to observe the final state of the Concast.
-  private resolve: (result?: T) => void;
+  private resolve: (result?: T | PromiseLike<T>) => void;
   private reject: (reason: any) => void;
   public readonly promise = new Promise<T>((resolve, reject) => {
     this.resolve = resolve;
@@ -151,17 +164,21 @@ export class Concast<T> extends Observable<T> {
 
   // Bound handler functions that can be reused for every internal
   // subscription.
-  private handlers: Observer<T> = {
-    next: result => {
+  private handlers = {
+    next: (result: T) => {
       if (this.sub !== null) {
         this.latest = ["next", result];
         iterateObserversSafely(this.observers, "next", result);
       }
     },
 
-    error: error => {
-      if (this.sub !== null) {
-        if (this.sub) this.sub.unsubscribe();
+    error: (error: any) => {
+      const { sub } = this;
+      if (sub !== null) {
+        // Delay unsubscribing from the underlying subscription slightly,
+        // so that immediately subscribing another observer can keep the
+        // subscription active.
+        if (sub) setTimeout(() => sub.unsubscribe());
         this.sub = null;
         this.latest = ["error", error];
         this.reject(error);
@@ -201,6 +218,9 @@ export class Concast<T> extends Observable<T> {
     const once = () => {
       if (!called) {
         called = true;
+        // Removing a cleanup observer should not unsubscribe from the
+        // underlying Observable, so the only removeObserver behavior we
+        // need here is to delete observer from this.observers.
         this.observers.delete(observer);
         callback();
       }
@@ -210,27 +230,22 @@ export class Concast<T> extends Observable<T> {
       error: once,
       complete: once,
     };
+    const count = this.addCount;
     this.addObserver(observer);
+    // Normally addObserver increments this.addCount, but we can "hide"
+    // cleanup observers by restoring this.addCount to its previous value
+    // after adding any cleanup observer.
+    this.addCount = count;
   }
 
   // A public way to abort observation and broadcast.
   public cancel = (reason: any) => {
     this.reject(reason);
     this.sources = [];
-    this.handlers.complete!();
+    this.handlers.complete();
   }
 }
 
-// Generic implementations of Observable.prototype methods like map and
-// filter need to know how to create a new Observable from a Concast.
-// Those methods assume (perhaps unwisely?) that they can call the
-// subtype's constructor with an observer registration function, but the
-// Concast constructor uses a different signature. Defining this
-// Symbol.species getter function on the Concast constructor function is
-// a hint to generic Observable code to use the default constructor
-// instead of trying to do `new Concast(observer => ...)`.
-if (typeof Symbol === "function" && Symbol.species) {
-  Object.defineProperty(Concast, Symbol.species, {
-    value: Observable,
-  });
-}
+// Necessary because the Concast constructor has a different signature
+// than the Observable constructor.
+fixObservableSubclass(Concast);

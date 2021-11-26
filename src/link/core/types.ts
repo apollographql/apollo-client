@@ -1,5 +1,4 @@
-import { DocumentNode } from 'graphql/language/ast';
-import { ExecutionResult } from 'graphql/execution/execute';
+import { DocumentNode, ExecutionResult } from 'graphql';
 export { DocumentNode };
 
 import { Observable } from '../../utilities';
@@ -22,13 +21,13 @@ export interface Operation {
 }
 
 export interface FetchResult<
-  TData = { [key: string]: any },
-  C = Record<string, any>,
-  E = Record<string, any>
-> extends ExecutionResult {
-  data?: TData | null;
-  extensions?: E;
-  context?: C;
+  TData = Record<string, any>,
+  TContext = Record<string, any>,
+  TExtensions = Record<string, any>
+> extends ExecutionResult<TData, TExtensions> {
+  data?: TData | null | undefined;
+  extensions?: TExtensions;
+  context?: TContext;
 };
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;

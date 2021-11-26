@@ -50,6 +50,48 @@ Object {
 }
 `;
 
+exports[`type policies complains about missing key fields 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'title' while writing result {
+  \\"year\\": 2011,
+  \\"theInformationBookData\\": {
+    \\"__typename\\": \\"Book\\",
+    \\"isbn\\": \\"1400096235\\",
+    \\"title\\": \\"The Information\\",
+    \\"subtitle\\": \\"A History, a Theory, a Flood\\",
+    \\"author\\": {
+      \\"name\\": \\"James Gleick\\"
+    }
+  }
+}",
+    ],
+    Array [
+      "Missing field 'year' while writing result {
+  \\"__typename\\": \\"Book\\",
+  \\"isbn\\": \\"1400096235\\",
+  \\"title\\": \\"The Information\\",
+  \\"subtitle\\": \\"A History, a Theory, a Flood\\",
+  \\"author\\": {
+    \\"name\\": \\"James Gleick\\"
+  }
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
 exports[`type policies field policies can handle Relay-style pagination 1`] = `
 Object {
   "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
@@ -749,6 +791,7 @@ Object {
           "cursor": "YXJyYXljb25uZWN0aW9uOjEx",
           "node": Object {
             "__typename": "SearchableItem",
+            "description": "<placeholder for unknown description>",
             "displayLabel": "James Turrell: Light knows when we’re looking",
           },
         },
@@ -762,6 +805,612 @@ Object {
       },
       "totalCount": 13531,
     },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination without args 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__ref": "TodoEdge:edge1",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        },
+      ],
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1292,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+  "TodoEdge:edge1": Object {
+    "__typename": "TodoEdge",
+    "id": "edge1",
+    "node": Object {
+      "__ref": "Todo:1",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can handle Relay-style pagination without args 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "todos": Object {
+      "edges": Array [
+        Object {
+          "__ref": "TodoEdge:edge1",
+          "cursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        },
+      ],
+      "extraMetaData": "extra",
+      "pageInfo": Object {
+        "__typename": "PageInfo",
+        "endCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+        "hasNextPage": true,
+        "hasPreviousPage": false,
+        "startCursor": "YXJyYXljb25uZWN0aW9uOjI=",
+      },
+      "totalCount": 1293,
+    },
+  },
+  "Todo:1": Object {
+    "__typename": "Todo",
+    "id": "1",
+    "title": "Fix the tests",
+  },
+  "TodoEdge:edge1": Object {
+    "__typename": "TodoEdge",
+    "id": "edge1",
+    "node": Object {
+      "__ref": "Todo:1",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 1`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 2`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 3`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 4`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 5`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 6`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 7`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":4}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies can include optional arguments in field keyArgs policy 8`] = `
+Object {
+  "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
+    "__typename": "Author",
+    "name": "Nadia Eghbal",
+    "writings": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2,\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":1,\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"a\\":3}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":2}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"b\\":4}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{\\"type\\":\\"Book\\"}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+    "writings:{}": Array [
+      Object {
+        "__typename": "Book",
+        "isbn": "0578675862",
+        "title": "Working in Public: The Making and Maintenance of Open Source Software",
+      },
+    ],
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Nadia Eghbal\\"}",
+    },
+  },
+}
+`;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;
+
+exports[`type policies field policies read, merge, and modify functions can access options.storage 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "mergeModify": 11,
+    "mergeRead": 1,
+    "mergeReadModify": 101,
+  },
+}
+`;
+
+exports[`type policies field policies readField helper function calls custom read functions 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'blockers' while writing result {
+  \\"__typename\\": \\"Task\\",
+  \\"id\\": 4,
+  \\"description\\": \\"grandchild task\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`type policies field policies runs nested merge functions as well as ancestors 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'time' while writing result {
+  \\"__typename\\": \\"Event\\",
+  \\"id\\": 123
+}",
+    ],
+    Array [
+      "Missing field 'time' while writing result {
+  \\"__typename\\": \\"Event\\",
+  \\"id\\": 345,
+  \\"name\\": \\"Rooftop dog party\\",
+  \\"attendees\\": [
+    {
+      \\"__typename\\": \\"Attendee\\",
+      \\"id\\": 456,
+      \\"name\\": \\"Inspector Beckett\\"
+    },
+    {
+      \\"__typename\\": \\"Attendee\\",
+      \\"id\\": 234
+    }
+  ]
+}",
+    ],
+    Array [
+      "Missing field 'name' while writing result {
+  \\"__typename\\": \\"Attendee\\",
+  \\"id\\": 234
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`type policies readField warns if explicitly passed undefined \`from\` option 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Undefined 'from' passed to readField with arguments [{\\"fieldName\\":\\"firstName\\",\\"from\\":<undefined>}]",
+    ],
+    Array [
+      "Undefined 'from' passed to readField with arguments [\\"lastName\\",<undefined>]",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`type policies support inheritance 1`] = `
+Object {
+  "Cobra:{\\"tagId\\":\\"Egypt30BC\\"}": Object {
+    "__typename": "Cobra",
+    "scientificName": "naja haje",
+    "tagId": "Egypt30BC",
+    "venomous": true,
+  },
+  "Cottonmouth:{\\"tagId\\":\\"CM420\\"}": Object {
+    "__typename": "Cottonmouth",
+    "scientificName": "agkistrodon piscivorus",
+    "tagId": "CM420",
+    "venomous": true,
+  },
+  "Python:{\\"tagId\\":\\"BigHug4U\\"}": Object {
+    "__typename": "Python",
+    "scientificName": "malayopython reticulatus",
+    "tagId": "BigHug4U",
+    "venomous": false,
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "reptiles": Array [
+      Object {
+        "__ref": "Turtle:{\\"tagId\\":\\"RedEaredSlider42\\"}",
+      },
+      Object {
+        "__ref": "Python:{\\"tagId\\":\\"BigHug4U\\"}",
+      },
+      Object {
+        "__ref": "Cobra:{\\"tagId\\":\\"Egypt30BC\\"}",
+      },
+      Object {
+        "__ref": "Cottonmouth:{\\"tagId\\":\\"CM420\\"}",
+      },
+    ],
+  },
+  "Turtle:{\\"tagId\\":\\"RedEaredSlider42\\"}": Object {
+    "__typename": "Turtle",
+    "scientificName": "trachemys scripta elegans",
+    "tagId": "RedEaredSlider42",
   },
 }
 `;

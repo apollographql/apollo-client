@@ -1,6 +1,12 @@
-import { FieldNode } from 'graphql';
+import { SelectionSetNode } from 'graphql';
 
-import { NormalizedCache } from './types';
+import {
+  NormalizedCache,
+  InMemoryCacheConfig,
+} from './types';
+
+import { KeyFieldsContext } from './policies';
+
 import {
   Reference,
   isReference,
@@ -8,10 +14,57 @@ import {
   StoreObject,
   isField,
   DeepMerger,
-  ReconcilerFunction,
+  resultKeyNameFromField,
+  shouldInclude,
+  isNonNullObject,
+  compact,
 } from '../../utilities';
 
-export const hasOwn = Object.prototype.hasOwnProperty;
+export const {
+  hasOwnProperty: hasOwn,
+} = Object.prototype;
+
+export function defaultDataIdFromObject(
+  { __typename, id, _id }: Readonly<StoreObject>,
+  context?: KeyFieldsContext,
+): string | undefined {
+  if (typeof __typename === "string") {
+    if (context) {
+      context.keyObject =
+         id !== void 0 ? {  id } :
+        _id !== void 0 ? { _id } :
+        void 0;
+    }
+    // If there is no object.id, fall back to object._id.
+    if (id === void 0) id = _id;
+    if (id !== void 0) {
+      return `${__typename}:${(
+        typeof id === "number" ||
+        typeof id === "string"
+      ) ? id : JSON.stringify(id)}`;
+    }
+  }
+}
+
+const defaultConfig = {
+  dataIdFromObject: defaultDataIdFromObject,
+  addTypename: true,
+  resultCaching: true,
+  // Thanks to the shouldCanonizeResults helper, this should be the only line
+  // you have to change to reenable canonization by default in the future.
+  canonizeResults: false,
+};
+
+export function normalizeConfig(config: InMemoryCacheConfig) {
+  return compact(defaultConfig, config);
+}
+
+export function shouldCanonizeResults(
+  config: Pick<InMemoryCacheConfig, "canonizeResults">,
+): boolean {
+  const value = config.canonizeResults;
+  return value === void 0 ? defaultConfig.canonizeResults : value;
+}
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,
@@ -22,73 +75,47 @@ export function getTypenameFromStoreObject(
     : objectOrReference && objectOrReference.__typename;
 }
 
-const FieldNamePattern = /^[_A-Za-z0-9]+/;
+export const TypeOrFieldNameRegExp = /^[_a-z][_0-9a-z]*/i;
+
 export function fieldNameFromStoreName(storeFieldName: string): string {
-  const match = storeFieldName.match(FieldNamePattern);
+  const match = storeFieldName.match(TypeOrFieldNameRegExp);
   return match ? match[0] : storeFieldName;
 }
 
-// Invoking merge functions needs to happen after processSelectionSet has
-// finished, but requires information that is more readily available
-// during processSelectionSet, so processSelectionSet embeds special
-// objects of the following shape within its result tree, which then must
-// be removed by calling Policies#applyMerges.
-export interface FieldValueToBeMerged {
-  __field: FieldNode;
-  __typename: string;
-  __value: StoreValue;
+export function selectionSetMatchesResult(
+  selectionSet: SelectionSetNode,
+  result: Record<string, any>,
+  variables?: Record<string, any>,
+): boolean {
+  if (isNonNullObject(result)) {
+    return Array.isArray(result)
+      ? result.every(item => selectionSetMatchesResult(selectionSet, item, variables))
+      : selectionSet.selections.every(field => {
+        if (isField(field) && shouldInclude(field, variables)) {
+          const key = resultKeyNameFromField(field);
+          return hasOwn.call(result, key) &&
+            (!field.selectionSet ||
+             selectionSetMatchesResult(field.selectionSet, result[key], variables));
+        }
+        // If the selection has been skipped with @skip(true) or
+        // @include(false), it should not count against the matching. If
+        // the selection is not a field, it must be a fragment (inline or
+        // named). We will determine if selectionSetMatchesResult for that
+        // fragment when we get to it, so for now we return true.
+        return true;
+      });
+  }
+  return false;
 }
 
 export function storeValueIsStoreObject(
   value: StoreValue,
 ): value is StoreObject {
-  return value !== null &&
-    typeof value === "object" &&
+  return isNonNullObject(value) &&
     !isReference(value) &&
     !Array.isArray(value);
 }
 
-export function isFieldValueToBeMerged(
-  value: any,
-): value is FieldValueToBeMerged {
-  const field = value && value.__field;
-  return field && isField(field);
-}
-
 export function makeProcessedFieldsMerger() {
-  // A DeepMerger that merges arrays and objects structurally, but otherwise
-  // prefers incoming scalar values over existing values. Provides special
-  // treatment for FieldValueToBeMerged objects. Used to accumulate fields
-  // when processing a single selection set.
-  return new DeepMerger(reconcileProcessedFields);
-}
-
-const reconcileProcessedFields: ReconcilerFunction<[]> = function (
-  existingObject,
-  incomingObject,
-  property,
-) {
-  const existing = existingObject[property];
-  const incoming = incomingObject[property];
-
-  if (isFieldValueToBeMerged(existing)) {
-    existing.__value = this.merge(
-      existing.__value,
-      isFieldValueToBeMerged(incoming)
-        // TODO Check compatibility of __field and __typename properties?
-        ? incoming.__value
-        : incoming,
-    );
-    return existing;
-  }
-
-  if (isFieldValueToBeMerged(incoming)) {
-    incoming.__value = this.merge(
-      existing,
-      incoming.__value,
-    );
-    return incoming;
-  }
-
-  return this.merge(existing, incoming);
+  return new DeepMerger;
 }

@@ -1,102 +1,140 @@
 ---
-title: Mocking new schema capabilities
-description: How to build UI features before your GraphQL API supports them
+title: Mocking schema capabilities
+description: Start on client-side features before your server supports them
 ---
 
-Imagine we're building out a new feature in our Space Explorer app — we'd like to display a description of each rocket we can choose — but the backend support for this feature isn't going to be available for another few weeks. In keeping with [schema-first design](https://www.apollographql.com/docs/tutorial/schema.html#write-schema), the team has decided that we'll be adding a new field called `description` to an existing type in our schema called `Rocket`.
+If your GraphQL server doesn't yet support a field that your client will use, you can still start building against that field by mocking its behavior within the client.
 
-Even though this field doesn't exist in the schema yet, we can take advantage of client schemas to document it as a _client-side_ field. In this guide, we'll walk through a simple recipe for this technique:
+For example, let's say we want to add a feature to the Space Explorer app from [the Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/). Specifically, we want to display a description of the rocket used for each launch. To support this functionality on the server side, we'll add a `description` field to our schema's `Rocket` type:
 
-- declare client-side extensions to the schema using Apollo Client;
-- enhance client resolvers with mock data;
-- write GraphQL queries that leverage client-only types and fields.
+```graphql{5}
+type Rocket {
+  id: ID!
+  name: String
+  type: String
+  description: String # field not yet supported
+}
+```
 
-## 1. Extend your server schema with a client-only field.
+But what if our back-end team isn't finished adding support for the `description` field? By mocking the field's behavior, we can still start developing the feature in our client. To do so, we'll follow the steps below.
 
-Before we can include this data in the UI, we'll need to define a client schema that extends our server schema. We'll start by constructing an instance of ApolloClient with a few small additions. Simply pass in `typeDefs` with extensions to the schema and `resolvers` which actually provide the mock data:
+## 1. Define a client-side schema (recommended)
 
-```js
+Our client application can define a [client-side schema](../local-state/client-side-schema/) that extends types from our server,  or even defines entirely new types. The syntax is identical to server-side schema definitions.
+
+> Although a client-side schema isn't _required_ for mocking, it helps team members understand your app's local capabilities. It also unlocks powerful local state support in tools like the [Apollo Client Devtools](./developer-tooling/#apollo-client-devtools) and the [Apollo extension for VS Code](https://www.apollographql.com/docs/devtools/editor-plugins/).
+
+This client-side schema extends the `Rocket` type to add a `description` field (make sure to name the variable `typeDefs` as shown):
+
+```js:title=index.js
 const typeDefs = gql`
   extend type Rocket {
-    description: String!
+    description: String
   }
 `;
+```
 
-const resolvers = {
-  Rocket: {
-    description: () => "A boilerplate standard space rocket"
-  }
-};
+We can then provide this schema to the `ApolloClient` constructor, like so:
 
+```js{4}:title=index.js
 const client = new ApolloClient({
-  cache,
-  link,
-  typeDefs,
-  resolvers
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache(),
+  typeDefs
 });
 ```
 
-Documenting your client-side API in [Schema Definition Language](https://apollographql.com/docs/graphql-tools/generate-schema.html#schema-language) is incredibly valuable, as other developers can easily see what client state is available in your app. Developers familiar with GraphQL schemas should quickly be able to understand how to query for these fields in other places throughout your app.
+## 2. Define a `read` function
 
-Additional tools available from Apollo can further enrich the developer experience when working with client-side schemas. The Apollo Visual Studio Code Plugin provides autocompletion of client-side fields as well as inline mouse-over documentation:
+Our client app doesn't yet know how to populate the `Rocket.description` field. To fix this, we can define a [`read` function](../caching/cache-field-behavior/#the-read-function) for the field. The Apollo Client cache calls this function whenever the field is queried, and the function's return value is used as the field's value.
 
-![VSCode Autocompletion](../assets/client-mocking/vscode-autocomplete.png)
-![VSCode Type Info](../assets/client-mocking/vscode-typeinfo.png)
+Let's define our `read` function in the configuration object we provide to the `InMemoryCache` constructor:
 
-We'll also see error messages in the VSCode console if we add fields that collide with the server-side schema:
-
-![VSCode Console Errors](../assets/client-mocking/vscode-errors.png)
-
-## 2. Introduce richer mock data.
-
-Now that we have a basic resolver, we might find that during testing it's a bit boring to show the same boilerplate text every time. In fact we might want to test different lengths of text to make sure our layout still looks good. Introducing a mock data helper library such as [faker.js](https://github.com/marak/Faker.js/) can help keep the mock data varied while testing. We can incorporate it easily into this workflow:
-
-```js
-import faker from "faker/locale/en";
-
-// returns either 1 or 2 latin sentences, like
-// 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...
-const oneOrTwoSentences = () =>
-  faker.lorem.sentences(Math.random() < 0.5 ? 1 : 2);
-
-const resolvers = {
-  Rocket: {
-    description: () => oneOrTwoSentences()
-  }
-};
+```js{5-9}:title=index.js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Rocket: {
+      fields: {
+        description: {
+          read() { // Read function for Rocket.description
+            return 'Placeholder rocket description';
+          }
+        },
+      },
+    },
+  },
+});
 ```
 
-> _Note:_ the faker.js library comes bundled with lots and lots of strings that can consume precious bundle bytes. For this reason you should make sure to only include the faker.js dependency in development mode and take care not to include this in your production bundle.
+This enables us to query the field, but we might not want to show the same boilerplate description for every rocket. To add variety to our mocked output, we can use a library like [faker.js](https://github.com/marak/Faker.js/):
 
-## 3. Query the mocked field with the `@client` directive.
+```js:title=index.js
+import faker from "faker/locale/en";
 
-Now, you’re ready to query your new field inside the `RocketDetails` component. Just add your new field to the query and specify the `@client` directive, and start using it in your UI.
+// Returns 1 or 2 sentences of Lorem Ipsum
+const oneOrTwoSentences = () =>
+  faker.lorem.sentences(Math.random() < 0.5 ? 1 : 2);
+```
 
-```jsx
-const GET_ROCKET_DETAILS = gql`
-  query RocketDetails($rocketId: ID!) {
-    rocket(id: $rocketId) {
-      type
-      description @client
+We can then update our `read` function like so:
+
+```js
+// (within InMemoryCache constructor)
+read() {
+  return oneOrTwoSentences();
+}
+```
+
+> Make sure to include libraries like faker.js only in your development build, because they can needlessly increase your production bundle size.
+
+## 3. Query with the `@client` directive
+
+We're ready to execute a query that includes our new field. Here's an abridged `GET_LAUNCH_DETAILS` query from the [Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/queries/#display-a-single-launchs-details) with our `description` field added:
+
+```jsx{7}
+export const GET_LAUNCH_DETAILS = gql`
+  query LaunchDetails($launchId: ID!) {
+    launch(id: $launchId) {
+      site
+      rocket {
+        type
+        description @client
+      }
     }
   }
 `;
+```
 
-export default function RocketDetails({ rocketId }) {
-  const { data } = useQuery(GET_ROCKET_DETAILS, { variables: { rocketId } });
+Notice that this field includes the `@client` directive. This directive tells Apollo Client _not_ to include `description` in the query it sends to our server. This is important for two related reasons:
+
+* The `description` field is populated entirely locally, so including it in network requests isn't helpful.
+* The `description` field _isn't_ in our server-side schema yet, so including it will produce a GraphQL error.
+
+We can now execute this query in a component with the `useQuery` hook as usual:
+
+```jsx
+export default function LaunchDetails({ launchId }) {
+  const { data } = useQuery(GET_LAUNCH_DETAILS, { variables: { rocketId } });
   return (
     <div>
-      <p>Rocket Type: {data.rocket.type}</p>
-      <p>Description: {data.rocket.description}</p>
+      <p>Rocket Type: {data.launch.rocket.type}</p>
+      <p>Description: {data.launch.rocket.description}</p>
     </div>
   );
 }
 ```
 
-## 4. Toggle on “real” data.
+## 4. Use live data when ready
 
-Once the feature is ready on the backend, just remove the `@client` directive from your query. You should now be able to see your real production data returned instead. It's probably a good idea to clean up any unused client schema and resolvers at this time.
+When your server's support for the `Rocket.description` field is ready, you can begin using it by doing the following:
 
-There you have it, a workflow for developing new features with new schema fields ahead of the actual schema implementation. For further reading, visit the [tutorial guide](https://www.apollographql.com/docs/tutorial/local-state.html#virtual-fields) which describes how to use client fields to manage local state in greater depth.
+1. Remove the `@client` directive from `description` in every query that includes it.
+2. Remove the field's `read` function (or modify the function so that it uses the current cached value instead of a random string).
 
-If you have feedback on this workflow, experiences you want to share, or just want to join the general discussion on client-side development and mocking, join us on [Spectrum](https://spectrum.chat/apollo)!
+---
+
+For more information on the Apollo Client features used here, see the following:
+
+* [Client-side schema](../local-state/client-side-schema/)
+* [Local-only fields](../local-state/managing-state-with-field-policies/)
+* [The `read` function](../caching/cache-field-behavior/#the-read-function)

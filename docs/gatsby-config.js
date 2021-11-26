@@ -1,28 +1,26 @@
 const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
 
 module.exports = {
-  pathPrefix: '/docs/react',
   plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
         ...themeOptions,
         root: __dirname,
+        pathPrefix: '/docs/react',
+        algoliaIndexName: 'react',
+        algoliaFilters: ['docset:react', 'docset:server'],
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
-        defaultVersion: '3.0',
+        defaultVersion: '3',
         versions: {
-          '2.6': 'version-2.6',
-          '2.5': 'version-2.5',
-          '2.4': 'version-2.4',
+          '2': 'version-2.6',
         },
         checkLinksOptions: {
           exceptions: [
             '/api/core/ApolloClient/',
-            '/v2.6/api/apollo-client/',
-            '/v2.5/api/apollo-client/',
-            '/v2.4/api/apollo-client/',
+            '/v2/api/apollo-client/',
           ],
         },
         sidebarCategories: {
@@ -30,22 +28,31 @@ module.exports = {
             'index',
             'why-apollo',
             'get-started',
-            '[Changelog](https://github.com/apollographql/apollo-client/blob/master/CHANGELOG.md)',
+            '[Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md)',
           ],
           'Fetching': [
             'data/queries',
             'data/mutations',
+            'data/refetching',
             'data/subscriptions',
-            'data/pagination',
             'data/fragments',
             'data/error-handling',
+            'data/operation-best-practices'
           ],
           Caching: [
+            'caching/overview',
             'caching/cache-configuration',
             'caching/cache-interaction',
             'caching/garbage-collection',
             'caching/cache-field-behavior',
             'caching/advanced-topics'
+          ],
+          Pagination: [
+            'pagination/overview',
+            'pagination/core-api',
+            'pagination/offset-based',
+            'pagination/cursor-based',
+            'pagination/key-args'
           ],
           'Local State': [
             'local-state/local-state-management',
@@ -55,10 +62,10 @@ module.exports = {
             'local-state/local-resolvers'
           ],
           'Development & Testing': [
+            'development-testing/developer-tooling',
             'development-testing/static-typing',
             'development-testing/testing',
             'development-testing/client-schema-mocking',
-            'development-testing/developer-tooling',
           ],
           Performance: [
             'performance/performance',
@@ -82,10 +89,8 @@ module.exports = {
           ],
           'API - Core': [
             'api/core/ApolloClient',
+            'api/cache/InMemoryCache',
             'api/core/ObservableQuery'
-          ],
-          'API - Cache': [
-            'api/cache/InMemoryCache'
           ],
           'API - React': [
             'api/react/hooks',
@@ -96,13 +101,16 @@ module.exports = {
           ],
           'API - Link': [
             'api/link/introduction',
+            'api/link/apollo-link-http',
             'api/link/apollo-link-batch-http',
             'api/link/apollo-link-context',
             'api/link/apollo-link-error',
+            'api/link/persisted-queries',
             'api/link/apollo-link-rest',
             'api/link/apollo-link-retry',
             'api/link/apollo-link-schema',
-            'api/link/apollo-link-ws'
+            'api/link/apollo-link-ws',
+            'api/link/community-links'
           ],
         },
       },

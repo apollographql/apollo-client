@@ -1,7 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Cache cache.restore replaces cache.{store{Reader,Writer},maybeBroadcastWatch} 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "a": "ay",
+    "b": "bee",
+    "c": "see",
+  },
+}
+`;
+
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
   },
@@ -17,6 +33,11 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 2`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
     "j": 8,
@@ -36,6 +57,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 3`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -56,6 +83,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 4`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -76,6 +109,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 5`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -96,6 +135,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 6`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -116,6 +161,11 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
   },
@@ -131,6 +181,11 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 2`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "i": 7,
     "j": 8,
@@ -150,6 +205,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 3`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -170,6 +231,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 4`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -190,6 +257,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 5`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -210,6 +283,12 @@ Object {
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 6`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -224,6 +303,92 @@ Object {
     "h": Object {
       "__ref": "bar",
     },
+  },
+}
+`;
+
+exports[`InMemoryCache#modify should allow invalidation using details.INVALIDATE 1`] = `
+Object {
+  "Author:{\\"name\\":\\"Maria Dahvana Headley\\"}": Object {
+    "__typename": "Author",
+    "name": "Maria Dahvana Headley",
+  },
+  "Book:{\\"isbn\\":\\"0374110034\\"}": Object {
+    "__typename": "Book",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Maria Dahvana Headley\\"}",
+    },
+    "isbn": "0374110034",
+    "title": "Beowulf: A New Translation",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "currentlyReading": Object {
+      "__ref": "Book:{\\"isbn\\":\\"0374110034\\"}",
+    },
+  },
+}
+`;
+
+exports[`TypedDocumentNode<Data, Variables> should determine Data and Variables types of {write,read}{Query,Fragment} 1`] = `
+Object {
+  "Author:{\\"name\\":\\"John C. Mitchell\\"}": Object {
+    "__typename": "Author",
+    "name": "John C. Mitchell",
+  },
+  "Book:{\\"isbn\\":\\"0262133210\\"}": Object {
+    "__typename": "Book",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"John C. Mitchell\\"}",
+    },
+    "isbn": "0262133210",
+    "title": "Foundations for Programming Languages",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "book({\\"isbn\\":\\"0262133210\\"})": Object {
+      "__ref": "Book:{\\"isbn\\":\\"0262133210\\"}",
+    },
+  },
+}
+`;
+
+exports[`TypedDocumentNode<Data, Variables> should determine Data and Variables types of {write,read}{Query,Fragment} 2`] = `
+Object {
+  "Author:{\\"name\\":\\"Harold Abelson\\"}": Object {
+    "__typename": "Author",
+    "name": "Harold Abelson",
+  },
+  "Author:{\\"name\\":\\"John C. Mitchell\\"}": Object {
+    "__typename": "Author",
+    "name": "John C. Mitchell",
+  },
+  "Book:{\\"isbn\\":\\"0262133210\\"}": Object {
+    "__typename": "Book",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"John C. Mitchell\\"}",
+    },
+    "isbn": "0262133210",
+    "title": "Foundations for Programming Languages",
+  },
+  "Book:{\\"isbn\\":\\"0262510871\\"}": Object {
+    "__typename": "Book",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Harold Abelson\\"}",
+    },
+    "isbn": "0262510871",
+    "title": "Structure and Interpretation of Computer Programs",
+  },
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "book({\\"isbn\\":\\"0262133210\\"})": Object {
+      "__ref": "Book:{\\"isbn\\":\\"0262133210\\"}",
+    },
+  },
+  "__META": Object {
+    "extraRootIds": Array [
+      "Book:{\\"isbn\\":\\"0262510871\\"}",
+    ],
   },
 }
 `;

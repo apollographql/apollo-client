@@ -1,13 +1,53 @@
 import { assign, omit } from 'lodash';
 import gql from 'graphql-tag';
 
-import { stripSymbols } from '../../../utilities/testing/stripSymbols';
+import { InMemoryCache } from '../inMemoryCache';
 import { StoreObject } from '../types';
 import { StoreReader } from '../readFromStore';
-import { makeReference, InMemoryCache, Reference, isReference } from '../../../core';
 import { Cache } from '../../core/types/Cache';
-import { defaultNormalizedCacheFactory } from './helpers';
-import { withError } from './diffAgainstStore';
+import { MissingFieldError } from '../../core/types/common';
+import {
+  defaultNormalizedCacheFactory,
+  readQueryFromStore,
+  withError,
+} from './helpers';
+import {
+  makeReference,
+  Reference,
+  isReference,
+  TypedDocumentNode,
+} from '../../../core';
+
+jest.mock('optimism');
+import { wrap } from 'optimism';
+
+describe('resultCacheMaxSize', () => {
+  const cache = new InMemoryCache();
+  let wrapSpy: jest.Mock = wrap as jest.Mock;
+  beforeEach(() => {
+    wrapSpy.mockClear();
+  });
+
+  it("does not set max size on caches if resultCacheMaxSize is not configured", () => {
+    new StoreReader({ cache });
+    expect(wrapSpy).toHaveBeenCalled();
+
+    wrapSpy.mock.calls.forEach(([, { max }]) => {
+      expect(max).toBeUndefined();
+    })
+  });
+
+  it("configures max size on caches when resultCacheMaxSize is set", () => {
+    const resultCacheMaxSize = 12345;
+    new StoreReader({ cache, resultCacheMaxSize });
+    expect(wrapSpy).toHaveBeenCalled();
+
+    wrapSpy.mock.calls.forEach(([, { max }]) => {
+      expect(max).toBe(resultCacheMaxSize);
+    })
+  });
+});
+
 
 describe('reading from the store', () => {
   const reader = new StoreReader({
@@ -32,7 +72,7 @@ describe('reading from the store', () => {
         } as StoreObject,
       });
 
-      const queryResult = reader.readQueryFromStore({
+      const queryResult = readQueryFromStore(reader, {
         store,
         query: gql`
           {
@@ -64,7 +104,7 @@ describe('reading from the store', () => {
         `,
       });
 
-      expect(stripSymbols(queryResult)).toEqual({
+      expect(queryResult).toEqual({
         nestedObj: {
           innerArray: [{ id: 'abcdef', someField: 3 }],
         },
@@ -74,7 +114,7 @@ describe('reading from the store', () => {
 
   it('rejects malformed queries', () => {
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store: defaultNormalizedCacheFactory(),
         query: gql`
           query {
@@ -89,7 +129,7 @@ describe('reading from the store', () => {
     }).toThrowError(/2 operations/);
 
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store: defaultNormalizedCacheFactory(),
         query: gql`
           fragment x on y {
@@ -112,7 +152,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         query {
@@ -123,7 +163,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: result['stringField'],
       numberField: result['numberField'],
     });
@@ -154,13 +194,13 @@ describe('reading from the store', () => {
       },
     });
 
-    const result = reader.readQueryFromStore({
+    const result = readQueryFromStore(reader, {
       store,
       query,
       variables,
     });
 
-    expect(stripSymbols(result)).toEqual({
+    expect(result).toEqual({
       id: 'abcd',
       nullField: null,
       numberField: 5,
@@ -187,12 +227,12 @@ describe('reading from the store', () => {
       },
     });
 
-    const result = reader.readQueryFromStore({
+    const result = readQueryFromStore(reader, {
       store,
       query,
     });
 
-    expect(stripSymbols(result)).toEqual({
+    expect(result).toEqual({
       id: 'abcd',
       firstName: 'James',
       lastName: 'BOND',
@@ -227,13 +267,13 @@ describe('reading from the store', () => {
       },
     });
 
-    const result = reader.readQueryFromStore({
+    const result = readQueryFromStore(reader, {
       store,
       query,
       variables,
     });
 
-    expect(stripSymbols(result)).toEqual({
+    expect(result).toEqual({
       id: 'abcd',
       nullField: null,
       numberField: 5,
@@ -262,7 +302,7 @@ describe('reading from the store', () => {
       abcde: result.nestedObj,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -277,7 +317,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: {
@@ -323,7 +363,7 @@ describe('reading from the store', () => {
       abcdef: result.deepNestedObj as StoreObject,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -358,7 +398,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
@@ -400,7 +440,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -415,7 +455,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -451,7 +491,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -466,7 +506,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -503,7 +543,7 @@ describe('reading from the store', () => {
       abcde: result.nestedArray[1],
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -519,7 +559,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -544,7 +584,7 @@ describe('reading from the store', () => {
     const store = defaultNormalizedCacheFactory({ ROOT_QUERY: result });
 
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store,
         query: gql`
           {
@@ -554,6 +594,154 @@ describe('reading from the store', () => {
         `,
       });
     }).toThrowError(/Can't find field 'missingField' on ROOT_QUERY object/);
+  });
+
+  it('readQuery supports returnPartialData', () => {
+    const cache = new InMemoryCache;
+    const aQuery = gql`query { a }`;
+    const bQuery = gql`query { b }`;
+    const abQuery = gql`query { a b }`;
+
+    cache.writeQuery({
+      query: aQuery,
+      data: { a: 123 },
+    });
+
+    expect(cache.readQuery({ query: bQuery })).toBe(null);
+    expect(cache.readQuery({ query: abQuery })).toBe(null);
+
+    expect(cache.readQuery({
+      query: bQuery,
+      returnPartialData: true,
+    })).toEqual({});
+
+    expect(cache.readQuery({
+      query: abQuery,
+      returnPartialData: true,
+    })).toEqual({ a: 123 });
+  });
+
+  it('readFragment supports returnPartialData', () => {
+    const cache = new InMemoryCache;
+    const id = cache.identify({
+      __typename: "ABObject",
+      id: 321,
+    });
+
+    const aFragment = gql`fragment AFragment on ABObject { a }`;
+    const bFragment = gql`fragment BFragment on ABObject { b }`;
+    const abFragment = gql`fragment ABFragment on ABObject { a b }`;
+
+    expect(cache.readFragment({ id, fragment: aFragment })).toBe(null);
+    expect(cache.readFragment({ id, fragment: bFragment })).toBe(null);
+    expect(cache.readFragment({ id, fragment: abFragment })).toBe(null);
+
+    const ref = cache.writeFragment({
+      id,
+      fragment: aFragment,
+      data: {
+        __typename: "ABObject",
+        a: 123,
+      },
+    });
+    expect(isReference(ref)).toBe(true);
+    expect(ref!.__ref).toBe(id);
+
+    expect(cache.readFragment({
+      id,
+      fragment: bFragment,
+    })).toBe(null);
+
+    expect(cache.readFragment({
+      id,
+      fragment: abFragment,
+    })).toBe(null);
+
+    expect(cache.readFragment({
+      id,
+      fragment: bFragment,
+      returnPartialData: true,
+    })).toEqual({
+      __typename: "ABObject",
+    });
+
+    expect(cache.readFragment({
+      id,
+      fragment: abFragment,
+      returnPartialData: true,
+    })).toEqual({
+      __typename: "ABObject",
+      a: 123,
+    });
+  });
+
+  it('distinguishes between missing @client and non-@client fields', () => {
+    const query = gql`
+      query {
+        normal {
+          present @client
+          missing
+        }
+        clientOnly @client {
+          present
+          missing
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            normal() {
+              return { present: "here" };
+            },
+            clientOnly() {
+              return { present: "also here" };
+            },
+          },
+        },
+      },
+    });
+
+    const { result, complete, missing } = cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    });
+
+    expect(complete).toBe(false);
+
+    expect(result).toEqual({
+      normal: {
+        present: "here",
+      },
+      clientOnly: {
+        present: "also here",
+      },
+    });
+
+    expect(missing).toEqual([
+      new MissingFieldError(
+        `Can't find field 'missing' on object ${JSON.stringify({
+          present: "here",
+        }, null, 2)}`,
+        {
+          normal: {
+            missing: `Can't find field 'missing' on object ${
+              JSON.stringify({ present: "here" }, null, 2)
+            }`,
+          },
+          clientOnly: {
+            missing: `Can't find field 'missing' on object ${
+              JSON.stringify({ present: "also here" }, null, 2)
+            }`,
+          },
+        },
+        query,
+        {}, // variables
+      ),
+    ]);
   });
 
   it('runs a nested query where the reference is null', () => {
@@ -571,7 +759,7 @@ describe('reading from the store', () => {
       }) as StoreObject,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -586,7 +774,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: null,
@@ -606,7 +794,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -618,7 +806,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: ['one', 'two', 'three'],
@@ -638,7 +826,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: result,
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -650,7 +838,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: [null, 'two', 'three'],
@@ -693,7 +881,7 @@ describe('reading from the store', () => {
       abcdef: data.deepNestedObj as StoreObject,
     });
 
-    const queryResult1 = reader.readQueryFromStore({
+    const queryResult1 = readQueryFromStore(reader, {
       store,
       rootId: 'abcde',
       query: gql`
@@ -710,7 +898,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    expect(stripSymbols(queryResult1)).toEqual({
+    expect(queryResult1).toEqual({
       stringField: 'This is a string too!',
       numberField: 6,
       nullField: null,
@@ -721,7 +909,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const queryResult2 = reader.readQueryFromStore({
+    const queryResult2 = readQueryFromStore(reader, {
       store,
       rootId: 'abcdef',
       query: gql`
@@ -733,7 +921,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    expect(stripSymbols(queryResult2)).toEqual({
+    expect(queryResult2).toEqual({
       stringField: 'This is a deep string',
       numberField: 7,
       nullField: null,
@@ -751,7 +939,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -762,7 +950,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       books: [
         {
           name: 'efgh',
@@ -799,7 +987,7 @@ describe('reading from the store', () => {
       },
     });
 
-    const queryResult = reader.readQueryFromStore({
+    const queryResult = readQueryFromStore(reader, {
       store,
       query: gql`
         {
@@ -810,7 +998,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    expect(stripSymbols(queryResult)).toEqual({
+    expect(queryResult).toEqual({
       books: [
         {
           name: 'efgh',
@@ -854,7 +1042,7 @@ describe('reading from the store', () => {
     });
 
     expect(() => {
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store,
         query: gql`
           {
@@ -870,7 +1058,7 @@ describe('reading from the store', () => {
     );
 
     expect(
-      reader.readQueryFromStore({
+      readQueryFromStore(reader, {
         store,
         query: gql`
           {
@@ -915,6 +1103,58 @@ describe('reading from the store', () => {
         ],
       },
     });
+  });
+
+  it("read functions for root query fields work with empty cache", () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            uuid() {
+              return "8d573b9c-cfcf-4e3e-98dd-14d255af577e";
+            },
+            null() {
+              return null;
+            },
+          }
+        },
+      },
+    });
+
+    expect(cache.readQuery({
+      query: gql`query { uuid null }`,
+    })).toEqual({
+      uuid: "8d573b9c-cfcf-4e3e-98dd-14d255af577e",
+      null: null,
+    });
+
+    expect(cache.extract()).toEqual({});
+
+    expect(cache.readFragment({
+      id: "ROOT_QUERY",
+      fragment: gql`
+        fragment UUIDFragment on Query {
+          null
+          uuid
+        }
+      `,
+    })).toEqual({
+      uuid: "8d573b9c-cfcf-4e3e-98dd-14d255af577e",
+      null: null,
+    });
+
+    expect(cache.extract()).toEqual({});
+
+    expect(cache.readFragment({
+      id: "does not exist",
+      fragment: gql`
+        fragment F on Never {
+          whatever
+        }
+      `,
+    })).toBe(null);
+
+    expect(cache.extract()).toEqual({});
   });
 
   it("custom read functions can map/filter dangling references", () => {
@@ -1052,8 +1292,19 @@ describe('reading from the store', () => {
     expect(diffChickens()).toEqual({
       complete: false,
       missing: [
-        expect.anything(),
-        expect.anything(),
+        new MissingFieldError(
+          "Can't find field 'id' on object {}",
+          {
+            chickens: {
+              1: {
+                id: "Can't find field 'id' on object {}",
+                inCoop: "Can't find field 'inCoop' on object {}",
+              },
+            },
+          },
+          expect.anything(), // query
+          expect.anything(), // variables
+        ),
       ],
       result: {
         chickens: [
@@ -1139,6 +1390,7 @@ describe('reading from the store', () => {
 
   it("propagates eviction signals to parent queries", () => {
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Deity: {
           keyFields: ["name"],
@@ -1210,10 +1462,10 @@ describe('reading from the store', () => {
 
     const diffs: Cache.DiffResult<any>[] = [];
 
-    function watch() {
+    function watch(immediate = true) {
       return cache.watch({
         query: rulerQuery,
-        immediate: true,
+        immediate,
         optimistic: true,
         callback(diff) {
           diffs.push(diff);
@@ -1424,7 +1676,16 @@ describe('reading from the store', () => {
       },
     };
 
-    expect(cache.extract()).toEqual(snapshotAfterGC);
+    const zeusMeta = {
+      extraRootIds: [
+        'Deity:{"name":"Zeus"}',
+      ],
+    };
+
+    expect(cache.extract()).toEqual({
+      ...snapshotAfterGC,
+      __META: zeusMeta,
+    });
 
     // There should be no diff generated by garbage collection.
     expect(diffs).toEqual([
@@ -1459,8 +1720,11 @@ describe('reading from the store', () => {
       diffWithZeusAsRuler,
     ]);
 
-    const snapshotWithoutAres = { ...snapshotAfterGC };
-    delete snapshotWithoutAres["Deity:{\"name\":\"Ares\"}"];
+    const snapshotWithoutAres = {
+      ...snapshotAfterGC,
+      __META: zeusMeta,
+    };
+    delete (snapshotWithoutAres as any)["Deity:{\"name\":\"Ares\"}"];
     expect(cache.extract()).toEqual(snapshotWithoutAres);
     // Ares already removed, so no new garbage to collect.
     expect(cache.gc()).toEqual([]);
@@ -1506,6 +1770,12 @@ describe('reading from the store', () => {
     ]);
 
     expect(cache.extract()).toEqual({
+      __META: {
+        extraRootIds: [
+          'Deity:{"name":"Apollo"}',
+          'Deity:{"name":"Zeus"}',
+        ],
+      },
       ROOT_QUERY: {
         __typename: "Query",
         ruler: { __ref: 'Deity:{"name":"Zeus"}' },
@@ -1537,14 +1807,10 @@ describe('reading from the store', () => {
       diffWithZeusAsRuler,
     ]);
 
-    // Rewatch the rulerQuery, which will populate the same diffs array
-    // that we were using before.
-    const cancel2 = watch();
-
-    const diffWithApolloAsRuler = {
-      complete: true,
-      result: apolloRulerResult,
-    };
+    // Rewatch the rulerQuery, but avoid delivering an immediate initial
+    // result (by passing false), so that we can use cache.modify to
+    // trigger the delivery of diffWithApolloAsRuler below.
+    const cancel2 = watch(false);
 
     expect(diffs).toEqual([
       initialDiff,
@@ -1552,7 +1818,6 @@ describe('reading from the store', () => {
       diffWithoutDevouredSons,
       diffWithChildrenOfZeus,
       diffWithZeusAsRuler,
-      diffWithApolloAsRuler,
     ]);
 
     cache.modify({
@@ -1570,6 +1835,11 @@ describe('reading from the store', () => {
 
     cancel2();
 
+    const diffWithApolloAsRuler = {
+      complete: true,
+      result: apolloRulerResult,
+    };
+
     // The cache.modify call should have triggered another diff, since we
     // overwrote the ROOT_QUERY.ruler field with a valid Reference to the
     // Apollo entity object.
@@ -1579,7 +1849,6 @@ describe('reading from the store', () => {
       diffWithoutDevouredSons,
       diffWithChildrenOfZeus,
       diffWithZeusAsRuler,
-      diffWithApolloAsRuler,
       diffWithApolloAsRuler,
     ]);
 
@@ -1598,6 +1867,7 @@ describe('reading from the store', () => {
     // Having survived GC, Apollo reigns supreme atop Olympus... or
     // something like that.
     expect(cache.extract()).toEqual({
+      __META: zeusMeta,
       ROOT_QUERY: {
         __typename: "Query",
         ruler: { __ref: 'Deity:{"name":"Apollo"}' },
@@ -1607,5 +1877,265 @@ describe('reading from the store', () => {
         name: "Apollo",
       },
     });
+  });
+
+  it("returns === results for different queries", function () {
+    const cache = new InMemoryCache({
+      canonizeResults: true,
+    });
+
+    const aQuery: TypedDocumentNode<{
+      a: string[];
+    }> = gql`query { a }`;
+
+    const abQuery: TypedDocumentNode<{
+      a: string[];
+      b: {
+        c: string;
+        d: string;
+      };
+    }> = gql`query { a b { c d } }`;
+
+    const bQuery: TypedDocumentNode<{
+      b: {
+        c: string;
+        d: string;
+      };
+    }> = gql`query { b { d c } }`;
+
+    const abData1 = {
+      a: ["a", "y"],
+      b: {
+        c: "see",
+        d: "dee",
+      },
+    };
+
+    cache.writeQuery({
+      query: abQuery,
+      data: abData1,
+    });
+
+    function read<Data, Vars>(query: TypedDocumentNode<Data, Vars>) {
+      return cache.readQuery({ query })!;
+    }
+
+    const aResult1 = read(aQuery);
+    const abResult1 = read(abQuery);
+    const bResult1 = read(bQuery);
+
+    expect(aResult1.a).toBe(abResult1.a);
+    expect(abResult1).toEqual(abData1);
+    expect(aResult1).toEqual({ a: abData1.a });
+    expect(bResult1).toEqual({ b: abData1.b });
+    expect(abResult1.b).toBe(bResult1.b);
+
+    const aData2 = {
+      a: "ayy".split(""),
+    };
+
+    cache.writeQuery({
+      query: aQuery,
+      data: aData2,
+    });
+
+    const aResult2 = read(aQuery);
+    const abResult2 = read(abQuery);
+    const bResult2 = read(bQuery);
+
+    expect(aResult2).toEqual(aData2);
+    expect(abResult2).toEqual({ ...abData1, ...aData2 });
+    expect(aResult2.a).toBe(abResult2.a);
+    expect(bResult2).toBe(bResult1);
+    expect(abResult2.b).toBe(bResult2.b);
+    expect(abResult2.b).toBe(bResult1.b);
+
+    const bData3 = {
+      b: {
+        d: "D",
+        c: "C",
+      },
+    };
+
+    cache.writeQuery({
+      query: bQuery,
+      data: bData3,
+    });
+
+    const aResult3 = read(aQuery);
+    const abResult3 = read(abQuery);
+    const bResult3 = read(bQuery);
+
+    expect(aResult3).toBe(aResult2);
+    expect(bResult3).toEqual(bData3);
+    expect(bResult3).not.toBe(bData3);
+    expect(abResult3).toEqual({
+      ...abResult2,
+      ...bData3,
+    });
+
+    expect(cache.extract()).toMatchSnapshot();
+  });
+
+  it("does not canonicalize custom scalar objects", function () {
+    const now = new Date;
+    const abc = { a: 1, b: 2, c: 3 };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            now() {
+              return now;
+            },
+
+            abc() {
+              return abc;
+            },
+          },
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{
+      now: typeof now;
+      abc: typeof abc;
+    }> = gql`query { now abc }`;
+
+    const result1 = cache.readQuery({ query })!;
+    const result2 = cache.readQuery({ query })!;
+
+    expect(result1).toBe(result2);
+    expect(result1.now).toBeInstanceOf(Date);
+
+    // We already know result1.now === result2.now, but it's also
+    // important that it be the very same (===) Date object that was
+    // returned from the read function for the Query.now field, not a
+    // canonicalized version.
+    expect(result1.now).toBe(now);
+    expect(result2.now).toBe(now);
+
+    // The Query.abc field returns a "normal" object, but we know from the
+    // structure of the query that it's a scalar object, so it will not be
+    // canonicalized.
+    expect(result1.abc).toEqual(abc);
+    expect(result2.abc).toEqual(abc);
+    expect(result1.abc).toBe(result2.abc);
+    expect(result1.abc).toBe(abc);
+    expect(result2.abc).toBe(abc);
+  });
+
+  it("readQuery can opt out of canonization", function () {
+    let count = 0;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            count() {
+              return count++;
+            },
+          },
+        },
+      },
+    });
+
+    const canon = cache["storeReader"].canon;
+
+    const query = gql`
+      query {
+        count
+      }
+    `;
+
+    function readQuery(canonizeResults: boolean) {
+      return cache.readQuery<{
+        count: number;
+      }>({
+        query,
+        canonizeResults,
+      });
+    }
+
+    const nonCanonicalQueryResult0 = readQuery(false);
+    expect(canon.isKnown(nonCanonicalQueryResult0)).toBe(false);
+    expect(nonCanonicalQueryResult0).toEqual({ count: 0 });
+
+    const canonicalQueryResult0 = readQuery(true);
+    expect(canon.isKnown(canonicalQueryResult0)).toBe(true);
+    // The preservation of { count: 0 } proves the result didn't have to be
+    // recomputed, but merely canonized.
+    expect(canonicalQueryResult0).toEqual({ count: 0 });
+
+    cache.evict({
+      fieldName: "count",
+    });
+
+    const canonicalQueryResult1 = readQuery(true);
+    expect(canon.isKnown(canonicalQueryResult1)).toBe(true);
+    expect(canonicalQueryResult1).toEqual({ count: 1 });
+
+    const nonCanonicalQueryResult1 = readQuery(false);
+    // Since we already read a canonical result, we were able to reuse it when
+    // reading the non-canonical result.
+    expect(nonCanonicalQueryResult1).toBe(canonicalQueryResult1);
+  });
+
+  it("readFragment can opt out of canonization", function () {
+    let count = 0;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            count() {
+              return count++;
+            },
+          },
+        },
+      },
+    });
+
+    const canon = cache["storeReader"].canon;
+
+    const fragment = gql`
+      fragment CountFragment on Query {
+        count
+      }
+    `;
+
+    function readFragment(canonizeResults: boolean) {
+      return cache.readFragment<{
+        count: number;
+      }>({
+        id: "ROOT_QUERY",
+        fragment,
+        canonizeResults,
+      });
+    }
+
+    const canonicalFragmentResult1 = readFragment(true);
+    expect(canon.isKnown(canonicalFragmentResult1)).toBe(true);
+    expect(canonicalFragmentResult1).toEqual({ count: 0 });
+
+    const nonCanonicalFragmentResult1 = readFragment(false);
+    // Since we already read a canonical result, we were able to reuse it when
+    // reading the non-canonical result.
+    expect(nonCanonicalFragmentResult1).toBe(canonicalFragmentResult1);
+
+    cache.evict({
+      fieldName: "count",
+    });
+
+    const nonCanonicalFragmentResult2 = readFragment(false);
+    expect(readFragment(false)).toBe(nonCanonicalFragmentResult2);
+    expect(canon.isKnown(nonCanonicalFragmentResult2)).toBe(false);
+    expect(nonCanonicalFragmentResult2).toEqual({ count: 1 });
+    expect(readFragment(false)).toBe(nonCanonicalFragmentResult2);
+
+    const canonicalFragmentResult2 = readFragment(true);
+    expect(readFragment(true)).toBe(canonicalFragmentResult2);
+    expect(canon.isKnown(canonicalFragmentResult2)).toBe(true);
+    expect(canonicalFragmentResult2).toEqual({ count: 1 });
   });
 });

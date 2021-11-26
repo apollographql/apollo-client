@@ -1,3 +1,5 @@
+import { invariant } from '../globals';
+
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.
 import {
@@ -9,11 +11,8 @@ import {
   ArgumentNode,
   ValueNode,
   ASTNode,
+  visit,
 } from 'graphql';
-
-import { visit } from 'graphql/language/visitor';
-
-import { invariant } from 'ts-invariant';
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };

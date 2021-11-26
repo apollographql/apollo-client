@@ -1,5 +1,6 @@
+import { invariant, InvariantError } from '../utilities/globals';
+
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
 
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
 import { ApolloCache, DataProxy } from '../cache';
@@ -12,8 +13,13 @@ import { ObservableQuery } from './ObservableQuery';
 
 import {
   ApolloQueryResult,
+  DefaultContext,
   OperationVariables,
   Resolvers,
+  RefetchQueriesOptions,
+  RefetchQueriesResult,
+  InternalRefetchQueriesResult,
+  RefetchQueriesInclude,
 } from './types';
 
 import {
@@ -30,9 +36,9 @@ import {
 } from './LocalState';
 
 export interface DefaultOptions {
-  watchQuery?: Partial<WatchQueryOptions>;
-  query?: Partial<QueryOptions>;
-  mutate?: Partial<MutationOptions>;
+  watchQuery?: Partial<WatchQueryOptions<any, any>>;
+  query?: Partial<QueryOptions<any, any>>;
+  mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
 let hasSuggestedDevtools = false;
@@ -55,6 +61,25 @@ export type ApolloClientOptions<TCacheShape> = {
   name?: string;
   version?: string;
 };
+
+type OptionsUnion<TData, TVariables, TContext> =
+  | WatchQueryOptions<TVariables, TData>
+  | QueryOptions<TVariables, TData>
+  | MutationOptions<TData, TVariables, TContext>;
+
+export function mergeOptions<
+  TOptions extends OptionsUnion<any, any, any>
+>(
+  defaults: Partial<TOptions>,
+  options: TOptions,
+): TOptions {
+  return compact(defaults, options, options.variables && {
+    variables: {
+      ...defaults.variables,
+      ...options.variables,
+    },
+  });
+}
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -121,7 +146,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache,
       ssrMode = false,
       ssrForceFetchDelay = 0,
-      connectToDevTools,
+      connectToDevTools =
+        // Expose the client instance as window.__APOLLO_CLIENT__ and call
+        // onBroadcast in queryManager.broadcastQueries to enable browser
+        // devtools, but disable them by default in production.
+        typeof window === 'object' &&
+        !(window as any).__APOLLO_CLIENT__ &&
+        __DEV__,
       queryDeduplication = true,
       defaultOptions,
       assumeImmutableResults = false,
@@ -168,48 +199,37 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.resetStore = this.resetStore.bind(this);
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
-    // Attach the client instance to window to let us be found by chrome devtools, but only in
-    // development mode
-    const defaultConnectToDevTools =
-      process.env.NODE_ENV !== 'production' &&
-      typeof window !== 'undefined' &&
-      !(window as any).__APOLLO_CLIENT__;
-
-    if (
-      typeof connectToDevTools === 'undefined'
-        ? defaultConnectToDevTools
-        : connectToDevTools && typeof window !== 'undefined'
-    ) {
+    if (connectToDevTools && typeof window === 'object') {
       (window as any).__APOLLO_CLIENT__ = this;
     }
 
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && process.env.NODE_ENV !== 'production') {
+    if (!hasSuggestedDevtools && __DEV__) {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&
         window.document &&
-        window.top === window.self
+        window.top === window.self &&
+        !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__
       ) {
-        // First check if devtools is not installed
-        if (
-          typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined'
-        ) {
-          // Only for Chrome
-          if (
-            window.navigator &&
-            window.navigator.userAgent &&
-            window.navigator.userAgent.indexOf('Chrome') > -1
-          ) {
-            // tslint:disable-next-line
-            console.debug(
-              'Download the Apollo DevTools ' +
-                'for a better development experience: ' +
-                'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm',
-            );
+        const nav = window.navigator;
+        const ua = nav && nav.userAgent;
+        let url: string | undefined;
+        if (typeof ua === "string") {
+          if (ua.indexOf("Chrome/") > -1) {
+            url = "https://chrome.google.com/webstore/detail/" +
+              "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
+          } else if (ua.indexOf("Firefox/") > -1) {
+            url = "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
           }
+        }
+        if (url) {
+          invariant.log(
+            "Download the Apollo DevTools for a better development " +
+              "experience: " + url
+          );
         }
       }
     }
@@ -234,18 +254,18 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       },
       localState: this.localState,
       assumeImmutableResults,
-      onBroadcast: () => {
+      onBroadcast: connectToDevTools ? () => {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             action: {},
             state: {
               queries: this.queryManager.getQueryStore(),
-              mutations: this.queryManager.mutationStore.getStore(),
+              mutations: this.queryManager.mutationStore || {},
             },
             dataWithOptimisticResults: this.cache.extract(true),
           });
         }
-      },
+      } : void 0,
     });
   }
 
@@ -266,7 +286,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * it uses Apollo's store in order to reactively deliver updates to your query results.
    * <p /><p />
    * For example, suppose you call watchQuery on a GraphQL query that fetches a person's
-   * first and last name and this person has a particular object identifer, provided by
+   * first and last name and this person has a particular object identifier, provided by
    * dataIdFromObject. Later, a different query fetches that same person's
    * first and last name and the first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.
@@ -277,10 +297,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * a description of store reactivity.
    */
   public watchQuery<T = any, TVariables = OperationVariables>(
-    options: WatchQueryOptions<TVariables>,
+    options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
-      options = compact(this.defaultOptions.watchQuery, options);
+      options = mergeOptions(this.defaultOptions.watchQuery, options);
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
@@ -305,10 +325,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * server at all or just resolve from the cache, etc.
    */
   public query<T = any, TVariables = OperationVariables>(
-    options: QueryOptions<TVariables>,
+    options: QueryOptions<TVariables, T>,
   ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
-      options = compact(this.defaultOptions.query, options);
+      options = mergeOptions(this.defaultOptions.query, options);
     }
 
     invariant(
@@ -333,13 +353,18 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T = any, TVariables = OperationVariables>(
-    options: MutationOptions<T, TVariables>,
-  ): Promise<FetchResult<T>> {
+  public mutate<
+    TData = any,
+    TVariables = OperationVariables,
+    TContext = DefaultContext,
+    TCache extends ApolloCache<any> = ApolloCache<any>
+  >(
+    options: MutationOptions<TData, TVariables, TContext>,
+  ): Promise<FetchResult<TData>> {
     if (this.defaultOptions.mutate) {
-      options = compact(this.defaultOptions.mutate, options);
+      options = mergeOptions(this.defaultOptions.mutate, options);
     }
-    return this.queryManager.mutate<T>(options);
+    return this.queryManager.mutate<TData, TVariables, TContext, TCache>(options);
   }
 
   /**
@@ -347,7 +372,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * {@link Observable} which either emits received data or an error.
    */
   public subscribe<T = any, TVariables = OperationVariables>(
-    options: SubscriptionOptions<TVariables>,
+    options: SubscriptionOptions<TVariables, T>,
   ): Observable<FetchResult<T>> {
     return this.queryManager.startGraphQLSubscription<T>(options);
   }
@@ -362,7 +387,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * optimistic results. Is `false` by default.
    */
   public readQuery<T = any, TVariables = OperationVariables>(
-    options: DataProxy.Query<TVariables>,
+    options: DataProxy.Query<TVariables, T>,
     optimistic: boolean = false,
   ): T | null {
     return this.cache.readQuery<T, TVariables>(options, optimistic);
@@ -383,7 +408,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * optimistic results. Is `false` by default.
    */
   public readFragment<T = any, TVariables = OperationVariables>(
-    options: DataProxy.Fragment<TVariables>,
+    options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false,
   ): T | null {
     return this.cache.readFragment<T, TVariables>(options, optimistic);
@@ -445,7 +470,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
     return Promise.resolve()
-      .then(() => this.queryManager.clearStore())
+      .then(() => this.queryManager.clearStore({
+        discardWatches: false,
+      }))
       .then(() => Promise.all(this.resetStoreCallbacks.map(fn => fn())))
       .then(() => this.reFetchObservableQueries());
   }
@@ -456,7 +483,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public clearStore(): Promise<any[]> {
     return Promise.resolve()
-      .then(() => this.queryManager.clearStore())
+      .then(() => this.queryManager.clearStore({
+        discardWatches: true,
+      }))
       .then(() => Promise.all(this.clearStoreCallbacks.map(fn => fn())));
   }
 
@@ -500,6 +529,65 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     includeStandby?: boolean,
   ): Promise<ApolloQueryResult<any>[]> {
     return this.queryManager.reFetchObservableQueries(includeStandby);
+  }
+
+  /**
+   * Refetches specified active queries. Similar to "reFetchObservableQueries()" but with a specific list of queries.
+   *
+   * `refetchQueries()` is useful for use cases to imperatively refresh a selection of queries.
+   *
+   * It is important to remember that `refetchQueries()` *will* refetch specified active
+   * queries. This means that any components that might be mounted will execute
+   * their queries again using your network interface. If you do not want to
+   * re-execute any queries then you should make sure to stop watching any
+   * active queries.
+   */
+  public refetchQueries<
+    TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
+    TResult = Promise<ApolloQueryResult<any>>,
+  >(
+    options: RefetchQueriesOptions<TCache, TResult>,
+  ): RefetchQueriesResult<TResult> {
+    const map = this.queryManager.refetchQueries(options);
+    const queries: ObservableQuery<any>[] = [];
+    const results: InternalRefetchQueriesResult<TResult>[] = [];
+
+    map.forEach((result, obsQuery) => {
+      queries.push(obsQuery);
+      results.push(result);
+    });
+
+    const result = Promise.all<TResult>(
+      results as TResult[]
+    ) as RefetchQueriesResult<TResult>;
+
+    // In case you need the raw results immediately, without awaiting
+    // Promise.all(results):
+    result.queries = queries;
+    result.results = results;
+
+    // If you decide to ignore the result Promise because you're using
+    // result.queries and result.results instead, you shouldn't have to worry
+    // about preventing uncaught rejections for the Promise.all result.
+    result.catch(error => {
+      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error ${error}`);
+    });
+
+    return result;
+  }
+
+  /**
+   * Get all currently active `ObservableQuery` objects, in a `Map` keyed by
+   * query ID strings. An "active" query is one that has observers and a
+   * `fetchPolicy` other than "standby" or "cache-only". You can include all
+   * `ObservableQuery` objects (including the inactive ones) by passing "all"
+   * instead of "active", or you can include just a subset of active queries by
+   * passing an array of query names or DocumentNode objects.
+   */
+  public getObservableQueries(
+    include: RefetchQueriesInclude = "active",
+  ): Map<string, ObservableQuery<any>> {
+    return this.queryManager.getObservableQueries(include);
   }
 
   /**

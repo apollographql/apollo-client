@@ -4,7 +4,7 @@ Excited about Apollo and want to make it better? We’re excited too!
 
 Apollo is a community of developers just like you, striving to create the best tools and libraries around GraphQL. We welcome anyone who wants to contribute or provide constructive feedback, no matter the age or level of experience. If you want to help but don't know where to start, let us know, and we'll find something for you.
 
-Oh, and if you haven't already, join the [Apollo Spectrum community](https://spectrum.chat/apollo).
+Oh, and if you haven't already, join our [community forums](https://community.apollographql.com).
 
 Here are some ways to contribute to the project, from easiest to most difficult:
 
@@ -35,7 +35,7 @@ Improving the documentation, examples, and other open source content can be the 
 
 ### Responding to issues
 
-In addition to reporting issues, a great way to contribute to Apollo is to respond to other peoples' issues and try to identify the problem or help them work around it. If you’re interested in taking a more active role in this process, please go ahead and respond to issues. And don't forget to say "Hi" in Apollo Spectrum!
+In addition to reporting issues, a great way to contribute to Apollo is to respond to other peoples' issues and try to identify the problem or help them work around it. If you’re interested in taking a more active role in this process, please go ahead and respond to issues. And don't forget to say "Hi" in our [community forums](https://community.apollographql.com)!
 
 ### Small bug fixes
 
@@ -117,8 +117,6 @@ jest --config ./config/jest.config.js --testRegex __tests__/useQuery.test.tsx
 
 It can be useful to link an Apollo Client checkout into an application, to test how Apollo Client development changes impact a real app. We'll use the [Apollo fullstack tutorial application](https://github.com/apollographql/fullstack-tutorial) to demonstrate this.
 
-> **Note:** The fullstack tutorial updates for Apollo Client 3 haven't been merged into `master` yet, so for now we'll use the tutorial's `apollo-client-3` branch.
-
 1) Clone and install Apollo Client.
 
 ```
@@ -135,7 +133,6 @@ cd ..
 ```
 git clone https://github.com/apollographql/fullstack-tutorial.git
 cd fullstack-tutorial
-git checkout apollo-client-3
 cd final/server
 npm i
 cd ../client

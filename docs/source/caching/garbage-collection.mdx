@@ -15,7 +15,26 @@ The `gc` method removes all objects from the normalized cache that are not **rea
 cache.gc();
 ```
 
- To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
+To determine whether an object is reachable, the cache starts from all known root objects and uses a tracing strategy to recursively visit all available child references. Any normalized objects that are _not_ visited during this process are removed. The `cache.gc()` method returns a list of the IDs of the removed objects.
+
+In addition to pruning your GraphQL data, `cache.gc` can also release memory that the cache uses to preserve unchanged parts of previous cache results:
+
+```js
+cache.gc({ resetResultCache: true })
+```
+
+Freeing this memory temporarily slows down cache reads, because those reads don't benefit from any previous reading work.
+
+If you're using the [`canonizeResults: true`](../api/cache/InMemoryCache/#canonizeresults) option, `cache.gc` can also reset the memory used for looking up canonical result objects:
+
+```js
+cache.gc({
+  resetResultCache: true,
+  resetResultIdentities: true,
+})
+```
+
+These additional `cache.gc` options can be useful for investigating memory usage patterns or leaks. Before taking heap snapshots or recording allocation timelines, it's a good idea to force _JavaScript_ garbage collection using your browser's devtools, to ensure memory released by the cache has been fully collected and returned to the heap.
 
 ### Configuring garbage collection
 
@@ -57,7 +76,7 @@ You can customize behavior for dangling references by defining a custom [`read` 
 
 * Filter the referenced object out of a list of available objects
 * Set the field's value to `null`
-* Return a particular default value 
+* Return a particular default value
 
 Every `read` function is passed a `canRead` function that helps it detect when its field currently contains a dangling reference.
 
@@ -98,6 +117,6 @@ new InMemoryCache({
 * The `read` function for `Query.ruler` returns a default ruler (Apollo) if the `existingRuler` has been deposed.
 * The `read` function for `Deity.offspring` filters its array to return only offspring that are alive and well in the cache.
 
-Filtering dangling references out of a cached array field (like the `Deity.offspring` example above) is so common that Apollo Client performs this filtering _automatically_ for array fields that don't define a `read` function. You can define a `read` function to override this behavior.
+Filtering dangling references out of a cached list field (like the `Deity.offspring` example above) is so common that the default `read` function for a list field performs this filtering _automatically_. You can define a custom `read` function to override this behavior.
 
 There isn't a similarly common solution for a field that contains a _single_ dangling reference (like the `Query.ruler` example above), so this is where writing a custom `read` function comes in handy most often.

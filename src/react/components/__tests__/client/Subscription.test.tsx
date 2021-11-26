@@ -1,6 +1,6 @@
 import React from 'react';
 import gql from 'graphql-tag';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../core';
 import { InMemoryCache as Cache } from '../../../../cache';
@@ -85,7 +85,7 @@ itAsync('executes the subscription', (resolve, reject) => {
     </ApolloProvider>
   );
 
-  return wait(() => expect(renderCount).toBe(5)).then(resolve, reject);
+  waitFor(() => expect(renderCount).toBe(5)).then(resolve, reject);
 });
 
 itAsync('calls onSubscriptionData if given', (resolve, reject) => {
@@ -114,7 +114,7 @@ itAsync('calls onSubscriptionData if given', (resolve, reject) => {
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  return wait(() => expect(count).toBe(4)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(4)).then(resolve, reject);
 });
 
 itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => {
@@ -144,7 +144,7 @@ itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => 
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+  waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
 });
 
 itAsync('executes subscription for the variables passed in the props', (resolve, reject) => {
@@ -210,7 +210,7 @@ itAsync('executes subscription for the variables passed in the props', (resolve,
 
   mockLink.simulateResult(results[0]);
 
-  return wait(() => expect(count).toBe(2)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(2)).then(resolve, reject);
 });
 
 itAsync('does not execute if variables have not changed', (resolve, reject) => {
@@ -281,7 +281,7 @@ itAsync('does not execute if variables have not changed', (resolve, reject) => {
 
   mockLink.simulateResult(results[0]);
 
-  return wait(() => expect(count).toBe(3)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(3)).then(resolve, reject);
 });
 
 itAsync('renders an error', (resolve, reject) => {
@@ -336,7 +336,7 @@ itAsync('renders an error', (resolve, reject) => {
 
   link.simulateResult(subscriptionError);
 
-  return wait(() => expect(count).toBe(2)).then(resolve, reject);
+  waitFor(() => expect(count).toBe(2)).then(resolve, reject);
 });
 
 describe('should update', () => {
@@ -361,28 +361,35 @@ describe('should update', () => {
               {(result: any) => {
                 const { loading, data } = result;
                 try {
-                  if (count === 0) {
-                    expect(loading).toBeTruthy();
-                    expect(data).toBeUndefined();
-                  } else if (count === 1) {
-                    expect(loading).toBeFalsy();
-                    expect(data).toEqual(results[0].result.data);
-                    setTimeout(() => {
-                      this.setState(
-                        {
-                          client: client2
-                        },
-                        () => {
-                          link2.simulateResult(results[1]);
-                        }
-                      );
-                    });
-                  } else if (count === 2) {
-                    expect(loading).toBeTruthy();
-                    expect(data).toBeUndefined();
-                  } else if (count === 3) {
-                    expect(loading).toBeFalsy();
-                    expect(data).toEqual(results[1].result.data);
+                  switch (count) {
+                    case 0:
+                      expect(loading).toBeTruthy();
+                      expect(data).toBeUndefined();
+                      break;
+                    case 1:
+                      setTimeout(() => {
+                        this.setState(
+                          {
+                            client: client2
+                          },
+                          () => {
+                            link2.simulateResult(results[1]);
+                          }
+                        );
+                      });
+                      // fallthrough
+                    case 2:
+                      expect(loading).toBeFalsy();
+                      expect(data).toEqual(results[0].result.data);
+                      break;
+                    case 3:
+                      expect(loading).toBeTruthy();
+                      expect(data).toBeUndefined();
+                      break;
+                    case 4:
+                      expect(loading).toBeFalsy();
+                      expect(data).toEqual(results[1].result.data);
+                      break;
                   }
                 } catch (error) {
                   reject(error);
@@ -401,7 +408,7 @@ describe('should update', () => {
 
     link.simulateResult(results[0]);
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('if the query changes', (resolve, reject) => {
@@ -449,28 +456,35 @@ describe('should update', () => {
             {(result: any) => {
               const { loading, data } = result;
               try {
-                if (count === 0) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 1) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(results[0].result.data);
-                  setTimeout(() => {
-                    this.setState(
-                      {
-                        subscription: subscriptionHero
-                      },
-                      () => {
-                        heroLink.simulateResult(heroResult);
-                      }
-                    );
-                  });
-                } else if (count === 2) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 3) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(heroResult.result.data);
+                switch (count) {
+                  case 0:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 1:
+                    setTimeout(() => {
+                      this.setState(
+                        {
+                          subscription: subscriptionHero
+                        },
+                        () => {
+                          heroLink.simulateResult(heroResult);
+                        }
+                      );
+                    });
+                    // fallthrough
+                  case 2:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(results[0].result.data);
+                    break;
+                  case 3:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 4:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(heroResult.result.data);
+                    break;
                 }
               } catch (error) {
                 reject(error);
@@ -491,7 +505,7 @@ describe('should update', () => {
 
     userLink.simulateResult(results[0]);
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
   itAsync('if the variables change', (resolve, reject) => {
@@ -518,31 +532,7 @@ describe('should update', () => {
       }
     };
 
-    class MockSubscriptionLinkOverride extends MockSubscriptionLink {
-      variables: any;
-      request(req: Operation) {
-        this.variables = req.variables;
-        return super.request(req);
-      }
-
-      simulateResult() {
-        if (this.variables.name === 'Luke Skywalker') {
-          return super.simulateResult({
-            result: {
-              data: dataLuke
-            }
-          });
-        } else if (this.variables.name === 'Han Solo') {
-          return super.simulateResult({
-            result: {
-              data: dataHan
-            }
-          });
-        }
-      }
-    }
-
-    const mockLink = new MockSubscriptionLinkOverride();
+    const mockLink = new MockSubscriptionLink();
 
     const mockClient = new ApolloClient({
       link: mockLink,
@@ -565,28 +555,35 @@ describe('should update', () => {
             {(result: any) => {
               const { loading, data } = result;
               try {
-                if (count === 0) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 1) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(dataLuke);
-                  setTimeout(() => {
-                    this.setState(
-                      {
-                        variables: variablesHan
-                      },
-                      () => {
-                        mockLink.simulateResult();
-                      }
-                    );
-                  });
-                } else if (count === 2) {
-                  expect(loading).toBeTruthy();
-                  expect(data).toBeUndefined();
-                } else if (count === 3) {
-                  expect(loading).toBeFalsy();
-                  expect(data).toEqual(dataHan);
+                switch (count) {
+                  case 0:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 1:
+                    setTimeout(() => {
+                      this.setState(
+                        {
+                          variables: variablesHan
+                        },
+                        () => {
+                          mockLink.simulateResult({ result: { data: dataHan } });
+                        }
+                      );
+                    });
+                    // fallthrough
+                  case 2:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(dataLuke);
+                    break;
+                  case 3:
+                    expect(loading).toBeTruthy();
+                    expect(data).toBeUndefined();
+                    break;
+                  case 4:
+                    expect(loading).toBeFalsy();
+                    expect(data).toEqual(dataHan);
+                    break;
                 }
               } catch (error) {
                 reject(error);
@@ -606,9 +603,9 @@ describe('should update', () => {
       </ApolloProvider>
     );
 
-    mockLink.simulateResult();
+    mockLink.simulateResult({ result: { data: dataLuke } });
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 });
 
@@ -725,7 +722,7 @@ describe('should not update', () => {
 
     mockLink.simulateResult();
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   itAsync('if shouldResubscribe returns false', (resolve, reject) => {
@@ -801,6 +798,6 @@ describe('should not update', () => {
 
     mockLink.simulateResult();
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 });

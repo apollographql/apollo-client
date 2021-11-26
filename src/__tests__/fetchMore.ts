@@ -131,6 +131,52 @@ describe('updateQuery on a query with required and optional variables', () => {
   });
 });
 
+// TODO: Delete this test after removal of updateQuery from fetchMore.
+// This test squashes deprecation notice errors when the suite is run, but not
+// when individual tests are run.
+describe('updateQuery with fetchMore deprecation notice', () => {
+  const query = gql`
+    query thing {
+      entry
+    }
+  `;
+
+  const result = {
+    data: {
+      __typename: 'Query',
+      entry: 1,
+    },
+  };
+
+  const result1 = cloneDeep(result);
+  itAsync('fetchMore warns exactly once', (resolve, reject) => {
+    const spy = jest.spyOn(console, "warn").mockImplementation();
+    const link = mockSingleLink({
+      request: { query },
+      result,
+    }, {
+      request: { query },
+      result: result1,
+    }).setOnError(reject);
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const observable = client.watchQuery({query});
+    return observable.fetchMore({updateQuery: (prev) => prev}).then(() => {
+      expect(spy).toHaveBeenCalledTimes(1);
+    }).then(() => {
+      return observable.fetchMore({updateQuery: (prev) => prev});
+    }).then(() => {
+      expect(spy).toHaveBeenCalledTimes(1);
+    }).finally(() => {
+      spy.mockRestore();
+    }).then(resolve, reject);
+  });
+});
+
 describe('fetchMore on an observable query', () => {
   const query = gql`
     query Comment($repoName: String!, $start: Int!, $limit: Int!) {
@@ -620,7 +666,7 @@ describe('fetchMore on an observable query', () => {
         request: { query, variables: variablesMore },
         error: fetchMoreError,
         delay: 5,
-      }).setOnError(reject);
+      });
 
       const client = new ApolloClient({
         link,
@@ -674,7 +720,7 @@ describe('fetchMore on an observable query', () => {
         request: { query, variables: variablesMore },
         error: fetchMoreError,
         delay: 5,
-      }).setOnError(reject);
+      });
 
       let calledFetchMore = false;
 

@@ -1,18 +1,14 @@
+import { invariant, InvariantError } from '../../utilities/globals';
+
 import {
   InlineFragmentNode,
   FragmentDefinitionNode,
   SelectionSetNode,
   FieldNode,
-} from "graphql";
-
-import { KeyTrie } from 'optimism';
-import { invariant, InvariantError } from 'ts-invariant';
+} from 'graphql';
 
 import {
   FragmentMap,
-  getFragmentFromSelection,
-  isField,
-  getTypenameFromResult,
   storeKeyNameFromField,
   StoreValue,
   StoreObject,
@@ -20,15 +16,22 @@ import {
   Reference,
   isReference,
   getStoreKeyName,
-  canUseWeakMap,
+  isNonNullObject,
+  stringifyForDisplay,
 } from '../../utilities';
-import { IdGetter, ReadMergeModifyContext } from "./types";
+import {
+  IdGetter,
+  MergeInfo,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types";
 import {
   hasOwn,
   fieldNameFromStoreName,
-  FieldValueToBeMerged,
-  isFieldValueToBeMerged,
   storeValueIsStoreObject,
+  selectionSetMatchesResult,
+  TypeOrFieldNameRegExp,
+  defaultDataIdFromObject,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
 import { InMemoryCache } from './inMemoryCache';
@@ -40,6 +43,15 @@ import {
   ReadFieldOptions,
   CanReadFunction,
 } from '../core/types/common';
+import { WriteContext } from './writeToStore';
+
+// Upgrade to a faster version of the default stable JSON.stringify function
+// used by getStoreKeyName. This function is used when computing storeFieldName
+// strings (when no keyArgs has been configured for a field).
+import { canonicalStringify } from './object-canon';
+import { keyArgsFnFromSpecifier, keyFieldsFnFromSpecifier } from './key-extractor';
+
+getStoreKeyName.setStringify(canonicalStringify);
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -47,26 +59,65 @@ export type TypePolicies = {
 
 // TypeScript 3.7 will allow recursive type aliases, so this should work:
 // type KeySpecifier = (string | KeySpecifier)[]
-type KeySpecifier = (string | any[])[];
+export type KeySpecifier = (string | KeySpecifier)[];
 
-type KeyFieldsContext = {
-  typename?: string;
+export type KeyFieldsContext = {
+  // The __typename of the incoming object, even if the __typename field was
+  // aliased to another name in the raw result object. May be undefined when
+  // dataIdFromObject is called for objects without __typename fields.
+  typename: string | undefined;
+
+  // The object to be identified, after processing to remove aliases and
+  // normalize identifiable child objects with references.
+  storeObject: StoreObject;
+
+  // Handy tool for reading additional fields from context.storeObject, either
+  // readField("fieldName") to read storeObject[fieldName], or readField("name",
+  // objectOrReference) to read from another object or Reference. If you read a
+  // field with a read function, that function will be invoked.
+  readField: ReadFieldFunction;
+
+  // If you are writing a custom keyFields function, and you plan to use the raw
+  // result object passed as the first argument, you may also need access to the
+  // selection set and available fragments for this object, just in case any
+  // fields have aliases. Since this logic is tricky to get right, and these
+  // context properties are not even always provided (for example, they are
+  // omitted when calling cache.identify(object), where object is assumed to be
+  // a StoreObject), we recommend you use context.storeObject (which has already
+  // been de-aliased) and context.readField (which can read from references as
+  // well as objects) instead of the raw result object in your keyFields
+  // functions, or just rely on the internal implementation of keyFields:[...]
+  // syntax to get these details right for you.
   selectionSet?: SelectionSetNode;
   fragmentMap?: FragmentMap;
-  // May be set by the KeyFieldsFunction to report fields that were involved
-  // in computing the ID. Never passed in by the caller.
+
+  // Internal. May be set by the KeyFieldsFunction to report fields that were
+  // involved in computing the ID. Never passed in by the caller.
   keyObject?: Record<string, any>;
 };
 
 export type KeyFieldsFunction = (
   object: Readonly<StoreObject>,
   context: KeyFieldsContext,
-) => KeySpecifier | ReturnType<IdGetter>;
+) => KeySpecifier | false | ReturnType<IdGetter>;
 
+type KeyFieldsResult = Exclude<ReturnType<KeyFieldsFunction>, KeySpecifier>;
+
+// TODO Should TypePolicy be a generic type, with a TObject or TEntity
+// type parameter?
 export type TypePolicy = {
   // Allows defining the primary key fields for this type, either using an
   // array of field names or a function that returns an arbitrary string.
   keyFields?: KeySpecifier | KeyFieldsFunction | false;
+
+  // Allows defining a merge function (or merge:true/false shorthand) to
+  // be used for merging objects of this type wherever they appear, unless
+  // the parent field also defines a merge function/boolean (that is,
+  // parent field merge functions take precedence over type policy merge
+  // functions). In many cases, defining merge:true for a given type
+  // policy can save you from specifying merge:true for all the field
+  // policies where that type might be encountered.
+  merge?: FieldMergeFunction | boolean;
 
   // In the rare event that your schema happens to use a different
   // __typename for the root Query, Mutation, and/or Schema types, you can
@@ -90,19 +141,31 @@ export type KeyArgsFunction = (
     field: FieldNode | null;
     variables?: Record<string, any>;
   },
-) => KeySpecifier | ReturnType<IdGetter>;
+) => KeySpecifier | false | ReturnType<IdGetter>;
 
 export type FieldPolicy<
+  // The internal representation used to store the field's data in the
+  // cache. Must be JSON-serializable if you plan to serialize the result
+  // of cache.extract() using JSON.
   TExisting = any,
+  // The type of the incoming parameter passed to the merge function,
+  // typically matching the GraphQL response format, but with Reference
+  // objects substituted for any identifiable child objects. Often the
+  // same as TExisting, but not necessarily.
   TIncoming = TExisting,
-  TReadResult = TExisting,
+  // The type that the read function actually returns, using TExisting
+  // data and options.args as input. Usually the same as TIncoming.
+  TReadResult = TIncoming,
+  // Allows FieldFunctionOptions definition to be overwritten by the
+  // developer
+  TOptions extends FieldFunctionOptions = FieldFunctionOptions
 > = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
-  read?: FieldReadFunction<TExisting, TReadResult>;
-  merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
+  read?: FieldReadFunction<TExisting, TReadResult, TOptions>;
+  merge?: FieldMergeFunction<TExisting, TIncoming, TOptions> | boolean;
 };
 
-type StorageType = Record<string, any>;
+export type StorageType = Record<string, any>;
 
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0 ? spec.args :
@@ -138,7 +201,7 @@ export interface FieldFunctionOptions<
   // A handy place to put field-specific data that you want to survive
   // across multiple read function calls. Useful for field-level caching,
   // if your read function does any expensive work.
-  storage: StorageType | null;
+  storage: StorageType;
 
   cache: InMemoryCache;
 
@@ -161,13 +224,19 @@ export interface FieldFunctionOptions<
   // Instead of just merging objects with { ...existing, ...incoming }, this
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
-  mergeObjects<T extends StoreObject | Reference>(
-    existing: T,
-    incoming: T,
-  ): T | undefined;
+  mergeObjects: MergeObjectsFunction;
 }
 
-export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
+type MergeObjectsFunction = <T extends StoreObject | Reference>(
+  existing: T,
+  incoming: T,
+) => T;
+
+export type FieldReadFunction<
+  TExisting = any,
+  TReadResult = TExisting,
+  TOptions extends FieldFunctionOptions = FieldFunctionOptions
+> = (
   // When reading a field, one often needs to know about any existing
   // value stored for that field. If the field is read before any value
   // has been written to the cache, this existing parameter will be
@@ -177,38 +246,22 @@ export type FieldReadFunction<TExisting = any, TReadResult = TExisting> = (
   // developer to annotate it with a type, without also having to provide
   // a whole new type for the options object.
   existing: SafeReadonly<TExisting> | undefined,
-  options: FieldFunctionOptions,
+  options: TOptions,
 ) => TReadResult | undefined;
 
-export type FieldMergeFunction<TExisting = any, TIncoming = TExisting> = (
+export type FieldMergeFunction<
+  TExisting = any,
+  TIncoming = TExisting,
+  // Passing the whole FieldFunctionOptions makes the current definition
+  // independent from its implementation
+  TOptions extends FieldFunctionOptions = FieldFunctionOptions
+> = (
   existing: SafeReadonly<TExisting> | undefined,
   // The incoming parameter needs to be positional as well, for the same
   // reasons discussed in FieldReadFunction above.
   incoming: SafeReadonly<TIncoming>,
-  options: FieldFunctionOptions,
+  options: TOptions,
 ) => SafeReadonly<TExisting>;
-
-export const defaultDataIdFromObject = (
-  { __typename, id, _id }: Readonly<StoreObject>,
-  context?: KeyFieldsContext,
-) => {
-  if (typeof __typename === "string") {
-    if (context) {
-      context.keyObject =
-         id !== void 0 ? {  id } :
-        _id !== void 0 ? { _id } :
-        void 0;
-    }
-    // If there is no object.id, fall back to object._id.
-    if (id === void 0) id = _id;
-    if (id !== void 0) {
-      return `${__typename}:${(
-        typeof id === "number" ||
-        typeof id === "string"
-      ) ? id : JSON.stringify(id)}`;
-    }
-  }
-};
 
 const nullKeyFieldsFn: KeyFieldsFunction = () => void 0;
 const simpleKeyArgsFn: KeyArgsFunction = (_args, context) => context.fieldName;
@@ -227,8 +280,8 @@ export class Policies {
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
-      subtypes?: Set<string>;
-      fields?: {
+      merge?: FieldMergeFunction<any>;
+      fields: {
         [fieldName: string]: {
           keyFn?: KeyArgsFunction;
           read?: FieldReadFunction<any>;
@@ -237,6 +290,22 @@ export class Policies {
       };
     };
   } = Object.create(null);
+
+  private toBeAdded: {
+    [__typename: string]: TypePolicy[];
+  } = Object.create(null);
+
+  // Map from subtype names to sets of supertype names. Note that this
+  // representation inverts the structure of possibleTypes (whose keys are
+  // supertypes and whose values are arrays of subtypes) because it tends
+  // to be much more efficient to search upwards than downwards.
+  private supertypeMap = new Map<string, Set<string>>();
+
+  // Any fuzzy subtypes specified by possibleTypes will be converted to
+  // RegExp objects and recorded here. Every key of this map can also be
+  // found in supertypeMap. In many cases this Map will be empty, which
+  // means no fuzzy subtype checking will happen in fragmentMatches.
+  private fuzzySubtypes = new Map<string, RegExp>();
 
   public readonly cache: InMemoryCache;
 
@@ -273,29 +342,43 @@ export class Policies {
 
   public identify(
     object: StoreObject,
-    selectionSet?: SelectionSetNode,
-    fragmentMap?: FragmentMap,
+    partialContext?: Partial<KeyFieldsContext>,
   ): [string?, StoreObject?] {
-    // TODO Consider subtypes?
-    // TODO Use an AliasMap here?
-    const typename = selectionSet && fragmentMap
-      ? getTypenameFromResult(object, selectionSet, fragmentMap)
-      : object.__typename;
+    const policies = this;
 
-    if (typename) {
-      const rootId = this.rootIdsByTypename[typename];
-      if ("string" === typeof rootId) return [rootId];
+    const typename = partialContext && (
+      partialContext.typename ||
+      partialContext.storeObject?.__typename
+    ) || object.__typename;
+
+    // It should be possible to write root Query fields with writeFragment,
+    // using { __typename: "Query", ... } as the data, but it does not make
+    // sense to allow the same identification behavior for the Mutation and
+    // Subscription types, since application code should never be writing
+    // directly to (or reading directly from) those root objects.
+    if (typename === this.rootTypenamesById.ROOT_QUERY) {
+      return ["ROOT_QUERY"];
     }
 
+    // Default context.storeObject to object if not otherwise provided.
+    const storeObject = partialContext && partialContext.storeObject || object;
+
     const context: KeyFieldsContext = {
+      ...partialContext,
       typename,
-      selectionSet,
-      fragmentMap,
+      storeObject,
+      readField: partialContext && partialContext.readField || function () {
+        const options = normalizeReadFieldOptions(arguments, storeObject);
+        return policies.readField(options, {
+          store: policies.cache["data"],
+          variables: options.variables,
+        });
+      },
     };
 
-    let id: string | undefined;
+    let id: KeyFieldsResult;
 
-    const policy = this.getTypePolicy(typename, false);
+    const policy = typename && this.getTypePolicy(typename);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
@@ -307,78 +390,118 @@ export class Policies {
       }
     }
 
-    id = id && String(id);
-
+    id = id ? String(id) : void 0;
     return context.keyObject ? [id, context.keyObject] : [id];
   }
 
   public addTypePolicies(typePolicies: TypePolicies) {
     Object.keys(typePolicies).forEach(typename => {
-      const existing = this.getTypePolicy(typename, true)!;
-      const incoming = typePolicies[typename];
-      const { keyFields, fields } = incoming;
+      const {
+        queryType,
+        mutationType,
+        subscriptionType,
+        ...incoming
+      } = typePolicies[typename];
 
-      if (incoming.queryType) this.setRootTypename("Query", typename);
-      if (incoming.mutationType) this.setRootTypename("Mutation", typename);
-      if (incoming.subscriptionType) this.setRootTypename("Subscription", typename);
+      // Though {query,mutation,subscription}Type configurations are rare,
+      // it's important to call setRootTypename as early as possible,
+      // since these configurations should apply consistently for the
+      // entire lifetime of the cache. Also, since only one __typename can
+      // qualify as one of these root types, these three properties cannot
+      // be inherited, unlike the rest of the incoming properties. That
+      // restriction is convenient, because the purpose of this.toBeAdded
+      // is to delay the processing of type/field policies until the first
+      // time they're used, allowing policies to be added in any order as
+      // long as all relevant policies (including policies for supertypes)
+      // have been added by the time a given policy is used for the first
+      // time. In other words, since inheritance doesn't matter for these
+      // properties, there's also no need to delay their processing using
+      // the this.toBeAdded queue.
+      if (queryType) this.setRootTypename("Query", typename);
+      if (mutationType) this.setRootTypename("Mutation", typename);
+      if (subscriptionType) this.setRootTypename("Subscription", typename);
 
-      existing.keyFn =
-        // Pass false to disable normalization for this typename.
-        keyFields === false ? nullKeyFieldsFn :
-        // Pass an array of strings to use those fields to compute a
-        // composite ID for objects of this typename.
-        Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
-        // Pass a function to take full control over identification.
-        typeof keyFields === "function" ? keyFields :
-        // Leave existing.keyFn unchanged if above cases fail.
-        existing.keyFn;
-
-      if (fields) {
-        Object.keys(fields).forEach(fieldName => {
-          const existing = this.getFieldPolicy(typename, fieldName, true)!;
-          const incoming = fields[fieldName];
-
-          if (typeof incoming === "function") {
-            existing.read = incoming;
-          } else {
-            const { keyArgs, read, merge } = incoming;
-
-            existing.keyFn =
-              // Pass false to disable argument-based differentiation of
-              // field identities.
-              keyArgs === false ? simpleKeyArgsFn :
-              // Pass an array of strings to use named arguments to
-              // compute a composite identity for the field.
-              Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
-              // Pass a function to take full control over field identity.
-              typeof keyArgs === "function" ? keyArgs :
-              // Leave existing.keyFn unchanged if above cases fail.
-              existing.keyFn;
-
-            if (typeof read === "function") existing.read = read;
-
-            existing.merge =
-              typeof merge === "function" ? merge :
-              // Pass merge:true as a shorthand for a merge implementation
-              // that returns options.mergeObjects(existing, incoming).
-              merge === true ? mergeTrueFn :
-              // Pass merge:false to make incoming always replace existing
-              // without any warnings about data clobbering.
-              merge === false ? mergeFalseFn :
-              existing.merge;
-          }
-
-          if (existing.read && existing.merge) {
-            // If we have both a read and a merge function, assume
-            // keyArgs:false, because read and merge together can take
-            // responsibility for interpreting arguments in and out. This
-            // default assumption can always be overridden by specifying
-            // keyArgs explicitly in the FieldPolicy.
-            existing.keyFn = existing.keyFn || simpleKeyArgsFn;
-          }
-        });
+      if (hasOwn.call(this.toBeAdded, typename)) {
+        this.toBeAdded[typename].push(incoming);
+      } else {
+        this.toBeAdded[typename] = [incoming];
       }
     });
+  }
+
+  private updateTypePolicy(typename: string, incoming: TypePolicy) {
+    const existing = this.getTypePolicy(typename);
+    const { keyFields, fields } = incoming;
+
+    function setMerge(
+      existing: { merge?: FieldMergeFunction | boolean; },
+      merge?: FieldMergeFunction | boolean,
+    ) {
+      existing.merge =
+        typeof merge === "function" ? merge :
+        // Pass merge:true as a shorthand for a merge implementation
+        // that returns options.mergeObjects(existing, incoming).
+        merge === true ? mergeTrueFn :
+        // Pass merge:false to make incoming always replace existing
+        // without any warnings about data clobbering.
+        merge === false ? mergeFalseFn :
+        existing.merge;
+    }
+
+    // Type policies can define merge functions, as an alternative to
+    // using field policies to merge child objects.
+    setMerge(existing, incoming.merge);
+
+    existing.keyFn =
+      // Pass false to disable normalization for this typename.
+      keyFields === false ? nullKeyFieldsFn :
+      // Pass an array of strings to use those fields to compute a
+      // composite ID for objects of this typename.
+      Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
+      // Pass a function to take full control over identification.
+      typeof keyFields === "function" ? keyFields :
+      // Leave existing.keyFn unchanged if above cases fail.
+      existing.keyFn;
+
+    if (fields) {
+      Object.keys(fields).forEach(fieldName => {
+        const existing = this.getFieldPolicy(typename, fieldName, true)!;
+        const incoming = fields[fieldName];
+
+        if (typeof incoming === "function") {
+          existing.read = incoming;
+        } else {
+          const { keyArgs, read, merge } = incoming;
+
+          existing.keyFn =
+            // Pass false to disable argument-based differentiation of
+            // field identities.
+            keyArgs === false ? simpleKeyArgsFn :
+            // Pass an array of strings to use named arguments to
+            // compute a composite identity for the field.
+            Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
+            // Pass a function to take full control over field identity.
+            typeof keyArgs === "function" ? keyArgs :
+            // Leave existing.keyFn unchanged if above cases fail.
+            existing.keyFn;
+
+          if (typeof read === "function") {
+            existing.read = read;
+          }
+
+          setMerge(existing, merge);
+        }
+
+        if (existing.read && existing.merge) {
+          // If we have both a read and a merge function, assume
+          // keyArgs:false, because read and merge together can take
+          // responsibility for interpreting arguments in and out. This
+          // default assumption can always be overridden by specifying
+          // keyArgs explicitly in the FieldPolicy.
+          existing.keyFn = existing.keyFn || simpleKeyArgsFn;
+        }
+      });
+    }
   }
 
   private setRootTypename(
@@ -402,30 +525,69 @@ export class Policies {
   public addPossibleTypes(possibleTypes: PossibleTypesMap) {
     (this.usingPossibleTypes as boolean) = true;
     Object.keys(possibleTypes).forEach(supertype => {
-      const subtypeSet = this.getSubtypeSet(supertype, true);
-      possibleTypes[supertype].forEach(subtypeSet!.add, subtypeSet);
+      // Make sure all types have an entry in this.supertypeMap, even if
+      // their supertype set is empty, so we can return false immediately
+      // from policies.fragmentMatches for unknown supertypes.
+      this.getSupertypeSet(supertype, true);
+
+      possibleTypes[supertype].forEach(subtype => {
+        this.getSupertypeSet(subtype, true)!.add(supertype);
+        const match = subtype.match(TypeOrFieldNameRegExp);
+        if (!match || match[0] !== subtype) {
+          // TODO Don't interpret just any invalid typename as a RegExp.
+          this.fuzzySubtypes.set(subtype, new RegExp(subtype));
+        }
+      });
     });
   }
 
-  private getTypePolicy(
-    typename: string | undefined,
-    createIfMissing: boolean,
-  ): Policies["typePolicies"][string] | undefined {
-    if (typename) {
-      return this.typePolicies[typename] || (
-        createIfMissing && (this.typePolicies[typename] = Object.create(null)));
-    }
-  }
+  private getTypePolicy(typename: string): Policies["typePolicies"][string] {
+    if (!hasOwn.call(this.typePolicies, typename)) {
+      const policy: Policies["typePolicies"][string] =
+        this.typePolicies[typename] = Object.create(null);
+      policy.fields = Object.create(null);
 
-  private getSubtypeSet(
-    supertype: string,
-    createIfMissing: boolean,
-  ): Set<string> | undefined {
-    const policy = this.getTypePolicy(supertype, createIfMissing);
-    if (policy) {
-      return policy.subtypes || (
-        createIfMissing ? policy.subtypes = new Set<string>() : void 0);
+      // When the TypePolicy for typename is first accessed, instead of
+      // starting with an empty policy object, inherit any properties or
+      // fields from the type policies of the supertypes of typename.
+      //
+      // Any properties or fields defined explicitly within the TypePolicy
+      // for typename will take precedence, and if there are multiple
+      // supertypes, the properties of policies whose types were added
+      // later via addPossibleTypes will take precedence over those of
+      // earlier supertypes. TODO Perhaps we should warn about these
+      // conflicts in development, and recommend defining the property
+      // explicitly in the subtype policy?
+      //
+      // Field policy inheritance is atomic/shallow: you can't inherit a
+      // field policy and then override just its read function, since read
+      // and merge functions often need to cooperate, so changing only one
+      // of them would be a recipe for inconsistency.
+      //
+      // Once the TypePolicy for typename has been accessed, its
+      // properties can still be updated directly using addTypePolicies,
+      // but future changes to supertype policies will not be reflected in
+      // this policy, because this code runs at most once per typename.
+      const supertypes = this.supertypeMap.get(typename);
+      if (supertypes && supertypes.size) {
+        supertypes.forEach(supertype => {
+          const { fields, ...rest } = this.getTypePolicy(supertype);
+          Object.assign(policy, rest);
+          Object.assign(policy.fields, fields);
+        });
+      }
     }
+
+    const inbox = this.toBeAdded[typename];
+    if (inbox && inbox.length) {
+      // Merge the pending policies into this.typePolicies, in the order they
+      // were originally passed to addTypePolicy.
+      inbox.splice(0).forEach(policy => {
+        this.updateTypePolicy(typename, policy);
+      });
+    }
+
+    return this.typePolicies[typename];
   }
 
   private getFieldPolicy(
@@ -437,20 +599,29 @@ export class Policies {
     read?: FieldReadFunction<any>;
     merge?: FieldMergeFunction<any>;
   } | undefined {
-    const typePolicy = this.getTypePolicy(typename, createIfMissing);
-    if (typePolicy) {
-      const fieldPolicies = typePolicy.fields || (
-        createIfMissing && (typePolicy.fields = Object.create(null)));
-      if (fieldPolicies) {
-        return fieldPolicies[fieldName] || (
-          createIfMissing && (fieldPolicies[fieldName] = Object.create(null)));
-      }
+    if (typename) {
+      const fieldPolicies = this.getTypePolicy(typename).fields;
+      return fieldPolicies[fieldName] || (
+        createIfMissing && (fieldPolicies[fieldName] = Object.create(null)));
     }
+  }
+
+  private getSupertypeSet(
+    subtype: string,
+    createIfMissing: boolean,
+  ): Set<string> | undefined {
+    let supertypeSet = this.supertypeMap.get(subtype);
+    if (!supertypeSet && createIfMissing) {
+      this.supertypeMap.set(subtype, supertypeSet = new Set<string>());
+    }
+    return supertypeSet;
   }
 
   public fragmentMatches(
     fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string | undefined,
+    result?: Record<string, any>,
+    variables?: Record<string, any>,
   ): boolean {
     if (!fragment.typeCondition) return true;
 
@@ -459,20 +630,75 @@ export class Policies {
     if (!typename) return false;
 
     const supertype = fragment.typeCondition.name.value;
+    // Common case: fragment type condition and __typename are the same.
     if (typename === supertype) return true;
 
-    if (this.usingPossibleTypes) {
-      const workQueue = [this.getSubtypeSet(supertype, false)];
+    if (this.usingPossibleTypes &&
+        this.supertypeMap.has(supertype)) {
+      const typenameSupertypeSet = this.getSupertypeSet(typename, true)!;
+      const workQueue = [typenameSupertypeSet];
+      const maybeEnqueue = (subtype: string) => {
+        const supertypeSet = this.getSupertypeSet(subtype, false);
+        if (supertypeSet &&
+            supertypeSet.size &&
+            workQueue.indexOf(supertypeSet) < 0) {
+          workQueue.push(supertypeSet);
+        }
+      };
+
+      // We need to check fuzzy subtypes only if we encountered fuzzy
+      // subtype strings in addPossibleTypes, and only while writing to
+      // the cache, since that's when selectionSetMatchesResult gives a
+      // strong signal of fragment matching. The StoreReader class calls
+      // policies.fragmentMatches without passing a result object, so
+      // needToCheckFuzzySubtypes is always false while reading.
+      let needToCheckFuzzySubtypes = !!(result && this.fuzzySubtypes.size);
+      let checkingFuzzySubtypes = false;
+
       // It's important to keep evaluating workQueue.length each time through
       // the loop, because the queue can grow while we're iterating over it.
       for (let i = 0; i < workQueue.length; ++i) {
-        const subtypes = workQueue[i];
-        if (subtypes) {
-          if (subtypes.has(typename)) return true;
-          subtypes.forEach(subtype => {
-            const subsubtypes = this.getSubtypeSet(subtype, false);
-            if (subsubtypes && workQueue.indexOf(subsubtypes) < 0) {
-              workQueue.push(subsubtypes);
+        const supertypeSet = workQueue[i];
+
+        if (supertypeSet.has(supertype)) {
+          if (!typenameSupertypeSet.has(supertype)) {
+            if (checkingFuzzySubtypes) {
+              invariant.warn(`Inferring subtype ${typename} of supertype ${supertype}`);
+            }
+            // Record positive results for faster future lookup.
+            // Unfortunately, we cannot safely cache negative results,
+            // because new possibleTypes data could always be added to the
+            // Policies class.
+            typenameSupertypeSet.add(supertype);
+          }
+          return true;
+        }
+
+        supertypeSet.forEach(maybeEnqueue);
+
+        if (needToCheckFuzzySubtypes &&
+            // Start checking fuzzy subtypes only after exhausting all
+            // non-fuzzy subtypes (after the final iteration of the loop).
+            i === workQueue.length - 1 &&
+            // We could wait to compare fragment.selectionSet to result
+            // after we verify the supertype, but this check is often less
+            // expensive than that search, and we will have to do the
+            // comparison anyway whenever we find a potential match.
+            selectionSetMatchesResult(fragment.selectionSet, result!, variables)) {
+          // We don't always need to check fuzzy subtypes (if no result
+          // was provided, or !this.fuzzySubtypes.size), but, when we do,
+          // we only want to check them once.
+          needToCheckFuzzySubtypes = false;
+          checkingFuzzySubtypes = true;
+
+          // If we find any fuzzy subtypes that match typename, extend the
+          // workQueue to search through the supertypes of those fuzzy
+          // subtypes. Otherwise the for-loop will terminate and we'll
+          // return false below.
+          this.fuzzySubtypes.forEach((regExp, fuzzyString) => {
+            const match = typename.match(regExp);
+            if (match && match[0] === typename) {
+              maybeEnqueue(fuzzyString);
             }
           });
         }
@@ -482,10 +708,15 @@ export class Policies {
     return false;
   }
 
+  public hasKeyArgs(typename: string | undefined, fieldName: string) {
+    const policy = this.getFieldPolicy(typename, fieldName, false);
+    return !!(policy && policy.keyFn);
+  }
+
   public getStoreFieldName(fieldSpec: FieldSpecifier): string {
     const { typename, fieldName } = fieldSpec;
     const policy = this.getFieldPolicy(typename, fieldName, false);
-    let storeFieldName: string | undefined;
+    let storeFieldName: Exclude<ReturnType<KeyArgsFunction>, KeySpecifier>;
 
     let keyFn = policy && policy.keyFn;
     if (keyFn && typename) {
@@ -515,6 +746,12 @@ export class Policies {
         : getStoreKeyName(fieldName, argsFromFieldSpecifier(fieldSpec));
     }
 
+    // Returning false from a keyArgs function is like configuring
+    // keyArgs: false, but more dynamic.
+    if (storeFieldName === false) {
+      return fieldName;
+    }
+
     // Make sure custom field names start with the actual field.name.value
     // of the field, so we can always figure out which properties of a
     // StoreObject correspond to which original field names.
@@ -522,8 +759,6 @@ export class Policies {
       ? storeFieldName
       : fieldName + ":" + storeFieldName;
   }
-
-  private storageTrie = new KeyTrie<StorageType>(true);
 
   public readField<V = StoreValue>(
     options: ReadFieldOptions,
@@ -552,7 +787,7 @@ export class Policies {
         objectOrReference,
         options,
         context,
-        this.storageTrie.lookup(
+        context.store.getStorage(
           isReference(objectOrReference)
             ? objectOrReference.__ref
             : objectOrReference,
@@ -571,117 +806,83 @@ export class Policies {
     return existing;
   }
 
-  public hasMergeFunction(
+  public getReadFunction(
     typename: string | undefined,
     fieldName: string,
-  ) {
+  ): FieldReadFunction | undefined {
     const policy = this.getFieldPolicy(typename, fieldName, false);
-    return !!(policy && policy.merge);
+    return policy && policy.read;
   }
 
-  public applyMerges<T extends StoreValue>(
-    existing: T | Reference,
-    incoming: T | FieldValueToBeMerged,
-    context: ReadMergeModifyContext,
-    storageKeys?: [string | StoreObject, string],
-  ): T {
-    if (isFieldValueToBeMerged(incoming)) {
-      const field = incoming.__field;
-      const fieldName = field.name.value;
-      // This policy and its merge function are guaranteed to exist
-      // because the incoming value is a FieldValueToBeMerged object.
-      const { merge } = this.getFieldPolicy(
-        incoming.__typename, fieldName, false)!;
+  public getMergeFunction(
+    parentTypename: string | undefined,
+    fieldName: string,
+    childTypename: string | undefined,
+  ): FieldMergeFunction | undefined {
+    let policy:
+      | Policies["typePolicies"][string]
+      | Policies["typePolicies"][string]["fields"][string]
+      | undefined =
+      this.getFieldPolicy(parentTypename, fieldName, false);
+    let merge = policy && policy.merge;
+    if (!merge && childTypename) {
+      policy = this.getTypePolicy(childTypename);
+      merge = policy && policy.merge;
+    }
+    return merge;
+  }
 
-      // If storage ends up null, that just means no options.storage object
-      // has ever been created for a read function for this field before, so
-      // there's nothing this merge function could do with options.storage
-      // that would help the read function do its work. Most merge functions
-      // will never need to worry about options.storage, but if you're reading
-      // this comment then you probably have good reasons for wanting to know
-      // esoteric details like these, you wizard, you.
-      const storage = storageKeys
-        ? this.storageTrie.lookupArray(storageKeys)
-        : null;
-
-      incoming = merge!(existing, incoming.__value, makeFieldFunctionOptions(
-        this,
-        // Unlike options.readField for read functions, we do not fall
-        // back to the current object if no foreignObjOrRef is provided,
-        // because it's not clear what the current object should be for
-        // merge functions: the (possibly undefined) existing object, or
-        // the incoming object? If you think your merge function needs
-        // to read sibling fields in order to produce a new value for
-        // the current field, you might want to rethink your strategy,
-        // because that's a recipe for making merge behavior sensitive
-        // to the order in which fields are written into the cache.
-        // However, readField(name, ref) is useful for merge functions
-        // that need to deduplicate child objects and references.
-        void 0,
-        { typename: incoming.__typename,
-          fieldName,
-          field,
-          variables: context.variables },
-        context,
-        storage,
-      )) as T;
+  public runMergeFunction(
+    existing: StoreValue,
+    incoming: StoreValue,
+    { field, typename, merge }: MergeInfo,
+    context: WriteContext,
+    storage?: StorageType,
+  ) {
+    if (merge === mergeTrueFn) {
+      // Instead of going to the trouble of creating a full
+      // FieldFunctionOptions object and calling mergeTrueFn, we can
+      // simply call mergeObjects, as mergeTrueFn would.
+      return makeMergeObjectsFunction(
+        context.store,
+      )(existing as StoreObject,
+        incoming as StoreObject);
     }
 
-    if (Array.isArray(incoming)) {
-      return incoming!.map(item => this.applyMerges(
-        // Items in the same position in different arrays are not
-        // necessarily related to each other, so there is no basis for
-        // merging them. Passing void here means any FieldValueToBeMerged
-        // objects within item will be handled as if there was no existing
-        // data. Also, we do not pass storageKeys because the array itself
-        // is never an entity with a __typename, so its indices can never
-        // have custom read or merge functions.
-        void 0,
-        item,
-        context,
-      )) as T;
+    if (merge === mergeFalseFn) {
+      // Likewise for mergeFalseFn, whose implementation is even simpler.
+      return incoming;
     }
 
-    if (storeValueIsStoreObject(incoming)) {
-      const e = existing as StoreObject | Reference;
-      const i = incoming as StoreObject;
-
-      // If the existing object is a { __ref } object, e.__ref provides a
-      // stable key for looking up the storage object associated with
-      // e.__ref and storeFieldName. Otherwise, storage is enabled only if
-      // existing is actually a non-null object. It's less common for a
-      // merge function to use options.storage, but it's conceivable that a
-      // pair of read and merge functions might want to cooperate in
-      // managing their shared options.storage object.
-      const firstStorageKey = isReference(e)
-        ? e.__ref
-        : typeof e === "object" && e;
-
-      let newFields: StoreObject | undefined;
-
-      Object.keys(i).forEach(storeFieldName => {
-        const incomingValue = i[storeFieldName];
-        const appliedValue = this.applyMerges(
-          context.store.getFieldValue(e, storeFieldName),
-          incomingValue,
-          context,
-          // Avoid enabling options.storage when firstStorageKey is falsy,
-          // which implies no options.storage object has ever been created
-          // for a read/merge function for this field.
-          firstStorageKey ? [firstStorageKey, storeFieldName] : void 0,
-        );
-        if (appliedValue !== incomingValue) {
-          newFields = newFields || Object.create(null);
-          newFields![storeFieldName] = appliedValue;
-        }
-      });
-
-      if (newFields) {
-        return { ...i, ...newFields } as typeof incoming;
-      }
+    // If cache.writeQuery or cache.writeFragment was called with
+    // options.overwrite set to true, we still call merge functions, but
+    // the existing data is always undefined, so the merge function will
+    // not attempt to combine the incoming data with the existing data.
+    if (context.overwrite) {
+      existing = void 0;
     }
 
-    return incoming;
+    return merge(existing, incoming, makeFieldFunctionOptions(
+      this,
+      // Unlike options.readField for read functions, we do not fall
+      // back to the current object if no foreignObjOrRef is provided,
+      // because it's not clear what the current object should be for
+      // merge functions: the (possibly undefined) existing object, or
+      // the incoming object? If you think your merge function needs
+      // to read sibling fields in order to produce a new value for
+      // the current field, you might want to rethink your strategy,
+      // because that's a recipe for making merge behavior sensitive
+      // to the order in which fields are written into the cache.
+      // However, readField(name, ref) is useful for merge functions
+      // that need to deduplicate child objects and references.
+      void 0,
+      { typename,
+        fieldName: field.name.value,
+        field,
+        variables: context.variables },
+      context,
+      storage || Object.create(null),
+    ));
   }
 }
 
@@ -690,12 +891,12 @@ function makeFieldFunctionOptions(
   objectOrReference: StoreObject | Reference | undefined,
   fieldSpec: FieldSpecifier,
   context: ReadMergeModifyContext,
-  storage: StorageType | null,
+  storage: StorageType,
 ): FieldFunctionOptions {
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
   const variables = fieldSpec.variables || context.variables;
-  const { getFieldValue, toReference, canRead } = context.store;
+  const { toReference, canRead } = context.store;
 
   return {
     args: argsFromFieldSpecifier(fieldSpec),
@@ -708,171 +909,106 @@ function makeFieldFunctionOptions(
     storage,
     cache: policies.cache,
     canRead,
-
-    readField<T>(
-      fieldNameOrOptions: string | ReadFieldOptions,
-      from?: StoreObject | Reference,
-    ) {
-      const options: ReadFieldOptions =
-        typeof fieldNameOrOptions === "string" ? {
-          fieldName: fieldNameOrOptions,
-          from,
-        } : { ...fieldNameOrOptions };
-
-      if (void 0 === options.from) {
-        options.from = objectOrReference;
-      }
-
-      if (void 0 === options.variables) {
-        options.variables = variables;
-      }
-
-      return policies.readField<T>(options, context);
+    readField<T>() {
+      return policies.readField<T>(
+        normalizeReadFieldOptions(arguments, objectOrReference, context),
+        context,
+      );
     },
-
-    mergeObjects(existing, incoming) {
-      if (Array.isArray(existing) || Array.isArray(incoming)) {
-        throw new InvariantError("Cannot automatically merge arrays");
-      }
-
-      // These dynamic checks are necessary because the parameters of a
-      // custom merge function can easily have the any type, so the type
-      // system cannot always enforce the StoreObject | Reference
-      // parameter types of options.mergeObjects.
-      if (existing && typeof existing === "object" &&
-          incoming && typeof incoming === "object") {
-        const eType = getFieldValue(existing, "__typename");
-        const iType = getFieldValue(incoming, "__typename");
-        const typesDiffer = eType && iType && eType !== iType;
-
-        const applied = policies.applyMerges(
-          typesDiffer ? void 0 : existing,
-          incoming,
-          context,
-        );
-
-        if (
-          typesDiffer ||
-          !storeValueIsStoreObject(existing) ||
-          !storeValueIsStoreObject(applied)
-        ) {
-          return applied;
-        }
-
-        return { ...existing, ...applied };
-      }
-
-      return incoming;
-    }
+    mergeObjects: makeMergeObjectsFunction(context.store),
   };
 }
 
-function keyArgsFnFromSpecifier(
-  specifier: KeySpecifier,
-): KeyArgsFunction {
-  return (args, context) => {
-    return args ? `${context.fieldName}:${
-      JSON.stringify(computeKeyObject(args, specifier))
-    }` : context.fieldName;
-  };
+export function normalizeReadFieldOptions(
+  readFieldArgs: IArguments,
+  objectOrReference: StoreObject | Reference | undefined,
+  variables?: ReadMergeModifyContext["variables"],
+): ReadFieldOptions {
+  const {
+    0: fieldNameOrOptions,
+    1: from,
+    length: argc,
+  } = readFieldArgs;
+
+  let options: ReadFieldOptions;
+
+  if (typeof fieldNameOrOptions === "string") {
+    options = {
+      fieldName: fieldNameOrOptions,
+      // Default to objectOrReference only when no second argument was
+      // passed for the from parameter, not when undefined is explicitly
+      // passed as the second argument.
+      from: argc > 1 ? from : objectOrReference,
+    };
+  } else {
+    options = { ...fieldNameOrOptions };
+    // Default to objectOrReference only when fieldNameOrOptions.from is
+    // actually omitted, rather than just undefined.
+    if (!hasOwn.call(options, "from")) {
+      options.from = objectOrReference;
+    }
+  }
+
+  if (__DEV__ && options.from === void 0) {
+    invariant.warn(`Undefined 'from' passed to readField with arguments ${
+      stringifyForDisplay(Array.from(readFieldArgs))
+    }`);
+  }
+
+  if (void 0 === options.variables) {
+    options.variables = variables;
+  }
+
+  return options;
 }
 
-function keyFieldsFnFromSpecifier(
-  specifier: KeySpecifier,
-): KeyFieldsFunction {
-  const trie = new KeyTrie<{
-    aliasMap?: AliasMap;
-  }>(canUseWeakMap);
-
-  return (object, context) => {
-    let aliasMap: AliasMap | undefined;
-    if (context.selectionSet && context.fragmentMap) {
-      const info = trie.lookupArray([
-        context.selectionSet,
-        context.fragmentMap,
-      ]);
-      aliasMap = info.aliasMap || (
-        info.aliasMap = makeAliasMap(context.selectionSet, context.fragmentMap)
-      );
+function makeMergeObjectsFunction(
+  store: NormalizedCache,
+): MergeObjectsFunction {
+  return function mergeObjects(existing, incoming) {
+    if (Array.isArray(existing) || Array.isArray(incoming)) {
+      throw new InvariantError("Cannot automatically merge arrays");
     }
 
-    const keyObject = context.keyObject =
-      computeKeyObject(object, specifier, aliasMap);
+    // These dynamic checks are necessary because the parameters of a
+    // custom merge function can easily have the any type, so the type
+    // system cannot always enforce the StoreObject | Reference parameter
+    // types of options.mergeObjects.
+    if (isNonNullObject(existing) &&
+        isNonNullObject(incoming)) {
+      const eType = store.getFieldValue(existing, "__typename");
+      const iType = store.getFieldValue(incoming, "__typename");
+      const typesDiffer = eType && iType && eType !== iType;
 
-    return `${context.typename}:${JSON.stringify(keyObject)}`;
-  };
-}
-
-type AliasMap = {
-  // Map from store key to corresponding response key. Undefined when there are
-  // no aliased fields in this selection set.
-  aliases?: Record<string, string>;
-  // Map from store key to AliasMap correponding to a child selection set.
-  // Undefined when there are no child selection sets.
-  subsets?: Record<string, AliasMap>;
-};
-
-function makeAliasMap(
-  selectionSet: SelectionSetNode,
-  fragmentMap: FragmentMap,
-): AliasMap {
-  let map: AliasMap = Object.create(null);
-  // TODO Cache this work, perhaps by storing selectionSet._aliasMap?
-  const workQueue = new Set([selectionSet]);
-  workQueue.forEach(selectionSet => {
-    selectionSet.selections.forEach(selection => {
-      if (isField(selection)) {
-        if (selection.alias) {
-          const responseKey = selection.alias.value;
-          const storeKey = selection.name.value;
-          if (storeKey !== responseKey) {
-            const aliases = map.aliases || (map.aliases = Object.create(null));
-            aliases[storeKey] = responseKey;
-          }
-        }
-        if (selection.selectionSet) {
-          const subsets = map.subsets || (map.subsets = Object.create(null));
-          subsets[selection.name.value] =
-            makeAliasMap(selection.selectionSet, fragmentMap);
-        }
-      } else {
-        const fragment = getFragmentFromSelection(selection, fragmentMap);
-        if (fragment) {
-          workQueue.add(fragment.selectionSet);
-        }
+      if (typesDiffer) {
+        return incoming;
       }
-    });
-  });
-  return map;
-}
 
-function computeKeyObject(
-  response: Record<string, any>,
-  specifier: KeySpecifier,
-  aliasMap?: AliasMap,
-): Record<string, any> {
-  // The order of adding properties to keyObj affects its JSON serialization,
-  // so we are careful to build keyObj in the order of keys given in
-  // specifier.
-  const keyObj = Object.create(null);
-  let prevKey: string | undefined;
-  specifier.forEach(s => {
-    if (Array.isArray(s)) {
-      if (typeof prevKey === "string") {
-        const subsets = aliasMap && aliasMap.subsets;
-        const subset = subsets && subsets[prevKey];
-        keyObj[prevKey] = computeKeyObject(response[prevKey], s, subset);
+      if (isReference(existing) &&
+          storeValueIsStoreObject(incoming)) {
+        // Update the normalized EntityStore for the entity identified by
+        // existing.__ref, preferring/overwriting any fields contributed by the
+        // newer incoming StoreObject.
+        store.merge(existing.__ref, incoming);
+        return existing;
       }
-    } else {
-      const aliases = aliasMap && aliasMap.aliases;
-      const responseName = aliases && aliases[s] || s;
-      invariant(
-        hasOwn.call(response, responseName),
-        // TODO Make this appropriate for keyArgs as well
-        `Missing field '${responseName}' while computing key fields`,
-      );
-      keyObj[prevKey = s] = response[responseName];
+
+      if (storeValueIsStoreObject(existing) &&
+          isReference(incoming)) {
+        // Update the normalized EntityStore for the entity identified by
+        // incoming.__ref, taking fields from the older existing object only if
+        // those fields are not already present in the newer StoreObject
+        // identified by incoming.__ref.
+        store.merge(existing, incoming.__ref);
+        return incoming;
+      }
+
+      if (storeValueIsStoreObject(existing) &&
+          storeValueIsStoreObject(incoming)) {
+        return { ...existing, ...incoming };
+      }
     }
-  });
-  return keyObj;
+
+    return incoming;
+  };
 }

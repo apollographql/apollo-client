@@ -1,3 +1,5 @@
+import { invariant } from '../utilities/globals';
+
 import {
   DocumentNode,
   OperationDefinitionNode,
@@ -7,9 +9,9 @@ import {
   FragmentDefinitionNode,
   FieldNode,
   ASTNode,
+  visit,
+  BREAK,
 } from 'graphql';
-import { visit, BREAK } from 'graphql/language/visitor';
-import { invariant } from 'ts-invariant';
 
 import { ApolloCache } from '../cache';
 import {

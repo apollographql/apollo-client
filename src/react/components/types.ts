@@ -1,6 +1,7 @@
 import { DocumentNode } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { OperationVariables } from '../../core';
+import { OperationVariables, DefaultContext, ApolloCache } from '../../core';
 import {
   QueryFunctionOptions,
   QueryResult,
@@ -16,16 +17,18 @@ export interface QueryComponentOptions<
   TVariables = OperationVariables
 > extends QueryFunctionOptions<TData, TVariables> {
   children: (result: QueryResult<TData, TVariables>) => JSX.Element | null;
-  query: DocumentNode;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface MutationComponentOptions<
   TData = any,
-  TVariables = OperationVariables
-> extends BaseMutationOptions<TData, TVariables> {
-  mutation: DocumentNode;
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children: (
-    mutateFunction: MutationFunction<TData, TVariables>,
+    mutateFunction: MutationFunction<TData, TVariables, TContext>,
     result: MutationResult<TData>
   ) => JSX.Element | null;
 }
@@ -34,6 +37,6 @@ export interface SubscriptionComponentOptions<
   TData = any,
   TVariables = OperationVariables
 > extends BaseSubscriptionOptions<TData, TVariables> {
-  subscription: DocumentNode;
+  subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);
 }

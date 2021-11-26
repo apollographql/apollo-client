@@ -8,6 +8,7 @@ import * as linkContext from "../link/context";
 import * as linkCore from "../link/core";
 import * as linkError from "../link/error";
 import * as linkHTTP from "../link/http";
+import * as linkPersistedQueries from "../link/persisted-queries";
 import * as linkRetry from "../link/retry";
 import * as linkSchema from "../link/schema";
 import * as linkUtils from "../link/utils";
@@ -15,13 +16,14 @@ import * as linkWS from "../link/ws";
 import * as react from "../react";
 import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
-import * as reactData from "../react/data";
 import * as reactHOC from "../react/hoc";
 import * as reactHooks from "../react/hooks";
 import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
+import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
+import * as utilitiesGlobals from "../utilities/globals";
 
 const entryPoints = require("../../config/entryPoints.js");
 
@@ -47,6 +49,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client/link/core", linkCore);
   check("@apollo/client/link/error", linkError);
   check("@apollo/client/link/http", linkHTTP);
+  check("@apollo/client/link/persisted-queries", linkPersistedQueries);
   check("@apollo/client/link/retry", linkRetry);
   check("@apollo/client/link/schema", linkSchema);
   check("@apollo/client/link/utils", linkUtils);
@@ -54,13 +57,14 @@ describe('exports of public entry points', () => {
   check("@apollo/client/react", react);
   check("@apollo/client/react/components", reactComponents);
   check("@apollo/client/react/context", reactContext);
-  check("@apollo/client/react/data", reactData);
   check("@apollo/client/react/hoc", reactHOC);
   check("@apollo/client/react/hooks", reactHooks);
   check("@apollo/client/react/parser", reactParser);
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
+  check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
+  check("@apollo/client/utilities/globals", utilitiesGlobals);
 
   it("completeness", () => {
     const { join } = require("path").posix;

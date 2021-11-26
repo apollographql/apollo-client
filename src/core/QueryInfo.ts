@@ -2,7 +2,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
-import { WatchQueryOptions } from './watchQueryOptions';
+import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { QueryListener } from './types';
 import { FetchResult } from '../link/core';
@@ -10,12 +10,14 @@ import {
   ObservableSubscription,
   isNonEmptyArray,
   graphQLResultHasError,
+  canUseWeakMap,
 } from '../utilities';
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
 } from './networkStatus';
 import { ApolloError } from '../errors';
+import { QueryManager } from './QueryManager';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -23,6 +25,43 @@ export type QueryStoreValue = Pick<QueryInfo,
   | "networkError"
   | "graphQLErrors"
   >;
+
+export const enum CacheWriteBehavior {
+  FORBID,
+  OVERWRITE,
+  MERGE,
+};
+
+const destructiveMethodCounts = new (
+  canUseWeakMap ? WeakMap : Map
+)<ApolloCache<any>, number>();
+
+function wrapDestructiveCacheMethod(
+  cache: ApolloCache<any>,
+  methodName: keyof ApolloCache<any>,
+) {
+  const original = cache[methodName];
+  if (typeof original === "function") {
+    cache[methodName] = function () {
+      destructiveMethodCounts.set(
+        cache,
+        // The %1e15 allows the count to wrap around to 0 safely every
+        // quadrillion evictions, so there's no risk of overflow. To be
+        // clear, this is more of a pedantic principle than something
+        // that matters in any conceivable practical scenario.
+        (destructiveMethodCounts.get(cache)! + 1) % 1e15,
+      );
+      return original.apply(this, arguments);
+    };
+  }
+}
+
+function cancelNotifyTimeout(info: QueryInfo) {
+  if (info["notifyTimeout"]) {
+    clearTimeout(info["notifyTimeout"]);
+    info["notifyTimeout"] = void 0;
+  }
+}
 
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
@@ -45,8 +84,28 @@ export class QueryInfo {
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
+  stopped = false;
 
-  constructor(private cache: ApolloCache<any>) {}
+  private cache: ApolloCache<any>;
+
+  constructor(
+    queryManager: QueryManager<any>,
+    public readonly queryId = queryManager.generateQueryId(),
+  ) {
+    const cache = this.cache = queryManager.cache;
+
+    // Track how often cache.evict is called, since we want eviction to
+    // override the feud-stopping logic in the markResult method, by
+    // causing shouldWrite to return true. Wrapping the cache.evict method
+    // is a bit of a hack, but it saves us from having to make eviction
+    // counting an official part of the ApolloCache API.
+    if (!destructiveMethodCounts.has(cache)) {
+      destructiveMethodCounts.set(cache, 0);
+      wrapDestructiveCacheMethod(cache, "evict");
+      wrapDestructiveCacheMethod(cache, "modify");
+      wrapDestructiveCacheMethod(cache, "reset");
+    }
+  }
 
   public init(query: {
     document: DocumentNode;
@@ -66,7 +125,7 @@ export class QueryInfo {
     }
 
     if (!equal(query.variables, this.variables)) {
-      this.diff = null;
+      this.lastDiff = void 0;
     }
 
     Object.assign(this, {
@@ -92,27 +151,62 @@ export class QueryInfo {
 
   private notifyTimeout?: ReturnType<typeof setTimeout>;
 
-  private diff: Cache.DiffResult<any> | null = null;
+  reset() {
+    cancelNotifyTimeout(this);
+    this.lastDiff = void 0;
+    this.dirty = false;
+  }
 
   getDiff(variables = this.variables): Cache.DiffResult<any> {
-    if (this.diff && equal(variables, this.variables)) {
-      return this.diff;
+    const options = this.getDiffOptions(variables);
+
+    if (this.lastDiff && equal(options, this.lastDiff.options)) {
+      return this.lastDiff.diff;
     }
 
     this.updateWatch(this.variables = variables);
 
-    return this.diff = this.cache.diff({
+    const oq = this.observableQuery;
+    if (oq && oq.options.fetchPolicy === "no-cache") {
+      return { complete: false };
+    }
+
+    const diff = this.cache.diff(options);
+    this.updateLastDiff(diff, options);
+    return diff;
+  }
+
+  private lastDiff?: {
+    diff: Cache.DiffResult<any>,
+    options: Cache.DiffOptions,
+  };
+
+  private updateLastDiff(
+    diff: Cache.DiffResult<any> | null,
+    options?: Cache.DiffOptions,
+  ) {
+    this.lastDiff = diff ? {
+      diff,
+      options: options || this.getDiffOptions(),
+    } : void 0;
+  }
+
+  private getDiffOptions(variables = this.variables): Cache.DiffOptions {
+    return {
       query: this.document!,
       variables,
       returnPartialData: true,
       optimistic: true,
-    });
+      canonizeResults: this.observableQuery?.options.canonizeResults,
+    };
   }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
-    const oldDiff = this.diff;
-    this.diff = diff;
-    if (!this.dirty && diff?.result !== oldDiff?.result) {
+    const oldDiff = this.lastDiff && this.lastDiff.diff;
+    this.updateLastDiff(diff);
+    if (!this.dirty &&
+        !equal(oldDiff && oldDiff.result,
+               diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {
         this.notifyTimeout = setTimeout(() => this.notify(), 0);
@@ -134,17 +228,25 @@ export class QueryInfo {
 
     if (oq) {
       oq["queryInfo"] = this;
-      this.listeners.add(this.oqListener = () => oq.reobserve());
+      this.listeners.add(this.oqListener = () => {
+        // If this.diff came from an optimistic transaction, deliver the
+        // current cache data to the ObservableQuery, but don't perform a
+        // full reobservation, since oq.reobserve might make a network
+        // request, and we don't want to trigger network requests for
+        // optimistic updates.
+        if (this.getDiff().fromOptimisticTransaction) {
+          oq["observe"]();
+        } else {
+          oq.reobserve();
+        }
+      });
     } else {
       delete this.oqListener;
     }
   }
 
   notify() {
-    if (this.notifyTimeout) {
-      clearTimeout(this.notifyTimeout);
-      this.notifyTimeout = void 0;
-    }
+    cancelNotifyTimeout(this);
 
     if (this.shouldNotify()) {
       this.listeners.forEach(listener => listener(this));
@@ -171,13 +273,22 @@ export class QueryInfo {
   }
 
   public stop() {
-    this.cancel();
-    // Revert back to the no-op version of cancel inherited from
-    // QueryInfo.prototype.
-    delete this.cancel;
+    if (!this.stopped) {
+      this.stopped = true;
 
-    const oq = this.observableQuery;
-    if (oq) oq.stopPolling();
+      // Cancel the pending notify timeout
+      this.reset();
+
+      this.cancel();
+      // Revert back to the no-op version of cancel inherited from
+      // QueryInfo.prototype.
+      this.cancel = QueryInfo.prototype.cancel;
+
+      this.subscriptions.forEach(sub => sub.unsubscribe());
+
+      const oq = this.observableQuery;
+      if (oq) oq.stopPolling();
+    }
   }
 
   // This method is a no-op by default, until/unless overridden by the
@@ -191,21 +302,48 @@ export class QueryInfo {
     if (oq && oq.options.fetchPolicy === "no-cache") {
       return;
     }
+
+    const watchOptions: Cache.WatchOptions = {
+      // Although this.getDiffOptions returns Cache.DiffOptions instead of
+      // Cache.WatchOptions, all the overlapping options should be the same, so
+      // we can reuse getDiffOptions here, for consistency.
+      ...this.getDiffOptions(variables),
+      watcher: this,
+      callback: diff => this.setDiff(diff),
+    };
+
     if (!this.lastWatch ||
-        this.lastWatch.query !== this.document ||
-        !equal(variables, this.lastWatch.variables)) {
+        !equal(watchOptions, this.lastWatch)) {
       this.cancel();
-      this.cancel = this.cache.watch(this.lastWatch = {
-        query: this.document!,
-        variables,
-        optimistic: true,
-        callback: diff => this.setDiff(diff),
-      });
+      this.cancel = this.cache.watch(this.lastWatch = watchOptions);
     }
   }
 
-  private lastWrittenResult?: FetchResult<any>;
-  private lastWrittenVars?: WatchQueryOptions["variables"];
+  private lastWrite?: {
+    result: FetchResult<any>;
+    variables: WatchQueryOptions["variables"];
+    dmCount: number | undefined;
+  };
+
+  public resetLastWrite() {
+    this.lastWrite = void 0;
+  }
+
+  private shouldWrite(
+    result: FetchResult<any>,
+    variables: WatchQueryOptions["variables"],
+  ) {
+    const { lastWrite } = this;
+    return !(
+      lastWrite &&
+      // If cache.evict has been called since the last time we wrote this
+      // data into the cache, there's a chance writing this result into
+      // the cache will repair what was evicted.
+      lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
+      equal(variables, lastWrite.variables) &&
+      equal(result.data, lastWrite.result.data)
+    );
+  }
 
   public markResult<T>(
     result: FetchResult<T>,
@@ -213,31 +351,41 @@ export class QueryInfo {
       | "variables"
       | "fetchPolicy"
       | "errorPolicy">,
-    allowCacheWrite: boolean,
+    cacheWriteBehavior: CacheWriteBehavior,
   ) {
     this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
 
+    // Cancel the pending notify timeout (if it exists) to prevent extraneous network
+    // requests. To allow future notify timeouts, diff and dirty are reset as well.
+    this.reset();
+
     if (options.fetchPolicy === 'no-cache') {
-      this.diff = { result: result.data, complete: true };
+      this.updateLastDiff(
+        { result: result.data, complete: true },
+        this.getDiffOptions(options.variables),
+      );
 
-    } else if (allowCacheWrite) {
-      const ignoreErrors =
-        options.errorPolicy === 'ignore' ||
-        options.errorPolicy === 'all';
-      let writeWithErrors = !graphQLResultHasError(result);
-      if (!writeWithErrors && ignoreErrors && result.data) {
-        writeWithErrors = true;
-      }
-
-      if (writeWithErrors) {
+    } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
+      if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction(cache => {
-          if (this.lastWrittenResult &&
-              equal(result.data, this.lastWrittenResult.data) &&
-              equal(options.variables, this.lastWrittenVars)) {
+          if (this.shouldWrite(result, options.variables)) {
+            cache.writeQuery({
+              query: this.document!,
+              data: result.data as T,
+              variables: options.variables,
+              overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+            });
+
+            this.lastWrite = {
+              result,
+              variables: options.variables,
+              dmCount: destructiveMethodCounts.get(this.cache),
+            };
+          } else {
             // If result is the same as the last result we received from
             // the network (and the variables match too), avoid writing
             // result into the cache again. The wisdom of skipping this
@@ -270,48 +418,41 @@ export class QueryInfo {
             // mitigate the clobbering somehow, but that would make this
             // particular cache write even less important, and thus
             // skipping it would be even safer than it is today.
-            if (this.diff && this.diff.complete) {
+            if (this.lastDiff &&
+                this.lastDiff.diff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
-              result.data = this.diff.result;
+              result.data = this.lastDiff.diff.result;
               return;
             }
             // If the previous this.diff was incomplete, fall through to
             // re-reading the latest data with cache.diff, below.
-          } else {
-            cache.writeQuery({
-              query: this.document!,
-              data: result.data as T,
-              variables: options.variables,
-            });
-            this.lastWrittenResult = result;
-            this.lastWrittenVars = options.variables;
           }
 
-          const diff = cache.diff<T>({
-            query: this.document!,
-            variables: options.variables,
-            returnPartialData: true,
-            optimistic: true,
-          });
+          const diffOptions = this.getDiffOptions(options.variables);
+          const diff = cache.diff<T>(diffOptions);
 
-          // Any time we're about to update this.diff, we need to make
-          // sure we've started watching the cache.
-          this.updateWatch(options.variables);
+          // In case the QueryManager stops this QueryInfo before its
+          // results are delivered, it's important to avoid restarting the
+          // cache watch when markResult is called.
+          if (!this.stopped) {
+            // Any time we're about to update this.diff, we need to make
+            // sure we've started watching the cache.
+            this.updateWatch(options.variables);
+          }
 
           // If we're allowed to write to the cache, and we can read a
           // complete result from the cache, update result.data to be the
           // result from the cache, rather than the raw network result.
           // Set without setDiff to avoid triggering a notify call, since
           // we have other ways of notifying for this result.
-          this.diff = diff;
+          this.updateLastDiff(diff, diffOptions);
           if (diff.complete) {
             result.data = diff.result;
           }
         });
-
       } else {
-        this.lastWrittenResult = this.lastWrittenVars = void 0;
+        this.lastWrite = void 0;
       }
     }
   }
@@ -323,7 +464,9 @@ export class QueryInfo {
 
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
-    this.lastWrittenResult = this.lastWrittenVars = void 0;
+    this.lastWrite = void 0;
+
+    this.reset();
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;
@@ -335,4 +478,18 @@ export class QueryInfo {
 
     return error;
   }
+}
+
+export function shouldWriteResult<T>(
+  result: FetchResult<T>,
+  errorPolicy: ErrorPolicy = "none",
+) {
+  const ignoreErrors =
+    errorPolicy === "ignore" ||
+    errorPolicy === "all";
+  let writeWithErrors = !graphQLResultHasError(result);
+  if (!writeWithErrors && ignoreErrors && result.data) {
+    writeWithErrors = true;
+  }
+  return writeWithErrors;
 }

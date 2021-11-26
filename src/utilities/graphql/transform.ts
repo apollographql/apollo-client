@@ -104,7 +104,7 @@ export function removeDirectivesFromDocument(
   let modifiedDoc = nullIfDocIsEmpty(
     visit(doc, {
       Variable: {
-        enter(node, _key, parent) {
+        enter(node: VariableNode, _key, parent) {
           // Store each variable that's referenced as part of an argument
           // (excluding operation definition variables), so we know which
           // variables are being used. If we later want to remove a variable
@@ -119,7 +119,7 @@ export function removeDirectivesFromDocument(
       },
 
       Field: {
-        enter(node) {
+        enter(node: FieldNode) {
           if (directives && node.directives) {
             // If `remove` is set to true for a directive, and a directive match
             // is found for a field, remove the field as well.
@@ -164,7 +164,7 @@ export function removeDirectivesFromDocument(
       },
 
       FragmentSpread: {
-        enter(node) {
+        enter(node: FragmentSpreadNode) {
           // Keep track of referenced fragment spreads. This is used to
           // determine if top level fragment definitions should be removed.
           fragmentSpreadsInUse[node.name.value] = true;
@@ -172,7 +172,7 @@ export function removeDirectivesFromDocument(
       },
 
       Directive: {
-        enter(node) {
+        enter(node: DirectiveNode) {
           // If a matching directive is found, remove it.
           if (getDirectiveMatcher(directives)(node)) {
             return null;
@@ -212,7 +212,7 @@ export function removeDirectivesFromDocument(
 export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
   return visit(checkDocument(doc), {
     SelectionSet: {
-      enter(node, _key, parent) {
+      enter(node: SelectionSetNode, _key, parent) {
         // Don't add __typename to OperationDefinitions.
         if (
           parent &&
@@ -268,7 +268,7 @@ addTypenameToDocument.added = function (field: FieldNode) {
   return field === TYPENAME_FIELD;
 };
 
-const connectionRemoveConfig = {
+const connectionRemoveConfig: RemoveDirectiveConfig = {
   test: (directive: DirectiveNode) => {
     const willRemove = directive.name.value === 'connection';
     if (willRemove) {
@@ -354,7 +354,7 @@ export function removeArgumentsFromDocument(
   return nullIfDocIsEmpty(
     visit(doc, {
       OperationDefinition: {
-        enter(node) {
+        enter(node: OperationDefinitionNode) {
           return {
             ...node,
             // Remove matching top level variables definitions.
@@ -367,7 +367,7 @@ export function removeArgumentsFromDocument(
       },
 
       Field: {
-        enter(node) {
+        enter(node: FieldNode) {
           // If `remove` is set to true for an argument, and an argument match
           // is found for a field, remove the field as well.
           const shouldRemoveField = config.some(argConfig => argConfig.remove);
@@ -390,7 +390,7 @@ export function removeArgumentsFromDocument(
       },
 
       Argument: {
-        enter(node) {
+        enter(node: ArgumentNode) {
           // Remove all matching arguments.
           if (argMatcher(node)) {
             return null;
@@ -459,7 +459,7 @@ export function buildQueryFromSelectionSet(
   // Build a new query using the selection set of the main operation.
   const modifiedDoc = visit(document, {
     OperationDefinition: {
-      enter(node) {
+      enter(node: OperationDefinitionNode) {
         return {
           ...node,
           operation: 'query',
@@ -493,7 +493,7 @@ export function removeClientSetsFromDocument(
   if (modifiedDoc) {
     modifiedDoc = visit(modifiedDoc, {
       FragmentDefinition: {
-        enter(node) {
+        enter(node: FragmentDefinitionNode) {
           if (node.selectionSet) {
             const isTypenameOnly = node.selectionSet.selections.every(
               selection =>

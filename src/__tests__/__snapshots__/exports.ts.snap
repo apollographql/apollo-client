@@ -16,11 +16,13 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "applyNextFetchPolicy",
   "checkFetcher",
   "concat",
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -44,6 +46,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -63,10 +66,14 @@ exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
   "ApolloCache",
   "Cache",
+  "EntityStore",
   "InMemoryCache",
   "MissingFieldError",
+  "Policies",
   "cacheSlot",
+  "canonicalStringify",
   "defaultDataIdFromObject",
+  "fieldNameFromStoreName",
   "isReference",
   "makeReference",
   "makeVar",
@@ -86,11 +93,13 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "applyNextFetchPolicy",
   "checkFetcher",
   "concat",
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -110,6 +119,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -169,10 +179,12 @@ Array [
   "checkFetcher",
   "createHttpLink",
   "createSignalIfSupported",
+  "defaultPrinter",
   "fallbackHttpConfig",
   "parseAndCheckHttpResponse",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
 ]
@@ -180,6 +192,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
+  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -250,15 +263,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/data 1`] = `
-Array [
-  "MutationData",
-  "OperationData",
-  "QueryData",
-  "SubscriptionData",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
 Array [
   "graphql",
@@ -285,6 +289,7 @@ Array [
   "DocumentType",
   "operationName",
   "parser",
+  "verifyDocumentType",
 ]
 `;
 
@@ -306,26 +311,47 @@ Array [
   "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "stripSymbols",
   "subscribeAndCount",
+  "withErrorSpy",
+  "withLogSpy",
+  "withWarningSpy",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/core 1`] = `
+Array [
+  "MockLink",
+  "MockSubscriptionLink",
+  "createMockClient",
+  "itAsync",
+  "mockObservableLink",
+  "mockSingleLink",
+  "subscribeAndCount",
+  "withErrorSpy",
+  "withLogSpy",
+  "withWarningSpy",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
   "Concast",
+  "DEV",
   "DeepMerger",
   "Observable",
   "addTypenameToDocument",
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseSymbol",
   "canUseWeakMap",
+  "canUseWeakSet",
   "checkDocument",
   "cloneDeep",
   "compact",
   "concatPagination",
   "createFragmentMap",
+  "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
   "getFragmentDefinition",
@@ -342,12 +368,16 @@ Array [
   "graphQLResultHasError",
   "hasClientExports",
   "hasDirectives",
+  "isDocumentNode",
   "isField",
   "isInlineFragment",
   "isNonEmptyArray",
+  "isNonNullObject",
   "isReference",
   "iterateObserversSafely",
   "makeReference",
+  "makeUniqueId",
+  "maybe",
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
@@ -361,6 +391,18 @@ Array [
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",
+  "stringifyForDisplay",
   "valueToObjectRepresentation",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
+Array [
+  "DEV",
+  "InvariantError",
+  "checkDEV",
+  "global",
+  "invariant",
+  "maybe",
 ]
 `;

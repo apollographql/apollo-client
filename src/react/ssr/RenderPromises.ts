@@ -2,7 +2,13 @@ import { DocumentNode } from 'graphql';
 
 import { ObservableQuery } from '../../core';
 import { QueryDataOptions } from '../types/types';
-import { QueryData } from '../data/QueryData';
+
+// TODO: A vestigial interface from when hooks were implemented with utility
+// classes, which should be deleted in the future.
+interface QueryData {
+  getOptions(): any;
+  fetchData(): Promise<void>;
+}
 
 type QueryInfo = {
   seen: boolean;
@@ -26,36 +32,48 @@ export class RenderPromises {
   // beyond a single call to renderToStaticMarkup.
   private queryInfoTrie = new Map<DocumentNode, Map<string, QueryInfo>>();
 
+  private stopped = false;
+  public stop() {
+    if (!this.stopped) {
+      this.queryPromises.clear();
+      this.queryInfoTrie.clear();
+      this.stopped = true;
+    }
+  }
+
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables>(
     observable: ObservableQuery<any, TVariables>,
     props: QueryDataOptions<TData, TVariables>
   ) {
+    if (this.stopped) return;
     this.lookupQueryInfo(props).observable = observable;
   }
 
   // Get's the cached observable that matches the SSR Query instances query and variables.
   public getSSRObservable<TData, TVariables>(
     props: QueryDataOptions<TData, TVariables>
-  ) {
+  ): ObservableQuery<any, TVariables> | null {
     return this.lookupQueryInfo(props).observable;
   }
 
-  public addQueryPromise<TData, TVariables>(
-    queryInstance: QueryData<TData, TVariables>,
+  public addQueryPromise(
+    queryInstance: QueryData,
     finish: () => React.ReactNode
   ): React.ReactNode {
-    const info = this.lookupQueryInfo(queryInstance.getOptions());
-    if (!info.seen) {
-      this.queryPromises.set(
-        queryInstance.getOptions(),
-        new Promise(resolve => {
-          resolve(queryInstance.fetchData());
-        })
-      );
-      // Render null to abandon this subtree for this rendering, so that we
-      // can wait for the data to arrive.
-      return null;
+    if (!this.stopped) {
+      const info = this.lookupQueryInfo(queryInstance.getOptions());
+      if (!info.seen) {
+        this.queryPromises.set(
+          queryInstance.getOptions(),
+          new Promise(resolve => {
+            resolve(queryInstance.fetchData());
+          })
+        );
+        // Render null to abandon this subtree for this rendering, so that we
+        // can wait for the data to arrive.
+        return null;
+      }
     }
     return finish();
   }

@@ -1,10 +1,11 @@
+import { invariant } from '../../utilities/globals';
+
 import {
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,
   OperationDefinitionNode
 } from 'graphql';
-import { invariant } from 'ts-invariant';
 
 export enum DocumentType {
   Query,
@@ -36,7 +37,7 @@ export function operationName(type: DocumentType) {
   return name;
 }
 
-// This parser is mostly used to saftey check incoming documents.
+// This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
   const cached = cache.get(document);
   if (cached) return cached;
@@ -113,3 +114,15 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   cache.set(document, payload);
   return payload;
 }
+
+export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
+  const operation = parser(document);
+  const requiredOperationName = operationName(type);
+  const usedOperationName = operationName(operation.type);
+  invariant(
+    operation.type === type,
+    `Running a ${requiredOperationName} requires a graphql ` +
+      `${requiredOperationName}, but a ${usedOperationName} was used instead.`
+  );
+}
+

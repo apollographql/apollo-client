@@ -3,9 +3,10 @@ version: 2
 jobs:
   Filesize:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:16.13.0
     steps:
       - checkout
+      - run: npm run ci:precheck
       - restore_cache:
           keys:
             # When lock file changes, use increasingly general patterns to
@@ -13,7 +14,7 @@ jobs:
             - npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
             - npm-v3-{{ .Branch }}-
             - npm-v3-
-      - run: npm --version
+      - run: npm version
       - run: npm ci
       - save_cache:
           key: npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
@@ -26,9 +27,10 @@ jobs:
 
   Tests:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:16.13.0
     steps:
       - checkout
+      - run: npm run ci:precheck
       - restore_cache:
           keys:
             # When lock file changes, use increasingly general patterns to
@@ -36,7 +38,7 @@ jobs:
             - npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
             - npm-v3-{{ .Branch }}-
             - npm-v3-
-      - run: npm --version
+      - run: npm version
       - run: npm ci
       - save_cache:
           key: npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}

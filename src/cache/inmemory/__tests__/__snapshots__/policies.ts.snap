@@ -50,6 +50,48 @@ Object {
 }
 `;
 
+exports[`type policies complains about missing key fields 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'title' while writing result {
+  \\"year\\": 2011,
+  \\"theInformationBookData\\": {
+    \\"__typename\\": \\"Book\\",
+    \\"isbn\\": \\"1400096235\\",
+    \\"title\\": \\"The Information\\",
+    \\"subtitle\\": \\"A History, a Theory, a Flood\\",
+    \\"author\\": {
+      \\"name\\": \\"James Gleick\\"
+    }
+  }
+}",
+    ],
+    Array [
+      "Missing field 'year' while writing result {
+  \\"__typename\\": \\"Book\\",
+  \\"isbn\\": \\"1400096235\\",
+  \\"title\\": \\"The Information\\",
+  \\"subtitle\\": \\"A History, a Theory, a Flood\\",
+  \\"author\\": {
+    \\"name\\": \\"James Gleick\\"
+  }
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
 exports[`type policies field policies can handle Relay-style pagination 1`] = `
 Object {
   "Artist:{\\"href\\":\\"/artist/jean-michel-basquiat\\"}": Object {
@@ -749,6 +791,7 @@ Object {
           "cursor": "YXJyYXljb25uZWN0aW9uOjEx",
           "node": Object {
             "__typename": "SearchableItem",
+            "description": "<placeholder for unknown description>",
             "displayLabel": "James Turrell: Light knows when we’re looking",
           },
         },
@@ -839,7 +882,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 1`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 1`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -861,7 +904,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 2`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 2`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -890,7 +933,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 3`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 3`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -926,7 +969,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 4`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 4`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -969,7 +1012,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 5`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 5`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1019,7 +1062,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 6`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 6`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1076,7 +1119,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 7`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 7`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1140,7 +1183,7 @@ Object {
 }
 `;
 
-exports[`type policies field policies can include optional arguments in keyArgs 8`] = `
+exports[`type policies field policies can include optional arguments in field keyArgs policy 8`] = `
 Object {
   "Author:{\\"name\\":\\"Nadia Eghbal\\"}": Object {
     "__typename": "Author",
@@ -1230,6 +1273,100 @@ Object {
     "mergeRead": 1,
     "mergeReadModify": 101,
   },
+}
+`;
+
+exports[`type policies field policies readField helper function calls custom read functions 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'blockers' while writing result {
+  \\"__typename\\": \\"Task\\",
+  \\"id\\": 4,
+  \\"description\\": \\"grandchild task\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`type policies field policies runs nested merge functions as well as ancestors 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'time' while writing result {
+  \\"__typename\\": \\"Event\\",
+  \\"id\\": 123
+}",
+    ],
+    Array [
+      "Missing field 'time' while writing result {
+  \\"__typename\\": \\"Event\\",
+  \\"id\\": 345,
+  \\"name\\": \\"Rooftop dog party\\",
+  \\"attendees\\": [
+    {
+      \\"__typename\\": \\"Attendee\\",
+      \\"id\\": 456,
+      \\"name\\": \\"Inspector Beckett\\"
+    },
+    {
+      \\"__typename\\": \\"Attendee\\",
+      \\"id\\": 234
+    }
+  ]
+}",
+    ],
+    Array [
+      "Missing field 'name' while writing result {
+  \\"__typename\\": \\"Attendee\\",
+  \\"id\\": 234
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
+exports[`type policies readField warns if explicitly passed undefined \`from\` option 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Undefined 'from' passed to readField with arguments [{\\"fieldName\\":\\"firstName\\",\\"from\\":<undefined>}]",
+    ],
+    Array [
+      "Undefined 'from' passed to readField with arguments [\\"lastName\\",<undefined>]",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
 }
 `;
 

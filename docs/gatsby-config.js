@@ -1,13 +1,15 @@
 const themeOptions = require('gatsby-theme-apollo-docs/theme-options');
 
 module.exports = {
-  pathPrefix: '/docs/react',
   plugins: [
     {
       resolve: 'gatsby-theme-apollo-docs',
       options: {
         ...themeOptions,
         root: __dirname,
+        pathPrefix: '/docs/react',
+        algoliaIndexName: 'react',
+        algoliaFilters: ['docset:react', 'docset:server'],
         subtitle: 'Client (React)',
         description: 'A guide to using the Apollo GraphQL Client with React',
         githubRepo: 'apollographql/apollo-client',
@@ -31,11 +33,14 @@ module.exports = {
           'Fetching': [
             'data/queries',
             'data/mutations',
+            'data/refetching',
             'data/subscriptions',
             'data/fragments',
             'data/error-handling',
+            'data/operation-best-practices'
           ],
           Caching: [
+            'caching/overview',
             'caching/cache-configuration',
             'caching/cache-interaction',
             'caching/garbage-collection',
@@ -57,10 +62,10 @@ module.exports = {
             'local-state/local-resolvers'
           ],
           'Development & Testing': [
+            'development-testing/developer-tooling',
             'development-testing/static-typing',
             'development-testing/testing',
             'development-testing/client-schema-mocking',
-            'development-testing/developer-tooling',
           ],
           Performance: [
             'performance/performance',
@@ -84,10 +89,8 @@ module.exports = {
           ],
           'API - Core': [
             'api/core/ApolloClient',
+            'api/cache/InMemoryCache',
             'api/core/ObservableQuery'
-          ],
-          'API - Cache': [
-            'api/cache/InMemoryCache'
           ],
           'API - React': [
             'api/react/hooks',
@@ -98,14 +101,16 @@ module.exports = {
           ],
           'API - Link': [
             'api/link/introduction',
+            'api/link/apollo-link-http',
             'api/link/apollo-link-batch-http',
             'api/link/apollo-link-context',
             'api/link/apollo-link-error',
+            'api/link/persisted-queries',
             'api/link/apollo-link-rest',
             'api/link/apollo-link-retry',
             'api/link/apollo-link-schema',
             'api/link/apollo-link-ws',
-            'api/link/persisted-queries'
+            'api/link/community-links'
           ],
         },
       },

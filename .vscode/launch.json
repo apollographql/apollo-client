@@ -7,7 +7,7 @@
       "name": "Jest Current File",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
       "args": [
-        "${fileBasenameNoExtension}",
+        "${relativeFile}",
         "--config",
         "./config/jest.config.js"
       ],

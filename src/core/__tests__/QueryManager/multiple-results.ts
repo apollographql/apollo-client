@@ -1,19 +1,16 @@
 // externals
 import gql from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../../utilities/testing/stripSymbols';
 
 // mocks
-import {
-  MockSubscriptionLink
-} from '../../../utilities/testing/mocking/mockSubscriptionLink';
+import { itAsync, MockSubscriptionLink } from '../../../testing/core';
 
 // core
 import { QueryManager } from '../../QueryManager';
 import { GraphQLError } from 'graphql';
 
 describe('mutiple results', () => {
-  it('allows multiple query results from link', done => {
+  itAsync('allows multiple query results from link', (resolve, reject) => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -58,7 +55,7 @@ describe('mutiple results', () => {
           link.simulateResult({ result: { data: laterData } });
         }
         if (count === 2) {
-          done();
+          resolve();
         }
       },
       error: e => {
@@ -70,7 +67,7 @@ describe('mutiple results', () => {
     link.simulateResult({ result: { data: initialData } });
   });
 
-  it('allows multiple query results from link with ignored errors', done => {
+  itAsync('allows multiple query results from link with ignored errors', (resolve, reject) => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -127,7 +124,7 @@ describe('mutiple results', () => {
           // make sure the count doesn't go up by accident
           setTimeout(() => {
             if (count === 3) throw new Error('error was not ignored');
-            done();
+            resolve();
           });
         }
       },
@@ -139,7 +136,7 @@ describe('mutiple results', () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
   });
-  it('strips errors from a result if ignored', done => {
+  itAsync('strips errors from a result if ignored', (resolve, reject) => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -185,19 +182,19 @@ describe('mutiple results', () => {
         count++;
 
         if (count === 1) {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
           // this should fire the `next` event without this error
           link.simulateResult({
             result: { errors: [new GraphQLError('defer failed')], data: laterData },
           });
         }
         if (count === 2) {
-          expect(stripSymbols(result.data)).toEqual(laterData);
+          expect(result.data).toEqual(laterData);
           expect(result.errors).toBeUndefined();
           // make sure the count doesn't go up by accident
           setTimeout(() => {
-            if (count === 3) done.fail(new Error('error was not ignored'));
-            done();
+            if (count === 3) reject(new Error('error was not ignored'));
+            resolve();
           }, 10);
         }
       },
@@ -210,7 +207,7 @@ describe('mutiple results', () => {
     link.simulateResult({ result: { data: initialData } });
   });
 
-  xit('allows multiple query results from link with all errors', done => {
+  itAsync.skip('allows multiple query results from link with all errors', (resolve, reject) => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -269,23 +266,23 @@ describe('mutiple results', () => {
             expect(result.errors).toBeUndefined();
             // make sure the count doesn't go up by accident
             setTimeout(() => {
-              if (count === 4) done.fail(new Error('error was not ignored'));
-              done();
+              if (count === 4) reject(new Error('error was not ignored'));
+              resolve();
             });
           }
         } catch (e) {
-          done.fail(e);
+          reject(e);
         }
       },
       error: e => {
-        done.fail(e);
+        reject(e);
       },
     });
 
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
   });
-  it('closes the observable if an error is set with the none policy', done => {
+  itAsync('closes the observable if an error is set with the none policy', (resolve, reject) => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -335,7 +332,7 @@ describe('mutiple results', () => {
       error: e => {
         expect(e).toBeDefined();
         expect(e.graphQLErrors).toBeDefined();
-        done();
+        resolve();
       },
     });
 

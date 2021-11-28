@@ -1,3 +1,5 @@
+import '../../utilities/globals';
+
 export { empty } from './empty';
 export { from } from './from';
 export { split } from './split';

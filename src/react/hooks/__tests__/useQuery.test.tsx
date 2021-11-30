@@ -3455,6 +3455,63 @@ describe('useQuery Hook', () => {
     });
   });
 
+  describe('defaultOptions', () => {
+    it('should allow polling options to be passed to the client', async () => {
+      const query = gql`{ hello }`;
+      const cache = new InMemoryCache();
+      const link = mockSingleLink(
+        {
+          request: { query },
+          result: { data: { hello: "world 1" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 2" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 3" } },
+        },
+      );
+
+      const client = new ApolloClient({
+        defaultOptions: {
+          watchQuery: {
+            pollInterval: 10,
+          },
+        },
+        cache,
+        link,
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 2' });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 3' });
+    });
+  });
+
   describe('canonical cache results', () => {
     it('can be disabled via useQuery options', async () => {
       const cache = new InMemoryCache({

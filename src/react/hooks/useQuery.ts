@@ -310,7 +310,7 @@ export function useQuery<
 
   return {
     ...obsQueryFields,
-    variables: obsQuery.variables,
+    variables: createWatchQueryOptions(query, options).variables,
     client,
     called: true,
     previousData: ref.current.previousData,
@@ -350,6 +350,10 @@ function createWatchQueryOptions<TData, TVariables>(
     // cache-first is the default policy, but we explicitly assign it here so
     // the cache policies computed based on options can be cleared
     watchQueryOptions.fetchPolicy = 'cache-first';
+  }
+
+  if (!watchQueryOptions.variables) {
+    watchQueryOptions.variables = {} as TVariables;
   }
 
   return { query, ...watchQueryOptions };

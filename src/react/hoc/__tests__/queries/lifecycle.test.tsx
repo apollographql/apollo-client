@@ -63,7 +63,7 @@ describe('[queries] lifecycle', () => {
                 break;
               case 1:
                 expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual(variables1);
+                expect(data!.variables).toEqual(variables2);
                 expect(data!.allPeople).toEqual(data1.allPeople);
                 break;
               case 2:
@@ -226,7 +226,7 @@ describe('[queries] lifecycle', () => {
                 break;
               case 1:
                 expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual({ first: 1 });
+                expect(data!.variables).toEqual({ first: 2 });
                 expect(data!.allPeople).toEqual(data1.allPeople);
                 break;
               case 2:
@@ -323,7 +323,7 @@ describe('[queries] lifecycle', () => {
                 break;
               case 1:
                 expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual({ first: 1 });
+                expect(data!.variables).toEqual({ first: 2 });
                 expect(data!.allPeople).toEqual(data1.allPeople);
                 break;
               case 2:

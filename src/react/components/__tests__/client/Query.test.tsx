@@ -68,8 +68,6 @@ describe('Query component', () => {
             if (result.loading) {
               expect(rest).toEqual({
                 called: true,
-                data: undefined,
-                error: undefined,
                 loading: true,
                 networkStatus: 1,
                 previousData: undefined,

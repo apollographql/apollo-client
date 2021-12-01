@@ -178,8 +178,10 @@ describe('queries', () => {
       expect(data).toBeTruthy();
       switch (count) {
         case 0:
-        case 1:
           expect(data!.variables.someId).toEqual(1);
+          break;
+        case 1:
+          expect(data!.variables.someId).toEqual(2);
           break;
         case 2:
           expect(data!.variables.someId).toEqual(2);

@@ -144,7 +144,7 @@ export function useQuery<
       }
     }
 
-    Object.assign(ref.current, { client, query, options });
+    Object.assign(ref.current, { client, query });
   }, [obsQuery, client, query, options]);
 
   // An effect to subscribe to the current observable query
@@ -255,6 +255,10 @@ export function useQuery<
     ) {
       obsQuery.setOptions(createWatchQueryOptions(query, options)).catch(() => {});
     }
+
+    // We assign options during rendering as a guard to make sure that
+    // callbacks like onCompleted and onError are not stale.
+    Object.assign(ref.current, { options });
   }
 
   if (
@@ -318,6 +322,9 @@ export function useQuery<
   };
 }
 
+/**
+ * A function to massage options before passing them the ObservableQuery.
+ */
 function createWatchQueryOptions<TData, TVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<TData, TVariables> = {},

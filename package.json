@@ -101,7 +101,7 @@
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "27.0.3",
     "@types/lodash": "4.14.177",
-    "@types/node": "16.11.10",
+    "@types/node": "16.11.11",
     "@types/react": "17.0.34",
     "@types/react-dom": "17.0.2",
     "bundlesize": "0.18.1",

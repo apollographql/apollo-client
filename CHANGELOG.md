@@ -1,3 +1,10 @@
+## Apollo Client 3.5.6 (unreleased)
+
+### Bug Fixes made by [@brainkim](https://github.com/brainkim) in [#9144](https://github.com/apollographql/apollo-client/pull/9144)):
+- Restores old behavior where the callback passed to `useMutation()` is constant.
+- Fix `useMutation()` callbacks having stale closures.
+- Fix `useQuery()` variables being out of date.
+
 ## Apollo Client 3.5.5 (2021-11-23)
 
 ### Bug Fixes

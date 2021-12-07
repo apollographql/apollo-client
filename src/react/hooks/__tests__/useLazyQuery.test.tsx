@@ -530,8 +530,10 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
     const execute = result.current[0];
-    const mock = jest.fn();
-    setTimeout(() => mock(execute()));
+    let executeResult: any;
+    setTimeout(() => {
+      executeResult = execute();
+    });
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
@@ -540,8 +542,118 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'world' });
 
-    expect(mock).toHaveBeenCalledTimes(1);
-    expect(mock.mock.calls[0][0]).toBeInstanceOf(Promise);
-    expect(await mock.mock.calls[0][0]).toEqual(result.current[1]);
+    expect(executeResult).toBeInstanceOf(Promise);
+    expect(await executeResult).toEqual(result.current[1]);
+  });
+
+  it('should have matching results from execution function and hook', async () => {
+    const query = gql`
+      query GetCountries($filter: String) {
+        countries(filter: $filter) {
+          code
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: {
+          query,
+          variables: {
+            filter: "PA",
+          },
+        },
+        result: {
+          data: {
+            countries: {
+              code: "PA",
+              name: "Panama",
+            },
+          },
+        },
+        delay: 20,
+      },
+      {
+        request: {
+          query,
+          variables: {
+            filter: "BA",
+          },
+        },
+        result: {
+          data: {
+            countries: {
+              code: "BA",
+              name: "Bahamas",
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      },
+    );
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    const execute = result.current[0];
+    let executeResult: any;
+    setTimeout(() => {
+      executeResult = execute({ variables: { filter: "PA" } });
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({
+      countries: {
+        code: "PA",
+        name: "Panama",
+      },
+    });
+
+    expect(executeResult).toBeInstanceOf(Promise);
+    expect((await executeResult).data).toEqual({
+      countries: {
+        code: "PA",
+        name: "Panama",
+      },
+    });
+
+    setTimeout(() => {
+      executeResult = execute({ variables: { filter: "BA" } });
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({
+      countries: {
+        code: "BA",
+        name: "Bahamas",
+      },
+    });
+
+    expect(executeResult).toBeInstanceOf(Promise);
+    expect((await executeResult).data).toEqual({
+      countries: {
+        code: "BA",
+        name: "Bahamas",
+      },
+    });
   });
 });

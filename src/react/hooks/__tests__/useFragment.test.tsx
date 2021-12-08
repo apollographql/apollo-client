@@ -1,5 +1,6 @@
 import * as React from "react";
 import { render, waitFor } from "@testing-library/react";
+import { renderHook } from '@testing-library/react-hooks';
 import { act } from "react-dom/test-utils";
 
 import { useFragment } from "../useFragment";
@@ -536,5 +537,99 @@ describe("useFragment", () => {
         ],
       },
     });
+  });
+
+  it("useFragment(...).missing is a tree describing missing fields", async () => {
+    const cache = new InMemoryCache;
+    const wrapper = ({ children }: any) => (
+      <MockedProvider cache={cache}>{children}</MockedProvider>
+    );
+
+    const ListAndItemFragments: TypedDocumentNode<QueryData> = gql`
+      fragment ListFragment on Query {
+        list {
+          id
+          ...ItemFragment
+        }
+      }
+      ${ItemFragment}
+    `;
+
+    const ListQuery: TypedDocumentNode<QueryData> = gql`
+      query ListQuery {
+        list {
+          id
+        }
+      }
+    `;
+
+    const ListQueryWithText: TypedDocumentNode<QueryData> = gql`
+      query ListQuery {
+        list {
+          id
+          text
+        }
+      }
+    `;
+
+    const { result } = renderHook(
+      () => useFragment({
+        fragment: ListAndItemFragments,
+        fragmentName: "ListFragment",
+        from: { __typename: "Query" },
+        returnPartialData: true,
+      }),
+      { wrapper },
+    );
+
+    expect(result.current.complete).toBe(false);
+    expect(result.current.data).toEqual({}); // TODO Should be undefined?
+    expect(result.current.missing).toEqual({
+      list: "Can't find field 'list' on ROOT_QUERY object",
+    });
+
+    const data125 = {
+      list: [
+        { __typename: "Item", id: 1 },
+        { __typename: "Item", id: 2 },
+        { __typename: "Item", id: 5 },
+      ],
+    };
+
+    await act(async () => {
+      cache.writeQuery({
+        query: ListQuery,
+        data: data125,
+      });
+    });
+
+    expect(result.current.complete).toBe(false);
+    expect(result.current.data).toEqual(data125);
+    expect(result.current.missing).toEqual({
+      list: {
+        0: { text: "Can't find field 'text' on Item:1 object" },
+        1: { text: "Can't find field 'text' on Item:2 object" },
+        2: { text: "Can't find field 'text' on Item:5 object" },
+      },
+    });
+
+    const data182WithText = {
+      list: [
+        { __typename: "Item", id: 1, text: "oyez1" },
+        { __typename: "Item", id: 8, text: "oyez8" },
+        { __typename: "Item", id: 2, text: "oyez2" },
+      ],
+    };
+
+    await act(async () => {
+      cache.writeQuery({
+        query: ListQueryWithText,
+        data: data182WithText,
+      });
+    });
+
+    expect(result.current.complete).toBe(true);
+    expect(result.current.data).toEqual(data182WithText);
+    expect(result.current.missing).toBeUndefined();
   });
 });

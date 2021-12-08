@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { equal } from "@wry/equality";
 
-import { Cache, MissingFieldError, Reference, StoreObject } from "../../cache";
+import { mergeDeepArray } from "../../utilities";
+import {
+  Cache,
+  Reference,
+  StoreObject,
+  MissingTree,
+} from "../../cache";
+
 import { useApolloClient } from "./useApolloClient";
 
 export interface UseFragmentOptions<TData, TVars>
@@ -22,7 +29,7 @@ extends Omit<
 export interface UseFragmentResult<TData> {
   data: TData | undefined;
   complete: boolean;
-  missing?: MissingFieldError[];
+  missing?: MissingTree;
   previousResult?: UseFragmentResult<TData>;
   lastCompleteResult?: UseFragmentResult<TData>;
 }
@@ -70,7 +77,9 @@ export function useFragment<TData, TVars>(
   };
 
   if (preDiff.missing) {
-    result.missing = preDiff.missing!;
+    result.missing = mergeDeepArray(
+      preDiff.missing.map(error => error.missing)
+    );
   }
 
   return result;

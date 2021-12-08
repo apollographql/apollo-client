@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { equal } from "@wry/equality";
 
 import { mergeDeepArray } from "../../utilities";
@@ -10,6 +10,7 @@ import {
 } from "../../cache";
 
 import { useApolloClient } from "./useApolloClient";
+import { useSyncExternalStore } from "./useSyncExternalStore";
 
 export interface UseFragmentOptions<TData, TVars>
 extends Omit<
@@ -69,27 +70,30 @@ export function useFragment<TData, TVars>(
     optimistic,
   };
 
+  const resultRef = useRef<UseFragmentResult<TData>>();
   let latestDiff = cache.diff<TData>(diffOptions);
-  let [latestResult, setResult] =
-    useState<UseFragmentResult<TData>>(() => diffToResult(latestDiff));
 
-  useEffect(() => {
-    let immediate = true;
-    return cache.watch({
-      ...diffOptions,
-      immediate,
-      callback(newDiff) {
-        if (!immediate || !equal(newDiff, latestDiff)) {
-          setResult(latestResult = diffToResult(
-            latestDiff = newDiff,
-          ));
-        }
-        immediate = false;
-      },
-    });
-  }, [latestDiff]);
+  return useSyncExternalStore(
+    forceUpdate => {
+      let immediate = true;
+      return cache.watch({
+        ...diffOptions,
+        immediate,
+        callback(diff) {
+          if (!immediate && !equal(diff, latestDiff)) {
+            resultRef.current = diffToResult(latestDiff = diff);
+            forceUpdate();
+          }
+          immediate = false;
+        },
+      });
+    },
 
-  return latestResult;
+    () => {
+      return resultRef.current ||
+        (resultRef.current = diffToResult(latestDiff));
+    },
+  );
 }
 
 function diffToResult<TData>(
@@ -102,7 +106,7 @@ function diffToResult<TData>(
 
   if (diff.missing) {
     result.missing = mergeDeepArray(
-      diff.missing.map(error => error.missing)
+      diff.missing.map(error => error.missing),
     );
   }
 

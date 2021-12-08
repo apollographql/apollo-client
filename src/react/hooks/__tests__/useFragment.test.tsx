@@ -607,6 +607,14 @@ describe("useFragment", () => {
     expect(result.current.data).toEqual(data125);
     expect(result.current.missing).toEqual({
       list: {
+        // Even though Query.list is actually an array in the data, data paths
+        // through this array leading to missing fields potentially involve only
+        // a small/sparse subset of the array's indexes, so we use objects for
+        // the entire MissingTree, to avoid having to worry about sparse arrays.
+        // This also means there's no missing.list.length property, which is
+        // good because "length" could be a name of an actual field that's
+        // missing, and it's somewhat unclear what the length of a sparse array
+        // should be, whereas object keys have a less ambiguous interpretation.
         0: { text: "Can't find field 'text' on Item:1 object" },
         1: { text: "Can't find field 'text' on Item:2 object" },
         2: { text: "Can't find field 'text' on Item:5 object" },

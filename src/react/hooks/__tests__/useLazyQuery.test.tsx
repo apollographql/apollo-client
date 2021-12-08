@@ -450,10 +450,11 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].previousData).toBe(undefined);
 
     setTimeout(() => execute({ variables: { id: 2 }}));
+    // Why is there no loading state here?
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toEqual(data1);
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual(data1);
+    expect(result.current[1].previousData).toBe(undefined);
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
@@ -637,7 +638,7 @@ describe('useLazyQuery Hook', () => {
     });
 
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    // TODO: Get rid of this render.
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);

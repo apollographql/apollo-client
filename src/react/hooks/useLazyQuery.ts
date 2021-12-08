@@ -36,6 +36,15 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     resolves: [],
   });
 
+  let result = useQuery<TData, TVariables>(query, {
+    ...options,
+    ...execution.options,
+    // We don’t set skip to execution.called, because we need useQuery to call
+    // addQueryPromise, so that ssr calls waits for execute to be called.
+    fetchPolicy: execution.called ? options?.fetchPolicy : 'standby',
+    skip: undefined,
+  });
+
   const execute = useCallback<
     QueryTuple<TData, TVariables>[0]
   >((executeOptions?: QueryLazyOptions<TVariables>) => {
@@ -45,7 +54,8 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     );
     setExecution((execution) => {
       if (execution.called) {
-        result && result.refetch(executeOptions?.variables);
+        resolve(result.refetch(executeOptions?.variables) as any);
+        return execution;
       }
 
       return {
@@ -58,18 +68,12 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     return promise;
   }, []);
 
-  let result = useQuery<TData, TVariables>(query, {
-    ...options,
-    ...execution.options,
-    // We don’t set skip to execution.called, because we need useQuery to call
-    // addQueryPromise, so that ssr calls waits for execute to be called.
-    fetchPolicy: execution.called ? options?.fetchPolicy : 'standby',
-    skip: undefined,
-  });
   useEffect(() => {
     const { resolves } = execution;
     if (!result.loading && resolves.length) {
-      setExecution((execution) => ({ ...execution, resolves: [] }));
+      setExecution((execution) => {
+        return { ...execution, resolves: [] };
+      });
       resolves.forEach((resolve) => resolve(result));
     }
   }, [result, execution]);

@@ -572,7 +572,7 @@ describe("useFragment", () => {
       }
     `;
 
-    const { result } = renderHook(
+    const { result: renderResult } = renderHook(
       () => useFragment({
         fragment: ListAndItemFragments,
         fragmentName: "ListFragment",
@@ -592,24 +592,24 @@ describe("useFragment", () => {
         array.push(result);
         return array;
       }
-      const all = historyToArray(result.current);
+      const all = historyToArray(renderResult.current);
       expect(all.length).toBe(expectedResultCount);
-      expect(all).toEqual(result.all);
+      expect(all).toEqual(renderResult.all);
 
-      if (result.current.complete) {
-        expect(result.current).toBe(
-          result.current.lastCompleteResult
+      if (renderResult.current.complete) {
+        expect(renderResult.current).toBe(
+          renderResult.current.lastCompleteResult
         );
       } else {
-        expect(result.current).not.toBe(
-          result.current.lastCompleteResult
+        expect(renderResult.current).not.toBe(
+          renderResult.current.lastCompleteResult
         );
       }
     }
 
-    expect(result.current.complete).toBe(false);
-    expect(result.current.data).toEqual({}); // TODO Should be undefined?
-    expect(result.current.missing).toEqual({
+    expect(renderResult.current.complete).toBe(false);
+    expect(renderResult.current.data).toEqual({}); // TODO Should be undefined?
+    expect(renderResult.current.missing).toEqual({
       list: "Can't find field 'list' on ROOT_QUERY object",
     });
 
@@ -630,9 +630,9 @@ describe("useFragment", () => {
       });
     });
 
-    expect(result.current.complete).toBe(false);
-    expect(result.current.data).toEqual(data125);
-    expect(result.current.missing).toEqual({
+    expect(renderResult.current.complete).toBe(false);
+    expect(renderResult.current.data).toEqual(data125);
+    expect(renderResult.current.missing).toEqual({
       list: {
         // Even though Query.list is actually an array in the data, data paths
         // through this array leading to missing fields potentially involve only
@@ -665,9 +665,9 @@ describe("useFragment", () => {
       });
     });
 
-    expect(result.current.complete).toBe(true);
-    expect(result.current.data).toEqual(data182WithText);
-    expect(result.current.missing).toBeUndefined();
+    expect(renderResult.current.complete).toBe(true);
+    expect(renderResult.current.data).toEqual(data182WithText);
+    expect(renderResult.current.missing).toBeUndefined();
 
     checkHistory(3);
   });

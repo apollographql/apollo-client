@@ -3,7 +3,7 @@ import { render, waitFor } from "@testing-library/react";
 import { renderHook } from '@testing-library/react-hooks';
 import { act } from "react-dom/test-utils";
 
-import { useFragment } from "../useFragment";
+import { useFragment, UseFragmentResult } from "../useFragment";
 import { MockedProvider } from "../../../testing";
 import { InMemoryCache, gql, TypedDocumentNode, Reference } from "../../../core";
 import { useQuery } from "../useQuery";
@@ -582,11 +582,38 @@ describe("useFragment", () => {
       { wrapper },
     );
 
+    function checkHistory(expectedResultCount: number) {
+      function historyToArray(
+        result: UseFragmentResult<QueryData>,
+      ): UseFragmentResult<QueryData>[] {
+        const array = result.previousResult
+          ? historyToArray(result.previousResult)
+          : [];
+        array.push(result);
+        return array;
+      }
+      const all = historyToArray(result.current);
+      expect(all.length).toBe(expectedResultCount);
+      expect(all).toEqual(result.all);
+
+      if (result.current.complete) {
+        expect(result.current).toBe(
+          result.current.lastCompleteResult
+        );
+      } else {
+        expect(result.current).not.toBe(
+          result.current.lastCompleteResult
+        );
+      }
+    }
+
     expect(result.current.complete).toBe(false);
     expect(result.current.data).toEqual({}); // TODO Should be undefined?
     expect(result.current.missing).toEqual({
       list: "Can't find field 'list' on ROOT_QUERY object",
     });
+
+    checkHistory(1);
 
     const data125 = {
       list: [
@@ -621,6 +648,8 @@ describe("useFragment", () => {
       },
     });
 
+    checkHistory(2);
+
     const data182WithText = {
       list: [
         { __typename: "Item", id: 1, text: "oyez1" },
@@ -639,5 +668,7 @@ describe("useFragment", () => {
     expect(result.current.complete).toBe(true);
     expect(result.current.data).toEqual(data182WithText);
     expect(result.current.missing).toBeUndefined();
+
+    checkHistory(3);
   });
 });

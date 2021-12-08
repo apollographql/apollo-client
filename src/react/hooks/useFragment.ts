@@ -54,8 +54,9 @@ export function useFragment<TData, TVars>(
     optimistic,
   };
 
-  const preDiff = cache.diff<TData>(diffOptions);
-  const setDiff = useState(preDiff)[1];
+  let latestDiff = cache.diff<TData>(diffOptions);
+  let [latestResult, setResult] =
+    useState<UseFragmentResult<TData>>(() => diffToResult(latestDiff));
 
   useEffect(() => {
     let immediate = true;
@@ -63,23 +64,49 @@ export function useFragment<TData, TVars>(
       ...diffOptions,
       immediate,
       callback(newDiff) {
-        if (!immediate || !equal(newDiff, preDiff)) {
-          setDiff(newDiff);
+        if (!immediate || !equal(newDiff, latestDiff)) {
+          setResult(latestResult = diffToResult(
+            latestDiff = newDiff,
+            latestResult,
+          ));
         }
         immediate = false;
       },
     });
-  }, [preDiff]);
+  }, [latestDiff]);
 
+  return latestResult;
+}
+
+function diffToResult<TData>(
+  diff: Cache.DiffResult<TData>,
+  previousResult?: UseFragmentResult<TData>,
+): UseFragmentResult<TData> {
   const result: UseFragmentResult<TData> = {
-    data: preDiff.result,
-    complete: !!preDiff.complete,
+    data: diff.result,
+    complete: !!diff.complete,
   };
 
-  if (preDiff.missing) {
+  if (diff.missing) {
     result.missing = mergeDeepArray(
-      preDiff.missing.map(error => error.missing)
+      diff.missing.map(error => error.missing)
     );
+  }
+
+  if (previousResult) {
+    result.previousResult = previousResult;
+  }
+
+  const lastCompleteResult = result.complete ? result : (
+    previousResult && (
+      previousResult.complete
+        ? previousResult
+        : previousResult.lastCompleteResult
+    )
+  );
+
+  if (lastCompleteResult) {
+    result.lastCompleteResult = lastCompleteResult;
   }
 
   return result;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { act, render, cleanup } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -214,7 +214,9 @@ describe('subscriptions', () => {
       </ApolloProvider>
     );
 
-    jest.advanceTimersByTime(230);
+    act(() => {
+      jest.advanceTimersByTime(230);
+    })
   });
 
   itAsync('resubscribes to a subscription', (resolve, reject) => {

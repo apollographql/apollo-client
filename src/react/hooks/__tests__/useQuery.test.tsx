@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import {
   ApolloClient,
@@ -125,12 +125,13 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result } = renderHook(
+      const { result, unmount } = renderHook(
         () => useQuery(query),
         { wrapper },
       );
 
       expect(result.current.called).toBe(true);
+      unmount();
     });
 
     it('should work with variables', async () => {
@@ -278,6 +279,87 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ names: [] });
     });
 
+    // An unsuccessful attempt to reproduce https://github.com/apollographql/apollo-client/issues/9135.
+    it('should not return stale variables when stored in state', async () => {
+      const query = gql`
+        query myQuery($name: String) {
+          hello(name: $name)
+        }
+      `;
+
+      const mutation = gql`
+        mutation myMutation($name: String) {
+          updateName(name: $name)
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { name: "world 1" } },
+          result: { data: { hello: "world 1" } },
+        },
+        {
+          request: { query: mutation, variables: { name: "world 2" } },
+          result: { data: { updateName: true } },
+        },
+        {
+          request: { query, variables: { name: "world 2" } },
+          result: { data: { hello: "world 2" } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      let setName: any;
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [name, setName1] = React.useState("world 1");
+          setName = setName1;
+          return [
+            useQuery(query, { variables: { name }}),
+            useMutation(mutation, {
+              update(cache, { data }) {
+                cache.writeQuery({
+                  query,
+                  data: { hello: data.updateGreeting },
+                });
+              },
+            }),
+          ] as const;
+        },
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
+
+      expect(result.current[0].loading).toBe(true);
+      expect(result.current[0].data).toBe(undefined);
+      expect(result.current[0].variables).toEqual({ name: "world 1" });
+      await waitForNextUpdate();
+
+      expect(result.current[0].loading).toBe(false);
+      expect(result.current[0].data).toEqual({ hello: "world 1" });
+      expect(result.current[0].variables).toEqual({ name: "world 1" });
+
+      const mutate = result.current[1][0];
+      act(() => {
+        mutate({ variables: { name: "world 2" } });
+        setName("world 2");
+      });
+
+      expect(result.current[0].loading).toBe(true);
+      expect(result.current[0].data).toBe(undefined);
+      expect(result.current[0].variables).toEqual({ name: "world 2" });
+      await waitForNextUpdate();
+
+      expect(result.current[0].loading).toBe(false);
+      expect(result.current[0].data).toEqual({ hello: "world 2" });
+      expect(result.current[0].variables).toEqual({ name: "world 2" });
+    });
+
     // TODO: Rewrite this test
     itAsync('should not error when forcing an update with React >= 16.13.0', (resolve, reject) => {
       const CAR_QUERY: DocumentNode = gql`
@@ -346,8 +428,8 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      wait(() => {
-        expect(renderCount).toBe(3);
+      waitFor(() => {
+        expect(renderCount).toBe(6);
       }).finally(() => {
         console.error = consoleError;
       }).then(resolve, reject);
@@ -3454,6 +3536,63 @@ describe('useQuery Hook', () => {
     });
   });
 
+  describe('defaultOptions', () => {
+    it('should allow polling options to be passed to the client', async () => {
+      const query = gql`{ hello }`;
+      const cache = new InMemoryCache();
+      const link = mockSingleLink(
+        {
+          request: { query },
+          result: { data: { hello: "world 1" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 2" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 3" } },
+        },
+      );
+
+      const client = new ApolloClient({
+        defaultOptions: {
+          watchQuery: {
+            pollInterval: 10,
+          },
+        },
+        cache,
+        link,
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 2' });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 3' });
+    });
+  });
+
   describe('canonical cache results', () => {
     it('can be disabled via useQuery options', async () => {
       const cache = new InMemoryCache({
@@ -3597,7 +3736,7 @@ describe('useQuery Hook', () => {
       bFetchPolicy: WatchQueryFetchPolicy,
     ) {
       const client = makeClient();
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => ({
           a: useQuery(aQuery, { fetchPolicy: aFetchPolicy }),
           b: useQuery(bQuery, { fetchPolicy: bFetchPolicy }),
@@ -3614,19 +3753,12 @@ describe('useQuery Hook', () => {
       expect(result.current.a.data).toBe(undefined);
       expect(result.current.b.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.a.loading).toBe(false);
-      expect(result.current.b.loading).toBe(true);
-      expect(result.current.a.data).toEqual(aData);
-      expect(result.current.b.data).toBe(undefined);
-
-      await waitForNextUpdate();
-
-      expect(result.current.a.loading).toBe(false);
-      expect(result.current.b.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.a.loading).toBe(false);
+        expect(result.current.b.loading).toBe(false);
+      });
       expect(result.current.a.data).toEqual(aData);
       expect(result.current.b.data).toEqual(bData);
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
     }
 
     it("cache-first for both", () => check(

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, wait } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -145,7 +145,7 @@ describe('[queries] observableQuery', () => {
     unmount = result.unmount;
     queryByText = result.queryByText;
 
-    return wait(() => {
+    await waitFor(() => {
       expect(done).toBeTruthy();
     });
   });
@@ -269,7 +269,7 @@ describe('[queries] observableQuery', () => {
       }, 20);
     }, 5);
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    return waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   it('not overly rerender', async () => {
@@ -380,7 +380,7 @@ describe('[queries] observableQuery', () => {
       }, 20);
     }, 5);
 
-    return wait(() => {
+    await waitFor(() => {
       expect(done).toBeTruthy();
     });
   });
@@ -472,6 +472,6 @@ describe('[queries] observableQuery', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    return waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 });

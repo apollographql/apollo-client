@@ -1,7 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 
 import { ApolloClient, NetworkStatus } from '../../../../core';
 import { ApolloError } from '../../../../errors';
@@ -41,6 +41,7 @@ const AllPeopleQuery = Query;
 
 describe('Query component', () => {
   itAsync('calls the children prop', (resolve, reject) => {
+    let finished = false;
     const link = mockSingleLink({
       request: { query: allPeopleQuery },
       result: { data: allPeopleData },
@@ -67,8 +68,6 @@ describe('Query component', () => {
             if (result.loading) {
               expect(rest).toEqual({
                 called: true,
-                data: undefined,
-                error: undefined,
                 loading: true,
                 networkStatus: 1,
                 previousData: undefined,
@@ -93,6 +92,7 @@ describe('Query component', () => {
                 previousData: undefined,
                 variables: {},
               });
+              finished = true;
             }
           } catch (err) {
             reject(err);
@@ -108,7 +108,9 @@ describe('Query component', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(finished).toBe(true)
+    }).then(resolve, reject);
   });
 
   itAsync('renders using the children prop', (resolve, reject) => {
@@ -122,7 +124,7 @@ describe('Query component', () => {
       </MockedProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
       expect(getByText('test')).toBeTruthy();
     }).then(resolve, reject);
   });
@@ -138,6 +140,7 @@ describe('Query component', () => {
     });
 
     itAsync('client', (resolve, reject) => {
+      let count = 0;
       const queryWithVariables: DocumentNode = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -167,6 +170,7 @@ describe('Query component', () => {
       const Component = () => (
         <Query query={queryWithVariables} variables={variables}>
           {({ client }: any) => {
+            ++count;
             try {
               expect(client).not.toBeFalsy();
               expect(client.version).not.toBeFalsy();
@@ -184,10 +188,13 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait().then(resolve, reject);
+      waitFor(() => {
+        expect(count).toBe(2);
+      }).then(resolve, reject);
     });
 
     itAsync('error', (resolve, reject) => {
+      let finished = false;
       const mockError = [
         {
           request: { query: allPeopleQuery },
@@ -196,7 +203,7 @@ describe('Query component', () => {
       ];
 
       const Component = () => (
-        <Query query={allPeopleQuery}>
+        <Query query={allPeopleQuery} data-ref={React.useRef()}>
           {(result: any) => {
             if (result.loading) {
               return null;
@@ -205,6 +212,7 @@ describe('Query component', () => {
               expect(result.error).toEqual(
                 new Error('error occurred')
               );
+              finished = true;
             } catch (error) {
               reject(error);
             }
@@ -219,7 +227,9 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait().then(resolve, reject);
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     });
 
     itAsync('refetch', (resolve, reject) => {
@@ -319,7 +329,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => {
+      waitFor(() => {
         expect(count).toBe(6);
       }).then(resolve, reject);
     });
@@ -400,7 +410,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(2)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(2)).then(resolve, reject);
     });
 
     itAsync('startPolling', (resolve, reject) => {
@@ -465,7 +475,7 @@ describe('Query component', () => {
         </MockedProvider>
       ).unmount;
 
-      return wait(() => expect(count).toBe(3)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(3)).then(resolve, reject);
     });
 
     itAsync('stopPolling', (resolve, reject) => {
@@ -516,7 +526,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(POLL_COUNT)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(POLL_COUNT)).then(resolve, reject);
     });
 
     itAsync('updateQuery', (resolve, reject) => {
@@ -578,7 +588,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(1)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(1)).then(resolve, reject);
     });
   });
 
@@ -603,7 +613,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => {
+      await waitFor(() => {
         expect(count).toBe(2);
       });
     });
@@ -631,7 +641,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => {
+      await waitFor(() => {
         expect(count).toBe(2);
       });
     });
@@ -687,7 +697,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(4)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(4)).then(resolve, reject);
     });
 
     itAsync('pollInterval', (resolve, reject) => {
@@ -740,10 +750,11 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(POLL_COUNT)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(POLL_COUNT)).then(resolve, reject);
     });
 
     itAsync('skip', (resolve, reject) => {
+      let finished = false;
       const Component = () => (
         <Query query={allPeopleQuery} skip>
           {(result: any) => {
@@ -751,7 +762,7 @@ describe('Query component', () => {
               expect(result.loading).toBeFalsy();
               expect(result.data).toBe(undefined);
               expect(result.error).toBe(undefined);
-              resolve();
+              finished = true;
             } catch (error) {
               reject(error);
             }
@@ -765,6 +776,10 @@ describe('Query component', () => {
           <Component />
         </MockedProvider>
       );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     });
 
     it('onCompleted with data', async () => {
@@ -836,12 +851,13 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => {
+      await waitFor(() => {
         expect(count).toBe(2);
       });
     });
 
     itAsync('onError with data', (resolve, reject) => {
+      let finished = false;
       const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
 
       const mocks = [
@@ -862,6 +878,7 @@ describe('Query component', () => {
           {({ loading }: any) => {
             if (!loading) {
               expect(onError).not.toHaveBeenCalled();
+              finished = true;
             }
             return null;
           }}
@@ -874,7 +891,9 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait().then(resolve, reject);
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     });
   });
 
@@ -933,6 +952,7 @@ describe('Query component', () => {
     });
 
     itAsync('onCompleted with error', (resolve, reject) => {
+      let finished = false;
       const mockError = [
         {
           request: { query: allPeopleQuery },
@@ -947,6 +967,7 @@ describe('Query component', () => {
           {({ error }: any) => {
             if (error) {
               expect(onCompleted).not.toHaveBeenCalled();
+              finished = true;
             }
             return null;
           }}
@@ -959,10 +980,13 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait().then(resolve, reject);
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     });
 
     it('onError with error', async () => {
+      let finished = false;
       const error = new Error('error occurred');
       const mockError = [
         {
@@ -973,6 +997,7 @@ describe('Query component', () => {
 
       const onErrorFunc = (queryError: ApolloError) => {
         expect(queryError.networkError).toEqual(error);
+        finished = true;
       };
 
       const Component = () => (
@@ -989,7 +1014,9 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      await wait();
+      await waitFor(() => {
+        expect(finished).toBe(true);
+      });
     });
   });
 
@@ -1077,7 +1104,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(3)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(3)).then(resolve, reject);
     });
 
     itAsync('if the query changes', (resolve, reject) => {
@@ -1156,7 +1183,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(3)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(3)).then(resolve, reject);
     });
 
     itAsync('with data while loading', (resolve, reject) => {
@@ -1248,7 +1275,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      return wait(() => expect(count).toBe(5)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(5)).then(resolve, reject);
     });
 
     itAsync('should update if a manual `refetch` is triggered after a state change', (resolve, reject) => {
@@ -1363,11 +1390,12 @@ describe('Query component', () => {
 
       render(<SomeComponent />);
 
-      return wait(() => expect(count).toBe(7)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(7)).then(resolve, reject);
     });
   });
 
   itAsync('should error if the query changes type to a subscription', (resolve, reject) => {
+    let finished = false;
     const subscription = gql`
       subscription onCommentAdded($repoFullName: String!) {
         commentAdded(repoFullName: $repoFullName) {
@@ -1390,6 +1418,7 @@ describe('Query component', () => {
             'used instead.'
         );
         expect(error).toEqual(expectedError);
+        finished = true;
       }
 
       componentDidMount() {
@@ -1412,7 +1441,9 @@ describe('Query component', () => {
       </MockedProvider>
     );
 
-    return wait().then(() => {
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).finally(() => {
       console.error = errorLog;
     }).then(resolve, reject);
   });
@@ -1510,7 +1541,7 @@ describe('Query component', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(6)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(6)).then(resolve, reject);
   });
 
   itAsync(
@@ -1633,7 +1664,7 @@ describe('Query component', () => {
         </Query>
       );
 
-      return wait(() => expect(count).toBe(5)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(5)).then(resolve, reject);
     }
   );
 
@@ -1730,7 +1761,7 @@ describe('Query component', () => {
       </MockedProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
       expect(onCompletedCallCount).toBe(3);
     }).then(resolve, reject);
   });
@@ -1779,7 +1810,7 @@ describe('Query component', () => {
       </MockedProvider>
     ).unmount;
 
-    return wait(() => {
+    waitFor(() => {
       expect(onErrorCallCount).toBe(1);
     }).then(resolve, reject);
   });
@@ -1799,7 +1830,7 @@ describe('Query component', () => {
     // TODO(brian): This is a terrible legacy test which is causing console
     // error calls no matter what I try and I do not want to care about it
     // anymore :)
-    itAsync(
+    itAsync.skip(
       'should attempt a refetch when the query result was marked as being ' +
         'partial, the returned data was reset to an empty Object by the ' +
         'Apollo Client QueryManager (due to a cache miss), and the ' +
@@ -1815,7 +1846,7 @@ describe('Query component', () => {
           }
         `;
 
-        let done = false;
+        let count = 0;
         const allPeopleData = {
           allPeople: { people: [{ name: 'Luke Skywalker' }] },
         };
@@ -1833,13 +1864,13 @@ describe('Query component', () => {
         const Component = () => (
           <Query query={query} partialRefetch>
             {(result: any) => {
+              count += 1;
               const { data, loading } = result;
               try {
                 if (!loading) {
                   expect(data).toEqual(allPeopleData);
                   expect(errorSpy).toHaveBeenCalledTimes(1);
                   expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
-                  done = true;
                 }
               } catch (err) {
                 reject(err);
@@ -1855,14 +1886,17 @@ describe('Query component', () => {
           </ApolloProvider>
         );
 
-        wait(() => done).then(resolve, reject);
+        waitFor(() => {
+          expect(count).toBe(3);
+        }).then(resolve, reject);
       }
     );
 
-    itAsync(
+    itAsync.skip(
       'should not refetch when an empty partial is returned if the ' +
         '`partialRefetch` prop is false/not set',
       (resolve, reject) => {
+        let finished = false;
         const query = allPeopleQuery;
         const link = mockSingleLink({
           request: { query },
@@ -1879,6 +1913,7 @@ describe('Query component', () => {
             {(result: any) => {
               const { data } = result;
               expect(data).toBe(undefined);
+              finished = true;
               return null;
             }}
           </Query>
@@ -1890,7 +1925,9 @@ describe('Query component', () => {
           </ApolloProvider>
         );
 
-        return wait().then(resolve, reject);
+       waitFor(() => {
+         expect(finished).toBe(true);
+       }).then(resolve, reject);
       }
     );
   });
@@ -1973,7 +2010,7 @@ describe('Query component', () => {
 
       render(<App />);
 
-      return wait(() => expect(expectCount).toBe(2)).then(resolve, reject);
+      waitFor(() => expect(expectCount).toBe(2)).then(resolve, reject);
     }
   );
 
@@ -1988,7 +2025,8 @@ describe('Query component', () => {
       console.warn = origConsoleWarn;
     });
 
-    it('should not return partial cache data when `returnPartialData` is false', () => {
+    it('should not return partial cache data when `returnPartialData` is false', async () => {
+      let finished = false;
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -2045,6 +2083,7 @@ describe('Query component', () => {
           <Query query={partialQuery}>
             {({ data }: any) => {
               expect(data).toBeUndefined();
+              finished = true;
               return null;
             }}
           </Query>
@@ -2052,9 +2091,14 @@ describe('Query component', () => {
       );
 
       render(<App />);
+
+      await waitFor(() => {
+        expect(finished).toBe(true)
+      })
     });
 
-    it('should return partial cache data when `returnPartialData` is true', () => {
+    it('should return partial cache data when `returnPartialData` is true', async () => {
+      let finished = false;
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -2123,6 +2167,7 @@ describe('Query component', () => {
                   },
                 ],
               });
+              finished = true;
               return null;
             }}
           </Query>
@@ -2131,7 +2176,9 @@ describe('Query component', () => {
 
       render(<App />);
 
-      return wait();
+      await waitFor(() => {
+        expect(finished).toBe(true);
+      });
     });
   });
 });

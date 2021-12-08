@@ -6,6 +6,7 @@ jobs:
       - image: circleci/node:16.13.0
     steps:
       - checkout
+      - run: npm run ci:precheck
       - restore_cache:
           keys:
             # When lock file changes, use increasingly general patterns to
@@ -29,6 +30,7 @@ jobs:
       - image: circleci/node:16.13.0
     steps:
       - checkout
+      - run: npm run ci:precheck
       - restore_cache:
           keys:
             # When lock file changes, use increasingly general patterns to

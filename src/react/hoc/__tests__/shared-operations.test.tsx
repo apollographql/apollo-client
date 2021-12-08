@@ -125,11 +125,13 @@ describe('shared operations', () => {
       }
     }
 
-    render(
+    const { unmount } = render(
       <ApolloProvider client={client}>
         <ContainerWithData />
       </ApolloProvider>
     );
+    // unmount here or else the query will resolve later and schedule an update that's not wrapped in act.
+    unmount();
   });
 
   it('binds two queries to props with different syntax', () => {
@@ -204,11 +206,14 @@ describe('shared operations', () => {
       })
     );
 
-    render(
+    const { unmount } = render(
       <ApolloProvider client={client}>
         <ContainerWithData />
       </ApolloProvider>
     );
+
+    // unmount here or else the query will resolve later and schedule an update that's not wrapped in act.
+    unmount();
   });
 
   it('binds two operations to props', () => {
@@ -266,11 +271,14 @@ describe('shared operations', () => {
       )
     );
 
-    render(
+    const { unmount } = render(
       <ApolloProvider client={client}>
         <ContainerWithData />
       </ApolloProvider>
     );
+
+    // unmount here or else the query will resolve later and schedule an update that's not wrapped in act.
+    unmount();
   });
 
   itAsync('allows options to take an object', (resolve, reject) => {
@@ -393,11 +401,14 @@ describe('shared operations', () => {
         return null;
       });
 
-      render(
+      const { unmount } = render(
         <ApolloProvider client={client}>
           <ContainerWithData />
         </ApolloProvider>
       );
+
+      // unmount here or else the query will resolve later and schedule an update that's not wrapped in act.
+      unmount();
     });
   });
 });

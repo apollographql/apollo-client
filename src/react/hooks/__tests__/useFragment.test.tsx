@@ -540,7 +540,23 @@ describe("useFragment", () => {
   });
 
   it("useFragment(...).missing is a tree describing missing fields", async () => {
-    const cache = new InMemoryCache;
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            list(items: Reference[] | undefined, { canRead }) {
+              // This filtering happens by default currently in the StoreReader
+              // execSubSelectedArrayImpl method, but I am beginning to question
+              // the wisdom of that automatic filtering. In case we end up
+              // changing the default behavior in the future, I've encoded the
+              // filtering explicitly here, so this test won't be broken.
+              return items && items.filter(canRead);
+            },
+          }
+        }
+      }
+    });
+
     const wrapper = ({ children }: any) => (
       <MockedProvider cache={cache}>{children}</MockedProvider>
     );
@@ -670,5 +686,70 @@ describe("useFragment", () => {
     expect(renderResult.current.missing).toBeUndefined();
 
     checkHistory(3);
+
+    await act(async () => cache.batch({
+      update(cache) {
+        cache.evict({
+          id: cache.identify({
+            __typename: "Item",
+            id: 8,
+          }),
+        });
+
+        cache.evict({
+          id: cache.identify({
+            __typename: "Item",
+            id: 2,
+          }),
+          fieldName: "text",
+        });
+      },
+    }));
+
+    expect(renderResult.current.complete).toBe(false);
+    expect(renderResult.current.data).toEqual({
+      list: [
+        { __typename: "Item", id: 1, text: "oyez1" },
+        { __typename: "Item", id: 2 },
+      ],
+    });
+    expect(renderResult.current.missing).toEqual({
+      // TODO Figure out why Item:8 is not represented here. Likely because of
+      // auto-filtering of dangling references from arrays, but that should
+      // still be reflected here, if possible.
+      list: {
+        1: {
+          text: "Can't find field 'text' on Item:2 object",
+        },
+      },
+    });
+
+    checkHistory(4);
+
+    expect(cache.extract()).toEqual({
+      "Item:1": {
+        __typename: "Item",
+        id: 1,
+        text: "oyez1",
+      },
+      "Item:2": {
+        __typename: "Item",
+        id: 2,
+      },
+      "Item:5": {
+        __typename: "Item",
+        id: 5,
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        list: [
+          { __ref: "Item:1" },
+          { __ref: "Item:8" },
+          { __ref: "Item:2" },
+        ],
+      },
+    });
+
+    expect(cache.gc().sort()).toEqual(["Item:5"]);
   });
 });

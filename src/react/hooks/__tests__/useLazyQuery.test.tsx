@@ -1,4 +1,5 @@
 import React from 'react';
+import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { renderHook } from '@testing-library/react-hooks';
 
@@ -450,11 +451,11 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].previousData).toBe(undefined);
 
     setTimeout(() => execute({ variables: { id: 2 }}));
-    // Why is there no loading state here?
+
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual(data1);
-    expect(result.current[1].previousData).toBe(undefined);
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].previousData).toEqual(data1);
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
@@ -542,9 +543,7 @@ describe('useLazyQuery Hook', () => {
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'world' });
-
-    expect(executeResult).toBeInstanceOf(Promise);
-    expect(await executeResult).toEqual(result.current[1]);
+    await expect(executeResult).resolves.toEqual(result.current[1]);
   });
 
   it('should have matching results from execution function and hook', async () => {
@@ -656,5 +655,74 @@ describe('useLazyQuery Hook', () => {
         name: "Bahamas",
       },
     });
+  });
+
+  it('the promise should reject with errors the “way useMutation does”', async () => {
+    const query = gql`{ hello }`;
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('error 1')],
+        },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('error 2')],
+        },
+        delay: 20,
+      },
+    ];
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      },
+    );
+
+    const execute = result.current[0];
+    let executeResult: any;
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    setTimeout(() => {
+      executeResult = execute();
+      executeResult.catch(() => {});
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toBe(undefined);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toEqual(new Error('error 1'));
+
+    await expect(executeResult).rejects.toEqual(new Error('error 1'));
+
+    setTimeout(() => {
+      executeResult = execute();
+      executeResult.catch(() => {});
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toEqual(new Error('error 1'));
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toEqual(new Error('error 2'));
+
+    await expect(executeResult).rejects.toEqual(new Error('error 2'));
   });
 });

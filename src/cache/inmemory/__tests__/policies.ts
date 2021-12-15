@@ -3220,13 +3220,6 @@ describe("type policies", function () {
           ROOT_QUERY: {
             __typename: "Query",
             todos: {
-              edges: [],
-              pageInfo: {
-                "endCursor": "",
-                "hasNextPage": true,
-                "hasPreviousPage": false,
-                "startCursor": "",
-               },
                totalCount: 1292
              },
           }

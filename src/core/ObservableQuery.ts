@@ -24,6 +24,7 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   WatchQueryFetchPolicy,
+  NextFetchPolicyContext,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
@@ -583,6 +584,44 @@ once, rather than every time you call fetchMore.`);
     this.updatePolling();
   }
 
+  // Update options.fetchPolicy according to options.nextFetchPolicy.
+  private applyNextFetchPolicy(
+    reason: NextFetchPolicyContext<TData, TVariables>["reason"],
+    // It's possible to use this method to apply options.nextFetchPolicy to
+    // options.fetchPolicy even if options !== this.options, though that happens
+    // most often when the options are temporary, used for only one request and
+    // then thrown away, so nextFetchPolicy may not end up mattering.
+    options: WatchQueryOptions<TVariables, TData> = this.options,
+  ) {
+    if (options.nextFetchPolicy) {
+      const { fetchPolicy = "cache-first" } = options;
+
+      // When someone chooses "cache-and-network" or "network-only" as their
+      // initial FetchPolicy, they often do not want future cache updates to
+      // trigger unconditional network requests, which is what repeatedly
+      // applying the "cache-and-network" or "network-only" policies would seem
+      // to imply. Instead, when the cache reports an update after the initial
+      // network request, it may be desirable for subsequent network requests to
+      // be triggered only if the cache result is incomplete. To that end, the
+      // options.nextFetchPolicy option provides an easy way to update
+      // options.fetchPolicy after the initial network request, without having to
+      // call observableQuery.setOptions.
+      if (typeof options.nextFetchPolicy === "function") {
+        options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
+          reason,
+          options,
+          observableQuery: this,
+        });
+      } else if (reason === "variables-changed") {
+        options.fetchPolicy = this.initialFetchPolicy;
+      } else {
+        options.fetchPolicy = options.nextFetchPolicy;
+      }
+    }
+
+    return options.fetchPolicy;
+  }
+
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
     newNetworkStatus?: NetworkStatus,
@@ -709,7 +748,7 @@ once, rather than every time you call fetchMore.`);
         !newOptions.fetchPolicy &&
         !equal(newOptions.variables, oldVariables)
       ) {
-        options.fetchPolicy = this.initialFetchPolicy;
+        this.applyNextFetchPolicy("variables-changed");
         if (newNetworkStatus === void 0) {
           newNetworkStatus = NetworkStatus.setVariables;
         }
@@ -829,38 +868,5 @@ export function logMissingFieldErrors(
     invariant.debug(`Missing cache result fields: ${
       JSON.stringify(missing)
     }`, missing);
-  }
-}
-
-// Adopt options.nextFetchPolicy (if defined) as a replacement for
-// options.fetchPolicy. Since this method also removes options.nextFetchPolicy
-// from options, the adoption tends to be idempotent, unless nextFetchPolicy
-// is a function that keeps setting options.nextFetchPolicy (uncommon).
-export function applyNextFetchPolicy<TData, TVars>(
-  options: Pick<
-    WatchQueryOptions<TVars, TData>,
-    | "fetchPolicy"
-    | "nextFetchPolicy"
-  >,
-) {
-  const {
-    fetchPolicy = "cache-first",
-    nextFetchPolicy,
-  } = options;
-
-  if (nextFetchPolicy) {
-    // When someone chooses "cache-and-network" or "network-only" as their
-    // initial FetchPolicy, they often do not want future cache updates to
-    // trigger unconditional network requests, which is what repeatedly
-    // applying the "cache-and-network" or "network-only" policies would seem
-    // to imply. Instead, when the cache reports an update after the initial
-    // network request, it may be desirable for subsequent network requests to
-    // be triggered only if the cache result is incomplete. To that end, the
-    // options.nextFetchPolicy option provides an easy way to update
-    // options.fetchPolicy after the initial network request, without having to
-    // call observableQuery.setOptions.
-    options.fetchPolicy = typeof nextFetchPolicy === "function"
-      ? nextFetchPolicy.call(options, fetchPolicy)
-      : nextFetchPolicy;
   }
 }

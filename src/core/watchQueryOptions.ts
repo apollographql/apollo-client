@@ -11,6 +11,7 @@ import {
   InternalRefetchQueriesInclude,
 } from './types';
 import { ApolloCache } from '../cache';
+import { ObservableQuery } from './ObservableQuery';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -125,7 +126,8 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
    */
   nextFetchPolicy?: WatchQueryFetchPolicy | ((
     this: WatchQueryOptions<TVariables, TData>,
-    lastFetchPolicy: WatchQueryFetchPolicy,
+    currentFetchPolicy: WatchQueryFetchPolicy,
+    context: NextFetchPolicyContext<TData, TVariables>,
   ) => WatchQueryFetchPolicy);
   /**
    * Specifies whether a {@link NetworkStatus.refetch} operation should merge
@@ -134,6 +136,14 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
    * behavior, for backwards compatibility with Apollo Client 3.x.
    */
   refetchWritePolicy?: RefetchWritePolicy;
+}
+
+export interface NextFetchPolicyContext<TData, TVariables> {
+  reason:
+    | "after-fetch"
+    | "variables-changed"
+  observableQuery: ObservableQuery;
+  options: WatchQueryOptions<TVariables, TData>;
 }
 
 export interface FetchMoreQueryOptions<TVariables, TData = any> {

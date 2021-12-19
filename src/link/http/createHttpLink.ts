@@ -26,7 +26,16 @@ import {
   removeClientSetsFromDocument,
 } from "../../utilities/index.js";
 
-const backupFetch = maybe(() => fetch);
+// https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+type Fetch = typeof fetch;
+
+// Don't store a reference to the original window fetch, but instead
+// create a 'passthrough' method that binds to whichever fetch is available.
+//
+// This resolves issues where some crash capturing services wrap fetch
+// but HttpLink has a reference to the original method, preventing
+// fetch failures from being captured or in some cases breaking capturing.
+const backupFetch: Fetch = (...args) => window.fetch(...args);
 
 export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   let {
@@ -44,7 +53,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   if (__DEV__) {
     // Make sure at least one of preferredFetch, window.fetch, or backupFetch is
     // defined, so requests won't fail at runtime.
-    checkFetcher(preferredFetch || backupFetch);
+    checkFetcher(preferredFetch || window.fetch);
   }
 
   const linkConfig = {
@@ -182,10 +191,11 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       // #7832), or (if all else fails) the backupFetch function we saved when
       // this module was first evaluated. This last option protects against the
       // removal of window.fetch, which is unlikely but not impossible.
-      const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
+      const currentFetch: Fetch =
+        preferredFetch ?? maybe(() => window.fetch) ?? backupFetch;
 
       const observerNext = observer.next.bind(observer);
-      currentFetch!(chosenURI, options)
+      currentFetch(chosenURI, options)
         .then((response) => {
           operation.setContext({ response });
           const ctype = response.headers?.get("content-type");
@@ -208,7 +218,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
         });
 
       return () => {
-        // XXX support canceling this request
+        // XXX support cancelling this request
         // https://developers.google.com/web/updates/2017/09/abortable-fetch
         if (controller) controller.abort();
       };

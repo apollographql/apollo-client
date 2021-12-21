@@ -134,12 +134,10 @@ export function useQuery<
 
       setResult(ref.current.result = nextResult);
       if (!nextResult.loading && options) {
-        if (!result.loading) {
-          if (result.error) {
-            options.onError?.(result.error);
-          } else if (result.data) {
-            options.onCompleted?.(result.data);
-          }
+        if (nextResult.error) {
+          options.onError?.(nextResult.error);
+        } else if (nextResult.data) {
+          options.onCompleted?.(nextResult.data);
         }
       }
     }

@@ -79,6 +79,12 @@ entryPoints.forEach(function buildPackageJson({
       type: "module",
       main: `${bundleName}.cjs`,
       module: 'index.js',
+      exports: {
+        ".": {
+          "require": `./${bundleName}.cjs`,
+          "default": "./index.js"
+        }
+      },
       types: 'index.d.ts',
       sideEffects,
     }, null, 2) + "\n",

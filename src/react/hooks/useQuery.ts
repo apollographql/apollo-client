@@ -246,7 +246,7 @@ export function useQuery<
     }
 
     // TODO: This is a hack to make sure useLazyQuery executions update the
-    // obsevable query options for ssr.
+    // observable query options for ssr.
     if (
       context.renderPromises &&
       options?.ssr !== false &&

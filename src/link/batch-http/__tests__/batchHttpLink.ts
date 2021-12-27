@@ -193,7 +193,7 @@ describe('BatchHttpLink', () => {
           },
           batchInterval: 1,
           //if batchKey does not work, then the batch size would be 3
-          batchMax: 3,
+          batchMax: 2,
           batchKey,
         }),
       ]);

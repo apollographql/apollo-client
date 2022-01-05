@@ -3,9 +3,7 @@ title: Introduction to Apollo Client
 sidebar_title: Introduction
 ---
 
-import { Button } from '@apollo/space-kit/Button';
 import { Link } from 'gatsby';
-import { colors } from 'gatsby-theme-apollo-core';
 
 **Apollo Client** is a comprehensive state management library for JavaScript that enables you to manage both local and remote data with GraphQL. Use it to fetch, cache, and modify application data, all while automatically updating your UI.
 
@@ -13,9 +11,10 @@ Apollo Client helps you structure code in an economical, predictable, and declar
 
 <p>
   <Button
-    size="large"
-    color={colors.primary}
-    as={<Link to="/get-started/" />}
+    size="lg"
+    colorScheme="indigo"
+    as={Link}
+    to="./get-started/"
   >
     Get started!
   </Button>

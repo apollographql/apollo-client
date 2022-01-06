@@ -70,33 +70,37 @@ export type TRelayPageInfo = {
   endCursor: string;
 };
 
-export type TRelayConnection<TNode, TConnectionExtraData> = {
-  edges: TRelayEdge<TNode>[];
-  pageInfo: TRelayPageInfo;
-} & TConnectionExtraData
+export type TExistingRelay<TNode> = Readonly<{
+  edges?: TRelayEdge<TNode>[];
+  pageInfo?: TRelayPageInfo;
+  [extra: string]: any;
+}>;
 
-export type TExistingRelay<TNode, TConnectionExtraData = any> = Readonly<Partial<TRelayConnection<TNode, TConnectionExtraData>>>;
-export type TIncomingRelay<TNode, TConnectionExtraData = any> = Readonly<Partial<TRelayConnection<TNode, TConnectionExtraData>>>;
+export type TIncomingRelay<TNode> = {
+  edges?: TRelayEdge<TNode>[];
+  pageInfo?: TRelayPageInfo;
+  [extra: string]: any;
+};
 
-export type RelayFieldPolicy<TNode, TConnectionExtraData> = FieldPolicy<
-  TExistingRelay<TNode, TConnectionExtraData> | null,
-  TIncomingRelay<TNode, TConnectionExtraData> | null,
-  TIncomingRelay<TNode, TConnectionExtraData> | null
+export type RelayFieldPolicy<TNode> = FieldPolicy<
+  TExistingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null
 >;
 
 // As proof of the flexibility of field policies, this function generates
 // one that handles Relay-style pagination, without Apollo Client knowing
 // anything about connections, edges, cursors, or pageInfo objects.
-export function relayStylePagination<TNode = Reference, TConnectionExtraData = any>(
+export function relayStylePagination<TNode = Reference>(
   keyArgs: KeyArgs = false,
-): RelayFieldPolicy<TNode, TConnectionExtraData> {
+): RelayFieldPolicy<TNode> {
   return {
     keyArgs,
 
     read(existing, { canRead, readField }) {
       if (!existing) return existing;
 
-      let read: TIncomingRelay<TNode, TConnectionExtraData> = {
+      let read: TIncomingRelay<TNode> = {
         // Some implementations return additional Connection fields, such
         // as existing.totalCount. These fields are saved by the merge
         // function, so the read function should also preserve them.
@@ -137,7 +141,7 @@ export function relayStylePagination<TNode = Reference, TConnectionExtraData = a
             // to firstEdgeCursor and/or lastEdgeCursor.
             startCursor: startCursor || firstEdgeCursor,
             endCursor: endCursor || lastEdgeCursor,
-          },
+          } as TRelayPageInfo,
         }
       }
 
@@ -149,7 +153,7 @@ export function relayStylePagination<TNode = Reference, TConnectionExtraData = a
         return existing ?? null;
       }
 
-      let merged: SafeReadonly<TExistingRelay<TNode, TConnectionExtraData>> = {
+      let merged: SafeReadonly<TExistingRelay<TNode>> = {
         ...(existing || {}),
         ...incoming,
       }
@@ -242,7 +246,7 @@ export function relayStylePagination<TNode = Reference, TConnectionExtraData = a
           // incoming page falls at the beginning or end of the data.
           ...incoming.pageInfo,
           ...existing?.pageInfo ?? {},
-        }
+        } as TRelayPageInfo
       }
 
       if (incoming.pageInfo) {

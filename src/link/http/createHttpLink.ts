@@ -9,7 +9,7 @@ import { selectURI } from './selectURI';
 import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';
 import { checkFetcher } from './checkFetcher';
 import {
-  selectHttpOptionsAndBody,
+  selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
   HttpOptions
@@ -82,7 +82,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     };
 
     //uses fallback, link, and then context to build options
-    const { options, body } = selectHttpOptionsAndBody(
+    const { options, body } = selectHttpOptionsAndBodyInternal(
       operation,
       print,
       fallbackHttpConfig,

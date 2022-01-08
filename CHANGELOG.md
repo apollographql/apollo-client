@@ -1,3 +1,48 @@
+## Apollo Client 3.5.6 (2021-12-07)
+
+### Bug Fixes (by [@brainkim](https://github.com/brainkim) in [#9144](https://github.com/apollographql/apollo-client/pull/9144))
+
+- Restores old behavior where the callback passed to `useMutation()` is constant.
+- Fix `useMutation()` callbacks having stale closures.
+- Fix `useQuery()` variables being out of date.
+
+## Apollo Client 3.5.5 (2021-11-23)
+
+### Bug Fixes
+
+- Remove `printer: Printer` positional parameter from publicly-exported `selectHttpOptionsAndBody` function, whose addition in [#8699](https://github.com/apollographql/apollo-client/pull/8699) was a breaking change (starting in Apollo Client 3.5.0) for direct consumers of `selectHttpOptionsAndBody`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9103](https://github.com/apollographql/apollo-client/pull/9103)
+
+## Apollo Client 3.5.4 (2021-11-19)
+
+### Notices
+
+- [Relevant if you use Apollo Client with React Native] Since Apollo Client v3.5.0, CommonJS bundles provided by `@apollo/client` use a `.cjs` file extension rather than `.cjs.js`, so Node.js won't interpret them as ECMAScript modules. While this change should be an implementation detail, it may cause problems for the [Metro bundler](https://facebook.github.io/metro/) used by React Native, whose [`resolver.sourceExts`](https://facebook.github.io/metro/docs/configuration#sourceexts) configuration does not include the `cjs` extension by default.
+
+  As a workaround until [this issue](https://github.com/facebook/metro/issues/535) is resolved, you can configure Metro to understand the `.cjs` file extension by creating a `metro.config.js` file in the root of your React Native project:
+  ```js
+  const { getDefaultConfig } = require("metro-config");
+  const { resolver: defaultResolver } = getDefaultConfig.getDefaultValues();
+  exports.resolver = {
+    ...defaultResolver,
+    sourceExts: [
+      ...defaultResolver.sourceExts,
+      "cjs",
+    ],
+  };
+  ```
+
+### Improvements
+
+- Restore the ability to pass `onError()` and `onCompleted()` to the mutation execution function. <br/> [@brainkim](https://github.com/brainkim) in [#9076](https://github.com/apollographql/apollo-client/pull/9076)
+
+- Work around webpack 5 errors of the form
+  ```
+  The request 'ts-invariant/process' failed to resolve only because it was resolved as fully specified
+  ```
+  by ensuring `import ... from 'ts-invariant/process'` is internally written to `import ... from 'ts-invariant/process/index.js'`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9083](https://github.com/apollographql/apollo-client/pull/9083)
+
 ## Apollo Client 3.5.3 (2021-11-17)
 
 - Avoid rewriting non-relative imported module specifiers in `config/rewriteModuleIds.ts` script, thereby allowing bundlers to resolve those imports as they see fit. <br/>
@@ -66,6 +111,9 @@
 - Include `graphql@16` in peer deps. <br/>
   [@brainkim](https://github.com/brainkim) in [#8997](https://github.com/apollographql/apollo-client/pull/8997)
 
+- Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
+
 ### React Refactoring
 
 #### Improvements (due to [@brainkim](https://github.com/brainkim) in [#8875](https://github.com/apollographql/apollo-client/pull/8875)):
@@ -80,11 +128,6 @@
 - `standby` fetchPolicies will now act like `skip: true` more consistently.
 - Calling `refetch` on a skipped query will have no effect (issue [#8270](https://github.com/apollographql/apollo-client/issues/8270)).
 - Prevent `onError` and `onCompleted` functions from firing continuously, and improving their polling behavior.
-
-### Other Bugs Fixed
-
-- Update `zen-observable-ts` to eliminate transitive dependency on `@types/zen-observable`. <br/>
-  [@benjamn](https://github.com/benjamn) in [#8695](https://github.com/apollographql/apollo-client/pull/8695)
 
 ## Apollo Client 3.4.17 (2021-11-08)
 

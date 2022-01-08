@@ -111,23 +111,27 @@ export const fallbackHttpConfig = {
 
 export const defaultPrinter: Printer = (ast, printer) => printer(ast);
 
-export const selectHttpOptionsAndBody = (
+export function selectHttpOptionsAndBody(
   operation: Operation,
-  printer: Printer,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
-) => {
-  let options: HttpConfig & Record<string, any> = {
-    ...fallbackConfig.options,
-    headers: fallbackConfig.headers,
-    credentials: fallbackConfig.credentials,
-  };
-  let http: HttpQueryOptions = fallbackConfig.http || {};
+) {
+  configs.unshift(fallbackConfig);
+  return selectHttpOptionsAndBodyInternal(
+    operation,
+    defaultPrinter,
+    ...configs,
+  );
+}
 
-  /*
-   * use the rest of the configs to populate the options
-   * configs later in the list will overwrite earlier fields
-   */
+export function selectHttpOptionsAndBodyInternal(
+  operation: Operation,
+  printer: Printer,
+  ...configs: HttpConfig[]
+) {
+  let options = {} as HttpConfig & Record<string, any>;
+  let http = {} as HttpQueryOptions;
+
   configs.forEach(config => {
     options = {
       ...options,
@@ -137,7 +141,10 @@ export const selectHttpOptionsAndBody = (
         ...headersToLowerCase(config.headers),
       },
     };
-    if (config.credentials) options.credentials = config.credentials;
+
+    if (config.credentials) {
+      options.credentials = config.credentials;
+    }
 
     http = {
       ...http,

@@ -149,7 +149,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
   options?: LazyQueryHookOptions<TData, TVariables>,
 ): [
-  (options?: QueryLazyOptions<TVariables>) => void,
+  (options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
   LazyQueryResult<TData, TVariables>
 ] {}
 ```
@@ -166,15 +166,15 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
 <QueryOptions3 />
 
-### Result
+### Result tuple
 
-**Execute function**
+**Execute function (first tuple item)**
 
 | Param            | Type                                                  | Description                                                                                                                     |
 | ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Execute function | (options?: QueryLazyOptions&lt;TVariables&gt;) => void | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. |
+| Execute function | `(options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>` | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails. |
 
-**Result object**
+**`LazyQueryResult<TData, TVariables>` object (second tuple item)**
 
 <QueryResult3 />
 
@@ -242,7 +242,7 @@ function useMutation<TData = any, TVariables = OperationVariables>(
 
 <MutationOptions3 />
 
-### Result
+### `MutationTuple<TData, TVariables>` result tuple
 
 <MutationResult3 />
 

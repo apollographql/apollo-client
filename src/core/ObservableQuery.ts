@@ -27,6 +27,7 @@ import {
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
+import { MissingTree } from '../cache/core/types/common';
 
 const {
   assign,
@@ -209,24 +210,20 @@ export class ObservableQuery<
     } as ApolloQueryResult<TData>;
 
     const { fetchPolicy = "cache-first" } = this.options;
-    // The presence of lastResult means a result has been received and
-    // this.options.variables haven't changed since then, so its absence means
-    // either there hasn't been a result yet (so these policies definitely
-    // should skip the cache) or there's been a result but it was for different
-    // variables (again, skipping the cache seems right).
-    const shouldReturnCachedData = lastResult || (
-      fetchPolicy !== 'network-only' &&
-      fetchPolicy !== 'no-cache' &&
-      fetchPolicy !== 'standby'
-    );
     if (
-      shouldReturnCachedData &&
+      // These fetch policies should never deliver data from the cache, unless
+      // redelivering a previously delivered result.
+      fetchPolicy === 'network-only' ||
+      fetchPolicy === 'no-cache' ||
+      fetchPolicy === 'standby' ||
       // If this.options.query has @client(always: true) fields, we cannot
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
-      !this.queryManager.transform(this.options.query).hasForcedResolvers
+      this.queryManager.transform(this.options.query).hasForcedResolvers
     ) {
+      // Fall through.
+    } else {
       const diff = this.queryInfo.getDiff();
 
       if (diff.complete || this.options.returnPartialData) {
@@ -238,20 +235,23 @@ export class ObservableQuery<
       }
 
       if (diff.complete) {
+        // Similar to setting result.partial to false, but taking advantage of the
+        // falsiness of missing fields.
+        delete result.partial;
+
         // If the diff is complete, and we're using a FetchPolicy that
-        // terminates after a complete cache read, we can assume the next
-        // result we receive will have NetworkStatus.ready and !loading.
-        if (result.networkStatus === NetworkStatus.loading &&
-            (fetchPolicy === 'cache-first' ||
-             fetchPolicy === 'cache-only')) {
+        // terminates after a complete cache read, we can assume the next result
+        // we receive will have NetworkStatus.ready and !loading.
+        if (
+          diff.complete &&
+          result.networkStatus === NetworkStatus.loading &&
+          (fetchPolicy === 'cache-first' ||
+          fetchPolicy === 'cache-only')
+        ) {
           result.networkStatus = NetworkStatus.ready;
           result.loading = false;
         }
-        delete result.partial;
-      } else if (fetchPolicy !== "no-cache") {
-        // Since result.partial comes from diff.complete, and we shouldn't be
-        // using cache data to provide a DiffResult when the fetchPolicy is
-        // "no-cache", avoid annotating result.partial for "no-cache" results.
+      } else {
         result.partial = true;
       }
 
@@ -326,9 +326,11 @@ export class ObservableQuery<
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
     const { fetchPolicy } = this.options;
-    if (fetchPolicy === 'no-cache') {
+    if (fetchPolicy === 'standby' || fetchPolicy === 'cache-and-network') {
+      reobserveOptions.fetchPolicy = fetchPolicy;
+    } else if (fetchPolicy === 'no-cache') {
       reobserveOptions.fetchPolicy = 'no-cache';
-    } else if (fetchPolicy !== 'cache-and-network') {
+    } else {
       reobserveOptions.fetchPolicy = 'network-only';
     }
 
@@ -815,11 +817,11 @@ function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
 }
 
 export function logMissingFieldErrors(
-  missing: MissingFieldError[] | undefined,
+  missing: MissingFieldError[] | MissingTree | undefined,
 ) {
-  if (__DEV__ && isNonEmptyArray(missing)) {
+  if (__DEV__ && missing) {
     invariant.debug(`Missing cache result fields: ${
-      missing.map(m => m.path.join('.')).join(', ')
+      JSON.stringify(missing)
     }`, missing);
   }
 }

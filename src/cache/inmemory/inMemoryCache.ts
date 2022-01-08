@@ -1,3 +1,5 @@
+import { invariant } from '../../utilities/globals';
+
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
@@ -224,7 +226,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
+  public diff<TData, TVariables = any>(
+    options: Cache.DiffOptions<TData, TVariables>,
+  ): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({
       ...options,
       store: options.optimistic ? this.optimisticData : this.data,
@@ -233,7 +237,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
+  public watch<TData = any, TVariables = any>(
+    watch: Cache.WatchOptions<TData, TVariables>,
+  ): () => void {
     if (!this.watches.size) {
       // In case we previously called forgetCache(this) because
       // this.watches became empty (see below), reattach this cache to any
@@ -313,8 +319,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // sure that none of the primary key fields have been renamed by aliasing.
   // If you pass a Reference object, its __ref ID string will be returned.
   public identify(object: StoreObject | Reference): string | undefined {
-    return isReference(object) ? object.__ref :
-      this.policies.identify(object)[0];
+    if (isReference(object)) return object.__ref;
+    try {
+      return this.policies.identify(object)[0];
+    } catch (e) {
+      invariant.warn(e);
+    }
   }
 
   public evict(options: Cache.EvictOptions): boolean {
@@ -377,7 +387,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private txCount = 0;
 
-  public batch(options: Cache.BatchOptions<InMemoryCache>) {
+  public batch<TUpdateResult>(
+    options: Cache.BatchOptions<InMemoryCache, TUpdateResult>,
+  ): TUpdateResult {
     const {
       update,
       optimistic = true,
@@ -385,14 +397,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       onWatchUpdated,
     } = options;
 
-    const perform = (layer?: EntityStore) => {
+    let updateResult: TUpdateResult;
+    const perform = (layer?: EntityStore): TUpdateResult => {
       const { data, optimisticData } = this;
       ++this.txCount;
       if (layer) {
         this.data = this.optimisticData = layer;
       }
       try {
-        update(this);
+        return updateResult = update(this);
       } finally {
         --this.txCount;
         this.data = data;
@@ -471,6 +484,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // options.onWatchUpdated.
       this.broadcastWatches(options);
     }
+
+    return updateResult!;
   }
 
   public performTransaction(

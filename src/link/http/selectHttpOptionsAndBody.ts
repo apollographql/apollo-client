@@ -1,6 +1,10 @@
-import { print } from 'graphql';
+import { ASTNode, print } from 'graphql';
 
 import { Operation } from '../core';
+
+export interface Printer {
+  (node: ASTNode, originalPrint: typeof print): string
+};
 
 export interface UriFunction {
   (operation: Operation): string;
@@ -65,6 +69,11 @@ export interface HttpOptions {
    * from the GraphQL specification by not strictly enforcing that rule.
    */
   includeUnusedVariables?: boolean;
+  /**
+   * A function to substitute for the default query print function. Can be
+   * used to apply changes to the results of the print function.
+   */
+   print?: Printer;
 }
 
 export interface HttpQueryOptions {
@@ -100,22 +109,29 @@ export const fallbackHttpConfig = {
   options: defaultOptions,
 };
 
-export const selectHttpOptionsAndBody = (
+export const defaultPrinter: Printer = (ast, printer) => printer(ast);
+
+export function selectHttpOptionsAndBody(
   operation: Operation,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
-) => {
-  let options: HttpConfig & Record<string, any> = {
-    ...fallbackConfig.options,
-    headers: fallbackConfig.headers,
-    credentials: fallbackConfig.credentials,
-  };
-  let http: HttpQueryOptions = fallbackConfig.http || {};
+) {
+  configs.unshift(fallbackConfig);
+  return selectHttpOptionsAndBodyInternal(
+    operation,
+    defaultPrinter,
+    ...configs,
+  );
+}
 
-  /*
-   * use the rest of the configs to populate the options
-   * configs later in the list will overwrite earlier fields
-   */
+export function selectHttpOptionsAndBodyInternal(
+  operation: Operation,
+  printer: Printer,
+  ...configs: HttpConfig[]
+) {
+  let options = {} as HttpConfig & Record<string, any>;
+  let http = {} as HttpQueryOptions;
+
   configs.forEach(config => {
     options = {
       ...options,
@@ -125,7 +141,10 @@ export const selectHttpOptionsAndBody = (
         ...headersToLowerCase(config.headers),
       },
     };
-    if (config.credentials) options.credentials = config.credentials;
+
+    if (config.credentials) {
+      options.credentials = config.credentials;
+    }
 
     http = {
       ...http,
@@ -140,7 +159,7 @@ export const selectHttpOptionsAndBody = (
   if (http.includeExtensions) (body as any).extensions = extensions;
 
   // not sending the query (i.e persisted queries)
-  if (http.includeQuery) (body as any).query = print(query);
+  if (http.includeQuery) (body as any).query = printer(query, print);
 
   return {
     options,

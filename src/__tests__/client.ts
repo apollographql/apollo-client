@@ -2335,7 +2335,7 @@ describe('client', () => {
     expect(count).toEqual(2);
   });
 
-  it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
+  itAsync('invokes onResetStore callbacks before notifying queries during resetStore call', async (resolve, reject) => {
     const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const query = gql`
@@ -2414,8 +2414,8 @@ describe('client', () => {
       })
       .subscribe({
         next,
-        error: fail,
-        complete: fail,
+        error: reject,
+        complete: reject,
       });
 
     expect(count).toEqual(0);
@@ -2423,6 +2423,8 @@ describe('client', () => {
     expect(count).toEqual(2);
     //watchQuery should only receive data twice
     expect(next).toHaveBeenCalledTimes(2);
+
+    resolve();
   });
 
   it('has a reFetchObservableQueries method which calls QueryManager', async () => {

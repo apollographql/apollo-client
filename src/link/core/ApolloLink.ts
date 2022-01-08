@@ -1,6 +1,6 @@
 import { InvariantError, invariant } from '../../utilities/globals';
 
-import { Observable } from '../../utilities';
+import { Observable, Observer } from '../../utilities';
 import {
   NextLink,
   Operation,
@@ -143,7 +143,7 @@ export class ApolloLink {
 
   protected onError(
     error: any,
-    observer?: ZenObservable.Observer<FetchResult>,
+    observer?: Observer<FetchResult>,
   ): false | void {
     if (observer && observer.error) {
       observer.error(error);

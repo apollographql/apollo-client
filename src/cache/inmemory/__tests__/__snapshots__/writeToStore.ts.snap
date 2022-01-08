@@ -34,6 +34,8 @@ Object {
 }
 `;
 
+exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 3`] = `[MockFunction]`;
+
 exports[`writing to the store correctly merges fragment fields along multiple paths 1`] = `
 Object {
   "Item:0f47f85d-8081-466e-9121-c94069a77c3e": Object {
@@ -73,19 +75,6 @@ exports[`writing to the store should not keep reference when type of mixed inlin
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'price' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\",
-  \\"description\\": \\"Description 1\\",
-  \\"__typename\\": \\"ShoppingCartItem\\"
-}",
-    ],
-    Array [
-      "Missing field 'expensive' while writing result {
-  \\"id\\": 1
-}",
-    ],
-    Array [
       "Missing field 'id' while writing result {
   \\"__typename\\": \\"Cat\\",
   \\"name\\": \\"cat\\"
@@ -93,14 +82,6 @@ exports[`writing to the store should not keep reference when type of mixed inlin
     ],
   ],
   "results": Array [
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
     Object {
       "type": "return",
       "value": undefined,
@@ -215,6 +196,29 @@ Object {
       "name": "Clytemnestra",
     },
   },
+}
+`;
+
+exports[`writing to the store writeResultToStore shape checking should not warn if a field is defered 1`] = `[MockFunction]`;
+
+exports[`writing to the store writeResultToStore shape checking should warn when it receives the wrong data inside a fragment 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'price' while writing result {
+  \\"id\\": \\"1\\",
+  \\"name\\": \\"Todo 1\\",
+  \\"description\\": \\"Description 1\\",
+  \\"__typename\\": \\"ShoppingCartItem\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
 }
 `;
 

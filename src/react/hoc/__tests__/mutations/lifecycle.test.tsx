@@ -3,7 +3,7 @@ import { render, cleanup } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { ApolloProvider } from '../../../context/ApolloProvider';
-import { createMockClient } from '../../../../utilities/testing/mocking/mockClient';
+import { itAsync, createMockClient } from '../../../../testing/core';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -23,7 +23,7 @@ const expectedData = {
 describe('graphql(mutation) lifecycle', () => {
   afterEach(cleanup);
 
-  it('allows falsy values in the mapped variables from props', done => {
+  itAsync('allows falsy values in the mapped variables from props', (resolve, reject) => {
     const client = createMockClient(expectedData, query, { id: null });
 
     interface Props {
@@ -35,7 +35,7 @@ describe('graphql(mutation) lifecycle', () => {
         componentDidMount() {
           this.props.mutate!().then(result => {
             expect(result && result.data).toEqual(expectedData);
-            done();
+            resolve();
           });
         }
 
@@ -69,7 +69,7 @@ describe('graphql(mutation) lifecycle', () => {
     }
   });
 
-  it('rebuilds the mutation on prop change when using `options`', done => {
+  itAsync('rebuilds the mutation on prop change when using `options`', (resolve, reject) => {
     const client = createMockClient(expectedData, query, {
       id: 2
     });
@@ -77,6 +77,7 @@ describe('graphql(mutation) lifecycle', () => {
     interface Props {
       listId: number;
     }
+
     function options(props: Props) {
       return {
         variables: {
@@ -88,7 +89,7 @@ describe('graphql(mutation) lifecycle', () => {
     class Container extends React.Component<ChildProps<Props>> {
       render() {
         if (this.props.listId !== 2) return null;
-        this.props.mutate!().then(() => done());
+        this.props.mutate!().then(() => resolve());
         return null;
       }
     }
@@ -114,7 +115,7 @@ describe('graphql(mutation) lifecycle', () => {
     );
   });
 
-  it('can execute a mutation with custom variables', done => {
+  itAsync('can execute a mutation with custom variables', (resolve, reject) => {
     const client = createMockClient(expectedData, query, { id: 1 });
     interface Variables {
       id: number;
@@ -125,7 +126,7 @@ describe('graphql(mutation) lifecycle', () => {
         componentDidMount() {
           this.props.mutate!({ variables: { id: 1 } }).then(result => {
             expect(result && result.data).toEqual(expectedData);
-            done();
+            resolve();
           });
         }
         render() {

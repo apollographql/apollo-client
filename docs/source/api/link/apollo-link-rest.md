@@ -41,7 +41,7 @@ const client = new ApolloClient({
 });
 ```
 
-Now it's time to write our first query. Defining a query is straightforward:
+Now it's time to write our first query:
 
 ```js
 import { gql } from '@apollo/client';

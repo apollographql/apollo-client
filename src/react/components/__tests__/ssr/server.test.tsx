@@ -158,14 +158,12 @@ describe('SSR', () => {
     const apolloClient = new ApolloClient({
       link: new ApolloLink(config => {
         return new Observable(observer => {
-          execute(
-            Schema,
-            print(config.query),
-            null,
-            null,
-            config.variables,
-            config.operationName
-          )
+          execute({
+            schema: Schema,
+            source: print(config.query),
+            variableValues: config.variables,
+            operationName: config.operationName,
+          })
             .then(result => {
               observer.next(result);
               observer.complete();

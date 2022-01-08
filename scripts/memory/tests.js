@@ -49,9 +49,9 @@ function makeRegistry(callback, reject) {
 // This is not technically a memory-related test, but it depends on the build
 // artifacts generated in the ../../dist directory by `npm run build`, which is
 // an assumption shared by the other tests in this file.
-describe("@apollo/client/apollo-client.cjs.js", () => {
+describe("@apollo/client/apollo-client.cjs", () => {
   it("can be imported as a single CommonJS bundle (issue #8592)", () => {
-    const bundle = require("@apollo/client/apollo-client.cjs.js");
+    const bundle = require("@apollo/client/apollo-client.cjs");
 
     // Very basic test that requiring the bundle worked.
     assert.strictEqual(typeof bundle.ApolloClient, "function");
@@ -63,7 +63,7 @@ describe("@apollo/client/apollo-client.cjs.js", () => {
 
     // The CommonJS bundles referred to by the "main" fields in the various
     // package.json files that we generate during `npm run build` are all
-    // independent, non-overlapping bundles, but apollo-client.cjs.js is its own
+    // independent, non-overlapping bundles, but apollo-client.cjs is its own
     // bundle, so importing it duplicates everything.
     assert.notStrictEqual(bundle.ApolloClient, ApolloClient);
     assert.notStrictEqual(bundle.InMemoryCache, InMemoryCache);

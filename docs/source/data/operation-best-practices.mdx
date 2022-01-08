@@ -1,6 +1,7 @@
 ---
 title: GraphQL query best practices
 sidebar_title: Best practices
+description: Operation naming, GraphQL variables, and more
 ---
 
 import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
@@ -33,10 +34,10 @@ You should define a name for _every_ GraphQL operation in your application. Doin
 
 * You clarify the purpose of each operation for both yourself and your teammates.
 * You avoid unexpected errors when combining multiple operations in a single query document (an anonymous operation can only appear alone).
-* You improve debugging output in both client _and_ server code, helping you identify exactly which operation is causing issues. 
+* You improve debugging output in both client _and_ server code, helping you identify exactly which operation is causing issues.
 * [Apollo Studio](https://www.apollographql.com/docs/studio/) provides helpful operation-level metrics, which require named operations.
 
-## Use variables to provide GraphQL arguments
+## Use GraphQL variables to provide arguments
 
 These two queries can both fetch a `Dog` object with ID `"5"`:
 
@@ -286,7 +287,7 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
   name: 'MarketingSite',
   version: '1.2'
-}); 
+});
 ```
 
 If you specify these values, Apollo Client automatically adds them to each operation request as HTTP headers (`apollographql-client-name` and `apollographql-client-version`).

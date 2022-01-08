@@ -17,7 +17,7 @@ In addition to `merge` and `read` functions, `InMemoryCache` field policies can 
 
 A `keyArgs: ["type"]` field policy configuration means `type` is the only argument the cache should consider (in addition to the field name and the identity of the enclosing object) when accessing values for this field. A `keyArgs: false` configuration disables the whole system of differentiating field values by arguments, so the field's value will be identified only by the field's name (within some `StoreObject`), without any serialized arguments appended to it.
 
-> In the unlikely event that a `keyArgs` array is insufficient to specify the storage key, you can alternatively pass a function for `keyArgs`, which allows you to sanitize and serialize the `args` object however you like.
+> In the unlikely event that a `keyArgs` array is insufficient to specify the storage key, you can alternatively pass a function for `keyArgs`, which allows you to sanitize and serialize the `args` object however you like. You can also provide nested `keyArgs` in the format `["arg", ["nested-arg"]]`.
 
 This article provides specific technical guidance on choosing appropriate `keyArgs` configurations, especially when working with paginated fields and field policies.
 

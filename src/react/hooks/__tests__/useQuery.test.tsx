@@ -857,6 +857,45 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: "world 3" });
     });
 
+    it("should return data from network when clients default fetch policy set to network-only", async () => {
+      const query = gql`{ hello }`;
+      const data = { hello: "world" };
+      const mocks = [
+        {
+          request: { query },
+          result: { data },
+        },
+      ];
+  
+      const cache = new InMemoryCache();
+      cache.writeQuery({
+        query,
+        data: { hello: "world 2" },
+      });
+  
+      const wrapper = ({ children }: any) => (
+        <MockedProvider 
+          mocks={mocks}
+          cache={cache} 
+          defaultOptions={{ watchQuery: { fetchPolicy: "network-only" } }} 
+        >
+          {children}
+        </MockedProvider>
+      );
+  
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        { wrapper },
+      );
+  
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(data);
+    });
+
     it('should stop polling when component unmounts', async () => {
       const query = gql`{ hello }`;
       const mocks = [

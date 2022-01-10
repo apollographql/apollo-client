@@ -7,7 +7,7 @@
     "types": "cd .. && typedoc --json ./docs/src/gatsby-theme-apollo-docs/docs.json ./src/index.ts"
   },
   "dependencies": {
-    "gatsby": "2.32.13",
+    "gatsby": "3.0.0",
     "gatsby-theme-apollo-docs": "5.3.12",
     "react": "16.14.0",
     "react-dom": "16.14.0"

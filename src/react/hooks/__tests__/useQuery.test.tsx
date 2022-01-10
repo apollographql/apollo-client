@@ -1545,6 +1545,7 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
+      expect(onCompleted).toHaveBeenLastCalledWith(data1);
 
       rerender({ variables: { first: 2 } });
       expect(result.current.loading).toBe(true);
@@ -1552,10 +1553,12 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data2);
+      expect(onCompleted).toHaveBeenLastCalledWith(data2);
 
       rerender({ variables: { first: 1 } });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
+      expect(onCompleted).toHaveBeenLastCalledWith(data1);
 
       expect(onCompleted).toHaveBeenCalledTimes(3);
     });

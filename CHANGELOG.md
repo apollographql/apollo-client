@@ -1,11 +1,11 @@
-## Apollo Client 3.5.7 (unreleased)
+## Apollo Client 3.5.7 (2022-01-10)
 
 ### Bug Fixes
 
-- Fix regression that prevented `onError` or `onCompleted` from being called in some cases when using `useQuery`. <br/>
+- Fix regression that prevented calling `onError` or `onCompleted` in some cases when using `useQuery`. <br/>
   [@mmahalwy](https://github.com/mmahalwy) in [#9226](https://github.com/apollographql/apollo-client/pull/9226)
 
-- Fix `defaultOptions` not being used by `useQuery`. <br/>
+- Make `useQuery` respect `defaultOptions.watchQuery.fetchPolicy`. <br/>
   [@yasharzolmajdi](https://github.com/yasharzolmajdi) in [#9210](https://github.com/apollographql/apollo-client/pull/9210)
 
 ## Apollo Client 3.5.6 (2021-12-07)

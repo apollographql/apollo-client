@@ -141,9 +141,12 @@ export class OperationBatcher {
     key: string = '',
   ): (Observable<FetchResult> | undefined)[] | undefined {
     const batch = this.batchesByKey.get(key);
-    if (!batch) return;
-
+    // Delete this batch and process it below.
     this.batchesByKey.delete(key);
+    if (!batch || !batch.size) {
+      // No requests to be processed.
+      return;
+    }
 
     const operations: Operation[] = [];
     const forwards: (NextLink | undefined)[] = [];
@@ -216,9 +219,7 @@ export class OperationBatcher {
 
   private scheduleQueueConsumption(key: string): void {
     this.scheduledBatchTimer = setTimeout(() => {
-      if (this.batchesByKey.get(key)?.size) {
-        this.consumeQueue(key);
-      }
+      this.consumeQueue(key);
     }, this.batchInterval);
   }
 }

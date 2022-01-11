@@ -1,5 +1,5 @@
-import {FetchResult, NextLink, Operation} from '../core';
-import {Observable, ObservableSubscription} from '../../utilities';
+import { Operation, FetchResult, NextLink } from '../core';
+import { Observable, ObservableSubscription } from '../../utilities';
 
 export type BatchHandler = (
   operations: Operation[],
@@ -43,12 +43,12 @@ export class OperationBatcher {
   private batchKey: (operation: Operation) => string;
 
   constructor({
-                batchDebounce,
-                batchInterval,
-                batchMax,
-                batchHandler,
-                batchKey,
-              }: {
+    batchDebounce,
+    batchInterval,
+    batchMax,
+    batchHandler,
+    batchKey,
+  }: {
     batchDebounce?: boolean;
     batchInterval?: number;
     batchMax?: number;

@@ -1,12 +1,16 @@
 import gql from 'graphql-tag';
-import {print} from 'graphql';
+import { print } from 'graphql';
 
-import {ApolloLink} from '../../core/ApolloLink';
-import {execute} from '../../core/execute';
-import {FetchResult, GraphQLRequest, Operation} from '../../core/types';
-import {Observable, ObservableSubscription} from '../../../utilities/observables/Observable';
-import {BatchableRequest, BatchHandler, BatchLink, OperationBatcher,} from '../batchLink';
-import {itAsync} from '../../../testing';
+import { ApolloLink, execute } from '../../core';
+import { Operation, FetchResult, GraphQLRequest } from '../../core/types';
+import { Observable } from '../../../utilities';
+import { itAsync } from '../../../testing';
+import {
+  BatchLink,
+  OperationBatcher,
+  BatchHandler,
+  BatchableRequest,
+} from '../batchLink';
 
 interface MockedResponse {
   request: GraphQLRequest;
@@ -409,6 +413,7 @@ describe('OperationBatcher', () => {
       lastName: 'Ever',
       firstName: 'Greatest',
     };
+
     const batcher = new OperationBatcher({
       batchInterval: 10,
       batchHandler: () =>
@@ -417,17 +422,19 @@ describe('OperationBatcher', () => {
           setTimeout(observer.complete.bind(observer));
         }),
     });
-      const query = gql`
-          query {
-              author {
-                  firstName
-                  lastName
-              }
-          }
-      `;
-    const operation: Operation = createOperation({}, {query});
 
-    batcher.enqueueRequest({operation}).subscribe(() => reject('next should never be called')).unsubscribe();
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    batcher.enqueueRequest({
+      operation: createOperation({}, { query }),
+    }).subscribe(() => reject('next should never be called')).unsubscribe();
 
     expect(batcher.queuedRequests.get('')).toBeUndefined();
     resolve();
@@ -446,14 +453,14 @@ describe('OperationBatcher', () => {
           setTimeout(observer.complete.bind(observer));
         }),
     });
-      const query = gql`
-          query {
-              author {
-                  firstName
-                  lastName
-              }
-          }
-      `;
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
     const operation: Operation = createOperation({}, {query});
 
     const observable = batcher.enqueueRequest({operation});
@@ -475,8 +482,6 @@ describe('OperationBatcher', () => {
   });
 
   itAsync('should cancel single query in flight when unsubscribing', (resolve, reject) => {
-    let subscription: ObservableSubscription | undefined;
-
     const batcher = new OperationBatcher({
       batchInterval: 10,
       batchHandler: () =>
@@ -487,22 +492,22 @@ describe('OperationBatcher', () => {
           return () => {
             expect(batcher.queuedRequests.get('')).toBeUndefined();
             resolve();
-          }
+          };
         }),
     });
 
     const query = gql`
-        query {
-            author {
-                firstName
-                lastName
-            }
+      query {
+        author {
+          firstName
+          lastName
         }
+      }
     `;
 
-    const operation: Operation = createOperation({}, {query});
-
-    subscription = batcher.enqueueRequest({operation}).subscribe(() => reject('next should never be called'));
+    const subscription = batcher.enqueueRequest({
+      operation: createOperation({}, { query }),
+    }).subscribe(() => reject('next should never be called'));
   });
 
   itAsync('should correctly batch multiple queries', (resolve, reject) => {
@@ -561,7 +566,7 @@ describe('OperationBatcher', () => {
     );
   });
 
-  itAsync('should cancel multiples queries in queue when unsubscribing and let pass still subscribed one', (resolve, reject) => {
+  itAsync('should cancel multiple queries in queue when unsubscribing and let pass still subscribed one', (resolve, reject) => {
     const data2 = {
       lastName: 'Hauser',
       firstName: 'Evans',
@@ -571,19 +576,19 @@ describe('OperationBatcher', () => {
       batchInterval: 10,
       batchHandler: () =>
         new Observable(observer => {
-          observer.next([{data: data2}]);
+          observer.next([{ data: data2 }]);
           setTimeout(observer.complete.bind(observer));
         }),
     });
 
-      const query = gql`
-          query {
-              author {
-                  firstName
-                  lastName
-              }
-          }
-      `;
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
 
     const operation: Operation = createOperation({}, {query});
     const operation2: Operation = createOperation({}, {query});

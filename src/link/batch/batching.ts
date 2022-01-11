@@ -22,16 +22,19 @@ interface QueuedRequest extends BatchableRequest {
   subscribers: Set<object>;
 }
 
+// Batches are primarily a Set<QueuedRequest>, but may have other optional
+// properties, such as batch.subscription.
+type RequestBatch = Set<QueuedRequest> & {
+  subscription?: ObservableSubscription;
+}
+
 // QueryBatcher doesn't fire requests immediately. Requests that were enqueued within
 // a certain amount of time (configurable through `batchInterval`) will be batched together
 // into one query.
 export class OperationBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   // Public only for testing
-  public readonly queuedRequests = new Map<string, {
-    requests: Set<QueuedRequest>;
-    batchedSubscription?: ObservableSubscription;
-  }>();
+  public readonly queuedRequests = new Map<string, RequestBatch>();
 
   private scheduledBatchTimer: ReturnType<typeof setTimeout>;
   private batchDebounce?: boolean;
@@ -75,21 +78,17 @@ export class OperationBatcher {
 
     if (!requestCopy.observable) {
       requestCopy.observable = new Observable<FetchResult>(observer => {
-        let queued = this.queuedRequests.get(key)!;
-        if (!queued) {
-          this.queuedRequests.set(key, queued = {
-            requests: new Set,
-          });
-        }
+        let batch = this.queuedRequests.get(key)!;
+        if (!batch) this.queuedRequests.set(key, batch = new Set);
 
         // These booleans seem to me (@benjamn) like they might always be the
         // same (and thus we could do with only one of them), but I'm not 100%
         // sure about that.
-        const isFirstEnqueuedRequest = queued.requests.size === 0;
+        const isFirstEnqueuedRequest = batch.size === 0;
         const isFirstSubscriber = requestCopy.subscribers.size === 0;
         requestCopy.subscribers.add(observer);
         if (isFirstSubscriber) {
-          queued.requests.add(requestCopy);
+          batch.add(requestCopy);
         }
 
         // called for each subscriber, so need to save all listeners (next, error, complete)
@@ -114,7 +113,7 @@ export class OperationBatcher {
         }
 
         // When amount of requests reaches `batchMax`, trigger the queue consumption without waiting on the `batchInterval`.
-        if (queued.requests.size === this.batchMax) {
+        if (batch.size === this.batchMax) {
           this.consumeQueue(key);
         }
 
@@ -123,12 +122,11 @@ export class OperationBatcher {
           if (requestCopy.subscribers.delete(observer) &&
               requestCopy.subscribers.size < 1) {
             // If this is last request from queue, remove queue entirely
-            if (queued.requests.delete(requestCopy) &&
-                queued.requests.size < 1) {
+            if (batch.delete(requestCopy) && batch.size < 1) {
               clearTimeout(this.scheduledBatchTimer);
               this.queuedRequests.delete(key);
               // If queue was in flight, cancel it
-              queued.batchedSubscription?.unsubscribe();
+              batch.subscription?.unsubscribe();
             }
           }
         }
@@ -143,8 +141,8 @@ export class OperationBatcher {
   public consumeQueue(
     key: string = '',
   ): (Observable<FetchResult> | undefined)[] | undefined {
-    const queued = this.queuedRequests.get(key);
-    if (!queued) return;
+    const batch = this.queuedRequests.get(key);
+    if (!batch) return;
 
     this.queuedRequests.delete(key);
 
@@ -155,11 +153,10 @@ export class OperationBatcher {
     const errors: Array<(error: Error) => void>[] = [];
     const completes: Array<() => void>[] = [];
 
-    // Even though queued.requests is a Set, it preserves the order of first
-    // insertion when iterating (per ECMAScript specification), so these
-    // requests will be handled in the order they were enqueued (minus any
-    // deleted ones).
-    queued.requests.forEach(request => {
+    // Even though batch is a Set, it preserves the order of first insertion
+    // when iterating (per ECMAScript specification), so these requests will be
+    // handled in the order they were enqueued (minus any deleted ones).
+    batch.forEach(request => {
       operations.push(request.operation);
       forwards.push(request.forward);
       observables.push(request.observable);
@@ -181,7 +178,7 @@ export class OperationBatcher {
       });
     };
 
-    queued.batchedSubscription = batchedObservable.subscribe({
+    batch.subscription = batchedObservable.subscribe({
       next: results => {
         if (!Array.isArray(results)) {
           results = [results];
@@ -220,7 +217,7 @@ export class OperationBatcher {
 
   private scheduleQueueConsumption(key: string): void {
     this.scheduledBatchTimer = setTimeout(() => {
-      if (this.queuedRequests.get(key)?.requests.size) {
+      if (this.queuedRequests.get(key)?.size) {
         this.consumeQueue(key);
       }
     }, this.batchInterval);

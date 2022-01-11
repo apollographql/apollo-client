@@ -9,13 +9,13 @@ export type BatchHandler = (
 export interface BatchableRequest {
   operation: Operation;
   forward?: NextLink;
+  observable?: Observable<FetchResult>;
+  next?: Array<(result: FetchResult) => void>;
+  error?: Array<(error: Error) => void>;
+  complete?: Array<() => void>;
 }
 
 interface QueuedRequest extends BatchableRequest {
-  // promise is created when the query fetch request is
-  // added to the queue and is resolved once the result is back
-  // from the server.
-  observable?: Observable<FetchResult>;
   next: Array<(result: FetchResult) => void>;
   error: Array<(error: Error) => void>;
   complete: Array<() => void>;

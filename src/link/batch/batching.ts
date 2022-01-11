@@ -19,7 +19,7 @@ interface QueuedRequest extends BatchableRequest {
   next: Array<(result: FetchResult) => void>;
   error: Array<(error: Error) => void>;
   complete: Array<() => void>;
-  subscribers: number;
+  subscribers: Set<object>;
 }
 
 // QueryBatcher doesn't fire requests immediately. Requests that were enqueued within
@@ -29,8 +29,8 @@ export class OperationBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   // Public only for testing
   public readonly queuedRequests = new Map<string, {
-    requests: QueuedRequest[],
-    batchedSubscription?: ObservableSubscription
+    requests: Set<QueuedRequest>;
+    batchedSubscription?: ObservableSubscription;
   }>();
 
   private scheduledBatchTimer: ReturnType<typeof setTimeout>;
@@ -68,21 +68,28 @@ export class OperationBatcher {
       next: [],
       error: [],
       complete: [],
-      subscribers: 0,
+      subscribers: new Set,
     };
 
     const key = this.batchKey(request.operation);
 
     if (!requestCopy.observable) {
       requestCopy.observable = new Observable<FetchResult>(observer => {
-        if (!this.queuedRequests.has(key)) {
-          this.queuedRequests.set(key, {requests: []});
+        let queued = this.queuedRequests.get(key)!;
+        if (!queued) {
+          this.queuedRequests.set(key, queued = {
+            requests: new Set,
+          });
         }
-        const queuedRequests = this.queuedRequests.get(key)!;
 
-        requestCopy.subscribers++;
-        if (requestCopy.subscribers === 1) {
-          queuedRequests.requests.push(requestCopy);
+        // These booleans seem to me (@benjamn) like they might always be the
+        // same (and thus we could do with only one of them), but I'm not 100%
+        // sure about that.
+        const isFirstEnqueuedRequest = queued.requests.size === 0;
+        const isFirstSubscriber = requestCopy.subscribers.size === 0;
+        requestCopy.subscribers.add(observer);
+        if (isFirstSubscriber) {
+          queued.requests.add(requestCopy);
         }
 
         // called for each subscriber, so need to save all listeners (next, error, complete)
@@ -99,7 +106,7 @@ export class OperationBatcher {
         }
 
         // The first enqueued request triggers the queue consumption after `batchInterval` milliseconds.
-        if (queuedRequests.requests.length === 1) {
+        if (isFirstEnqueuedRequest) {
           this.scheduleQueueConsumption(key);
         } else if (this.batchDebounce) {
           clearTimeout(this.scheduledBatchTimer);
@@ -107,27 +114,21 @@ export class OperationBatcher {
         }
 
         // When amount of requests reaches `batchMax`, trigger the queue consumption without waiting on the `batchInterval`.
-        if (queuedRequests.requests.length === this.batchMax) {
+        if (queued.requests.size === this.batchMax) {
           this.consumeQueue(key);
         }
 
         return () => {
-          requestCopy.subscribers--;
-
           // If this is last subscriber for this request, remove request from queue
-          if (requestCopy.subscribers < 1) {
-            const index = queuedRequests.requests.indexOf(requestCopy);
-            if (index !== undefined && index > -1) {
-              queuedRequests.requests.splice(index, 1);
-
-              // If this is last request from queue, remove queue entirely
-              if (queuedRequests.requests.length === 0) {
-                clearTimeout(this.scheduledBatchTimer);
-                this.queuedRequests.delete(key);
-
-                // If queue was in flight, cancel it
-                queuedRequests.batchedSubscription?.unsubscribe();
-              }
+          if (requestCopy.subscribers.delete(observer) &&
+              requestCopy.subscribers.size < 1) {
+            // If this is last request from queue, remove queue entirely
+            if (queued.requests.delete(requestCopy) &&
+                queued.requests.size < 1) {
+              clearTimeout(this.scheduledBatchTimer);
+              this.queuedRequests.delete(key);
+              // If queue was in flight, cancel it
+              queued.batchedSubscription?.unsubscribe();
             }
           }
         }
@@ -140,16 +141,12 @@ export class OperationBatcher {
   // Consumes the queue.
   // Returns a list of promises (one for each query).
   public consumeQueue(
-    key?: string,
+    key: string = '',
   ): (Observable<FetchResult> | undefined)[] | undefined {
-    const requestKey = key || '';
-    const queuedRequests = this.queuedRequests.get(requestKey);
+    const queued = this.queuedRequests.get(key);
+    if (!queued) return;
 
-    if (!queuedRequests) {
-      return;
-    }
-
-    this.queuedRequests.delete(requestKey);
+    this.queuedRequests.delete(key);
 
     const operations: Operation[] = [];
     const forwards: (NextLink | undefined)[] = [];
@@ -158,7 +155,11 @@ export class OperationBatcher {
     const errors: Array<(error: Error) => void>[] = [];
     const completes: Array<() => void>[] = [];
 
-    queuedRequests.requests.forEach(request => {
+    // Even though queued.requests is a Set, it preserves the order of first
+    // insertion when iterating (per ECMAScript specification), so these
+    // requests will be handled in the order they were enqueued (minus any
+    // deleted ones).
+    queued.requests.forEach(request => {
       operations.push(request.operation);
       forwards.push(request.forward);
       observables.push(request.observable);
@@ -180,7 +181,7 @@ export class OperationBatcher {
       });
     };
 
-    queuedRequests.batchedSubscription = batchedObservable.subscribe({
+    queued.batchedSubscription = batchedObservable.subscribe({
       next: results => {
         if (!Array.isArray(results)) {
           results = [results];
@@ -219,7 +220,7 @@ export class OperationBatcher {
 
   private scheduleQueueConsumption(key: string): void {
     this.scheduledBatchTimer = setTimeout(() => {
-      if (this.queuedRequests.get(key)?.requests.length) {
+      if (this.queuedRequests.get(key)?.requests.size) {
         this.consumeQueue(key);
       }
     }, this.batchInterval);

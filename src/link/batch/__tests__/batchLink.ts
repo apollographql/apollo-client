@@ -187,9 +187,9 @@ describe('OperationBatcher', () => {
 
     expect(batcher.queuedRequests.get('')).toBeUndefined();
     batcher.enqueueRequest(request).subscribe({});
-    expect(batcher.queuedRequests.get('')!.requests.length).toBe(1);
+    expect(batcher.queuedRequests.get('')!.requests.size).toBe(1);
     batcher.enqueueRequest(request).subscribe({});
-    expect(batcher.queuedRequests.get('')!.requests.length).toBe(2);
+    expect(batcher.queuedRequests.get('')!.requests.size).toBe(2);
   });
 
   describe('request queue', () => {
@@ -303,7 +303,7 @@ describe('OperationBatcher', () => {
       });
 
       try {
-        expect(myBatcher.queuedRequests.get('')!.requests.length).toBe(2);
+        expect(myBatcher.queuedRequests.get('')!.requests.size).toBe(2);
         const observables: (
           | Observable<FetchResult>
           | undefined)[] = myBatcher.consumeQueue()!;
@@ -345,22 +345,22 @@ describe('OperationBatcher', () => {
       myBatcher.enqueueRequest({ operation }).subscribe({});
       myBatcher.enqueueRequest({ operation }).subscribe({});
       myBatcher.enqueueRequest({ operation }).subscribe({});
-      expect(myBatcher.queuedRequests.get('')!.requests.length).toEqual(3);
+      expect(myBatcher.queuedRequests.get('')!.requests.size).toEqual(3);
 
       // 2. Run the timer halfway.
       jest.advanceTimersByTime(batchInterval / 2);
-      expect(myBatcher.queuedRequests.get('')!.requests.length).toEqual(3);
+      expect(myBatcher.queuedRequests.get('')!.requests.size).toEqual(3);
 
       // 3. Queue a 4th request, causing the timer to reset.
       myBatcher.enqueueRequest({ operation }).subscribe({});
-      expect(myBatcher.queuedRequests.get('')!.requests.length).toEqual(4);
+      expect(myBatcher.queuedRequests.get('')!.requests.size).toEqual(4);
 
       // 4. Run the timer to batchInterval + 1, at this point, if debounce were
       // not set, the original 3 requests would have fired, but we expect
       // instead that the queries will instead fire at
       // (batchInterval + batchInterval / 2).
       jest.advanceTimersByTime(batchInterval / 2 + 1);
-      expect(myBatcher.queuedRequests.get('')!.requests.length).toEqual(4);
+      expect(myBatcher.queuedRequests.get('')!.requests.size).toEqual(4);
 
       // 5. Finally, run the timer to (batchInterval + batchInterval / 2) +1,
       // and expect the queue to be empty.
@@ -395,7 +395,7 @@ describe('OperationBatcher', () => {
 
     batcher.enqueueRequest({ operation }).subscribe({});
     try {
-      expect(batcher.queuedRequests.get('')!.requests.length).toBe(1);
+      expect(batcher.queuedRequests.get('')!.requests.size).toBe(1);
     } catch (e) {
       reject(e);
     }
@@ -464,17 +464,26 @@ describe('OperationBatcher', () => {
     const operation: Operation = createOperation({}, {query});
 
     const observable = batcher.enqueueRequest({operation});
+
+    const checkQueuedRequests = (
+      expectedSubscriberCount: number,
+    ) => {
+      const queued = batcher.queuedRequests.get('');
+      expect(queued).not.toBeUndefined();
+      expect(queued!.requests.size).toBe(1);
+      queued!.requests.forEach(request => {
+        expect(request.subscribers.size).toBe(expectedSubscriberCount);
+      });
+    };
+
     const sub1 = observable.subscribe(() => reject('next should never be called'));
-    expect(batcher.queuedRequests.get('')).not.toBeUndefined();
-    expect(batcher.queuedRequests.get('')?.requests[0].subscribers).toBe(1);
+    checkQueuedRequests(1);
 
     const sub2 = observable.subscribe(() => reject('next should never be called'));
-    expect(batcher.queuedRequests.get('')).not.toBeUndefined();
-    expect(batcher.queuedRequests.get('')?.requests[0].subscribers).toBe(2);
+    checkQueuedRequests(2);
 
     sub1.unsubscribe();
-    expect(batcher.queuedRequests.get('')).not.toBeUndefined();
-    expect(batcher.queuedRequests.get('')?.requests[0].subscribers).toBe(1);
+    checkQueuedRequests(1);
 
     sub2.unsubscribe();
     expect(batcher.queuedRequests.get('')).toBeUndefined();
@@ -542,7 +551,7 @@ describe('OperationBatcher', () => {
     batcher.enqueueRequest({ operation }).subscribe({});
     batcher.enqueueRequest({ operation: operation2 }).subscribe({});
     try {
-      expect(batcher.queuedRequests.get('')!.requests.length).toBe(2);
+      expect(batcher.queuedRequests.get('')!.requests.size).toBe(2);
     } catch (e) {
       reject(e);
     }
@@ -551,7 +560,7 @@ describe('OperationBatcher', () => {
       // The batch shouldn't be fired yet, so we can add one more request.
       batcher.enqueueRequest({ operation: operation3 }).subscribe({});
       try {
-        expect(batcher.queuedRequests.get('')!.requests.length).toBe(3);
+        expect(batcher.queuedRequests.get('')!.requests.size).toBe(3);
       } catch (e) {
         reject(e);
       }
@@ -604,18 +613,18 @@ describe('OperationBatcher', () => {
       resolve();
     });
 
-    expect(batcher.queuedRequests.get('')!.requests.length).toBe(2);
+    expect(batcher.queuedRequests.get('')!.requests.size).toBe(2);
 
     sub1.unsubscribe();
-    expect(batcher.queuedRequests.get('')!.requests.length).toBe(1);
+    expect(batcher.queuedRequests.get('')!.requests.size).toBe(1);
 
     setTimeout(() => {
       // The batch shouldn't be fired yet, so we can add one more request.
       const sub3 = batcher.enqueueRequest({operation: operation3}).subscribe(() => reject('next should never be called'));
-      expect(batcher.queuedRequests.get('')!.requests.length).toBe(2);
+      expect(batcher.queuedRequests.get('')!.requests.size).toBe(2);
 
       sub3.unsubscribe();
-      expect(batcher.queuedRequests.get('')!.requests.length).toBe(1);
+      expect(batcher.queuedRequests.get('')!.requests.size).toBe(1);
     }, 5);
   });
 

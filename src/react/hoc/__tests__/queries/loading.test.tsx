@@ -208,14 +208,14 @@ describe('[queries] loading', () => {
                 expect(prevProps.data!.error).toBe(undefined);
                 expect(prevProps.data!.networkStatus).toBe(NetworkStatus.ready);
                 expect(this.props.data!.loading).toBe(false);
-                expect(this.props.data!.variables).toEqual(variables1);
+                expect(this.props.data!.variables).toEqual(variables2);
                 expect(this.props.data!.allPeople).toEqual(data1.allPeople);
                 expect(this.props.data!.error).toBe(undefined);
                 expect(prevProps.data!.networkStatus).toBe(NetworkStatus.ready);
                 break;
               case 2:
                 expect(prevProps.data!.loading).toBe(false);
-                expect(prevProps.data!.variables).toEqual(variables1);
+                expect(prevProps.data!.variables).toEqual(variables2);
                 expect(prevProps.data!.allPeople).toEqual(data1.allPeople);
                 expect(prevProps.data!.error).toBe(undefined);
                 expect(this.props.data!.loading).toBe(true);

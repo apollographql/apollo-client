@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { equal } from '@wry/equality';
-import { OperationVariables } from '../../core';
+import { OperationVariables, mergeOptions } from '../../core';
 import { getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
@@ -29,16 +29,18 @@ export function useQuery<
 ): QueryResult<TData, TVariables> {
   const context = useContext(getApolloContext());
   const client = useApolloClient(options?.client);
+  const defaultWatchQueryOptions = client.defaultOptions.watchQuery;
   verifyDocumentType(query, DocumentType.Query);
+
   const ref = useRef({
     client,
     query,
     options,
-    watchQueryOptions: createWatchQueryOptions(query, options),
+    watchQueryOptions: createWatchQueryOptions(query, options, defaultWatchQueryOptions),
   });
 
   const [obsQuery, setObsQuery] = useState(() => {
-    const watchQueryOptions = createWatchQueryOptions(query, options);
+    const watchQueryOptions = createWatchQueryOptions(query, options, defaultWatchQueryOptions);
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
@@ -69,7 +71,7 @@ export function useQuery<
         {
           // The only options which seem to actually be used by the
           // RenderPromises class are query and variables.
-          getOptions: () => createWatchQueryOptions(query, options),
+          getOptions: () => createWatchQueryOptions(query, options, defaultWatchQueryOptions),
           fetchData: () => new Promise<void>((resolve) => {
             const sub = obsQuery!.subscribe({
               next(result) {
@@ -101,7 +103,8 @@ export function useQuery<
   // This effect is also responsible for updating the obsQuery options whenever
   // they change.
   useEffect(() => {
-    const watchQueryOptions = createWatchQueryOptions(query, options);
+    const watchQueryOptions = createWatchQueryOptions(query, options, defaultWatchQueryOptions);
+
     if (ref.current.client !== client || !equal(ref.current.query, query)) {
       const obsQuery = client.watchQuery(watchQueryOptions);
       setObsQuery(obsQuery);
@@ -247,24 +250,39 @@ export function useQuery<
 
     // TODO: This is a hack to make sure useLazyQuery executions update the
     // obsevable query options for ssr.
-    if (context.renderPromises && options?.ssr !== false && result.loading) {
-      obsQuery.setOptions(createWatchQueryOptions(query, options))
-        .catch(() => {});
+    if (
+      context.renderPromises &&
+      options?.ssr !== false &&
+      !options?.skip &&
+      result.loading
+    ) {
+      obsQuery.setOptions(
+        createWatchQueryOptions(query, options, defaultWatchQueryOptions)
+      ).catch(() => {});
     }
+
+    // We assign options during rendering as a guard to make sure that
+    // callbacks like onCompleted and onError are not stale.
+    // TODO
+    Object.assign(ref.current, { options });
   }
 
   return {
     ...obsQueryMethods,
-    variables: obsQuery.variables,
+    variables: createWatchQueryOptions(query, options, defaultWatchQueryOptions).variables,
     client,
     called: true,
     ...result,
   };
 }
 
+/**
+ * A function to massage options before passing them the ObservableQuery.
+ */
 function createWatchQueryOptions<TData, TVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<TData, TVariables> = {},
+  defaultOptions?: Partial<WatchQueryOptions<any, any>>
 ): WatchQueryOptions<TVariables, TData> {
   // Using destructuring to remove hook specific options.
   const {
@@ -273,10 +291,15 @@ function createWatchQueryOptions<TData, TVariables>(
     onCompleted,
     onError,
     displayName,
-    ...watchQueryOptions
+    ...otherOptions
   } = options;
   // TODO: For some reason, we pass context, which is the React Apollo Context,
   // into observable queries, and test for that.
+
+  let watchQueryOptions = { query, ...otherOptions };
+  if (defaultOptions) {
+    watchQueryOptions = mergeOptions(defaultOptions, watchQueryOptions);
+  }
 
   if (skip) {
     watchQueryOptions.fetchPolicy = 'standby';
@@ -296,5 +319,9 @@ function createWatchQueryOptions<TData, TVariables>(
     watchQueryOptions.fetchPolicy = 'cache-first';
   }
 
-  return { query, ...watchQueryOptions };
+  if (!watchQueryOptions.variables) {
+    watchQueryOptions.variables = {} as TVariables;
+  }
+
+  return watchQueryOptions;
 }

@@ -33,8 +33,7 @@ type RequestBatch = Set<QueuedRequest> & {
 // into one query.
 export class OperationBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
-  // Public only for testing
-  public readonly queuedRequests = new Map<string, RequestBatch>();
+  private batchesByKey = new Map<string, RequestBatch>();
 
   private scheduledBatchTimer: ReturnType<typeof setTimeout>;
   private batchDebounce?: boolean;
@@ -78,8 +77,8 @@ export class OperationBatcher {
 
     if (!requestCopy.observable) {
       requestCopy.observable = new Observable<FetchResult>(observer => {
-        let batch = this.queuedRequests.get(key)!;
-        if (!batch) this.queuedRequests.set(key, batch = new Set);
+        let batch = this.batchesByKey.get(key)!;
+        if (!batch) this.batchesByKey.set(key, batch = new Set);
 
         // These booleans seem to me (@benjamn) like they might always be the
         // same (and thus we could do with only one of them), but I'm not 100%
@@ -124,7 +123,7 @@ export class OperationBatcher {
             // If this is last request from queue, remove queue entirely
             if (batch.delete(requestCopy) && batch.size < 1) {
               clearTimeout(this.scheduledBatchTimer);
-              this.queuedRequests.delete(key);
+              this.batchesByKey.delete(key);
               // If queue was in flight, cancel it
               batch.subscription?.unsubscribe();
             }
@@ -141,10 +140,10 @@ export class OperationBatcher {
   public consumeQueue(
     key: string = '',
   ): (Observable<FetchResult> | undefined)[] | undefined {
-    const batch = this.queuedRequests.get(key);
+    const batch = this.batchesByKey.get(key);
     if (!batch) return;
 
-    this.queuedRequests.delete(key);
+    this.batchesByKey.delete(key);
 
     const operations: Operation[] = [];
     const forwards: (NextLink | undefined)[] = [];
@@ -217,7 +216,7 @@ export class OperationBatcher {
 
   private scheduleQueueConsumption(key: string): void {
     this.scheduledBatchTimer = setTimeout(() => {
-      if (this.queuedRequests.get(key)?.size) {
+      if (this.batchesByKey.get(key)?.size) {
         this.consumeQueue(key);
       }
     }, this.batchInterval);

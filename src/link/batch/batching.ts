@@ -128,10 +128,10 @@ export class OperationBatcher {
       queuedRequest => queuedRequest.forward,
     );
 
-    const observables: (Observable<FetchResult> | undefined)[] = [];
-    const nexts: any[] = [];
-    const errors: any[] = [];
-    const completes: any[] = [];
+    const observables: BatchableRequest["observable"][] = [];
+    const nexts: BatchableRequest["next"][] = [];
+    const errors: BatchableRequest["error"][] = [];
+    const completes: BatchableRequest["complete"][] = [];
     queuedRequests.forEach((batchableRequest, index) => {
       observables.push(batchableRequest.observable);
       nexts.push(batchableRequest.next);
@@ -147,7 +147,7 @@ export class OperationBatcher {
       errors.forEach(rejecters => {
         if (rejecters) {
           //each subscriber to request
-          rejecters.forEach((e: any) => e(error));
+          rejecters.forEach((e) => e(error));
         }
       });
     };
@@ -170,9 +170,7 @@ export class OperationBatcher {
         }
 
         results.forEach((result, index) => {
-          if (nexts[index]) {
-            nexts[index].forEach((next: any) => next(result));
-          }
+          nexts[index]?.forEach((next) => next(result));
         });
       },
       error: onError,
@@ -180,7 +178,7 @@ export class OperationBatcher {
         completes.forEach(complete => {
           if (complete) {
             //each subscriber to request
-            complete.forEach((c: any) => c());
+            complete.forEach((c) => c());
           }
         });
       },

@@ -1,8 +1,10 @@
 import gql from 'graphql-tag';
+import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 
 import { createOperation } from '../../utils/createOperation';
 import {
   selectHttpOptionsAndBody,
+  selectHttpOptionsAndBodyInternal,
   fallbackHttpConfig,
 } from '../selectHttpOptionsAndBody';
 
@@ -112,5 +114,19 @@ describe('selectHttpOptionsAndBody', () => {
       accept: 'application/octet-stream',
       'content-type': 'application/json',
     });
+  });
+
+  it('applies custom printer function when provided', () => {
+    const customPrinter = (ast: ASTNode, originalPrint: typeof print) => {
+      return stripIgnoredCharacters(originalPrint(ast));
+    };
+
+    const { body } = selectHttpOptionsAndBodyInternal(
+      createOperation({}, { query }),
+      customPrinter,
+      fallbackHttpConfig,
+    );
+
+    expect(body.query).toBe('query SampleQuery{stub{id}}');
   });
 });

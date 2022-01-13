@@ -9,7 +9,7 @@ You can customize how a particular field in your Apollo Client cache is read and
 * A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
 * An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
-You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whatever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the type that contains the field. The following example defines a field policy for the `name` field of a `Person` type: 
+You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whatever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the type that contains the field. The following example defines a field policy for the `name` field of a `Person` type:
 
 ```ts{5-10}
 const cache = new InMemoryCache({
@@ -168,7 +168,7 @@ In such situations, the cache defaults to _replacing_ the existing `favoriteBook
 
 You could fix this problem by modifying your queries to request an `id` field for the `favoriteBook.author` objects, or by specifying custom `keyFields` in the `Author` type policy, such as `["name", "dateOfBirth"]`. Providing the cache with this information allows it to know when two `Author` objects represent the same logical entity, so it can safely merge their fields. This solution is recommended, when feasible.
 
-However, you may encounter situations where your data graph does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
+However, you may encounter situations where your graph does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
 
 In such situations, you can define a custom `merge` function for the `author` field within the type policy for `Book`:
 

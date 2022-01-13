@@ -3,6 +3,7 @@ import fetchMock from 'fetch-mock';
 
 import { createOperation } from '../../utils/createOperation';
 import { parseAndCheckHttpResponse } from '../parseAndCheckHttpResponse';
+import { itAsync } from '../../../testing';
 
 const query = gql`
   query SampleQuery {
@@ -19,23 +20,23 @@ describe('parseAndCheckResponse', () => {
 
   const operations = [createOperation({}, { query })];
 
-  it('throws a parse error with a status code on unparsable response', done => {
+  itAsync('throws a parse error with a status code on unparsable response', (resolve, reject) => {
     const status = 400;
     fetchMock.mock('begin:/error', status);
     fetch('error')
       .then(parseAndCheckHttpResponse(operations))
-      .then(done.fail)
+      .then(reject)
       .catch(e => {
         expect(e.statusCode).toBe(status);
         expect(e.name).toBe('ServerParseError');
         expect(e).toHaveProperty('response');
         expect(e).toHaveProperty('bodyText');
-        done();
+        resolve();
       })
-      .catch(done.fail);
+      .catch(reject);
   });
 
-  it('throws a network error with a status code and result', done => {
+  itAsync('throws a network error with a status code and result', (resolve, reject) => {
     const status = 403;
     const body = { data: 'fail' }; //does not contain data or errors
     fetchMock.mock('begin:/error', {
@@ -44,34 +45,34 @@ describe('parseAndCheckResponse', () => {
     });
     fetch('error')
       .then(parseAndCheckHttpResponse(operations))
-      .then(done.fail)
+      .then(reject)
       .catch(e => {
         expect(e.statusCode).toBe(status);
         expect(e.name).toBe('ServerError');
         expect(e).toHaveProperty('response');
         expect(e).toHaveProperty('result');
-        done();
+        resolve();
       })
-      .catch(done.fail);
+      .catch(reject);
   });
 
-  it('throws a server error on incorrect data', done => {
+  itAsync('throws a server error on incorrect data', (resolve, reject) => {
     const data = { hello: 'world' }; //does not contain data or erros
     fetchMock.mock('begin:/incorrect', data);
     fetch('incorrect')
       .then(parseAndCheckHttpResponse(operations))
-      .then(done.fail)
+      .then(reject)
       .catch(e => {
         expect(e.statusCode).toBe(200);
         expect(e.name).toBe('ServerError');
         expect(e).toHaveProperty('response');
         expect(e.result).toEqual(data);
-        done();
+        resolve();
       })
-      .catch(done.fail);
+      .catch(reject);
   });
 
-  it('is able to return a correct GraphQL result', done => {
+  itAsync('is able to return a correct GraphQL result', (resolve, reject) => {
     const errors = ['', '' + new Error('hi')];
     const data = { data: { hello: 'world' }, errors };
 
@@ -84,8 +85,8 @@ describe('parseAndCheckResponse', () => {
         expect(data).toEqual({ hello: 'world' });
         expect(e.length).toEqual(errors.length);
         expect(e).toEqual(errors);
-        done();
+        resolve();
       })
-      .catch(done.fail);
+      .catch(reject);
   });
 });

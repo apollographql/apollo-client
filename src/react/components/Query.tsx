@@ -9,7 +9,7 @@ export function Query<TData = any, TVariables = OperationVariables>(
 ) {
   const { children, query, ...options } = props;
   const result = useQuery(query, options);
-  return result ? children(result) : null;
+  return result ? children(result as any) : null;
 }
 
 export interface Query<TData, TVariables> {

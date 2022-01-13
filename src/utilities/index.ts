@@ -1,7 +1,4 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "./globals";
-invariant("boolean" === typeof DEV, DEV);
-export { DEV }
+export { DEV, maybe } from './globals';
 
 export {
   DirectiveInfo,
@@ -84,7 +81,6 @@ export {
 export * from './common/mergeDeep';
 export * from './common/cloneDeep';
 export * from './common/maybeDeepFreeze';
-export * from './common/maybe';
 export * from './observables/iteration';
 export * from './observables/asyncMap';
 export * from './observables/Concast';

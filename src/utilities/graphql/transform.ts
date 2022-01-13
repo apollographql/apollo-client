@@ -1,3 +1,5 @@
+import { invariant } from '../globals';
+
 import {
   DocumentNode,
   SelectionNode,
@@ -12,7 +14,9 @@ import {
   VariableNode,
   visit,
 } from 'graphql';
-import { invariant } from 'ts-invariant';
+
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type Kind = any;
 
 import {
   checkDocument,
@@ -52,9 +56,9 @@ export type RemoveVariableDefinitionConfig = RemoveNodeConfig<
 >;
 
 const TYPENAME_FIELD: FieldNode = {
-  kind: 'Field',
+  kind: 'Field' as Kind,
   name: {
-    kind: 'Name',
+    kind: 'Name' as Kind,
     value: '__typename',
   },
 };

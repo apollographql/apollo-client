@@ -1,5 +1,8 @@
+import { invariant, InvariantError } from '../utilities/globals';
+
 import { DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
@@ -571,7 +574,7 @@ export class QueryManager<TStore> {
           definitions: transformed.definitions.map(def => {
             if (def.kind === "OperationDefinition" &&
                 def.operation !== "query") {
-              return { ...def, operation: "query" };
+              return { ...def, operation: "query" as OperationTypeNode };
             }
             return def;
           }),
@@ -695,7 +698,9 @@ export class QueryManager<TStore> {
     if (queryInfo) queryInfo.stop();
   }
 
-  public clearStore(): Promise<void> {
+  public clearStore(options: Cache.ResetOptions = {
+    discardWatches: true,
+  }): Promise<void> {
     // Before we have sent the reset action to the store, we can no longer
     // rely on the results returned by in-flight requests since these may
     // depend on values that previously existed in the data portion of the
@@ -720,19 +725,7 @@ export class QueryManager<TStore> {
     }
 
     // begin removing data from the store
-    return this.cache.reset();
-  }
-
-  public resetStore(): Promise<ApolloQueryResult<any>[]> {
-    // Similarly, we have to have to refetch each of the queries currently being
-    // observed. We refetch instead of error'ing on these since the assumption is that
-    // resetting the store doesn't eliminate the need for the queries currently being
-    // watched. If there is an existing query in flight when the store is reset,
-    // the promise for it will be rejected and its results will not be written to the
-    // store.
-    return this.clearStore().then(() => {
-      return this.reFetchObservableQueries();
-    });
+    return this.cache.reset(options);
   }
 
   public getObservableQueries(
@@ -766,8 +759,10 @@ export class QueryManager<TStore> {
           options: { fetchPolicy },
         } = oq;
 
-        if (fetchPolicy === "standby" || !oq.hasObservers()) {
-          // Skip inactive queries unless include === "all".
+        if (
+          fetchPolicy === "standby" ||
+          (include === "active" && !oq.hasObservers())
+        ) {
           return;
         }
 
@@ -1127,9 +1122,8 @@ export class QueryManager<TStore> {
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     this.fetchCancelFns.set(queryId, reason => {
-      // Delaying the cancellation using a Promise ensures that the
-      // concast variable has been initialized.
-      Promise.resolve().then(() => concast.cancel(reason));
+      // This delay ensures the concast variable has been initialized.
+      setTimeout(() => concast.cancel(reason));
     });
 
     // A Concast<T> can be created either from an Iterable<Observable<T>>
@@ -1256,9 +1250,9 @@ export class QueryManager<TStore> {
                 results.set(oq, result as InternalRefetchQueriesResult<TResult>);
               }
 
-              // Prevent the normal cache broadcast of this result, since we've
-              // already handled it.
-              return false;
+              // Allow the default cache broadcast to happen, except when
+              // onQueryUpdated returns false.
+              return result;
             }
 
             if (onQueryUpdated !== null) {

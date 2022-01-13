@@ -49,9 +49,9 @@ function makeRegistry(callback, reject) {
 // This is not technically a memory-related test, but it depends on the build
 // artifacts generated in the ../../dist directory by `npm run build`, which is
 // an assumption shared by the other tests in this file.
-describe("@apollo/client/apollo-client.cjs.js", () => {
+describe("@apollo/client/apollo-client.cjs", () => {
   it("can be imported as a single CommonJS bundle (issue #8592)", () => {
-    const bundle = require("@apollo/client/apollo-client.cjs.js");
+    const bundle = require("@apollo/client/apollo-client.cjs");
 
     // Very basic test that requiring the bundle worked.
     assert.strictEqual(typeof bundle.ApolloClient, "function");
@@ -63,7 +63,7 @@ describe("@apollo/client/apollo-client.cjs.js", () => {
 
     // The CommonJS bundles referred to by the "main" fields in the various
     // package.json files that we generate during `npm run build` are all
-    // independent, non-overlapping bundles, but apollo-client.cjs.js is its own
+    // independent, non-overlapping bundles, but apollo-client.cjs is its own
     // bundle, so importing it duplicates everything.
     assert.notStrictEqual(bundle.ApolloClient, ApolloClient);
     assert.notStrictEqual(bundle.InMemoryCache, InMemoryCache);
@@ -155,13 +155,18 @@ describe("garbage collection", () => {
           },
         },
       },
+      // Explicitly disable canonization to test that it can be overridden.
+      canonizeResults: false,
     });
 
     const client = new ApolloClient({ cache });
 
     (function () {
       const query = gql`query { local }`;
-      const obsQuery = client.watchQuery({ query });
+      const obsQuery = client.watchQuery({
+        query,
+        canonizeResults: true,
+      });
 
       function register(suffix) {
         const reader = cache["storeReader"];
@@ -177,16 +182,18 @@ describe("garbage collection", () => {
             local: "hello",
           });
 
-          assert.strictEqual(
-            cache.readQuery({ query }),
-            result.data,
-          );
+          const read = () => cache.readQuery({
+            query,
+            canonizeResults: true,
+          });
+
+          assert.strictEqual(read(), result.data);
 
           assert.deepStrictEqual(cache.gc(), []);
 
           // Nothing changes because we merely called cache.gc().
           assert.strictEqual(
-            cache.readQuery({ query }),
+            read(),
             result.data,
           );
 
@@ -199,7 +206,7 @@ describe("garbage collection", () => {
 
           register(2);
 
-          const dataAfterResetWithSameCanon = cache.readQuery({ query });
+          const dataAfterResetWithSameCanon = read();
           assert.strictEqual(dataAfterResetWithSameCanon, result.data);
 
           assert.deepStrictEqual(cache.gc({
@@ -211,7 +218,7 @@ describe("garbage collection", () => {
 
           register(3);
 
-          const dataAfterFullReset = cache.readQuery({ query });
+          const dataAfterFullReset = read();
           assert.notStrictEqual(dataAfterFullReset, result.data);
           assert.deepStrictEqual(dataAfterFullReset, result.data);
 

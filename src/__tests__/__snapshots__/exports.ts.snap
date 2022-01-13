@@ -22,6 +22,7 @@ Array [
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -45,6 +46,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -97,6 +99,7 @@ Array [
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -116,6 +119,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -175,10 +179,12 @@ Array [
   "checkFetcher",
   "createHttpLink",
   "createSignalIfSupported",
+  "defaultPrinter",
   "fallbackHttpConfig",
   "parseAndCheckHttpResponse",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
 ]
@@ -186,6 +192,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
+  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -256,15 +263,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/data 1`] = `
-Array [
-  "MutationData",
-  "OperationData",
-  "QueryData",
-  "SubscriptionData",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
 Array [
   "graphql",
@@ -291,6 +289,7 @@ Array [
   "DocumentType",
   "operationName",
   "parser",
+  "verifyDocumentType",
 ]
 `;
 
@@ -319,6 +318,21 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/testing/core 1`] = `
+Array [
+  "MockLink",
+  "MockSubscriptionLink",
+  "createMockClient",
+  "itAsync",
+  "mockObservableLink",
+  "mockSingleLink",
+  "subscribeAndCount",
+  "withErrorSpy",
+  "withLogSpy",
+  "withWarningSpy",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
   "Concast",
@@ -329,6 +343,7 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",
   "checkDocument",
@@ -378,5 +393,16 @@ Array [
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "valueToObjectRepresentation",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
+Array [
+  "DEV",
+  "InvariantError",
+  "checkDEV",
+  "global",
+  "invariant",
+  "maybe",
 ]
 `;

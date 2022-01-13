@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { Observable } from '../../utilities';
+import { Observable, ObservableSubscription } from '../../utilities';
 import { FetchResult } from '../../link/core';
 import { ApolloError } from '../../errors';
 import {
@@ -104,32 +104,11 @@ export interface QueryLazyOptions<TVariables> {
   context?: DefaultContext;
 }
 
-type UnexecutedLazyFields = {
-  loading: false;
-  networkStatus: NetworkStatus.ready;
-  called: false;
-  data: undefined;
-  previousData?: undefined;
-}
-
-type Impartial<T> = {
-  [P in keyof T]?: never;
-}
-
-type AbsentLazyResultFields =
-  Omit<
-    Impartial<QueryResult<unknown, unknown>>,
-    keyof UnexecutedLazyFields>
-
-type UnexecutedLazyResult =
-   UnexecutedLazyFields & AbsentLazyResultFields
-
-export type LazyQueryResult<TData, TVariables> =
-  | UnexecutedLazyResult
-  | QueryResult<TData, TVariables>;
+// TODO: Delete this
+export type LazyQueryResult<TData, TVariables> = QueryResult<TData, TVariables>;
 
 export type QueryTuple<TData, TVariables> = [
-  (options?: QueryLazyOptions<TVariables>) => void,
+  (options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
   LazyQueryResult<TData, TVariables>
 ];
 
@@ -170,6 +149,7 @@ export interface MutationResult<TData = any> {
   loading: boolean;
   called: boolean;
   client: ApolloClient<object>;
+  reset(): void;
 }
 
 export declare type MutationFunction<
@@ -234,10 +214,13 @@ export interface BaseSubscriptionOptions<
   onSubscriptionComplete?: () => void;
 }
 
-export interface SubscriptionResult<TData = any> {
+export interface SubscriptionResult<TData = any, TVariables = any> {
   loading: boolean;
   data?: TData;
   error?: ApolloError;
+  // This was added by the legacy useSubscription type, and is tested in unit
+  // tests, but probably shouldn’t be added to the result.
+  variables?: TVariables;
 }
 
 export interface SubscriptionHookOptions<
@@ -257,5 +240,5 @@ export interface SubscriptionDataOptions<
 
 export interface SubscriptionCurrentObservable {
   query?: Observable<any>;
-  subscription?: ZenObservable.Subscription;
+  subscription?: ObservableSubscription;
 }

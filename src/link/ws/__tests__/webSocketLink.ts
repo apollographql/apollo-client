@@ -5,6 +5,7 @@ import gql from 'graphql-tag';
 import { Observable } from '../../../utilities';
 import { execute } from '../../core';
 import { WebSocketLink } from '..';
+import { itAsync } from '../../../testing';
 
 const query = gql`
   query SampleQuery {
@@ -42,7 +43,7 @@ describe('WebSocketLink', () => {
   // it('should pass the correct initialization parameters to the Subscription Client', () => {
   // });
 
-  it('should call request on the client for a query', done => {
+  itAsync('should call request on the client for a query', (resolve, reject) => {
     const result = { data: { data: 'result' } };
     const client: any = {};
     const observable = Observable.of(result);
@@ -56,11 +57,11 @@ describe('WebSocketLink', () => {
     obs.subscribe(data => {
       expect(data).toEqual(result);
       expect(client.request).toHaveBeenCalledTimes(1);
-      done();
+      resolve();
     });
   });
 
-  it('should call query on the client for a mutation', done => {
+  itAsync('should call query on the client for a mutation', (resolve, reject) => {
     const result = { data: { data: 'result' } };
     const client: any = {};
     const observable = Observable.of(result);
@@ -74,11 +75,11 @@ describe('WebSocketLink', () => {
     obs.subscribe(data => {
       expect(data).toEqual(result);
       expect(client.request).toHaveBeenCalledTimes(1);
-      done();
+      resolve();
     });
   });
 
-  it('should call request on the subscriptions client for subscription', done => {
+  itAsync('should call request on the subscriptions client for subscription', (resolve, reject) => {
     const result = { data: { data: 'result' } };
     const client: any = {};
     const observable = Observable.of(result);
@@ -92,11 +93,11 @@ describe('WebSocketLink', () => {
     obs.subscribe(data => {
       expect(data).toEqual(result);
       expect(client.request).toHaveBeenCalledTimes(1);
-      done();
+      resolve();
     });
   });
 
-  it('should call next with multiple results for subscription', done => {
+  itAsync('should call next with multiple results for subscription', (resolve, reject) => {
     const results = [
       { data: { data: 'result1' } },
       { data: { data: 'result2' } },
@@ -117,7 +118,7 @@ describe('WebSocketLink', () => {
       expect(client.request).toHaveBeenCalledTimes(1);
       expect(data).toEqual(results.shift());
       if (results.length === 0) {
-        done();
+        resolve();
       }
     });
   });

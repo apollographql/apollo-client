@@ -1,5 +1,5 @@
+import { invariant } from '../../utilities/globals';
 import { dep, OptimisticDependencyFunction } from 'optimism';
-import { invariant } from 'ts-invariant';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 
@@ -291,14 +291,17 @@ export abstract class EntityStore implements NormalizedCache {
     return false;
   }
 
-  public evict(options: Cache.EvictOptions): boolean {
+  public evict(
+    options: Cache.EvictOptions,
+    limit: EntityStore,
+  ): boolean {
     let evicted = false;
     if (options.id) {
       if (hasOwn.call(this.data, options.id)) {
         evicted = this.delete(options.id, options.fieldName, options.args);
       }
-      if (this instanceof Layer) {
-        evicted = this.parent.evict(options) || evicted;
+      if (this instanceof Layer && this !== limit) {
+        evicted = this.parent.evict(options, limit) || evicted;
       }
       // Always invalidate the field to trigger rereading of watched
       // queries, even if no cache data was modified by the eviction,
@@ -568,7 +571,7 @@ class CacheGroup {
         // so the result caching system would do well to "forget everything it
         // knows" about that object. To achieve that kind of invalidation, we
         // not only dirty the associated result cache entry, but also remove it
-        // completely from the dependency graph. For the optimism implmentation
+        // completely from the dependency graph. For the optimism implementation
         // details, see https://github.com/benjamn/optimism/pull/195.
         storeFieldName === "__exists" ? "forget" : "setDirty",
       );

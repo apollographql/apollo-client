@@ -1,6 +1,4 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "../utilities";
-invariant("boolean" === typeof DEV, DEV);
+import '../utilities/globals';
 
 export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';
@@ -17,11 +15,13 @@ export {
 } from '../utilities';
 
 export { EntityStore } from './inmemory/entityStore';
-export { fieldNameFromStoreName } from './inmemory/helpers'
+export {
+  fieldNameFromStoreName,
+  defaultDataIdFromObject,
+} from './inmemory/helpers'
 
 export {
   InMemoryCache,
-  InMemoryCacheConfig,
 } from './inmemory/inMemoryCache';
 
 export {
@@ -31,7 +31,6 @@ export {
 } from './inmemory/reactiveVars';
 
 export {
-  defaultDataIdFromObject,
   TypePolicies,
   TypePolicy,
   FieldPolicy,

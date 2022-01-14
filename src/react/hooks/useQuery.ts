@@ -173,6 +173,14 @@ export function useQuery<
         }
 
         previousResult = result;
+
+        if (!result.loading) {
+          if (result.data) {
+            ref.current.options?.onCompleted?.(result.data);
+          } else if (result.error) {
+            ref.current.options?.onError?.(result.error);
+          }
+        }
       }
 
       return previousResult;
@@ -191,23 +199,6 @@ export function useQuery<
   }), [obsQuery]);
 
   let result = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  useEffect(() => {
-    if (
-      ref.current.options?.skip ||
-      ref.current.options?.fetchPolicy === 'standby'
-    ) {
-      return;
-    }
-
-    if (!result.loading) {
-      if (result.error) {
-        ref.current.options?.onError?.(result.error);
-      } else if (result.data) {
-        ref.current.options?.onCompleted?.(result.data);
-      }
-    }
-  }, [result]);
-
   let partial: boolean | undefined;
   ({ partial, ...result } = result);
   if (options?.skip || options?.fetchPolicy === 'standby') {

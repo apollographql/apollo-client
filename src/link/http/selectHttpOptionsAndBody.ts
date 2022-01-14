@@ -95,7 +95,7 @@ const defaultHttpOptions: HttpQueryOptions = {
 
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
-  accept: '*/*',
+  accept: 'application/json',
   'content-type': 'application/json',
 };
 

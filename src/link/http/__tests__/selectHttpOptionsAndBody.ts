@@ -37,7 +37,7 @@ describe('selectHttpOptionsAndBody', () => {
 
   it('the fallbackConfig is used if no other configs are specified', () => {
     const defaultHeaders = {
-      accept: '*/*',
+      accept: 'application/json',
       'content-type': 'application/json',
     };
 

@@ -617,7 +617,7 @@ describe('HttpLink', () => {
           const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
-          expect(headers.accept).toBe('*/*');
+          expect(headers.accept).toBe('application/json');
         }),
       );
     });
@@ -634,7 +634,7 @@ describe('HttpLink', () => {
           const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
-          expect(headers.accept).toBe('*/*');
+          expect(headers.accept).toBe('application/json');
         }),
       );
     });
@@ -656,7 +656,7 @@ describe('HttpLink', () => {
           const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
-          expect(headers.accept).toBe('*/*');
+          expect(headers.accept).toBe('application/json');
         }),
       );
     });
@@ -677,7 +677,7 @@ describe('HttpLink', () => {
           const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe('1234');
           expect(headers['content-type']).toBe('application/json');
-          expect(headers.accept).toBe('*/*');
+          expect(headers.accept).toBe('application/json');
         }),
       );
     });

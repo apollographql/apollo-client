@@ -1,4 +1,4 @@
-import { Operation, FetchResult, NextLink } from '../core';
+import { FetchResult, NextLink, Operation } from '../core';
 import { Observable, ObservableSubscription } from '../../utilities';
 
 export type BatchHandler = (
@@ -11,7 +11,7 @@ export interface BatchableRequest {
   forward?: NextLink;
 }
 
-interface QueuedRequest extends BatchableRequest {
+type QueuedRequest = BatchableRequest & {
   observable?: Observable<FetchResult>;
   next: Array<(result: FetchResult) => void>;
   error: Array<(error: Error) => void>;
@@ -145,12 +145,12 @@ export class OperationBatcher {
       return;
     }
 
-    const operations: Operation[] = [];
-    const forwards: (NextLink | undefined)[] = [];
-    const observables: (Observable<FetchResult> | undefined)[] = [];
-    const nexts: Array<(result: FetchResult) => void>[] = [];
-    const errors: Array<(error: Error) => void>[] = [];
-    const completes: Array<() => void>[] = [];
+    const operations: QueuedRequest['operation'][] = [];
+    const forwards: QueuedRequest['forward'][] = [];
+    const observables: QueuedRequest['observable'][] = [];
+    const nexts: QueuedRequest['next'][] = [];
+    const errors: QueuedRequest['error'][] = [];
+    const completes: QueuedRequest['complete'][] = [];
 
     // Even though batch is a Set, it preserves the order of first insertion
     // when iterating (per ECMAScript specification), so these requests will be

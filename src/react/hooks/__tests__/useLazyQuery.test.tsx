@@ -1,10 +1,12 @@
 import React from 'react';
 import gql from 'graphql-tag';
+import userEvent from '@testing-library/user-event'
+import { render } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 
 import { ApolloClient, InMemoryCache } from '../../../core';
-import { ApolloProvider } from '../../../react';
-import { MockedProvider, mockSingleLink } from '../../../testing';
+import { ApolloProvider } from '../../context';
+import { MockedProvider, MockedProviderProps, mockSingleLink } from '../../../testing'
 import { useLazyQuery } from '../useLazyQuery';
 
 describe('useLazyQuery Hook', () => {
@@ -544,4 +546,100 @@ describe('useLazyQuery Hook', () => {
     expect(mock.mock.calls[0][0]).toBeInstanceOf(Promise);
     expect(await mock.mock.calls[0][0]).toEqual(result.current[1]);
   });
+
+  // More about the test case https://github.com/apollographql/apollo-client/issues/9317
+  it('should not execute query when variables are updating', async () => {
+    const QUERY_CARS_BY_BRAND = gql`
+      query($brand: String) {
+        cars(brand: $brand) {
+          brand
+          model
+        }
+      }
+    `;
+
+    const responseCallback = jest.fn()
+
+    const data1 = {
+      cars: [
+        {
+          brand: 'Audi',
+          model: 'A4',
+        },
+        {
+          brand: 'Audi',
+          model: 'RS8',
+        }
+      ]
+    };
+
+    const data2 = {
+      cars: [
+        {
+          brand: 'BMW',
+          model: 'X6',
+        },
+        {
+          brand: 'BMW',
+          model: 'X7',
+        }
+      ]
+    };
+
+    const mocks: MockedProviderProps["mocks"] = [
+      {
+        request: { query: QUERY_CARS_BY_BRAND, variables: { brand: 'Audi' } },
+        newData: () => {
+          responseCallback()
+          return { data: data1 }
+        },
+        delay: 20,
+      },
+      {
+        request: { query: QUERY_CARS_BY_BRAND, variables: { brand: 'BMW' } },
+        newData: () => {
+          responseCallback()
+          return { data: data2 }
+        },
+        delay: 20,
+      },
+    ];
+
+    function Component() {
+      const [brand, setBrand] = React.useState('BMW');
+      const [execQuery, { loading, data, error }] = useLazyQuery(QUERY_CARS_BY_BRAND, {
+        variables: {
+          brand
+        }
+      })
+
+      return (
+        <>
+          <input data-testid="brand-input" type="text" value={brand} onChange={(e) => setBrand(e.target.value)} />
+          <button onClick={() => execQuery()}>Submit</button>
+          {loading && 'loading'}
+          {error && 'error'}
+          <pre>{data && JSON.stringify(data, null, 2)}</pre>
+        </>
+      );
+    }
+
+    const wrapper = render(<MockedProvider mocks={mocks}><Component /></MockedProvider>)
+    const submitButton = wrapper.getByText('Submit')
+
+    submitButton.click()
+
+    expect(await wrapper.findByText(/BMW/)).toBeTruthy()
+    expect(await wrapper.queryByText(/Audi/)).toBeFalsy()
+    expect(responseCallback).toBeCalledTimes(1)
+
+    await userEvent.type(wrapper.getByTestId('brand-input'), '{backspace}{backspace}{backspace}Audi', { delay: 100 })
+    expect(responseCallback).toBeCalledTimes(1)
+
+    submitButton.click()
+
+    expect(await wrapper.findByText(/Audi/)).toBeTruthy()
+    expect(await wrapper.queryByText(/BMW/)).toBeFalsy()
+    expect(responseCallback).toBeCalledTimes(2)
+  })
 });

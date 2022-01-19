@@ -167,12 +167,12 @@ export class OperationBatcher {
     const batchedObservable =
       this.batchHandler(operations, forwards) || Observable.of();
 
-    const onError = (error: any) => {
+    const onError = (error: Error) => {
       //each callback list in batch
       errors.forEach(rejecters => {
         if (rejecters) {
           //each subscriber to request
-          rejecters.forEach((e: any) => e(error));
+          rejecters.forEach((e) => e(error));
         }
       });
     };
@@ -196,7 +196,7 @@ export class OperationBatcher {
 
         results.forEach((result, index) => {
           if (nexts[index]) {
-            nexts[index].forEach((next: any) => next(result));
+            nexts[index].forEach((next) => next(result));
           }
         });
       },
@@ -205,7 +205,7 @@ export class OperationBatcher {
         completes.forEach(complete => {
           if (complete) {
             //each subscriber to request
-            complete.forEach((c: any) => c());
+            complete.forEach((c) => c());
           }
         });
       },

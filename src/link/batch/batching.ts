@@ -9,13 +9,10 @@ export type BatchHandler = (
 export interface BatchableRequest {
   operation: Operation;
   forward?: NextLink;
-  observable?: Observable<FetchResult>;
-  next?: Array<(result: FetchResult) => void>;
-  error?: Array<(error: Error) => void>;
-  complete?: Array<() => void>;
 }
 
 interface QueuedRequest extends BatchableRequest {
+  observable?: Observable<FetchResult>;
   next: Array<(result: FetchResult) => void>;
   error: Array<(error: Error) => void>;
   complete: Array<() => void>;

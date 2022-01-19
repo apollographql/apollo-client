@@ -1,3 +1,14 @@
+## Apollo Client 3.5.8 (unreleased)
+
+### Bug Fixes
+- Fix the type of the `called` property for `useQuery()`/`useLazyQuery()`. <br/>
+  [@sztadii](https://github.com/sztadii) in [#9304](https://github.com/apollographql/apollo-client/pull/9304)
+
+###  Bug Fixes (by [@brainkim](https://github.com/brainkim) in [#9328](https://github.com/apollographql/apollo-client/pull/9328))
+- Fix `refetch()` not being called when `skip` is true.
+- Fix the promise returned from the `useLazyQuery()` execution function having stale variables.
+- Fix the promise returned from the `useLazyQuery()` execution function not rejecting when a query errors.
+
 ## Apollo Client 3.5.7 (2022-01-10)
 
 ### Bug Fixes

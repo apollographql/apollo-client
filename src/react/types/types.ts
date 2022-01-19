@@ -105,7 +105,9 @@ export interface QueryLazyOptions<TVariables> {
 }
 
 // TODO: Delete this
-export type LazyQueryResult<TData, TVariables> = QueryResult<TData, TVariables>;
+export interface LazyQueryResult<TData, TVariables> extends Omit<QueryResult<TData, TVariables>, 'called'> {
+  called: boolean
+};
 
 export type QueryTuple<TData, TVariables> = [
   (options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,

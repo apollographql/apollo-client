@@ -70,7 +70,7 @@ export class OperationBatcher {
       next: [],
       error: [],
       complete: [],
-      subscribers: new Set,
+      subscribers: new Set(),
     };
 
     const key = this.batchKey(request.operation);
@@ -78,7 +78,7 @@ export class OperationBatcher {
     if (!requestCopy.observable) {
       requestCopy.observable = new Observable<FetchResult>(observer => {
         let batch = this.batchesByKey.get(key)!;
-        if (!batch) this.batchesByKey.set(key, batch = new Set);
+        if (!batch) this.batchesByKey.set(key, batch = new Set());
 
         // These booleans seem to me (@benjamn) like they might always be the
         // same (and thus we could do with only one of them), but I'm not 100%

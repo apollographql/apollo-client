@@ -1,5 +1,4 @@
-import { from, ObservableInput } from 'rxjs';
-import { take, toArray, map } from 'rxjs/operators';
+import { from, ObservableInput, take, toArray, map } from 'rxjs';
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 

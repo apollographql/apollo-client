@@ -108,7 +108,7 @@ export type OptimisticStoreItem = {
 export type ReadQueryOptions = {
   store: NormalizedCache;
   query: DocumentNode;
-  variables?: object;
+  variables?: Object;
   previousResult?: any;
   canonizeResults?: boolean;
   rootId?: string;

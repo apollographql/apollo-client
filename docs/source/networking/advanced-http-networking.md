@@ -115,10 +115,10 @@ import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from '@apollo/clien
 const httpLink = new HttpLink({ uri: '/graphql' });
 
 const addDateLink = new ApolloLink((operation, forward) => {
-  return forward(operation).map(response => {
+  return forward(operation).pipe(map(response => {
     response.data.date = new Date();
     return response;
-  });
+  }));
 });
 
 const client = new ApolloClient({
@@ -129,7 +129,7 @@ const client = new ApolloClient({
 
 In the above example, `addDateLink` adds a `date` field to the top level of each response.
 
-Note that `forward(operation).map(func)` _doesn't_ support asynchronous execution of the `func` mapping function. If you need to make asynchronous modifications, use the `asyncMap` function from `@apollo/client/utilities`, like so:
+Note that `forward(operation).pipe(map(func))` _doesn't_ support asynchronous execution of the `func` mapping function. If you need to make asynchronous modifications, use the `asyncMap` function from `@apollo/client/utilities`, like so:
 
 ```js
 import {

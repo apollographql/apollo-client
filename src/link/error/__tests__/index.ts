@@ -6,6 +6,7 @@ import { ServerError, throwServerError } from '../../utils/throwServerError';
 import { Observable } from '../../../utilities/observables/Observable';
 import { onError, ErrorLink } from '../';
 import { itAsync } from '../../../testing';
+import { of } from 'rxjs';
 
 describe('error handling', () => {
   itAsync('has an easy way to handle GraphQL errors', (resolve, reject) => {
@@ -24,7 +25,7 @@ describe('error handling', () => {
     });
 
     const mockLink = new ApolloLink(operation =>
-      Observable.of({
+      of({
         errors: [
           {
             message: 'resolver blew up',
@@ -153,7 +154,7 @@ describe('error handling', () => {
     });
 
     const mockLink = new ApolloLink(operation => {
-      return Observable.of({ data: { foo: { id: 1 } } });
+      return of({ data: { foo: { id: 1 } } });
     });
 
     const link = errorLink.concat(mockLink);
@@ -178,7 +179,7 @@ describe('error handling', () => {
     });
 
     const mockLink = new ApolloLink(operation => {
-      return Observable.of({
+      return of({
         data: { foo: { id: 1 } },
         errors: [{ message: 'ignore' } as any],
       });
@@ -249,7 +250,7 @@ describe('error handling', () => {
     });
 
     const mockLink = new ApolloLink(operation =>
-      Observable.of({
+      of({
         data: { foo: true },
         errors: [
           {
@@ -286,7 +287,7 @@ describe('error handling with class', () => {
     });
 
     const mockLink = new ApolloLink(operation =>
-      Observable.of({
+      of({
         errors: [
           {
             message: 'resolver blew up',
@@ -377,7 +378,7 @@ describe('error handling with class', () => {
     });
 
     const mockLink = new ApolloLink(operation => {
-      return Observable.of({ data: { foo: { id: 1 } } });
+      return of({ data: { foo: { id: 1 } } });
     });
 
     const link = errorLink.concat(mockLink);

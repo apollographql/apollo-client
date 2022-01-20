@@ -18,6 +18,7 @@ import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { of } from 'rxjs';
 
 describe('useQuery Hook', () => {
   describe('General use', () => {
@@ -438,7 +439,7 @@ describe('useQuery Hook', () => {
     it('should tear down the query on unmount', async () => {
       const query = gql`{ hello }`;
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
+        link: new ApolloLink(() => of({ data: { hello: 'world' } })),
         cache: new InMemoryCache(),
       });
 
@@ -2846,7 +2847,7 @@ describe('useQuery Hook', () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(() => Observable.of({ data: {} })),
+        link: new ApolloLink(() => of({ data: {} })),
         resolvers: {
           ClientData: {
             titleLength(data) {
@@ -3018,7 +3019,7 @@ describe('useQuery Hook', () => {
 
     it('should tear down the query if `skip` is `true`', async () => {
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
+        link: new ApolloLink(() => of({ data: { hello: 'world' } })),
         cache: new InMemoryCache(),
       });
 
@@ -3074,7 +3075,7 @@ describe('useQuery Hook', () => {
     // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
     it('should refetch when skip is true', async () => {
       const query = gql`{ hello }`;
-      const link = new ApolloLink(() => Observable.of({
+      const link = new ApolloLink(() => of({
         data: { hello: 'world' },
       }));
 

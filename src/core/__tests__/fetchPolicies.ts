@@ -9,6 +9,7 @@ import {
   itAsync,
   mockSingleLink,
 } from '../../testing';
+import { map } from "rxjs";
 
 const query = gql`
   query {
@@ -93,10 +94,10 @@ describe('network-only', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         called++;
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -118,10 +119,10 @@ describe('network-only', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         called++;
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -141,10 +142,10 @@ describe('network-only', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         called++;
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -170,9 +171,9 @@ describe('network-only', () => {
 
   itAsync('updates the cache on a mutation', (resolve, reject) => {
     const inspector = new ApolloLink((operation, forward) => {
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -201,10 +202,10 @@ describe('no-cache', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         called++;
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -225,10 +226,10 @@ describe('no-cache', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         called++;
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -248,10 +249,10 @@ describe('no-cache', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         called++;
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -272,10 +273,10 @@ describe('no-cache', () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         called++;
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -301,9 +302,9 @@ describe('no-cache', () => {
 
   itAsync('does not update the cache on a mutation', (resolve, reject) => {
     const inspector = new ApolloLink((operation, forward) => {
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         return result;
-      });
+      }));
     });
 
     const client = new ApolloClient({
@@ -329,10 +330,10 @@ describe('no-cache', () => {
       let called = 0;
       const inspector = new ApolloLink((operation, forward) => {
         called++;
-        return forward(operation).map(result => {
+        return forward(operation).pipe(map(result => {
           called++;
           return result;
-        });
+        }));
       });
 
       const client = new ApolloClient({
@@ -353,10 +354,10 @@ describe('no-cache', () => {
       let called = 0;
       const inspector = new ApolloLink((operation, forward) => {
         called++;
-        return forward(operation).map(result => {
+        return forward(operation).pipe(map(result => {
           called++;
           return result;
-        });
+        }));
       });
 
       const client = new ApolloClient({
@@ -485,10 +486,10 @@ describe('cache-first', () => {
     const results: any[] = [];
     const client = new ApolloClient({
       link: new ApolloLink((operation, forward) => {
-        return forward(operation).map(result => {
+        return forward(operation).pipe(map(result => {
           results.push(result);
           return result;
-        });
+        }));
       }).concat(createMutationLink(reject)),
       cache: new InMemoryCache,
     });

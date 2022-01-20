@@ -1,6 +1,7 @@
-import { Observable, Observer, ObservableSubscription } from "./Observable";
+import { Observable, ObservableSubscription, Observer } from "./Observable";
 import { iterateObserversSafely } from "./iteration";
 import { fixObservableSubclass } from "./subclassing";
+import { Observer as RxjsObserver } from 'rxjs';
 
 type MaybeAsync<T> = T | PromiseLike<T>;
 
@@ -74,14 +75,14 @@ export class Concast<T> extends Observable<T> {
       sources = [new Observable<T>(sources)];
     }
 
-    if (isPromiseLike(sources)) {
-      sources.then(
-        iterable => this.start(iterable),
-        this.handlers.error,
-      );
-    } else {
-      this.start(sources);
+    if (!isPromiseLike(sources)) {
+      sources = Promise.resolve(sources);
     }
+
+    sources.then(
+      iterable =>  this.start(iterable),
+      this.handlers.error,
+    );
   }
 
   // A consumable array of source observables, incrementally consumed
@@ -164,15 +165,15 @@ export class Concast<T> extends Observable<T> {
 
   // Bound handler functions that can be reused for every internal
   // subscription.
-  private handlers = {
-    next: (result: T) => {
+  private handlers: RxjsObserver<T> = {
+    next: result => {
       if (this.sub !== null) {
         this.latest = ["next", result];
         iterateObserversSafely(this.observers, "next", result);
       }
     },
 
-    error: (error: any) => {
+    error: error => {
       const { sub } = this;
       if (sub !== null) {
         // Delay unsubscribing from the underlying subscription slightly,
@@ -213,7 +214,7 @@ export class Concast<T> extends Observable<T> {
     },
   };
 
-  public cleanup(callback: () => any) {
+  public cleanup(callback: () => unknown) {
     let called = false;
     const once = () => {
       if (!called) {

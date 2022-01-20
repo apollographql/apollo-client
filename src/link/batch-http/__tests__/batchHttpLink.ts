@@ -7,6 +7,7 @@ import { execute } from '../../core/execute';
 import { Observable } from '../../../utilities/observables/Observable';
 import { BatchHttpLink } from '../batchHttpLink';
 import { itAsync } from '../../../testing';
+import { map } from 'rxjs';
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -496,7 +497,7 @@ describe('SharedHttpTest', () => {
       operation.setContext({
         headers: { authorization: '1234' },
       });
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         const { headers } = operation.getContext();
         try {
           expect(headers).toBeDefined();
@@ -504,7 +505,7 @@ describe('SharedHttpTest', () => {
           reject(e);
         }
         return result;
-      });
+      }));
     });
     const link = middleware.concat(createHttpLink({ uri: '/data' }));
 

@@ -1,7 +1,7 @@
-import { Observable } from '../../../utilities/observables/Observable';
 import { itAsync } from '../../../testing';
 import { toPromise } from '../toPromise';
 import { fromError } from '../fromError';
+import { of } from 'rxjs';
 
 describe('toPromise', () => {
   const data = {
@@ -12,7 +12,7 @@ describe('toPromise', () => {
   const error = new Error('I always error');
 
   it('return next call as Promise resolution', () => {
-    return toPromise(Observable.of(data)).then(result =>
+    return toPromise(of(data)).then(result =>
       expect(data).toEqual(result),
     );
   });
@@ -37,7 +37,7 @@ describe('toPromise', () => {
     });
 
     itAsync('return error call as Promise rejection', (resolve, reject) => {
-      toPromise(Observable.of(data, data)).then(result => {
+      toPromise(of(data, data)).then(result => {
         expect(data).toEqual(result);
         expect(spy).toHaveBeenCalled();
         resolve();

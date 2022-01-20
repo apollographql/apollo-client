@@ -6,6 +6,7 @@ import { Observable } from '../../../utilities';
 import { execute } from '../../core';
 import { WebSocketLink } from '..';
 import { itAsync } from '../../../testing';
+import {of} from "rxjs";
 
 const query = gql`
   query SampleQuery {
@@ -46,7 +47,7 @@ describe('WebSocketLink', () => {
   itAsync('should call request on the client for a query', (resolve, reject) => {
     const result = { data: { data: 'result' } };
     const client: any = {};
-    const observable = Observable.of(result);
+    const observable = of(result);
     client.__proto__ = SubscriptionClient.prototype;
     client.request = jest.fn();
     client.request.mockReturnValueOnce(observable);
@@ -64,7 +65,7 @@ describe('WebSocketLink', () => {
   itAsync('should call query on the client for a mutation', (resolve, reject) => {
     const result = { data: { data: 'result' } };
     const client: any = {};
-    const observable = Observable.of(result);
+    const observable = of(result);
     client.__proto__ = SubscriptionClient.prototype;
     client.request = jest.fn();
     client.request.mockReturnValueOnce(observable);
@@ -82,7 +83,7 @@ describe('WebSocketLink', () => {
   itAsync('should call request on the subscriptions client for subscription', (resolve, reject) => {
     const result = { data: { data: 'result' } };
     const client: any = {};
-    const observable = Observable.of(result);
+    const observable = of(result);
     client.__proto__ = SubscriptionClient.prototype;
     client.request = jest.fn();
     client.request.mockReturnValueOnce(observable);

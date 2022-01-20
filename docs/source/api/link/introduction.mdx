@@ -107,7 +107,7 @@ When your custom link's request handler is done executing its logic, it should r
 
 > If a non-terminating custom link's request handler _doesn't_ `return forward(operation)`, the link chain ends and the associated GraphQL operation is not executed.
 
-The `forward` function's return type is an `Observable` provided by the [`zen-observable`](https://github.com/zenparsing/zen-observable) library. See the `zen-observable` documentation for details.
+The `forward` function's return type is an `Observable` provided by the [`rxjs`](https://github.com/ReactiveX/rxjs) library. See the `rxjs` documentation for details.
 
 ### Handling a response
 
@@ -140,10 +140,10 @@ Each link can execute logic while the result is being passed back by modifying t
 return forward(operation);
 
 // AFTER
-return forward(operation).map((data) => {
+return forward(operation).pipe(map((data) => {
   // ...modify result as desired here...
   return data;
-});
+}));
 ```
 
 Whatever the function provided to `map` returns is passed to the next link up the chain.
@@ -157,12 +157,12 @@ const roundTripLink = new ApolloLink((operation, forward) => {
   // Called before operation is sent to server
   operation.setContext({ start: new Date() });
 
-  return forward(operation).map((data) => {
+  return forward(operation).pipe(map((data) => {
     // Called after server responds
     const time = new Date() - operation.getContext().start;
     console.log(`Operation ${operation.operationName} took ${time} to complete`);
     return data;
-  });
+  }));
 });
 ```
 
@@ -285,10 +285,10 @@ import { ApolloLink } from '@apollo/client';
 
 const consoleLink = new ApolloLink((operation, forward) => {
   console.log(`starting request for ${operation.operationName}`);
-  return forward(operation).map((data) => {
+  return forward(operation).pipe(map((data) => {
     console.log(`ending request for ${operation.operationName}`);
     return data;
-  })
+  }))
 })
 ```
 
@@ -389,12 +389,12 @@ const timeStartLink = new ApolloLink((operation, forward) => {
 });
 
 const logTimeLink = new ApolloLink((operation, forward) => {
-  return forward(operation).map((data) => {
+  return forward(operation).pipe(map((data) => {
     // data from a previous link
     const time = new Date() - operation.getContext().start;
     console.log(`operation ${operation.operationName} took ${time} to complete`);
     return data;
-  })
+  }))
 });
 
 const additiveLink = from([

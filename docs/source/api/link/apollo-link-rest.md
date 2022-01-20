@@ -423,7 +423,7 @@ const authRestLink = new ApolloLink((operation, forward) => {
       }
     };
   });
-  return forward(operation).map(result => {
+  return forward(operation).pipe(map(result => {
     const { restResponses } = operation.getContext();
     const authTokenResponse = restResponses.find(res => res.headers.has("Authorization"));
     // You might also filter on res.url to find the response of a specific API call
@@ -431,7 +431,7 @@ const authRestLink = new ApolloLink((operation, forward) => {
       localStorage.setItem("token", authTokenResponse.headers.get("Authorization"));
     }
     return result;
-  });
+  }));
 });
 
 const restLink = new RestLink({ uri: "uri" });

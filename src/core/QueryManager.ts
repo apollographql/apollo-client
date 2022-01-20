@@ -4,8 +4,7 @@ import { DocumentNode } from 'graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from '@wry/equality';
-import { of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { of, map } from 'rxjs';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';

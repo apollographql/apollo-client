@@ -1,4 +1,4 @@
-import { Subscription } from "zen-observable-ts";
+import { Subscription } from "rxjs";
 
 import { itAsync } from '../testing';
 import {

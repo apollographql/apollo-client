@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { of } from 'rxjs';
+import { map, of } from 'rxjs';
 
 import { ApolloClient, NetworkStatus } from '../../core';
 import { ObservableQuery } from '../ObservableQuery';
@@ -2390,7 +2390,7 @@ describe('ObservableQuery', () => {
     expect(observable).toBeInstanceOf(Observable);
     expect(observable).toBeInstanceOf(ObservableQuery);
 
-    const mapped = observable.map(result => {
+    const mapped = observable.pipe(map(result => {
       expect(result).toEqual({
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2400,7 +2400,7 @@ describe('ObservableQuery', () => {
         ...result,
         data: { mapped: true },
       };
-    });
+    }));
     expect(mapped).toBeInstanceOf(Observable);
     expect(mapped).not.toBeInstanceOf(ObservableQuery);
 

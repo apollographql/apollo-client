@@ -64,7 +64,20 @@ Object {
 
 exports[`General use should pipe exceptions thrown in custom onError functions through the link chain 1`] = `[Error: oh no!]`;
 
+exports[`General use should pipe exceptions thrown in custom onError functions through the link chain 2`] = `[Error: oh no!]`;
+
 exports[`General use should return "Mocked response should contain" errors in response 1`] = `[Error: Mocked response should contain either result or error: {"query":"query GetUser($username: String!) {\\n  user(username: $username) {\\n    id\\n    __typename\\n  }\\n}"}]`;
+
+exports[`General use should return "Mocked response should contain" errors in response 2`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
 
 exports[`General use should return "No more mocked responses" errors in response 1`] = `
 [Error: No more mocked responses for the query: query GetUser($username: String!) {
@@ -78,6 +91,281 @@ Expected variables: {}
 `;
 
 exports[`General use should support custom error handling using setOnError 1`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 2`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 3`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 4`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 5`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 6`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 7`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 8`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 9`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 10`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 11`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 12`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 13`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 14`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 15`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 16`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 17`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 18`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 19`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 20`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 21`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 22`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 23`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 24`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 25`] = `
+[Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+]
+`;
+
+exports[`General use should support custom error handling using setOnError 26`] = `
 [Error: No more mocked responses for the query: query GetUser($username: String!) {
   user(username: $username) {
     id

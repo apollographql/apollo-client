@@ -1,10 +1,10 @@
 import gql from 'graphql-tag';
 
-import { Observable } from '../../utilities';
 import { ApolloLink } from '../../link/core';
 import { ApolloClient } from '../../core';
 import { InMemoryCache } from '../../cache';
 import { itAsync } from '../../testing';
+import {of} from "rxjs";
 
 describe('Basic functionality', () => {
   itAsync('should not break subscriptions', (resolve, reject) => {
@@ -15,7 +15,7 @@ describe('Basic functionality', () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { field: 1 } }, { data: { field: 2 } }),
+      of({ data: { field: 1 } }, { data: { field: 2 } }),
     );
 
     const client = new ApolloClient({
@@ -47,7 +47,7 @@ describe('Basic functionality', () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { field: 1 } }, { data: { field: 2 } }),
+      of({ data: { field: 1 } }, { data: { field: 2 } }),
     );
 
     let subCounter = 0;

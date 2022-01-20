@@ -1,6 +1,5 @@
 // externals
-import { from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { from, map } from 'rxjs';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';

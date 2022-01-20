@@ -21,6 +21,7 @@ import {
   mockSingleLink,
   withErrorSpy,
 } from '../testing';
+import { of } from 'rxjs';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -141,7 +142,7 @@ describe('client', () => {
 
     const variables = { first: 1 };
 
-    const link = ApolloLink.from([() => Observable.of({ data })]);
+    const link = ApolloLink.from([() => of({ data })]);
 
     const client = new ApolloClient({
       link,
@@ -679,7 +680,7 @@ describe('client', () => {
       },
     };
 
-    const link = ApolloLink.from([() => Observable.of({ data }, { data })]);
+    const link = ApolloLink.from([() => of({ data }, { data })]);
 
     const client = new ApolloClient({
       link,
@@ -1299,7 +1300,7 @@ describe('client', () => {
     const link = ApolloLink.from([
       request => {
         expect(request.operationName).toBe('myQueryName');
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({
@@ -1324,7 +1325,7 @@ describe('client', () => {
     const link = ApolloLink.from([
       request => {
         expect(request.operationName).toBe('myMutationName');
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({

@@ -1,7 +1,7 @@
 // externals
 import gql from 'graphql-tag';
 
-import { Observable, ObservableSubscription } from '../../../utilities/observables/Observable';
+import { ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 
@@ -11,6 +11,7 @@ import { itAsync, MockSubscriptionLink } from '../../../testing/core';
 // core
 import { QueryManager } from '../../QueryManager';
 import { NextLink, Operation, Reference } from '../../../core';
+import { of, map } from 'rxjs';
 
 describe('Link interactions', () => {
   itAsync('includes the cache on the context for eviction links', (resolve, reject) => {
@@ -35,7 +36,7 @@ describe('Link interactions', () => {
     const evictionLink = (operation: Operation, forward: NextLink) => {
       const { cache } = operation.getContext();
       expect(cache).toBeDefined();
-      return forward(operation).map(result => {
+      return forward(operation).pipe(map(result => {
         setTimeout(() => {
           const cacheResult = cache.read({ query });
           expect(cacheResult).toEqual(initialData);
@@ -45,7 +46,7 @@ describe('Link interactions', () => {
           }
         }, 10);
         return result;
-      });
+      }));
     };
 
     const mockLink = new MockSubscriptionLink();
@@ -319,7 +320,7 @@ describe('Link interactions', () => {
       const { getCacheKey } = operation.getContext();
       expect(getCacheKey).toBeDefined();
       expect(getCacheKey({ id: 1, __typename: 'Book' })).toEqual('Book:1');
-      return Observable.of({ data: bookData });
+      return of({ data: bookData });
     });
 
     const queryManager = new QueryManager({

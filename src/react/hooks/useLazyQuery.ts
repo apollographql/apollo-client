@@ -80,8 +80,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
       loading: false,
       data: void 0 as unknown as TData,
       error: void 0,
-      // TODO: fix the type of result
-      called: false as any,
+      called: false,
     };
 
 
@@ -94,6 +93,5 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     }
   }
 
-  // TODO: fix the type of result
-  return [execute, result as LazyQueryResult<TData, TVariables>];
+  return [execute, result];
 }

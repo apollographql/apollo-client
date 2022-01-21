@@ -119,3 +119,5 @@ export function storeValueIsStoreObject(
 export function makeProcessedFieldsMerger() {
   return new DeepMerger;
 }
+
+export const isReadonlyArray = (a: any): a is ReadonlyArray<any> => Array.isArray(a)

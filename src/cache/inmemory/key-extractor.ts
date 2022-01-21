@@ -7,7 +7,7 @@ import {
   isNonNullObject,
 } from "../../utilities";
 
-import { hasOwn } from "./helpers";
+import { hasOwn, isReadonlyArray } from "./helpers";
 import {
   KeySpecifier,
   KeyFieldsFunction,
@@ -197,7 +197,7 @@ export function getSpecifierPaths(spec: KeySpecifier): string[][] {
     const currentPath: string[] = [];
 
     spec.forEach((s, i) => {
-      if (Array.isArray(s)) {
+      if (isReadonlyArray(s)) {
         getSpecifierPaths(s).forEach(p => paths.push(currentPath.concat(p)));
         currentPath.length = 0;
       } else {

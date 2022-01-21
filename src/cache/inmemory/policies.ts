@@ -32,6 +32,7 @@ import {
   selectionSetMatchesResult,
   TypeOrFieldNameRegExp,
   defaultDataIdFromObject,
+  isReadonlyArray,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
 import { InMemoryCache } from './inMemoryCache';
@@ -58,7 +59,7 @@ export type TypePolicies = {
 }
 
 // TypeScript 3.7 will allow recursive type aliases, so this should work:
-// type KeySpecifier = ReadonlyArray<string | KeySpecifier>
+// type KeySpecifier = (string | KeySpecifier)[]
 export type KeySpecifier = ReadonlyArray<string | KeySpecifier>;
 
 export type KeyFieldsContext = {
@@ -382,7 +383,7 @@ export class Policies {
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
-      if (Array.isArray(specifierOrId)) {
+      if (isReadonlyArray(specifierOrId)) {
         keyFn = keyFieldsFnFromSpecifier(specifierOrId);
       } else {
         id = specifierOrId;
@@ -729,7 +730,7 @@ export class Policies {
       const args = argsFromFieldSpecifier(fieldSpec);
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
-        if (Array.isArray(specifierOrString)) {
+        if (isReadonlyArray(specifierOrString)) {
           keyFn = keyArgsFnFromSpecifier(specifierOrString);
         } else {
           // If the custom keyFn returns a falsy value, fall back to

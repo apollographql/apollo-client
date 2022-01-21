@@ -127,19 +127,25 @@ describe('useSubscription Hook', () => {
       }
     `;
 
+    const onSetup = jest.fn();
     const link = new MockSubscriptionLink();
+    link.onSetup(onSetup);
     const client = new ApolloClient({
       link,
       cache: new Cache({ addTypename: false })
     });
 
-    const onSubscriptionData = jest.fn();
-    const { result, unmount, waitForNextUpdate } = renderHook(
-      () => useSubscription(subscription, {
-        onSubscriptionData,
-        skip: true,
+    const { result, unmount, waitForNextUpdate, rerender } = renderHook(
+      ({ variables }) => useSubscription(subscription, {
+        variables,
+        skip: true
       }),
       {
+        initialProps: {
+          variables: {
+            foo: 'bar'
+          }
+        },
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>
             {children}
@@ -151,11 +157,13 @@ describe('useSubscription Hook', () => {
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
+
+    rerender({ variables: { foo: 'bar2' }});
+    expect(onSetup).toHaveBeenCalledTimes(0);
+
     await expect(waitForNextUpdate({ timeout: 20 }))
       .rejects.toThrow('Timed out');
     unmount();
-
-    expect(onSubscriptionData).toHaveBeenCalledTimes(0);
   });
 
   it('should create a subscription after skip has changed from true to a falsy value', async () => {

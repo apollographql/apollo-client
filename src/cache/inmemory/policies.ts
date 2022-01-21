@@ -59,7 +59,7 @@ export type TypePolicies = {
 
 // TypeScript 3.7 will allow recursive type aliases, so this should work:
 // type KeySpecifier = (string | KeySpecifier)[]
-export type KeySpecifier = (string | KeySpecifier)[];
+export type KeySpecifier = ReadonlyArray<string | KeySpecifier>;
 
 export type KeyFieldsContext = {
   // The __typename of the incoming object, even if the __typename field was

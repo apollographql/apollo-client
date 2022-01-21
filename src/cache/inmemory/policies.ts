@@ -58,7 +58,7 @@ export type TypePolicies = {
 }
 
 // TypeScript 3.7 will allow recursive type aliases, so this should work:
-// type KeySpecifier = (string | KeySpecifier)[]
+// type KeySpecifier = ReadonlyArray<string | KeySpecifier>
 export type KeySpecifier = ReadonlyArray<string | KeySpecifier>;
 
 export type KeyFieldsContext = {

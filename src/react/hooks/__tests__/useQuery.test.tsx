@@ -3071,7 +3071,8 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: 'world' });
     });
 
-    it('should not refetch when skip is true', async () => {
+    // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
+    it('should refetch when skip is true', async () => {
       const query = gql`{ hello }`;
       const link = new ApolloLink(() => Observable.of({
         data: { hello: 'world' },
@@ -3098,13 +3099,18 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       await expect(waitForNextUpdate({ timeout: 20 }))
         .rejects.toThrow('Timed out');
-      result.current.refetch();
-      await expect(waitForNextUpdate({ timeout: 20 }))
-        .rejects.toThrow('Timed out');
+      const promise = result.current.refetch();
+      // TODO: Not really sure about who is causing this render.
+      await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      expect(requestSpy).toHaveBeenCalledTimes(0);
+      expect(requestSpy).toHaveBeenCalledTimes(1);
       requestSpy.mockRestore();
+      expect(promise).resolves.toEqual({
+        data: {hello: "world"},
+        loading: false,
+        networkStatus: 7,
+      });
     });
   });
 

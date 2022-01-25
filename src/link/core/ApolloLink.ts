@@ -56,14 +56,14 @@ export class ApolloLink {
     if (isTerminating(leftLink) && isTerminating(rightLink)) {
       return new ApolloLink(operation => {
         return test(operation)
-          ? leftLink.request(operation) ?? EMPTY
-          : rightLink.request(operation) ?? EMPTY;
+          ? leftLink.request(operation) || EMPTY
+          : rightLink.request(operation) || EMPTY;
       });
     } else {
       return new ApolloLink((operation, forward) => {
         return test(operation)
-          ? leftLink.request(operation, forward) ?? EMPTY
-          : rightLink.request(operation, forward) ?? EMPTY;
+          ? leftLink.request(operation, forward) || EMPTY
+          : rightLink.request(operation, forward) || EMPTY;
       });
     }
   }
@@ -78,7 +78,7 @@ export class ApolloLink {
           operation.context,
           transformOperation(validateOperation(operation)),
         ),
-      ) ?? EMPTY
+      ) || EMPTY
     );
   }
 
@@ -103,15 +103,15 @@ export class ApolloLink {
         operation =>
           firstLink.request(
             operation,
-            op => nextLink.request(op) ?? EMPTY,
-          ) ?? EMPTY,
+            op => nextLink.request(op) || EMPTY,
+          ) || EMPTY,
       );
     } else {
       return new ApolloLink((operation, forward) => {
         return (
           firstLink.request(operation, op => {
-            return nextLink.request(op, forward) ?? EMPTY;
-          }) ?? EMPTY
+            return nextLink.request(op, forward) || EMPTY;
+          }) || EMPTY
         );
       });
     }

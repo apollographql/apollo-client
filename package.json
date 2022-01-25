@@ -64,11 +64,15 @@
   },
   "peerDependencies": {
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0",
+    "graphql-ws": "^5.5.5",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0-beta",
     "subscriptions-transport-ws": "^0.9.0 || ^0.11.0",
     "use-sync-external-store": "^1.0.0 || ^1.0.0-rc || ^1.0.0-beta"
   },
   "peerDependenciesMeta": {
+    "graphql-ws": {
+      "optional": true
+    },
     "react": {
       "optional": true
     },
@@ -116,6 +120,7 @@
     "fetch-mock": "9.11.0",
     "glob": "7.2.0",
     "graphql": "16.0.1",
+    "graphql-ws": "5.5.5",
     "jest": "27.4.7",
     "jest-fetch-mock": "3.0.3",
     "jest-junit": "13.0.0",

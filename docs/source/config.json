@@ -1,0 +1,13 @@
+{
+  "title": "Apollo Client",
+  "version": "v2",
+  "sidebar": {
+    "Introduction": "/",
+    "Get started": "/get-started",
+    "Why Apollo Client?": "/why-apollo",
+    "Caching": {
+      "Advanced topics": "/caching/advanced-topics",
+      "Overview": "/caching/overview"
+    }
+  }
+}

@@ -1,9 +1,9 @@
 ---
 title: WebSocket Link
-sidebar_title: WebSocket (older protocol)
 description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `subscriptions-transport-ws` library
 api_reference: true
 ---
+
 > We no longer recommend using the `subscriptions-transport-ws` library, because this library is not actively maintained. We instead recommend using the newer `graphql-ws` library with the accompanying `GraphQLWsLink` for creating GraphQL subscriptions on the client side; learn more in [Choice of subscription protocol](../../data/subscriptions/#choice-of-subscription-protocol).
 >
 > We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.

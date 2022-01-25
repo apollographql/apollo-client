@@ -1,10 +1,7 @@
 ---
 title: Local-only fields in Apollo Client
-sidebar_title: Local-only fields
 description: Fetch local and remote data with one GraphQL query
 ---
-
-import { ExpansionPanel } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 Your Apollo Client queries can include **local-only fields** that _aren't_ defined in your GraphQL server's schema:
 
@@ -141,7 +138,7 @@ export const cartItemsVar = makeVar([]);
 
 This initializes a reactive variable with an empty array (you can pass any initial value to `makeVar`). Note that the return value of `makeVar` isn't the variable itself, but rather a _function_. We get the variable's current value by calling `cartItemsVar()`, and we set a _new_ value by calling `cartItemsVar(newValue)`.
 
-Next, let's define the field policy for `cartItems`. As always, we pass this to the constructor of `InMemoryCache`: 
+Next, let's define the field policy for `cartItems`. As always, we pass this to the constructor of `InMemoryCache`:
 
 ```js{5-9}:title=cache.js
 export const cache = new InMemoryCache({
@@ -343,7 +340,7 @@ By default, neither a reactive variable nor the `InMemoryCache` persists its sta
 
 The `apollo-3-cache-persist` library helps you persist and rehydrate the Apollo Client cache between sessions. For details, see [Persisting the cache](../caching/advanced-topics/#persisting-the-cache).
 
-There is currently no built-in API for persisting reactive variables, but you can write variable values to `localStorage` (or another store) whenever they're modified, and initialize those variables with their stored value (if any) on app load. 
+There is currently no built-in API for persisting reactive variables, but you can write variable values to `localStorage` (or another store) whenever they're modified, and initialize those variables with their stored value (if any) on app load.
 
 ## Modifying
 
@@ -370,7 +367,7 @@ const GET_CURRENT_AUTHOR_POST_COUNT = gql`
 `;
 ```
 
-In the query above, the result of the local-only field `currentAuthorId` is used as the value of the `$authorId` variable that's passed to `postCount`. 
+In the query above, the result of the local-only field `currentAuthorId` is used as the value of the `$authorId` variable that's passed to `postCount`.
 
 You can do this even if `postCount` is _also_ a local-only field (i.e., if it's also marked as `@client`).
 

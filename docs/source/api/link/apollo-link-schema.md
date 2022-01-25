@@ -1,6 +1,5 @@
 ---
 title: Schema Link
-sidebar_title: Schema
 description: Assists with mocking and server-side rendering
 ---
 

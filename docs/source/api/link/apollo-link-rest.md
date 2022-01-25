@@ -1,6 +1,5 @@
 ---
 title: REST Link
-sidebar_title: REST
 description: Call REST APIs inside your GraphQL queries.
 ---
 

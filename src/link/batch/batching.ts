@@ -141,7 +141,7 @@ export class OperationBatcher {
     });
 
     const batchedObservable =
-      this.batchHandler(requests, forwards) || EMPTY;
+      this.batchHandler(requests, forwards) ?? EMPTY;
 
     const onError = (error: any) => {
       //each callback list in batch

@@ -1,6 +1,5 @@
 ---
 title: Batch HTTP Link
-sidebar_title: HTTP Batch
 description: Batch multiple operations into a single HTTP request
 ---
 
@@ -11,7 +10,7 @@ The `BatchHttpLink` is a terminating link that batches an array of individual Gr
 ```js
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 
-const link = new BatchHttpLink({ 
+const link = new BatchHttpLink({
   uri: "http://localhost:4000/graphql",
   batchMax: 5, // No more than 5 operations per batch
   batchInterval: 20 // Wait no more than 20ms after first batched operation

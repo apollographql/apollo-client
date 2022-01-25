@@ -1,6 +1,5 @@
 ---
 title: WebSocket Link
-sidebar_title: WebSocket
 description: Execute subscriptions (or other GraphQL operations) over WebSocket
 api_reference: true
 ---

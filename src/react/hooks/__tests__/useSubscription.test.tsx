@@ -135,10 +135,12 @@ describe('useSubscription Hook', () => {
       cache: new Cache({ addTypename: false })
     });
 
+    const onSubscriptionData = jest.fn();
     const { result, unmount, waitForNextUpdate, rerender } = renderHook(
       ({ variables }) => useSubscription(subscription, {
         variables,
-        skip: true
+        skip: true,
+        onSubscriptionData,
       }),
       {
         initialProps: {
@@ -159,10 +161,11 @@ describe('useSubscription Hook', () => {
     expect(result.current.data).toBe(undefined);
 
     rerender({ variables: { foo: 'bar2' }});
-    expect(onSetup).toHaveBeenCalledTimes(0);
-
     await expect(waitForNextUpdate({ timeout: 20 }))
       .rejects.toThrow('Timed out');
+
+    expect(onSetup).toHaveBeenCalledTimes(0);
+    expect(onSubscriptionData).toHaveBeenCalledTimes(0);
     unmount();
   });
 

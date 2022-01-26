@@ -88,7 +88,7 @@ export function selectionSetMatchesResult(
   variables?: Record<string, any>,
 ): boolean {
   if (isNonNullObject(result)) {
-    return Array.isArray(result)
+    return isArray(result)
       ? result.every(item => selectionSetMatchesResult(selectionSet, item, variables))
       : selectionSet.selections.every(field => {
         if (isField(field) && shouldInclude(field, variables)) {
@@ -113,11 +113,11 @@ export function storeValueIsStoreObject(
 ): value is StoreObject {
   return isNonNullObject(value) &&
     !isReference(value) &&
-    !Array.isArray(value);
+    !isArray(value);
 }
 
 export function makeProcessedFieldsMerger() {
   return new DeepMerger;
 }
 
-export const isReadonlyArray = (a: any): a is ReadonlyArray<any> => Array.isArray(a)
+export const isArray = (a: any): a is readonly any[] => Array.isArray(a)

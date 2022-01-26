@@ -120,4 +120,4 @@ export function makeProcessedFieldsMerger() {
   return new DeepMerger;
 }
 
-export const isArray = (a: any): a is readonly any[] => Array.isArray(a)
+export const isArray = (a: any): a is any[] | readonly any[] => Array.isArray(a)

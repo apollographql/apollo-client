@@ -285,9 +285,11 @@ export class ObservableQuery<
     variablesMustMatch?: boolean,
   ) {
     const last = this.last;
-    if (last &&
-        last[key] &&
-        (!variablesMustMatch || equal(last!.variables, this.variables))) {
+    if (
+      last &&
+      last[key] &&
+      (!variablesMustMatch || equal(last.variables, this.variables))
+    ) {
       return last[key];
     }
   }
@@ -761,8 +763,12 @@ once, rather than every time you call fetchMore.`);
     result: ApolloQueryResult<TData>,
     variables: TVariables | undefined,
   ) {
-    if (this.getLastError() || this.isDifferentFromLastResult(result)) {
-      this.updateLastResult(result, variables);
+    const lastError = this.getLastError();
+    if (lastError || this.isDifferentFromLastResult(result)) {
+      if (lastError || !result.partial || this.options.returnPartialData) {
+        this.updateLastResult(result, variables);
+      }
+
       iterateObserversSafely(this.observers, 'next', result);
     }
   }

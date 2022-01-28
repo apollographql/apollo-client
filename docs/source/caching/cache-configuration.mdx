@@ -311,7 +311,7 @@ const equivalentResult = cache.readQuery({
 });
 ```
 
-The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use this same method for the outermost selection set of every operation, but the `__typename` of the root query and mutation are almost always `"Query"` and `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
+The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use this same method for the outermost selection set of every operation, but the `__typename`s of the root query and mutation are almost always `"Query"` and `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
 
 For most objects in a graph, the `__typename` field is vital for proper identification and normalization. For the root query and mutation types, the `__typename` is not nearly as useful or important, because those types are singletons with only one instance per client.
 

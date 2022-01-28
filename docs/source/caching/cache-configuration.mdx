@@ -30,7 +30,7 @@ The `InMemoryCache` constructor accepts a variety of [configuration options](#co
 
 You can configure the cache's behavior to better suit your application. For example, you can:
 
-* Specify [custom cache ID fields](#customizing-cache-ids)
+* Customize the format of a particular type's [cache ID](#customizing-cache-ids)
 * Customize the storage and retrieval of [individual fields](./cache-field-behavior/)
 * Define polymorphic type relationships for [fragment matching](#possibletypes)
 * Define patterns for [pagination](../pagination/overview/)
@@ -218,7 +218,7 @@ Notice that the above function still uses different logic to generate keys based
 This code also has the following drawbacks:
 
 * It's sensitive to aliasing mistakes.
-* It does nothing to protect against undefined `object` properties.
+* It does nothing to protect against undefined object properties.
 * Accidentally using different key fields at different times can cause inconsistencies in the cache.
 
 ### Disabling normalization

@@ -71,7 +71,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     QueryTuple<TData, TVariables>[0]
   >((executeOptions?: QueryLazyOptions<TVariables>) => {
     setExecution({ called: true, options: executeOptions });
-    return result.refetch(executeOptions?.variables).then((result1) => {
+    const promise = result.refetch(executeOptions?.variables).then((result1) => {
       const result2 = {
         ...result,
         data: result1.data,
@@ -83,6 +83,12 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
       Object.assign(result2, eagerMethods);
       return result2;
     });
+
+    // Because the return value of `useLazyQuery` is usually floated, we need
+    // to catch the promise to prevent unhandled rejections.
+    promise.catch(() => {});
+
+    return promise;
   }, []);
 
   return [execute, result];

@@ -725,4 +725,39 @@ describe('useLazyQuery Hook', () => {
 
     await expect(executeResult).rejects.toEqual(new Error('error 2'));
   });
+
+  it('the promise should not cause an unhandled rejection', async () => {
+    const query = gql`{ hello }`;
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('error 1')],
+        },
+      },
+    ];
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      },
+    );
+
+    const execute = result.current[0];
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    setTimeout(() => {
+      execute();
+    });
+
+    await waitForNextUpdate();
+
+    // Making sure the rejection triggers a test failure.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
 });

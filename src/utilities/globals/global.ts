@@ -1,6 +1,20 @@
 import { maybe } from "./maybe";
 
 declare global {
+  // Despite our attempts to reuse the React Native __DEV__ constant instead of
+  // inventing something new and Apollo-specific, declaring a useful type for
+  // __DEV__ unfortunately conflicts (TS2451) with the global declaration in
+  // @types/react-native/index.d.ts.
+  //
+  // To hide that harmless conflict, we @ts-ignore this line, which should
+  // continue to provide a type for __DEV__ elsewhere in the Apollo Client
+  // codebase, even when @types/react-native is not in use.
+  //
+  // However, because TypeScript drops @ts-ignore comments when generating .d.ts
+  // files (https://github.com/microsoft/TypeScript/issues/38628), we have to
+  // manually post-process dist/utilities/globals/global.d.ts to add it back.
+  //
+  // @ts-ignore
   const __DEV__: boolean | undefined;
 }
 

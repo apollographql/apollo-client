@@ -1,6 +1,6 @@
 ---
 title: WebSocket Link
-sidebar_title: WebSocket (newer protocol)
+sidebar_title: WebSocket (older protocol)
 description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `subscriptions-transport-ws` library
 api_reference: true
 ---

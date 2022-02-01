@@ -32,13 +32,9 @@ import { print } from "graphql";
 import type { Client } from "graphql-ws";
 
 import { ApolloLink, Operation, FetchResult } from "../core";
-import { Observable } from "../../utilities";
+import { isNonNullObject, Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 
-
-function isObject(val: unknown): val is Record<PropertyKey, unknown> {
-  return typeof val === 'object' && val !== null;
-}
 interface LikeCloseEvent {
   /** Returns the WebSocket connection close code provided by the server. */
   readonly code: number;
@@ -47,7 +43,7 @@ interface LikeCloseEvent {
 }
 
 function isLikeCloseEvent(val: unknown): val is LikeCloseEvent {
-  return isObject(val) && 'code' in val && 'reason' in val;
+  return isNonNullObject(val) && 'code' in val && 'reason' in val;
 }
 
 

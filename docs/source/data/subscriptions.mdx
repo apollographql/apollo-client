@@ -324,7 +324,7 @@ Instead of `import { createClient } from 'graphql-ws'`, you `import { Subscripti
 
 Instead of `import { GraphQLWsLink } from '@apollo/client/link/subscriptions'`, you `import { WebSocketLink } from '@apollo/client/link/ws`.
 
-The options passed to `new SubscriptionClient` are slightly different from those passed to `createClient`. The subscriptions URL is specified in an `uri` option instead of an `url` option. The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You may also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.)
+The options passed to `new SubscriptionClient` are slightly different from those passed to `createClient`. The subscriptions URL is specified in an `uri` option instead of an `url` option. The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You may also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.) See [the `subscriptions-transport-ws` README](https://www.npmjs.com/package/subscriptions-transport-ws) for complete `SubscriptionClient` API docs.
 
 Once you've created your `wsLink`, everything else in this document still applies: `useSubscription`, `subscribeToMore`, and split links work exactly the same way for both implementations.
 

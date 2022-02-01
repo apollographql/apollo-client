@@ -21,18 +21,21 @@ npm install subscriptions-transport-ws
 
 ```js
 import { WebSocketLink } from "@apollo/client/link/ws";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-const link = new WebSocketLink({
-  uri: "ws://localhost:3000/subscriptions",
-  options: {
-    reconnect: true,
-  },
+const link = new WebSocketLink(
+  new SubscriptionClient({
+    uri: "ws://localhost:3000/subscriptions",
+    options: {
+      reconnect: true,
+    },
+  }),
 });
 ```
 
 ### Options
 
-The `WebSocketLink` constructor takes an options object with the following fields:
+The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an options object with the following fields. (These options are passed directly to the `SubscriptionClient` constructor.)
 
 <table class="field-table">
   <thead>

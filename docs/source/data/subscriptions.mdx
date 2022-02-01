@@ -96,10 +96,11 @@ Import and initialize a `GraphQLWsLink` object in the same project file where yo
 
 ```js:title=index.js
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
 
-const wsLink = new GraphQLWsLink({
+const wsLink = new GraphQLWsLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
-});
+}));
 ```
 
 Replace the value of the `url` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#setting-a-subscription-endpoint).
@@ -116,14 +117,15 @@ The following example expands on the previous one by initializing both a `GraphQ
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
 
 const httpLink = new HttpLink({
   uri: 'http://localhost:4000/graphql'
 });
 
-const wsLink = new GraphQLWsLink({
+const wsLink = new GraphQLWsLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
-});
+}));
 
 // The split function takes three parameters:
 //
@@ -166,15 +168,16 @@ const client = new ApolloClient({
 
 It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `GraphQLWsLink` constructor, like so:
 
-```js{7-9}
+```js{6-8}
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
 
-const wsLink = new GraphQLWsLink({
+const wsLink = new GraphQLWsLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
   connectionParams: {
     authToken: user.authToken,
   },
-});
+}));
 ```
 
 Your `GraphQLWsLink` passes the `connectionParams` object to your server whenever it connects. Your server receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
@@ -315,11 +318,13 @@ After being called, the `useSubscription` Hook returns a result object with the 
 
 If your server uses `subscriptions-transport-ws` instead of the newer `graphql-ws` library, you need to make a few changes to how you set up your link.
 
-Instead of `npm install graphql-ws`, you `npm install subscriptions-transport-ws`
+Instead of `npm install graphql-ws`, you `npm install subscriptions-transport-ws`.
+
+Instead of `import { createClient } from 'graphql-ws'`, you `import { SubscriptionClient } from 'subscriptions-transport-ws'`.
 
 Instead of `import { GraphQLWsLink } from '@apollo/client/link/subscriptions'`, you `import { WebSocketLink } from '@apollo/client/link/ws`.
 
-The options passed to the link constructor are slightly different. The subscriptions URL is specified in an `uri` option instead of an `url` option. The `connectionParams` option is nested under an options object called `options` instead of being at the top level.
+The options passed to `new SubscriptionClient` are slightly different from those passed to `createClient`. The subscriptions URL is specified in an `uri` option instead of an `url` option. The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You may also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.)
 
 Once you've created your `wsLink`, everything else in this document still applies: `useSubscription`, `subscribeToMore`, and split links work exactly the same way for both implementations.
 
@@ -327,14 +332,17 @@ The following is what typical `WebSocketLink` initialization looks like:
 
 ```js
 import { WebSocketLink } from "@apollo/client/link/ws";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-const wsLink = new WebSocketLink({
-  uri: "ws://localhost:4000/subscriptions",
-  options: {
-    connectionParams: {
-      authToken: user.authToken,
+const wsLink = new WebSocketLink(
+  new SubscriptionClient({
+    uri: "ws://localhost:4000/subscriptions",
+    options: {
+      connectionParams: {
+        authToken: user.authToken,
+      },
     },
-  },
+  }),
 });
 ```
 

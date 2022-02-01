@@ -21,21 +21,18 @@ npm install graphql-ws
 
 ```js
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
-const link = new GraphQLWsLink({
+const link = new GraphQLWsLink(createClient({
   url: "ws://localhost:3000/subscriptions",
-});
+}));
 ```
 
 ### Options
 
-The `GraphQLWsLink` constructor takes a single object. This can either be a `Client` returned from the `graphql-ws` `createClient` function, or an options object that will be passed directly to the `createClient` function.
+The `GraphQLWsLink` constructor takes a single argument, which is a `Client` returned from the `graphql-ws` `createClient` function.
 
-If you are passing an options object, the one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server.
-
-Full documentation of supported options can be found in [the `graphql-ws` docs for `ClientOptions`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/client.ClientOptions.md).
-
-<table class="field-table">
+The `createClient` function can take many options; full details can be found in [the `graphql-ws` docs for `ClientOptions`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/client.ClientOptions.md). The one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server. (Note that this differs from the [older link's URL option](./apollo-link-ws) which is called `uri` rather than `url`.)
 
 ## Usage
 

@@ -26,22 +26,15 @@
 // THE SOFTWARE.
 
 import { print } from "graphql";
-import { createClient, ClientOptions, Client } from "graphql-ws";
+import type { Client } from "graphql-ws";
 
 import { ApolloLink, Operation, FetchResult } from "../core";
 import { Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 
 export class GraphQLWsLink extends ApolloLink {
-  private client: Client;
-
-  constructor(optionsOrClient: ClientOptions | Client) {
+  constructor(public readonly client: Client) {
     super();
-    this.client =
-      // Client is an interface, not a class, so we can't use instanceof here
-      "subscribe" in optionsOrClient
-        ? optionsOrClient
-        : createClient(optionsOrClient);
   }
 
   public request(operation: Operation): Observable<FetchResult> {

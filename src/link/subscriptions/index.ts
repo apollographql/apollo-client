@@ -1,5 +1,8 @@
-// This file is adapted from sample code in the README of the graphql-ws npm package:
+// This file is adapted from the graphql-ws npm package:
 // https://github.com/enisdenjo/graphql-ws
+//
+// Most of the file comes from that package's README; some other parts (such as
+// isLikeCloseEvent) come from its source.
 //
 // Here's the license of the original code:
 //
@@ -32,6 +35,22 @@ import { ApolloLink, Operation, FetchResult } from "../core";
 import { Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 
+
+function isObject(val: unknown): val is Record<PropertyKey, unknown> {
+  return typeof val === 'object' && val !== null;
+}
+interface LikeCloseEvent {
+  /** Returns the WebSocket connection close code provided by the server. */
+  readonly code: number;
+  /** Returns the WebSocket connection close reason provided by the server. */
+  readonly reason: string;
+}
+
+function isLikeCloseEvent(val: unknown): val is LikeCloseEvent {
+  return isObject(val) && 'code' in val && 'reason' in val;
+}
+
+
 export class GraphQLWsLink extends ApolloLink {
   constructor(public readonly client: Client) {
     super();
@@ -49,7 +68,7 @@ export class GraphQLWsLink extends ApolloLink {
               return observer.error(err);
             }
 
-            if (err instanceof CloseEvent) {
+            if (isLikeCloseEvent(err)) {
               return observer.error(
                 // reason will be available on clean closes
                 new Error(

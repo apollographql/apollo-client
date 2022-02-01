@@ -328,7 +328,7 @@ The following is what typical `WebSocketLink` initialization looks like:
 ```js
 import { WebSocketLink } from "@apollo/client/link/ws";
 
-const wsLink = new GraphQLWsLink({
+const wsLink = new WebSocketLink({
   uri: "ws://localhost:4000/subscriptions",
   options: {
     connectionParams: {

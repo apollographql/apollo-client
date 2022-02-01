@@ -25,11 +25,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { print, GraphQLError } from "graphql";
+import { print } from "graphql";
 import { createClient, ClientOptions, Client } from "graphql-ws";
 
 import { ApolloLink, Operation, FetchResult } from "../core";
 import { Observable } from "../../utilities";
+import { ApolloError } from "../../errors";
 
 export class GraphQLWsLink extends ApolloLink {
   private client: Client;
@@ -65,9 +66,9 @@ export class GraphQLWsLink extends ApolloLink {
             }
 
             return observer.error(
-              new Error(
-                (err as GraphQLError[]).map(({ message }) => message).join(", ")
-              )
+              new ApolloError({
+                graphQLErrors: Array.isArray(err) ? err : [err],
+              })
             );
           },
         }

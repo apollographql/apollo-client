@@ -44,19 +44,19 @@ export class GraphQLWsLink extends ApolloLink {
   }
 
   public request(operation: Operation): Observable<FetchResult> {
-    return new Observable((sink) => {
+    return new Observable((observer) => {
       return this.client.subscribe<FetchResult>(
         { ...operation, query: print(operation.query) },
         {
-          next: sink.next.bind(sink),
-          complete: sink.complete.bind(sink),
+          next: observer.next.bind(observer),
+          complete: observer.complete.bind(observer),
           error: (err) => {
             if (err instanceof Error) {
-              return sink.error(err);
+              return observer.error(err);
             }
 
             if (err instanceof CloseEvent) {
-              return sink.error(
+              return observer.error(
                 // reason will be available on clean closes
                 new Error(
                   `Socket closed with event ${err.code} ${err.reason || ""}`
@@ -64,7 +64,7 @@ export class GraphQLWsLink extends ApolloLink {
               );
             }
 
-            return sink.error(
+            return observer.error(
               new Error(
                 (err as GraphQLError[]).map(({ message }) => message).join(", ")
               )

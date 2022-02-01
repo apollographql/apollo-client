@@ -4,6 +4,8 @@
 
 - Tentatively reimplement `useQuery` and `useLazyQuery` to use the [proposed `useSyncExternalStore` API](https://github.com/reactwg/react-18/discussions/86) from React 18. <br/>
   [@brainkim](https://github.com/brainkim) in [#8785](https://github.com/apollographql/apollo-client/pull/8785)
+- Add `GraphQLWsLink` in `@apollo/client/ws/subscriptions`. This link is similar to the existing `WebSocketLink` in `@apollo/client/link/ws`, but uses the newer [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package and protocol instead of the older `subscriptions-transport-ws` implementation.
+  [@glasser](https://github.com/glasser) in [#9369](https://github.com/apollographql/apollo-client/pull/9369)
 
 ## Apollo Client 3.5.7 (2022-01-10)
 

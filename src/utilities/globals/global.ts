@@ -11,8 +11,10 @@ declare global {
   // codebase, even when @types/react-native is not in use.
   //
   // However, because TypeScript drops @ts-ignore comments when generating .d.ts
-  // files (https://github.com/microsoft/TypeScript/issues/38628), we have to
-  // manually post-process dist/utilities/globals/global.d.ts to add it back.
+  // files (https://github.com/microsoft/TypeScript/issues/38628), we also
+  // sanitize the dist/utilities/globals/global.d.ts file to avoid declaring
+  // __DEV__ globally altogether when @apollo/client is installed in the
+  // node_modules directory of an application.
   //
   // @ts-ignore
   const __DEV__: boolean | undefined;

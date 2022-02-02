@@ -3,30 +3,23 @@ import { EOL } from "os";
 import { distDir } from './helpers';
 
 export function applyDistSpotFixes() {
+  sanitizeDEV();
+}
+
+function sanitizeDEV() {
   const globalDTsPath = `${distDir}/utilities/globals/global.d.ts`;
   const globalDTs = fs.readFileSync(globalDTsPath, "utf8");
-  const dtsLines = globalDTs.split(EOL);
-
-  const found = dtsLines.some((line, i) => {
-    // As explained in ../src/utilities/globals/global.ts, we actually do want the
-    // @ts-ignore comment to be propagated to the .d.ts file, so it won't conflict
-    // with React Native's declaration of a global type for __DEV__.
-    if (/__DEV__/.test(line)) {
-      const prevLine = dtsLines[i - 1];
-      if (!/@ts-ignore/.test(prevLine)) {
-        const leadingSpace = /^\s*/.exec(line);
-        dtsLines.splice(i, 0, leadingSpace + "// @ts-ignore");
-      }
-      return true;
-    }
-  });
-
-  if (found) {
-    const fixed = dtsLines.join(EOL);
-    if (fixed !== globalDTs) {
-      fs.writeFileSync(globalDTsPath, fixed);
-    }
-  } else {
-    throw Error(`Could not find/fix __DEV__ type declaration in ${globalDTsPath}`);
+  // The global.d.ts types are useful within the @apollo/client codebase to
+  // provide a type for the global __DEV__ constant, but actually shipping that
+  // declaration as a globally-declared type runs too much risk of conflict with
+  // other __DEV__ declarations attempting to do achieve the same thing, most
+  // notably the one in @types/react-native/index.d.ts. We preserve the default
+  // export so that index.d.ts doesn't need to change, but otherwise we remove
+  // all traces of __DEV__ from global.d.ts.
+  if (/__DEV__/.test(globalDTs)) {
+    fs.writeFileSync(globalDTsPath, [
+      "declare const _default: typeof globalThis;",
+      "export default _default;",
+    ].join(EOL));
   }
 }

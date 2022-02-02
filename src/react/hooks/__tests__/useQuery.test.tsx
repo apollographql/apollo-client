@@ -3072,7 +3072,8 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: 'world' });
     });
 
-    it('should not refetch when skip is true', async () => {
+    // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
+    it('should refetch when skip is true', async () => {
       const query = gql`{ hello }`;
       const link = new ApolloLink(() => Observable.of({
         data: { hello: 'world' },
@@ -3099,13 +3100,18 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       await expect(waitForNextUpdate({ timeout: 20 }))
         .rejects.toThrow('Timed out');
-      result.current.refetch();
-      await expect(waitForNextUpdate({ timeout: 20 }))
-        .rejects.toThrow('Timed out');
+      const promise = result.current.refetch();
+      // TODO: Not really sure about who is causing this render.
+      await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      expect(requestSpy).toHaveBeenCalledTimes(0);
+      expect(requestSpy).toHaveBeenCalledTimes(1);
       requestSpy.mockRestore();
+      expect(promise).resolves.toEqual({
+        data: {hello: "world"},
+        loading: false,
+        networkStatus: 7,
+      });
     });
   });
 
@@ -3318,6 +3324,99 @@ describe('useQuery Hook', () => {
           ),
         },
       );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+    });
+
+    it('should not return partial cache data when `returnPartialData` is false and new variables are passed in', async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      const query = gql`
+        query MyCar($id: ID) {
+          car (id: $id) {
+            id
+            make
+          }
+        }
+      `;
+
+      const partialQuery = gql`
+        query MyCar($id: ID) {
+          car (id: $id) {
+            id
+            make
+            model
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        variables: { id: 1 },
+        data: {
+          car: {
+            __typename: 'Car',
+            id: 1,
+            make: 'Ford',
+            model: 'Pinto',
+          },
+        },
+      });
+
+      cache.writeQuery({
+        query: partialQuery,
+        variables: { id: 2 },
+        data: {
+          car: {
+            __typename: 'Car',
+            id: 2,
+            make: 'Ford',
+            model: 'Pinto',
+          },
+        },
+      });
+
+
+      let setId: any;
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [id, setId1] = React.useState(2);
+          setId = setId1;
+          return useQuery(partialQuery, {
+            variables: { id },
+            returnPartialData: false,
+            notifyOnNetworkStatusChange: true,
+          });
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        car: {
+          __typename: 'Car',
+          id: 2,
+          make: 'Ford',
+          model: 'Pinto',
+        },
+      });
+
+      setTimeout(() => {
+        setId(1);
+      });
+
+      await waitForNextUpdate();
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);

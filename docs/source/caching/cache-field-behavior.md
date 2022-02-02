@@ -322,7 +322,7 @@ query BookWithAuthorLanguages {
 }
 ```
 
-In this case, the `favoriteBook.authors` field is no longer just a single object, but an array of authors, so it's even more imporant to define a custom `merge` function to prevent loss of data by replacement:
+In this case, the `favoriteBook.authors` field is no longer just a single object, but an array of authors, so it's even more important to define a custom `merge` function to prevent loss of data by replacement:
 
 ```ts
 const cache = new InMemoryCache({

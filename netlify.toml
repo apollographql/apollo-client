@@ -1,13 +1,6 @@
 [build]
   publish = "docs/public"
-  command = "npx typedoc src/index.ts --json docs/public/docs.json"
+  command = "typedoc src/index.ts --json docs/public/docs.json"
 [build.environment]
-  NPM_VERSION = "6"
-[context.production.environment]
-  PREFIX_PATHS = "true"
-[context.branch-deploy.environment]
-  PREFIX_PATHS = "true"
-[dev]
-  command = "npm run build"
-[context.dev.environment]
-  SKIP_INDEXING = "false"
+  NODE_VERSION = "16"
+  NPM_VERSION = "8"

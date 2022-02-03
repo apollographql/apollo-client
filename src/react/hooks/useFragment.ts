@@ -26,6 +26,21 @@ extends Omit<
   optimistic?: boolean;
 }
 
+// Since the above definition of UseFragmentOptions can be hard to parse without
+// help from TypeScript/VSCode, here are the intended fields and their types.
+// Uncomment this code to check that it's consistent with the definition above.
+//
+// export interface UseFragmentOptions<TData, TVars> {
+//   from: string | StoreObject | Reference;
+//   fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+//   fragmentName?: string;
+//   optimistic?: boolean;
+//   variables?: TVars;
+//   previousResult?: any;
+//   returnPartialData?: boolean;
+//   canonizeResults?: boolean;
+// }
+
 export interface UseFragmentResult<TData> {
   data: TData | undefined;
   complete: boolean;

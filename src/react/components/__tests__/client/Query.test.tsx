@@ -1229,7 +1229,11 @@ describe('Query component', () => {
           const { variables } = this.state;
 
           return (
-            <AllPeopleQuery query={query} variables={variables}>
+            <AllPeopleQuery
+              query={query}
+              variables={variables}
+              notifyOnNetworkStatusChange={true}
+            >
               {(result: any) => {
                 try {
                   switch (count) {
@@ -1717,35 +1721,40 @@ describe('Query component', () => {
           <AllPeopleQuery
             query={query}
             variables={variables}
+            notifyOnNetworkStatusChange={true}
             onCompleted={this.onCompleted}
           >
             {({ loading, data }: any) => {
-              switch (renderCount) {
-                case 0:
-                  expect(loading).toBe(true);
-                  break;
-                case 1:
-                case 2:
-                  expect(loading).toBe(false);
-                  expect(data).toEqual(data1);
-                  break;
-                case 3:
-                  expect(loading).toBe(true);
-                  break;
-                case 4:
-                  expect(loading).toBe(false);
-                  expect(data).toEqual(data2);
-                  setTimeout(() => {
-                    this.setState({ variables: { first: 1 } });
-                  });
-                case 5:
-                  expect(loading).toBe(false);
-                  expect(data).toEqual(data2);
-                  break;
-                case 6:
-                  expect(loading).toBe(false);
-                  expect(data).toEqual(data1);
-                  break;
+              try {
+                switch (renderCount) {
+                  case 0:
+                    expect(loading).toBe(true);
+                    break;
+                  case 1:
+                  case 2:
+                    expect(loading).toBe(false);
+                    expect(data).toEqual(data1);
+                    break;
+                  case 3:
+                    expect(loading).toBe(true);
+                    break;
+                  case 4:
+                    expect(loading).toBe(false);
+                    expect(data).toEqual(data2);
+                    setTimeout(() => {
+                      this.setState({ variables: { first: 1 } });
+                    });
+                  case 5:
+                    expect(loading).toBe(false);
+                    expect(data).toEqual(data2);
+                    break;
+                  case 6:
+                    expect(loading).toBe(false);
+                    expect(data).toEqual(data1);
+                    break;
+                }
+              } catch (err) {
+                reject(err);
               }
               renderCount += 1;
               return null;
@@ -1762,6 +1771,7 @@ describe('Query component', () => {
     );
 
     waitFor(() => {
+      expect(renderCount).toBe(7);
       expect(onCompletedCallCount).toBe(3);
     }).then(resolve, reject);
   });

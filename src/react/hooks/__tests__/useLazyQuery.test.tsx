@@ -264,7 +264,7 @@ describe('useLazyQuery Hook', () => {
     setTimeout(() => execute());
 
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].loading).toBe(true);
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
 
     await waitForNextUpdate();
@@ -451,7 +451,6 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].previousData).toBe(undefined);
 
     setTimeout(() => execute({ variables: { id: 2 }}));
-
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
     expect(result.current[1].data).toBe(undefined);
@@ -532,10 +531,8 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
     const execute = result.current[0];
-    let executeResult: any;
-    setTimeout(() => {
-      executeResult = execute();
-    });
+    const mock = jest.fn();
+    setTimeout(() => mock(execute()));
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
@@ -543,7 +540,10 @@ describe('useLazyQuery Hook', () => {
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'world' });
-    await expect(executeResult).resolves.toEqual(result.current[1]);
+
+    expect(mock).toHaveBeenCalledTimes(1);
+    expect(mock.mock.calls[0][0]).toBeInstanceOf(Promise);
+    expect(await mock.mock.calls[0][0]).toEqual(result.current[1]);
   });
 
   it('should have matching results from execution function and hook', async () => {

@@ -55,7 +55,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = result[key];
-      eagerMethods[key] = (...args: any) => {
+      eagerMethods[key] = (...args: any[]) => {
         setExecution((execution) => ({ ...execution, called: true }));
         return (method as any)(...args);
       };
@@ -71,6 +71,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     QueryTuple<TData, TVariables>[0]
   >((executeOptions?: QueryLazyOptions<TVariables>) => {
     setExecution({ called: true, options: executeOptions });
+
     const promise = result.refetch(executeOptions?.variables).then((result1) => {
       const result2 = {
         ...result,

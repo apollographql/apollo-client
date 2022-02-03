@@ -635,7 +635,10 @@ describe('[queries] loading', () => {
 
     const Container = connect(
       graphql<Props, Data, Vars>(query, {
-        options: ({ first }) => ({ variables: { first } })
+        options: ({ first }) => ({
+          variables: { first },
+          notifyOnNetworkStatusChange: true,
+        })
       })(
         class extends React.Component<ChildProps<Props, Data, Vars>> {
           render() {
@@ -754,7 +757,8 @@ describe('[queries] loading', () => {
         graphql<Props, Data, Vars>(query, {
           options: ({ first }) => ({
             variables: { first },
-            fetchPolicy: 'network-only'
+            fetchPolicy: 'network-only',
+            notifyOnNetworkStatusChange: true,
           })
         })(
           class extends React.Component<ChildProps<Props, Data, Vars>> {
@@ -774,7 +778,6 @@ describe('[queries] loading', () => {
                     expect(props.data!.loading).toBeFalsy(); // has initial data
                     expect(props.data!.allPeople).toEqual(data.allPeople);
                     break;
-
                   case 3:
                     expect(props.data!.loading).toBeTruthy(); // on variables change
                     break;

@@ -1378,7 +1378,6 @@ describe('useMutation Hook', () => {
           optimisticResponse,
           update(cache) {
             const result = cache.readQuery({ query: countQuery });
-
             cache.writeQuery({
               query: countQuery,
               data: {
@@ -1412,13 +1411,7 @@ describe('useMutation Hook', () => {
         });
       });
 
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual({ todoCount: 0 });
-      expect(result.current.mutation[1].loading).toBe(true);
-      expect(result.current.mutation[1].data).toBe(undefined);
       expect(finishedReobserving).toBe(false);
-
-      await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual({ todoCount: 1 });
       expect(result.current.mutation[1].loading).toBe(true);
@@ -1569,7 +1562,7 @@ describe('useMutation Hook', () => {
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
       await waitForNextUpdate();
-      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.loading).toBe(true);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
       await waitForNextUpdate();

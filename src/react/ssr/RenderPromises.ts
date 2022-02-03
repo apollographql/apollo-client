@@ -44,21 +44,22 @@ export class RenderPromises {
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables>(
     observable: ObservableQuery<any, TVariables>,
-    props: QueryDataOptions<TData, TVariables>
+    options: QueryDataOptions<TData, TVariables>
   ) {
     if (this.stopped) return;
-    this.lookupQueryInfo(props).observable = observable;
+    this.lookupQueryInfo(options).observable = observable;
   }
 
   // Get's the cached observable that matches the SSR Query instances query and variables.
   public getSSRObservable<TData, TVariables>(
-    props: QueryDataOptions<TData, TVariables>
+    options: QueryDataOptions<TData, TVariables>
   ): ObservableQuery<any, TVariables> | null {
-    return this.lookupQueryInfo(props).observable;
+    return this.lookupQueryInfo(options).observable;
   }
 
   public addQueryPromise(
     queryInstance: QueryData,
+    // TODO: This callback is a noop on the useQuery side.
     finish: () => React.ReactNode
   ): React.ReactNode {
     if (!this.stopped) {
@@ -66,15 +67,14 @@ export class RenderPromises {
       if (!info.seen) {
         this.queryPromises.set(
           queryInstance.getOptions(),
-          new Promise(resolve => {
-            resolve(queryInstance.fetchData());
-          })
+          new Promise(resolve => resolve(queryInstance.fetchData()))
         );
         // Render null to abandon this subtree for this rendering, so that we
         // can wait for the data to arrive.
         return null;
       }
     }
+
     return finish();
   }
 

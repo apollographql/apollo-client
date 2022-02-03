@@ -446,7 +446,9 @@ describe('[queries] observableQuery', () => {
             if (count === 2) {
               expect(loading).toBe(false);
               expect(allPeople).toEqual(dataOne.allPeople);
-              refetch();
+              setTimeout(() => {
+                refetch();
+              });
             }
             if (count === 3) {
               expect(loading).toBe(false);

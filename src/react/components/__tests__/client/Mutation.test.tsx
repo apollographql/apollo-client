@@ -1021,11 +1021,7 @@ describe('General Mutation testing', () => {
       return (
         <Mutation mutation={mutation} refetchQueries={refetchQueries}>
           {(createTodo: any, resultMutation: any) => (
-            <Query
-              query={query}
-              variables={variables}
-              notifyOnNetworkStatusChange={true}
-            >
+            <Query query={query} variables={variables}>
               {(resultQuery: any) => {
                 try {
                   if (count === 0) {
@@ -1051,16 +1047,13 @@ describe('General Mutation testing', () => {
                     // mutation loading
                     expect(resultMutation.loading).toBe(true);
                   } else if (count === 6) {
-                    // mutation still loading???
-                    expect(resultMutation.loading).toBe(true);
-                  } else if (count === 7) {
-                    expect(resultQuery.loading).toBe(true);
+                    // mutation loaded
                     expect(resultMutation.loading).toBe(false);
-                  } else if (count === 8) {
+                  } else if (count === 7) {
                     // query refetched
-                    expect(resultQuery.data).toEqual(peopleData3);
                     expect(resultQuery.loading).toBe(false);
                     expect(resultMutation.loading).toBe(false);
+                    expect(resultQuery.data).toEqual(peopleData3);
                   }
                   count++;
                 } catch (err) {
@@ -1081,7 +1074,7 @@ describe('General Mutation testing', () => {
     );
 
     waitFor(() => {
-      expect(count).toBe(9);
+      expect(count).toEqual(8);
     }).then(resolve, reject);
   }));
 

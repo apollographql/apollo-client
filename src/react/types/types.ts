@@ -78,7 +78,7 @@ export interface QueryResult<TData = any, TVariables = OperationVariables>
   error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;
-  called: true;
+  called: boolean;
 }
 
 export interface QueryDataOptions<TData = any, TVariables = OperationVariables>

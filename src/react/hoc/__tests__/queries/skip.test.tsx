@@ -166,8 +166,7 @@ describe('[queries] skip', () => {
       options: ({ person }) => ({
         variables: {
           id: person!.id
-        },
-        notifyOnNetworkStatusChange: true,
+        }
       })
     })(
       class extends React.Component<ChildProps<Props, Data, Vars>> {
@@ -176,13 +175,13 @@ describe('[queries] skip', () => {
             const { props } = this;
             switch (count) {
               case 0:
-                expect(props.data!.loading).toBe(true);
-                break;
               case 1:
-                expect(props.data!.loading).toBe(false);
-                expect(props.data!.allPeople).toEqual(data.allPeople);
+                expect(props.data!.loading).toBeTruthy();
                 break;
               case 2:
+                expect(props.data!.allPeople).toEqual(data.allPeople);
+                break;
+              case 3:
                 expect(renderCount).toBe(3);
                 break;
             }
@@ -219,7 +218,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(2)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync("doesn't run options or props when skipped, including option.client", (resolve, reject) => {
@@ -664,21 +663,28 @@ describe('[queries] skip', () => {
               case 3:
                 // This render is triggered after setting skip to true. Now
                 // let's set skip to false to re-trigger the query.
-                expect(this.props.skip).toBe(true);
-                expect(this.props.data).toBeUndefined();
-                expect(ranQuery).toBe(1);
                 setTimeout(() => {
                   this.props.setSkip(false);
                 }, 10);
-                break;
+                // fallthrough
               case 4:
+                expect(this.props.skip).toBe(true);
+                expect(this.props.data).toBeUndefined();
+                expect(ranQuery).toBe(1);
+                break;
+              case 5:
                 expect(this.props.skip).toBe(false);
                 expect(this.props.data!.loading).toBe(true);
                 expect(this.props.data.allPeople).toEqual(data.allPeople);
                 expect(ranQuery).toBe(1);
                 break;
-              case 5:
+              case 6:
                 expect(this.props.skip).toBe(false);
+                expect(this.props.data!.loading).toBe(true);
+                expect(this.props.data.allPeople).toEqual(data.allPeople);
+                expect(ranQuery).toBe(2);
+                break;
+              case 7:
                 expect(this.props.data!.loading).toBe(false);
                 expect(this.props.data.allPeople).toEqual(nextData.allPeople);
                 expect(ranQuery).toBe(2);
@@ -690,13 +696,13 @@ describe('[queries] skip', () => {
                   this.props.data.refetch();
                 }, 10);
                 break;
-              case 6:
+              case 8:
                 expect(this.props.skip).toBe(false);
                 expect(this.props.data!.loading).toBe(true);
                 expect(this.props.data.allPeople).toEqual(nextData.allPeople);
                 expect(ranQuery).toBe(3);
                 break;
-              case 7:
+              case 9:
                 // The next batch of data has loaded.
                 expect(this.props.skip).toBe(false);
                 expect(this.props.data!.loading).toBe(false);
@@ -733,7 +739,7 @@ describe('[queries] skip', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toEqual(7)).then(resolve, reject);
+    waitFor(() => expect(count).toEqual(9)).then(resolve, reject);
   }));
 
   it('removes the injected props if skip becomes true', async () => {

@@ -10,6 +10,8 @@ import {
 } from "../../cache";
 
 import { useApolloClient } from "./useApolloClient";
+import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { DocumentNode } from "graphql";
 
 export interface UseFragmentOptions<TData, TVars>
 extends Omit<
@@ -24,6 +26,17 @@ extends Omit<
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
+}
+
+export interface UseFragmentOptions<TData, TVars> {
+  from: string | StoreObject | Reference;
+  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+  fragmentName?: string;
+  optimistic?: boolean;
+  variables?: TVars;
+  previousResult?: any;
+  returnPartialData?: boolean;
+  canonizeResults?: boolean;
 }
 
 export interface UseFragmentResult<TData> {

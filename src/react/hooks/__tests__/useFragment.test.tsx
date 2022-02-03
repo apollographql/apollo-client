@@ -19,11 +19,14 @@ describe("useFragment", () => {
     text?: string;
   };
 
-  const ListFragment: TypedDocumentNode<QueryData> = gql`
+  const ListFragment: TypedDocumentNode<QueryDataWithExtra> = gql`
     fragment ListFragment on Query {
       list {
         id
       }
+      # Used to make sure ListFragment got used, even if the id field of the
+      # nested list items is provided by other means.
+      extra
     }
   `;
 
@@ -33,9 +36,13 @@ describe("useFragment", () => {
     }
   `;
 
-  type QueryData = {
+  interface QueryData {
     list: Item[];
-  };
+  }
+
+  interface QueryDataWithExtra extends QueryData {
+    extra: string;
+  }
 
   it("can rerender individual list elements", async () => {
     const cache = new InMemoryCache({
@@ -300,10 +307,10 @@ describe("useFragment", () => {
       },
     });
 
-    const listQuery: TypedDocumentNode<QueryData> = gql`
+    const listQuery: TypedDocumentNode<QueryDataWithExtra> = gql`
       query {
+        ...ListFragment
         list {
-          ...ListFragment
           ...ItemFragment
         }
       }
@@ -319,6 +326,7 @@ describe("useFragment", () => {
           { __typename: "Item", id: 2 },
           { __typename: "Item", id: 5 },
         ],
+        extra: "from ListFragment",
       },
     })
 
@@ -528,6 +536,7 @@ describe("useFragment", () => {
           { __ref: "Item:4" },
           { __ref: "Item:5" },
         ],
+        extra: "from ListFragment",
       },
       __META: {
         extraRootIds: [

@@ -1,7 +1,6 @@
 [build]
-  base    = "docs"
   publish = "docs/public"
-  command = "cd .. && npm i && npm run build && cd docs && npm i && npm run types && gatsby build"
+  command = "npx typedoc src/index.ts --json docs/public/docs.json"
 [build.environment]
   NPM_VERSION = "6"
 [context.production.environment]

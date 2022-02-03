@@ -1,4 +1,3 @@
-/** @jest-environment node */
 import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';

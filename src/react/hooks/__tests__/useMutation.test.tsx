@@ -272,6 +272,49 @@ describe('useMutation Hook', () => {
         expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
       });
 
+      it('should reject when there’s only an error and no error policy is set', async () => {
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables,
+            },
+            result: {
+              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            },
+          }
+        ];
+
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
+        );
+
+        const createTodo = result.current[0];
+        let fetchError: any;
+        await act(async () => {
+          // need to call createTodo this way to get “act” warnings to go away.
+          try {
+            await createTodo({ variables });
+          } catch (err) {
+            fetchError = err;
+            return;
+          }
+
+          throw new Error("function did not error");
+        });
+
+        expect(fetchError).toEqual(new GraphQLError(CREATE_TODO_ERROR));
+      });
+
       it(`should reject when errorPolicy is 'none'`, async () => {
         const variables = {
           description: 'Get milk!'
@@ -341,7 +384,47 @@ describe('useMutation Hook', () => {
 
         expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
         expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
-      })
+      });
+
+      it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
+        const errorMock = jest.spyOn(console, "error")
+          .mockImplementation(() => {});
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables,
+            },
+            result: {
+              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            },
+          }
+        ];
+
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "ignore" }),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
+        );
+
+        const createTodo = result.current[0];
+        let fetchResult: any;
+        await act(async () => {
+          fetchResult = await createTodo({ variables });
+        });
+
+        expect(fetchResult).toEqual({});
+        expect(errorMock).toHaveBeenCalledTimes(1);
+        expect(errorMock.mock.calls[0][0]).toMatch("Missing field");
+        errorMock.mockRestore();
+      });
     });
 
     it('should return the current client instance in the result object', async () => {
@@ -1295,6 +1378,7 @@ describe('useMutation Hook', () => {
           optimisticResponse,
           update(cache) {
             const result = cache.readQuery({ query: countQuery });
+
             cache.writeQuery({
               query: countQuery,
               data: {
@@ -1328,7 +1412,13 @@ describe('useMutation Hook', () => {
         });
       });
 
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.data).toEqual({ todoCount: 0 });
+      expect(result.current.mutation[1].loading).toBe(true);
+      expect(result.current.mutation[1].data).toBe(undefined);
       expect(finishedReobserving).toBe(false);
+
+      await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual({ todoCount: 1 });
       expect(result.current.mutation[1].loading).toBe(true);
@@ -1479,7 +1569,7 @@ describe('useMutation Hook', () => {
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
       await waitForNextUpdate();
-      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
       await waitForNextUpdate();

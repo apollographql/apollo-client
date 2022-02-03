@@ -40,7 +40,7 @@ describe('useLazyQuery Hook SSR', () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      ssrMode: true,
+      ssrMode: true
     });
 
     const Component = () => {

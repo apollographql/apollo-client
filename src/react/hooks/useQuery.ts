@@ -1,5 +1,4 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { equal } from '@wry/equality';
 import { OperationVariables, mergeOptions } from '../../core';
 import { getApolloContext } from '../context';
@@ -31,14 +30,6 @@ export function useQuery<
   const client = useApolloClient(options?.client);
   const defaultWatchQueryOptions = client.defaultOptions.watchQuery;
   verifyDocumentType(query, DocumentType.Query);
-
-  const ref = useRef({
-    client,
-    query,
-    options,
-    watchQueryOptions: createWatchQueryOptions(query, options, defaultWatchQueryOptions),
-  });
-
   const [obsQuery, setObsQuery] = useState(() => {
     const watchQueryOptions = createWatchQueryOptions(query, options, defaultWatchQueryOptions);
     // See if there is an existing observable that was used to fetch the same
@@ -85,7 +76,6 @@ export function useQuery<
                 sub.unsubscribe();
               },
               complete() {
-                // TODO: Does this branch ever get called before next() and error()?
                 resolve();
               },
             });
@@ -99,127 +89,142 @@ export function useQuery<
     return obsQuery;
   });
 
+  let [result, setResult] = useState(() => {
+    const result = obsQuery.getCurrentResult();
+    if (!result.loading && options) {
+      if (result.error) {
+        options.onError?.(result.error);
+      } else if (result.data) {
+        options.onCompleted?.(result.data);
+      }
+    }
+
+    return result;
+  });
+
+  const ref = useRef({
+    client,
+    query,
+    options,
+    result,
+    previousData: void 0 as TData | undefined,
+    watchQueryOptions: createWatchQueryOptions(query, options, defaultWatchQueryOptions),
+  });
+
   // An effect to recreate the obsQuery whenever the client or query changes.
-  // This effect is also responsible for updating the obsQuery options whenever
-  // they change.
+  // This effect is also responsible for checking and updating the obsQuery
+  // options whenever they change.
   useEffect(() => {
     const watchQueryOptions = createWatchQueryOptions(query, options, defaultWatchQueryOptions);
-
+    let nextResult: ApolloQueryResult<TData> | undefined;
     if (ref.current.client !== client || !equal(ref.current.query, query)) {
       const obsQuery = client.watchQuery(watchQueryOptions);
       setObsQuery(obsQuery);
+      nextResult = obsQuery.getCurrentResult();
     } else if (!equal(ref.current.watchQueryOptions, watchQueryOptions)) {
-      obsQuery.setOptions(watchQueryOptions);
-      // We call setObsQuery to rerender the hook.
-      setObsQuery(obsQuery);
+      obsQuery.setOptions(watchQueryOptions).catch(() => {});
+      nextResult = obsQuery.getCurrentResult();
+      ref.current.watchQueryOptions = watchQueryOptions;
     }
 
-    Object.assign(ref.current, {
-      client,
-      query,
-      options,
-      watchQueryOptions,
-    });
+    if (nextResult) {
+      const previousResult = ref.current.result;
+      if (previousResult.data) {
+        ref.current.previousData = previousResult.data;
+      }
+
+      setResult(ref.current.result = nextResult);
+      if (!nextResult.loading && options) {
+        if (nextResult.error) {
+          options.onError?.(nextResult.error);
+        } else if (nextResult.data) {
+          options.onCompleted?.(nextResult.data);
+        }
+      }
+    }
+
+    Object.assign(ref.current, { client, query });
   }, [obsQuery, client, query, options]);
 
-  const [subscribe, getSnapshot] = useMemo(() => {
-    let previousResult: ApolloQueryResult<TData> | undefined;
-    const subscribe = (forceUpdate: () => void) => {
-      let subscription = obsQuery.subscribe(forceUpdate, onError);
-      function onError(error: Error) {
-        forceUpdate();
-        subscription.unsubscribe();
-        const last = obsQuery["last"];
-        obsQuery.resetLastResults();
-        obsQuery.subscribe(forceUpdate, onError);
-        obsQuery["last"] = last;
-        if (!error.hasOwnProperty('graphQLErrors')) {
-          // The error is not a GraphQL error
-          throw error;
-        }
-      }
+  // An effect to subscribe to the current observable query
+  useEffect(() => {
+    if (context.renderPromises) {
+      return;
+    }
 
-      return () => {
-        subscription.unsubscribe();
-      };
-    };
-
-    const getSnapshot = () => {
-      let result = obsQuery.getCurrentResult();
-      if (result.errors && result.errors.length) {
-        // Until a set naming convention for networkError and graphQLErrors is
-        // decided upon, we map errors (graphQLErrors) to the error options.
-        // TODO: Is it possible for both result.error and result.errors to be
-        // defined here?
-        result = {
-          ...result,
-          error:
-            result.error || new ApolloError({ graphQLErrors: result.errors }),
-        };
-      }
-
+    let subscription = obsQuery.subscribe(onNext, onError);
+    // We use `getCurrentResult()` instead of the callback argument because
+    // the values differ slightly. Specifically, loading results will have
+    // an empty object for data instead of `undefined` for some reason.
+    function onNext() {
+      const previousResult = ref.current.result;
+      const result = obsQuery.getCurrentResult();
+      // Make sure we're not attempting to re-render similar results
       if (
-        !previousResult ||
-        previousResult.loading !== result.loading ||
-        previousResult.networkStatus !== result.networkStatus ||
-        !equal(previousResult.data, result.data) ||
-        !equal(previousResult.error, result.error)
+        previousResult &&
+        previousResult.loading === result.loading &&
+        previousResult.networkStatus === result.networkStatus &&
+        equal(previousResult.data, result.data)
       ) {
-        if (previousResult) {
-          result = {
-            ...result,
-            previousData: previousResult.data || (previousResult as any).previousData,
-          } as ApolloQueryResult<TData>;
-        }
-
-        previousResult = result;
-
-        if (!result.loading) {
-          if (result.data) {
-            ref.current.options?.onCompleted?.(result.data);
-          } else if (result.error) {
-            ref.current.options?.onError?.(result.error);
-          }
-        }
+        return;
       }
 
-      return previousResult;
-    };
+      if (previousResult.data) {
+        ref.current.previousData = previousResult.data;
+      }
 
-    return [subscribe, getSnapshot];
-  }, [obsQuery]);
+      setResult(ref.current.result = result);
+      if (!result.loading) {
+        ref.current.options?.onCompleted?.(result.data);
+      }
+    }
 
-  const obsQueryMethods = useMemo(() => ({
-    refetch: obsQuery.refetch.bind(obsQuery),
-    fetchMore: obsQuery.fetchMore.bind(obsQuery),
-    updateQuery: obsQuery.updateQuery.bind(obsQuery),
-    startPolling: obsQuery.startPolling.bind(obsQuery),
-    stopPolling: obsQuery.stopPolling.bind(obsQuery),
-    subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
-  }), [obsQuery]);
+    function onError(error: Error) {
+      const last = obsQuery["last"];
+      subscription.unsubscribe();
+      // Unfortunately, if `lastError` is set in the current
+      // `observableQuery` when the subscription is re-created,
+      // the subscription will immediately receive the error, which will
+      // cause it to terminate again. To avoid this, we first clear
+      // the last error/result from the `observableQuery` before re-starting
+      // the subscription, and restore it afterwards (so the subscription
+      // has a chance to stay open).
+      try {
+        obsQuery.resetLastResults();
+        subscription = obsQuery.subscribe(onNext, onError);
+      } finally {
+        obsQuery["last"] = last;
+      }
 
-  let result = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+      if (!error.hasOwnProperty('graphQLErrors')) {
+        // The error is not a GraphQL error
+        throw error;
+      }
+
+      const previousResult = ref.current.result;
+      if (
+        (previousResult && previousResult.loading) ||
+        !equal(error, previousResult.error)
+      ) {
+        setResult(ref.current.result = {
+          data: previousResult.data,
+          error: error as ApolloError,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+        });
+        ref.current.options?.onError?.(error as ApolloError);
+      }
+    }
+
+    return () => subscription.unsubscribe();
+  }, [obsQuery, context.renderPromises, client.disableNetworkFetches]);
+
   let partial: boolean | undefined;
   ({ partial, ...result } = result);
-  if (options?.skip || options?.fetchPolicy === 'standby') {
-    // When skipping a query (ie. we're not querying for data but still want to
-    // render children), make sure the `data` is cleared out and `loading` is
-    // set to `false` (since we aren't loading anything).
-    //
-    // NOTE: We no longer think this is the correct behavior. Skipping should
-    // not automatically set `data` to `undefined`, but instead leave the
-    // previous data in place. In other words, skipping should not mandate that
-    // previously received data is all of a sudden removed. Unfortunately,
-    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-    // to address this.
-    result = {
-      loading: false,
-      data: void 0 as unknown as TData,
-      error: void 0,
-      networkStatus: NetworkStatus.ready,
-    };
-  } else {
+
+  {
     // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION
+    //
     // TODO: This code should be removed when the partialRefetch option is
     // removed. I was unable to get this hook to behave reasonably in certain
     // edge cases when this block was put in an effect.
@@ -247,22 +252,71 @@ export function useQuery<
       !options?.skip &&
       result.loading
     ) {
-      obsQuery.setOptions(
-        createWatchQueryOptions(query, options, defaultWatchQueryOptions)
-      ).catch(() => {});
+      obsQuery.setOptions(createWatchQueryOptions(query, options, defaultWatchQueryOptions)).catch(() => {});
     }
 
     // We assign options during rendering as a guard to make sure that
     // callbacks like onCompleted and onError are not stale.
-    // TODO
     Object.assign(ref.current, { options });
   }
 
+  if (
+    (context.renderPromises || client.disableNetworkFetches) &&
+    options?.ssr === false
+  ) {
+    // If SSR has been explicitly disabled, and this function has been called
+    // on the server side, return the default loading state.
+    result = ref.current.result = {
+      loading: true,
+      data: void 0 as unknown as TData,
+      error: void 0,
+      networkStatus: NetworkStatus.loading,
+    };
+  } else if (options?.skip || options?.fetchPolicy === 'standby') {
+    // When skipping a query (ie. we're not querying for data but still want to
+    // render children), make sure the `data` is cleared out and `loading` is
+    // set to `false` (since we aren't loading anything).
+    //
+    // NOTE: We no longer think this is the correct behavior. Skipping should
+    // not automatically set `data` to `undefined`, but instead leave the
+    // previous data in place. In other words, skipping should not mandate that
+    // previously received data is all of a sudden removed. Unfortunately,
+    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+    // to address this.
+    result = {
+      loading: false,
+      data: void 0 as unknown as TData,
+      error: void 0,
+      networkStatus: NetworkStatus.ready,
+    };
+  }
+
+  if (result.errors && result.errors.length) {
+    // Until a set naming convention for networkError and graphQLErrors is
+    // decided upon, we map errors (graphQLErrors) to the error options.
+    // TODO: Is it possible for both result.error and result.errors to be
+    // defined here?
+    result = {
+      ...result,
+      error: result.error || new ApolloError({ graphQLErrors: result.errors }),
+    };
+  }
+
+  const obsQueryFields = useMemo(() => ({
+    refetch: obsQuery.refetch.bind(obsQuery),
+    fetchMore: obsQuery.fetchMore.bind(obsQuery),
+    updateQuery: obsQuery.updateQuery.bind(obsQuery),
+    startPolling: obsQuery.startPolling.bind(obsQuery),
+    stopPolling: obsQuery.stopPolling.bind(obsQuery),
+    subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
+  }), [obsQuery]);
+
   return {
-    ...obsQueryMethods,
+    ...obsQueryFields,
     variables: createWatchQueryOptions(query, options, defaultWatchQueryOptions).variables,
     client,
     called: true,
+    previousData: ref.current.previousData,
     ...result,
   };
 }
@@ -275,7 +329,9 @@ function createWatchQueryOptions<TData, TVariables>(
   options: QueryHookOptions<TData, TVariables> = {},
   defaultOptions?: Partial<WatchQueryOptions<any, any>>
 ): WatchQueryOptions<TVariables, TData> {
-  // Using destructuring to remove hook specific options.
+  // TODO: For some reason, we pass context, which is the React Apollo Context,
+  // into observable queries, and test for that.
+  // removing hook specific options
   const {
     skip,
     ssr,
@@ -284,8 +340,6 @@ function createWatchQueryOptions<TData, TVariables>(
     displayName,
     ...otherOptions
   } = options;
-  // TODO: For some reason, we pass context, which is the React Apollo Context,
-  // into observable queries, and test for that.
 
   let watchQueryOptions = { query, ...otherOptions };
   if (defaultOptions) {

@@ -2,5 +2,4 @@
   publish = "docs/public"
   command = "typedoc src/index.ts --json docs/public/docs.json"
 [build.environment]
-  NODE_VERSION = "16"
-  NPM_VERSION = "8"
+  NPM_VERSION = "7"

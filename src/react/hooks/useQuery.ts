@@ -222,6 +222,7 @@ export function useQuery<
   }, [obsQuery, context.renderPromises, client.disableNetworkFetches]);
 
   const partial: boolean | undefined = result.partial;
+  delete result.partial
 
   {
     // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION

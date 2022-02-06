@@ -29,9 +29,12 @@ export function useQuery<
   const context = useContext(getApolloContext());
   const client = useApolloClient(options?.client);
   const defaultWatchQueryOptions = client.defaultOptions.watchQuery;
+  const watchQueryOptions = useMemo(
+    () => createWatchQueryOptions(query, options, defaultWatchQueryOptions),
+    [query, options, defaultWatchQueryOptions]
+  )
   verifyDocumentType(query, DocumentType.Query);
   const [obsQuery, setObsQuery] = useState(() => {
-    const watchQueryOptions = createWatchQueryOptions(query, options, defaultWatchQueryOptions);
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
@@ -62,7 +65,7 @@ export function useQuery<
         {
           // The only options which seem to actually be used by the
           // RenderPromises class are query and variables.
-          getOptions: () => createWatchQueryOptions(query, options, defaultWatchQueryOptions),
+          getOptions: () => watchQueryOptions,
           fetchData: () => new Promise<void>((resolve) => {
             const sub = obsQuery!.subscribe({
               next(result) {
@@ -108,14 +111,13 @@ export function useQuery<
     options,
     result,
     previousData: void 0 as TData | undefined,
-    watchQueryOptions: createWatchQueryOptions(query, options, defaultWatchQueryOptions),
+    watchQueryOptions,
   });
 
   // An effect to recreate the obsQuery whenever the client or query changes.
   // This effect is also responsible for checking and updating the obsQuery
   // options whenever they change.
   useEffect(() => {
-    const watchQueryOptions = createWatchQueryOptions(query, options, defaultWatchQueryOptions);
     let nextResult: ApolloQueryResult<TData> | undefined;
     if (ref.current.client !== client || !equal(ref.current.query, query)) {
       const obsQuery = client.watchQuery(watchQueryOptions);
@@ -219,8 +221,7 @@ export function useQuery<
     return () => subscription.unsubscribe();
   }, [obsQuery, context.renderPromises, client.disableNetworkFetches]);
 
-  let partial: boolean | undefined;
-  ({ partial, ...result } = result);
+  const partial: boolean | undefined = result.partial;
 
   {
     // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION
@@ -252,7 +253,7 @@ export function useQuery<
       !options?.skip &&
       result.loading
     ) {
-      obsQuery.setOptions(createWatchQueryOptions(query, options, defaultWatchQueryOptions)).catch(() => {});
+      obsQuery.setOptions(watchQueryOptions).catch(() => {});
     }
 
     // We assign options during rendering as a guard to make sure that
@@ -311,14 +312,15 @@ export function useQuery<
     subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
   }), [obsQuery]);
 
-  return {
+  return useMemo(() => ({
     ...obsQueryFields,
-    variables: createWatchQueryOptions(query, options, defaultWatchQueryOptions).variables,
+    variables: watchQueryOptions.variables,
     client,
     called: true,
     previousData: ref.current.previousData,
     ...result,
-  };
+  }), [obsQueryFields, watchQueryOptions.variables, client, ref.current.previousData, result]);
+
 }
 
 /**

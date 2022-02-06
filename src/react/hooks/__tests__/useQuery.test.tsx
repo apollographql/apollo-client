@@ -27,7 +27,7 @@ describe('useQuery Hook', () => {
 
       useEffect(() => {
         /**
-         * Since the return value from useQuery changes on each render,
+         * IF the return value from useQuery changes on each render,
          * this component will re-render in an infinite loop.
          */
          console.log('CURRENT RESULT CHANGED')
@@ -39,6 +39,48 @@ describe('useQuery Hook', () => {
       if (result.loading) return null
 
       return <div>{result.data.hello}{counter}</div>
+    }
+
+    itAsync('should handle a simple query', (resolve, reject) => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const { getByText } = render(
+        <MockedProvider mocks={mocks}>
+          <Component query={query} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(getByText('world2')).toBeTruthy();
+      }).then(resolve, reject);
+    });
+  })
+
+  describe('regression test issue #9204 - destructured', () => {
+    const Component = ({ query }: any) => {
+      const [counter, setCounter] = useState(0)
+      const {data, loading} = useQuery(query)
+
+      useEffect(() => {
+        /**
+         * IF the return value from useQuery changes on each render,
+         * this component will re-render in an infinite loop.
+         */
+         console.log('CURRENT RESULT CHANGED')
+        setCounter(p => p + 1)
+      }, [
+        data
+      ])
+
+      if (loading) return null
+
+      return <div>{data.hello}{counter}</div>
     }
 
     itAsync('should handle a simple query', (resolve, reject) => {

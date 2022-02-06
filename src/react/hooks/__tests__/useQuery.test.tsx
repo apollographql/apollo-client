@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
@@ -20,6 +20,48 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
+  describe('regression test issue #9204', () => {
+    const Component = ({ query }: any) => {
+      const [counter, setCounter] = useState(0)
+      const result = useQuery(query)
+
+      useEffect(() => {
+        /**
+         * Since the return value from useQuery changes on each render,
+         * this component will re-render in an infinite loop.
+         */
+         console.log('CURRENT RESULT CHANGED')
+        setCounter(p => p + 1)
+      }, [
+        result
+      ])
+
+      if (result.loading) return null
+
+      return <div>{result.data.hello}{counter}</div>
+    }
+
+    itAsync('should handle a simple query', (resolve, reject) => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const { getByText } = render(
+        <MockedProvider mocks={mocks}>
+          <Component query={query} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(getByText('world2')).toBeTruthy();
+      }).then(resolve, reject);
+    });
+  })
+
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;

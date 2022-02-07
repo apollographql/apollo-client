@@ -14,12 +14,14 @@ import {
   ObservableSubscription,
   compact,
 } from '../../utilities';
+import { NetworkError } from '../../errors';
+import { ServerError } from '../utils';
 
 export const VERSION = 1;
 
 export interface ErrorResponse {
   graphQLErrors?: readonly GraphQLError[];
-  networkError?: Error;
+  networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;
 }
@@ -56,6 +58,15 @@ const defaultOptions = {
       )
     ) {
       return true;
+    }
+
+    if (
+      graphQLErrors &&
+      graphQLErrors.some(
+        ({ message }) => message === 'PersistedQueryNotFound',
+      )
+    ) {
+      return false;
     }
 
     const { response } = operation.getContext();
@@ -158,17 +169,19 @@ export const createPersistedQueryLink = (
         {
           response,
           networkError,
-        }: { response?: ExecutionResult; networkError?: Error },
+        }: { response?: ExecutionResult; networkError?: ServerError },
         cb: () => void,
       ) => {
         if (!retried && ((response && response.errors) || networkError)) {
           retried = true;
+          // Network errors can return GraphQL errors on for example a 403
+          const graphQLErrors = response ? response.errors : networkError && networkError.result && networkError.result.errors;
 
           const disablePayload = {
             response,
             networkError,
             operation,
-            graphQLErrors: response ? response.errors : undefined,
+            graphQLErrors,
           };
 
           // if the server doesn't support persisted queries, don't try anymore
@@ -176,9 +189,7 @@ export const createPersistedQueryLink = (
 
           // if its not found, we can try it again, otherwise just report the error
           if (
-            (response &&
-              response.errors &&
-              response.errors.some(
+            (graphQLErrors && graphQLErrors.some(
                 ({ message }: { message: string }) =>
                   message === 'PersistedQueryNotFound',
               )) ||
@@ -213,7 +224,7 @@ export const createPersistedQueryLink = (
         next: (response: ExecutionResult) => {
           retry({ response }, () => observer.next!(response));
         },
-        error: (networkError: Error) => {
+        error: (networkError: ServerError) => {
           retry({ networkError }, () => observer.error!(networkError));
         },
         complete: observer.complete!.bind(observer),

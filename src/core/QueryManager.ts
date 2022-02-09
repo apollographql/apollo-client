@@ -32,7 +32,6 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  WatchQueryFetchPolicy,
   ErrorPolicy,
   MutationFetchPolicy,
 } from './watchQueryOptions';
@@ -78,9 +77,13 @@ interface TransformCacheEntry {
   asQuery: DocumentNode;
 }
 
+type DefaultOptions = import("./ApolloClient").DefaultOptions;
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
+  public defaultOptions: DefaultOptions;
+
   public readonly assumeImmutableResults: boolean;
   public readonly ssrMode: boolean;
 
@@ -104,6 +107,7 @@ export class QueryManager<TStore> {
   constructor({
     cache,
     link,
+    defaultOptions,
     queryDeduplication = false,
     onBroadcast,
     ssrMode = false,
@@ -113,6 +117,7 @@ export class QueryManager<TStore> {
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
+    defaultOptions?: DefaultOptions;
     queryDeduplication?: boolean;
     onBroadcast?: () => void;
     ssrMode?: boolean;
@@ -122,6 +127,7 @@ export class QueryManager<TStore> {
   }) {
     this.cache = cache;
     this.link = link;
+    this.defaultOptions = defaultOptions || Object.create(null);
     this.queryDeduplication = queryDeduplication;
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache });
@@ -165,8 +171,8 @@ export class QueryManager<TStore> {
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
     onQueryUpdated,
-    errorPolicy = 'none',
-    fetchPolicy = 'network-only',
+    fetchPolicy = this.defaultOptions.mutate?.fetchPolicy || "network-only",
+    errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>> {
@@ -1089,9 +1095,10 @@ export class QueryManager<TStore> {
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 
+    const defaults = this.defaultOptions.watchQuery;
     let {
-      fetchPolicy = "cache-first" as WatchQueryFetchPolicy,
-      errorPolicy = "none" as ErrorPolicy,
+      fetchPolicy = defaults && defaults.fetchPolicy || "cache-first",
+      errorPolicy = defaults && defaults.errorPolicy || "none",
       returnPartialData = false,
       notifyOnNetworkStatusChange = false,
       context = {},

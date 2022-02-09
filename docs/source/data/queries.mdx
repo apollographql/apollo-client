@@ -22,7 +22,7 @@ The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the pr
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
-```tsx:title=index.js
+```tsx title="index.js"
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
@@ -37,7 +37,7 @@ const GET_DOGS = gql`
 
 Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS` query to the `useQuery` hook:
 
-```tsx:title=index.js
+```tsx title="index.js"
 function Dogs({ onDogSelected }) {
   const { loading, error, data } = useQuery(GET_DOGS);
 
@@ -71,7 +71,7 @@ Whenever Apollo Client fetches query results from your server, it automatically 
 
 To see this caching in action, let's build a new component called `DogPhoto`. `DogPhoto` accepts a prop called `breed` that reflects the current value of the dropdown menu in our `Dogs` component:
 
-```jsx:title=index.js
+```jsx title="index.js"
 const GET_DOG_PHOTO = gql`
   query Dog($breed: String!) {
     dog(breed: $breed) {
@@ -109,7 +109,7 @@ Sometimes, you want to make sure that your query's cached data is up to date wit
 
 Polling provides near-real-time synchronization with your server by executing your query periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
 
-```jsx{4}:title=index.js
+```jsx title="index.js" {4}
 function DogPhoto({ breed }) {
   const { loading, error, data } = useQuery(GET_DOG_PHOTO, {
     variables: { breed },
@@ -141,7 +141,7 @@ You can optionally provide a new `variables` object to
 the `refetch` function. If you don't (as is the case in the following example),
 the query uses the same variables that it used in its previous execution.
 
-```jsx{2,12}:title=index.js
+```jsx {2,12} title="index.js"
 function DogPhoto({ breed }) {
   const { loading, error, data, refetch } = useQuery(GET_DOG_PHOTO, {
     variables: { breed }
@@ -182,7 +182,7 @@ Let's return to our refetching example from the previous section. If you click t
 The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
 of this information, we set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
 
-```jsx{4,8,12}:title=index.js
+```jsx title="index.js" {4,8,12}
 import { NetworkStatus } from '@apollo/client';
 
 function DogPhoto({ breed }) {
@@ -230,7 +230,7 @@ The `useLazyQuery` hook is perfect for executing queries in response to events b
 
 Here's an example:
 
-```jsx{2,5,13}:title=index.js
+```jsx {2,5,13} title="index.js"
 import React from 'react';
 import { useLazyQuery } from '@apollo/client';
 
@@ -263,7 +263,7 @@ By default, the `useQuery` hook checks the Apollo Client cache to see if all the
 
 You can specify a different fetch policy for a given query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
 
-```js{2}
+```js {2}
 const { loading, error, data } = useQuery(GET_DOGS, {
   fetchPolicy: "network-only" // Doesn't check cache before making a network request
 });
@@ -273,7 +273,7 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 
 You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used to determine how the query responds to future cache updates:
 
-```js{3}
+```js {3}
 const { loading, error, data } = useQuery(GET_DOGS, {
   fetchPolicy: "network-only",   // Used for first execution
   nextFetchPolicy: "cache-first" // Used for subsequent executions

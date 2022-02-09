@@ -26,7 +26,7 @@ You can read and write cache data using GraphQL queries that are similar (or eve
 
 The `readQuery` method enables you to execute a GraphQL query directly on your cache, like so:
 
-```js{12-17}
+```js {12-17}
 const READ_TODO = gql`
   query ReadTodo($id: ID!) {
     todo(id: $id) {
@@ -110,7 +110,7 @@ Note the following about `writeQuery`:
 
 In the example above, if your cache _already_ contains a `Todo` object with ID `5`, `writeQuery` overwrites the fields that are included in `data` (other fields are preserved):
 
-```js{6-7,17-18}
+```js {6-7,17-18}
 // BEFORE
 {
   'Todo:5': {
@@ -233,7 +233,7 @@ client.writeQuery({
 
 As a convenience, you can use `cache.updateQuery` or `cache.updateFragment` to combine reading and writing cached data with a single method call:
 
-```js{12-17}
+```js {12-17}
 // Query to fetch all todo items
 const query = gql`
   query MyTodoAppQuery {
@@ -479,7 +479,7 @@ If a type in your cache uses a [custom cache ID](./cache-configuration/#customiz
 
 Let's say we have a JavaScript representation of a cached GraphQL object, like this:
 
-```js{3}
+```js {3}
 const invisibleManBook = {
   __typename: 'Book',
   isbn: '9780679601395', // The key field for this type's cache ID
@@ -495,7 +495,7 @@ If we want to interact with this object in our cache with methods like [`writeFr
 
 Instead of needing to look up that our `Book` type uses the `isbn` field for its cache ID, we can use the `cache.identify` method, like so:
 
-```js{8}
+```js {8}
 const bookYearFragment = gql`
   fragment BookYear on Book {
     publicationYear

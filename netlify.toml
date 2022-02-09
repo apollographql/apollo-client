@@ -1,5 +1,5 @@
 [build]
   publish = "docs/public"
-  command = "typedoc src/index.ts --json docs/public/docs.json"
+  command = "npx typedoc src/index.ts --json docs/public/docs.json"
 [build.environment]
   NPM_VERSION = "7"

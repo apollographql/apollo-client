@@ -104,7 +104,7 @@ Apollo Client supports the following error policies for an operation:
 
 Specify an error policy in the options object you provide your operation hook (such as `useQuery`), like so:
 
-```tsx{9}
+```tsx {9}
 const MY_QUERY = gql`
   query WillFail {
     badField # This field's resolver produces an error
@@ -162,7 +162,7 @@ The `onError` link can retry a failed operation based on the type of GraphQL err
 
 To retry an operation, you `return forward(operation)` in your `onError` function. Here's an example:
 
-```js{18}
+```js {18}
 onError(({ graphQLErrors, networkError, operation, forward }) => {
   if (graphQLErrors) {
     for (let err of graphQLErrors) {

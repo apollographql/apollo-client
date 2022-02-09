@@ -7,7 +7,7 @@ If your GraphQL server doesn't yet support a field that your client will use, yo
 
 For example, let's say we want to add a feature to the Space Explorer app from [the Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/). Specifically, we want to display a description of the rocket used for each launch. To support this functionality on the server side, we'll add a `description` field to our schema's `Rocket` type:
 
-```graphql{5}
+```graphql {5}
 type Rocket {
   id: ID!
   name: String
@@ -26,7 +26,7 @@ Our client application can define a [client-side schema](../local-state/client-s
 
 This client-side schema extends the `Rocket` type to add a `description` field (make sure to name the variable `typeDefs` as shown):
 
-```js:title=index.js
+```js title="index.js"
 const typeDefs = gql`
   extend type Rocket {
     description: String
@@ -36,7 +36,7 @@ const typeDefs = gql`
 
 We can then provide this schema to the `ApolloClient` constructor, like so:
 
-```js{4}:title=index.js
+```js {4} title="index.js"
 const client = new ApolloClient({
   uri: 'http://localhost:4000/graphql',
   cache: new InMemoryCache(),
@@ -50,7 +50,7 @@ Our client app doesn't yet know how to populate the `Rocket.description` field. 
 
 Let's define our `read` function in the configuration object we provide to the `InMemoryCache` constructor:
 
-```js{5-9}:title=index.js
+```js {5-9} title="index.js"
 const cache = new InMemoryCache({
   typePolicies: {
     Rocket: {
@@ -68,7 +68,7 @@ const cache = new InMemoryCache({
 
 This enables us to query the field, but we might not want to show the same boilerplate description for every rocket. To add variety to our mocked output, we can use a library like [faker.js](https://github.com/marak/Faker.js/):
 
-```js:title=index.js
+```js title="index.js"
 import faker from "faker/locale/en";
 
 // Returns 1 or 2 sentences of Lorem Ipsum
@@ -91,7 +91,7 @@ read() {
 
 We're ready to execute a query that includes our new field. Here's an abridged `GET_LAUNCH_DETAILS` query from the [Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/queries/#display-a-single-launchs-details) with our `description` field added:
 
-```jsx{7}
+```jsx {7}
 export const GET_LAUNCH_DETAILS = gql`
   query LaunchDetails($launchId: ID!) {
     launch(id: $launchId) {

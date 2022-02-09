@@ -86,7 +86,7 @@ npm install subscriptions-transport-ws
 
 Import and initialize a `WebSocketLink` object in the same project file where you initialize `ApolloClient`:
 
-```js:title=index.js
+```js title="index.js"
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
@@ -107,7 +107,7 @@ To support this, the `@apollo/client` library provides a `split` function that l
 
 The following example expands on the previous one by initializing both a `WebSocketLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
 
-```js:title=index.js
+```js title="index.js"
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { WebSocketLink } from '@apollo/client/link/ws';
@@ -147,7 +147,7 @@ Using this logic, queries and mutations will use HTTP as normal, and subscriptio
 
 After you define your link chain, you provide it to Apollo Client via the `link` constructor option:
 
-```js{6}:title=index.js
+```js {6} title="index.js"
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 // ...code from the above example goes here...
@@ -164,7 +164,7 @@ const client = new ApolloClient({
 
 It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `WebSocketLink` constructor, like so:
 
-```js{7-9}
+```js {7-9}
 import { WebSocketLink } from '@apollo/client/link/ws';
 
 const wsLink = new WebSocketLink({
@@ -250,7 +250,7 @@ const COMMENTS_SUBSCRIPTION = gql`
 
 Next, we modify our `CommentsPageWithData` function to add a `subscribeToNewComments` property to the `CommentsPage` component it returns. This property is a function that will be responsible for calling `subscribeToMore` after the component mounts.
 
-```jsx{10-25}
+```jsx {10-25}
 function CommentsPageWithData({ params }) {
   const { subscribeToMore, ...result } = useQuery(
     COMMENTS_QUERY,

@@ -38,7 +38,7 @@ You should define a name for _every_ GraphQL operation in your application. Doin
 
 These two queries can both fetch a `Dog` object with ID `"5"`:
 
-```graphql{2-3,10-11}
+```graphql {2-3,10-11}
 # Recommended ✅
 query GetDog($dogId: ID!) {
   dog(id: $dogId) {
@@ -60,7 +60,7 @@ The first query uses a variable (`$dogId`) for the value of the `dog` field's re
 
 You pass variable values to `useQuery` (or `useMutation`) like so:
 
-```js{11-15}:title=dog.tsx
+```js {11-15} title="dog.tsx"
 const GET_DOG = gql`
   query GetDog($dogId: ID!) {
     dog(id: $dogId) {
@@ -278,7 +278,7 @@ To improve the performance of your [server-side response cache](https://www.apol
 
 The constructor of `ApolloClient` accepts the `name` and `version` options:
 
-```js{4-5}
+```js {4-5}
 const client = new ApolloClient({
   uri: 'http://localhost:4000/graphql',
   cache: new InMemoryCache(),

@@ -134,7 +134,7 @@ flowchart LR
 
 Each link can execute logic while the result is being passed back by modifying their request handler's `return` statement, like so:
 
-```js{4-8}
+```js {4-8}
 // BEFORE (NO INTERACTION)
 return forward(operation);
 
@@ -253,7 +253,7 @@ Other uses for the `split` method include:
 
 After you finish composing your entire link chain, you provide the resulting link to the constructor of `ApolloClient`, like so:
 
-```js{12}
+```js {12}
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 import { RetryLink } from '@apollo/client/link/retry';
 

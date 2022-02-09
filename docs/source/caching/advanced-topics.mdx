@@ -19,7 +19,7 @@ Operations that use this fetch policy don't write their result to the cache, and
 
 ## Persisting the cache
 
-You can persist and rehydrate the `InMemoryCache` from a storage provider like `AsyncStorage` or `localStorage`. To do so, use the [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist) library. This library works with a variety of [storage providers](https://github.com/apollographql/apollo-cache-persist#storage-providers).
+You can persist and rehydrate the `InMemoryCache` from a storage provider like `AsyncStorage` or `localStorage`. To do so, use the [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist) library. This library works with a variety of [storage providers](https://github.com/apollographql/apollo-cache-persist/blob/master/docs/storage-providers.md).
 
 To get started, pass your cache and a storage provider to `persistCache`. By default, the contents of your cache are immediately restored asynchronously, and they're persisted on every write to the cache with a short configurable debounce interval.
 

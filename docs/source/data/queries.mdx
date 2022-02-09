@@ -26,7 +26,7 @@ Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. 
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```tsx:title=index.js
+```tsx title="index.js"
 import gql from 'graphql-tag';
 import { useQuery } from '@apollo/react-hooks';
 
@@ -43,7 +43,7 @@ const GET_DOGS = gql`
 </div>
 <div data-language="js">
 
-```tsx:title=index.js
+```tsx title="index.js"
 import gql from 'graphql-tag';
 import { Query } from 'react-apollo';
 
@@ -65,7 +65,7 @@ Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```tsx:title=index.js
+```tsx title="index.js"
 function Dogs({ onDogSelected }) {
   const { loading, error, data } = useQuery(GET_DOGS);
 
@@ -87,7 +87,7 @@ function Dogs({ onDogSelected }) {
 </div>
 <div data-language="js">
 
-```tsx:title=index.js
+```tsx title="index.js"
 const Dogs = ({ onDogSelected }) => (
   <Query query={GET_DOGS}>
     {({ loading, error, data }) => {
@@ -131,7 +131,7 @@ To see this caching in action, let's build a new component called `DogPhoto`. `D
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 const GET_DOG_PHOTO = gql`
   query Dog($breed: String!) {
     dog(breed: $breed) {
@@ -158,7 +158,7 @@ function DogPhoto({ breed }) {
 </div>
 <div data-language="js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 const GET_DOG_PHOTO = gql`
   query Dog($breed: String!) {
     dog(breed: $breed) {
@@ -203,7 +203,7 @@ Polling provides near-real-time synchronization with your server by causing a qu
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 function DogPhoto({ breed }) {
   const { loading, error, data } = useQuery(GET_DOG_PHOTO, {
     variables: { breed },
@@ -223,7 +223,7 @@ function DogPhoto({ breed }) {
 </div>
 <div data-language="js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 const DogPhoto = ({ breed }) => (
   <Query
     query={GET_DOG_PHOTO}
@@ -265,7 +265,7 @@ the query uses the same variables that it used in its previous execution.
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 function DogPhoto({ breed }) {
   const { loading, error, data, refetch } = useQuery(GET_DOG_PHOTO, {
     variables: { breed },
@@ -287,7 +287,7 @@ function DogPhoto({ breed }) {
 </div>
 <div data-language="js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 const DogPhoto = ({ breed }) => (
   <Query query={GET_DOG_PHOTO} variables={{ breed }} skip={!breed}>
     {({ loading, error, data, refetch }) => {
@@ -325,7 +325,7 @@ of this information, we need to set the `notifyOnNetworkStatusChange` option to 
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 function DogPhoto({ breed }) {
   const { loading, error, data, refetch, networkStatus } = useQuery(
     GET_DOG_PHOTO,
@@ -352,7 +352,7 @@ function DogPhoto({ breed }) {
 </div>
 <div data-language="js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 const DogPhoto = ({ breed }) => (
   <Query
     query={GET_DOG_PHOTO}
@@ -398,7 +398,7 @@ When React mounts and renders a component that calls the `useQuery` hook, Apollo
 The `useLazyQuery` hook is perfect for executing queries in response to events
 other than component rendering. This hook acts just like `useQuery`, with one key exception: when `useLazyQuery` is called, it does _not_ immediately execute its associated query. Instead, it returns a function in its result tuple that you can call whenever you're ready to execute the query:
 
-```jsx:title=index.js
+```jsx title="index.js"
 import React, { useState } from 'react';
 import { useLazyQuery } from '@apollo/react-hooks';
 

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { equal } from '@wry/equality';
-import { OperationVariables, mergeOptions } from '../../core';
+import { OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
@@ -326,25 +326,22 @@ export function useQuery<
  */
 function createWatchQueryOptions<TData, TVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<TData, TVariables> = {},
-  defaultOptions?: Partial<WatchQueryOptions<any, any>>
-): WatchQueryOptions<TVariables, TData> {
-  // TODO: For some reason, we pass context, which is the React Apollo Context,
-  // into observable queries, and test for that.
-  // removing hook specific options
-  const {
-    skip,
+  { skip,
     ssr,
     onCompleted,
     onError,
     displayName,
+    // The above options are useQuery-specific, so this ...otherOptions spread
+    // makes otherOptions almost a WatchQueryOptions object, except for the
+    // query property that we add below.
     ...otherOptions
-  } = options;
-
-  let watchQueryOptions = { query, ...otherOptions };
-  if (defaultOptions) {
-    watchQueryOptions = mergeOptions(defaultOptions, watchQueryOptions);
-  }
+  }: QueryHookOptions<TData, TVariables> = {},
+  defaultOptions?: Partial<WatchQueryOptions<any, any>>
+): WatchQueryOptions<TVariables, TData> {
+  // TODO: For some reason, we pass context, which is the React Apollo Context,
+  // into observable queries, and test for that.
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
+    Object.assign(otherOptions, { query });
 
   if (skip) {
     watchQueryOptions.fetchPolicy = 'standby';
@@ -361,7 +358,8 @@ function createWatchQueryOptions<TData, TVariables>(
   } else if (!watchQueryOptions.fetchPolicy) {
     // cache-first is the default policy, but we explicitly assign it here so
     // the cache policies computed based on options can be cleared
-    watchQueryOptions.fetchPolicy = 'cache-first';
+    watchQueryOptions.fetchPolicy =
+      defaultOptions && defaultOptions.fetchPolicy || 'cache-first';
   }
 
   if (!watchQueryOptions.variables) {

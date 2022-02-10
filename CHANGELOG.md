@@ -13,6 +13,9 @@
 - Fix partial data appearing in `useQuery().data` when `notifyOnNetworkStatusChange: true`. <br/>
   [@brainkim](https://github.com/brainkim) in [#9367](https://github.com/apollographql/apollo-client/pull/9367)
 
+- Prevent `Promise`s returned by `useLazyQuery` execute functions from causing unhandled `Promise` rejection errors if uncaught. <br/>
+  [@brainkim](https://github.com/brainkim) in [#9380](https://github.com/apollographql/apollo-client/pull/9380)
+
 ## Apollo Client 3.5.8 (2022-01-24)
 
 ### Bug Fixes

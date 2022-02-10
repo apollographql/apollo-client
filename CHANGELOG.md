@@ -1,3 +1,8 @@
+## Apollo Client 3.5.9 (unreleased)
+
+- Interpret `keyFields: [...]` and `keyArgs: [...]` configurations in `InMemoryCache` type/field policies as `ReadonlyArray`s, since they are never mutated internally. <br/>
+  [@julienfouilhe](https://github.com/julienfouilhe) in [#9339](https://github.com/apollographql/apollo-client/pull/9339)
+
 ## Apollo Client 3.5.8 (2022-01-24)
 
 ### Bug Fixes

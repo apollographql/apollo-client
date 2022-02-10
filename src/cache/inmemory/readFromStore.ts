@@ -36,7 +36,7 @@ import {
   ReadMergeModifyContext,
 } from './types';
 import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
-import { getTypenameFromStoreObject, shouldCanonizeResults } from './helpers';
+import { getTypenameFromStoreObject, isArray, shouldCanonizeResults } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError, MissingTree } from '../core/types/common';
@@ -67,7 +67,7 @@ type ExecSelectionSetOptions = {
 
 type ExecSubSelectedArrayOptions = {
   field: FieldNode;
-  array: any[];
+  array: readonly any[];
   enclosingRef: Reference;
   context: ReadContext;
 };
@@ -374,7 +374,7 @@ export class StoreReader {
             });
           }
 
-        } else if (Array.isArray(fieldValue)) {
+        } else if (isArray(fieldValue)) {
           fieldValue = handleMissing(this.executeSubSelectedArray({
             field: selection,
             array: fieldValue,
@@ -462,7 +462,7 @@ export class StoreReader {
       }
 
       // This is a nested array, recurse
-      if (Array.isArray(item)) {
+      if (isArray(item)) {
         return handleMissing(this.executeSubSelectedArray({
           field,
           array: item,

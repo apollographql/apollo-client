@@ -237,12 +237,10 @@ export function useQuery<
       (!result.data || Object.keys(result.data).length === 0) &&
       obsQuery.options.fetchPolicy !== 'cache-only'
     ) {
-      result = {
-        ...result,
+      Object.assign(result, {
         loading: true,
         networkStatus: NetworkStatus.refetch,
-      };
-
+      });
       obsQuery.refetch();
     }
 
@@ -298,10 +296,9 @@ export function useQuery<
     // decided upon, we map errors (graphQLErrors) to the error options.
     // TODO: Is it possible for both result.error and result.errors to be
     // defined here?
-    result = {
-      ...result,
-      error: result.error || new ApolloError({ graphQLErrors: result.errors }),
-    };
+    if (!result.error) {
+      result.error = new ApolloError({ graphQLErrors: result.errors });
+    }
   }
 
   const obsQueryFields = useMemo(() => ({
@@ -313,15 +310,12 @@ export function useQuery<
     subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
   }), [obsQuery]);
 
-  return useMemo(() => ({
-    ...obsQueryFields,
-    variables: watchQueryOptions.variables,
+  return Object.assign(result, obsQueryFields, {
     client,
+    variables: watchQueryOptions.variables,
     called: true,
     previousData: ref.current.previousData,
-    ...result,
-  }), [obsQueryFields, watchQueryOptions.variables, client, ref.current.previousData, result]);
-
+  });
 }
 
 /**

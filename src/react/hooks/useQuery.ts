@@ -44,17 +44,14 @@ export function useQuery<
 
     if (context.renderPromises) {
       context.renderPromises.registerSSRObservable(obsQuery);
-    }
 
-    if (
-      context.renderPromises &&
-      options?.ssr !== false &&
-      !options?.skip &&
-      obsQuery.getCurrentResult().loading
-    ) {
-      // TODO: This is a legacy API which could probably be cleaned up
-      context.renderPromises.addQueryPromise(
-        {
+      if (
+        options?.ssr !== false &&
+        !options?.skip &&
+        obsQuery.getCurrentResult().loading
+      ) {
+        // TODO: This is a legacy API which could probably be cleaned up
+        context.renderPromises.addQueryPromise({
           // The only options which seem to actually be used by the
           // RenderPromises class are query and variables.
           getOptions: () => watchQueryOptions,
@@ -77,8 +74,8 @@ export function useQuery<
           }),
         },
         // This callback never seemed to do anything
-        () => null,
-      );
+        () => null);
+      }
     }
 
     return obsQuery;

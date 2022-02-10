@@ -28,30 +28,22 @@ export function useQuery<
 ): QueryResult<TData, TVariables> {
   const context = useContext(getApolloContext());
   const client = useApolloClient(options?.client);
-  const defaultWatchQueryOptions = client.defaultOptions.watchQuery;
-  const watchQueryOptions = useMemo(
-    () => createWatchQueryOptions(query, options, defaultWatchQueryOptions),
-    [query, options, defaultWatchQueryOptions]
-  )
   verifyDocumentType(query, DocumentType.Query);
+  const watchQueryOptions = useMemo(
+    () => createWatchQueryOptions(query, options, client.defaultOptions.watchQuery),
+    [query, options, client.defaultOptions.watchQuery],
+  );
   const [obsQuery, setObsQuery] = useState(() => {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
-    let obsQuery: ObservableQuery<TData, TVariables> | null = null;
-    if (context.renderPromises) {
-      obsQuery = context.renderPromises.getSSRObservable(watchQueryOptions);
-    }
+    const obsQuery: ObservableQuery<TData, TVariables> =
+      context.renderPromises
+        && context.renderPromises.getSSRObservable(watchQueryOptions)
+        || client.watchQuery(watchQueryOptions);
 
-    if (!obsQuery) {
-      // Is it safe (StrictMode/memory-wise) to call client.watchQuery here?
-      obsQuery = client.watchQuery(watchQueryOptions);
-      if (context.renderPromises) {
-        context.renderPromises.registerSSRObservable(
-          obsQuery,
-          watchQueryOptions,
-        );
-      }
+    if (context.renderPromises) {
+      context.renderPromises.registerSSRObservable(obsQuery);
     }
 
     if (
@@ -67,7 +59,7 @@ export function useQuery<
           // RenderPromises class are query and variables.
           getOptions: () => watchQueryOptions,
           fetchData: () => new Promise<void>((resolve) => {
-            const sub = obsQuery!.subscribe({
+            const sub = obsQuery.subscribe({
               next(result) {
                 if (!result.loading) {
                   resolve()

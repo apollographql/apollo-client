@@ -54,7 +54,7 @@ export function useQuery<
         context.renderPromises.addQueryPromise({
           // The only options which seem to actually be used by the
           // RenderPromises class are query and variables.
-          getOptions: () => watchQueryOptions,
+          getOptions: () => obsQuery.options,
           fetchData: () => new Promise<void>((resolve) => {
             const sub = obsQuery.subscribe({
               next(result) {

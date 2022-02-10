@@ -81,7 +81,9 @@ export function useQuery<
     return obsQuery;
   });
 
-  let [result, setResult] = useState(() => {
+  // Call the setResult helper function (declared below) instead of calling
+  // setResultState directly, unless you know what you're up to.
+  let [result, setResultState] = useState(() => {
     const result = obsQuery.getCurrentResult();
     if (!result.loading && options) {
       if (result.error) {
@@ -98,10 +100,20 @@ export function useQuery<
     client,
     query,
     options,
+    // The ref.current.{result,previousData} properties are kept in sync with
+    // the useState result by the helper function setResult, declared below.
     result,
     previousData: void 0 as TData | undefined,
     watchQueryOptions,
   });
+
+  function setResult(nextResult: ApolloQueryResult<TData>) {
+    const previousResult = ref.current.result;
+    if (previousResult.data) {
+      ref.current.previousData = previousResult.data;
+    }
+    setResultState(ref.current.result = nextResult);
+  }
 
   // An effect to recreate the obsQuery whenever the client or query changes.
   // This effect is also responsible for checking and updating the obsQuery
@@ -119,12 +131,8 @@ export function useQuery<
     }
 
     if (nextResult) {
-      const previousResult = ref.current.result;
-      if (previousResult.data) {
-        ref.current.previousData = previousResult.data;
-      }
+      setResult(nextResult);
 
-      setResult(ref.current.result = nextResult);
       if (!nextResult.loading && options) {
         if (nextResult.error) {
           options.onError?.(nextResult.error);
@@ -160,11 +168,8 @@ export function useQuery<
         return;
       }
 
-      if (previousResult.data) {
-        ref.current.previousData = previousResult.data;
-      }
+      setResult(result);
 
-      setResult(ref.current.result = result);
       if (!result.loading) {
         ref.current.options?.onCompleted?.(result.data);
       }
@@ -197,7 +202,7 @@ export function useQuery<
         (previousResult && previousResult.loading) ||
         !equal(error, previousResult.error)
       ) {
-        setResult(ref.current.result = {
+        setResult({
           data: previousResult.data,
           error: error as ApolloError,
           loading: false,

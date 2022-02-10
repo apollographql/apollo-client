@@ -221,7 +221,8 @@ export function useQuery<
     return () => subscription.unsubscribe();
   }, [obsQuery, context.renderPromises, client.disableNetworkFetches]);
 
-  const partial: boolean | undefined = result.partial;
+  const { partial } = result;
+  delete result.partial;
 
   {
     // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION

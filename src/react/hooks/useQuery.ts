@@ -19,6 +19,12 @@ import {
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 
+const {
+  prototype: {
+    hasOwnProperty,
+  },
+} = Object;
+
 export function useQuery<
   TData = any,
   TVariables = OperationVariables,
@@ -192,7 +198,7 @@ export function useQuery<
         obsQuery["last"] = last;
       }
 
-      if (!error.hasOwnProperty('graphQLErrors')) {
+      if (!hasOwnProperty.call(error, 'graphQLErrors')) {
         // The error is not a GraphQL error
         throw error;
       }
@@ -216,7 +222,10 @@ export function useQuery<
   }, [obsQuery, context.renderPromises, client.disableNetworkFetches]);
 
   const { partial } = result;
-  delete result.partial;
+  if (!partial && hasOwnProperty.call(result, "partial")) {
+    // Hide result.partial if it is defined but falsy.
+    delete result.partial;
+  }
 
   {
     // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION

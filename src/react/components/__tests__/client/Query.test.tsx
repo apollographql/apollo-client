@@ -72,6 +72,7 @@ describe('Query component', () => {
                 networkStatus: 1,
                 previousData: undefined,
                 variables: {},
+                partial: true,
               });
               expect(clientResult).toBe(client);
             } else {

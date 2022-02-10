@@ -1,7 +1,17 @@
 ## Apollo Client 3.5.9 (unreleased)
 
+### Improvements
+
 - Interpret `keyFields: [...]` and `keyArgs: [...]` configurations in `InMemoryCache` type/field policies as `ReadonlyArray`s, since they are never mutated internally. <br/>
   [@julienfouilhe](https://github.com/julienfouilhe) in [#9339](https://github.com/apollographql/apollo-client/pull/9339)
+
+### Bug Fixes
+
+- Fix `useSubscription` executing `skip`ped subscription when input changes. <br/>
+  [@levrik](https://github.com/levrik) in [#9299](https://github.com/apollographql/apollo-client/pull/9299)
+
+- Fix partial data appearing in `useQuery().data` when `notifyOnNetworkStatusChange: true`. <br/>
+  [@brainkim](https://github.com/brainkim) in [#9367](https://github.com/apollographql/apollo-client/pull/9367)
 
 ## Apollo Client 3.5.8 (2022-01-24)
 

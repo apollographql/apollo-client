@@ -1,25 +1,127 @@
 ---
-title: The keyArgs API
+title: Key arguments in Apollo Client
+description: Using the keyArgs API
 sidebar_title: keyArgs
 ---
 
-> We recommend reading [Core pagination API](./core-api) before learning about considerations specific to the `keyArgs` configuration.
+> We recommend reading [Core pagination API](./core-api) before learning about considerations specific to `keyArgs` configuration.
 
-In GraphQL, a single field within a single object may store multiple different values at once, corresponding to different combinations of field arguments passed to the field in a given request. This multiplicity of field values requires the cache to store the values separately, so that they can be retrieved separately in the future.
+In Apollo Client, a **key argument** is any GraphQL argument that can cause a schema field to return a logically distinct value. For example, consider this `Query.user` field:
 
-There are many ways this storage could be structured, but `InMemoryCache` represents each entity object as a `StoreObject`, which is an ordinary JavaScript object with string keys generated from the name of the field plus the serialized arguments (if any), rather than using just the name of the field. Fields without arguments are keyed by their field names alone.
+```graphql{3}
+type Query {
+  # Returns whichever User object corresponds to `id`
+  user(id: ID!): User
+}
+```
 
-By default, `InMemoryCache` incorporates _all_ field arguments into the storage key for each field, so a single field can simultaneously hold as many different values as the number of unique combinations of arguments. This default strategy sacrifices the hit rate of the cache in order to avoid reusing field values inappropriately when any of the arguments are not the same.
+In this example, `id` is a key argument for `Query.user`, because it influences _which_ `User` object is returned.
 
-However, in many cases, you may realize that your field values are more reusable than this default strategy assumes, and some or all of the arguments are not actually relevant to the storage identity of the field. Fortunately, this system is configurable.
+## Default behavior
 
-In addition to `merge` and `read` functions, `InMemoryCache` field policies can contain a configuration called [`keyArgs`](../caching/cache-field-behavior#specifying-key-arguments), which specifies an array of argument names whose values should be serialized and appended to the field name to create a distinct storage key for a particular value of the field to be stored in the cache.
+By default, the Apollo Client cache considers _all_ GraphQL arguments to be key arguments, which affects how it stores data.
 
-A `keyArgs: ["type"]` field policy configuration means `type` is the only argument the cache should consider (in addition to the field name and the identity of the enclosing object) when accessing values for this field. A `keyArgs: false` configuration disables the whole system of differentiating field values by arguments, so the field's value will be identified only by the field's name (within some `StoreObject`), without any serialized arguments appended to it.
+### Caching multiple values for a field
 
-> In the unlikely event that a `keyArgs` array is insufficient to specify the storage key, you can alternatively pass a function for `keyArgs`, which allows you to sanitize and serialize the `args` object however you like. You can also provide nested `keyArgs` in the format `["arg", ["nested-arg"]]`.
+Key arguments enable a single schema field to return logically distinct values. Because of this, the Apollo Client cache needs to be able to _store_ multiple distinct values for a single field.
 
-This article provides specific technical guidance on choosing appropriate `keyArgs` configurations, especially when working with paginated fields and field policies.
+To accomplish this, the cache includes the values of a field's key arguments in the **storage key** it uses for that field:
+
+```yaml:title=Cache
+ROOT_QUERY
+  __typename: "Query"
+
+  user({"id":"1"}):
+    __ref: "User:1"
+
+  user({"id":"2"}):
+    __ref: "User:2"
+```
+
+Here, we've queried for `User`s with `id`s `1` and `2`. The cache stores these values separately within the `user` field's containing object (`ROOT_QUERY`). Each value uses a storage key that includes both the field name _and_ key argument values.
+
+> If a field has no key arguments, its storage key is just its name.
+
+Again, the cache considers _all_ arguments to be key arguments by default. This means that it stores a separate value for _every possible argument combination a field supports_.
+
+This default behavior is for safety: the cache doesn't know whether it can _merge_ the values returned for different argument combinations without invalidating important data. For example, the cache definitely _shouldn't_ merge the results of querying for `User`s with `id`s `1` and `2`.
+
+### Pagination issues
+
+Certain arguments _shouldn't_ cause the Apollo Client cache to store a separate value. This is almost always the case for arguments related to paginated lists.
+
+Consider this `Query.feed` field:
+
+```graphql{2}
+type Query {
+  feed(offset: Int, limit: Int, category: Category): [FeedItem!]
+}
+```
+
+The `offset` and `limit` arguments enable a client to specify which "page" of the list it wants to fetch. In an app with an infinitely scrolling feed, the client might initially fetch the first ten items, then fetch the _next_ ten:
+
+```graphql
+# First query
+query GetFeedItems {
+  feed(offset: 0, limit: 10, category: "SPORTS")
+}
+
+# Second query
+query GetFeedItems {
+  feed(offset: 10, limit: 10, category: "SPORTS")
+}
+```
+
+But as discussed [above](#caching-multiple-values-for-a-field), these two lists of ten items are cached _separately_ by default. This means that when the second query completes, the returned items _aren't_ appended to the original list in the feed!
+
+```yaml:title=Cache
+ROOT_QUERY
+  __typename: "Query"
+
+  feed({"offset":"0","limit":"10","category":"SPORTS"}):
+    [...]
+
+  feed({"offset":"10","limit":"10","category":"SPORTS"}):
+    [...]
+```
+
+In this case, we _don't_ want `offset` and `limit` to be key arguments of the `Query.feed` field. Instead, the Apollo Client cache _should_ merge the results of the two above queries into a single cache entry that includes items from both lists.
+
+To handle this case, we can [set key arguments](#setting-key-arguments) for the field.
+
+## Setting key arguments
+
+You can specify a particular field's key arguments by defining a [field policy](../caching/cache-field-behavior) for that field:
+
+```js{5-7}
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["category"],
+        },
+      },
+    },
+  },
+});
+```
+
+The field policy for `Query.feed` above includes a `keyArgs` array, which contains the names of all arguments that the cache _should_ treat as key arguments for the field.
+
+In this case, we don't want the cache to treat `offset` or `limit` as key arguments, because those arguments don't change _which_ feed we're fetching from. However, we _do_ want to treat `category` as a key argument, because we want to store our `SPORTS` feed separately from other feeds, such as `FASHION`.
+
+### Supported values for `keyArgs`
+
+In addition to providing a flat array of argument names, you can provide any of the following values for `keyArgs`:
+
+* `false`, if _none_ of the field's arguments should be treated as key arguments.
+* An array that includes _nested_ argument names, if an argument is an `Input` type with its own fields (e.g., `["input-arg", ["nested-arg"]]`).
+* A function that can sanitize and serialize the `args` object however you like before generating the field's storage key.
+    * This is for advanced use cases. See [`FieldPolicy` API reference](../caching/cache-field-behavior/#fieldpolicy-api-reference).
+
+In the unlikely event that a `keyArgs` array is insufficient to specify the storage key, you can alternatively pass a function for `keyArgs`, which allows you to sanitize and serialize the `args` object however you like.
+
 
 ## Which arguments belong in `keyArgs`?
 

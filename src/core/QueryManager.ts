@@ -190,11 +190,15 @@ export class QueryManager<TStore> {
     );
 
     const mutationId = this.generateMutationId();
-    mutation = this.transform(mutation).document;
+
+    const {
+      document,
+      hasClientExports,
+    } = this.transform(mutation);
+    mutation = this.cache.transformForLink(document);
 
     variables = this.getVariables(mutation, variables) as TVariables;
-
-    if (this.transform(mutation).hasClientExports) {
+    if (hasClientExports) {
       variables = await this.localState.addExportedVariables(mutation, variables, context) as TVariables;
     }
 
@@ -558,11 +562,9 @@ export class QueryManager<TStore> {
 
     if (!transformCache.has(document)) {
       const transformed = this.cache.transformDocument(document);
-      const forLink = removeConnectionDirectiveFromDocument(
-        this.cache.transformForLink(transformed));
-
+      const noConnection = removeConnectionDirectiveFromDocument(transformed);
       const clientQuery = this.localState.clientQuery(transformed);
-      const serverQuery = forLink && this.localState.serverQuery(forLink);
+      const serverQuery = noConnection && this.localState.serverQuery(noConnection);
 
       const cacheEntry: TransformCacheEntry = {
         document: transformed,
@@ -1040,9 +1042,17 @@ export class QueryManager<TStore> {
     // even though the input object may have been modified in the meantime.
     options = cloneDeep(options);
 
+    // Performing transformForLink here gives this.cache a chance to fill in
+    // missing fragment definitions (for example) before sending this document
+    // through the link chain.
+    const linkDocument = this.cache.transformForLink(
+      // Use same document originally produced by this.cache.transformDocument.
+      this.transform(queryInfo.document!).document
+    );
+
     return asyncMap(
       this.getObservableFromLink(
-        queryInfo.document!,
+        linkDocument,
         options.context,
         options.variables,
       ),
@@ -1071,7 +1081,10 @@ export class QueryManager<TStore> {
               graphQLErrors,
             }));
           }
-          queryInfo.markResult(result, options, cacheWriteBehavior);
+          // Use linkDocument rather than queryInfo.document so the
+          // operation/fragments used to write the result are the same as the
+          // ones used to obtain it from the link.
+          queryInfo.markResult(result, linkDocument, options, cacheWriteBehavior);
           queryInfo.markReady();
         }
 

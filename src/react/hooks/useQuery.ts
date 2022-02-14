@@ -114,11 +114,24 @@ export function useQuery<
   });
 
   function setResult(nextResult: ApolloQueryResult<TData>) {
-    const previousResult = ref.current.result;
+    const {
+      result: previousResult,
+      options,
+    } = ref.current;
+
     if (previousResult.data) {
       ref.current.previousData = previousResult.data;
     }
+
     setResultState(ref.current.result = nextResult);
+
+    if (!nextResult.loading && options) {
+      if (nextResult.error) {
+        options.onError?.(nextResult.error);
+      } else if (nextResult.data) {
+        options.onCompleted?.(nextResult.data);
+      }
+    }
   }
 
   // An effect to recreate the obsQuery whenever the client or query changes.
@@ -138,14 +151,6 @@ export function useQuery<
 
     if (nextResult) {
       setResult(nextResult);
-
-      if (!nextResult.loading && options) {
-        if (nextResult.error) {
-          options.onError?.(nextResult.error);
-        } else if (nextResult.data) {
-          options.onCompleted?.(nextResult.data);
-        }
-      }
     }
 
     Object.assign(ref.current, { client, query });
@@ -175,10 +180,6 @@ export function useQuery<
       }
 
       setResult(result);
-
-      if (!result.loading) {
-        ref.current.options?.onCompleted?.(result.data);
-      }
     }
 
     function onError(error: Error) {
@@ -214,7 +215,6 @@ export function useQuery<
           loading: false,
           networkStatus: NetworkStatus.error,
         });
-        ref.current.options?.onError?.(error as ApolloError);
       }
     }
 

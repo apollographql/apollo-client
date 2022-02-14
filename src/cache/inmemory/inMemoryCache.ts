@@ -91,6 +91,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private resetResultCache(resetResultIdentities?: boolean) {
     const previousReader = this.storeReader;
+    const { fragments } = this.config;
 
     // The StoreWriter is mostly stateless and so doesn't really need to be
     // reset, but it does need to have its writer.storeReader reference updated,
@@ -105,7 +106,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         canon: resetResultIdentities
           ? void 0
           : previousReader && previousReader.canon,
+        fragments,
       }),
+      fragments,
     );
 
     this.maybeBroadcastWatch = wrap((
@@ -512,6 +515,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
+  }
+
+  public transformForLink(document: DocumentNode): DocumentNode {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
   }
 
   protected broadcastWatches(options?: BroadcastOptions) {

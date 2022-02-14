@@ -21,6 +21,8 @@ import {
   CanReadFunction,
 } from '../core/types/common';
 
+import { FragmentRegistryAPI } from './fragmentRegistry';
+
 export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
@@ -130,6 +132,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
   typePolicies?: TypePolicies;
   resultCacheMaxSize?: number;
   canonizeResults?: boolean;
+  fragments?: FragmentRegistryAPI;
 }
 
 export interface MergeInfo {

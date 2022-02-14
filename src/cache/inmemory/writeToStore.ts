@@ -7,11 +7,10 @@ import {
 } from 'graphql';
 
 import {
-  createFragmentMap,
   FragmentMap,
+  FragmentMapFunction,
   getFragmentFromSelection,
   getDefaultValues,
-  getFragmentDefinitions,
   getOperationDefinition,
   getTypenameFromResult,
   makeReference,
@@ -28,8 +27,8 @@ import {
   argumentsObjectFromField,
 } from '../../utilities';
 
-import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
-import { makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, isArray } from './helpers';
+import { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types';
+import { isArray, makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, extractFragmentContext } from './helpers';
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 import { EntityStore } from './entityStore';
@@ -42,7 +41,8 @@ export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
     [dataId: string]: SelectionSetNode[];
   };
-  readonly fragmentMap?: FragmentMap;
+  readonly fragmentMap: FragmentMap;
+  lookupFragment: FragmentMapFunction;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
   // If true, merge functions will be called with undefined existing data.
@@ -104,6 +104,7 @@ export class StoreWriter {
   constructor(
     public readonly cache: InMemoryCache,
     private reader?: StoreReader,
+    private fragments?: InMemoryCacheConfig["fragments"],
   ) {}
 
   public writeToStore(store: NormalizedCache, {
@@ -129,7 +130,7 @@ export class StoreWriter {
       },
       variables,
       varString: canonicalStringify(variables),
-      fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+      ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
       incomingById: new Map,
       clientOnly: false,
@@ -475,6 +476,7 @@ export class StoreWriter {
     | "deferred"
     | "flavors"
     | "fragmentMap"
+    | "lookupFragment"
     | "variables"
   >>(
     selectionSet: SelectionSetNode,
@@ -559,8 +561,10 @@ export class StoreWriter {
           );
 
         } else {
-          const fragment =
-            getFragmentFromSelection(selection, context.fragmentMap);
+          const fragment = getFragmentFromSelection(
+            selection,
+            context.lookupFragment,
+          );
 
           if (fragment &&
               policies.fragmentMatches(

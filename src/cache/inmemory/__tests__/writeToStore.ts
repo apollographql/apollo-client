@@ -17,8 +17,6 @@ import {
   StoreObject,
   addTypenameToDocument,
   cloneDeep,
-  createFragmentMap,
-  getFragmentDefinitions,
   getMainDefinition,
 } from '../../../utilities';
 import { itAsync } from '../../../testing/core';
@@ -27,6 +25,7 @@ import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
 import { withErrorSpy, withWarningSpy } from '../../../testing';
 import { TypedDocumentNode } from '../../../core'
+import { extractFragmentContext } from '../helpers';
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -3118,7 +3117,6 @@ describe('writing to the store', () => {
       },
     ) {
       const { selectionSet } = getMainDefinition(query);
-      const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
 
       const flat = writer["flattenFields"](selectionSet, {
         __typename: "Query",
@@ -3126,7 +3124,7 @@ describe('writing to the store', () => {
         bField: "b",
         rootField: "root",
       }, {
-        fragmentMap,
+        ...extractFragmentContext(query),
         clientOnly: false,
         deferred: false,
         flavors: new Map,

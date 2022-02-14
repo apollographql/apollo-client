@@ -10,24 +10,42 @@ import { wrap } from "optimism";
 
 import { FragmentMap, getFragmentDefinitions } from "../../utilities";
 
-export class FragmentRegistry {
-  private registry: FragmentMap = Object.create(null);
+export interface FragmentRegistryAPI {
+  register(...fragments: DocumentNode[]): this;
+  lookup(fragmentName: string): FragmentDefinitionNode | null;
+  transform<D extends DocumentNode>(document: D): D;
+}
 
-  static from(...fragments: DocumentNode[]): FragmentRegistry {
-    const registry = new this();
-    return registry.register.apply(registry, fragments);
-  }
+// As long as createFragmentRegistry is not imported or used, the
+// FragmentRegistry example implementation provided below should not be bundled
+// (by tree-shaking bundlers like Rollup), because the implementation of
+// InMemoryCache refers only to the TypeScript interface FragmentRegistryAPI,
+// never the concrete implementation FragmentRegistry (which is deliberately not
+// exported from this module).
+export function createFragmentRegistry(
+  ...fragments: DocumentNode[]
+): FragmentRegistryAPI {
+  return new FragmentRegistry(...fragments);
+}
+
+const { forEach: arrayLikeForEach } = Array.prototype;
+
+class FragmentRegistry implements FragmentRegistryAPI {
+  private registry: FragmentMap = Object.create(null);
 
   // Call static method FragmentRegistry.from(...) instead of invoking the
   // FragmentRegistry constructor directly. This reserves the constructor for
   // future configuration of the FragmentRegistry.
-  protected constructor() {
+  constructor(...fragments: DocumentNode[]) {
     this.resetCaches();
+    if (fragments.length) {
+      this.register.apply(this, fragments);
+    }
   }
 
-  public register(...fragments: DocumentNode[]): this {
+  public register(): this {
     const definitions = new Map<string, FragmentDefinitionNode>();
-    fragments.forEach(doc => {
+    arrayLikeForEach.call(arguments, (doc: DocumentNode) => {
       getFragmentDefinitions(doc).forEach(node => {
         definitions.set(node.name.value, node);
       });
@@ -68,7 +86,7 @@ export class FragmentRegistry {
     });
   }
 
-  public lookup(fragmentName: string) {
+  public lookup(fragmentName: string): FragmentDefinitionNode | null {
     return this.registry[fragmentName] || null;
   }
 

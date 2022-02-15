@@ -34,11 +34,13 @@ export function useQuery<
 ): QueryResult<TData, TVariables> {
   const context = useContext(getApolloContext());
   const client = useApolloClient(options?.client);
-  verifyDocumentType(query, DocumentType.Query);
-  const watchQueryOptions = useMemo(
-    () => createWatchQueryOptions(query, options, client.defaultOptions.watchQuery),
-    [query, options, client.defaultOptions.watchQuery],
+
+  const watchQueryOptions = useWatchQueryOptions(
+    client,
+    query,
+    options,
   );
+
   const [obsQuery, setObsQuery] = useState(() => {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
@@ -319,6 +321,27 @@ export function useQuery<
     called: true,
     previousData: ref.current.previousData,
   });
+}
+
+function useWatchQueryOptions<TData, TVariables>(
+  client: ReturnType<typeof useApolloClient>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: QueryHookOptions<TData, TVariables> | undefined,
+) {
+  verifyDocumentType(query, DocumentType.Query);
+
+  const watchQueryOptions = createWatchQueryOptions(
+    query,
+    options,
+    client.defaultOptions.watchQuery,
+  );
+
+  const ref = useRef<WatchQueryOptions<TVariables, TData>>(watchQueryOptions);
+  if (!equal(ref.current, watchQueryOptions)) {
+    ref.current = watchQueryOptions;
+  }
+
+  return ref.current;
 }
 
 /**

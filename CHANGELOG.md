@@ -5,6 +5,9 @@
 - Interpret `keyFields: [...]` and `keyArgs: [...]` configurations in `InMemoryCache` type/field policies as `ReadonlyArray`s, since they are never mutated internally. <br/>
   [@julienfouilhe](https://github.com/julienfouilhe) in [#9339](https://github.com/apollographql/apollo-client/pull/9339)
 
+- Avoid declaring a global type for the `__DEV__` constant, to avoid conflict with other such global declarations. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9386](https://github.com/apollographql/apollo-client/pull/9386)
+
 ### Bug Fixes
 
 - Fix `useSubscription` executing `skip`ped subscription when input changes. <br/>

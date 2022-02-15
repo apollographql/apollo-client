@@ -32,6 +32,7 @@ import {
   selectionSetMatchesResult,
   TypeOrFieldNameRegExp,
   defaultDataIdFromObject,
+  isArray,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
 import { InMemoryCache } from './inMemoryCache';
@@ -59,7 +60,7 @@ export type TypePolicies = {
 
 // TypeScript 3.7 will allow recursive type aliases, so this should work:
 // type KeySpecifier = (string | KeySpecifier)[]
-export type KeySpecifier = (string | KeySpecifier)[];
+export type KeySpecifier = ReadonlyArray<string | KeySpecifier>;
 
 export type KeyFieldsContext = {
   // The __typename of the incoming object, even if the __typename field was
@@ -382,7 +383,7 @@ export class Policies {
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
       const specifierOrId = keyFn(object, context);
-      if (Array.isArray(specifierOrId)) {
+      if (isArray(specifierOrId)) {
         keyFn = keyFieldsFnFromSpecifier(specifierOrId);
       } else {
         id = specifierOrId;
@@ -457,7 +458,7 @@ export class Policies {
       keyFields === false ? nullKeyFieldsFn :
       // Pass an array of strings to use those fields to compute a
       // composite ID for objects of this typename.
-      Array.isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
+      isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields) :
       // Pass a function to take full control over identification.
       typeof keyFields === "function" ? keyFields :
       // Leave existing.keyFn unchanged if above cases fail.
@@ -479,7 +480,7 @@ export class Policies {
             keyArgs === false ? simpleKeyArgsFn :
             // Pass an array of strings to use named arguments to
             // compute a composite identity for the field.
-            Array.isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
+            isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs) :
             // Pass a function to take full control over field identity.
             typeof keyArgs === "function" ? keyArgs :
             // Leave existing.keyFn unchanged if above cases fail.
@@ -729,7 +730,7 @@ export class Policies {
       const args = argsFromFieldSpecifier(fieldSpec);
       while (keyFn) {
         const specifierOrString = keyFn(args, context);
-        if (Array.isArray(specifierOrString)) {
+        if (isArray(specifierOrString)) {
           keyFn = keyArgsFnFromSpecifier(specifierOrString);
         } else {
           // If the custom keyFn returns a falsy value, fall back to
@@ -966,7 +967,7 @@ function makeMergeObjectsFunction(
   store: NormalizedCache,
 ): MergeObjectsFunction {
   return function mergeObjects(existing, incoming) {
-    if (Array.isArray(existing) || Array.isArray(incoming)) {
+    if (isArray(existing) || isArray(incoming)) {
       throw new InvariantError("Cannot automatically merge arrays");
     }
 

@@ -13,6 +13,27 @@
 - Tentatively reimplement `useQuery` and `useLazyQuery` to use the [proposed `useSyncExternalStore` API](https://github.com/reactwg/react-18/discussions/86) from React 18. <br/>
   [@brainkim](https://github.com/brainkim) in [#8785](https://github.com/apollographql/apollo-client/pull/8785)
 
+## Apollo Client 3.5.9 (2022-02-15)
+
+### Improvements
+
+- Interpret `keyFields: [...]` and `keyArgs: [...]` configurations in `InMemoryCache` type/field policies as `ReadonlyArray`s, since they are never mutated internally. <br/>
+  [@julienfouilhe](https://github.com/julienfouilhe) in [#9339](https://github.com/apollographql/apollo-client/pull/9339)
+
+- Avoid declaring a global type for the `__DEV__` constant, to avoid conflict with other such global declarations. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9386](https://github.com/apollographql/apollo-client/pull/9386)
+
+### Bug Fixes
+
+- Fix `useSubscription` executing `skip`ped subscription when input changes. <br/>
+  [@levrik](https://github.com/levrik) in [#9299](https://github.com/apollographql/apollo-client/pull/9299)
+
+- Fix partial data appearing in `useQuery().data` when `notifyOnNetworkStatusChange: true`. <br/>
+  [@brainkim](https://github.com/brainkim) in [#9367](https://github.com/apollographql/apollo-client/pull/9367)
+
+- Prevent `Promise`s returned by `useLazyQuery` execute functions from causing unhandled `Promise` rejection errors if uncaught. <br/>
+  [@brainkim](https://github.com/brainkim) in [#9380](https://github.com/apollographql/apollo-client/pull/9380)
+
 ## Apollo Client 3.5.8 (2022-01-24)
 
 ### Bug Fixes

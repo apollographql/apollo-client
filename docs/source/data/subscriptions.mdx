@@ -44,7 +44,7 @@ type Subscription {
 }
 ```
 
-For more information on implementing support for subscriptions on the server side, see the [Apollo Server documentation for subscriptions](https://www.apollographql.com/docs/apollo-server/data/subscriptions/).
+For more information on implementing support for subscriptions on the server side, see the [Apollo Server documentation for subscriptions](/apollo-server/data/subscriptions/).
 
 ### Client side
 
@@ -103,7 +103,7 @@ const wsLink = new GraphQLWsLink(createClient({
 }));
 ```
 
-Replace the value of the `url` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#setting-a-subscription-endpoint).
+Replace the value of the `url` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](/apollo-server/data/subscriptions/#setting-a-subscription-endpoint).
 
 ### 3. Split communication by operation (recommended)
 

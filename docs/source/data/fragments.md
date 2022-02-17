@@ -164,7 +164,7 @@ This makes the contents of `someFragment.graphql` available to the current file.
 
 ## Using fragments with unions and interfaces
 
-You can define fragments on [unions and interfaces](https://www.apollographql.com/docs/apollo-server/schema/unions-interfaces/).
+You can define fragments on [unions and interfaces](/apollo-server/schema/unions-interfaces/).
 
 Here's an example of a query that includes three in-line fragments:
 

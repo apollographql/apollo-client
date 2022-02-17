@@ -109,13 +109,13 @@ The render prop function that you pass to the `children` prop of `Query` is call
   <dt><code>refetch</code>: (variables?: TVariables) => Promise&lt;ApolloQueryResult&gt;</dt>
   <dd>A function that allows you to refetch the query and optionally pass in new variables</dd>
   <dt><code>fetchMore</code>: ({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise&lt;ApolloQueryResult&gt;</dt>
-  <dd>A function that enables <a href="/features/pagination/">pagination</a> for your query</dd>
+  <dd>A function that enables <a href="../features/pagination/">pagination</a> for your query</dd>
   <dt><code>startPolling</code>: (interval: number) => void</dt>
   <dd>This function sets up an interval in ms and fetches the query each time the specified interval passes.</dd>
   <dt><code>stopPolling</code>: () => void</dt>
   <dd>This function stops the query from polling.</dd>
   <dt><code>subscribeToMore</code>: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void</dt>
-  <dd>A function that sets up a <a href="/advanced/subscriptions/">subscription</a>. <code>subscribeToMore</code> returns a function that you can use to unsubscribe.</dd>
+  <dd>A function that sets up a <a href="../advanced/subscriptions/">subscription</a>. <code>subscribeToMore</code> returns a function that you can use to unsubscribe.</dd>
   <dt><code>updateQuery</code>: (previousResult: TData, options: { variables: TVariables }) => TData</dt>
   <dd>A function that allows you to update the query's result in the cache outside the context of a fetch, mutation, or subscription</dd>
   <dt><code>client</code>: ApolloClient</dt>
@@ -140,7 +140,7 @@ The Mutation component accepts the following props. Only `mutation` and `childre
   <dt><code>ignoreResults</code>: boolean</dt>
   <dd>If true, the <code>data</code> property on the render prop function will not update with the mutation result.</dd>
   <dt><code>optimisticResponse</code>: Object</dt>
-  <dd>Provide a <a href="/features/optimistic-ui/">mutation response</a> before the result comes back from the server</dd>
+  <dd>Provide a <a href="../features/optimistic-ui/">mutation response</a> before the result comes back from the server</dd>
   <dt><code>refetchQueries</code>: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables}></dt>
   <dd>A function that allows you to specify which queries you want to refetch after a mutation has occurred</dd>
   <dt><code>onCompleted</code>: (data: TData) => void</dt>

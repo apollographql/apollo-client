@@ -3236,6 +3236,111 @@ describe('@connection', () => {
     resolve();
   });
 
+
+  ['cache.modify', 'cache.updateQuery'].forEach(type => {
+    itAsync(`updates watchQuery when object added with ${type} changes`, (resolve, reject) => {
+      const baseQuery = gql`
+        query base {
+          base {
+            __typename
+            id
+            things {
+              __typename
+              id
+              n
+            }
+          }
+        }
+      `;
+
+      const baseData = {base: {__typename: 'Base', id: '1234', things: []} };
+
+      const thingQuery = gql`
+        query thing {
+          thing {
+            __typename
+            id
+            n
+          }
+        }
+      `;
+
+      const modifyThingsData = [{__typename: 'Thing', id: '4567', n: 'abc'}];
+
+      const readThingData = { thing: { __typename: 'Thing', id: '4567', n: 'xyz'} };
+
+      const link = mockSingleLink({
+        request: { query: baseQuery },
+        result: {data: baseData },
+      }, {
+        request: { query: thingQuery },
+        result: {data: readThingData}
+      }).setOnError(reject);
+
+      const cache = new InMemoryCache({ addTypename: false })
+
+      const client = new ApolloClient({
+        link,
+        cache,
+      });
+
+      const obs = client.watchQuery({
+        query: baseQuery,
+        fetchPolicy: 'cache-and-network',
+        nextFetchPolicy: 'cache-first'
+      });
+
+      let count = 0;
+      obs.subscribe({
+        next: result => {
+          count++;
+
+          if (count === 1) {
+            expect(result.data).toEqual(baseData);
+
+            // Either of these will trigger an update in watch query
+            if (type === 'cache.modify') {
+              const id = cache.identify(baseData.base);
+
+              cache.modify({
+                id,
+                fields: {
+                  things() {
+                    return modifyThingsData
+                 }
+                }
+              })
+            } else {
+              cache.updateQuery({
+                query: baseQuery,
+              }, (data) => {
+                return {base: {...data.base, things: modifyThingsData}};
+              })
+            }
+
+          } else if (count === 2) {
+            // things have been added, now readQuery to update thing
+            expect(result.data).toEqual({base: {...baseData.base, things: modifyThingsData}});
+
+            // This should also trigger an update in the watch query, but doesn't when cache.modify was used before
+            client.query({
+              query: thingQuery,
+              fetchPolicy: 'network-only',
+            }).then((result) => {
+              expect(result.data).toEqual(readThingData);
+            });
+
+          } else if (count === 3) {
+            // watchQuery has been updated with the new n value for thing
+            expect(result.data).toEqual({base:{...baseData.base, things: [readThingData.thing]}});
+            resolve()
+          }
+        }
+      });
+    });
+
+  });
+
   describe('default settings', () => {
     const query = gql`
       query number {

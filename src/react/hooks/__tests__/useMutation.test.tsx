@@ -439,6 +439,37 @@ describe('useMutation Hook', () => {
       expect(result.current[1].client).toBeInstanceOf(ApolloClient);
     });
 
+    it ('should call client passed to execute function', async () => {
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION),
+        { wrapper: ({ children }) => (
+          <MockedProvider>
+            {children}
+          </MockedProvider>
+        )},
+      );
+
+      const link = mockSingleLink();
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link
+      });
+
+      const mutateSpy = jest.spyOn(client, 'mutate').mockImplementation(
+        () => new Promise((resolve) => {
+          resolve({ data: CREATE_TODO_RESULT })
+        })
+      );
+
+      const createTodo = result.current[0];
+      await act(async () => {
+        await createTodo({ client });
+      });
+
+      expect(mutateSpy).toHaveBeenCalledTimes(1);
+    });
+
     it('should merge provided variables', async () => {
       const CREATE_TODO_DATA = {
         createTodo: {

@@ -26,7 +26,7 @@ meteor npm install graphql apollo-server-express apollo-boost
 
 ### Client
 
-Create your [ApolloClient](https://www.apollographql.com/docs/react/) instance:
+Create your [ApolloClient](/react/) instance:
 
 ```js
 import { Accounts } from 'meteor/accounts-base'
@@ -73,7 +73,7 @@ MeteorAccountsLink({ headerName: 'meteor-login-token' })
 
 ### Server
 
-Set up the [Apollo server](https://www.apollographql.com/docs/apollo-server/):
+Set up the [Apollo server](/apollo-server/):
 
 ```js
 import { ApolloServer, gql } from 'apollo-server-express'

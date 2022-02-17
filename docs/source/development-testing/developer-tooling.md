@@ -5,7 +5,7 @@ description: Improve your developer experience with these these services and ext
 
 ## Apollo Graph Manager
 
-[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) is a cloud service that helps you manage, validate, and secure your organization's data graph.
+[Apollo Graph Manager](/platform/graph-manager-overview/) is a cloud service that helps you manage, validate, and secure your organization's data graph.
 
 It provides the following features to all Apollo users for free:
 
@@ -15,7 +15,7 @@ It provides the following features to all Apollo users for free:
 
 Advanced features are available with a subscription to an Apollo Team or Enterprise plan.
 
-To learn more about Graph Manager, check out the [overview](https://www.apollographql.com/docs/platform/graph-manager-overview/).
+To learn more about Graph Manager, check out the [overview](/platform/graph-manager-overview/).
 
 ## Apollo Client Devtools
 

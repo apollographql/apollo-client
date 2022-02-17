@@ -4,7 +4,7 @@ order: 110
 description: How to configure Apollo Client's network layer.
 ---
 
-Now that you have learned how to read and update your data, it's helpful to know how to direct where your data comes from and where it goes! Apollo has a powerful way to manage your network layer using a library called [Apollo Link](https://www.apollographql.com/docs/link/).
+Now that you have learned how to read and update your data, it's helpful to know how to direct where your data comes from and where it goes! Apollo has a powerful way to manage your network layer using a library called [Apollo Link](/link/).
 
 ## Apollo Link
 
@@ -160,7 +160,7 @@ Query deduplication can be useful if many components display the same data, but 
 
 ## Other links
 
-The network stack of Apollo Client is easily customized using Apollo Link! It can log errors, send side effects, send data over WebSockets or HTTP, and so much more. A few examples are below but make sure to check out the [link docs](https://www.apollographql.com/docs/link/) to learn more!
+The network stack of Apollo Client is easily customized using Apollo Link! It can log errors, send side effects, send data over WebSockets or HTTP, and so much more. A few examples are below but make sure to check out the [link docs](/link/) to learn more!
 
 ### GraphQL over WebSocket
 
@@ -168,11 +168,11 @@ Another alternative for network interface is GraphQL over WebSocket, using [`sub
 
 You can then create WebSocket as full-transport, and pass all GraphQL operations over the WebSocket (`Query`, `Mutation` and `Subscription`), or use a hybrid network interface and execute `Query` and `Mutation` over HTTP, and only `Subscription` over the WebSocket.
 
-For more information about using WebSockets with Apollo Link, check out the [in-depth guide](https://www.apollographql.com/docs/link/links/ws)
+For more information about using WebSockets with Apollo Link, check out the [in-depth guide](/link/links/ws)
 
 ### Query Batching
 
-Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. Batching works only with server that support batched queries (for example graphql-server). Batched requests to servers that don’t support batching will fail. To learn how to use batching with Apollo checkout the [in-depth guide](https://www.apollographql.com/docs/link/links/batch-http)
+Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. Batching works only with server that support batched queries (for example graphql-server). Batched requests to servers that don’t support batching will fail. To learn how to use batching with Apollo checkout the [in-depth guide](/link/links/batch-http)
 
 ### Mutation batching
 

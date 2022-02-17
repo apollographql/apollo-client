@@ -21,7 +21,7 @@ A [Svelte](https://svelte.dev) integration is maintained by Tim Hall ([@timhall]
 
 ## Angular
 
-To use Apollo with the [Angular](https://angular.io) rendering library, see the [Angular guide](https://www.apollographql.com/docs/angular);
+To use Apollo with the [Angular](https://angular.io) rendering library, see the [Angular guide](https://apollo-angular.com/docs/);
 
 ## Ember
 

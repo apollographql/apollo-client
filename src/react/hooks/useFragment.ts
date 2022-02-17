@@ -82,7 +82,6 @@ export function useFragment<TData, TVars>(
         if (!immediate || !equal(newDiff, latestDiff)) {
           setResult(latestResult = diffToResult(
             latestDiff = newDiff,
-            latestResult,
           ));
         }
         immediate = false;
@@ -95,7 +94,6 @@ export function useFragment<TData, TVars>(
 
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>,
-  previousResult?: UseFragmentResult<TData>,
 ): UseFragmentResult<TData> {
   const result: UseFragmentResult<TData> = {
     data: diff.result,
@@ -106,22 +104,6 @@ function diffToResult<TData>(
     result.missing = mergeDeepArray(
       diff.missing.map(error => error.missing)
     );
-  }
-
-  if (previousResult) {
-    result.previousResult = previousResult;
-  }
-
-  const lastCompleteResult = result.complete ? result : (
-    previousResult && (
-      previousResult.complete
-        ? previousResult
-        : previousResult.lastCompleteResult
-    )
-  );
-
-  if (lastCompleteResult) {
-    result.lastCompleteResult = lastCompleteResult;
   }
 
   return result;

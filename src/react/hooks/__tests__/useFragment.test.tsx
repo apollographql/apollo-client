@@ -3,7 +3,7 @@ import { render, waitFor } from "@testing-library/react";
 import { renderHook } from '@testing-library/react-hooks';
 import { act } from "react-dom/test-utils";
 
-import { useFragment, UseFragmentResult } from "../useFragment";
+import { useFragment } from "../useFragment";
 import { MockedProvider } from "../../../testing";
 import { InMemoryCache, gql, TypedDocumentNode, Reference } from "../../../core";
 import { useQuery } from "../useQuery";
@@ -608,28 +608,31 @@ describe("useFragment", () => {
     );
 
     function checkHistory(expectedResultCount: number) {
-      function historyToArray(
-        result: UseFragmentResult<QueryData>,
-      ): UseFragmentResult<QueryData>[] {
-        const array = result.previousResult
-          ? historyToArray(result.previousResult)
-          : [];
-        array.push(result);
-        return array;
-      }
-      const all = historyToArray(renderResult.current);
-      expect(all.length).toBe(expectedResultCount);
-      expect(all).toEqual(renderResult.all);
+      // Temporarily disabling this check until we can come up with a better
+      // (more opt-in) system than result.previousResult.previousResult...
 
-      if (renderResult.current.complete) {
-        expect(renderResult.current).toBe(
-          renderResult.current.lastCompleteResult
-        );
-      } else {
-        expect(renderResult.current).not.toBe(
-          renderResult.current.lastCompleteResult
-        );
-      }
+      // function historyToArray(
+      //   result: UseFragmentResult<QueryData>,
+      // ): UseFragmentResult<QueryData>[] {
+      //   const array = result.previousResult
+      //     ? historyToArray(result.previousResult)
+      //     : [];
+      //   array.push(result);
+      //   return array;
+      // }
+      // const all = historyToArray(renderResult.current);
+      // expect(all.length).toBe(expectedResultCount);
+      // expect(all).toEqual(renderResult.all);
+
+      // if (renderResult.current.complete) {
+      //   expect(renderResult.current).toBe(
+      //     renderResult.current.lastCompleteResult
+      //   );
+      // } else {
+      //   expect(renderResult.current).not.toBe(
+      //     renderResult.current.lastCompleteResult
+      //   );
+      // }
     }
 
     expect(renderResult.current.complete).toBe(false);

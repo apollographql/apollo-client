@@ -36,7 +36,7 @@ type Subscription {
 }
 ```
 
-For more information on implementing support for subscriptions on the server side, see the [Apollo Server documentation for subscriptions](https://www.apollographql.com/docs/apollo-server/data/subscriptions/).
+For more information on implementing support for subscriptions on the server side, see the [Apollo Server documentation for subscriptions](/apollo-server/data/subscriptions/).
 
 ### Client side
 
@@ -97,7 +97,7 @@ const wsLink = new WebSocketLink({
 });
 ```
 
-Replace the value of the `uri` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#setting-a-subscription-endpoint).
+Replace the value of the `uri` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](/apollo-server/data/subscriptions/#setting-a-subscription-endpoint).
 
 ### 3. Split communication by operation (recommended)
 
@@ -178,7 +178,7 @@ const wsLink = new WebSocketLink({
 });
 ```
 
-Your `WebSocketLink` passes the `connectionParams` object to your server whenever it connects. If your server has a [SubscriptionsServer](https://www.apollographql.com/docs/graphql-subscriptions/authentication) object that's listening for WebSocket connections, it receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
+Your `WebSocketLink` passes the `connectionParams` object to your server whenever it connects. If your server has a [SubscriptionsServer](/graphql-subscriptions/authentication) object that's listening for WebSocket connections, it receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
 
 
 ## Executing a subscription

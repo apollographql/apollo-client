@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { equal } from '@wry/equality';
 import { OperationVariables } from '../../core';
-import { getApolloContext } from '../context';
+import { ApolloContextValue, getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
   ApolloClient,
@@ -62,6 +62,28 @@ class InternalState<TData, TVariables> {
   public forceUpdate() {
     // Replaced (in useInternalState) with a method that triggers an update.
   }
+
+  public renderPromises: ApolloContextValue["renderPromises"];
+  public queryHookOptions: QueryHookOptions<TData, TVariables>;
+  public watchQueryOptions: WatchQueryOptions<TVariables, TData>;
+
+  useOptions(
+    options: undefined | QueryHookOptions<TData, TVariables>,
+  ): this {
+    this.renderPromises = useContext(getApolloContext()).renderPromises;
+
+    const watchQueryOptions = createWatchQueryOptions(
+      this.query,
+      this.queryHookOptions = options || {},
+      this.client.defaultOptions.watchQuery,
+    );
+
+    if (!equal(watchQueryOptions, this.watchQueryOptions)) {
+      this.watchQueryOptions = watchQueryOptions;
+    }
+
+    return this;
+  }
 }
 
 export function useQuery<
@@ -71,26 +93,20 @@ export function useQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: QueryHookOptions<TData, TVariables>,
 ): QueryResult<TData, TVariables> {
-  const context = useContext(getApolloContext());
   const state = useInternalState(query, options?.client);
-
-  const watchQueryOptions = useWatchQueryOptions(
-    state.client,
-    query,
-    options,
-  );
+  state.useOptions(options);
 
   const [obsQuery, setObsQuery] = useState(() => {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
     const obsQuery: ObservableQuery<TData, TVariables> =
-      context.renderPromises
-        && context.renderPromises.getSSRObservable(watchQueryOptions)
-        || state.client.watchQuery(watchQueryOptions);
+      state.renderPromises
+        && state.renderPromises.getSSRObservable(state.watchQueryOptions)
+        || state.client.watchQuery(state.watchQueryOptions);
 
-    if (context.renderPromises) {
-      context.renderPromises.registerSSRObservable(obsQuery);
+    if (state.renderPromises) {
+      state.renderPromises.registerSSRObservable(obsQuery);
 
       if (
         options?.ssr !== false &&
@@ -98,7 +114,7 @@ export function useQuery<
         obsQuery.getCurrentResult().loading
       ) {
         // TODO: This is a legacy API which could probably be cleaned up
-        context.renderPromises.addQueryPromise({
+        state.renderPromises.addQueryPromise({
           // The only options which seem to actually be used by the
           // RenderPromises class are query and variables.
           getOptions: () => obsQuery.options,
@@ -150,7 +166,7 @@ export function useQuery<
     // the useState result by the helper function setResult, declared below.
     result,
     previousData: void 0 as TData | undefined,
-    watchQueryOptions,
+    watchQueryOptions: state.watchQueryOptions,
   });
 
   function setResult(nextResult: ApolloQueryResult<TData>) {
@@ -180,13 +196,13 @@ export function useQuery<
   useEffect(() => {
     let nextResult: ApolloQueryResult<TData> | undefined;
     if (ref.current.state !== state) {
-      const obsQuery = state.client.watchQuery(watchQueryOptions);
+      const obsQuery = state.client.watchQuery(state.watchQueryOptions);
       setObsQuery(obsQuery);
       nextResult = obsQuery.getCurrentResult();
-    } else if (!equal(ref.current.watchQueryOptions, watchQueryOptions)) {
-      obsQuery.setOptions(watchQueryOptions).catch(() => {});
+    } else if (!equal(ref.current.watchQueryOptions, state.watchQueryOptions)) {
+      obsQuery.setOptions(state.watchQueryOptions).catch(() => {});
       nextResult = obsQuery.getCurrentResult();
-      ref.current.watchQueryOptions = watchQueryOptions;
+      ref.current.watchQueryOptions = state.watchQueryOptions;
     }
 
     if (nextResult) {
@@ -198,7 +214,7 @@ export function useQuery<
 
   // An effect to subscribe to the current observable query
   useEffect(() => {
-    if (context.renderPromises) {
+    if (state.renderPromises) {
       return;
     }
 
@@ -259,7 +275,7 @@ export function useQuery<
     }
 
     return () => subscription.unsubscribe();
-  }, [obsQuery, context.renderPromises, state.client.disableNetworkFetches]);
+  }, [obsQuery, state.renderPromises, state.client.disableNetworkFetches]);
 
   const { partial } = result;
   if (!partial && hasOwnProperty.call(result, "partial")) {
@@ -290,12 +306,12 @@ export function useQuery<
     // TODO: This is a hack to make sure useLazyQuery executions update the
     // obsevable query options for ssr.
     if (
-      context.renderPromises &&
+      state.renderPromises &&
       options?.ssr !== false &&
       !options?.skip &&
       result.loading
     ) {
-      obsQuery.setOptions(watchQueryOptions).catch(() => {});
+      obsQuery.setOptions(state.watchQueryOptions).catch(() => {});
     }
 
     // We assign options during rendering as a guard to make sure that
@@ -304,7 +320,7 @@ export function useQuery<
   }
 
   if (
-    (context.renderPromises || state.client.disableNetworkFetches) &&
+    (state.renderPromises || state.client.disableNetworkFetches) &&
     options?.ssr === false
   ) {
     // If SSR has been explicitly disabled, and this function has been called
@@ -355,31 +371,10 @@ export function useQuery<
 
   return Object.assign(result, obsQueryFields, {
     client: state.client,
-    variables: watchQueryOptions.variables,
+    variables: state.watchQueryOptions.variables,
     called: true,
     previousData: ref.current.previousData,
   });
-}
-
-function useWatchQueryOptions<TData, TVariables>(
-  client: ReturnType<typeof useApolloClient>,
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<TData, TVariables> | undefined,
-) {
-  verifyDocumentType(query, DocumentType.Query);
-
-  const watchQueryOptions = createWatchQueryOptions(
-    query,
-    options,
-    client.defaultOptions.watchQuery,
-  );
-
-  const ref = useRef<WatchQueryOptions<TVariables, TData>>(watchQueryOptions);
-  if (!equal(ref.current, watchQueryOptions)) {
-    ref.current = watchQueryOptions;
-  }
-
-  return ref.current;
 }
 
 /**

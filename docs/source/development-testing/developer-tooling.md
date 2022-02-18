@@ -5,7 +5,7 @@ description: Improve your developer experience with these services and extension
 
 ## Apollo Studio
 
-[Apollo Studio](/studio/graph-manager-overview/) (formerly Graph Manager) is a cloud app that provides a single, consolidated place for you to collaborate on the evolution of your graph.
+[Apollo Studio](/studio/) (formerly Graph Manager) is a cloud app that provides a single, consolidated place for you to collaborate on the evolution of your graph.
 
 It provides the following features to all Apollo users for free:
 

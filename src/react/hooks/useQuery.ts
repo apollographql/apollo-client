@@ -144,8 +144,7 @@ export function useQuery<
   });
 
   const ref = useRef({
-    client: state.client,
-    query,
+    state,
     options,
     // The ref.current.{result,previousData} properties are kept in sync with
     // the useState result by the helper function setResult, declared below.
@@ -180,7 +179,7 @@ export function useQuery<
   // options whenever they change.
   useEffect(() => {
     let nextResult: ApolloQueryResult<TData> | undefined;
-    if (ref.current.client !== state.client || !equal(ref.current.query, query)) {
+    if (ref.current.state !== state) {
       const obsQuery = state.client.watchQuery(watchQueryOptions);
       setObsQuery(obsQuery);
       nextResult = obsQuery.getCurrentResult();
@@ -194,8 +193,8 @@ export function useQuery<
       setResult(nextResult);
     }
 
-    Object.assign(ref.current, { client: state.client, query });
-  }, [obsQuery, state.client, query, options]);
+    ref.current.state = state;
+  }, [obsQuery, state, options]);
 
   // An effect to subscribe to the current observable query
   useEffect(() => {

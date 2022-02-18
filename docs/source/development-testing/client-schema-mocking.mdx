@@ -3,7 +3,7 @@ title: Mocking new schema capabilities
 description: How to build UI features before your GraphQL API supports them
 ---
 
-Imagine we're building out a new feature in our Space Explorer app — we'd like to display a description of each rocket we can choose — but the backend support for this feature isn't going to be available for another few weeks. In keeping with [schema-first design](/tutorial/schema.html#write-schema), the team has decided that we'll be adding a new field called `description` to an existing type in our schema called `Rocket`.
+Imagine we're building out a new feature in our Space Explorer app — we'd like to display a description of each rocket we can choose — but the backend support for this feature isn't going to be available for another few weeks. In keeping with [schema-first design](/tutorial/schema/#define-your-schemas-types), the team has decided that we'll be adding a new field called `description` to an existing type in our schema called `Rocket`.
 
 Even though this field doesn't exist in the schema yet, we can take advantage of client schemas to document it as a _client-side_ field. In this guide, we'll walk through a simple recipe for this technique:
 
@@ -130,6 +130,6 @@ export default function RocketDetails({ rocketId }) {
 
 Once the feature is ready on the backend, just remove the `@client` directive from your query. You should now be able to see your real production data returned instead. It's probably a good idea to clean up any unused client schema and resolvers at this time.
 
-There you have it, a workflow for developing new features with new schema fields ahead of the actual schema implementation. For further reading, visit the [tutorial guide](/tutorial/local-state.html#virtual-fields) which describes how to use client fields to manage local state in greater depth.
+There you have it, a workflow for developing new features with new schema fields ahead of the actual schema implementation. For further reading, visit the [tutorial guide](/tutorial/local-state/) which describes how to use client fields to manage local state in greater depth.
 
 If you have feedback on this workflow, experiences you want to share, or just want to join the general discussion on client-side development and mocking, join us on [Spectrum](https://spectrum.chat/apollo)!

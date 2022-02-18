@@ -89,8 +89,19 @@ class InternalState<TData, TVariables> {
       options.skip
     ));
 
+    this.onCompleted = options
+      && options.onCompleted
+      || InternalState.prototype.onCompleted;
+
+    this.onError = options
+      && options.onError
+      || InternalState.prototype.onError;
+
     return this;
   }
+
+  public onCompleted(data: TData) {}
+  public onError(error: ApolloError) {}
 
   public observable: ObservableQuery<TData, TVariables>;
   public obsQueryFields: Omit<
@@ -168,11 +179,11 @@ export function useQuery<
   // setResultState directly, unless you know what you're up to.
   let [result, setResultState] = useState(() => {
     const result = obsQuery.getCurrentResult();
-    if (!result.loading && options) {
+    if (!result.loading) {
       if (result.error) {
-        options.onError?.(result.error);
+        state.onError(result.error);
       } else if (result.data) {
-        options.onCompleted?.(result.data);
+        state.onCompleted(result.data);
       }
     }
 
@@ -203,9 +214,9 @@ export function useQuery<
 
     if (!nextResult.loading && options) {
       if (nextResult.error) {
-        options.onError?.(nextResult.error);
+        state.onError(nextResult.error);
       } else if (nextResult.data) {
-        options.onCompleted?.(nextResult.data);
+        state.onCompleted(nextResult.data);
       }
     }
   }

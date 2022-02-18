@@ -4,6 +4,7 @@ import { OperationVariables } from '../../core';
 import { getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
+  ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
   ObservableQuery,
@@ -25,6 +26,44 @@ const {
   },
 } = Object;
 
+function useInternalState<TData, TVariables>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  clientOverride?: ApolloClient<any>,
+) {
+  const client = useApolloClient(clientOverride);
+
+  const state = useMemo(
+    () => new InternalState(client, query),
+    [client, query],
+  );
+
+  const [stateWrapper, setStateWrapper] = useState({ state });
+
+  state.forceUpdate = () => {
+    setStateWrapper({ state: stateWrapper.state });
+  };
+
+  if (state !== stateWrapper.state) {
+    // TODO Somehow call forceUpdate, perhaps in useEffect?
+    stateWrapper.state = state;
+  }
+
+  return state;
+}
+
+class InternalState<TData, TVariables> {
+  constructor(
+    public readonly client: ReturnType<typeof useApolloClient>,
+    public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ) {
+    verifyDocumentType(query, DocumentType.Query);
+  }
+
+  public forceUpdate() {
+    // Replaced (in useInternalState) with a method that triggers an update.
+  }
+}
+
 export function useQuery<
   TData = any,
   TVariables = OperationVariables,
@@ -33,10 +72,10 @@ export function useQuery<
   options?: QueryHookOptions<TData, TVariables>,
 ): QueryResult<TData, TVariables> {
   const context = useContext(getApolloContext());
-  const client = useApolloClient(options?.client);
+  const state = useInternalState(query, options?.client);
 
   const watchQueryOptions = useWatchQueryOptions(
-    client,
+    state.client,
     query,
     options,
   );
@@ -48,7 +87,7 @@ export function useQuery<
     const obsQuery: ObservableQuery<TData, TVariables> =
       context.renderPromises
         && context.renderPromises.getSSRObservable(watchQueryOptions)
-        || client.watchQuery(watchQueryOptions);
+        || state.client.watchQuery(watchQueryOptions);
 
     if (context.renderPromises) {
       context.renderPromises.registerSSRObservable(obsQuery);
@@ -105,7 +144,7 @@ export function useQuery<
   });
 
   const ref = useRef({
-    client,
+    client: state.client,
     query,
     options,
     // The ref.current.{result,previousData} properties are kept in sync with
@@ -141,8 +180,8 @@ export function useQuery<
   // options whenever they change.
   useEffect(() => {
     let nextResult: ApolloQueryResult<TData> | undefined;
-    if (ref.current.client !== client || !equal(ref.current.query, query)) {
-      const obsQuery = client.watchQuery(watchQueryOptions);
+    if (ref.current.client !== state.client || !equal(ref.current.query, query)) {
+      const obsQuery = state.client.watchQuery(watchQueryOptions);
       setObsQuery(obsQuery);
       nextResult = obsQuery.getCurrentResult();
     } else if (!equal(ref.current.watchQueryOptions, watchQueryOptions)) {
@@ -155,8 +194,8 @@ export function useQuery<
       setResult(nextResult);
     }
 
-    Object.assign(ref.current, { client, query });
-  }, [obsQuery, client, query, options]);
+    Object.assign(ref.current, { client: state.client, query });
+  }, [obsQuery, state.client, query, options]);
 
   // An effect to subscribe to the current observable query
   useEffect(() => {
@@ -221,7 +260,7 @@ export function useQuery<
     }
 
     return () => subscription.unsubscribe();
-  }, [obsQuery, context.renderPromises, client.disableNetworkFetches]);
+  }, [obsQuery, context.renderPromises, state.client.disableNetworkFetches]);
 
   const { partial } = result;
   if (!partial && hasOwnProperty.call(result, "partial")) {
@@ -266,7 +305,7 @@ export function useQuery<
   }
 
   if (
-    (context.renderPromises || client.disableNetworkFetches) &&
+    (context.renderPromises || state.client.disableNetworkFetches) &&
     options?.ssr === false
   ) {
     // If SSR has been explicitly disabled, and this function has been called
@@ -316,7 +355,7 @@ export function useQuery<
   }), [obsQuery]);
 
   return Object.assign(result, obsQueryFields, {
-    client,
+    client: state.client,
     variables: watchQueryOptions.variables,
     called: true,
     previousData: ref.current.previousData,

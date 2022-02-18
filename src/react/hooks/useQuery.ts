@@ -15,6 +15,7 @@ import {
 import {
   QueryHookOptions,
   QueryResult,
+  ObservableQueryFields,
 } from '../types/types';
 
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -66,6 +67,7 @@ class InternalState<TData, TVariables> {
   public renderPromises: ApolloContextValue["renderPromises"];
   public queryHookOptions: QueryHookOptions<TData, TVariables>;
   public watchQueryOptions: WatchQueryOptions<TVariables, TData>;
+  public ssrDisabled: boolean;
 
   useOptions(
     options: undefined | QueryHookOptions<TData, TVariables>,
@@ -82,39 +84,45 @@ class InternalState<TData, TVariables> {
       this.watchQueryOptions = watchQueryOptions;
     }
 
+    this.ssrDisabled = Boolean(options && (
+      options.ssr === false ||
+      options.skip
+    ));
+
     return this;
   }
-}
 
-export function useQuery<
-  TData = any,
-  TVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: QueryHookOptions<TData, TVariables>,
-): QueryResult<TData, TVariables> {
-  const state = useInternalState(query, options?.client);
-  state.useOptions(options);
+  public observable: ObservableQuery<TData, TVariables>;
+  public obsQueryFields: Omit<
+    ObservableQueryFields<TData, TVariables>,
+    "variables"
+  >;
 
-  const [obsQuery, setObsQuery] = useState(() => {
+  useObservableQuery() {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
-    const obsQuery: ObservableQuery<TData, TVariables> =
-      state.renderPromises
-        && state.renderPromises.getSSRObservable(state.watchQueryOptions)
-        || state.client.watchQuery(state.watchQueryOptions);
+    const obsQuery = this.observable =
+      this.renderPromises
+        && this.renderPromises.getSSRObservable(this.watchQueryOptions)
+        || this.observable
+        || this.client.watchQuery(this.watchQueryOptions);
 
-    if (state.renderPromises) {
-      state.renderPromises.registerSSRObservable(obsQuery);
+    this.obsQueryFields = useMemo(() => ({
+      refetch: obsQuery.refetch.bind(obsQuery),
+      fetchMore: obsQuery.fetchMore.bind(obsQuery),
+      updateQuery: obsQuery.updateQuery.bind(obsQuery),
+      startPolling: obsQuery.startPolling.bind(obsQuery),
+      stopPolling: obsQuery.stopPolling.bind(obsQuery),
+      subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
+    }), [obsQuery]);
 
-      if (
-        options?.ssr !== false &&
-        !options?.skip &&
-        obsQuery.getCurrentResult().loading
-      ) {
+    if (this.renderPromises) {
+      this.renderPromises.registerSSRObservable(obsQuery);
+
+      if (!this.ssrDisabled && obsQuery.getCurrentResult().loading) {
         // TODO: This is a legacy API which could probably be cleaned up
-        state.renderPromises.addQueryPromise({
+        this.renderPromises.addQueryPromise({
           // The only options which seem to actually be used by the
           // RenderPromises class are query and variables.
           getOptions: () => obsQuery.options,
@@ -142,7 +150,19 @@ export function useQuery<
     }
 
     return obsQuery;
-  });
+  }
+}
+
+export function useQuery<
+  TData = any,
+  TVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: QueryHookOptions<TData, TVariables>,
+): QueryResult<TData, TVariables> {
+  const state = useInternalState(query, options?.client);
+  state.useOptions(options);
+  const obsQuery = state.useObservableQuery();
 
   // Call the setResult helper function (declared below) instead of calling
   // setResultState directly, unless you know what you're up to.
@@ -196,9 +216,9 @@ export function useQuery<
   useEffect(() => {
     let nextResult: ApolloQueryResult<TData> | undefined;
     if (ref.current.state !== state) {
-      const obsQuery = state.client.watchQuery(state.watchQueryOptions);
-      setObsQuery(obsQuery);
-      nextResult = obsQuery.getCurrentResult();
+      state.observable = state.client.watchQuery(state.watchQueryOptions);
+      state.forceUpdate();
+      nextResult = state.observable.getCurrentResult();
     } else if (!equal(ref.current.watchQueryOptions, state.watchQueryOptions)) {
       obsQuery.setOptions(state.watchQueryOptions).catch(() => {});
       nextResult = obsQuery.getCurrentResult();

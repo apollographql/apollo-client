@@ -98,7 +98,7 @@ Variable values are _not_ included in query strings. You can also specify _which
 
 ## Query only the data you need, where you need it
 
-One of GraphQL's biggest advantages over a traditional REST API is its support for [declarative data fetching](/intro/benefits/#declarative-and-efficient-data-fetching). Each component can (and should) query exactly the fields it requires to render, with no superfluous data sent over the network.
+One of GraphQL's biggest advantages over a traditional REST API is its support for [declarative data fetching](/intro/benefits/#graphql-provides-declarative-efficient-data-fetching). Each component can (and should) query exactly the fields it requires to render, with no superfluous data sent over the network.
 
 If instead your root component executes a single, enormous query to obtain data for all of its children, it might query on behalf of components that _aren't even rendered_ given the current state. This can result in a delayed response, and it drastically reduces the likelihood that the query's result can be reused by a [server-side response cache](/apollo-server/performance/caching/).
 
@@ -289,4 +289,4 @@ const client = new ApolloClient({
 
 If you specify these values, Apollo Client automatically adds them to each operation request as HTTP headers (`apollographql-client-name` and `apollographql-client-version`).
 
-Then if you've configured [metrics reporting in Apollo Studio](/studio/setup-analytics/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](/studio/client-awareness/).
+Then if you've configured [metrics reporting in Apollo Studio](/studio/metrics/usage-reporting/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](/studio/metrics/client-awareness/).

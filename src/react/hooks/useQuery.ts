@@ -175,10 +175,18 @@ export function useQuery<
   state.useOptions(options);
   const obsQuery = state.useObservableQuery();
 
-  // Call the setResult helper function (declared below) instead of calling
-  // setResultState directly, unless you know what you're up to.
-  let [result, setResultState] = useState(() => {
-    const result = obsQuery.getCurrentResult();
+  const ref = useRef({
+    state,
+    options,
+    // The ref.current.{result,previousData} properties are kept in sync with
+    // the useState result by the helper function setResult, declared below.
+    result: void 0 as ApolloQueryResult<TData> | undefined,
+    previousData: void 0 as TData | undefined,
+    watchQueryOptions: state.watchQueryOptions,
+  });
+
+  if (!ref.current.result) {
+    const result = ref.current.result = obsQuery.getCurrentResult();
     if (!result.loading) {
       if (result.error) {
         state.onError(result.error);
@@ -186,19 +194,7 @@ export function useQuery<
         state.onCompleted(result.data);
       }
     }
-
-    return result;
-  });
-
-  const ref = useRef({
-    state,
-    options,
-    // The ref.current.{result,previousData} properties are kept in sync with
-    // the useState result by the helper function setResult, declared below.
-    result,
-    previousData: void 0 as TData | undefined,
-    watchQueryOptions: state.watchQueryOptions,
-  });
+  }
 
   function setResult(nextResult: ApolloQueryResult<TData>) {
     const {
@@ -206,11 +202,12 @@ export function useQuery<
       options,
     } = ref.current;
 
-    if (previousResult.data) {
+    if (previousResult && previousResult.data) {
       ref.current.previousData = previousResult.data;
     }
 
-    setResultState(ref.current.result = nextResult);
+    ref.current.result = nextResult;
+    state.forceUpdate();
 
     if (!nextResult.loading && options) {
       if (nextResult.error) {
@@ -293,11 +290,12 @@ export function useQuery<
 
       const previousResult = ref.current.result;
       if (
+        !previousResult ||
         (previousResult && previousResult.loading) ||
         !equal(error, previousResult.error)
       ) {
         setResult({
-          data: previousResult.data,
+          data: (previousResult && previousResult.data) as TData,
           error: error as ApolloError,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -308,13 +306,14 @@ export function useQuery<
     return () => subscription.unsubscribe();
   }, [obsQuery, state.renderPromises, state.client.disableNetworkFetches]);
 
-  const { partial } = result;
-  if (!partial && hasOwnProperty.call(result, "partial")) {
-    // Hide result.partial if it is defined but falsy.
-    delete result.partial;
-  }
-
   {
+    const { result } = ref.current;
+    const { partial } = result;
+    if (!partial && hasOwnProperty.call(result, "partial")) {
+      // Hide result.partial if it is defined but falsy.
+      delete result.partial;
+    }
+
     // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION
     //
     // TODO: This code should be removed when the partialRefetch option is
@@ -350,6 +349,7 @@ export function useQuery<
     Object.assign(ref.current, { options });
   }
 
+  let { result } = ref.current;
   if (
     (state.renderPromises || state.client.disableNetworkFetches) &&
     options?.ssr === false

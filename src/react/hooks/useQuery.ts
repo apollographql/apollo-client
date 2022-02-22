@@ -177,7 +177,6 @@ export function useQuery<
 
   const ref = useRef({
     state,
-    options,
     // The ref.current.{result,previousData} properties are kept in sync with
     // the useState result by the helper function setResult, declared below.
     result: void 0 as ApolloQueryResult<TData> | undefined,
@@ -197,11 +196,7 @@ export function useQuery<
   }
 
   function setResult(nextResult: ApolloQueryResult<TData>) {
-    const {
-      result: previousResult,
-      options,
-    } = ref.current;
-
+    const previousResult = ref.current.result;
     if (previousResult && previousResult.data) {
       ref.current.previousData = previousResult.data;
     }
@@ -209,7 +204,7 @@ export function useQuery<
     ref.current.result = nextResult;
     state.forceUpdate();
 
-    if (!nextResult.loading && options) {
+    if (!nextResult.loading) {
       if (nextResult.error) {
         state.onError(nextResult.error);
       } else if (nextResult.data) {
@@ -238,7 +233,7 @@ export function useQuery<
     }
 
     ref.current.state = state;
-  }, [obsQuery, state, options]);
+  }, [obsQuery, state, state.queryHookOptions]);
 
   // An effect to subscribe to the current observable query
   useEffect(() => {
@@ -321,7 +316,7 @@ export function useQuery<
     // edge cases when this block was put in an effect.
     if (
       partial &&
-      options?.partialRefetch &&
+      state.queryHookOptions.partialRefetch &&
       !result.loading &&
       (!result.data || Object.keys(result.data).length === 0) &&
       obsQuery.options.fetchPolicy !== 'cache-only'
@@ -337,22 +332,18 @@ export function useQuery<
     // obsevable query options for ssr.
     if (
       state.renderPromises &&
-      options?.ssr !== false &&
-      !options?.skip &&
+      state.queryHookOptions.ssr !== false &&
+      !state.queryHookOptions.skip &&
       result.loading
     ) {
       obsQuery.setOptions(state.watchQueryOptions).catch(() => {});
     }
-
-    // We assign options during rendering as a guard to make sure that
-    // callbacks like onCompleted and onError are not stale.
-    Object.assign(ref.current, { options });
   }
 
   let { result } = ref.current;
   if (
     (state.renderPromises || state.client.disableNetworkFetches) &&
-    options?.ssr === false
+    state.queryHookOptions.ssr === false
   ) {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
@@ -362,7 +353,10 @@ export function useQuery<
       error: void 0,
       networkStatus: NetworkStatus.loading,
     };
-  } else if (options?.skip || options?.fetchPolicy === 'standby') {
+  } else if (
+    state.queryHookOptions.skip ||
+    state.queryHookOptions.fetchPolicy === 'standby'
+  ) {
     // When skipping a query (ie. we're not querying for data but still want to
     // render children), make sure the `data` is cleared out and `loading` is
     // set to `false` (since we aren't loading anything).

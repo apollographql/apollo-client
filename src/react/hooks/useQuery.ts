@@ -162,6 +162,42 @@ class InternalState<TData, TVariables> {
 
     return obsQuery;
   }
+
+  public result: undefined | ApolloQueryResult<TData>;
+  public previousData: undefined | TData;
+
+  setResult(nextResult: ApolloQueryResult<TData>) {
+    const previousResult = this.result;
+    if (previousResult && previousResult.data) {
+      this.previousData = previousResult.data;
+    }
+
+    this.result = nextResult;
+    this.forceUpdate();
+
+    if (!nextResult.loading) {
+      if (nextResult.error) {
+        this.onError(nextResult.error);
+      } else if (nextResult.data) {
+        this.onCompleted(nextResult.data);
+      }
+    }
+  }
+
+  getCurrentResult(): ApolloQueryResult<TData> {
+    if (!this.result) {
+      const result = this.result = this.observable.getCurrentResult();
+      if (!result.loading) {
+        if (result.error) {
+          this.onError(result.error);
+        } else if (result.data) {
+          this.onCompleted(result.data);
+        }
+      }
+      this.result = result;
+    }
+    return this.result;
+  }
 }
 
 export function useQuery<
@@ -177,41 +213,8 @@ export function useQuery<
 
   const ref = useRef({
     state,
-    // The ref.current.{result,previousData} properties are kept in sync with
-    // the useState result by the helper function setResult, declared below.
-    result: void 0 as ApolloQueryResult<TData> | undefined,
-    previousData: void 0 as TData | undefined,
     watchQueryOptions: state.watchQueryOptions,
   });
-
-  if (!ref.current.result) {
-    const result = ref.current.result = obsQuery.getCurrentResult();
-    if (!result.loading) {
-      if (result.error) {
-        state.onError(result.error);
-      } else if (result.data) {
-        state.onCompleted(result.data);
-      }
-    }
-  }
-
-  function setResult(nextResult: ApolloQueryResult<TData>) {
-    const previousResult = ref.current.result;
-    if (previousResult && previousResult.data) {
-      ref.current.previousData = previousResult.data;
-    }
-
-    ref.current.result = nextResult;
-    state.forceUpdate();
-
-    if (!nextResult.loading) {
-      if (nextResult.error) {
-        state.onError(nextResult.error);
-      } else if (nextResult.data) {
-        state.onCompleted(nextResult.data);
-      }
-    }
-  }
 
   // An effect to recreate the obsQuery whenever the client or query changes.
   // This effect is also responsible for checking and updating the obsQuery
@@ -229,7 +232,7 @@ export function useQuery<
     }
 
     if (nextResult) {
-      setResult(nextResult);
+      state.setResult(nextResult);
     }
 
     ref.current.state = state;
@@ -246,7 +249,7 @@ export function useQuery<
     // the values differ slightly. Specifically, loading results will have
     // an empty object for data instead of `undefined` for some reason.
     function onNext() {
-      const previousResult = ref.current.result;
+      const previousResult = state.result;
       const result = obsQuery.getCurrentResult();
       // Make sure we're not attempting to re-render similar results
       if (
@@ -258,7 +261,7 @@ export function useQuery<
         return;
       }
 
-      setResult(result);
+      state.setResult(result);
     }
 
     function onError(error: Error) {
@@ -283,13 +286,13 @@ export function useQuery<
         throw error;
       }
 
-      const previousResult = ref.current.result;
+      const previousResult = state.result;
       if (
         !previousResult ||
         (previousResult && previousResult.loading) ||
         !equal(error, previousResult.error)
       ) {
-        setResult({
+        state.setResult({
           data: (previousResult && previousResult.data) as TData,
           error: error as ApolloError,
           loading: false,
@@ -301,8 +304,9 @@ export function useQuery<
     return () => subscription.unsubscribe();
   }, [obsQuery, state.renderPromises, state.client.disableNetworkFetches]);
 
+  let result = state.getCurrentResult();
+
   {
-    const { result } = ref.current;
     const { partial } = result;
     if (!partial && hasOwnProperty.call(result, "partial")) {
       // Hide result.partial if it is defined but falsy.
@@ -340,14 +344,13 @@ export function useQuery<
     }
   }
 
-  let { result } = ref.current;
   if (
     (state.renderPromises || state.client.disableNetworkFetches) &&
     state.queryHookOptions.ssr === false
   ) {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    result = ref.current.result = {
+    result = state.result = {
       loading: true,
       data: void 0 as unknown as TData,
       error: void 0,
@@ -389,7 +392,7 @@ export function useQuery<
     client: state.client,
     variables: state.watchQueryOptions.variables,
     called: true,
-    previousData: ref.current.previousData,
+    previousData: state.previousData,
   });
 }
 

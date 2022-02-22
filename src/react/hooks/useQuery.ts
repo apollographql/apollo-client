@@ -385,16 +385,7 @@ export function useQuery<
     }
   }
 
-  const obsQueryFields = useMemo(() => ({
-    refetch: obsQuery.refetch.bind(obsQuery),
-    fetchMore: obsQuery.fetchMore.bind(obsQuery),
-    updateQuery: obsQuery.updateQuery.bind(obsQuery),
-    startPolling: obsQuery.startPolling.bind(obsQuery),
-    stopPolling: obsQuery.stopPolling.bind(obsQuery),
-    subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
-  }), [obsQuery]);
-
-  return Object.assign(result, obsQueryFields, {
+  return Object.assign(result, state.obsQueryFields, {
     client: state.client,
     variables: state.watchQueryOptions.variables,
     called: true,

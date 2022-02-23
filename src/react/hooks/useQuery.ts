@@ -172,6 +172,28 @@ class InternalState<TData, TVariables> {
       }
     }
 
+    const ref = useRef({
+      state: this,
+      watchQueryOptions: this.watchQueryOptions,
+    });
+
+    // An effect to recreate the obsQuery whenever the client or query changes.
+    // This effect is also responsible for checking and updating the obsQuery
+    // options whenever they change.
+    useEffect(() => {
+      if (this.renderPromises) {
+        // Do nothing during server rendering.
+      } else if (ref.current.state !== this) {
+        this.observable = this.client.watchQuery(this.watchQueryOptions);
+        ref.current.state = this;
+        this.setResult(this.observable.getCurrentResult());
+      } else if (!equal(ref.current.watchQueryOptions, this.watchQueryOptions)) {
+        obsQuery.setOptions(this.watchQueryOptions).catch(() => {});
+        ref.current.watchQueryOptions = this.watchQueryOptions;
+        this.setResult(obsQuery.getCurrentResult());
+      }
+    }, [obsQuery, this, this.queryHookOptions]);
+
     this.useSubscriptionEffect();
 
     return obsQuery;
@@ -394,34 +416,7 @@ export function useQuery<
 ): QueryResult<TData, TVariables> {
   const state = useInternalState(query, options?.client);
   state.useOptions(options);
-  const obsQuery = state.useObservableQuery();
-
-  const ref = useRef({
-    state,
-    watchQueryOptions: state.watchQueryOptions,
-  });
-
-  // An effect to recreate the obsQuery whenever the client or query changes.
-  // This effect is also responsible for checking and updating the obsQuery
-  // options whenever they change.
-  useEffect(() => {
-    let nextResult: ApolloQueryResult<TData> | undefined;
-    if (ref.current.state !== state) {
-      state.observable = state.client.watchQuery(state.watchQueryOptions);
-      state.forceUpdate();
-      nextResult = state.observable.getCurrentResult();
-    } else if (!equal(ref.current.watchQueryOptions, state.watchQueryOptions)) {
-      obsQuery.setOptions(state.watchQueryOptions).catch(() => {});
-      nextResult = obsQuery.getCurrentResult();
-      ref.current.watchQueryOptions = state.watchQueryOptions;
-    }
-
-    if (nextResult) {
-      state.setResult(nextResult);
-    }
-
-    ref.current.state = state;
-  }, [obsQuery, state, state.queryHookOptions]);
+  state.useObservableQuery();
 
   const result = state.getCurrentResult();
 

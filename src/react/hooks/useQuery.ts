@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState, MutableRefObject } from 'react';
 import { equal } from '@wry/equality';
 import { OperationVariables } from '../../core';
 import { ApolloContextValue, getApolloContext } from '../context';
@@ -69,9 +69,16 @@ class InternalState<TData, TVariables> {
   public watchQueryOptions: WatchQueryOptions<TVariables, TData>;
   public ssrDisabled: boolean;
 
+  private resultRef: MutableRefObject<{
+    result?: ApolloQueryResult<TData>;
+    previousData?: TData;
+  }>;
+
   useOptions(
     options: undefined | QueryHookOptions<TData, TVariables>,
   ): this {
+    this.resultRef = useRef({});
+
     this.renderPromises = useContext(getApolloContext()).renderPromises;
 
     const watchQueryOptions = createWatchQueryOptions(
@@ -163,16 +170,24 @@ class InternalState<TData, TVariables> {
     return obsQuery;
   }
 
-  public result: undefined | ApolloQueryResult<TData>;
-  public previousData: undefined | TData;
+  // public result: undefined | ApolloQueryResult<TData>;
+  // public previousData: undefined | TData;
+
+  public get result(): ApolloQueryResult<TData> | undefined {
+    return this.resultRef.current.result;
+  }
+
+  public get previousData(): TData | undefined {
+    return this.resultRef.current.previousData;
+  }
 
   setResult(nextResult: ApolloQueryResult<TData>) {
-    const previousResult = this.result;
+    const previousResult = this.resultRef.current.result;
     if (previousResult && previousResult.data) {
-      this.previousData = previousResult.data;
+      this.resultRef.current.previousData = previousResult.data;
     }
 
-    this.result = nextResult;
+    this.resultRef.current.result = nextResult;
     this.forceUpdate();
 
     if (!nextResult.loading) {
@@ -185,8 +200,8 @@ class InternalState<TData, TVariables> {
   }
 
   getCurrentResult(): ApolloQueryResult<TData> {
-    if (!this.result) {
-      const result = this.result = this.observable.getCurrentResult();
+    if (!this.resultRef.current.result) {
+      const result = this.resultRef.current.result = this.observable.getCurrentResult();
       if (!result.loading) {
         if (result.error) {
           this.onError(result.error);
@@ -194,9 +209,9 @@ class InternalState<TData, TVariables> {
           this.onCompleted(result.data);
         }
       }
-      this.result = result;
+      this.resultRef.current.result = result;
     }
-    return this.result;
+    return this.resultRef.current.result;
   }
 }
 
@@ -350,7 +365,7 @@ export function useQuery<
   ) {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    result = state.result = {
+    result = {
       loading: true,
       data: void 0 as unknown as TData,
       error: void 0,

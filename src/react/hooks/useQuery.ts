@@ -20,6 +20,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
+import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
 
 const {
   prototype: {
@@ -213,6 +214,39 @@ class InternalState<TData, TVariables> {
     }
     return this.resultRef.current.result;
   }
+
+  private toQueryResultCache = new (canUseWeakMap ? WeakMap : Map)<
+    ApolloQueryResult<TData>,
+    QueryResult<TData, TVariables>
+  >();
+
+  toQueryResult(
+    result: ApolloQueryResult<TData>,
+  ): QueryResult<TData, TVariables> {
+    let queryResult = this.toQueryResultCache.get(result);
+    if (queryResult) return queryResult;
+
+    const { data, partial, ...resultWithoutPartial } = result;
+    this.toQueryResultCache.set(result, queryResult = {
+      data, // Ensure always defined, even if result.data is missing.
+      ...resultWithoutPartial,
+      ...this.obsQueryFields,
+      client: this.client,
+      variables: this.observable.variables,
+      called: true,
+      previousData: this.previousData,
+    });
+
+    if (!queryResult.error && isNonEmptyArray(result.errors)) {
+      // Until a set naming convention for networkError and graphQLErrors is
+      // decided upon, we map errors (graphQLErrors) to the error options.
+      // TODO: Is it possible for both result.error and result.errors to be
+      // defined here?
+      queryResult.error = new ApolloError({ graphQLErrors: result.errors });
+    }
+
+    return queryResult;
+  }
 }
 
 export function useQuery<
@@ -393,22 +427,7 @@ export function useQuery<
     };
   }
 
-  if (result.errors && result.errors.length) {
-    // Until a set naming convention for networkError and graphQLErrors is
-    // decided upon, we map errors (graphQLErrors) to the error options.
-    // TODO: Is it possible for both result.error and result.errors to be
-    // defined here?
-    if (!result.error) {
-      result.error = new ApolloError({ graphQLErrors: result.errors });
-    }
-  }
-
-  return Object.assign(result, state.obsQueryFields, {
-    client: state.client,
-    variables: state.watchQueryOptions.variables,
-    called: true,
-    previousData: state.previousData,
-  });
+  return state.toQueryResult(result);
 }
 
 /**

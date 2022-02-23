@@ -165,6 +165,10 @@ class InternalState<TData, TVariables> {
         },
         // This callback never seemed to do anything
         () => null);
+
+        // TODO: This is a hack to make sure useLazyQuery executions update the
+        // obsevable query options for ssr.
+        obsQuery.setOptions(this.watchQueryOptions).catch(() => {});
       }
     }
 
@@ -424,17 +428,6 @@ export function useQuery<
         networkStatus: NetworkStatus.refetch,
       });
       obsQuery.refetch();
-    }
-
-    // TODO: This is a hack to make sure useLazyQuery executions update the
-    // obsevable query options for ssr.
-    if (
-      state.renderPromises &&
-      state.queryHookOptions.ssr !== false &&
-      !state.queryHookOptions.skip &&
-      result.loading
-    ) {
-      obsQuery.setOptions(state.watchQueryOptions).catch(() => {});
     }
   }
 

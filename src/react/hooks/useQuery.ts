@@ -201,8 +201,9 @@ class InternalState<TData, TVariables> {
   }
 
   getCurrentResult(): ApolloQueryResult<TData> {
-    if (!this.resultRef.current.result) {
-      const result = this.resultRef.current.result = this.observable.getCurrentResult();
+    let { result } = this.resultRef.current;
+    if (!result) {
+      result = this.observable.getCurrentResult();
       if (!result.loading) {
         if (result.error) {
           this.onError(result.error);
@@ -212,7 +213,42 @@ class InternalState<TData, TVariables> {
       }
       this.resultRef.current.result = result;
     }
-    return this.resultRef.current.result;
+
+    if (
+      (this.renderPromises || this.client.disableNetworkFetches) &&
+      this.queryHookOptions.ssr === false
+    ) {
+      // If SSR has been explicitly disabled, and this function has been called
+      // on the server side, return the default loading state.
+      result = {
+        loading: true,
+        data: void 0 as unknown as TData,
+        error: void 0,
+        networkStatus: NetworkStatus.loading,
+      };
+    } else if (
+      this.queryHookOptions.skip ||
+      this.queryHookOptions.fetchPolicy === 'standby'
+    ) {
+      // When skipping a query (ie. we're not querying for data but still want to
+      // render children), make sure the `data` is cleared out and `loading` is
+      // set to `false` (since we aren't loading anything).
+      //
+      // NOTE: We no longer think this is the correct behavior. Skipping should
+      // not automatically set `data` to `undefined`, but instead leave the
+      // previous data in place. In other words, skipping should not mandate that
+      // previously received data is all of a sudden removed. Unfortunately,
+      // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+      // to address this.
+      result = {
+        loading: false,
+        data: void 0 as unknown as TData,
+        error: void 0,
+        networkStatus: NetworkStatus.ready,
+      };
+    }
+
+    return result;
   }
 
   private toQueryResultCache = new (canUseWeakMap ? WeakMap : Map)<
@@ -353,7 +389,7 @@ export function useQuery<
     return () => subscription.unsubscribe();
   }, [obsQuery, state.renderPromises, state.client.disableNetworkFetches]);
 
-  let result = state.getCurrentResult();
+  const result = state.getCurrentResult();
 
   {
     const { partial } = result;
@@ -391,40 +427,6 @@ export function useQuery<
     ) {
       obsQuery.setOptions(state.watchQueryOptions).catch(() => {});
     }
-  }
-
-  if (
-    (state.renderPromises || state.client.disableNetworkFetches) &&
-    state.queryHookOptions.ssr === false
-  ) {
-    // If SSR has been explicitly disabled, and this function has been called
-    // on the server side, return the default loading state.
-    result = {
-      loading: true,
-      data: void 0 as unknown as TData,
-      error: void 0,
-      networkStatus: NetworkStatus.loading,
-    };
-  } else if (
-    state.queryHookOptions.skip ||
-    state.queryHookOptions.fetchPolicy === 'standby'
-  ) {
-    // When skipping a query (ie. we're not querying for data but still want to
-    // render children), make sure the `data` is cleared out and `loading` is
-    // set to `false` (since we aren't loading anything).
-    //
-    // NOTE: We no longer think this is the correct behavior. Skipping should
-    // not automatically set `data` to `undefined`, but instead leave the
-    // previous data in place. In other words, skipping should not mandate that
-    // previously received data is all of a sudden removed. Unfortunately,
-    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-    // to address this.
-    result = {
-      loading: false,
-      data: void 0 as unknown as TData,
-      error: void 0,
-      networkStatus: NetworkStatus.ready,
-    };
   }
 
   return state.toQueryResult(result);

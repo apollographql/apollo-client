@@ -362,6 +362,27 @@ class InternalState<TData, TVariables> {
 
     return queryResult;
   }
+
+  unsafeHandlePartialRefetch(result: ApolloQueryResult<TData>) {
+    // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
+    //
+    // TODO: This code should be removed when the partialRefetch option is
+    // removed. I was unable to get this hook to behave reasonably in certain
+    // edge cases when this block was put in an effect.
+    if (
+      result.partial &&
+      this.queryHookOptions.partialRefetch &&
+      !result.loading &&
+      (!result.data || Object.keys(result.data).length === 0) &&
+      this.observable.options.fetchPolicy !== 'cache-only'
+    ) {
+      Object.assign(result, {
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      });
+      this.observable.refetch();
+    }
+  }
 }
 
 export function useQuery<
@@ -404,32 +425,8 @@ export function useQuery<
 
   const result = state.getCurrentResult();
 
-  {
-    const { partial } = result;
-    if (!partial && hasOwnProperty.call(result, "partial")) {
-      // Hide result.partial if it is defined but falsy.
-      delete result.partial;
-    }
-
-    // BAD BOY CODE BLOCK WHERE WE PUT SIDE-EFFECTS IN THE RENDER FUNCTION
-    //
-    // TODO: This code should be removed when the partialRefetch option is
-    // removed. I was unable to get this hook to behave reasonably in certain
-    // edge cases when this block was put in an effect.
-    if (
-      partial &&
-      state.queryHookOptions.partialRefetch &&
-      !result.loading &&
-      (!result.data || Object.keys(result.data).length === 0) &&
-      obsQuery.options.fetchPolicy !== 'cache-only'
-    ) {
-      Object.assign(result, {
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-      });
-      obsQuery.refetch();
-    }
-  }
+  // TODO Remove this method when we remove support for options.partialRefetch.
+  state.unsafeHandlePartialRefetch(result);
 
   return state.toQueryResult(result);
 }

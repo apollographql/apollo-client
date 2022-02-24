@@ -60,10 +60,11 @@ function useInternalState<TData, TVariables>(
     setStateWrapper({ state: stateWrapper.state });
   };
 
-  if (state !== stateWrapper.state) {
-    // TODO Somehow call forceUpdate, perhaps in useEffect?
-    stateWrapper.state = state;
-  }
+  useEffect(() => {
+    if (state !== stateWrapper.state) {
+      setStateWrapper({ state });
+    }
+  }, [state, stateWrapper.state]);
 
   return state;
 }
@@ -193,26 +194,20 @@ class InternalState<TData, TVariables> {
     }
 
     const ref = useRef({
-      state: this,
       watchQueryOptions: this.watchQueryOptions,
     });
 
-    // An effect to recreate the obsQuery whenever the client or query changes.
-    // This effect is also responsible for checking and updating the obsQuery
-    // options whenever they change.
+    // An effect to keep obsQuery.options up to date in case
+    // state.watchQueryOptions changes.
     useEffect(() => {
       if (this.renderPromises) {
         // Do nothing during server rendering.
-      } else if (ref.current.state !== this) {
-        this.observable = this.client.watchQuery(this.watchQueryOptions);
-        ref.current.state = this;
-        this.setResult(this.observable.getCurrentResult());
       } else if (!equal(ref.current.watchQueryOptions, this.watchQueryOptions)) {
         obsQuery.setOptions(this.watchQueryOptions).catch(() => {});
         ref.current.watchQueryOptions = this.watchQueryOptions;
         this.setResult(obsQuery.getCurrentResult());
       }
-    }, [obsQuery, this, this.queryHookOptions]);
+    }, [obsQuery, this.watchQueryOptions]);
 
     this.useSubscriptionEffect();
 

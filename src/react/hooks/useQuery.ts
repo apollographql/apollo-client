@@ -30,6 +30,19 @@ const {
   },
 } = Object;
 
+export function useQuery<
+  TData = any,
+  TVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: QueryHookOptions<TData, TVariables>,
+): QueryResult<TData, TVariables> {
+  return useInternalState(
+    query,
+    options && options.client,
+  ).useQuery(options);
+}
+
 function useInternalState<TData, TVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   clientOverride?: ApolloClient<any>,
@@ -67,12 +80,24 @@ class InternalState<TData, TVariables> {
     // Replaced (in useInternalState) with a method that triggers an update.
   }
 
-  public renderPromises: ApolloContextValue["renderPromises"];
-  public queryHookOptions: QueryHookOptions<TData, TVariables>;
-  public watchQueryOptions: WatchQueryOptions<TVariables, TData>;
-  public ssrDisabled: boolean;
+  public useQuery(options: undefined | QueryHookOptions<TData, TVariables>) {
+    this.useOptions(options);
+    this.useObservableQuery();
 
-  useOptions(
+    const result = this.getCurrentResult();
+
+    // TODO Remove this method when we remove support for options.partialRefetch.
+    this.unsafeHandlePartialRefetch(result);
+
+    return this.toQueryResult(result);
+  }
+
+  private renderPromises: ApolloContextValue["renderPromises"];
+  private queryHookOptions: QueryHookOptions<TData, TVariables>;
+  private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
+  private ssrDisabled: boolean;
+
+  private useOptions(
     options: undefined | QueryHookOptions<TData, TVariables>,
   ): this {
     this.renderPromises = useContext(getApolloContext()).renderPromises;
@@ -103,16 +128,16 @@ class InternalState<TData, TVariables> {
     return this;
   }
 
-  public onCompleted(data: TData) {}
-  public onError(error: ApolloError) {}
+  private onCompleted(data: TData) {}
+  private onError(error: ApolloError) {}
 
-  public observable: ObservableQuery<TData, TVariables>;
-  public obsQueryFields: Omit<
+  private observable: ObservableQuery<TData, TVariables>;
+  private obsQueryFields: Omit<
     ObservableQueryFields<TData, TVariables>,
     "variables"
   >;
 
-  useObservableQuery() {
+  private useObservableQuery() {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
@@ -267,10 +292,10 @@ class InternalState<TData, TVariables> {
     ]);
   }
 
-  public result: undefined | ApolloQueryResult<TData>;
-  public previousData: undefined | TData;
+  private result: undefined | ApolloQueryResult<TData>;
+  private previousData: undefined | TData;
 
-  setResult(nextResult: ApolloQueryResult<TData>) {
+  private setResult(nextResult: ApolloQueryResult<TData>) {
     const previousResult = this.result;
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
@@ -288,7 +313,7 @@ class InternalState<TData, TVariables> {
     }
   }
 
-  getCurrentResult(): ApolloQueryResult<TData> {
+  private getCurrentResult(): ApolloQueryResult<TData> {
     let { result } = this;
     if (!result) {
       result = this.result = this.observable.getCurrentResult();
@@ -343,7 +368,7 @@ class InternalState<TData, TVariables> {
     QueryResult<TData, TVariables>
   >();
 
-  toQueryResult(
+  private toQueryResult(
     result: ApolloQueryResult<TData>,
   ): QueryResult<TData, TVariables> {
     let queryResult = this.toQueryResultCache.get(result);
@@ -371,7 +396,7 @@ class InternalState<TData, TVariables> {
     return queryResult;
   }
 
-  unsafeHandlePartialRefetch(result: ApolloQueryResult<TData>) {
+  private unsafeHandlePartialRefetch(result: ApolloQueryResult<TData>) {
     // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
     //
     // TODO: This code should be removed when the partialRefetch option is
@@ -391,25 +416,6 @@ class InternalState<TData, TVariables> {
       this.observable.refetch();
     }
   }
-}
-
-export function useQuery<
-  TData = any,
-  TVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: QueryHookOptions<TData, TVariables>,
-): QueryResult<TData, TVariables> {
-  const state = useInternalState(query, options?.client);
-  state.useOptions(options);
-  state.useObservableQuery();
-
-  const result = state.getCurrentResult();
-
-  // TODO Remove this method when we remove support for options.partialRefetch.
-  state.unsafeHandlePartialRefetch(result);
-
-  return state.toQueryResult(result);
 }
 
 /**

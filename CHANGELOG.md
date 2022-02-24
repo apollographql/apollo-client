@@ -1,5 +1,5 @@
 
-## Apollo Client 3.5.10 (unreleased)
+## Apollo Client 3.5.10 (2022-02-24)
 
 ### Improvements
 

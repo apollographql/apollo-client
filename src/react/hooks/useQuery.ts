@@ -193,7 +193,7 @@ class InternalState<TData, TVariables> {
       }
     }
 
-    const ref = useRef({
+    const prevOptionsRef = useRef({
       watchQueryOptions: this.watchQueryOptions,
     });
 
@@ -202,9 +202,14 @@ class InternalState<TData, TVariables> {
     useEffect(() => {
       if (this.renderPromises) {
         // Do nothing during server rendering.
-      } else if (!equal(ref.current.watchQueryOptions, this.watchQueryOptions)) {
+      } else if (
+        // The useOptions method only updates this.watchQueryOptions if new new
+        // watchQueryOptions are not deep-equal to the previous options, so we
+        // only need a reference check (!==) here.
+        this.watchQueryOptions !== prevOptionsRef.current.watchQueryOptions
+      ) {
         obsQuery.setOptions(this.watchQueryOptions).catch(() => {});
-        ref.current.watchQueryOptions = this.watchQueryOptions;
+        prevOptionsRef.current.watchQueryOptions = this.watchQueryOptions;
         this.setResult(obsQuery.getCurrentResult());
       }
     }, [obsQuery, this.watchQueryOptions]);

@@ -235,9 +235,9 @@ Now, when the _second_ query returns, the cached `Book` object is updated to the
 
 The `Author`'s `name` field has been removed! This is because Apollo Client can't be sure that the `Author` objects returned by the two queries actually refer to the same author. So instead of merging fields of the two objects, Apollo Client completely _overwrites_ the object (and logs a warning).
 
-However, _we_ are confident that these two objects represent the same author, because a book's author virtually never changes. This common-sense knowledge is something we have at our disposal, as humans, but it must be communicated to the cache, which is neither human nor capable of telepathy.
+However, _we_ are confident that these two objects represent the same author, because a book's author virtually never changes. Therefore, we can tell the cache to treat `Book.author` objects as the _same_ object as long as they belong to the same `Book`. This enables the cache to merge the `name` and `dateOfBirth` fields returned by different queries above.
 
-In situations like this one, we can define a custom `merge` function for the `author` field within the type policy for `Book`:
+To achieve this, we can define a custom `merge` function for the `author` field within the type policy for `Book`:
 
 ```ts
 const cache = new InMemoryCache({

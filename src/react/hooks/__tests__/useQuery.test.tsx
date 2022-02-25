@@ -20,90 +20,6 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
-  describe('regression test issue #9204', () => {
-    const Component = ({ query }: any) => {
-      const [counter, setCounter] = useState(0)
-      const result = useQuery(query)
-
-      useEffect(() => {
-        /**
-         * IF the return value from useQuery changes on each render,
-         * this component will re-render in an infinite loop.
-         */
-         console.log('CURRENT RESULT CHANGED')
-        setCounter(p => p + 1)
-      }, [
-        result
-      ])
-
-      if (result.loading) return null
-
-      return <div>{result.data.hello}{counter}</div>
-    }
-
-    itAsync('should handle a simple query', (resolve, reject) => {
-      const query = gql`{ hello }`;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const { getByText } = render(
-        <MockedProvider mocks={mocks}>
-          <Component query={query} />
-        </MockedProvider>
-      );
-
-      waitFor(() => {
-        expect(getByText('world2')).toBeTruthy();
-      }).then(resolve, reject);
-    });
-  })
-
-  describe('regression test issue #9204 - destructured', () => {
-    const Component = ({ query }: any) => {
-      const [counter, setCounter] = useState(0)
-      const {data, loading} = useQuery(query)
-
-      useEffect(() => {
-        /**
-         * IF the return value from useQuery changes on each render,
-         * this component will re-render in an infinite loop.
-         */
-         console.log('CURRENT RESULT CHANGED')
-        setCounter(p => p + 1)
-      }, [
-        data
-      ])
-
-      if (loading) return null
-
-      return <div>{data.hello}{counter}</div>
-    }
-
-    itAsync('should handle a simple query', (resolve, reject) => {
-      const query = gql`{ hello }`;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const { getByText } = render(
-        <MockedProvider mocks={mocks}>
-          <Component query={query} />
-        </MockedProvider>
-      );
-
-      waitFor(() => {
-        expect(getByText('world2')).toBeTruthy();
-      }).then(resolve, reject);
-    });
-  })
-
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
@@ -130,7 +46,7 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
-    it('memo\'s it\'s output', async () => {
+    it("useQuery result is referentially stable", async () => {
       const query = gql`{ hello }`;
       const mocks = [ {
           request: { query },
@@ -141,8 +57,7 @@ describe('useQuery Hook', () => {
       await waitFor(() => result.current.loading === false);
       const oldResult = result.current;
       rerender({ children: null });
-
-      expect(oldResult).toBe(result.current);
+      expect(oldResult === result.current).toBe(true);
     });
 
     it('should read and write results from the cache', async () => {
@@ -4045,5 +3960,51 @@ describe('useQuery Hook', () => {
       "network-only",
       "cache-and-network",
     ));
+  });
+
+  describe('regression test issue #9204', () => {
+    itAsync('should handle a simple query', (resolve, reject) => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const Component = ({ query }: any) => {
+        const [counter, setCounter] = useState(0)
+        const result = useQuery(query)
+
+        useEffect(() => {
+          /**
+           * IF the return value from useQuery changes on each render,
+           * this component will re-render in an infinite loop.
+           */
+          if (counter > 10) {
+            reject(new Error(`Too many results (${counter})`));
+          } else {
+            setCounter(c => c + 1);
+          }
+        }, [
+          result,
+          result.data,
+        ]);
+
+        if (result.loading) return null;
+
+        return <div>{result.data.hello}{counter}</div>;
+      }
+
+      const { getByText } = render(
+        <MockedProvider mocks={mocks}>
+          <Component query={query} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(getByText('world2')).toBeTruthy();
+      }).then(resolve, reject);
+    });
   });
 });

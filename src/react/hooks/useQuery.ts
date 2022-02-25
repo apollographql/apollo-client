@@ -103,12 +103,9 @@ class InternalState<TData, TVariables> {
   ): this {
     this.renderPromises = useContext(getApolloContext()).renderPromises;
 
-    const watchQueryOptions = createWatchQueryOptions(
-      this.query,
+    const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options || {},
-      this.client.defaultOptions.watchQuery,
     );
-
     if (!equal(watchQueryOptions, this.watchQueryOptions)) {
       this.watchQueryOptions = watchQueryOptions;
     }
@@ -127,6 +124,50 @@ class InternalState<TData, TVariables> {
       || InternalState.prototype.onError;
 
     return this;
+  }
+
+  // A function to massage options before passing them to ObservableQuery.
+  private createWatchQueryOptions<TData, TVariables>({
+    skip,
+    ssr,
+    onCompleted,
+    onError,
+    displayName,
+    // The above options are useQuery-specific, so this ...otherOptions spread
+    // makes otherOptions almost a WatchQueryOptions object, except for the
+    // query property that we add below.
+    ...otherOptions
+  }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<TVariables, TData> {
+    // TODO: For some reason, we pass context, which is the React Apollo Context,
+    // into observable queries, and test for that.
+    const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
+      Object.assign(otherOptions, { query: this.query });
+
+    if (skip) {
+      watchQueryOptions.fetchPolicy = 'standby';
+    } else if (
+      watchQueryOptions.context?.renderPromises &&
+      (
+        watchQueryOptions.fetchPolicy === 'network-only' ||
+        watchQueryOptions.fetchPolicy === 'cache-and-network'
+      )
+    ) {
+      // this behavior was added to react-apollo without explanation in this PR
+      // https://github.com/apollographql/react-apollo/pull/1579
+      watchQueryOptions.fetchPolicy = 'cache-first';
+    } else if (!watchQueryOptions.fetchPolicy) {
+      const defaultOptions = this.client.defaultOptions.watchQuery;
+      // cache-first is the default policy, but we explicitly assign it here so
+      // the cache policies computed based on options can be cleared
+      watchQueryOptions.fetchPolicy =
+        defaultOptions && defaultOptions.fetchPolicy || 'cache-first';
+    }
+
+    if (!watchQueryOptions.variables) {
+      watchQueryOptions.variables = {} as TVariables;
+    }
+
+    return watchQueryOptions;
   }
 
   private onCompleted(data: TData) {}
@@ -412,52 +453,4 @@ class InternalState<TData, TVariables> {
       this.observable.refetch();
     }
   }
-}
-
-/**
- * A function to massage options before passing them the ObservableQuery.
- */
-function createWatchQueryOptions<TData, TVariables>(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  { skip,
-    ssr,
-    onCompleted,
-    onError,
-    displayName,
-    // The above options are useQuery-specific, so this ...otherOptions spread
-    // makes otherOptions almost a WatchQueryOptions object, except for the
-    // query property that we add below.
-    ...otherOptions
-  }: QueryHookOptions<TData, TVariables> = {},
-  defaultOptions?: Partial<WatchQueryOptions<any, any>>
-): WatchQueryOptions<TVariables, TData> {
-  // TODO: For some reason, we pass context, which is the React Apollo Context,
-  // into observable queries, and test for that.
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-    Object.assign(otherOptions, { query });
-
-  if (skip) {
-    watchQueryOptions.fetchPolicy = 'standby';
-  } else if (
-    watchQueryOptions.context?.renderPromises &&
-    (
-      watchQueryOptions.fetchPolicy === 'network-only' ||
-      watchQueryOptions.fetchPolicy === 'cache-and-network'
-    )
-  ) {
-    // this behavior was added to react-apollo without explanation in this PR
-    // https://github.com/apollographql/react-apollo/pull/1579
-    watchQueryOptions.fetchPolicy = 'cache-first';
-  } else if (!watchQueryOptions.fetchPolicy) {
-    // cache-first is the default policy, but we explicitly assign it here so
-    // the cache policies computed based on options can be cleared
-    watchQueryOptions.fetchPolicy =
-      defaultOptions && defaultOptions.fetchPolicy || 'cache-first';
-  }
-
-  if (!watchQueryOptions.variables) {
-    watchQueryOptions.variables = {} as TVariables;
-  }
-
-  return watchQueryOptions;
 }

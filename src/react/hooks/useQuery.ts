@@ -38,17 +38,15 @@ export function useQuery<
   options?: QueryHookOptions<TData, TVariables>,
 ): QueryResult<TData, TVariables> {
   return useInternalState(
+    useApolloClient(options && options.client),
     query,
-    options && options.client,
   ).useQuery(options);
 }
 
 function useInternalState<TData, TVariables>(
+  client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  clientOverride?: ApolloClient<any>,
 ) {
-  const client = useApolloClient(clientOverride);
-
   const state = useMemo(
     () => new InternalState(client, query),
     [client, query],

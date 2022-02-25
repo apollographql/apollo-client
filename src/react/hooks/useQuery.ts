@@ -300,15 +300,17 @@ class InternalState<TData, TVariables> {
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
     }
-
     this.result = nextResult;
     this.forceUpdate();
+    this.handleErrorOrCompleted(nextResult);
+  }
 
-    if (!nextResult.loading) {
-      if (nextResult.error) {
-        this.onError(nextResult.error);
-      } else if (nextResult.data) {
-        this.onCompleted(nextResult.data);
+  private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
+    if (!result.loading) {
+      if (result.error) {
+        this.onError(result.error);
+      } else if (result.data) {
+        this.onCompleted(result.data);
       }
     }
   }
@@ -317,13 +319,7 @@ class InternalState<TData, TVariables> {
     let { result } = this;
     if (!result) {
       result = this.result = this.observable.getCurrentResult();
-      if (!result.loading) {
-        if (result.error) {
-          this.onError(result.error);
-        } else if (result.data) {
-          this.onCompleted(result.data);
-        }
-      }
+      this.handleErrorOrCompleted(result);
     }
 
     if (

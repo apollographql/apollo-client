@@ -81,7 +81,9 @@ class InternalState<TData, TVariables> {
 
   public useQuery(options: undefined | QueryHookOptions<TData, TVariables>) {
     this.useOptions(options);
-    this.useObservableQuery();
+
+    const obsQuery = this.useObservableQuery();
+    this.useSubscriptionEffect(obsQuery);
 
     const result = this.getCurrentResult();
 
@@ -212,12 +214,12 @@ class InternalState<TData, TVariables> {
       }
     }, [obsQuery, this.watchQueryOptions]);
 
-    this.useSubscriptionEffect();
-
     return obsQuery;
   }
 
-  private useSubscriptionEffect() {
+  private useSubscriptionEffect(
+    obsQuery: ObservableQuery<TData, TVariables>,
+  ) {
     // An effect to subscribe to the current observable query
     useEffect(() => {
       if (this.renderPromises) {
@@ -229,7 +231,7 @@ class InternalState<TData, TVariables> {
         // We use `getCurrentResult()` instead of the onNext argument because
         // the values differ slightly. Specifically, loading results will have
         // an empty object for data instead of `undefined` for some reason.
-        const result = this.observable.getCurrentResult();
+        const result = obsQuery.getCurrentResult();
         // Make sure we're not attempting to re-render similar results
         if (
           previousResult &&
@@ -244,7 +246,7 @@ class InternalState<TData, TVariables> {
       };
 
       const onError = (error: Error) => {
-        const last = this.observable["last"];
+        const last = obsQuery["last"];
         subscription.unsubscribe();
         // Unfortunately, if `lastError` is set in the current
         // `observableQuery` when the subscription is re-created,
@@ -254,10 +256,10 @@ class InternalState<TData, TVariables> {
         // the subscription, and restore it afterwards (so the subscription
         // has a chance to stay open).
         try {
-          this.observable.resetLastResults();
-          subscription = this.observable.subscribe(onNext, onError);
+          obsQuery.resetLastResults();
+          subscription = obsQuery.subscribe(onNext, onError);
         } finally {
-          this.observable["last"] = last;
+          obsQuery["last"] = last;
         }
 
         if (!hasOwnProperty.call(error, 'graphQLErrors')) {
@@ -280,11 +282,11 @@ class InternalState<TData, TVariables> {
         }
       };
 
-      let subscription = this.observable.subscribe(onNext, onError);
+      let subscription = obsQuery.subscribe(onNext, onError);
 
       return () => subscription.unsubscribe();
     }, [
-      this.observable,
+      obsQuery,
       this.renderPromises,
       this.client.disableNetworkFetches,
     ]);

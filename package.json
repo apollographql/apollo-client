@@ -104,7 +104,7 @@
     "@types/glob": "7.2.0",
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "27.4.1",
-    "@types/lodash": "4.14.178",
+    "@types/lodash": "4.14.179",
     "@types/node": "16.11.25",
     "@types/react": "17.0.34",
     "@types/react-dom": "17.0.2",

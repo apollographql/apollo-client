@@ -47,17 +47,33 @@ function useInternalState<TData, TVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ) {
+  // Return/recycle an InternalState object appropriate for this client and
+  // query (and this component). If either of these inputs changes, we trigger
+  // an update in the useEffect below.
   const state = useMemo(
     () => new InternalState(client, query),
     [client, query],
   );
 
+  // Updating this state wrapper is the only way we trigger React component
+  // updates (no other useState calls within the InternalState class).
   const [stateWrapper, setStateWrapper] = useState({ state });
 
+  // By default, InternalState.prototype.forceUpdate is an empty function, but
+  // we replace it here (before anyone has had a chance to see this state yet)
+  // with a function that unconditionally forces an update, using the latest
+  // setStateWrapper function.
   state.forceUpdate = () => {
+    // Changing the stateWrapper object reference without changing
+    // stateWrapper.state makes setStateWrapper trigger an update even when the
+    // state is not really changing, which gives us more control over updates.
     setStateWrapper({ state: stateWrapper.state });
   };
 
+  // In case the client and query have changed since the previous render (so we
+  // have a new state and stateWrapper.state is out of date), trigger a
+  // setStateWrapper update using an effect. This may not be the most elegant
+  // way to maintain this state, but at least it's confined to useInternalState.
   useEffect(() => {
     if (state !== stateWrapper.state) {
       setStateWrapper({ state });
@@ -79,6 +95,9 @@ class InternalState<TData, TVariables> {
     // Replaced (in useInternalState) with a method that triggers an update.
   }
 
+  // Methods beginning with use- should be called according to the standard
+  // rules of React hooks: only at the top level of the calling function, and
+  // without any dynamic conditional logic.
   public useQuery(options: undefined | QueryHookOptions<TData, TVariables>) {
     this.useOptions(options);
 
@@ -93,6 +112,10 @@ class InternalState<TData, TVariables> {
     return this.toQueryResult(result);
   }
 
+  // These members are all populated by the useOptions method, which is called
+  // unconditionally at the beginning of the useQuery method, so we can safely
+  // use these members in other/later methods without worrying about the
+  // possibility they might be undefined.
   private renderPromises: ApolloContextValue["renderPromises"];
   private queryHookOptions: QueryHookOptions<TData, TVariables>;
   private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
@@ -106,6 +129,9 @@ class InternalState<TData, TVariables> {
     const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options || {},
     );
+    // Update this.watchQueryOptions, but only when they have changed, which
+    // allows us to depend on the referential stability of
+    // this.watchQueryOptions elsewhere.
     if (!equal(watchQueryOptions, this.watchQueryOptions)) {
       this.watchQueryOptions = watchQueryOptions;
     }
@@ -114,6 +140,13 @@ class InternalState<TData, TVariables> {
       options.ssr === false ||
       options.skip
     ));
+
+    // Make sure state.onCompleted and state.onError always reflect the latest
+    // options.onCompleted and options.onError callbacks provided to useQuery,
+    // since those functions are often recreated every time useQuery is called.
+    // Like the forceUpdate method, the versions of these methods inherited from
+    // InternalState.prototype are empty no-ops, but we can override them on the
+    // base state object (without modifying the prototype).
 
     this.onCompleted = options
       && options.onCompleted
@@ -170,6 +203,9 @@ class InternalState<TData, TVariables> {
     return watchQueryOptions;
   }
 
+  // Defining these methods as no-ops on the prototype allows us to call
+  // state.onCompleted and/or state.onError without worrying about whether a
+  // callback was provided.
   private onCompleted(data: TData) {}
   private onError(error: ApolloError) {}
 
@@ -186,7 +222,7 @@ class InternalState<TData, TVariables> {
     const obsQuery = this.observable =
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
-        || this.observable
+        || this.observable // Reuse this.observable if possible (and not SSR)
         || this.client.watchQuery(this.watchQueryOptions);
 
     this.obsQueryFields = useMemo(() => ({
@@ -259,6 +295,9 @@ class InternalState<TData, TVariables> {
   }
 
   private useSubscriptionEffect(
+    // We could use this.observable and not pass this obsQuery parameter, but I
+    // like the guarantee that obsQuery won't change, whereas this.observable
+    // could change without warning (in theory).
     obsQuery: ObservableQuery<TData, TVariables>,
   ) {
     // An effect to subscribe to the current observable query
@@ -333,6 +372,8 @@ class InternalState<TData, TVariables> {
     ]);
   }
 
+  // These members are populated by getCurrentResult and setResult, and it's
+  // okay/normal for them to be initially undefined.
   private result: undefined | ApolloQueryResult<TData>;
   private previousData: undefined | TData;
 
@@ -342,6 +383,8 @@ class InternalState<TData, TVariables> {
       this.previousData = previousResult.data;
     }
     this.result = nextResult;
+    // Calling state.setResult always triggers an update, though some call sites
+    // perform additional equality checks before committing to an update.
     this.forceUpdate();
     this.handleErrorOrCompleted(nextResult);
   }
@@ -358,6 +401,9 @@ class InternalState<TData, TVariables> {
 
   private getCurrentResult(): ApolloQueryResult<TData> {
     let { result } = this;
+    // Using this.result as a cache ensures getCurrentResult continues returning
+    // the same (===) result object, unless state.setResult has been called, or
+    // we're doing server rendering and therefore override the result below.
     if (!result) {
       result = this.result = this.observable.getCurrentResult();
       this.handleErrorOrCompleted(result);
@@ -400,6 +446,9 @@ class InternalState<TData, TVariables> {
     return result;
   }
 
+  // This cache allows the referential stability of this.result (as returned by
+  // getCurrentResult) to translate into referential stability of the resulting
+  // QueryResult object returned by toQueryResult.
   private toQueryResultCache = new (canUseWeakMap ? WeakMap : Map)<
     ApolloQueryResult<TData>,
     QueryResult<TData, TVariables>

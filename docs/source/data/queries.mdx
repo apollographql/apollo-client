@@ -10,7 +10,7 @@ This article shows how to fetch GraphQL data in React with the `useQuery` hook a
 
 ## Prerequisites
 
-This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend [this guide](http://graphql.org/learn/queries/). You can also build example queries against Apollo's [full-stack tutorial server](https://apollo-fullstack-tutorial.herokuapp.com/).
+This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend [this guide](http://graphql.org/learn/queries/). You can also build example queries against Apollo's [full-stack tutorial server](https://apollo-fullstack-tutorial.herokuapp.com/graphql).
 
 This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. For more information, see the [getting started guide](../get-started/).
 
@@ -67,7 +67,7 @@ In the next step, we'll associate the dropdown with a more sophisticated query t
 
 ## Caching query results
 
-Whenever Apollo Client fetches query results from your server, it automatically **caches** those results locally. This makes subsequent executions of the same query extremely fast.
+Whenever Apollo Client fetches query results from your server, it automatically **caches** those results locally. This makes later executions of that same query extremely fast.
 
 To see this caching in action, let's build a new component called `DogPhoto`. `DogPhoto` accepts a prop called `breed` that reflects the current value of the dropdown menu in our `Dogs` component:
 
@@ -97,7 +97,7 @@ function DogPhoto({ breed }) {
 
 Notice that we're providing a configuration option (`variables`) to the `useQuery` hook this time. The `variables` option is an object that contains all of the variables we want to pass to our GraphQL query. In this case, we want to pass the currently selected `breed` from the dropdown.
 
-Select `bulldog` from the dropdown to see its photo appear. Then switch to another breed, and then switch _back_ to `bulldog`. You'll notice that the bulldog photo loads instantly the second time around. This is the Apollo cache at work!
+Select `bulldog` from the dropdown to see its photo appear. Then switch to another breed, and then switch _back_ to `bulldog`. You'll notice that the bulldog photo loads instantly the second time around. This is the cache at work!
 
 Next, let's learn some techniques for ensuring that our cached data is fresh.
 
@@ -109,7 +109,7 @@ Sometimes, you want to make sure that your query's cached data is up to date wit
 
 Polling provides near-real-time synchronization with your server by executing your query periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
 
-```jsx:title=index.js
+```jsx{4}:title=index.js
 function DogPhoto({ breed }) {
   const { loading, error, data } = useQuery(GET_DOG_PHOTO, {
     variables: { breed },
@@ -182,7 +182,7 @@ Let's return to our refetching example from the previous section. If you click t
 The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
 of this information, we set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
 
-```jsx:title=index.js
+```jsx{4,8,12}:title=index.js
 import { NetworkStatus } from '@apollo/client';
 
 function DogPhoto({ breed }) {

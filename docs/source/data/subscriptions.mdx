@@ -335,15 +335,12 @@ import { WebSocketLink } from "@apollo/client/link/ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const wsLink = new WebSocketLink(
-  new SubscriptionClient({
-    uri: "ws://localhost:4000/subscriptions",
-    options: {
-      connectionParams: {
-        authToken: user.authToken,
-      },
+  new SubscriptionClient('ws://localhost:4000/subscriptions', {
+    connectionParams: {
+      authToken: user.authToken,
     },
   }),
-});
+);
 ```
 
 More details on `WebSocketLink`'s API can be found in [its API docs](../api/link/apollo-link-ws).

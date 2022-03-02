@@ -466,6 +466,7 @@ class InternalState<TData, TVariables> {
       ...resultWithoutPartial,
       ...this.obsQueryFields,
       client: this.client,
+      observable: this.observable,
       variables: this.observable.variables,
       called: true,
       previousData: this.previousData,

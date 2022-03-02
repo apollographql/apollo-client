@@ -56,6 +56,7 @@ describe('Query component', () => {
         {(result: any) => {
           const {
             client: clientResult,
+            observable,
             fetchMore,
             refetch,
             startPolling,

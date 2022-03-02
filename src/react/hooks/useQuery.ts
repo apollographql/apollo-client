@@ -30,17 +30,55 @@ const {
   },
 } = Object;
 
+type QueryHookOptionsFunction<TData, TVariables> = (
+  options: QueryHookOptions<TData, TVariables>,
+) => QueryHookOptions<TData, TVariables>;
+
 export function useQuery<
   TData = any,
   TVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: QueryHookOptions<TData, TVariables>,
+  optionsOrFunction?:
+    | QueryHookOptions<TData, TVariables>
+    | QueryHookOptionsFunction<TData, TVariables>
 ): QueryResult<TData, TVariables> {
+  const options = useNormalizedOptions(optionsOrFunction);
   return useInternalState(
-    useApolloClient(options && options.client),
+    useApolloClient(options.client),
     query,
   ).useQuery(options);
+}
+
+// I would have made this function a method of the InternalState class, but it
+// needs to run before we get the client from useApolloClient in the useQuery
+// function above, just in case the options function returns options.client as
+// an override for the ApolloClient instance provided by React context.
+function useNormalizedOptions<TData, TVariables>(
+  optionsOrFunction:
+    | QueryHookOptions<TData, TVariables>
+    | QueryHookOptionsFunction<TData, TVariables>
+    | undefined,
+): QueryHookOptions<TData, TVariables> {
+  const optionsRef = useRef<QueryHookOptions<TData, TVariables>>();
+  let options: QueryHookOptions<TData, TVariables> =
+    optionsRef.current || Object.create(null);
+
+  if (typeof optionsOrFunction === "function") {
+    const newOptions = optionsOrFunction(options);
+    if (newOptions !== options) {
+      Object.assign(options, newOptions, newOptions.variables && {
+        variables: {
+          ...options.variables,
+          ...newOptions.variables,
+        },
+      });
+    }
+  } else if (optionsOrFunction && !equal(optionsOrFunction, options)) {
+    options = optionsOrFunction;
+  }
+
+  return optionsRef.current = options;
 }
 
 function useInternalState<TData, TVariables>(
@@ -86,7 +124,7 @@ class InternalState<TData, TVariables> {
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
   // without any dynamic conditional logic.
-  public useQuery(options: undefined | QueryHookOptions<TData, TVariables>) {
+  public useQuery(options: QueryHookOptions<TData, TVariables>) {
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
@@ -110,12 +148,12 @@ class InternalState<TData, TVariables> {
   private ssrDisabled: boolean;
 
   private useOptions(
-    options: undefined | QueryHookOptions<TData, TVariables>,
+    options: QueryHookOptions<TData, TVariables>,
   ) {
     this.renderPromises = useContext(getApolloContext()).renderPromises;
 
     const watchQueryOptions = this.createWatchQueryOptions(
-      this.queryHookOptions = options || {},
+      this.queryHookOptions = options,
     );
     // Update this.watchQueryOptions, but only when they have changed, which
     // allows us to depend on the referential stability of

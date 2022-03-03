@@ -18,21 +18,19 @@ import {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
+  QueryHookOptionsFunction,
 } from '../types/types';
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
+import { useNormalizedOptions } from './options';
 
 const {
   prototype: {
     hasOwnProperty,
   },
 } = Object;
-
-type QueryHookOptionsFunction<TData, TVariables> = (
-  options: QueryHookOptions<TData, TVariables>,
-) => QueryHookOptions<TData, TVariables>;
 
 export function useQuery<
   TData = any,
@@ -48,37 +46,6 @@ export function useQuery<
     useApolloClient(options.client),
     query,
   ).useQuery(options);
-}
-
-// I would have made this function a method of the InternalState class, but it
-// needs to run before we get the client from useApolloClient in the useQuery
-// function above, just in case the options function returns options.client as
-// an override for the ApolloClient instance provided by React context.
-function useNormalizedOptions<TData, TVariables>(
-  optionsOrFunction:
-    | QueryHookOptions<TData, TVariables>
-    | QueryHookOptionsFunction<TData, TVariables>
-    | undefined,
-): QueryHookOptions<TData, TVariables> {
-  const optionsRef = useRef<QueryHookOptions<TData, TVariables>>();
-  let options: QueryHookOptions<TData, TVariables> =
-    optionsRef.current || Object.create(null);
-
-  if (typeof optionsOrFunction === "function") {
-    const newOptions = optionsOrFunction(options);
-    if (newOptions !== options) {
-      Object.assign(options, newOptions, newOptions.variables && {
-        variables: {
-          ...options.variables,
-          ...newOptions.variables,
-        },
-      });
-    }
-  } else if (optionsOrFunction && !equal(optionsOrFunction, options)) {
-    options = optionsOrFunction;
-  }
-
-  return optionsRef.current = options;
 }
 
 function useInternalState<TData, TVariables>(

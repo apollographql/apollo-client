@@ -68,6 +68,8 @@ cache.evict({ id: 'my-object-id', fieldName: 'yearOfFounding' });
 
 Evicting an object often makes _other_ cached objects unreachable. Because of this, you should call [`cache.gc`](#cachegc) after `evict`ing one or more objects from the cache.
 
+If the evicted object appears in any arrays in the cache, it is removed from those arrays.
+
 ## Dangling references
 
 When an object is `evict`ed from the cache, references to that object might remain in _other_ cached objects. Apollo Client preserves these dangling references by default, because the referenced object might be written _back_ to the cache at a later time. This means the reference might still be useful.

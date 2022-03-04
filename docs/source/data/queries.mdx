@@ -282,6 +282,100 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 
 For example, this is helpful if you want a query to always make an initial network request, but you're comfortable reading from the cache after that.
 
+#### `nextFetchPolicy` functions
+
+If you want to apply a single `nextFetchPolicy` by default, because you find yourself manually providing `nextFetchPolicy` for most of your queries, you can configure `defaultOptions.watchQuery.nextFetchPolicy` when creating your `ApolloClient` instance:
+
+```js
+new ApolloClient({
+  link,
+  client,
+  defaultOptions: {
+    watchQuery: {
+      nextFetchPolicy: "cache-only",
+    },
+  },
+})
+```
+
+This configuration applies to all `client.watchQuery` calls and `useQuery` calls that do not otherwise configure `nextFetchPolicy`.
+
+If you want more control over how `nextFetchPolicy` behaves, you can provide a function instead of a `WatchQueryFetchPolicy` string:
+
+```js
+new ApolloClient({
+  link,
+  client,
+  defaultOptions: {
+    watchQuery: {
+      nextFetchPolicy(currentFetchPolicy) {
+        if (
+          currentFetchPolicy === "network-only" ||
+          currentFetchPolicy === "cache-and-network"
+        ) {
+          // Demote the network policies (except "no-cache") to "cache-first"
+          // after the first request.
+          return "cache-first";
+        }
+        // Leave all other fetch policies unchanged.
+        return currentFetchPolicy;
+      },
+    },
+  },
+})
+```
+
+This `nextFetchPolicy` function will be called after each request, and uses the `currentFetchPolicy` parameter to decide how to modify the fetch policy.
+
+In addition to being called after each request, your `nextFetchPolicy` function will also be called when variables change, which by default resets the `fetchPolicy` to its initial value, which is often important to trigger a fresh network request for queries that started out with `cache-and-network` or `network-only` fetch policies.
+
+To intercept and handle the `variables-changed` case yourself, you can use the `NextFetchPolicyContext` object passed as the second argument to your `nextFetchPolicy` function:
+
+```js
+new ApolloClient({
+  link,
+  client,
+  defaultOptions: {
+    watchQuery: {
+      nextFetchPolicy(currentFetchPolicy, {
+        // Either "after-fetch" or "variables-changed", indicating why the
+        // nextFetchPolicy function was invoked.
+        reason,
+        // The rest of the options (currentFetchPolicy === options.fetchPolicy).
+        options,
+        // The original value of options.fetchPolicy, before nextFetchPolicy was
+        // applied for the first time.
+        initialPolicy,
+        // The ObservableQuery associated with this client.watchQuery call.
+        observable,
+      }) {
+        // When variables change, the default behavior is to reset
+        // options.fetchPolicy to context.initialPolicy. If you omit this logic,
+        // your nextFetchPolicy function can override this default behavior to
+        // prevent options.fetchPolicy from changing in this case.
+        if (reason === "variables-changed") {
+          return initialPolicy;
+        }
+
+        if (
+          currentFetchPolicy === "network-only" ||
+          currentFetchPolicy === "cache-and-network"
+        ) {
+          // Demote the network policies (except "no-cache") to "cache-first"
+          // after the first request.
+          return "cache-first";
+        }
+
+        // Leave all other fetch policies unchanged.
+        return currentFetchPolicy;
+      },
+    },
+  },
+})
+```
+
+In order to debug these `nextFetchPolicy` transitions, it can be useful to add `console.log` or `debugger` statements to the function body, to see when and why the function is called.
+
 ### Supported fetch policies
 
 <table class="field-table">

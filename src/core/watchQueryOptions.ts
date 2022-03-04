@@ -141,9 +141,10 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
 export interface NextFetchPolicyContext<TData, TVariables> {
   reason:
     | "after-fetch"
-    | "variables-changed"
-  observableQuery: ObservableQuery;
+    | "variables-changed";
+  observable: ObservableQuery<TData, TVariables>;
   options: WatchQueryOptions<TVariables, TData>;
+  initialPolicy: WatchQueryFetchPolicy;
 }
 
 export interface FetchMoreQueryOptions<TVariables, TData = any> {

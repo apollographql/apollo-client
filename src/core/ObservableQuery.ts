@@ -610,7 +610,8 @@ once, rather than every time you call fetchMore.`);
         options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
           reason,
           options,
-          observableQuery: this,
+          observable: this,
+          initialPolicy: this.initialFetchPolicy,
         });
       } else if (reason === "variables-changed") {
         options.fetchPolicy = this.initialFetchPolicy;

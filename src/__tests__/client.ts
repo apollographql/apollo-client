@@ -3312,10 +3312,16 @@ describe('@connection', () => {
 
         defaultOptions: {
           watchQuery: {
-            nextFetchPolicy(fetchPolicy) {
+            nextFetchPolicy(fetchPolicy, context) {
               expect(++nextFetchPolicyCallCount).toBe(1);
               expect(this.query).toBe(query);
               expect(fetchPolicy).toBe("cache-first");
+
+              expect(context.reason).toBe("after-fetch");
+              expect(context.observable).toBe(obs);
+              expect(context.options).toBe(obs.options);
+              expect(context.initialPolicy).toBe("cache-first");
+
               // Usually options.nextFetchPolicy applies only once, but a
               // nextFetchPolicy function can set this.nextFetchPolicy
               // again to perform an additional transition.
@@ -3323,6 +3329,7 @@ describe('@connection', () => {
                 ++nextFetchPolicyCallCount;
                 return "cache-first";
               };
+
               return "cache-and-network";
             },
           },

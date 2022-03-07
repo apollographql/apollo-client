@@ -2,7 +2,7 @@ import React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
 import gql from 'graphql-tag';
 
-import { ApolloClient, ApolloLink, concat } from '../../../core';
+import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
@@ -59,6 +59,57 @@ describe('useSubscription Hook', () => {
     await waitForNextUpdate();
     expect(result.current.loading).toBe(false);
     expect(result.current.data).toEqual(results[3].result.data);
+  });
+
+  it('should call onError after error results', async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ['Audi', 'BMW', 'Mercedes', 'Hyundai'].map(make => ({
+      result: { data: { car: { make } } }
+    }));
+
+    const errorResult = {
+      error: new ApolloError({ errorMessage: "test" }),
+      result: { data: { car: { make: null } } },
+    };
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false })
+    });
+
+
+    const onError = jest.fn();
+    const { result, waitForNextUpdate } = renderHook(
+      () => useSubscription(subscription, { onError }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.error).toBe(undefined);
+    expect(result.current.data).toBe(undefined);
+    setTimeout(() => link.simulateResult(results[0]));
+    await waitForNextUpdate();
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data).toEqual(results[0].result.data);
+    setTimeout(() => link.simulateResult(errorResult));
+    await waitForNextUpdate();
+    setTimeout(() => {
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('should cleanup after the subscription component has been unmounted', async () => {

@@ -110,6 +110,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
           error,
           variables: options?.variables,
         });
+        ref.current.options?.onError?.(error);
       },
       complete() {
         ref.current.options?.onSubscriptionComplete?.();

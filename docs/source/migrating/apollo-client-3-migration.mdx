@@ -56,6 +56,12 @@ import { ApolloProvider, useQuery, useApolloClient } from '@apollo/client'
 
 As part of migrating, we recommend removing all `@apollo/react-hooks` dependencies.
 
+**Breaking Changes:**
+
+* `useQuery` [no longer maintains the previously fetched results](https://github.com/apollographql/apollo-client/pull/6566) in its `data` result when loading new data. Instead, when new data is being loaded (i.e. `loading` === `true`) the `data` result of `useQuery` is set to `undefined`. Use the `previousData` result as a bridge to the old v2 behavior.
+* `refetch` functionality of `useQuery` [was broken in v3.5.x until it was fixed in v3.5.8](https://github.com/apollographql/apollo-client/issues/9101). Previous to this version, if the `skip: true` option was used, `refetch` would always be `undefined`.
+
+
 ### @apollo/react-ssr
 
 React Apollo’s SSR utilities (like `getDataFromTree`, `getMarkupFromTree`, and `renderToStringWithData`) are included in the `@apollo/client` package. Access them via `@apollo/client/react/ssr`:

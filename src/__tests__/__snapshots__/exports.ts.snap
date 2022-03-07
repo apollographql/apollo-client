@@ -210,6 +210,12 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/link/subscriptions 1`] = `
+Array [
+  "GraphQLWsLink",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",

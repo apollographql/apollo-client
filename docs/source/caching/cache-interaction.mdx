@@ -109,7 +109,7 @@ Note the following about `writeQuery`:
 * Any changes you make to cached data with `writeQuery` are **not** pushed to your GraphQL server. If you reload your environment, these changes disappear.
 * The shape of your query is _not_ enforced by your GraphQL server's schema:
     * The query can include fields that are _not_ present in your schema.
-    * You can (but usually shouldn't) provide values for schema fields that are _invalid_ according to your schema.
+    * You can (but usually **shouldn't**) provide values for schema fields that are _invalid_ according to your schema.
 
 #### Editing existing data
 

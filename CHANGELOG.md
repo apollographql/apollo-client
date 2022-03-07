@@ -1,9 +1,22 @@
-## Apollo Client 3.5.9 (unreleased)
+
+## Apollo Client 3.5.10 (2022-02-24)
+
+### Improvements
+
+- Add `GraphQLWsLink` in `@apollo/client/link/subscriptions`. This link is similar to the existing `WebSocketLink` in `@apollo/client/link/ws`, but uses the newer [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package and protocol instead of the older `subscriptions-transport-ws` implementation. <br/>
+  [@glasser](https://github.com/glasser) in [#9369](https://github.com/apollographql/apollo-client/pull/9369)
+
+  > Note from [@benjamn](https://github.com/benjamn): since `GraphQLWsLink` is new functionality, we would normally wait for the next minor version (v3.6), but we were asked to expedite this release. These changes are strictly additive/opt-in/backwards-compatible, so shipping them in a patch release (3.5.10) seems safe, if unusual.
+
+## Apollo Client 3.5.9 (2022-02-15)
 
 ### Improvements
 
 - Interpret `keyFields: [...]` and `keyArgs: [...]` configurations in `InMemoryCache` type/field policies as `ReadonlyArray`s, since they are never mutated internally. <br/>
   [@julienfouilhe](https://github.com/julienfouilhe) in [#9339](https://github.com/apollographql/apollo-client/pull/9339)
+
+- Avoid declaring a global type for the `__DEV__` constant, to avoid conflict with other such global declarations. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9386](https://github.com/apollographql/apollo-client/pull/9386)
 
 ### Bug Fixes
 

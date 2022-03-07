@@ -133,7 +133,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 }
 
 export interface MergeInfo {
-  field: FieldNode;
+  field: FieldNode | undefined;
   typename: string | undefined;
   merge: FieldMergeFunction;
 };

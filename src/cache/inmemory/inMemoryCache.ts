@@ -32,7 +32,7 @@ type BroadcastOptions = Pick<
 >
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: EntityStore;
+  public data: EntityStore;
   private optimisticData: EntityStore;
 
   protected config: InMemoryCacheConfig;

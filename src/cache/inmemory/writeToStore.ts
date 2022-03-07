@@ -154,7 +154,7 @@ export class StoreWriter {
     context.incomingById.forEach(({ storeObject, mergeTree, fieldNodeSet }, dataId) => {
       const entityRef = makeReference(dataId);
 
-      if (mergeTree && mergeTree.map.size) {
+      if (mergeTree && (mergeTree.map.size || mergeTree.info)) {
         const applied = this.applyMerges(mergeTree, entityRef, storeObject, context);
         if (isReference(applied)) {
           // Assume References returned by applyMerges have already been merged
@@ -421,6 +421,24 @@ export class StoreWriter {
         previous.mergeTree = mergeMergeTrees(previous.mergeTree, mergeTree);
         fieldNodeSet.forEach(field => previous.fieldNodeSet.add(field));
       } else {
+
+        if(typename && mergeTreeIsEmpty(mergeTree)) {
+          const typePolicy = policies.getTypePolicy(
+            typename,
+          );
+
+          const merge = typePolicy.merge
+
+          if (merge) {
+            mergeTree.info = {
+              field: undefined as any, // !!!
+              typename,
+              merge,
+            };
+          }
+        }
+       
+
         context.incomingById.set(dataId, {
           storeObject: incoming,
           // Save a reference to mergeTree only if it is not empty, because
@@ -660,6 +678,9 @@ export class StoreWriter {
     }
 
     if (mergeTree.info) {
+      if(isReference(existing) && isReference(incoming)){
+        return incoming;
+      }
       return this.cache.policies.runMergeFunction(
         existing,
         incoming,

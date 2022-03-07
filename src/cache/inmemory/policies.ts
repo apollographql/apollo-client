@@ -226,6 +226,8 @@ export interface FieldFunctionOptions<
   // helper function can be used to merge objects in a way that respects any
   // custom merge functions defined for their fields.
   mergeObjects: MergeObjectsFunction;
+
+  context: ReadMergeModifyContext | undefined;
 }
 
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
@@ -542,7 +544,7 @@ export class Policies {
     });
   }
 
-  private getTypePolicy(typename: string): Policies["typePolicies"][string] {
+  public getTypePolicy(typename: string): Policies["typePolicies"][string] {
     if (!hasOwn.call(this.typePolicies, typename)) {
       const policy: Policies["typePolicies"][string] =
         this.typePolicies[typename] = Object.create(null);
@@ -878,7 +880,7 @@ export class Policies {
       // that need to deduplicate child objects and references.
       void 0,
       { typename,
-        fieldName: field.name.value,
+        fieldName: field?.name.value || "ROOT",
         field,
         variables: context.variables },
       context,
@@ -917,6 +919,7 @@ function makeFieldFunctionOptions(
       );
     },
     mergeObjects: makeMergeObjectsFunction(context.store),
+    context
   };
 }
 

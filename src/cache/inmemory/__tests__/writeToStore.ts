@@ -2497,6 +2497,20 @@ describe('writing to the store', () => {
       },
 
       {
+        existing:  {
+          __ref: "Account:12345",
+        },
+        incoming:  {
+          __typename: "Account",
+          contact: "support@example.com",
+          id: 12345,
+        },
+        merged:  {
+          __ref: "Account:12345",
+        },
+      },
+
+      {
         existing: {
           __typename: "Account",
           contact: "billing@example.com",

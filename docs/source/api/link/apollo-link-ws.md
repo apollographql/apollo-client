@@ -1,40 +1,97 @@
 ---
-title: Subscriptions Link
-sidebar_title: Subscriptions (newer protocol)
-description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `graphql-ws` library
+title: WebSocket Link
+sidebar_title: WebSocket (older protocol)
+description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `subscriptions-transport-ws` library
 api_reference: true
 ---
-
 > We no longer recommend using the `subscriptions-transport-ws` library, because this library is not actively maintained. We instead recommend using the newer `graphql-ws` library with the accompanying `GraphQLWsLink` for creating GraphQL subscriptions on the client side; learn more in [Choice of subscription protocol](../../data/subscriptions/#choice-of-subscription-protocol).
-
+>
 > We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
 
-The `GraphQLWsLink` is a [terminating link](./introduction/#the-terminating-link) that's used most commonly with GraphQL [subscriptions](../../data/subscriptions/) (which usually communicate over WebSocket), although you can send queries and mutations over WebSocket as well.
+The `WebSocketLink` is a [terminating link](./introduction/#the-terminating-link) that's used most commonly with GraphQL [subscriptions](../../data/subscriptions/) (which usually communicate over WebSocket), although you can send queries and mutations over WebSocket as well.
 
-`GraphQLWsLink` requires the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library. Install it in your project like so:
+`WebSocketLink` requires the [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) library. Install it in your project like so:
 
 ```shell
-npm install graphql-ws
+npm install subscriptions-transport-ws
 ```
 
-> **Note**: This link works with the newer `graphql-ws` library. If your server uses the older `subscriptions-transport-ws`, you should use the [`WebSocketLink` link from `@apollo/client/link/ws](./apollo-link-ws) instead.
+> **Note**: The `subscriptions-transport-ws` library is not actively maintained. We recommend the use of the `graphql-ws` library instead. These libraries layer different protocols on top of WebSockets, so you do need to ensure you are using the same library in your server and any clients that you support. To use `graphql-ws` from Apollo Client, use the [`GraphQLWsLink` link from `@apollo/client/link/subscriptions](./apollo-link-subscriptions) instead.
 
 ## Constructor
 
 ```js
-import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
-import { createClient } from "graphql-ws";
+import { WebSocketLink } from "@apollo/client/link/ws";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-const link = new GraphQLWsLink(createClient({
-  url: "ws://localhost:3000/subscriptions",
-}));
+const link = new WebSocketLink(
+  new SubscriptionClient({
+    uri: "ws://localhost:3000/subscriptions",
+    options: {
+      reconnect: true,
+    },
+  }),
+});
 ```
 
 ### Options
 
-The `GraphQLWsLink` constructor takes a single argument, which is a `Client` returned from the `graphql-ws` `createClient` function.
+The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an options object with the following fields. (These options are passed directly to the `SubscriptionClient` constructor.)
 
-The `createClient` function can take many options; full details can be found in [the `graphql-ws` docs for `ClientOptions`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/client.ClientOptions.md). The one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server. (Note that this differs from the [older link's URL option](./apollo-link-ws) which is called `uri` rather than `url`.)
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+###### `uri`
+
+`String`
+</td>
+<td>
+
+**Required.** The URL of the WebSocket endpoint to connect to (e.g., `ws://localhost:4000/subscriptions`).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `options`
+
+`Object`
+</td>
+<td>
+
+Options for configuring the WebSocket connection.
+
+[See supported options](https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts#L61-L71)
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `webSocketImpl`
+
+`Object`
+</td>
+<td>
+
+A W3C-compliant WebSocket implementation to use. Provide this if your environment does not provide native WebSocket support (for example, in Node.js).
+
+</td>
+</tr>
+</tbody>
+</table>
 
 ## Usage
 

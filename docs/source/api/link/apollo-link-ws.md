@@ -1,21 +1,42 @@
 ---
 title: WebSocket Link
 sidebar_title: WebSocket (older protocol)
-description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `subscriptions-transport-ws` library
+description:
+  Execute subscriptions (or other GraphQL operations) over WebSocket with the
+  `subscriptions-transport-ws` library
 api_reference: true
 ---
 
-> We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
+> We no longer recommend using the `subscriptions-transport-ws` library, because
+> this library is not actively maintained. We instead recommend using the newer
+> `graphql-ws` library with the accompanying `GraphQLWsLink` for creating
+> GraphQL subscriptions on the client side; learn more in
+> [Choice of subscription protocol](../../data/subscriptions/#choice-of-subscription-protocol).
+>
+> We recommend reading [Apollo Link overview](./introduction/) before learning
+> about individual links.
 
-The `WebSocketLink` is a [terminating link](./introduction/#the-terminating-link) that's used most commonly with GraphQL [subscriptions](../../data/subscriptions/) (which usually communicate over WebSocket), although you can send queries and mutations over WebSocket as well.
+The `WebSocketLink` is a
+[terminating link](./introduction/#the-terminating-link) that's used most
+commonly with GraphQL [subscriptions](../../data/subscriptions/) (which usually
+communicate over WebSocket), although you can send queries and mutations over
+WebSocket as well.
 
-`WebSocketLink` requires the [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) library. Install it in your project like so:
+`WebSocketLink` requires the
+[`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws)
+library. Install it in your project like so:
 
 ```shell
 npm install subscriptions-transport-ws
 ```
 
-> **Note**: The `subscriptions-transport-ws` library is not actively maintained. We recommend the use of the `graphql-ws` library instead. These libraries layer different protocols on top of WebSockets, so you do need to ensure you are using the same library in your server and any clients that you support. To use `graphql-ws` from Apollo Client, use the [`GraphQLWsLink` link from `@apollo/client/link/subscriptions](./apollo-link-subscriptions) instead.
+> **Note**: The `subscriptions-transport-ws` library is not actively maintained.
+> We recommend the use of the `graphql-ws` library instead. These libraries
+> layer different protocols on top of WebSockets, so you do need to ensure you
+> are using the same library in your server and any clients that you support. To
+> use `graphql-ws` from Apollo Client, use the
+> [`GraphQLWsLink` link from `@apollo/client/link/subscriptions](./apollo-link-subscriptions)
+> instead.
 
 ## Constructor
 
@@ -35,7 +56,9 @@ const link = new WebSocketLink(
 
 ### Options
 
-The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an options object with the following fields. (These options are passed directly to the `SubscriptionClient` constructor.)
+The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an
+options object with the following fields. (These options are passed directly to
+the `SubscriptionClient` constructor.)
 
 <table class="field-table">
   <thead>
@@ -52,10 +75,12 @@ The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an
 ###### `uri`
 
 `String`
+
 </td>
 <td>
 
-**Required.** The URL of the WebSocket endpoint to connect to (e.g., `ws://localhost:4000/subscriptions`).
+**Required.** The URL of the WebSocket endpoint to connect to (e.g.,
+`ws://localhost:4000/subscriptions`).
 
 </td>
 </tr>
@@ -66,6 +91,7 @@ The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an
 ###### `options`
 
 `Object`
+
 </td>
 <td>
 
@@ -82,10 +108,12 @@ Options for configuring the WebSocket connection.
 ###### `webSocketImpl`
 
 `Object`
+
 </td>
 <td>
 
-A W3C-compliant WebSocket implementation to use. Provide this if your environment does not provide native WebSocket support (for example, in Node.js).
+A W3C-compliant WebSocket implementation to use. Provide this if your
+environment does not provide native WebSocket support (for example, in Node.js).
 
 </td>
 </tr>

@@ -47,7 +47,7 @@ const httpLink = new HttpLink({ uri: "/graphql" });
 const persistedQueriesLink = createPersistedQueryLink({ sha256 });
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: persistedQueriesLink.concat(httpLink);
+  link: persistedQueriesLink.concat(httpLink),
 });
 ```
 

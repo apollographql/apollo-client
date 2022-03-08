@@ -20,12 +20,12 @@ npm install graphql-ws
 ## Constructor
 
 ```js
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { createClient } from 'graphql-ws';
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
 const link = new GraphQLWsLink(
   createClient({
-    url: 'ws://localhost:3000/subscriptions',
+    url: "ws://localhost:3000/subscriptions",
   }),
 );
 ```

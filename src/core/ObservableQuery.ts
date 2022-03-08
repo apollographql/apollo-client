@@ -445,19 +445,12 @@ once, rather than every time you call fetchMore.`);
         queryInfo.networkStatus = originalNetworkStatus;
       }
 
-      queryInfo.reset();
-      const queryDataAfterFetchMore = queryInfo.getDiff().result;
-
-      // Instead of calling this.observe(), we deliver the result directly from
-      // the cache, since that's the mechanism by which fetchMore delivers its
-      // results, even for network-only queries.
-      this.reportResult({
-        loading: false,
-        // TODO Ideally this would always be NetworkStatus.fetchMore, though
-        // that would mean isNetworkRequestInFlight would need to be updated.
-        networkStatus: queryInfo.networkStatus || NetworkStatus.fetchMore,
-        data: queryDataAfterFetchMore,
-      }, this.variables);
+      // Since fetchMore works by updating the cache, we trigger reobservation
+      // using a temporary fetchPolicy of "cache-first", so (complete) cache
+      // results written by fetchMore can be delivered without additional
+      // network requests, which is relevant when this.options.fetchPolicy is
+      // "cache-and-network" or "network-only".
+      this.reobserveCacheFirst();
     });
   }
 
@@ -816,6 +809,43 @@ once, rather than every time you call fetchMore.`);
       this.getCurrentResult(false),
       this.variables,
     );
+  }
+
+  // Reobserve with fetchPolicy effectively set to "cache-first", triggering
+  // delivery of any new data from the cache, possibly falling back to the
+  // network if any cache data are missing. This allows _complete_ cache results
+  // to be delivered without also kicking off unnecessary network requests when
+  // this.options.fetchPolicy is "cache-and-network" or "network-only". When
+  // this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
+  // "standby", or "no-cache"), we call this.reobserve() as usual.
+  private reobserveCacheFirst() {
+    const { fetchPolicy, nextFetchPolicy } = this.options;
+
+    if (
+      fetchPolicy === "cache-and-network" ||
+      fetchPolicy === "network-only"
+    ) {
+      return this.reobserve({
+        fetchPolicy: "cache-first",
+        // Use a temporary nextFetchPolicy function that replaces itself with
+        // the previous nextFetchPolicy value and returns the original
+        // fetchPolicy.
+        nextFetchPolicy(...args) {
+          // Replace this nextFetchPolicy function in the options object with
+          // the original this.options.nextFetchPolicy value.
+          this.nextFetchPolicy = nextFetchPolicy;
+          // If the original nextFetchPolicy value was a function, give it a
+          // chance to decide what happens here.
+          if (typeof nextFetchPolicy === "function") {
+            return nextFetchPolicy.apply(this, args);
+          }
+          // Otherwise go back to the original this.options.fetchPolicy.
+          return fetchPolicy!;
+        },
+      });
+    }
+
+    return this.reobserve();
   }
 
   private reportResult(

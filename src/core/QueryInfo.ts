@@ -238,17 +238,7 @@ export class QueryInfo {
         if (diff.fromOptimisticTransaction) {
           oq["observe"]();
         } else if (diff.complete) {
-          const { fetchPolicy, nextFetchPolicy } = oq.options;
-          oq.reobserve({
-            fetchPolicy: "cache-first",
-            nextFetchPolicy(...args) {
-              this.nextFetchPolicy = nextFetchPolicy;
-              if (typeof nextFetchPolicy === "function") {
-                return nextFetchPolicy.apply(this, args);
-              }
-              return fetchPolicy!;
-            },
-          });
+          oq["reobserveCacheFirst"]();
         } else {
           oq.reobserve();
         }

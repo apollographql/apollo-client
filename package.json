@@ -56,7 +56,7 @@
     {
       "name": "apollo-client",
       "path": "./dist/apollo-client.min.cjs",
-      "maxSize": "28.6kB"
+      "maxSize": "28.65kB"
     }
   ],
   "engines": {

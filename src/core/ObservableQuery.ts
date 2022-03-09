@@ -1,5 +1,5 @@
 import { invariant } from '../utilities/globals';
-
+import { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -394,6 +394,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       this.observe();
     }
 
+    const updatedQuerySet = new Set<DocumentNode>();
+
     return this.queryManager.fetchQuery(
       qid,
       combinedOptions,
@@ -401,6 +403,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     ).then(fetchMoreResult => {
       const data = fetchMoreResult.data as TData;
       const { updateQuery } = fetchMoreOptions;
+
+      this.queryManager.removeQuery(qid);
+
+      if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
+        queryInfo.networkStatus = originalNetworkStatus;
+      }
 
       if (updateQuery) {
         if (__DEV__ &&
@@ -429,33 +437,26 @@ once, rather than every time you call fetchMore.`);
         // combinedOptions.variables (instead of this.variables, which is
         // what this.updateQuery uses, because it works by abusing the
         // original field value, keyed by the original variables).
-        this.queryManager.cache.writeQuery({
-          query: combinedOptions.query,
-          variables: combinedOptions.variables,
-          data,
-          // TODO Figure out why this breaks tests, since the result should
-          // ultimately be broadcast by this.reobserveCacheFirst in the finally
-          // block below. Alternatively, we rely on the cache broadcast for this
-          // cache.writeQuery, and avoid using reobserveCacheFirst below.
-          broadcast: false,
+        this.queryManager.cache.batch({
+          update: cache => {
+            cache.writeQuery({
+              query: combinedOptions.query,
+              variables: combinedOptions.variables,
+              data,
+            });
+          },
+          onWatchUpdated: watch => {
+            updatedQuerySet.add(watch.query);
+          },
         });
       }
 
       return fetchMoreResult as ApolloQueryResult<TData>;
 
     }).finally(() => {
-      this.queryManager.removeQuery(qid);
-
-      if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
-        queryInfo.networkStatus = originalNetworkStatus;
+      if (!updatedQuerySet.has(this.options.query)) {
+        this.reobserveCacheFirst();
       }
-
-      // Since fetchMore works by updating the cache, we trigger reobservation
-      // using a temporary fetchPolicy of "cache-first", so (complete) cache
-      // results written by fetchMore can be delivered without additional
-      // network requests, which is relevant when this.options.fetchPolicy is
-      // "cache-and-network" or "network-only".
-      this.reobserveCacheFirst();
     });
   }
 

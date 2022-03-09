@@ -57,19 +57,15 @@ function useInternalState<TData, TVariables>(
   }
   const state = stateRef.current;
 
-  // Updating this state wrapper is the only way we trigger React component
-  // updates (no other useState calls within the InternalState class).
-  const [stateWrapper, setStateWrapper] = useState({ state });
-
   // By default, InternalState.prototype.forceUpdate is an empty function, but
   // we replace it here (before anyone has had a chance to see this state yet)
   // with a function that unconditionally forces an update, using the latest
-  // setStateWrapper function.
+  // setTick function. Updating this state by calling state.forceUpdate is the
+  // only way we trigger React component updates (no other useState calls within
+  // the InternalState class).
+  const [_tick, setTick] = useState(0);
   state.forceUpdate = () => {
-    // Changing the stateWrapper object reference without changing
-    // stateWrapper.state makes setStateWrapper trigger an update even when the
-    // state is not really changing, which gives us more control over updates.
-    setStateWrapper({ state: stateWrapper.state });
+    setTick(tick => tick + 1);
   };
 
   return state;

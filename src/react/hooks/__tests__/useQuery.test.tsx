@@ -46,6 +46,21 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
+    it('memo\'s it\'s output', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [ {
+          request: { query },
+          result: { data: { hello: "world" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
+      await waitFor(() => result.current.loading === false);
+      const oldResult = result.current;
+      rerender({ children: null });
+
+      expect(oldResult).toBe(result.current);
+    });
+
     it('should read and write results from the cache', async () => {
       const query = gql`{ hello }`;
       const mocks = [

@@ -124,7 +124,7 @@ class InternalState<TData, TVariables> {
       this.watchQueryOptions = watchQueryOptions;
     }
 
-    this.ssrDisabled = Boolean(options && (
+    this.ssrDisabled = !!(options && (
       options.ssr === false ||
       options.skip
     ));

@@ -70,16 +70,6 @@ function useInternalState<TData, TVariables>(
     setStateWrapper({ state: stateWrapper.state });
   };
 
-  // In case the client and query have changed since the previous render (so we
-  // have a new state and stateWrapper.state is out of date), trigger a
-  // setStateWrapper update using an effect. This may not be the most elegant
-  // way to maintain this state, but at least it's confined to useInternalState.
-  useEffect(() => {
-    if (state !== stateWrapper.state) {
-      setStateWrapper({ state });
-    }
-  }, [state, stateWrapper.state]);
-
   return state;
 }
 

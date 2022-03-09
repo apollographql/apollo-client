@@ -410,46 +410,48 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         queryInfo.networkStatus = originalNetworkStatus;
       }
 
-      if (updateQuery) {
-        if (__DEV__ &&
-            !warnedAboutUpdateQuery) {
-          invariant.warn(
-`The updateQuery callback for fetchMore is deprecated, and will be removed
-in the next major version of Apollo Client.
+      this.queryManager.cache.batch({
+        update: cache => {
+          if (updateQuery) {
+            if (__DEV__ &&
+                !warnedAboutUpdateQuery) {
+              invariant.warn(
+    `The updateQuery callback for fetchMore is deprecated, and will be removed
+    in the next major version of Apollo Client.
 
-Please convert updateQuery functions to field policies with appropriate
-read and merge functions, or use/adapt a helper function (such as
-concatPagination, offsetLimitPagination, or relayStylePagination) from
-@apollo/client/utilities.
+    Please convert updateQuery functions to field policies with appropriate
+    read and merge functions, or use/adapt a helper function (such as
+    concatPagination, offsetLimitPagination, or relayStylePagination) from
+    @apollo/client/utilities.
 
-The field policy system handles pagination more effectively than a
-hand-written updateQuery function, and you only need to define the policy
-once, rather than every time you call fetchMore.`);
-          warnedAboutUpdateQuery = true;
-        }
-        this.updateQuery(previous => updateQuery(previous, {
-          fetchMoreResult: data,
-          variables: combinedOptions.variables as TVariables,
-        }));
-      } else {
-        // If we're using a field policy instead of updateQuery, the only
-        // thing we need to do is write the new data to the cache using
-        // combinedOptions.variables (instead of this.variables, which is
-        // what this.updateQuery uses, because it works by abusing the
-        // original field value, keyed by the original variables).
-        this.queryManager.cache.batch({
-          update: cache => {
+    The field policy system handles pagination more effectively than a
+    hand-written updateQuery function, and you only need to define the policy
+    once, rather than every time you call fetchMore.`);
+              warnedAboutUpdateQuery = true;
+            }
+            this.updateQuery(previous => updateQuery(previous, {
+              fetchMoreResult: data,
+              variables: combinedOptions.variables as TVariables,
+            }));
+          } else {
+            // If we're using a field policy instead of updateQuery, the only
+            // thing we need to do is write the new data to the cache using
+            // combinedOptions.variables (instead of this.variables, which is
+            // what this.updateQuery uses, because it works by abusing the
+            // original field value, keyed by the original variables).
+
             cache.writeQuery({
               query: combinedOptions.query,
               variables: combinedOptions.variables,
               data,
             });
-          },
-          onWatchUpdated: watch => {
-            updatedQuerySet.add(watch.query);
-          },
-        });
-      }
+          }
+        },
+
+        onWatchUpdated(watch) {
+          updatedQuerySet.add(watch.query);
+        },
+      });
 
       return fetchMoreResult as ApolloQueryResult<TData>;
 

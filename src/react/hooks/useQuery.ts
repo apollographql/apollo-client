@@ -47,13 +47,15 @@ function useInternalState<TData, TVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ) {
-  // Return/recycle an InternalState object appropriate for this client and
-  // query (and this component). If either of these inputs changes, we trigger
-  // an update in the useEffect below.
-  const state = useMemo(
-    () => new InternalState(client, query),
-    [client, query],
-  );
+  const stateRef = useRef<InternalState<TData, TVariables>>();
+  if (
+    !stateRef.current ||
+    client !== stateRef.current.client ||
+    query !== stateRef.current.query
+  ) {
+    stateRef.current = new InternalState(client, query);
+  }
+  const state = stateRef.current;
 
   // Updating this state wrapper is the only way we trigger React component
   // updates (no other useState calls within the InternalState class).

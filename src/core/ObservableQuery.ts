@@ -433,6 +433,11 @@ once, rather than every time you call fetchMore.`);
           query: combinedOptions.query,
           variables: combinedOptions.variables,
           data,
+          // TODO Figure out why this breaks tests, since the result should
+          // ultimately be broadcast by this.reobserveCacheFirst in the finally
+          // block below. Alternatively, we rely on the cache broadcast for this
+          // cache.writeQuery, and avoid using reobserveCacheFirst below.
+          broadcast: false,
         });
       }
 

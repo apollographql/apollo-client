@@ -111,7 +111,7 @@ class InternalState<TData, TVariables> {
 
   private useOptions(
     options: undefined | QueryHookOptions<TData, TVariables>,
-  ): this {
+  ) {
     this.renderPromises = useContext(getApolloContext()).renderPromises;
 
     const watchQueryOptions = this.createWatchQueryOptions(
@@ -143,8 +143,6 @@ class InternalState<TData, TVariables> {
     this.onError = options
       && options.onError
       || InternalState.prototype.onError;
-
-    return this;
   }
 
   // A function to massage options before passing them to ObservableQuery.

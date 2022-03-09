@@ -435,10 +435,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     once, rather than every time you call fetchMore.`);
               warnedAboutUpdateQuery = true;
             }
-            this.updateQuery(previous => updateQuery(previous, {
+
+            cache.updateQuery({
+              query: this.options.query,
+              variables: this.variables,
+              returnPartialData: true,
+              optimistic: false,
+            }, previous => updateQuery(previous!, {
               fetchMoreResult: fetchMoreResult.data,
               variables: combinedOptions.variables as TFetchVars,
             }));
+
           } else {
             // If we're using a field policy instead of updateQuery, the only
             // thing we need to do is write the new data to the cache using

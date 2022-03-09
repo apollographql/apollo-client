@@ -1,10 +1,30 @@
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
-import { itAsync, mockSingleLink, subscribeAndCount } from '../testing';
-import { InMemoryCache, InMemoryCacheConfig, FieldMergeFunction } from '../cache';
-import { ApolloClient, NetworkStatus, ObservableQuery } from '../core';
-import { offsetLimitPagination, concatPagination } from '../utilities';
+import {
+  ApolloClient,
+  ApolloQueryResult,
+  NetworkStatus,
+  ObservableQuery,
+  TypedDocumentNode,
+} from '../core';
+
+import {
+  offsetLimitPagination,
+  concatPagination,
+} from '../utilities';
+
+import {
+  InMemoryCache,
+  InMemoryCacheConfig,
+  FieldMergeFunction,
+} from '../cache';
+
+import {
+  itAsync,
+  mockSingleLink,
+  subscribeAndCount,
+} from '../testing';
 
 describe('updateQuery on a simple query', () => {
   const query = gql`
@@ -117,7 +137,7 @@ describe('updateQuery on a query with required and optional variables', () => {
 
     return new Promise(resolve => setTimeout(resolve, 5))
       .then(() => obsHandle)
-      .then((watchedQuery: ObservableQuery<any>) => {
+      .then((watchedQuery: ObservableQuery<any, any>) => {
         expect(latestResult.data.entry.value).toBe(1);
         watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
@@ -178,7 +198,23 @@ describe('updateQuery with fetchMore deprecation notice', () => {
 });
 
 describe('fetchMore on an observable query', () => {
-  const query = gql`
+  type TCommentData = {
+    entry: {
+      __typename: string;
+      comments: Array<{
+        __typename: string;
+        text: string;
+      }>;
+    }
+  };
+
+  type TCommentVars = {
+    repoName: string;
+    start: number;
+    limit: number;
+  };
+
+  const query: TypedDocumentNode<TCommentData, TCommentVars> = gql`
     query Comment($repoName: String!, $start: Int!, $limit: Int!) {
       entry(repoFullName: $repoName) {
         comments(start: $start, limit: $limit) {
@@ -189,7 +225,10 @@ describe('fetchMore on an observable query', () => {
       }
     }
   `;
-  const query2 = gql`
+  const query2: TypedDocumentNode<
+    TCommentData,
+    Omit<TCommentVars, "repoName">
+  > = gql`
     query NewComments($start: Int!, $limit: Int!) {
       comments(start: $start, limit: $limit) {
         text
@@ -269,7 +308,7 @@ describe('fetchMore on an observable query', () => {
       }),
     });
 
-    return client.watchQuery<any>({
+    return client.watchQuery({
       query,
       variables,
     });
@@ -291,7 +330,7 @@ describe('fetchMore on an observable query', () => {
       cache: new InMemoryCache(cacheConfig),
     });
 
-    return client.watchQuery<any>({
+    return client.watchQuery({
       query,
       variables,
     });
@@ -307,36 +346,44 @@ describe('fetchMore on an observable query', () => {
         result: resultMore,
       });
 
-      let latestResult: any;
-      observable.subscribe({
-        next(result: any) {
-          latestResult = result;
-        },
-      });
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data.entry.comments).toHaveLength(10);
 
-      return observable.fetchMore({
-        // Rely on the fact that the original variables had limit: 10
-        variables: { start: 10 },
-        updateQuery: (prev, options) => {
-          expect(options.variables).toEqual(variablesMore);
+          return observable.fetchMore({
+            // Rely on the fact that the original variables had limit: 10
+            variables: { start: 10 },
+            updateQuery: (prev, options) => {
+              expect(options.variables).toEqual(variablesMore);
 
-          const state = cloneDeep(prev) as any;
-          state.entry.comments = [
-            ...state.entry.comments,
-            ...(options.fetchMoreResult as any).entry.comments,
-          ];
-          return state;
-        },
-      }).then(data => {
-        // This is the server result
-        expect(data.data.entry.comments).toHaveLength(10);
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toEqual(`comment ${i}`);
+              const state = cloneDeep(prev) as any;
+              state.entry.comments = [
+                ...state.entry.comments,
+                ...options.fetchMoreResult!.entry.comments,
+              ];
+              return state;
+            },
+          }).then(fetchMoreResult => {
+            // This is the server result
+            expect(fetchMoreResult.loading).toBe(false);
+            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+          });
+
+        } else if (count === 2) {
+          const combinedComments = result.data.entry.comments;
+          expect(combinedComments).toHaveLength(20);
+          for (let i = 1; i <= 20; i++) {
+            expect(combinedComments[i - 1].text).toEqual(`comment ${i}`);
+          }
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Too many results (${
+            JSON.stringify({ count, result })
+          })`);
         }
-      }).then(resolve, reject);
+      });
     });
 
     itAsync('field policy', (resolve, reject) => {
@@ -353,26 +400,35 @@ describe('fetchMore on an observable query', () => {
         result: resultMore,
       });
 
-      let latestResult: any;
-      observable.subscribe({
-        next(result: any) {
-          latestResult = result;
-        },
-      });
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data.entry.comments).toHaveLength(10);
 
-      return observable.fetchMore({
-        // Rely on the fact that the original variables had limit: 10
-        variables: { start: 10 },
-      }).then(data => {
-        // This is the server result
-        expect(data.data.entry.comments).toHaveLength(10);
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toEqual(`comment ${i}`);
+          return observable.fetchMore({
+            // Rely on the fact that the original variables had limit: 10
+            variables: { start: 10 },
+          }).then(fetchMoreResult => {
+            // This is the server result
+            expect(fetchMoreResult.loading).toBe(false);
+            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+          }).catch(reject);
+
+        } else if (count === 2) {
+          expect(result.loading).toBe(false);
+          const combinedComments = result.data.entry.comments;
+          expect(combinedComments).toHaveLength(20);
+          combinedComments.forEach((comment, i) => {
+            expect(comment.text).toEqual(`comment ${i + 1}`);
+          });
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Too many results (${
+            JSON.stringify({ count, result })
+          })`);
         }
-      }).then(resolve, reject);
+      });
     });
   });
 
@@ -386,32 +442,47 @@ describe('fetchMore on an observable query', () => {
         result: resultMore,
       });
 
-      let latestResult: any;
-      observable.subscribe({
-        next(result: any) {
-          latestResult = result;
-        },
-      });
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data.entry.comments).toHaveLength(10);
 
-      return observable.fetchMore({
-        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-        updateQuery: (prev, options) => {
-          const state = cloneDeep(prev) as any;
-          state.entry.comments = [
-            ...state.entry.comments,
-            ...(options.fetchMoreResult as any).entry.comments,
-          ];
-          return state;
-        },
-      }).then(data => {
-        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toEqual(`comment ${i}`);
+          return observable.fetchMore({
+            variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+            updateQuery: (prev, options) => {
+              expect(options.variables).toEqual(variablesMore);
+              const state = cloneDeep(prev) as any;
+              state.entry.comments = [
+                ...state.entry.comments,
+                ...options.fetchMoreResult!.entry.comments,
+              ];
+              return state;
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult.loading).toBe(false);
+            const fetchMoreComments = fetchMoreResult.data.entry.comments;
+            expect(fetchMoreComments).toHaveLength(10);
+            fetchMoreComments.forEach((comment, i) => {
+              expect(comment.text).toEqual(`comment ${i + 11}`)
+            });
+          });
+
+        } else if (count === 2) {
+          expect(result.loading).toBe(false);
+          const combinedComments = result.data.entry.comments;
+          expect(combinedComments).toHaveLength(20);
+
+          combinedComments.forEach((comment, i) => {
+            expect(comment.text).toEqual(`comment ${i + 1}`);
+          });
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Too many results (${
+            JSON.stringify({ count, result })
+          })`);
         }
-      }).then(resolve, reject);
+      });
     });
 
     itAsync('field policy', (resolve, reject) => {
@@ -431,24 +502,34 @@ describe('fetchMore on an observable query', () => {
         result: resultMore,
       });
 
-      let latestResult: any;
-      observable.subscribe({
-        next(result: any) {
-          latestResult = result;
-        },
-      });
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data.entry.comments).toHaveLength(10);
 
-      return observable.fetchMore({
-        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-      }).then(data => {
-        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toEqual(`comment ${i}`);
+          return observable.fetchMore({
+            // rely on the fact that the original variables had limit: 10
+            variables: { start: 10 },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult.loading).toBe(false);
+            expect(fetchMoreResult.data.entry.comments).toHaveLength(10); // this is the server result
+          }).catch(reject);
+
+        } else if (count === 2) {
+          expect(result.loading).toBe(false);
+          const combinedComments = result.data.entry.comments;
+          expect(combinedComments).toHaveLength(20);
+          combinedComments.forEach((comment, i) => {
+            expect(comment.text).toEqual(`comment ${i + 1}`);
+          });
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Too many results (${
+            JSON.stringify({ count, result })
+          })`);
         }
-      }).then(resolve, reject);
+      });
     });
   });
 
@@ -625,34 +706,48 @@ describe('fetchMore on an observable query', () => {
       result: result2,
     });
 
-    let latestResult: any;
-    observable.subscribe({
-      next(result: any) {
-        latestResult = result;
-      },
-    });
+    subscribeAndCount(reject, observable, (count, result) => {
+      if (count === 1) {
+        expect(result.loading).toBe(false);
+        expect(result.data.entry.comments).toHaveLength(10);
 
-    return observable.fetchMore({
-      query: query2,
-      variables: variables2,
-      updateQuery: (prev, options) => {
-        const state = cloneDeep(prev) as any;
-        state.entry.comments = [
-          ...state.entry.comments,
-          ...(options.fetchMoreResult as any).comments,
-        ];
-        return state;
-      },
-    }).then(() => {
-      const comments = latestResult.data.entry.comments;
-      expect(comments).toHaveLength(20);
-      for (let i = 1; i <= 10; i++) {
-        expect(comments[i - 1].text).toEqual(`comment ${i}`);
+        return observable.fetchMore({
+          query: query2,
+          variables: variables2,
+          updateQuery: (prev, options) => {
+            const state = cloneDeep(prev) as any;
+            state.entry.comments = [
+              ...state.entry.comments,
+              ...(options.fetchMoreResult as any as TCommentData["entry"]).comments,
+            ];
+            return state;
+          },
+        }).then(fetchMoreResult => {
+          expect(fetchMoreResult.loading).toBe(false);
+          expect((
+            fetchMoreResult as any as ApolloQueryResult<TCommentData["entry"]>
+          ).data.comments).toHaveLength(10);
+        });
+
+      } else if (count === 2) {
+        expect(result.loading).toBe(false);
+        const combinedComments = result.data.entry.comments;
+        expect(combinedComments).toHaveLength(20);
+
+        for (let i = 1; i <= 10; i++) {
+          expect(combinedComments[i - 1].text).toEqual(`comment ${i}`);
+        }
+        for (let i = 11; i <= 20; i++) {
+          expect(combinedComments[i - 1].text).toEqual(`new comment ${i}`);
+        }
+
+        setTimeout(resolve, 10);
+      } else {
+        reject(`Too many results (${
+          JSON.stringify({ count, result })
+        })`);
       }
-      for (let i = 11; i <= 20; i++) {
-        expect(comments[i - 1].text).toEqual(`new comment ${i}`);
-      }
-    }).then(resolve, reject);
+    });
   });
 
   describe('will not get an error from `fetchMore` if thrown', () => {
@@ -804,7 +899,23 @@ describe('fetchMore on an observable query', () => {
 });
 
 describe('fetchMore on an observable query with connection', () => {
-  const query = gql`
+  type TEntryComments = {
+    entry: {
+      comments: Array<{
+        text: string;
+        __typename?: string;
+      }>;
+      __typename?: string;
+    };
+  };
+
+  type TEntryVars = {
+    repoName: string;
+    start: number;
+    limit: number;
+  };
+
+  const query: TypedDocumentNode<TEntryComments, TEntryVars> = gql`
     query Comment($repoName: String!, $start: Int!, $limit: Int!) {
       entry(repoFullName: $repoName, start: $start, limit: $limit)
         @connection(key: "repoName") {
@@ -814,7 +925,7 @@ describe('fetchMore on an observable query with connection', () => {
       }
     }
   `;
-  const transformedQuery = gql`
+  const transformedQuery: TypedDocumentNode<TEntryComments, TEntryVars> = gql`
     query Comment($repoName: String!, $start: Int!, $limit: Int!) {
       entry(repoFullName: $repoName, start: $start, limit: $limit) {
         comments {
@@ -884,7 +995,7 @@ describe('fetchMore on an observable query with connection', () => {
       }),
     });
 
-    return client.watchQuery<any>({
+    return client.watchQuery({
       query,
       variables,
     });
@@ -906,7 +1017,7 @@ describe('fetchMore on an observable query with connection', () => {
       cache: new InMemoryCache(cacheConfig),
     });
 
-    return client.watchQuery<any>({
+    return client.watchQuery({
       query,
       variables,
     });
@@ -920,34 +1031,41 @@ describe('fetchMore on an observable query with connection', () => {
           variables: variablesMore,
         },
         result: resultMore,
-      })
-
-      let latestResult: any;
-      observable.subscribe({
-        next(result: any) {
-          latestResult = result;
-        },
       });
 
-      return observable.fetchMore({
-        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-        updateQuery: (prev, options) => {
-          const state = cloneDeep(prev) as any;
-          state.entry.comments = [
-            ...state.entry.comments,
-            ...(options.fetchMoreResult as any).entry.comments,
-          ];
-          return state;
-        },
-      }).then(data => {
-        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toBe(`comment ${i}`);
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data.entry.comments).toHaveLength(10);
+
+          return observable.fetchMore({
+            variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+            updateQuery: (prev, options) => {
+              const state = cloneDeep(prev) as any;
+              state.entry.comments = [
+                ...state.entry.comments,
+                ...(options.fetchMoreResult as TEntryComments).entry.comments,
+              ];
+              return state;
+            },
+          }).then(fetchMoreResult => {
+            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+            expect(fetchMoreResult.loading).toBe(false);
+          });
+        } else if (count === 2) {
+          const combinedComments = result.data.entry.comments;
+          expect(combinedComments).toHaveLength(20);
+          combinedComments.forEach((comment, i) => {
+            expect(comment.text).toBe(`comment ${i + 1}`);
+          });
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Too many results (${
+            JSON.stringify({ count, result })
+          })`);
         }
-      }).then(resolve, reject);
+      });
     });
 
     itAsync('field policy', (resolve, reject) => {
@@ -965,26 +1083,36 @@ describe('fetchMore on an observable query with connection', () => {
           variables: variablesMore,
         },
         result: resultMore,
-      })
-
-      let latestResult: any;
-      observable.subscribe({
-        next(result: any) {
-          latestResult = result;
-        },
       });
 
-      return observable.fetchMore({
-        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-      }).then(data => {
-        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
-        expect(data.loading).toBe(false);
-        const comments = latestResult.data.entry.comments;
-        expect(comments).toHaveLength(20);
-        for (let i = 1; i <= 20; i++) {
-          expect(comments[i - 1].text).toBe(`comment ${i}`);
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data.entry.comments).toHaveLength(10);
+
+          return observable.fetchMore({
+            // rely on the fact that the original variables had limit: 10
+            variables: { start: 10 },
+          }).then(fetchMoreResult => {
+            // this is the server result
+            expect(fetchMoreResult.loading).toBe(false);
+            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+          });
+
+        } else if (count === 2) {
+          const combinedComments = result.data.entry.comments;
+          expect(combinedComments).toHaveLength(20);
+          combinedComments.forEach((comment, i) => {
+            expect(comment.text).toBe(`comment ${i + 1}`);
+          });
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Too many results (${
+            JSON.stringify({ count, result })
+          })`);
         }
-      }).then(resolve, reject);
+      });
     });
   });
 
@@ -1024,7 +1152,7 @@ describe('fetchMore on an observable query with connection', () => {
                   const state = cloneDeep(prev) as any;
                   state.entry.comments = [
                     ...state.entry.comments,
-                    ...(options.fetchMoreResult as any).entry.comments,
+                    ...options.fetchMoreResult.entry.comments,
                   ];
                   return state;
                 },

@@ -52,8 +52,6 @@ export interface UpdateQueryOptions<TVariables> {
   variables?: TVariables;
 }
 
-let warnedAboutUpdateQuery = false;
-
 interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
   variables?: TVariables;
@@ -419,23 +417,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         update: cache => {
           const { updateQuery } = fetchMoreOptions;
           if (updateQuery) {
-            if (__DEV__ &&
-                !warnedAboutUpdateQuery) {
-              invariant.warn(
-    `The updateQuery callback for fetchMore is deprecated, and will be removed
-    in the next major version of Apollo Client.
-
-    Please convert updateQuery functions to field policies with appropriate
-    read and merge functions, or use/adapt a helper function (such as
-    concatPagination, offsetLimitPagination, or relayStylePagination) from
-    @apollo/client/utilities.
-
-    The field policy system handles pagination more effectively than a
-    hand-written updateQuery function, and you only need to define the policy
-    once, rather than every time you call fetchMore.`);
-              warnedAboutUpdateQuery = true;
-            }
-
             cache.updateQuery({
               query: this.options.query,
               variables: this.variables,

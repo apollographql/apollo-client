@@ -362,10 +362,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     return this.reobserve(reobserveOptions, NetworkStatus.refetch);
   }
 
-  public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
-      FetchMoreOptions<TData, TVariables>,
-  ): Promise<ApolloQueryResult<TData>> {
+  public fetchMore<
+    TFetchData = TData,
+    TFetchVars = TVariables,
+  >(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+    updateQuery?: (
+      previousQueryResult: TData,
+      options: {
+        fetchMoreResult: TFetchData;
+        variables: TFetchVars;
+      },
+    ) => TData;
+  }): Promise<ApolloQueryResult<TFetchData>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
@@ -381,7 +389,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // fetchMore to provide an updateQuery callback that determines how
       // the data gets written to the cache.
       fetchPolicy: "no-cache",
-    } as WatchQueryOptions;
+    } as WatchQueryOptions<TFetchVars, TFetchData>;
 
     const qid = this.queryManager.generateQueryId();
 
@@ -401,9 +409,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       combinedOptions,
       NetworkStatus.fetchMore,
     ).then(fetchMoreResult => {
-      const data = fetchMoreResult.data as TData;
-      const { updateQuery } = fetchMoreOptions;
-
       this.queryManager.removeQuery(qid);
 
       if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
@@ -412,6 +417,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
       this.queryManager.cache.batch({
         update: cache => {
+          const { updateQuery } = fetchMoreOptions;
           if (updateQuery) {
             if (__DEV__ &&
                 !warnedAboutUpdateQuery) {
@@ -430,8 +436,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
               warnedAboutUpdateQuery = true;
             }
             this.updateQuery(previous => updateQuery(previous, {
-              fetchMoreResult: data,
-              variables: combinedOptions.variables as TVariables,
+              fetchMoreResult: fetchMoreResult.data,
+              variables: combinedOptions.variables as TFetchVars,
             }));
           } else {
             // If we're using a field policy instead of updateQuery, the only
@@ -443,7 +449,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
             cache.writeQuery({
               query: combinedOptions.query,
               variables: combinedOptions.variables,
-              data,
+              data: fetchMoreResult.data,
             });
           }
         },
@@ -453,7 +459,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         },
       });
 
-      return fetchMoreResult as ApolloQueryResult<TData>;
+      return fetchMoreResult as ApolloQueryResult<TFetchData>;
 
     }).finally(() => {
       if (!updatedQuerySet.has(this.options.query)) {

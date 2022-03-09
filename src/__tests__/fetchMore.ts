@@ -4,7 +4,6 @@ import gql from 'graphql-tag';
 import {
   ApolloClient,
   ApolloLink,
-  ApolloQueryResult,
   NetworkStatus,
   ObservableQuery,
   TypedDocumentNode,
@@ -229,7 +228,7 @@ describe('fetchMore on an observable query', () => {
     }
   `;
   const query2: TypedDocumentNode<
-    TCommentData,
+    TCommentData["entry"],
     Omit<TCommentVars, "repoName">
   > = gql`
     query NewComments($start: Int!, $limit: Int!) {
@@ -363,7 +362,7 @@ describe('fetchMore on an observable query', () => {
               const state = cloneDeep(prev) as any;
               state.entry.comments = [
                 ...state.entry.comments,
-                ...options.fetchMoreResult!.entry.comments,
+                ...options.fetchMoreResult.entry.comments,
               ];
               return state;
             },
@@ -457,7 +456,7 @@ describe('fetchMore on an observable query', () => {
               const state = cloneDeep(prev) as any;
               state.entry.comments = [
                 ...state.entry.comments,
-                ...options.fetchMoreResult!.entry.comments,
+                ...options.fetchMoreResult.entry.comments,
               ];
               return state;
             },
@@ -1265,15 +1264,13 @@ describe('fetchMore on an observable query', () => {
             const state = cloneDeep(prev) as any;
             state.entry.comments = [
               ...state.entry.comments,
-              ...(options.fetchMoreResult as any as TCommentData["entry"]).comments,
+              ...options.fetchMoreResult.comments,
             ];
             return state;
           },
         }).then(fetchMoreResult => {
           expect(fetchMoreResult.loading).toBe(false);
-          expect((
-            fetchMoreResult as any as ApolloQueryResult<TCommentData["entry"]>
-          ).data.comments).toHaveLength(10);
+          expect(fetchMoreResult.data.comments).toHaveLength(10);
         });
 
       } else if (count === 2) {
@@ -1591,7 +1588,7 @@ describe('fetchMore on an observable query with connection', () => {
               const state = cloneDeep(prev) as any;
               state.entry.comments = [
                 ...state.entry.comments,
-                ...(options.fetchMoreResult as TEntryComments).entry.comments,
+                ...options.fetchMoreResult.entry.comments,
               ];
               return state;
             },

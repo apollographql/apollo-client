@@ -238,7 +238,7 @@ export class QueryInfo {
         if (diff.fromOptimisticTransaction) {
           oq["observe"]();
         } else if (diff.complete) {
-          oq["reobserveCacheFirst"]();
+          oq.reobserveCacheFirst();
         } else {
           oq.reobserve();
         }

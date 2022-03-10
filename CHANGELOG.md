@@ -11,6 +11,9 @@
 - Allow passing function to `useQuery` for finer-grained `options` control. <br/>
   [@benjamn](https://github.com/benjamn) in [#9223](https://github.com/apollographql/apollo-client/pull/9223)
 
+- Provide additional context to `nextFetchPolicy` functions to assist with `fetchPolicy` transitions. More details can be found in the [`nextFetchPolicy` documentation](https://deploy-preview-9067--apollo-client-docs.netlify.app/data/queries/#nextfetchpolicy). <br/>
+  [@benjamn](https://github.com/benjamn) in [#9222](https://github.com/apollographql/apollo-client/pull/9222)
+
 ### Postponed to v3.7
 
 - Tentatively reimplement `useQuery` and `useLazyQuery` to use the [proposed `useSyncExternalStore` API](https://github.com/reactwg/react-18/discussions/86) from React 18. <br/>

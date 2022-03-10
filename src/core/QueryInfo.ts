@@ -229,18 +229,15 @@ export class QueryInfo {
     if (oq) {
       oq["queryInfo"] = this;
       this.listeners.add(this.oqListener = () => {
-        // If this.diff came from an optimistic transaction, deliver the
-        // current cache data to the ObservableQuery, but don't perform a
-        // full reobservation, since oq.reobserve might make a network
-        // request, and we don't want to trigger network requests for
-        // optimistic updates.
+        // If this.diff came from an optimistic transaction, deliver the current
+        // cache data to the ObservableQuery, but don't perform a reobservation,
+        // since oq.reobserveCacheFirst might make a network request, and we
+        // don't want to trigger network requests for optimistic updates.
         const diff = this.getDiff();
         if (diff.fromOptimisticTransaction) {
           oq["observe"]();
-        } else if (diff.complete) {
-          oq.reobserveCacheFirst();
         } else {
-          oq.reobserve();
+          oq.reobserveCacheFirst();
         }
       });
     } else {

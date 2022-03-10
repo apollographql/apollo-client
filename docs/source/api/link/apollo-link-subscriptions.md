@@ -15,7 +15,7 @@ The `GraphQLWsLink` is a [terminating link](./introduction/#the-terminating-link
 npm install graphql-ws
 ```
 
-> **Note**: This link works with the newer `graphql-ws` library. If your server uses the older `subscriptions-transport-ws`, you should use the [`WebSocketLink` link from `@apollo/client/link/ws](./apollo-link-ws) instead.
+> **Note**: This link works with the newer `graphql-ws` library. If your server uses the older `subscriptions-transport-ws`, you should use the [`WebSocketLink` link from `@apollo/client/link/ws`](./apollo-link-ws) instead.
 
 ## Constructor
 
@@ -23,9 +23,11 @@ npm install graphql-ws
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 
-const link = new GraphQLWsLink(createClient({
-  url: "ws://localhost:3000/subscriptions",
-}));
+const link = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:3000/subscriptions",
+  }),
+);
 ```
 
 ### Options

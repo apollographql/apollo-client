@@ -66,10 +66,10 @@ const cache = new InMemoryCache({
 });
 ```
 
-This enables us to query the field, but we might not want to show the same boilerplate description for every rocket. To add variety to our mocked output, we can use a library like [faker.js](https://github.com/marak/Faker.js/):
+This enables us to query the field, but we might not want to show the same boilerplate description for every rocket. To add variety to our mocked output, we can use a library like [faker.js](https://github.com/faker-js/faker):
 
 ```js:title=index.js
-import faker from "faker/locale/en";
+import { faker } from "@faker-js/faker";
 
 // Returns 1 or 2 sentences of Lorem Ipsum
 const oneOrTwoSentences = () =>

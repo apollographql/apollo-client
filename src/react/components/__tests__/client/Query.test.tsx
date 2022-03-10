@@ -56,6 +56,7 @@ describe('Query component', () => {
         {(result: any) => {
           const {
             client: clientResult,
+            observable,
             fetchMore,
             refetch,
             startPolling,
@@ -1148,28 +1149,26 @@ describe('Query component', () => {
               {(result: any) => {
                 if (result.loading) return null;
                 try {
-                  switch (count) {
-                    case 0:
+                  switch (++count) {
+                    case 1:
                       expect(query).toEqual(query1);
                       expect(result.data).toEqual(data1);
                       setTimeout(() => {
                         this.setState({ query: query2 });
                       });
                       break;
-                    case 1:
-                      expect(query).toEqual(query2);
-                      expect(result.data).toEqual(data1);
-                      break;
                     case 2:
                       expect(query).toEqual(query2);
                       expect(result.data).toEqual(data2);
+                      break;
+                    default:
+                      reject(`Too many renders (${count})`);
                       break;
                   }
                 } catch (error) {
                   reject(error);
                 }
 
-                count++;
                 return null;
               }}
             </Query>
@@ -1183,7 +1182,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(2)).then(resolve, reject);
     });
 
     itAsync('with data while loading', (resolve, reject) => {

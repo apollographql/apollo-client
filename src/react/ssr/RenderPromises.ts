@@ -44,10 +44,9 @@ export class RenderPromises {
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables>(
     observable: ObservableQuery<any, TVariables>,
-    props: QueryDataOptions<TData, TVariables>
   ) {
     if (this.stopped) return;
-    this.lookupQueryInfo(props).observable = observable;
+    this.lookupQueryInfo(observable.options).observable = observable;
   }
 
   // Get's the cached observable that matches the SSR Query instances query and variables.

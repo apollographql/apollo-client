@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
@@ -44,6 +44,20 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: "world" });
+    });
+
+    it("useQuery result is referentially stable", async () => {
+      const query = gql`{ hello }`;
+      const mocks = [ {
+          request: { query },
+          result: { data: { hello: "world" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
+      await waitFor(() => result.current.loading === false);
+      const oldResult = result.current;
+      rerender({ children: null });
+      expect(oldResult === result.current).toBe(true);
     });
 
     it('should read and write results from the cache', async () => {
@@ -3946,5 +3960,51 @@ describe('useQuery Hook', () => {
       "network-only",
       "cache-and-network",
     ));
+  });
+
+  describe('regression test issue #9204', () => {
+    itAsync('should handle a simple query', (resolve, reject) => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const Component = ({ query }: any) => {
+        const [counter, setCounter] = useState(0)
+        const result = useQuery(query)
+
+        useEffect(() => {
+          /**
+           * IF the return value from useQuery changes on each render,
+           * this component will re-render in an infinite loop.
+           */
+          if (counter > 10) {
+            reject(new Error(`Too many results (${counter})`));
+          } else {
+            setCounter(c => c + 1);
+          }
+        }, [
+          result,
+          result.data,
+        ]);
+
+        if (result.loading) return null;
+
+        return <div>{result.data.hello}{counter}</div>;
+      }
+
+      const { getByText } = render(
+        <MockedProvider mocks={mocks}>
+          <Component query={query} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(getByText('world2')).toBeTruthy();
+      }).then(resolve, reject);
+    });
   });
 });

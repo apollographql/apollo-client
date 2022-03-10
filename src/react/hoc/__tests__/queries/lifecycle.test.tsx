@@ -63,7 +63,7 @@ describe('[queries] lifecycle', () => {
                 break;
               case 1:
                 expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual(variables2);
+                expect(data!.variables).toEqual(variables1);
                 expect(data!.allPeople).toEqual(data1.allPeople);
                 break;
               case 2:
@@ -226,7 +226,7 @@ describe('[queries] lifecycle', () => {
                 break;
               case 1:
                 expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual({ first: 2 });
+                expect(data!.variables).toEqual({ first: 1 });
                 expect(data!.allPeople).toEqual(data1.allPeople);
                 break;
               case 2:
@@ -323,7 +323,7 @@ describe('[queries] lifecycle', () => {
                 break;
               case 1:
                 expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual({ first: 2 });
+                expect(data!.variables).toEqual({ first: 1 });
                 expect(data!.allPeople).toEqual(data1.allPeople);
                 break;
               case 2:
@@ -592,16 +592,16 @@ describe('[queries] lifecycle', () => {
         render() {
           try {
             const { loading, a, b, c } = this.props.data!;
-            switch (count) {
-              case 0:
+            switch (++count) {
+              case 1:
                 expect({ loading, a, b, c }).toEqual({
                   loading: true,
-                  a: undefined,
-                  b: undefined,
-                  c: undefined
+                  a: void 0,
+                  b: void 0,
+                  c: void 0,
                 });
                 break;
-              case 1:
+              case 2:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 1,
@@ -610,7 +610,7 @@ describe('[queries] lifecycle', () => {
                 });
                 refetchQuery!();
                 break;
-              case 2:
+              case 3:
                 expect({ loading, a, b, c }).toEqual({
                   loading: true,
                   a: 1,
@@ -618,11 +618,6 @@ describe('[queries] lifecycle', () => {
                   c: 3
                 });
                 break;
-              case 3:
-                setTimeout(() => {
-                  switchClient!(client2);
-                });
-                // fallthrough
               case 4:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
@@ -630,16 +625,27 @@ describe('[queries] lifecycle', () => {
                   b: 2,
                   c: 3
                 });
+                setTimeout(() => {
+                  switchClient!(client2);
+                });
                 break;
               case 5:
                 expect({ loading, a, b, c }).toEqual({
                   loading: true,
-                  a: undefined,
-                  b: undefined,
-                  c: undefined
+                  a: void 0,
+                  b: void 0,
+                  c: void 0,
                 });
                 break;
               case 6:
+                expect({ loading, a, b, c }).toEqual({
+                  loading: true,
+                  a: void 0,
+                  b: void 0,
+                  c: void 0,
+                });
+                break;
+              case 7:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 4,
@@ -648,7 +654,7 @@ describe('[queries] lifecycle', () => {
                 });
                 refetchQuery!();
                 break;
-              case 7:
+              case 8:
                 expect({ loading, a, b, c }).toEqual({
                   loading: true,
                   a: 4,
@@ -656,11 +662,6 @@ describe('[queries] lifecycle', () => {
                   c: 6
                 });
                 break;
-              case 8:
-                setTimeout(() => {
-                  switchClient!(client3);
-                });
-                // fallthrough
               case 9:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
@@ -668,20 +669,26 @@ describe('[queries] lifecycle', () => {
                   b: 5,
                   c: 6
                 });
+                setTimeout(() => {
+                  switchClient!(client3);
+                });
                 break;
               case 10:
                 expect({ loading, a, b, c }).toEqual({
                   loading: true,
-                  a: undefined,
-                  b: undefined,
-                  c: undefined
+                  a: void 0,
+                  b: void 0,
+                  c: void 0,
                 });
                 break;
               case 11:
-                setTimeout(() => {
-                  switchClient!(client1);
+                expect({ loading, a, b, c }).toEqual({
+                  loading: true,
+                  a: void 0,
+                  b: void 0,
+                  c: void 0,
                 });
-                // fallthrough
+                break;
               case 12:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
@@ -689,12 +696,18 @@ describe('[queries] lifecycle', () => {
                   b: 8,
                   c: 9
                 });
+                setTimeout(() => {
+                  switchClient!(client1);
+                });
                 break;
               case 13:
-                setTimeout(() => {
-                  switchClient!(client3);
+                expect({ loading, a, b, c }).toEqual({
+                  loading: false,
+                  a: 1,
+                  b: 2,
+                  c: 3,
                 });
-                // fallthrough
+                break;
               case 14:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
@@ -702,8 +715,19 @@ describe('[queries] lifecycle', () => {
                   b: 2,
                   c: 3
                 });
+                setTimeout(() => {
+                  switchClient!(client3);
+                });
                 break;
               case 15:
+                expect({ loading, a, b, c }).toEqual({
+                  loading: false,
+                  a: 7,
+                  b: 8,
+                  c: 9,
+                });
+                break;
+              case 16:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 7,
@@ -716,7 +740,6 @@ describe('[queries] lifecycle', () => {
             reject(err);
           }
 
-          count++;
           return null;
         }
       }

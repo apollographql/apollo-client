@@ -1,3 +1,4 @@
+import { RenderResult } from "@testing-library/react-hooks/src/types";
 import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
@@ -16,6 +17,7 @@ import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
+import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
@@ -58,6 +60,75 @@ describe('useQuery Hook', () => {
       const oldResult = result.current;
       rerender({ children: null });
       expect(oldResult === result.current).toBe(true);
+    });
+
+    const expectFrames = <TData, TVariables>(result: RenderResult<QueryResult<TData, TVariables>>, expectedPartialFrames: Partial<QueryResult<TData, TVariables>>[]) => {
+      const actualPartialFrames = result.all.map((actualFrame, i) => {
+      const expectedPartialFrame = expectedPartialFrames[i];
+        if (actualFrame instanceof Error) {
+          return {
+            error: actualFrame,
+          };
+        }
+        if (expectedPartialFrame) {
+          const actualPartialFrame: Partial<Record<keyof QueryResult<TData, TVariables>, any>> = {};
+          (Object.keys(expectedPartialFrame) as (keyof typeof expectedPartialFrame)[]).forEach((key) => {
+            actualPartialFrame[key] = actualFrame[key];
+          });
+          return actualPartialFrame;
+        }
+        return {};
+      });
+      expect(actualPartialFrames).toEqual(expectedPartialFrames);
+    };
+
+    const UNNEEDED_FRAME = {};
+
+    it("useQuery produces the expected frames initially", async () => {
+      const query = gql`{ hello }`;
+      const mocks = [ {
+        request: { query },
+        result: { data: { hello: "world" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
+      await waitFor(() => result.current.loading === false);
+      rerender({ children: null });
+      expectFrames(result, [
+        { loading: true, data: void 0 },
+        { loading: false, data: { hello: "world" } },
+        UNNEEDED_FRAME
+      ]);
+    });
+
+    it("useQuery produces the expected frames when variables change", async () => {
+      const query = gql`
+        query ($id: Int) {
+        hello(id: $id)
+      }
+      `;
+      const mocks = [ {
+        request: { query, variables: { id: 1 } },
+        result: { data: { hello: "world 1" } },
+      }, {
+        request: { query, variables: { id: 2 } },
+        result: { data: { hello: "world 2" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, rerender, waitFor } = renderHook(
+        (options) => useQuery(query, options),
+        { wrapper, initialProps: { variables: { id: 1 } } },
+      );
+      await waitFor(() => result.current.loading === false);
+      rerender({ variables: { id: 2 } });
+      await waitFor(() => result.current.loading === false);
+      expectFrames(result, [
+        { loading: true, data: void 0 },
+        { loading: false, data: { hello: "world 1" } },
+        UNNEEDED_FRAME,
+        { loading: true, data: void 0 },
+        { loading: false, data: { hello: "world 2" } },
+      ]);
     });
 
     it('should read and write results from the cache', async () => {

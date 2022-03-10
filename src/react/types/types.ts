@@ -93,12 +93,20 @@ export interface QueryHookOptions<TData = any, TVariables = OperationVariables>
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
+export type QueryHookOptionsFunction<TData, TVariables> = (
+  prevOptions: QueryHookOptions<TData, TVariables>,
+) => QueryHookOptions<TData, TVariables>;
+
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables = OperationVariables
 > extends Omit<QueryFunctionOptions<TData, TVariables>, 'skip'> {
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
+
+export type LazyQueryHookOptionsFunction<TData, TVariables> = (
+  prevOptions: LazyQueryHookOptions<TData, TVariables>,
+) => LazyQueryHookOptions<TData, TVariables>;
 
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;

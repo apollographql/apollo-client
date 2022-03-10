@@ -18,11 +18,13 @@ import {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
+  QueryHookOptionsFunction,
 } from '../types/types';
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
+import { useNormalizedOptions } from './options';
 
 const {
   prototype: {
@@ -35,10 +37,13 @@ export function useQuery<
   TVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: QueryHookOptions<TData, TVariables>,
+  optionsOrFunction?:
+    | QueryHookOptions<TData, TVariables>
+    | QueryHookOptionsFunction<TData, TVariables>
 ): QueryResult<TData, TVariables> {
+  const options = useNormalizedOptions(optionsOrFunction);
   return useInternalState(
-    useApolloClient(options && options.client),
+    useApolloClient(options.client),
     query,
   ).useQuery(options);
 }
@@ -86,7 +91,7 @@ class InternalState<TData, TVariables> {
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
   // without any dynamic conditional logic.
-  public useQuery(options: undefined | QueryHookOptions<TData, TVariables>) {
+  public useQuery(options: QueryHookOptions<TData, TVariables>) {
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
@@ -110,12 +115,12 @@ class InternalState<TData, TVariables> {
   private ssrDisabled: boolean;
 
   private useOptions(
-    options: undefined | QueryHookOptions<TData, TVariables>,
+    options: QueryHookOptions<TData, TVariables>,
   ) {
     this.renderPromises = useContext(getApolloContext()).renderPromises;
 
     const watchQueryOptions = this.createWatchQueryOptions(
-      this.queryHookOptions = options || {},
+      this.queryHookOptions = options,
     );
     // Update this.watchQueryOptions, but only when they have changed, which
     // allows us to depend on the referential stability of

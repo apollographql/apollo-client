@@ -1394,6 +1394,84 @@ describe('fetchMore on an observable query', () => {
       expect(count()).toBe(beforeQueryCount);
     }).then(resolve, reject);
   });
+
+  itAsync("delivers all loading states even if data unchanged", (resolve, reject) => {
+    type TEmptyItems = {
+      emptyItems: Array<{
+        text: string;
+      }>;
+    };
+
+    const query: TypedDocumentNode<TEmptyItems> = gql`
+      query GetNothing {
+        emptyItems {
+          text
+        }
+      }
+    `;
+
+    const variables = {};
+
+    const emptyItemsMock = {
+      request: {
+        query,
+        variables,
+      },
+      result: {
+        data: {
+          emptyItems: [],
+        },
+      },
+    };
+
+    const link = mockSingleLink(
+      emptyItemsMock,
+      emptyItemsMock,
+      emptyItemsMock,
+    ).setOnError(reject);
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const observable = client.watchQuery({
+      query,
+      variables,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    subscribeAndCount(reject, observable, (count, result) => {
+      if (count === 1) {
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data.emptyItems).toHaveLength(0);
+
+        return observable.fetchMore({
+          variables,
+        }).then(fetchMoreResult => {
+          expect(fetchMoreResult.loading).toBe(false);
+          expect(fetchMoreResult.networkStatus).toBe(NetworkStatus.ready);
+          expect(fetchMoreResult.data.emptyItems).toHaveLength(0);
+        });
+      } else if (count === 2) {
+        expect(result.loading).toBe(true);
+        expect(result.networkStatus).toBe(NetworkStatus.fetchMore);
+        expect(result.data.emptyItems).toHaveLength(0);
+
+      } else if (count === 3) {
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data.emptyItems).toHaveLength(0);
+
+        setTimeout(resolve, 10);
+      } else {
+        reject(`Too many results (${
+          JSON.stringify({ count, result })
+        })`);
+      }
+    });
+  });
 });
 
 describe('fetchMore on an observable query with connection', () => {

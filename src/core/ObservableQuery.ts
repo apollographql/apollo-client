@@ -1,4 +1,5 @@
 import { invariant } from '../utilities/globals';
+import { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -399,6 +400,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       this.observe();
     }
 
+    const updatedQuerySet = new Set<DocumentNode>();
+
     return this.queryManager.fetchQuery(
       qid,
       combinedOptions,
@@ -410,32 +413,57 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         queryInfo.networkStatus = originalNetworkStatus;
       }
 
-      const { updateQuery } = fetchMoreOptions;
-      if (updateQuery) {
-        this.queryManager.cache.updateQuery({
-          query: this.options.query,
-          variables: this.variables,
-          returnPartialData: true,
-          optimistic: false,
-        }, previous => updateQuery(previous!, {
-          fetchMoreResult: fetchMoreResult.data,
-          variables: combinedOptions.variables as TFetchVars,
-        }));
+      // Performing this cache update inside a cache.batch transaction ensures
+      // any affected cache.watch watchers are notified at most once about any
+      // updates. Most watchers will be using the QueryInfo class, which
+      // responds to notifications by calling reobserveCacheFirst to deliver
+      // fetchMore cache results back to this ObservableQuery.
+      this.queryManager.cache.batch({
+        update: cache => {
+          const { updateQuery } = fetchMoreOptions;
+          if (updateQuery) {
+            cache.updateQuery({
+              query: this.options.query,
+              variables: this.variables,
+              returnPartialData: true,
+              optimistic: false,
+            }, previous => updateQuery(previous!, {
+              fetchMoreResult: fetchMoreResult.data,
+              variables: combinedOptions.variables as TFetchVars,
+            }));
 
-      } else {
-        // If we're using a field policy instead of updateQuery, the only
-        // thing we need to do is write the new data to the cache using
-        // combinedOptions.variables (instead of this.variables, which is
-        // what this.updateQuery uses, because it works by abusing the
-        // original field value, keyed by the original variables).
-        this.queryManager.cache.writeQuery({
-          query: combinedOptions.query,
-          variables: combinedOptions.variables,
-          data: fetchMoreResult.data,
-        });
-      }
+          } else {
+            // If we're using a field policy instead of updateQuery, the only
+            // thing we need to do is write the new data to the cache using
+            // combinedOptions.variables (instead of this.variables, which is
+            // what this.updateQuery uses, because it works by abusing the
+            // original field value, keyed by the original variables).
+            cache.writeQuery({
+              query: combinedOptions.query,
+              variables: combinedOptions.variables,
+              data: fetchMoreResult.data,
+            });
+          }
+        },
+
+        onWatchUpdated(watch) {
+          // Record the DocumentNode associated with any watched query whose
+          // data were updated by the cache writes above.
+          updatedQuerySet.add(watch.query);
+        },
+      });
 
       return fetchMoreResult as ApolloQueryResult<TFetchData>;
+
+    }).finally(() => {
+      // In case the cache writes above did not generate a broadcast
+      // notification (which would have been intercepted by onWatchUpdated),
+      // likely because the written data were the same as what was already in
+      // the cache, we still want fetchMore to deliver its final loading:false
+      // result with the unchanged data.
+      if (!updatedQuerySet.has(this.options.query)) {
+        this.reobserveCacheFirst();
+      }
     });
   }
 

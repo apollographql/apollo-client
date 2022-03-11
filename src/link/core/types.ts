@@ -24,7 +24,7 @@ export interface FetchResult<
   TData = Record<string, any>,
   TContext = Record<string, any>,
   TExtensions = Record<string, any>
-> extends ExecutionResult<TData, TExtensions> {
+> extends ExecutionResult<TData> {
   data?: TData | null | undefined;
   extensions?: TExtensions;
   context?: TContext;

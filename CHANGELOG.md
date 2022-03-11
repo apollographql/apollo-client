@@ -14,6 +14,9 @@
 - Provide additional context to `nextFetchPolicy` functions to assist with `fetchPolicy` transitions. More details can be found in the [`nextFetchPolicy` documentation](https://deploy-preview-9067--apollo-client-docs.netlify.app/data/queries/#nextfetchpolicy). <br/>
   [@benjamn](https://github.com/benjamn) in [#9222](https://github.com/apollographql/apollo-client/pull/9222)
 
+- Remove nagging deprecation warning about passing an `options.updateQuery` function to `fetchMore`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9504](https://github.com/apollographql/apollo-client/pull/9504)
+
 ### Potentially disruptive changes
 
 - Calling `fetchMore` for queries using the `cache-and-network` or `network-only` fetch policies should no longer trigger additional network requests when cache results are complete. <br/>

@@ -88,7 +88,7 @@
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.16.1",
     "prop-types": "^15.7.2",
-    "rxjs": "^7.5.2",
+    "rxjs": "^7.5.5",
     "ts-invariant": "^0.9.4",
     "tslib": "^2.3.0"
   },

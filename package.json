@@ -124,7 +124,7 @@
     "recast": "0.21.0",
     "resolve": "1.22.0",
     "rimraf": "3.0.2",
-    "rollup": "2.69.2",
+    "rollup": "2.70.0",
     "rollup-plugin-terser": "7.0.2",
     "rxjs": "6.6.7",
     "subscriptions-transport-ws": "0.11.0",

@@ -1,6 +1,5 @@
 ---
 title: Subscriptions Link
-sidebar_title: Subscriptions (newer protocol)
 description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `graphql-ws` library
 api_reference: true
 ---

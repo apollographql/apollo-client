@@ -85,6 +85,7 @@
       "REST": "/api/link/apollo-link-rest",
       "Retry": "/api/link/apollo-link-retry",
       "Schema": "/api/link/apollo-link-schema",
+      "Subscriptions (newer protocol)": "/api/link/apollo-link-subscriptions",
       "WebSocket (older protocol)": "/api/link/apollo-link-ws",
       "Community links": "/api/link/community-links"
     }

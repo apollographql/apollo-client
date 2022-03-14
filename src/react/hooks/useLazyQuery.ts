@@ -5,8 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { OperationVariables } from '../../core';
 import {
   LazyQueryHookOptions,
-  QueryLazyOptions,
-  QueryTuple,
+  LazyQueryResultTuple,
 } from '../types/types';
 import { useQuery } from './useQuery';
 
@@ -23,10 +22,10 @@ const EAGER_METHODS = [
 export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
-): QueryTuple<TData, TVariables> {
+): LazyQueryResultTuple<TData, TVariables> {
   const [execution, setExecution] = useState<{
     called: boolean,
-    options?: QueryLazyOptions<TVariables>,
+    options?: Partial<LazyQueryHookOptions<TData, TVariables>>;
   }>({
     called: false,
   });
@@ -68,8 +67,8 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   Object.assign(result, eagerMethods);
 
   const execute = useCallback<
-    QueryTuple<TData, TVariables>[0]
-  >((executeOptions?: QueryLazyOptions<TVariables>) => {
+    LazyQueryResultTuple<TData, TVariables>[0]
+  >(executeOptions => {
     setExecution({ called: true, options: executeOptions });
     const promise = result.refetch(executeOptions?.variables).then((result1) => {
       const result2 = {

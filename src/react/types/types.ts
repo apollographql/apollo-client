@@ -103,21 +103,28 @@ export interface QueryHookOptions<TData = any, TVariables = OperationVariables>
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables = OperationVariables
-> extends Omit<QueryFunctionOptions<TData, TVariables>, 'skip'> {
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
+> extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {}
 
+/**
+ * @deprecated TODO Delete this unused interface.
+ */
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;
   context?: DefaultContext;
 }
 
-// TODO: Delete this
+/**
+ * @deprecated TODO Delete this unused type alias.
+ */
 export type LazyQueryResult<TData, TVariables> = QueryResult<TData, TVariables>;
 
-export type QueryTuple<TData, TVariables> = [
-  (options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
-  LazyQueryResult<TData, TVariables>
+export type LazyQueryExecFunction<TData, TVariables> = (
+  options?: Partial<LazyQueryHookOptions<TData, TVariables>>,
+) => Promise<QueryResult<TData, TVariables>>;
+
+export type LazyQueryResultTuple<TData, TVariables> = [
+  LazyQueryExecFunction<TData, TVariables>,
+  QueryResult<TData, TVariables>,
 ];
 
 /* Mutation types */

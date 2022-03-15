@@ -71,18 +71,9 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
     setExecution({ called: true, options: executeOptions });
-    const promise = result.refetch(executeOptions?.variables).then((result1) => {
-      const result2 = {
-        ...result,
-        data: result1.data,
-        error: result1.error,
-        called: true,
-        loading: false,
-      };
-
-      Object.assign(result2, eagerMethods);
-      return result2;
-    });
+    const promise = result.refetch(executeOptions?.variables)
+      .then(apolloQueryResult => internalState.toQueryResult(apolloQueryResult))
+      .then(queryResult => Object.assign(queryResult, eagerMethods));
 
     // Because the return value of `useLazyQuery` is usually floated, we need
     // to catch the promise to prevent unhandled rejections.

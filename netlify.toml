@@ -1,6 +1,0 @@
-[build]
-  base    = "docs/"
-  publish = "docs/public/"
-  command = "npm run types && gatsby build --prefix-paths && mkdir -p docs/react && mv public/* docs/react && mv docs public/ && mv public/docs/react/_redirects public"
-[build.environment]
-  NPM_VERSION = "6"

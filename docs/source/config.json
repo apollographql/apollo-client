@@ -1,6 +1,10 @@
 {
   "title": "Client (React)",
   "version": "v2",
+  "algoliaFilters": [
+    "docset:react",
+    "docset:server"
+  ],
   "sidebar": {
     "Introduction": "/",
     "Why Apollo Client?": "/why-apollo",

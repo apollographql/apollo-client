@@ -1,0 +1,16 @@
+name: Preview docs on Netlify
+
+on:
+  pull_request:
+    branches:
+      - main
+      - version-2.6
+    paths:
+      - docs/**
+
+jobs:
+  preview:
+    uses: apollographql/docs/.github/workflows/preview.yml@main
+    secrets:
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

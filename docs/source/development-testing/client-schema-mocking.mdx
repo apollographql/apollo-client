@@ -5,9 +5,9 @@ description: Start on client-side features before your server supports them
 
 If your GraphQL server doesn't yet support a field that your client will use, you can still start building against that field by mocking its behavior within the client.
 
-For example, let's say we want to add a feature to the Space Explorer app from [the Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/). Specifically, we want to display a description of the rocket used for each launch. To support this functionality on the server side, we'll add a `description` field to our schema's `Rocket` type:
+For example, let's say we want to add a feature to the Space Explorer app from [the Apollo full-stack tutorial](/tutorial/introduction/). Specifically, we want to display a description of the rocket used for each launch. To support this functionality on the server side, we'll add a `description` field to our schema's `Rocket` type:
 
-```graphql{5}
+```graphql {5}
 type Rocket {
   id: ID!
   name: String
@@ -22,11 +22,11 @@ But what if our back-end team isn't finished adding support for the `description
 
 Our client application can define a [client-side schema](../local-state/client-side-schema/) that extends types from our server,  or even defines entirely new types. The syntax is identical to server-side schema definitions.
 
-> Although a client-side schema isn't _required_ for mocking, it helps team members understand your app's local capabilities. It also unlocks powerful local state support in tools like the [Apollo Client Devtools](./developer-tooling/#apollo-client-devtools) and the [Apollo extension for VS Code](https://www.apollographql.com/docs/devtools/editor-plugins/).
+> Although a client-side schema isn't _required_ for mocking, it helps team members understand your app's local capabilities. It also unlocks powerful local state support in tools like the [Apollo Client Devtools](./developer-tooling/#apollo-client-devtools) and the [Apollo extension for VS Code](/devtools/editor-plugins/).
 
 This client-side schema extends the `Rocket` type to add a `description` field (make sure to name the variable `typeDefs` as shown):
 
-```js:title=index.js
+```js title="index.js"
 const typeDefs = gql`
   extend type Rocket {
     description: String
@@ -36,7 +36,7 @@ const typeDefs = gql`
 
 We can then provide this schema to the `ApolloClient` constructor, like so:
 
-```js{4}:title=index.js
+```js {4} title="index.js"
 const client = new ApolloClient({
   uri: 'http://localhost:4000/graphql',
   cache: new InMemoryCache(),
@@ -50,7 +50,7 @@ Our client app doesn't yet know how to populate the `Rocket.description` field. 
 
 Let's define our `read` function in the configuration object we provide to the `InMemoryCache` constructor:
 
-```js{5-9}:title=index.js
+```js {5-9} title="index.js"
 const cache = new InMemoryCache({
   typePolicies: {
     Rocket: {
@@ -68,7 +68,7 @@ const cache = new InMemoryCache({
 
 This enables us to query the field, but we might not want to show the same boilerplate description for every rocket. To add variety to our mocked output, we can use a library like [faker.js](https://github.com/faker-js/faker):
 
-```js:title=index.js
+```js title="index.js"
 import { faker } from "@faker-js/faker";
 
 // Returns 1 or 2 sentences of Lorem Ipsum
@@ -89,9 +89,9 @@ read() {
 
 ## 3. Query with the `@client` directive
 
-We're ready to execute a query that includes our new field. Here's an abridged `GET_LAUNCH_DETAILS` query from the [Apollo full-stack tutorial](https://www.apollographql.com/docs/tutorial/queries/#display-a-single-launchs-details) with our `description` field added:
+We're ready to execute a query that includes our new field. Here's an abridged `GET_LAUNCH_DETAILS` query from the [Apollo full-stack tutorial](/tutorial/queries/#display-a-single-launchs-details) with our `description` field added:
 
-```jsx{7}
+```jsx {7}
 export const GET_LAUNCH_DETAILS = gql`
   query LaunchDetails($launchId: ID!) {
     launch(id: $launchId) {

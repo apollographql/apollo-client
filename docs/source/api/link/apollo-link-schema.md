@@ -1,6 +1,5 @@
 ---
 title: Schema Link
-sidebar_title: Schema
 description: Assists with mocking and server-side rendering
 ---
 
@@ -35,7 +34,7 @@ const graphqlClient = new ApolloClient({
 
 ### Mocking
 
-For more detailed information about mocking, refer to the [graphql-tools documentation](https://www.apollographql.com/docs/graphql-tools/mocking.html).
+For more detailed information about mocking, refer to the [graphql-tools documentation](https://www.graphql-tools.com/docs/graphql-tools/mocking).
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';

@@ -1,6 +1,5 @@
 ---
 title: View integrations
-subtitle: Using Apollo Client with your view layer
 description: How to use Apollo Client with the view layer your application is developed in!
 ---
 

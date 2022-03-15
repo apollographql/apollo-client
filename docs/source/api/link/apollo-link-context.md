@@ -1,6 +1,5 @@
 ---
 title: Context Link
-sidebar_title: Context
 description: Easily set a context on your operation, which is used by other links further down the chain.
 ---
 

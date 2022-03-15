@@ -1,6 +1,5 @@
 ---
 title: HTTP Link
-sidebar_title: HTTP
 description: Get GraphQL results over a network using HTTP fetch.
 ---
 

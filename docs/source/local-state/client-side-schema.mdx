@@ -5,7 +5,7 @@ description: Extend your schema with client-specific fields
 
 You can optionally provide a **client-side schema** to Apollo Client that defines [local-only types and fields](./managing-state-with-field-policies/). You can define completely new types, or extend types from your server's schema with new fields.
 
-As with any GraphQL schema, your client-side schema must be written in [Schema Definition Language](https://www.apollographql.com/docs/apollo-server/schema/schema/#the-schema-definition-language).
+As with any GraphQL schema, your client-side schema must be written in [Schema Definition Language](/apollo-server/schema/schema/#the-schema-definition-language).
 
 The client-side schema is _not_ used to validate operations like it is on the server (the `graphql-js` modules for schema validation would dramatically increase your bundle size). Instead, your client-side schema is used for introspection in the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools), where you can explore your schema in GraphiQL.
 

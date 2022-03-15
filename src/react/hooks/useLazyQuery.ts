@@ -31,12 +31,19 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   );
 
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
+  const defaultOptions = internalState.client.defaultOptions.watchQuery;
+  const initialFetchPolicy =
+    (options && options.fetchPolicy) ||
+    (execOptionsRef.current && execOptionsRef.current.fetchPolicy) ||
+    (defaultOptions && defaultOptions.fetchPolicy) ||
+    "cache-first";
+
   const useQueryResult = internalState.useQuery({
     ...options,
     ...execOptionsRef.current,
     // We don’t set skip to execution.called, because some useQuery SSR code
     // checks skip for some reason.
-    fetchPolicy: execOptionsRef.current ? options?.fetchPolicy : 'standby',
+    fetchPolicy: execOptionsRef.current ? initialFetchPolicy : 'standby',
     skip: undefined,
   });
 
@@ -65,12 +72,17 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    execOptionsRef.current = executeOptions;
-    internalState.forceUpdate();
+    executeOptions = execOptionsRef.current = {
+      ...executeOptions, // Works when executeOptions initially falsy/undefined
+      fetchPolicy: executeOptions && executeOptions.fetchPolicy || initialFetchPolicy,
+    };
 
-    const promise = result.refetch(executeOptions?.variables)
+    const promise = result.observable.reobserve(executeOptions)
       .then(apolloQueryResult => internalState.toQueryResult(apolloQueryResult))
       .then(queryResult => Object.assign(queryResult, eagerMethods));
+
+    // Deliver the loading state for this reobservation immediately.
+    internalState.forceUpdate();
 
     // Because the return value of `useLazyQuery` is usually floated, we need
     // to catch the promise to prevent unhandled rejections.

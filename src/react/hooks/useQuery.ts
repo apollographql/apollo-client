@@ -43,7 +43,7 @@ export function useQuery<
   ).useQuery(options);
 }
 
-function useInternalState<TData, TVariables>(
+export function useInternalState<TData, TVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ) {

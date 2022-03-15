@@ -7,7 +7,8 @@ import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
 } from '../types/types';
-import { useQuery } from './useQuery';
+import { useInternalState } from './useQuery';
+import { useApolloClient } from './useApolloClient';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -23,6 +24,11 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
 ): LazyQueryResultTuple<TData, TVariables> {
+  const internalState = useInternalState(
+    useApolloClient(options && options.client),
+    query,
+  );
+
   const [execution, setExecution] = useState<{
     called: boolean,
     options?: Partial<LazyQueryHookOptions<TData, TVariables>>;
@@ -30,7 +36,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     called: false,
   });
 
-  let result = useQuery<TData, TVariables>(query, {
+  let result = internalState.useQuery({
     ...options,
     ...execution.options,
     // We don’t set skip to execution.called, because some useQuery SSR code

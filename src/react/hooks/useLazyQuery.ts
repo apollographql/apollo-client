@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
 import {
@@ -30,10 +30,11 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     query,
   );
 
-  const [execution, setExecution] = useState<{
-    called: boolean,
+  const execRef = useRef<{
+    called: boolean;
     options?: Partial<LazyQueryHookOptions<TData, TVariables>>;
-  }>({
+  }>();
+  const execution = execRef.current || (execRef.current = {
     called: false,
   });
 
@@ -57,7 +58,8 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     for (const key of EAGER_METHODS) {
       const method = result[key];
       eagerMethods[key] = (...args: any) => {
-        setExecution((execution) => ({ ...execution, called: true }));
+        execution.called = true;
+        internalState.forceUpdate();
         return (method as any)(...args);
       };
     }
@@ -70,7 +72,10 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    setExecution({ called: true, options: executeOptions });
+    execution.called = true;
+    execution.options = executeOptions;
+    internalState.forceUpdate();
+
     const promise = result.refetch(executeOptions?.variables)
       .then(apolloQueryResult => internalState.toQueryResult(apolloQueryResult))
       .then(queryResult => Object.assign(queryResult, eagerMethods));

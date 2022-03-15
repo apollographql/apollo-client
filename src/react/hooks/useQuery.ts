@@ -466,7 +466,7 @@ class InternalState<TData, TVariables> {
       };
     } else if (
       this.queryHookOptions.skip ||
-      this.queryHookOptions.fetchPolicy === 'standby'
+      this.watchQueryOptions.fetchPolicy === 'standby'
     ) {
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is

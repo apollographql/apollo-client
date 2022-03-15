@@ -6,6 +6,7 @@ import { OperationVariables } from '../../core';
 import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
+  QueryResult,
 } from '../types/types';
 import { useInternalState } from './useQuery';
 import { useApolloClient } from './useApolloClient';
@@ -36,7 +37,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     called: false,
   });
 
-  let result = internalState.useQuery({
+  const useQueryResult = internalState.useQuery({
     ...options,
     ...execution.options,
     // We don’t set skip to execution.called, because some useQuery SSR code
@@ -45,15 +46,10 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     skip: undefined,
   });
 
-  if (!execution.called) {
-    result = {
-      ...result,
-      loading: false,
-      data: void 0 as unknown as TData,
-      error: void 0,
-      called: false,
-    };
-  }
+  const result: QueryResult<TData, TVariables> =
+    Object.assign(useQueryResult, {
+      called: execution.called,
+    });
 
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = useMemo(() => {
@@ -69,7 +65,6 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     return eagerMethods;
   }, []);
 
-  result.error = result.error || void 0;
   Object.assign(result, eagerMethods);
 
   const execute = useCallback<

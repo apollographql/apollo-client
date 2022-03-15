@@ -4,6 +4,6 @@ This is the documentation **source** for this repository.
 
 The **deployed** version of the documentation for this repository is available at:
 
-* https://www.apollographql.com/docs/react/
+* https://www.apollographql.com/docs/react/v2
 
 See the [docs site README](https://github.com/apollographql/docs) for local installation and development.

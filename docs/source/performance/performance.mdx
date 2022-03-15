@@ -2,8 +2,6 @@
 title: Improving performance
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 ## Redirecting to cached data
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
@@ -422,4 +420,4 @@ const SeriesDetailView = ({ seriesId }) => (
 </div>
 </MultiCodeBlock>
 
-Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](https://www.apollographql.com/docs/link/links/batch-http) those two queries can be sent to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/react/api/link/apollo-link-batch-http/) those two queries can be sent to the server in one network request.

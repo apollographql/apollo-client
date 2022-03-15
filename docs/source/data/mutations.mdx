@@ -3,11 +3,8 @@ title: Mutations
 description: Learn how to update data with the useMutation hook
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
 import MutationOptions2 from '../../shared/mutation-options.mdx';
 import MutationResult2 from '../../shared/mutation-result.mdx';
-
-> Apollo Client 3.0 is now available in beta. [Switch to the beta docs](https://www.apollographql.com/docs/react/v3.0-beta)
 
 Now that we've [learned how to fetch data](./queries/) from our backend with Apollo Client,
 the natural next step is to learn how to update that data with **mutations**.
@@ -36,7 +33,7 @@ Let's look at an example. First, we'll create a GraphQL mutation named `ADD_TODO
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 import gql from 'graphql-tag';
 import { useMutation } from '@apollo/react-hooks';
 
@@ -54,7 +51,7 @@ const ADD_TODO = gql`
 </div>
 <div data-language="js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 import gql from 'graphql-tag';
 import { Mutation } from '@apollo/react-components';
 
@@ -77,7 +74,7 @@ Next, we'll create a component named `AddTodo` that represents the submission fo
 <MultiCodeBlock>
 <div data-language="hooks-js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 function AddTodo() {
   let input;
   const [addTodo, { data }] = useMutation(ADD_TODO);
@@ -106,7 +103,7 @@ function AddTodo() {
 </div>
 <div data-language="js">
 
-```jsx:title=index.js
+```jsx title="index.js"
 const AddTodo = () => {
   let input;
 

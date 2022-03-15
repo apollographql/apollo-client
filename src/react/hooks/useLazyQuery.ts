@@ -30,26 +30,19 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     query,
   );
 
-  const execRef = useRef<{
-    called: boolean;
-    options?: Partial<LazyQueryHookOptions<TData, TVariables>>;
-  }>();
-  const execution = execRef.current || (execRef.current = {
-    called: false,
-  });
-
+  const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
   const useQueryResult = internalState.useQuery({
     ...options,
-    ...execution.options,
+    ...execOptionsRef.current,
     // We don’t set skip to execution.called, because some useQuery SSR code
     // checks skip for some reason.
-    fetchPolicy: execution.called ? options?.fetchPolicy : 'standby',
+    fetchPolicy: execOptionsRef.current ? options?.fetchPolicy : 'standby',
     skip: undefined,
   });
 
   const result: QueryResult<TData, TVariables> =
     Object.assign(useQueryResult, {
-      called: execution.called,
+      called: !!execOptionsRef.current,
     });
 
   // We use useMemo here to make sure the eager methods have a stable identity.
@@ -58,7 +51,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     for (const key of EAGER_METHODS) {
       const method = result[key];
       eagerMethods[key] = (...args: any) => {
-        execution.called = true;
+        execOptionsRef.current = execOptionsRef.current || {};
         internalState.forceUpdate();
         return (method as any)(...args);
       };
@@ -72,8 +65,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    execution.called = true;
-    execution.options = executeOptions;
+    execOptionsRef.current = executeOptions;
     internalState.forceUpdate();
 
     const promise = result.refetch(executeOptions?.variables)

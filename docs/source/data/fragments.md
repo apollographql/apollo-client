@@ -49,7 +49,7 @@ Let's say we have a blog application that executes several GraphQL operations re
 
 To specify this core set of fields, we can define a fragment on the `Comment` type, like so:
 
-```js:title=fragments.js
+```js title="fragments.js"
 import { gql } from '@apollo/client';
 
 export const CORE_COMMENT_FIELDS = gql`
@@ -69,7 +69,7 @@ export const CORE_COMMENT_FIELDS = gql`
 
 We can then include the `CoreCommentFields` fragment in a GraphQL operation like so:
 
-```jsx{2,5,12}:title=PostDetails.jsx
+```jsx {2,5,12} title="PostDetails.jsx"
 import { gql } from '@apollo/client';
 import { CORE_COMMENT_FIELDS } from './fragments';
 
@@ -114,7 +114,7 @@ In this app, the `FeedPage` component executes a query to fetch a list of `FeedE
 
 A colocated fragment is just like any other fragment, except it's attached to a particular component that uses the fragment's fields. For example, the `VoteButtons` child component of `FeedPage` might use the fields `score` and `vote { choice }` from the `FeedEntry` object:
 
-```js:title=VoteButtons.jsx
+```js title="VoteButtons.jsx"
 VoteButtons.fragments = {
   entry: gql`
     fragment VoteButtonsFragment on FeedEntry {
@@ -129,7 +129,7 @@ VoteButtons.fragments = {
 
 After you define a fragment in a child component, the _parent_ component can refer to it in its _own_ colocated fragments, like so:
 
-```js:title=FeedEntry.jsx
+```js title="FeedEntry.jsx"
 FeedEntry.fragments = {
   entry: gql`
     fragment FeedEntryFragment on FeedEntry {
@@ -164,7 +164,7 @@ This makes the contents of `someFragment.graphql` available to the current file.
 
 ## Using fragments with unions and interfaces
 
-You can define fragments on [unions and interfaces](https://www.apollographql.com/docs/apollo-server/schema/unions-interfaces/).
+You can define fragments on [unions and interfaces](/apollo-server/schema/unions-interfaces/).
 
 Here's an example of a query that includes three in-line fragments:
 

@@ -1,6 +1,5 @@
 ---
 title: REST Link
-sidebar_title: REST
 description: Call REST APIs inside your GraphQL queries.
 ---
 
@@ -15,7 +14,7 @@ Calling REST APIs from a GraphQL client opens the benefits of GraphQL for more p
 
 With `apollo-link-rest`, you can call your endpoints inside your GraphQL queries and have all your data managed by Apollo Client. `apollo-link-rest` is suitable for just dipping your toes in the water, or doing a full-steam ahead integration, and then later on migrating to a backend-driven GraphQL experience.
 
-> For more advanced or complex back-ends, you may want to consider using [`apollo-server`](https://www.apollographql.com/docs/apollo-server/).
+> For more advanced or complex back-ends, you may want to consider using [`apollo-server`](/apollo-server/).
 
 ## Quick start
 
@@ -647,7 +646,7 @@ const restLink = new RestLink({
 
 The export directive re-exposes a field for use in a later (nested) query. These are the same semantics that will be supported on the server, but when used in a `RestLink` you can use the exported variables for further calls (i.e. waterfall requests from nested fields).
 
-_Note: If you're constantly using @export you may prefer to take a look at [`apollo-server`](https://www.apollographql.com/docs/apollo-server/)._
+_Note: If you're constantly using @export you may prefer to take a look at [`apollo-server`](/apollo-server/)._
 
 ### Arguments
 

@@ -46,6 +46,13 @@ export interface QueryFunctionOptions<
   skip?: boolean;
   onCompleted?: (data: TData) => void;
   onError?: (error: ApolloError) => void;
+
+  // Default WatchQueryOptions for this useQuery, providing initial values for
+  // unspecified options, superseding client.defaultOptions.watchQuery (option
+  // by option, not whole), but never overriding options previously passed to
+  // useQuery (or options added/modified later by other means).
+  // TODO What about about default values that are expensive to evaluate?
+  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
 export type ObservableQueryFields<TData, TVariables> = Pick<
@@ -92,10 +99,6 @@ export interface QueryHookOptions<TData = any, TVariables = OperationVariables>
   extends QueryFunctionOptions<TData, TVariables> {
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
-
-export type QueryHookOptionsFunction<TData, TVariables> = (
-  prevOptions: QueryHookOptions<TData, TVariables>,
-) => QueryHookOptions<TData, TVariables>;
 
 export interface LazyQueryHookOptions<
   TData = any,

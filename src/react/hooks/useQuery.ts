@@ -2,7 +2,7 @@ import {
   useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { equal } from '@wry/equality';
-import { OperationVariables } from '../../core';
+import { mergeOptions, OperationVariables } from '../../core';
 import { ApolloContextValue, getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
@@ -18,13 +18,11 @@ import {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
-  QueryHookOptionsFunction,
 } from '../types/types';
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
-import { useNormalizedOptions } from './options';
 
 const {
   prototype: {
@@ -37,11 +35,8 @@ export function useQuery<
   TVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  optionsOrFunction?:
-    | QueryHookOptions<TData, TVariables>
-    | QueryHookOptionsFunction<TData, TVariables>
+  options: QueryHookOptions<TData, TVariables> = Object.create(null),
 ): QueryResult<TData, TVariables> {
-  const options = useNormalizedOptions(optionsOrFunction);
   return useInternalState(
     useApolloClient(options.client),
     query,
@@ -122,6 +117,7 @@ class InternalState<TData, TVariables> {
     const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options,
     );
+
     // Update this.watchQueryOptions, but only when they have changed, which
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
@@ -145,21 +141,29 @@ class InternalState<TData, TVariables> {
   }
 
   // A function to massage options before passing them to ObservableQuery.
-  private createWatchQueryOptions<TData, TVariables>({
+  private createWatchQueryOptions({
     skip,
     ssr,
     onCompleted,
     onError,
     displayName,
+    defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<TVariables, TData> {
-    // TODO: For some reason, we pass context, which is the React Apollo Context,
-    // into observable queries, and test for that.
+    const toMerge: Array<
+      | WatchQueryOptions<TVariables, TData>
+      | Partial<WatchQueryOptions<TVariables, TData>>
+    > = [];
+    const globalDefaults = this.client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+    if (defaultOptions) toMerge.push(defaultOptions);
+    if (this.watchQueryOptions) toMerge.push(this.watchQueryOptions);
+    toMerge.push(otherOptions);
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(otherOptions, { query: this.query });
+      Object.assign(toMerge.reduce(mergeOptions), { query: this.query });
 
     if (skip) {
       watchQueryOptions.fetchPolicy = 'standby';
@@ -174,11 +178,7 @@ class InternalState<TData, TVariables> {
       // https://github.com/apollographql/react-apollo/pull/1579
       watchQueryOptions.fetchPolicy = 'cache-first';
     } else if (!watchQueryOptions.fetchPolicy) {
-      const defaultOptions = this.client.defaultOptions.watchQuery;
-      // cache-first is the default policy, but we explicitly assign it here so
-      // the cache policies computed based on options can be cleared
-      watchQueryOptions.fetchPolicy =
-        defaultOptions && defaultOptions.fetchPolicy || 'cache-first';
+      watchQueryOptions.fetchPolicy = 'cache-first';
     }
 
     if (!watchQueryOptions.variables) {

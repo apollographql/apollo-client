@@ -87,6 +87,15 @@ class InternalState<TData, TVariables> {
   // rules of React hooks: only at the top level of the calling function, and
   // without any dynamic conditional logic.
   public useQuery(options: QueryHookOptions<TData, TVariables>) {
+    // The renderPromises field gets initialized here in the useQuery method, at
+    // the beginning of everything (for a given component rendering, at least),
+    // so we can safely use this.renderPromises in other/later InternalState
+    // methods without worrying it might be uninitialized. Even after
+    // initialization, this.renderPromises is usually undefined (unless SSR is
+    // happening), but that's fine as long as it has been initialized that way,
+    // rather than left uninitialized.
+    this.renderPromises = useContext(getApolloContext()).renderPromises;
+
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
@@ -100,10 +109,10 @@ class InternalState<TData, TVariables> {
     return this.toQueryResult(result);
   }
 
-  // These members are all populated by the useOptions method, which is called
-  // unconditionally at the beginning of the useQuery method, so we can safely
-  // use these members in other/later methods without worrying about the
-  // possibility they might be undefined.
+  // These members (except for renderPromises) are all populated by the
+  // useOptions method, which is called unconditionally at the beginning of the
+  // useQuery method, so we can safely use these members in other/later methods
+  // without worrying they might be uninitialized.
   private renderPromises: ApolloContextValue["renderPromises"];
   private queryHookOptions: QueryHookOptions<TData, TVariables>;
   private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
@@ -112,8 +121,6 @@ class InternalState<TData, TVariables> {
   private useOptions(
     options: QueryHookOptions<TData, TVariables>,
   ) {
-    this.renderPromises = useContext(getApolloContext()).renderPromises;
-
     const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options,
     );
@@ -168,7 +175,7 @@ class InternalState<TData, TVariables> {
     if (skip) {
       watchQueryOptions.fetchPolicy = 'standby';
     } else if (
-      watchQueryOptions.context?.renderPromises &&
+      this.renderPromises &&
       (
         watchQueryOptions.fetchPolicy === 'network-only' ||
         watchQueryOptions.fetchPolicy === 'cache-and-network'

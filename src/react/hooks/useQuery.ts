@@ -129,10 +129,10 @@ class InternalState<TData, TVariables> {
       this.watchQueryOptions = watchQueryOptions;
     }
 
-    this.ssrDisabled = !!(options && (
+    this.ssrDisabled = !!(
       options.ssr === false ||
       options.skip
-    ));
+    );
 
     // Make sure state.onCompleted and state.onError always reflect the latest
     // options.onCompleted and options.onError callbacks provided to useQuery,
@@ -140,14 +140,8 @@ class InternalState<TData, TVariables> {
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
-
-    this.onCompleted = options
-      && options.onCompleted
-      || InternalState.prototype.onCompleted;
-
-    this.onError = options
-      && options.onError
-      || InternalState.prototype.onError;
+    this.onCompleted = options.onCompleted || InternalState.prototype.onCompleted;
+    this.onError = options.onError || InternalState.prototype.onError;
   }
 
   // A function to massage options before passing them to ObservableQuery.

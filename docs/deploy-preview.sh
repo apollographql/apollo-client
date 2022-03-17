@@ -6,6 +6,6 @@ cd docs
 
 npm i
 
-DOCS_PATH=../source
+npm i -g netlify-cli
 
-npx netlify build --context=deploy-preview
+DOCS_PATH=../source netlify build --context=deploy-preview

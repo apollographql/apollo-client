@@ -160,17 +160,64 @@ class InternalState<TData, TVariables> {
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<TVariables, TData> {
-    const toMerge: Array<
-      | WatchQueryOptions<TVariables, TData>
-      | Partial<WatchQueryOptions<TVariables, TData>>
-    > = [];
+    // We use the mergeOptions helper function (which uses compact(...) and
+    // shallow-merges variables) to combine globalDefaults with any local
+    // defaultOptions provided to useQuery.
+    const toMerge: Partial<WatchQueryOptions<TVariables, TData>>[] = [];
+
+    // Merge global client.watchQuery default options with the lowest priority.
     const globalDefaults = this.client.defaultOptions.watchQuery;
     if (globalDefaults) toMerge.push(globalDefaults);
+
+    // Next, merge any defaultOptions passed directly to useQuery.
     if (defaultOptions) toMerge.push(defaultOptions);
-    if (this.watchQueryOptions) toMerge.push(this.watchQueryOptions);
+
+    if (this.watchQueryOptions && toMerge.length) {
+      // If we already have this.watchQueryOptions, those options should take
+      // precedence over default options of the same name. It might be simpler
+      // to do toMerge.push(this.watchQueryOptions), but that potentially
+      // (re)injects unrelated/unwanted options. Passing Object.create(null) as
+      // the second argument to toMerge.reduce ensures the result is a newly
+      // created object, so we can safely modify it in the forEach loop below.
+      const defaults = toMerge.reduce(mergeOptions, Object.create(null));
+
+      // Compact the toMerge array to hold only the merged defaults. This is
+      // equivalent to toMerge.splice(0, toMerge.length, defaults).
+      toMerge.length = 1;
+      toMerge[0] = defaults;
+
+      Object.keys(defaults).forEach(
+        (defaultOptionName: keyof WatchQueryOptions<TVariables, TData>) => {
+          const currentOptionValue = this.watchQueryOptions[defaultOptionName];
+          if (
+            hasOwnProperty.call(this.watchQueryOptions, defaultOptionName) &&
+            !equal(defaults[defaultOptionName], currentOptionValue)
+          ) {
+            // If you keep passing useQuery({ defaultOptions: { variables }}),
+            // those default variables continue to provide their default values
+            // every time, though in most cases this.watchQueryOptions.variables
+            // will have a current value for every default variable name, so the
+            // defaults don't matter. However, if a variable has been removed
+            // from this.watchQueryOptions.variables, future useQuery calls can
+            // restore its default value from defaultOptions.variables.
+            defaults[defaultOptionName] = defaultOptionName === "variables"
+              ? { ...defaults.variables, ...currentOptionValue }
+              : currentOptionValue;
+          }
+        },
+      );
+    }
+
+    // Give highest precedence to any non-default WatchQueryOptions passed
+    // directly to useQuery.
     toMerge.push(otherOptions);
+
+    const merged = toMerge.reduce(mergeOptions, Object.create(null));
+
+    // This Object.assign is safe because merged is the fresh object created by
+    // the Object.create(null) argument to toMerge.reduce.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(toMerge.reduce(mergeOptions), { query: this.query });
+      Object.assign(merged, { query: this.query });
 
     if (skip) {
       watchQueryOptions.fetchPolicy = 'standby';
@@ -185,6 +232,9 @@ class InternalState<TData, TVariables> {
       // https://github.com/apollographql/react-apollo/pull/1579
       watchQueryOptions.fetchPolicy = 'cache-first';
     } else if (!watchQueryOptions.fetchPolicy) {
+      // We applied all available fetchPolicy default values above (from
+      // globalDefaults and defaultOptions), so, if fetchPolicy is still
+      // undefined, fall back to the default default (no typo), cache-first.
       watchQueryOptions.fetchPolicy = 'cache-first';
     }
 

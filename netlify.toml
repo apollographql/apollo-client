@@ -1,6 +1,8 @@
 [build]
   publish = "docs/public"
   command = "npx typedoc src/index.ts --json docs/public/docs.json"
+[build.environment]
+  NPM_VERSION = "7"
 [context.deploy-preview.build]
   base = "docs"
   command = "./deploy-preview.sh"

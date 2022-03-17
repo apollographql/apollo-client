@@ -1,11 +1,11 @@
 ---
 title: WebSocket Link
-description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `subscriptions-transport-ws` library
+description: Execute subscriptions (or other operations) over WebSocket with the subscriptions-transport-ws library
 api_reference: true
 ---
 
-> We no longer recommend using the `subscriptions-transport-ws` library, because this library is not actively maintained. We instead recommend using the newer `graphql-ws` library with the accompanying `GraphQLWsLink` for creating GraphQL subscriptions on the client side; learn more in [Choice of subscription protocol](../../data/subscriptions/#choice-of-subscription-protocol).
->
+> ⚠️ **We no longer recommend using `WebSocketLink` or the `subscriptions-transport-ws` library**, because the library is not actively maintained. We instead recommend using the newer `graphql-ws` library with the accompanying [`GraphQLWsLink`](./apollo-link-subscriptions) for creating GraphQL subscriptions on the client side. For more information, see [Choosing a subscription library](../../data/subscriptions/#choosing-a-subscription-library).
+
 > We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
 
 The `WebSocketLink` is a [terminating link](./introduction/#the-terminating-link) that's used most commonly with GraphQL [subscriptions](../../data/subscriptions/) (which usually communicate over WebSocket), although you can send queries and mutations over WebSocket as well.
@@ -15,9 +15,6 @@ The `WebSocketLink` is a [terminating link](./introduction/#the-terminating-link
 ```shell
 npm install subscriptions-transport-ws
 ```
-
-> **Note**: The `subscriptions-transport-ws` library is not actively maintained. We recommend the use of the `graphql-ws` library instead. These libraries layer different protocols on top of WebSockets, so you do need to ensure you are using the same library in your server and any clients that you support. To use `graphql-ws` from Apollo Client, use the [`GraphQLWsLink` link from `@apollo/client/link/subscriptions](./apollo-link-subscriptions) instead.
-
 ## Constructor
 
 ```js

@@ -22,13 +22,13 @@ You _should_ use subscriptions for the following:
 
 * **Low-latency, real-time updates**. For example, a chat application's client wants to receive new messages as soon as they're available.
 
-## Choice of subscription protocol
+## Choosing a subscription library
 
-The GraphQL spec does not define a specific way to send subscription requests. The first popular JavaScript library to implement subscriptions over WebSocket is called `subscriptions-transport-ws`. This library is no longer actively maintained; its successor is a library called `graphql-ws`. The two packages _do not use the same protocol_, so you need to make sure that your server and clients all use the same library.
+The GraphQL spec does not define a specific protocol for sending subscription requests. The first popular JavaScript library to implement subscriptions over WebSocket is called `subscriptions-transport-ws`. **This library is no longer actively maintained.** Its successor is a library called `graphql-ws`. The two libraries _do not use the same WebSocket subprotocol_, so you need to make sure that your server and clients all use the same library.
 
-Apollo Client supports both `graphql-ws` and `subscriptions-transport-ws`. We recommend you use the newer library `graphql-ws` and this page shows how to use it. If you need to use `subscriptions-transport-ws` because your server still uses that protocol, the differences are described [at the bottom of this page](#the-older-subscriptions-transport-ws-library).
+Apollo Client supports both `graphql-ws` and `subscriptions-transport-ws`. We recommend you use the newer library `graphql-ws`, and this page shows how to use it. If you need to use `subscriptions-transport-ws` because your server still uses that protocol, the differences are described [at the bottom of this page](#the-older-subscriptions-transport-ws-library).
 
-> **Note**: When looking at the source code of an implementation to determine which protocol it supports, you will find that the libraries uses different strings as the "WebSocket subprotocol". Confusingly, `subscriptions-transport-ws` uses the `graphql-ws` subprotocol and `graphql-ws` uses the `graphql-transport-ws` subprotocol! In these docs, when we say "`graphql-ws`" we are referring to the _library_ `graphql-ws`, not the subprotocol `graphql-ws`, which is the other project.
+> **Note**: Confusingly, the `subscriptions-transport-ws` library calls its _WebSocket subprotocol_ `graphql-ws`, and the `graphql-ws` _library_ calls its  subprotocol `graphql-transport-ws`! In this article and throughout the Apollo docs, we refer to the two _libraries_ (`subscriptions-transport-ws` and `graphql-ws`), _not_ the two subprotocols.
 
 ## Defining a subscription
 
@@ -78,7 +78,9 @@ Whenever your GraphQL server _does_ push data to a subscribing client, that data
 
 ## Setting up the transport
 
-Because subscriptions usually maintain a persistent connection, they shouldn't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library. (As mentioned [above](#choice-of-subscription-protocol), some servers use an older library called `subscriptions-transport-ws`; see [below](#the-older-subscriptions-transport-ws-library) for the changes necessary to use that library with Apollo Client.)
+Because subscriptions usually maintain a persistent connection, they shouldn't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library.
+
+> As mentioned in [Choosing a subscription protocol](#choosing-a-subscription-protocol), some servers use an older library called `subscriptions-transport-ws`. For necessary changes to use that library, see [below](#the-older-subscriptions-transport-ws-library).
 
 ### 1. Install required libraries
 
@@ -316,19 +318,35 @@ After being called, the `useSubscription` Hook returns a result object with the 
 
 ## The older `subscriptions-transport-ws` library
 
-If your server uses `subscriptions-transport-ws` instead of the newer `graphql-ws` library, you need to make a few changes to how you set up your link.
+If your server uses `subscriptions-transport-ws` instead of the newer `graphql-ws` library, you need to make a few changes to how you set up your link:
 
-Instead of `npm install graphql-ws`, you `npm install subscriptions-transport-ws`.
+1. Instead of `npm install graphql-ws`:
 
-Instead of `import { createClient } from 'graphql-ws'`, you `import { SubscriptionClient } from 'subscriptions-transport-ws'`.
+    ```bash
+    npm install subscriptions-transport-ws
+    ```
 
-Instead of `import { GraphQLWsLink } from '@apollo/client/link/subscriptions'`, you `import { WebSocketLink } from '@apollo/client/link/ws`.
+2. Instead of `import { createClient } from 'graphql-ws'`:
 
-The options passed to `new SubscriptionClient` are slightly different from those passed to `createClient`. The subscriptions URL is specified in an `uri` option instead of an `url` option. The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You may also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.) See [the `subscriptions-transport-ws` README](https://www.npmjs.com/package/subscriptions-transport-ws) for complete `SubscriptionClient` API docs.
+    ```js
+    import { SubscriptionClient } from 'subscriptions-transport-ws'
+    ```
 
-Once you've created your `wsLink`, everything else in this document still applies: `useSubscription`, `subscribeToMore`, and split links work exactly the same way for both implementations.
+3. Instead of `import { GraphQLWsLink } from '@apollo/client/link/subscriptions'`:
 
-The following is what typical `WebSocketLink` initialization looks like:
+    ```js
+    import { WebSocketLink } from '@apollo/client/link/ws
+    ```
+
+4. The options you pass to `new SubscriptionClient` differ slightly from those passed to `createClient`:
+
+    * The subscription URL is specified via the `uri` option instead of the `url` option.
+    * The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You can also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.)
+    * See [the `subscriptions-transport-ws` README](https://www.npmjs.com/package/subscriptions-transport-ws) for complete `SubscriptionClient` API docs.
+
+After you create your `wsLink`, everything else in this article still applies: `useSubscription`, `subscribeToMore`, and split links work exactly the same way for both implementations.
+
+The following is an example of a typical `WebSocketLink` initialization:
 
 ```js
 import { WebSocketLink } from "@apollo/client/link/ws";

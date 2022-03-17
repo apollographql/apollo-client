@@ -41,10 +41,9 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const useQueryResult = internalState.useQuery({
     ...options,
     ...execOptionsRef.current,
-    // We don’t set skip to execution.called, because some useQuery SSR code
-    // checks skip for some reason.
-    fetchPolicy: execOptionsRef.current ? initialFetchPolicy : 'standby',
-    skip: undefined,
+    // TODO This probably means this.observable.initialFetchPolicy is never set
+    // appropriately.
+    skip: !execOptionsRef.current,
   });
 
   const result: QueryResult<TData, TVariables> =
@@ -72,22 +71,22 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    executeOptions = execOptionsRef.current = {
-      ...executeOptions, // Works when executeOptions initially falsy/undefined
-      fetchPolicy: executeOptions && executeOptions.fetchPolicy || initialFetchPolicy,
-    };
-
-    const promise = result.observable.reobserve(executeOptions)
-      .then(apolloQueryResult => {
-        return internalState.toQueryResult(
-          // If this.observable.options.fetchPolicy is "standby", the
-          // apolloQueryResult we receive here can be undefined, so we call
-          // getCurrentResult to obtain a stub result. TODO Investigate whether
-          // standby queries could return this stub result in the first place.
-          apolloQueryResult || internalState["getCurrentResult"]()
-        );
-      })
-      .then(queryResult => Object.assign(queryResult, eagerMethods));
+    const promise = result.observable.reobserve(
+      execOptionsRef.current = executeOptions ? {
+        ...executeOptions,
+        fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
+      } : {
+        fetchPolicy: initialFetchPolicy,
+      },
+    ).then(apolloQueryResult => {
+      return internalState.toQueryResult(
+        // If this.observable.options.fetchPolicy is "standby", the
+        // apolloQueryResult we receive here can be undefined, so we call
+        // getCurrentResult to obtain a stub result. TODO Investigate whether
+        // standby queries could return this stub result in the first place.
+        apolloQueryResult || internalState["getCurrentResult"]()
+      );
+    }).then(queryResult => Object.assign(queryResult, eagerMethods));
 
     // Deliver the loading state for this reobservation immediately.
     internalState.forceUpdate();

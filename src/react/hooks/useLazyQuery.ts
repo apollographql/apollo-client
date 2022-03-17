@@ -78,7 +78,15 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     };
 
     const promise = result.observable.reobserve(executeOptions)
-      .then(apolloQueryResult => internalState.toQueryResult(apolloQueryResult))
+      .then(apolloQueryResult => {
+        return internalState.toQueryResult(
+          // If this.observable.options.fetchPolicy is "standby", the
+          // apolloQueryResult we receive here can be undefined, so we call
+          // getCurrentResult to obtain a stub result. TODO Investigate whether
+          // standby queries could return this stub result in the first place.
+          apolloQueryResult || internalState["getCurrentResult"]()
+        );
+      })
       .then(queryResult => Object.assign(queryResult, eagerMethods));
 
     // Deliver the loading state for this reobservation immediately.

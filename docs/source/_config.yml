@@ -1,0 +1,49 @@
+title: Client (React)
+version: v2
+algoliaFilters:
+  - docset:react
+  - docset:server
+sidebar:
+  Introduction: /
+  Why Apollo Client?: /why-apollo
+  Get started: /get-started
+  Fetching data:
+    Queries: /data/queries
+    Mutations: /data/mutations
+    Local state management: /data/local-state
+    Subscriptions: /data/subscriptions
+    Pagination: /data/pagination
+    Using fragments: /data/fragments
+    Error handling: /data/error-handling
+  Caching:
+    Configuring the cache: /caching/cache-configuration
+    Interacting with cached data: /caching/cache-interaction
+  Development & Testing:
+    Using Apollo with TypeScript: /development-testing/static-typing
+    Testing React components: /development-testing/testing
+    Mocking new schema capabilities: /development-testing/client-schema-mocking
+    Developer tools: /development-testing/developer-tooling
+  Performance:
+    Improving performance: /performance/performance
+    Optimistic UI: /performance/optimistic-ui
+    Server-side rendering: /performance/server-side-rendering
+    Compiling queries with Babel: /performance/babel
+  Integrations:
+    View integrations: /integrations/integrations
+    Integrating with React Native: /integrations/react-native
+    Integrating with Meteor: /integrations/meteor
+    Loading queries with Webpack: /integrations/webpack
+  Networking:
+    Network layer (Apollo Link): /networking/network-layer
+    Authentication: /networking/authentication
+  API Reference:
+    class ApolloClient: /api/apollo-client
+    "@apollo/react-hooks": /api/react-hooks
+    "@apollo/react-ssr": /api/react-ssr
+    "@apollo/react-testing": /api/react-testing
+    "@apollo/react-components": /api/react-components
+    "@apollo/react-hoc": /api/react-hoc
+    "@apollo/react-common": /api/react-common
+  Migrating:
+    Hooks migration guide: /migrating/hooks-migration
+    Apollo Boost migration: /migrating/boost-migration

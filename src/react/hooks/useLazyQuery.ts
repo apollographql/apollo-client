@@ -7,10 +7,8 @@ import {
   LazyQueryHookOptions,
   QueryLazyOptions,
   QueryTuple,
-  LazyQueryHookOptionsFunction,
 } from '../types/types';
 import { useQuery } from './useQuery';
-import { useNormalizedOptions } from './options';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -24,12 +22,8 @@ const EAGER_METHODS = [
 
 export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  optionsOrFunction?:
-    | LazyQueryHookOptions<TData, TVariables>
-    | LazyQueryHookOptionsFunction<TData, TVariables>
+  options?: LazyQueryHookOptions<TData, TVariables>
 ): QueryTuple<TData, TVariables> {
-  const options = useNormalizedOptions(optionsOrFunction);
-
   const [execution, setExecution] = useState<{
     called: boolean,
     options?: QueryLazyOptions<TVariables>,

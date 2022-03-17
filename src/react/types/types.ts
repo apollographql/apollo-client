@@ -107,10 +107,6 @@ export interface LazyQueryHookOptions<
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export type LazyQueryHookOptionsFunction<TData, TVariables> = (
-  prevOptions: LazyQueryHookOptions<TData, TVariables>,
-) => LazyQueryHookOptions<TData, TVariables>;
-
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;
   context?: DefaultContext;

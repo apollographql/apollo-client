@@ -4,5 +4,6 @@
 [build.environment]
   NODE_VERSION = "16"
 [context.deploy-preview.build]
-  command = "./docs/deploy-preview.sh"
+  base = "docs"
+  command = "./deploy-preview.sh"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."

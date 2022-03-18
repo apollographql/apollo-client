@@ -1,9 +1,13 @@
 #!/bin/bash
 
-git clone https://github.com/apollographql/docs --branch tb/local-dev --single-branch monodocs
+cd ../
 
-cd monodocs
+mv docs content
+
+git clone https://github.com/apollographql/docs --branch tb/local-dev --single-branch
+
+cd docs
 
 npm i
 
-DOCS_PATH=../docs npm run build
+DOCS_PATH=../content npm run build

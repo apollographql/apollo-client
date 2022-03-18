@@ -5,5 +5,6 @@
   NODE_VERSION = "16"
 [context.deploy-preview.build]
   base = "docs"
+  publish = "monodocs"
   command = "./deploy-preview.sh"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."

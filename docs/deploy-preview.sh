@@ -10,4 +10,6 @@ cd docs
 
 npm i
 
-DOCS_PATH=../content npm run build
+cp -r ../content local
+
+DOCS_LOCAL=true npm run build

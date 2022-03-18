@@ -10,6 +10,10 @@ cd docs
 
 npm i
 
-cp -r ../content "local"
+cp -r ../content local
+
+ls
+
+ls local
 
 DOCS_LOCAL=true npm run build

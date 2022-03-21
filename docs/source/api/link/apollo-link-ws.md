@@ -4,7 +4,9 @@ description: Execute subscriptions (or other operations) over WebSocket with the
 api_reference: true
 ---
 
-> ⚠️ **We no longer recommend using `WebSocketLink` or the `subscriptions-transport-ws` library**, because the library is not actively maintained. We instead recommend using the newer `graphql-ws` library with the accompanying [`GraphQLWsLink`](./apollo-link-subscriptions) for creating GraphQL subscriptions on the client side. For more information, see [Choosing a subscription library](../../data/subscriptions/#choosing-a-subscription-library).
+> ⚠️ **We no longer recommend using `WebSocketLink` or the `subscriptions-transport-ws` library**, because the library is not actively maintained. To execute subscriptions, We instead recommend using the newer `graphql-ws` library with the accompanying [`GraphQLWsLink`](./apollo-link-subscriptions).
+>
+> Whichever library you use, make sure you use the _same_ library in your server and any clients you support. For more information, see [Choosing a subscription library](../../data/subscriptions/#choosing-a-subscription-library).
 
 > We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
 

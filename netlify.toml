@@ -1,10 +1,12 @@
 [build]
   publish = "docs/public"
   command = "npx typedoc src/index.ts --json docs/public/docs.json"
+
 [build.environment]
   NODE_VERSION = "16"
+
 [context.deploy-preview.build]
   base = "docs"
-  publish = "monodocs/public"
-  command = "./preview.sh"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
+  command = "./preview.sh"
+  publish = "monodocs/public"

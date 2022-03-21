@@ -8,5 +8,13 @@
 [context.deploy-preview.build]
   base = "docs"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
-  command = "./preview.sh"
+  command = """\
+  cd ../
+  rm -rf monodocs
+  git clone https://github.com/apollographql/docs --branch tb/local-dev --single-branch monodocs
+  cd monodocs
+  npm i
+  cp -r ../docs local
+  DOCS_LOCAL=true npm run build \
+  """
   publish = "monodocs/public"

@@ -655,6 +655,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     options: WatchQueryOptions<TVariables, TData>,
     newNetworkStatus?: NetworkStatus,
   ): Concast<ApolloQueryResult<TData>> {
+    // TODO Make sure we update the networkStatus (and infer fetchVariables)
+    // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
     return this.queryManager.fetchQueryObservable(
       this.queryId,

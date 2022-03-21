@@ -184,6 +184,9 @@ class InternalState<TData, TVariables> {
         this.client.disableNetworkFetches,
       ]),
 
+      // TODO This may return an old result when we really should start a full
+      // reobservation (possibly including a network request). Need to determine
+      // based on options when a new request is being made.
       () => this.getCurrentResult(),
     );
 

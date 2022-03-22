@@ -1,5 +1,20 @@
 [build]
   publish = "docs/public"
   command = "npx typedoc src/index.ts --json docs/public/docs.json"
+
 [build.environment]
-  NPM_VERSION = "7"
+  NODE_VERSION = "16"
+
+[context.deploy-preview.build]
+  base = "docs"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
+  command = """\
+  cd ../
+  rm -rf monodocs
+  git clone https://github.com/apollographql/docs --branch main --single-branch monodocs
+  cd monodocs
+  npm i
+  cp -r ../docs local
+  DOCS_LOCAL=true npm run build \
+  """
+  publish = "monodocs/public"

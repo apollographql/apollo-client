@@ -1,6 +1,6 @@
 ---
 title: Subscriptions Link
-description: Execute subscriptions (or other GraphQL operations) over WebSocket with the `graphql-ws` library
+description: Execute subscriptions (or other operations) over WebSocket with the graphql-ws library
 api_reference: true
 ---
 
@@ -33,7 +33,7 @@ const link = new GraphQLWsLink(
 
 The `GraphQLWsLink` constructor takes a single argument, which is a `Client` returned from the `graphql-ws` `createClient` function.
 
-The `createClient` function can take many options; full details can be found in [the `graphql-ws` docs for `ClientOptions`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/client.ClientOptions.md). The one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server. (Note that this differs from the [older link's URL option](./apollo-link-ws) which is called `uri` rather than `url`.)
+The `createClient` function can take many options, described in the [`graphql-ws` docs for `ClientOptions`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/client.ClientOptions.md). The one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server. (Note that this differs from the [older link's URL option](./apollo-link-ws), which is named `uri` instead of `url`.)
 
 ## Usage
 

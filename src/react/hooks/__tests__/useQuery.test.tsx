@@ -124,11 +124,11 @@ describe('useQuery Hook', () => {
       rerender({ variables: { id: 2 } });
       await waitFor(() => result.current.loading === false);
       expectFrames(result, [
-        { loading: true, data: void 0 },
-        { loading: false, data: { hello: "world 1" } },
+        { loading: true, data: void 0, networkStatus: NetworkStatus.loading },
+        { loading: false, data: { hello: "world 1" }, networkStatus: NetworkStatus.ready },
         UNNEEDED_FRAME,
-        { loading: true, data: void 0 },
-        { loading: false, data: { hello: "world 2" } },
+        { loading: true, data: void 0, networkStatus: NetworkStatus.setVariables },
+        { loading: false, data: { hello: "world 2" }, networkStatus: NetworkStatus.ready },
       ]);
     });
 

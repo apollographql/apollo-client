@@ -616,7 +616,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     // options.fetchPolicy even if options !== this.options, though that happens
     // most often when the options are temporary, used for only one request and
     // then thrown away, so nextFetchPolicy may not end up mattering.
-    options: WatchQueryOptions<TVariables, TData> = this.options,
+    options: WatchQueryOptions<TVariables, TData>,
   ) {
     if (options.nextFetchPolicy) {
       const { fetchPolicy = "cache-first" } = options;
@@ -775,7 +775,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         !newOptions.fetchPolicy &&
         !equal(newOptions.variables, oldVariables)
       ) {
-        this.applyNextFetchPolicy("variables-changed");
+        this.applyNextFetchPolicy("variables-changed", options);
         if (newNetworkStatus === void 0) {
           newNetworkStatus = NetworkStatus.setVariables;
         }

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - version-2.6
     paths:
       - docs/**
 

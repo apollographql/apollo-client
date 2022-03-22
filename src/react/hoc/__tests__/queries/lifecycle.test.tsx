@@ -639,14 +639,6 @@ describe('[queries] lifecycle', () => {
                 break;
               case 6:
                 expect({ loading, a, b, c }).toEqual({
-                  loading: true,
-                  a: void 0,
-                  b: void 0,
-                  c: void 0,
-                });
-                break;
-              case 7:
-                expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 4,
                   b: 5,
@@ -654,7 +646,7 @@ describe('[queries] lifecycle', () => {
                 });
                 refetchQuery!();
                 break;
-              case 8:
+              case 7:
                 expect({ loading, a, b, c }).toEqual({
                   loading: true,
                   a: 4,
@@ -662,7 +654,7 @@ describe('[queries] lifecycle', () => {
                   c: 6
                 });
                 break;
-              case 9:
+              case 8:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 4,
@@ -673,23 +665,15 @@ describe('[queries] lifecycle', () => {
                   switchClient!(client3);
                 });
                 break;
+              case 9:
+                expect({ loading, a, b, c }).toEqual({
+                  loading: true,
+                  a: void 0,
+                  b: void 0,
+                  c: void 0,
+                });
+                break;
               case 10:
-                expect({ loading, a, b, c }).toEqual({
-                  loading: true,
-                  a: void 0,
-                  b: void 0,
-                  c: void 0,
-                });
-                break;
-              case 11:
-                expect({ loading, a, b, c }).toEqual({
-                  loading: true,
-                  a: void 0,
-                  b: void 0,
-                  c: void 0,
-                });
-                break;
-              case 12:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 7,
@@ -700,15 +684,7 @@ describe('[queries] lifecycle', () => {
                   switchClient!(client1);
                 });
                 break;
-              case 13:
-                expect({ loading, a, b, c }).toEqual({
-                  loading: false,
-                  a: 1,
-                  b: 2,
-                  c: 3,
-                });
-                break;
-              case 14:
+              case 11:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 1,
@@ -719,7 +695,7 @@ describe('[queries] lifecycle', () => {
                   switchClient!(client3);
                 });
                 break;
-              case 15:
+              case 12:
                 expect({ loading, a, b, c }).toEqual({
                   loading: false,
                   a: 7,
@@ -727,14 +703,8 @@ describe('[queries] lifecycle', () => {
                   c: 9,
                 });
                 break;
-              case 16:
-                expect({ loading, a, b, c }).toEqual({
-                  loading: false,
-                  a: 7,
-                  b: 8,
-                  c: 9
-                });
-                break;
+              default:
+                reject(`Unexpectedly many renders (${count})`);
             }
           } catch (err) {
             reject(err);
@@ -767,7 +737,7 @@ describe('[queries] lifecycle', () => {
 
     render(<ClientSwitcher />);
 
-    waitFor(() => expect(count).toBe(16)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(12)).then(resolve, reject);
   });
 
   itAsync('handles synchronous racecondition with prefilled data from the server', (resolve, reject) => {

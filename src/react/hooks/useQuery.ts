@@ -172,7 +172,8 @@ class InternalState<TData, TVariables> {
     // Next, merge any defaultOptions passed directly to useQuery.
     if (defaultOptions) toMerge.push(defaultOptions);
 
-    if (this.watchQueryOptions && toMerge.length) {
+    const latestOptions = this.observable && this.observable.options;
+    if (latestOptions && toMerge.length) {
       // If we already have this.watchQueryOptions, those options should take
       // precedence over default options of the same name. It might be simpler
       // to do toMerge.push(this.watchQueryOptions), but that potentially
@@ -188,9 +189,9 @@ class InternalState<TData, TVariables> {
 
       Object.keys(defaults).forEach(
         (defaultOptionName: keyof WatchQueryOptions<TVariables, TData>) => {
-          const currentOptionValue = this.watchQueryOptions[defaultOptionName];
+          const currentOptionValue = latestOptions[defaultOptionName];
           if (
-            hasOwnProperty.call(this.watchQueryOptions, defaultOptionName) &&
+            hasOwnProperty.call(latestOptions, defaultOptionName) &&
             !equal(defaults[defaultOptionName], currentOptionValue)
           ) {
             // If you keep passing useQuery({ defaultOptions: { variables }}),

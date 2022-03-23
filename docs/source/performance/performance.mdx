@@ -1,11 +1,6 @@
 ---
 title: Improving performance in Apollo Client
-sidebar_title: Improving performance
 ---
-
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 ## Redirecting to cached data
 
@@ -23,7 +18,7 @@ For example, this code snippet calls `client.query` to execute a query when the 
 
 <ExpansionPanel title="Click to expand">
 
-```jsx{19-24}
+```jsx {19-24}
 function Feed() {
   const { loading, error, data, client } = useQuery(GET_DOGS);
 

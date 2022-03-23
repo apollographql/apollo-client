@@ -1,6 +1,5 @@
 ---
 title: Advanced topics on caching in Apollo Client
-sidebar_title: Advanced topics
 ---
 
 This article describes special cases and considerations when using the Apollo Client cache.
@@ -85,7 +84,7 @@ You can also call `client.onResetStore` from your React components. This can be 
 
 The `client.onResetStore` method's return value is a function you can call to unregister your callback:
 
-```js{6-8,12}
+```js {6-8,12}
 import { withApollo } from "@apollo/react-hoc";
 
 export class Foo extends Component {
@@ -147,7 +146,7 @@ query Book($id: ID!) {
 
 In a case like this, _we_ know that the second query's data might already be in the cache, but because that data was fetched by a different query, _Apollo Client_ doesn't know that. To tell Apollo Client where to look for the cached `Book` object, we can define a field policy `read` function for the `book` field:
 
-```js{9-14}
+```js {9-14}
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({

@@ -1,9 +1,6 @@
 ---
 title: Configuring the Apollo Client cache
-sidebar_title: Configuration
 ---
-
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 This article describes cache setup and configuration. To learn how to interact with cached data, see [Reading and writing data to the cache](./cache-interaction).
 
@@ -185,7 +182,7 @@ This example shows a variety of `typePolicies` with different `keyFields`:
 
 If an object has multiple `keyFields`, the cache ID always lists those fields in the same order to ensure uniqueness.
 
-Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias).
+Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](/resources/graphql-glossary/#alias).
 
 ### Calculating an object's cache ID
 

@@ -82,7 +82,8 @@ This request handler then calls `return forward(operation)`, which is the syntax
 
 Every link must define a `request` method, also known as its **request handler**. This method is passed the following arguments:
 
-* `operation`: The GraphQL operation that's being passed through the link. For details, see [The `Operation` object](#the-operation-object).
+* `operation`: The GraphQL operation that's being passed through the link.
+    * For details, see [The `Operation` object](#the-operation-object).
 * `forward`: A function for executing the next link in the chain (unless this is a [terminating link](#the-terminating-link)).
 
 Whenever Apollo Client prepares to execute a GraphQL operation, it calls the request handler of the first link in the chain. Each link is responsible for executing its logic and then passing execution to the _next_ link by calling the [`forward` function](#the-forward-function) and returning its result.

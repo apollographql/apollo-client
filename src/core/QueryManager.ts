@@ -1060,11 +1060,12 @@ export class QueryManager<TStore> {
         const aqr: ApolloQueryResult<TData> = {
           data: result.data,
           loading: false,
-          networkStatus: queryInfo.networkStatus || NetworkStatus.ready,
+          networkStatus: NetworkStatus.ready,
         };
 
         if (hasErrors && options.errorPolicy !== "ignore") {
           aqr.errors = result.errors;
+          aqr.networkStatus = NetworkStatus.error;
         }
 
         return aqr;

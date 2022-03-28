@@ -137,8 +137,12 @@ export function useMutation<
     setResult({ called: false, loading: false, client });
   }, []);
 
-  useEffect(() => () => {
-    ref.current.isMounted = false;
+  useEffect(() => {
+    ref.current.isMounted = true;
+
+    return () => {
+      ref.current.isMounted = false;
+    };
   }, []);
 
   return [execute, { reset, ...result }];

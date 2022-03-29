@@ -8,10 +8,7 @@ import { ApolloError } from '../../errors';
 import {
   ApolloCache,
   ApolloClient,
-  ApolloQueryResult,
   DefaultContext,
-  FetchMoreOptions,
-  FetchMoreQueryOptions,
   FetchPolicy,
   MutationOptions,
   NetworkStatus,
@@ -63,19 +60,8 @@ export type ObservableQueryFields<TData, TVariables> = Pick<
   | 'updateQuery'
   | 'refetch'
   | 'variables'
-> & {
-  fetchMore: ((
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
-      FetchMoreOptions<TData, TVariables>
-  ) => Promise<ApolloQueryResult<TData>>) &
-    (<TData2, TVariables2>(
-      fetchMoreOptions: { query?: DocumentNode | TypedDocumentNode<TData, TVariables> } & FetchMoreQueryOptions<
-        TVariables2,
-        TData
-      > &
-        FetchMoreOptions<TData2, TVariables2>
-    ) => Promise<ApolloQueryResult<TData2>>);
-};
+  | 'fetchMore'
+>;
 
 export interface QueryResult<TData = any, TVariables = OperationVariables>
   extends ObservableQueryFields<TData, TVariables> {

@@ -268,14 +268,27 @@ class InternalState<TData, TVariables> {
         || this.observable // Reuse this.observable if possible (and not SSR)
         || this.client.watchQuery(this.watchQueryOptions);
 
-    this.obsQueryFields = useMemo(() => ({
-      refetch: obsQuery.refetch.bind(obsQuery),
-      fetchMore: obsQuery.fetchMore.bind(obsQuery),
-      updateQuery: obsQuery.updateQuery.bind(obsQuery),
-      startPolling: obsQuery.startPolling.bind(obsQuery),
-      stopPolling: obsQuery.stopPolling.bind(obsQuery),
-      subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
-    }), [obsQuery]);
+    this.obsQueryFields = useMemo(() => {
+      type OQFieldName = keyof typeof this.obsQueryFields;
+
+      function wrap<M extends OQFieldName>(
+        method: M,
+      ): ObservableQuery<TData, TVariables>[M] {
+        return function () {
+          return obsQuery[method].apply(obsQuery, arguments);
+        };
+      }
+
+      return {
+        // These methods are available directly from result.observable now.
+        refetch: wrap("refetch"),
+        fetchMore: wrap("fetchMore"),
+        updateQuery: wrap("updateQuery"),
+        startPolling: wrap("startPolling"),
+        stopPolling: wrap("stopPolling"),
+        subscribeToMore: wrap("subscribeToMore"),
+      };
+    }, [obsQuery]);
 
     if (this.renderPromises) {
       this.renderPromises.registerSSRObservable(obsQuery);

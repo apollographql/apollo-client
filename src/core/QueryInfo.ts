@@ -3,7 +3,7 @@ import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
-import { ObservableQuery } from './ObservableQuery';
+import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
 import { FetchResult } from '../link/core';
 import {
@@ -246,7 +246,7 @@ export class QueryInfo {
           // this method, and are handled by calling oq.reobserve(). If this
           // reobservation is spurious, isDifferentFromLastResult still has a
           // chance to catch it before delivery to ObservableQuery subscribers.
-          oq.reobserveCacheFirst();
+          reobserveCacheFirst(oq);
         }
       });
     } else {

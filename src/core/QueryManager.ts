@@ -927,8 +927,10 @@ export class QueryManager<TStore> {
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
-    this.getQuery(queryId).stop();
-    this.queries.delete(queryId);
+    if (this.queries.has(queryId)) {
+      this.getQuery(queryId).stop();
+      this.queries.delete(queryId);
+    }
   }
 
   public broadcastQueries() {

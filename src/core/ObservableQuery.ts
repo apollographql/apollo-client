@@ -1,5 +1,5 @@
 import { invariant } from '../utilities/globals';
-
+import { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -51,8 +51,6 @@ export interface FetchMoreOptions<
 export interface UpdateQueryOptions<TVariables> {
   variables?: TVariables;
 }
-
-let warnedAboutUpdateQuery = false;
 
 interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
@@ -362,10 +360,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     return this.reobserve(reobserveOptions, NetworkStatus.refetch);
   }
 
-  public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
-      FetchMoreOptions<TData, TVariables>,
-  ): Promise<ApolloQueryResult<TData>> {
+  public fetchMore<
+    TFetchData = TData,
+    TFetchVars = TVariables,
+  >(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+    updateQuery?: (
+      previousQueryResult: TData,
+      options: {
+        fetchMoreResult: TFetchData;
+        variables: TFetchVars;
+      },
+    ) => TData;
+  }): Promise<ApolloQueryResult<TFetchData>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
@@ -381,64 +387,83 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // fetchMore to provide an updateQuery callback that determines how
       // the data gets written to the cache.
       fetchPolicy: "no-cache",
-    } as WatchQueryOptions;
+    } as WatchQueryOptions<TFetchVars, TFetchData>;
 
     const qid = this.queryManager.generateQueryId();
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
+    const { queryInfo } = this;
+    const originalNetworkStatus = queryInfo.networkStatus;
+    queryInfo.networkStatus = NetworkStatus.fetchMore;
     if (combinedOptions.notifyOnNetworkStatusChange) {
-      this.queryInfo.networkStatus = NetworkStatus.fetchMore;
       this.observe();
     }
+
+    const updatedQuerySet = new Set<DocumentNode>();
 
     return this.queryManager.fetchQuery(
       qid,
       combinedOptions,
       NetworkStatus.fetchMore,
     ).then(fetchMoreResult => {
-      const data = fetchMoreResult.data as TData;
-      const { updateQuery } = fetchMoreOptions;
+      this.queryManager.removeQuery(qid);
 
-      if (updateQuery) {
-        if (__DEV__ &&
-            !warnedAboutUpdateQuery) {
-          invariant.warn(
-`The updateQuery callback for fetchMore is deprecated, and will be removed
-in the next major version of Apollo Client.
-
-Please convert updateQuery functions to field policies with appropriate
-read and merge functions, or use/adapt a helper function (such as
-concatPagination, offsetLimitPagination, or relayStylePagination) from
-@apollo/client/utilities.
-
-The field policy system handles pagination more effectively than a
-hand-written updateQuery function, and you only need to define the policy
-once, rather than every time you call fetchMore.`);
-          warnedAboutUpdateQuery = true;
-        }
-        this.updateQuery(previous => updateQuery(previous, {
-          fetchMoreResult: data,
-          variables: combinedOptions.variables as TVariables,
-        }));
-      } else {
-        // If we're using a field policy instead of updateQuery, the only
-        // thing we need to do is write the new data to the cache using
-        // combinedOptions.variables (instead of this.variables, which is
-        // what this.updateQuery uses, because it works by abusing the
-        // original field value, keyed by the original variables).
-        this.queryManager.cache.writeQuery({
-          query: combinedOptions.query,
-          variables: combinedOptions.variables,
-          data,
-        });
+      if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
+        queryInfo.networkStatus = originalNetworkStatus;
       }
 
-      return fetchMoreResult as ApolloQueryResult<TData>;
+      // Performing this cache update inside a cache.batch transaction ensures
+      // any affected cache.watch watchers are notified at most once about any
+      // updates. Most watchers will be using the QueryInfo class, which
+      // responds to notifications by calling reobserveCacheFirst to deliver
+      // fetchMore cache results back to this ObservableQuery.
+      this.queryManager.cache.batch({
+        update: cache => {
+          const { updateQuery } = fetchMoreOptions;
+          if (updateQuery) {
+            cache.updateQuery({
+              query: this.options.query,
+              variables: this.variables,
+              returnPartialData: true,
+              optimistic: false,
+            }, previous => updateQuery(previous!, {
+              fetchMoreResult: fetchMoreResult.data,
+              variables: combinedOptions.variables as TFetchVars,
+            }));
+
+          } else {
+            // If we're using a field policy instead of updateQuery, the only
+            // thing we need to do is write the new data to the cache using
+            // combinedOptions.variables (instead of this.variables, which is
+            // what this.updateQuery uses, because it works by abusing the
+            // original field value, keyed by the original variables).
+            cache.writeQuery({
+              query: combinedOptions.query,
+              variables: combinedOptions.variables,
+              data: fetchMoreResult.data,
+            });
+          }
+        },
+
+        onWatchUpdated(watch) {
+          // Record the DocumentNode associated with any watched query whose
+          // data were updated by the cache writes above.
+          updatedQuerySet.add(watch.query);
+        },
+      });
+
+      return fetchMoreResult as ApolloQueryResult<TFetchData>;
 
     }).finally(() => {
-      this.queryManager.stopQuery(qid);
-      this.reobserve();
+      // In case the cache writes above did not generate a broadcast
+      // notification (which would have been intercepted by onWatchUpdated),
+      // likely because the written data were the same as what was already in
+      // the cache, we still want fetchMore to deliver its final loading:false
+      // result with the unchanged data.
+      if (!updatedQuerySet.has(this.options.query)) {
+        reobserveCacheFirst(this);
+      }
     });
   }
 
@@ -786,14 +811,14 @@ once, rather than every time you call fetchMore.`);
     return concast.promise;
   }
 
-  // Pass the current result to this.observer.next without applying any
-  // fetch policies.
+  // (Re)deliver the current result to this.observers without applying fetch
+  // policies or making network requests.
   private observe() {
-    // Passing false is important so that this.getCurrentResult doesn't
-    // save the fetchMore result as this.lastResult, causing it to be
-    // ignored due to the this.isDifferentFromLastResult check in
-    // this.observer.next.
     this.reportResult(
+      // Passing false is important so that this.getCurrentResult doesn't
+      // save the fetchMore result as this.lastResult, causing it to be
+      // ignored due to the this.isDifferentFromLastResult check in
+      // this.reportResult.
       this.getCurrentResult(false),
       this.variables,
     );
@@ -857,6 +882,44 @@ once, rather than every time you call fetchMore.`);
 // Necessary because the ObservableQuery constructor has a different
 // signature than the Observable constructor.
 fixObservableSubclass(ObservableQuery);
+
+// Reobserve with fetchPolicy effectively set to "cache-first", triggering
+// delivery of any new data from the cache, possibly falling back to the network
+// if any cache data are missing. This allows _complete_ cache results to be
+// delivered without also kicking off unnecessary network requests when
+// this.options.fetchPolicy is "cache-and-network" or "network-only". When
+// this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
+// "standby", or "no-cache"), we call this.reobserve() as usual.
+export function reobserveCacheFirst<TData, TVars>(
+  obsQuery: ObservableQuery<TData, TVars>,
+) {
+  const { fetchPolicy, nextFetchPolicy } = obsQuery.options;
+
+  if (
+    fetchPolicy === "cache-and-network" ||
+    fetchPolicy === "network-only"
+  ) {
+    return obsQuery.reobserve({
+      fetchPolicy: "cache-first",
+      // Use a temporary nextFetchPolicy function that replaces itself with the
+      // previous nextFetchPolicy value and returns the original fetchPolicy.
+      nextFetchPolicy(this: WatchQueryOptions<TVars, TData>) {
+        // Replace this nextFetchPolicy function in the options object with the
+        // original this.options.nextFetchPolicy value.
+        this.nextFetchPolicy = nextFetchPolicy;
+        // If the original nextFetchPolicy value was a function, give it a
+        // chance to decide what happens here.
+        if (typeof nextFetchPolicy === "function") {
+          return nextFetchPolicy.apply(this, arguments);
+        }
+        // Otherwise go back to the original this.options.fetchPolicy.
+        return fetchPolicy!;
+      },
+    });
+  }
+
+  return obsQuery.reobserve();
+}
 
 function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
   invariant.error('Unhandled error', error.message, error.stack);

@@ -64,7 +64,7 @@ This value is `undefined` if this is the query's first execution.
 
 If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
 
-For more information, see [Handling operation errors](https://www.apollographql.com/docs/react/data/error-handling/).
+For more information, see [Handling operation errors](/react/data/error-handling/).
 
 </td>
 </tr>
@@ -158,7 +158,7 @@ Can be useful for manually executing followup queries or writing data to the cac
 
 If `true`, the associated lazy query has been executed.
 
-This field is only present on the result object returned by [`useLazyQuery`](https://www.apollographql.com/docs/react/data/queries/#executing-queries-manually).
+This field is only present on the result object returned by [`useLazyQuery`](/react/data/queries/#executing-queries-manually).
 
 </td>
 </tr>
@@ -185,7 +185,7 @@ A function that enables you to re-execute the query, optionally passing in new `
 
 To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request).
 
-See also [Refetching](https://www.apollographql.com/docs/react/data/queries/#refetching).
+See also [Refetching](/react/data/queries/#refetching).
 
 </td>
 </tr>
@@ -201,7 +201,7 @@ See also [Refetching](https://www.apollographql.com/docs/react/data/queries/#ref
 
 <td>
 
-A function that helps you fetch the next set of results for a [paginated list field](https://www.apollographql.com/docs/react/pagination/core-api/).
+A function that helps you fetch the next set of results for a [paginated list field](/react/pagination/core-api/).
 
 </td>
 </tr>
@@ -248,7 +248,7 @@ A function that instructs the query to stop polling after a previous call to `st
 
 <td>
 
-A function that enables you to execute a [subscription](https://www.apollographql.com/docs/react/data/subscriptions/), usually to subscribe to specific fields that were included in the query.
+A function that enables you to execute a [subscription](/react/data/subscriptions/), usually to subscribe to specific fields that were included in the query.
 
 This function returns _another_ function that you can call to terminate the subscription.
 

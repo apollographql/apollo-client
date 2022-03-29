@@ -1,10 +1,7 @@
 ---
 title: GraphQL query best practices
-sidebar_title: Best practices
 description: Operation naming, GraphQL variables, and more
 ---
-
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 When creating queries and mutations, follow these best practices to get the most out of both GraphQL and Apollo tooling.
 
@@ -35,13 +32,13 @@ You should define a name for _every_ GraphQL operation in your application. Doin
 * You clarify the purpose of each operation for both yourself and your teammates.
 * You avoid unexpected errors when combining multiple operations in a single query document (an anonymous operation can only appear alone).
 * You improve debugging output in both client _and_ server code, helping you identify exactly which operation is causing issues.
-* [Apollo Studio](https://www.apollographql.com/docs/studio/) provides helpful operation-level metrics, which require named operations.
+* [Apollo Studio](/studio/) provides helpful operation-level metrics, which require named operations.
 
 ## Use GraphQL variables to provide arguments
 
 These two queries can both fetch a `Dog` object with ID `"5"`:
 
-```graphql{2-3,10-11}
+```graphql {2-3,10-11}
 # Recommended ✅
 query GetDog($dogId: ID!) {
   dog(id: $dogId) {
@@ -63,7 +60,7 @@ The first query uses a variable (`$dogId`) for the value of the `dog` field's re
 
 You pass variable values to `useQuery` (or `useMutation`) like so:
 
-```js{11-15}:title=dog.tsx
+```js {11-15} title="dog.tsx"
 const GET_DOG = gql`
   query GetDog($dogId: ID!) {
     dog(id: $dogId) {
@@ -91,19 +88,19 @@ Beyond reusability, hardcoded arguments have other disadvantages relative to var
 
 If two otherwise identical queries have different hardcoded argument values, they're considered _entirely different operations_ by your GraphQL server's cache. The cache enables your server to _skip_ parsing and validating operations that it's encountered before, improving performance.
 
-The server-side cache also powers features like [automatic persisted queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) and query plans in a [federated gateway](https://www.apollographql.com/docs/federation/gateway/). Hardcoded arguments reduce the performance gains of these features and take up useful space in the cache.
+The server-side cache also powers features like [automatic persisted queries](/apollo-server/performance/apq/) and query plans in a [federated gateway](/federation/gateway/). Hardcoded arguments reduce the performance gains of these features and take up useful space in the cache.
 
 #### Reduced information privacy
 
 The value of a GraphQL argument might include sensitive information, such as an access token or a user's personal info. If this information is included in a query string, it's cached with the rest of that query string.
 
-Variable values are _not_ included in query strings. You can also specify _which_ variable values (if any) are [included in metrics reporting](https://www.apollographql.com/docs/apollo-server/api/plugin/usage-reporting/#sendvariablevalues) to Apollo Studio.
+Variable values are _not_ included in query strings. You can also specify _which_ variable values (if any) are [included in metrics reporting](/apollo-server/api/plugin/usage-reporting/#sendvariablevalues) to Apollo Studio.
 
 ## Query only the data you need, where you need it
 
-One of GraphQL's biggest advantages over a traditional REST API is its support for [declarative data fetching](https://www.apollographql.com/docs/intro/benefits/#declarative-and-efficient-data-fetching). Each component can (and should) query exactly the fields it requires to render, with no superfluous data sent over the network.
+One of GraphQL's biggest advantages over a traditional REST API is its support for [declarative data fetching](/intro/benefits/#graphql-provides-declarative-efficient-data-fetching). Each component can (and should) query exactly the fields it requires to render, with no superfluous data sent over the network.
 
-If instead your root component executes a single, enormous query to obtain data for all of its children, it might query on behalf of components that _aren't even rendered_ given the current state. This can result in a delayed response, and it drastically reduces the likelihood that the query's result can be reused by a [server-side response cache](https://www.apollographql.com/docs/apollo-server/performance/caching/).
+If instead your root component executes a single, enormous query to obtain data for all of its children, it might query on behalf of components that _aren't even rendered_ given the current state. This can result in a delayed response, and it drastically reduces the likelihood that the query's result can be reused by a [server-side response cache](/apollo-server/performance/caching/).
 
 In the large majority of cases, a query such as the following should be divided into _multiple_ queries that are distributed among the appropriate components:
 
@@ -273,7 +270,7 @@ query GetMyDocuments {
 }
 ```
 
-To improve the performance of your [server-side response cache](https://www.apollographql.com/docs/apollo-server/performance/caching/), fetch these two types of fields in _separate queries_ whenever possible. By doing so, your server can cache just a _single_ response for a query like `GetAllElements` above, while caching separate responses for each user that executes `GetMyDocuments`.
+To improve the performance of your [server-side response cache](/apollo-server/performance/caching/), fetch these two types of fields in _separate queries_ whenever possible. By doing so, your server can cache just a _single_ response for a query like `GetAllElements` above, while caching separate responses for each user that executes `GetMyDocuments`.
 
 ## Set your app's `name` and `version` for metrics reporting (paid)
 
@@ -281,7 +278,7 @@ To improve the performance of your [server-side response cache](https://www.apol
 
 The constructor of `ApolloClient` accepts the `name` and `version` options:
 
-```js{4-5}
+```js {4-5}
 const client = new ApolloClient({
   uri: 'http://localhost:4000/graphql',
   cache: new InMemoryCache(),
@@ -292,4 +289,4 @@ const client = new ApolloClient({
 
 If you specify these values, Apollo Client automatically adds them to each operation request as HTTP headers (`apollographql-client-name` and `apollographql-client-version`).
 
-Then if you've configured [metrics reporting in Apollo Studio](https://www.apollographql.com/docs/studio/setup-analytics/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](https://www.apollographql.com/docs/studio/client-awareness/).
+Then if you've configured [metrics reporting in Apollo Studio](/studio/metrics/usage-reporting/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](/studio/metrics/client-awareness/).

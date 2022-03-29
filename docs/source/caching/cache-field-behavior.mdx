@@ -1,9 +1,6 @@
 ---
 title: Customizing the behavior of cached fields
-sidebar_title: Customizing field behavior
 ---
-
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 You can customize how a particular field in your Apollo Client cache is read and written. To do so, you define a **field policy** for the field. A field policy can include:
 
@@ -13,7 +10,7 @@ You can customize how a particular field in your Apollo Client cache is read and
 
 You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whichever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the field's parent type. The following example defines a field policy for the `name` field of a `Person` type:
 
-```ts{5-10}
+```ts {5-10}
 const cache = new InMemoryCache({
   typePolicies: {
     Person: {
@@ -280,7 +277,7 @@ In summary, the `Book.author` policy above allows the cache to safely merge the 
 
 Beginning with Apollo Client 3.3, you can avoid having to configure `merge` functions for lots of different fields that might hold an `Author` object, and instead put the `merge` configuration in the `Author` type policy:
 
-```ts{13}
+```ts {13}
 const cache = new InMemoryCache({
   typePolicies: {
     Book: {

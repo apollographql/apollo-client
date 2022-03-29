@@ -3,6 +3,7 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useCallback, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
+import { ApolloError } from '../../errors';
 import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
@@ -10,6 +11,7 @@ import {
 } from '../types/types';
 import { useInternalState } from './useQuery';
 import { useApolloClient } from './useApolloClient';
+import { isNonEmptyArray } from '../../utilities';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -79,13 +81,29 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
         fetchPolicy: initialFetchPolicy,
       },
     ).then(apolloQueryResult => {
-      return internalState.toQueryResult(
-        // If this.observable.options.fetchPolicy is "standby", the
-        // apolloQueryResult we receive here can be undefined, so we call
-        // getCurrentResult to obtain a stub result. TODO Investigate whether
-        // standby queries could return this stub result in the first place.
-        apolloQueryResult || internalState["getCurrentResult"]()
-      );
+      // If this.observable.options.fetchPolicy is "standby", the
+      // apolloQueryResult we receive here can be undefined, so we call
+      // getCurrentResult to obtain a stub result. TODO Investigate whether
+      // standby queries could return this stub result in the first place.
+      apolloQueryResult = apolloQueryResult || internalState["getCurrentResult"]();
+
+      if (
+        apolloQueryResult.error ||
+        isNonEmptyArray(apolloQueryResult.errors)
+      ) {
+        const {
+          errorPolicy = "none",
+        } = result.observable.options;
+
+        if (errorPolicy === "none") {
+          throw apolloQueryResult.error || new ApolloError({
+            graphQLErrors: apolloQueryResult.errors,
+          });
+        }
+      }
+
+      return internalState.toQueryResult(apolloQueryResult);
+
     }).then(queryResult => Object.assign(queryResult, eagerMethods));
 
     // Deliver the loading state for this reobservation immediately.

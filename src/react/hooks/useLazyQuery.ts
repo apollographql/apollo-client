@@ -58,10 +58,13 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = result[key];
-      eagerMethods[key] = (...args: any) => {
-        execOptionsRef.current = execOptionsRef.current || {};
-        internalState.forceUpdate();
-        return (method as any)(...args);
+      eagerMethods[key] = function () {
+        if (!execOptionsRef.current) {
+          execOptionsRef.current = Object.create(null);
+          // Only the first time populating execOptionsRef.current matters here.
+          internalState.forceUpdate();
+        }
+        return method.apply(this, arguments);
       };
     }
 

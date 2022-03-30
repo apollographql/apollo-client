@@ -97,7 +97,7 @@ npm install graphql-ws
 Import and initialize a `GraphQLWsLink` object in the same project file where you initialize `ApolloClient`:
 
 ```js title="index.js"
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { GraphQLWsLink } from '@apollo/client/link/ws';
 import { createClient } from 'graphql-ws';
 
 const wsLink = new GraphQLWsLink(createClient({

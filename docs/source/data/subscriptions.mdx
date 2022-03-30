@@ -86,21 +86,21 @@ Because subscriptions usually maintain a persistent connection, they shouldn't u
 
 [Apollo Link](../api/link/introduction/) is a library that helps you customize Apollo Client's network communication. You can use it to define a **link chain** that modifies your operations and routes them to the appropriate destination.
 
-To execute subscriptions over WebSocket, you can add a `GraphQLWsLink` to your link chain. This link requires the `graphql-ws` library. Install it like so:
+To execute subscriptions over WebSocket, you can add a `WebSocketLink` to your link chain. This link requires the `graphql-ws` library. Install it like so:
 
 ```bash
 npm install graphql-ws
 ```
 
-### 2. Initialize a `GraphQLWsLink`
+### 2. Initialize a `WebSocketLink`
 
-Import and initialize a `GraphQLWsLink` object in the same project file where you initialize `ApolloClient`:
+Import and initialize a `WebSocketLink` object in the same project file where you initialize `ApolloClient`:
 
 ```js title="index.js"
-import { GraphQLWsLink } from '@apollo/client/link/ws';
+import { WebSocketLink } from '@apollo/client/link/ws';
 import { createClient } from 'graphql-ws';
 
-const wsLink = new GraphQLWsLink(createClient({
+const wsLink = new WebSocketLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
 }));
 ```
@@ -109,23 +109,23 @@ Replace the value of the `url` option with your GraphQL server's subscription-sp
 
 ### 3. Split communication by operation (recommended)
 
-Although Apollo Client _can_ use your `GraphQLWsLink` to execute all operation types, in most cases it should continue using HTTP for queries and mutations. This is because queries and mutations don't require a stateful or long-lasting connection, making HTTP more efficient and scalable if a WebSocket connection isn't already present.
+Although Apollo Client _can_ use your `WebSocketLink` to execute all operation types, in most cases it should continue using HTTP for queries and mutations. This is because queries and mutations don't require a stateful or long-lasting connection, making HTTP more efficient and scalable if a WebSocket connection isn't already present.
 
 To support this, the `@apollo/client` library provides a `split` function that lets you use one of two different `Link`s, according to the result of a boolean check.
 
-The following example expands on the previous one by initializing both a `GraphQLWsLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
+The following example expands on the previous one by initializing both a `WebSocketLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
 
 ```js title="index.js"
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { WebSocketLink } from '@apollo/client/link/ws';
 import { createClient } from 'graphql-ws';
 
 const httpLink = new HttpLink({
   uri: 'http://localhost:4000/graphql'
 });
 
-const wsLink = new GraphQLWsLink(createClient({
+const wsLink = new WebSocketLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
 }));
 
@@ -168,13 +168,13 @@ const client = new ApolloClient({
 
 ### 5. Authenticate over WebSocket (optional)
 
-It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `GraphQLWsLink` constructor, like so:
+It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `WebSocketLink` constructor, like so:
 
 ```js {6-8}
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { WebSocketLink } from '@apollo/client/link/ws';
 import { createClient } from 'graphql-ws';
 
-const wsLink = new GraphQLWsLink(createClient({
+const wsLink = new WebSocketLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
   connectionParams: {
     authToken: user.authToken,
@@ -182,7 +182,7 @@ const wsLink = new GraphQLWsLink(createClient({
 }));
 ```
 
-Your `GraphQLWsLink` passes the `connectionParams` object to your server whenever it connects. Your server receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
+Your `WebSocketLink` passes the `connectionParams` object to your server whenever it connects. Your server receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
 
 ## Executing a subscription
 
@@ -332,7 +332,7 @@ If your server uses `subscriptions-transport-ws` instead of the newer `graphql-w
     import { SubscriptionClient } from 'subscriptions-transport-ws'
     ```
 
-3. Instead of `import { GraphQLWsLink } from '@apollo/client/link/subscriptions'`:
+3. Instead of `import { WebSocketLink } from '@apollo/client/link/ws'`:
 
     ```js
     import { WebSocketLink } from '@apollo/client/link/ws

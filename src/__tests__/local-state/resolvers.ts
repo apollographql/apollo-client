@@ -195,6 +195,72 @@ describe('Basic resolver capabilities', () => {
     });
   });
 
+  itAsync('should handle @client fields inside fragments', (resolve, reject) => {
+    const query = gql`
+      fragment Foo on Foo {
+        bar
+        ...Foo2
+      }
+      fragment Foo2 on Foo {
+        __typename
+        baz @client
+      }
+      query Mixed {
+        foo {
+          ...Foo
+        }
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const serverQuery = gql`
+      fragment Foo on Foo {
+        bar
+        ...Foo2
+      }
+      fragment Foo2 on Foo {
+        __typename
+      }
+      query Mixed {
+        foo {
+          ...Foo
+        }
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const resolvers = {
+      Foo: {
+        baz: () => false,
+      },
+    };
+
+    assertWithObserver({
+      reject,
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: { data: { foo: { bar: true, __typename: `Foo` }, bar: { baz: true } } },
+      observer: {
+        next({ data }) {
+          try {
+            expect(data).toEqual({
+              foo: { bar: true, baz: false, __typename: 'Foo' },
+              bar: { baz: true },
+            });
+          } catch (error) {
+            reject(error);
+          }
+          resolve();
+        },
+      },
+    });
+  });
+
   itAsync('should have access to query variables when running @client resolvers', (resolve, reject) => {
     const query = gql`
       query WithVariables($id: ID!) {

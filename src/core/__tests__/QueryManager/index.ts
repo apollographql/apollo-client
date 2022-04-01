@@ -545,7 +545,7 @@ describe('QueryManager', () => {
       // Unsubscribing from the link happens after a microtask
       // (Promise.resolve().then) delay, so we need to wait at least that
       // long before verifying onRequestUnsubscribe was called.
-      resolve => setTimeout(resolve, 0)
+      resolve => setTimeout(resolve, 10)
     ).then(() => {
       expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
       expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);

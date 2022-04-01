@@ -59,6 +59,7 @@ describe('Query component', () => {
             observable,
             fetchMore,
             refetch,
+            reobserve,
             startPolling,
             stopPolling,
             subscribeToMore,

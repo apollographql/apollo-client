@@ -282,6 +282,7 @@ class InternalState<TData, TVariables> {
       return {
         // These methods are available directly from result.observable now.
         refetch: wrap("refetch"),
+        reobserve: wrap("reobserve"),
         fetchMore: wrap("fetchMore"),
         updateQuery: wrap("updateQuery"),
         startPolling: wrap("startPolling"),

@@ -17,6 +17,7 @@ import { isNonEmptyArray } from '../../utilities';
 // whether the useLazyQuery execute function was called before.
 const EAGER_METHODS = [
   'refetch',
+  'reobserve',
   'fetchMore',
   'updateQuery',
   'startPolling',
@@ -76,7 +77,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    const promise = result.observable.reobserve(
+    const promise = result.reobserve(
       execOptionsRef.current = executeOptions ? {
         ...executeOptions,
         fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,

@@ -491,6 +491,52 @@ describe('Basic resolver capabilities', () => {
         .then(check),
     ]);
   });
+
+  itAsync('should not run resolvers without @client directive (issue #9571)', (resolve, reject) => {
+    const query = gql`
+      query Mixed {
+        foo @client {
+          bar
+        }
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const serverQuery = gql`
+      query Mixed {
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        foo: () => ({ __typename: `Foo`, bar: true }),
+        bar: () => ({ __typename: `Bar`, baz: false }),
+      },
+    };
+
+    assertWithObserver({
+      reject,
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: { data: { bar: { baz: true } } },
+      observer: {
+        next({ data }) {
+          try {
+            expect(data).toEqual({ foo: { bar: true }, bar: { baz: true } });
+          } catch (error) {
+            reject(error);
+          }
+          resolve();
+        },
+      },
+    });
+  });
 });
 
 describe('Writing cache data from resolvers', () => {

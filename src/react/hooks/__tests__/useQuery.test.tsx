@@ -8,6 +8,7 @@ import {
   ApolloClient,
   ApolloError,
   NetworkStatus,
+  OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from '../../../core';
@@ -761,7 +762,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe("options functions", () => {
+  describe("options.defaultOptions", () => {
     it("can provide a default fetchPolicy", async () => {
       const query = gql`query { hello }`;
       const link = mockSingleLink(
@@ -819,42 +820,193 @@ describe('useQuery Hook', () => {
       ]);
     });
 
-    it("can provide options.client without ApolloProvider", async () => {
-      const query = gql`query { hello }`;
-      const link = mockSingleLink(
-        {
-          request: { query },
-          result: { data: { hello: 'from link' } },
-        },
-      );
+    it("can provide individual default variables", async () => {
+      const query: TypedDocumentNode<{
+        vars: OperationVariables,
+      }, OperationVariables> = gql`
+        query VarsQuery {
+          vars
+        }
+      `;
 
       const client = new ApolloClient({
-        link,
+        link: new ApolloLink(request => new Observable(observer => {
+          observer.next({
+            data: {
+              vars: request.variables,
+            },
+          });
+          observer.complete();
+        })),
+
         cache: new InMemoryCache(),
-        ssrMode: true,
+
+        defaultOptions: {
+          watchQuery: {
+            variables: {
+              default: "global",
+              global: true,
+            },
+          },
+        },
       });
 
+      const fetchPolicyLog: (string | undefined)[] = [];
+
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { client }),
-        // We deliberately do not provide the usual ApolloProvider wrapper for
-        // this test, since we are providing the client directly to useQuery.
-        // {
-        //   wrapper: ({ children }) => (
-        //     <ApolloProvider client={client}>
-        //       {children}
-        //     </ApolloProvider>
-        //   ),
-        // }
+        () => {
+          const result = useQuery(query, {
+            defaultOptions: {
+              fetchPolicy: "cache-and-network",
+              variables: {
+                default: "local",
+                global: false,
+              },
+            },
+            variables: {
+              mandatory: true,
+            },
+          });
+          fetchPolicyLog.push(result.observable.options.fetchPolicy);
+          return result;
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        }
       );
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
+      expect(result.current.observable.variables).toEqual({
+        default: "local",
+        global: false,
+        mandatory: true,
+      });
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-and-network");
+
+      expect(
+        // The defaultOptions field is for useQuery options (QueryHookOptions),
+        // not the more general WatchQueryOptions that ObservableQuery sees.
+        "defaultOptions" in result.current.observable.options
+      ).toBe(false);
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+      ]);
 
       await waitForNextUpdate();
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: 'from link' });
+      expect(result.current.data).toEqual({
+        vars: {
+          default: "local",
+          global: false,
+          mandatory: true,
+        },
+      });
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+      ]);
+
+      const reobservePromise = result.current.observable.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          default: "reobserve",
+        },
+      }).then(finalResult => {
+        expect(finalResult.loading).toBe(false);
+        expect(finalResult.data).toEqual({
+          vars: {
+            default: "reobserve",
+            global: false,
+            mandatory: true,
+          },
+        });
+      });
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("network-only");
+
+      expect(result.current.observable.variables).toEqual({
+        default: "reobserve",
+        global: false,
+        mandatory: true,
+      });
+
+      await reobservePromise;
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        vars: {
+          default: "reobserve",
+          global: false,
+          mandatory: true,
+        },
+      });
+      expect(
+        result.current.observable.variables
+      ).toEqual(
+        result.current.data!.vars
+      );
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+        "cache-first",
+      ]);
     });
+  });
+
+  it("can provide options.client without ApolloProvider", async () => {
+    const query = gql`query { hello }`;
+    const link = mockSingleLink(
+      {
+        request: { query },
+        result: { data: { hello: 'from link' } },
+      },
+    );
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      ssrMode: true,
+    });
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useQuery(query, { client }),
+      // We deliberately do not provide the usual ApolloProvider wrapper for
+      // this test, since we are providing the client directly to useQuery.
+      // {
+      //   wrapper: ({ children }) => (
+      //     <ApolloProvider client={client}>
+      //       {children}
+      //     </ApolloProvider>
+      //   ),
+      // }
+    );
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.data).toBeUndefined();
+
+    await waitForNextUpdate();
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data).toEqual({ hello: 'from link' });
   });
 
   describe('polling', () => {

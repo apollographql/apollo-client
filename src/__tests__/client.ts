@@ -8,6 +8,7 @@ import {
   WatchQueryFetchPolicy,
   QueryOptions,
   ObservableQuery,
+  TypedDocumentNode,
 } from '../core';
 
 import { Observable, ObservableSubscription } from '../utilities';
@@ -3382,6 +3383,106 @@ describe('@connection', () => {
           setTimeout(resolve, 50);
         } else {
           reject("too many results");
+        }
+      });
+    });
+
+    itAsync('can override global defaultOptions.watchQuery.nextFetchPolicy', (resolve, reject) => {
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          observer.next({
+            data: {
+              linkCount: ++linkCount,
+            },
+          });
+          observer.complete();
+        })),
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy(currentFetchPolicy) {
+              reject(new Error("should not have called global nextFetchPolicy"));
+              return currentFetchPolicy;
+            },
+          }
+        }
+      });
+
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`query CountQuery { linkCount }`;
+
+      let fetchPolicyRecord: WatchQueryFetchPolicy[] = [];
+      const observable = client.watchQuery({
+        query,
+        nextFetchPolicy(currentFetchPolicy) {
+          fetchPolicyRecord.push(currentFetchPolicy);
+          return "cache-first";
+        }
+      });
+
+      subscribeAndCount(reject, observable, (resultCount, result) => {
+        if (resultCount === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 1 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+          ]);
+
+          return client.refetchQueries({
+            include: ["CountQuery"],
+          }).then(results => {
+            expect(results.length).toBe(1);
+            results.forEach(result => {
+              expect(result.loading).toBe(false);
+              expect(result.data).toEqual({ linkCount: 2 });
+            });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+            ]);
+          });
+
+        } else if (resultCount === 2) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 2 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+          ]);
+
+          return observable.reobserve({
+            // Allow delivery of loading:true result.
+            notifyOnNetworkStatusChange: true,
+            // Force a network request in addition to loading:true cache result.
+            fetchPolicy: "cache-and-network",
+          }).then(finalResult => {
+            expect(finalResult.loading).toBe(false);
+            expect(finalResult.data).toEqual({ linkCount: 3 });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+              "cache-and-network",
+            ]);
+          });
+
+        } else if (resultCount === 3) {
+          expect(result.loading).toBe(true);
+          expect(result.data).toEqual({ linkCount: 2 });
+
+        } else if (resultCount === 4) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 3 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+            "cache-and-network",
+          ]);
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(new Error(`Too many results (${resultCount})`));
         }
       });
     });

@@ -8,8 +8,8 @@
 - Add `GraphQLWsLink` in `@apollo/client/link/subscriptions`. This link is similar to the existing `WebSocketLink` in `@apollo/client/link/ws`, but uses the newer [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package and protocol instead of the older `subscriptions-transport-ws` implementation. This functionality was technically first released in `@apollo/client@3.5.10`, but semantically belongs in the 3.6.0 minor version.
   [@glasser](https://github.com/glasser) in [#9369](https://github.com/apollographql/apollo-client/pull/9369)
 
-- Allow passing function to `useQuery` for finer-grained `options` control. <br/>
-  [@benjamn](https://github.com/benjamn) in [#9223](https://github.com/apollographql/apollo-client/pull/9223)
+- Allow passing `defaultOptions` to `useQuery` to avoid clobbering/resetting existing options when `useQuery` is called repeatedly. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9563](https://github.com/apollographql/apollo-client/pull/9563), superseding [#9223](https://github.com/apollographql/apollo-client/pull/9223)
 
 - Provide additional context to `nextFetchPolicy` functions to assist with `fetchPolicy` transitions. More details can be found in the [`nextFetchPolicy` documentation](https://deploy-preview-9067--apollo-client-docs.netlify.app/data/queries/#nextfetchpolicy). <br/>
   [@benjamn](https://github.com/benjamn) in [#9222](https://github.com/apollographql/apollo-client/pull/9222)

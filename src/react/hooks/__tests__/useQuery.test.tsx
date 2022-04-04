@@ -844,8 +844,8 @@ describe('useQuery Hook', () => {
         defaultOptions: {
           watchQuery: {
             variables: {
-              default: "global",
-              global: true,
+              sourceOfVar: "global",
+              isGlobal: true,
             },
           },
         },
@@ -859,8 +859,8 @@ describe('useQuery Hook', () => {
             defaultOptions: {
               fetchPolicy: "cache-and-network",
               variables: {
-                default: "local",
-                global: false,
+                sourceOfVar: "local",
+                isGlobal: false,
               },
             },
             variables: {
@@ -882,8 +882,8 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
       expect(result.current.observable.variables).toEqual({
-        default: "local",
-        global: false,
+        sourceOfVar: "local",
+        isGlobal: false,
         mandatory: true,
       });
 
@@ -906,8 +906,8 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({
         vars: {
-          default: "local",
-          global: false,
+          sourceOfVar: "local",
+          isGlobal: false,
           mandatory: true,
         },
       });
@@ -921,14 +921,14 @@ describe('useQuery Hook', () => {
         fetchPolicy: "network-only",
         nextFetchPolicy: "cache-first",
         variables: {
-          default: "reobserve",
+          sourceOfVar: "reobserve",
         },
       }).then(finalResult => {
         expect(finalResult.loading).toBe(false);
         expect(finalResult.data).toEqual({
           vars: {
-            default: "reobserve",
-            global: false,
+            sourceOfVar: "reobserve",
+            isGlobal: false,
             mandatory: true,
           },
         });
@@ -939,8 +939,8 @@ describe('useQuery Hook', () => {
       ).toBe("network-only");
 
       expect(result.current.observable.variables).toEqual({
-        default: "reobserve",
-        global: false,
+        sourceOfVar: "reobserve",
+        isGlobal: false,
         mandatory: true,
       });
 
@@ -953,8 +953,8 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({
         vars: {
-          default: "reobserve",
-          global: false,
+          sourceOfVar: "reobserve",
+          isGlobal: false,
           mandatory: true,
         },
       });

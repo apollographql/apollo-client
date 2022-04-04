@@ -19,6 +19,7 @@ import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { QueryResult } from '../../types/types';
 
 describe('useQuery Hook', () => {
   describe('General use', () => {
@@ -3373,6 +3374,113 @@ describe('useQuery Hook', () => {
         loading: false,
         networkStatus: 7,
       });
+    });
+
+    it('should set correct initialFetchPolicy even if skip:true', async () => {
+      const query = gql`{ hello }`;
+      let linkCount = 0;
+      const link = new ApolloLink(() => Observable.of({
+        data: { hello: ++linkCount },
+      }));
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const correctInitialFetchPolicy: WatchQueryFetchPolicy =
+        "cache-and-network";
+
+      const { result, waitForNextUpdate, rerender } = renderHook<{
+        skip: boolean;
+      }, QueryResult>(
+        ({ skip = true }) => useQuery(query, {
+          // Skipping equates to using a fetchPolicy of "standby", but that
+          // should not mean we revert to standby whenever we want to go back to
+          // the initial fetchPolicy (e.g. when variables change).
+          skip,
+          fetchPolicy: correctInitialFetchPolicy,
+        }),
+        {
+          initialProps: {
+            skip: true,
+          },
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
+
+      function check(
+        expectedFetchPolicy: WatchQueryFetchPolicy,
+        expectedInitialFetchPolicy: WatchQueryFetchPolicy,
+      ) {
+        const { observable } = result.current;
+        const {
+          fetchPolicy,
+          initialFetchPolicy,
+        } = observable.options;
+
+        expect(fetchPolicy).toBe(expectedFetchPolicy);
+        expect(initialFetchPolicy).toBe(expectedInitialFetchPolicy);
+      }
+
+      check(
+        "standby",
+        correctInitialFetchPolicy,
+      );
+
+      rerender({
+        skip: false,
+      });
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hello: 1,
+      });
+
+      check(
+        correctInitialFetchPolicy,
+        correctInitialFetchPolicy,
+      );
+
+      const reasons: string[] = [];
+
+      const reobservePromise = result.current.observable.reobserve({
+        variables: {
+          newVar: true,
+        },
+        nextFetchPolicy(currentFetchPolicy, context) {
+          expect(currentFetchPolicy).toBe("cache-and-network");
+          expect(context.initialFetchPolicy).toBe("cache-and-network");
+          reasons.push(context.reason);
+          return currentFetchPolicy;
+        },
+      }).then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: 2 });
+      });
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hello: 2,
+      });
+
+      await reobservePromise;
+
+      expect(reasons).toEqual([
+        "variables-changed",
+        "after-fetch",
+      ]);
     });
   });
 

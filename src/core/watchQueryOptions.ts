@@ -121,6 +121,7 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
    * Specifies the {@link FetchPolicy} to be used for this query.
    */
   fetchPolicy?: WatchQueryFetchPolicy;
+
   /**
    * Specifies the {@link FetchPolicy} to be used after this query has completed.
    */
@@ -129,6 +130,14 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
     currentFetchPolicy: WatchQueryFetchPolicy,
     context: NextFetchPolicyContext<TData, TVariables>,
   ) => WatchQueryFetchPolicy);
+
+  /**
+   * Defaults to the initial value of options.fetchPolicy, but can be explicitly
+   * configured to specify the WatchQueryFetchPolicy to revert back to whenever
+   * variables change (unless nextFetchPolicy intervenes).
+   */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+
   /**
    * Specifies whether a {@link NetworkStatus.refetch} operation should merge
    * incoming field data with existing data, or overwrite the existing data.
@@ -144,7 +153,7 @@ export interface NextFetchPolicyContext<TData, TVariables> {
     | "variables-changed";
   observable: ObservableQuery<TData, TVariables>;
   options: WatchQueryOptions<TVariables, TData>;
-  initialPolicy: WatchQueryFetchPolicy;
+  initialFetchPolicy: WatchQueryFetchPolicy;
 }
 
 export interface FetchMoreQueryOptions<TVariables, TData = any> {

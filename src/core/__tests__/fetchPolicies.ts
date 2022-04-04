@@ -938,7 +938,8 @@ describe("nextFetchPolicy", () => {
     expect(currentFetchPolicy).toBe(context.options.fetchPolicy);
     switch (context.reason) {
       case "variables-changed":
-        return context.initialPolicy;
+        expect(context.initialFetchPolicy).toBe(context.options.initialFetchPolicy);
+        return context.initialFetchPolicy;
       default:
       case "after-fetch":
         return "cache-first";
@@ -1070,7 +1071,8 @@ describe("nextFetchPolicy", () => {
     expect(currentFetchPolicy).toBe(context.options.fetchPolicy);
     switch (context.reason) {
       case "variables-changed":
-        return context.initialPolicy;
+        expect(context.initialFetchPolicy).toBe(context.options.initialFetchPolicy);
+        return context.initialFetchPolicy;
       default:
       case "after-fetch":
         return "cache-first";

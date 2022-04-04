@@ -220,9 +220,7 @@ class InternalState<TData, TVariables> {
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
       Object.assign(merged, { query: this.query });
 
-    if (skip) {
-      watchQueryOptions.fetchPolicy = 'standby';
-    } else if (
+    if (
       this.renderPromises &&
       (
         watchQueryOptions.fetchPolicy === 'network-only' ||
@@ -237,6 +235,24 @@ class InternalState<TData, TVariables> {
       // globalDefaults and defaultOptions), so, if fetchPolicy is still
       // undefined, fall back to the default default (no typo), cache-first.
       watchQueryOptions.fetchPolicy = 'cache-first';
+    }
+
+    if (skip) {
+      const {
+        // The watchQueryOptions.initialFetchPolicy field usually defaults to
+        // watchQueryOptions.fetchPolicy, which has now been properly
+        // defaulted/initialized. However, watchQueryOptions.initialFetchPolicy
+        // can be provided explicitly instead, if more control is desired.
+        initialFetchPolicy = watchQueryOptions.fetchPolicy,
+      } = watchQueryOptions;
+
+      // When skipping, we set watchQueryOptions.fetchPolicy initially to
+      // "standby", but we also need/want to preserve the initial non-standby
+      // fetchPolicy that would have been used if not skipping.
+      Object.assign(watchQueryOptions, {
+        initialFetchPolicy,
+        fetchPolicy: 'standby',
+      });
     }
 
     if (!watchQueryOptions.variables) {

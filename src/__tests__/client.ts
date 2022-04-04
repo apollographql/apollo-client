@@ -3321,7 +3321,7 @@ describe('@connection', () => {
               expect(context.reason).toBe("after-fetch");
               expect(context.observable).toBe(obs);
               expect(context.options).toBe(obs.options);
-              expect(context.initialPolicy).toBe("cache-first");
+              expect(context.initialFetchPolicy).toBe("cache-first");
 
               // Usually options.nextFetchPolicy applies only once, but a
               // nextFetchPolicy function can set this.nextFetchPolicy

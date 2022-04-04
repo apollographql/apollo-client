@@ -44,8 +44,6 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const useQueryResult = internalState.useQuery({
     ...options,
     ...execOptionsRef.current,
-    // TODO This probably means this.observable.initialFetchPolicy is never set
-    // appropriately.
     skip: !execOptionsRef.current,
   });
 

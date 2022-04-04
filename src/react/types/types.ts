@@ -105,6 +105,12 @@ export interface QueryLazyOptions<TVariables> {
  */
 export type LazyQueryResult<TData, TVariables> = QueryResult<TData, TVariables>;
 
+/**
+ * @deprecated TODO Delete this unused type alias.
+ */
+export type QueryTuple<TData, TVariables> =
+  LazyQueryResultTuple<TData, TVariables>;
+
 export type LazyQueryExecFunction<TData, TVariables> = (
   options?: Partial<LazyQueryHookOptions<TData, TVariables>>,
 ) => Promise<QueryResult<TData, TVariables>>;

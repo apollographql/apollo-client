@@ -85,8 +85,9 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     ).then(apolloQueryResult => {
       // If this.observable.options.fetchPolicy is "standby", the
       // apolloQueryResult we receive here can be undefined, so we call
-      // getCurrentResult to obtain a stub result. TODO Investigate whether
-      // standby queries could return this stub result in the first place.
+      // getCurrentResult to obtain a stub result.
+      // TODO Investigate whether standby queries could return this stub result
+      // in the first place.
       apolloQueryResult = apolloQueryResult || internalState["getCurrentResult"]();
 
       if (

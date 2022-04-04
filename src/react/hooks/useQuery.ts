@@ -79,14 +79,14 @@ class InternalState<TData, TVariables> {
     verifyDocumentType(query, DocumentType.Query);
   }
 
-  public forceUpdate() {
+  forceUpdate() {
     // Replaced (in useInternalState) with a method that triggers an update.
   }
 
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
   // without any dynamic conditional logic.
-  public useQuery(options: QueryHookOptions<TData, TVariables>) {
+  useQuery(options: QueryHookOptions<TData, TVariables>) {
     // The renderPromises field gets initialized here in the useQuery method, at
     // the beginning of everything (for a given component rendering, at least),
     // so we can safely use this.renderPromises in other/later InternalState
@@ -498,7 +498,7 @@ class InternalState<TData, TVariables> {
     QueryResult<TData, TVariables>
   >();
 
-  public toQueryResult(
+  toQueryResult(
     result: ApolloQueryResult<TData>,
   ): QueryResult<TData, TVariables> {
     let queryResult = this.toQueryResultCache.get(result);

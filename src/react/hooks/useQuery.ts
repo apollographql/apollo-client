@@ -2,7 +2,7 @@ import {
   useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { equal } from '@wry/equality';
-import { OperationVariables } from '../../core';
+import { mergeOptions, OperationVariables } from '../../core';
 import { ApolloContextValue, getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
@@ -18,13 +18,11 @@ import {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
-  QueryHookOptionsFunction,
 } from '../types/types';
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
-import { useNormalizedOptions } from './options';
 
 const {
   prototype: {
@@ -37,11 +35,8 @@ export function useQuery<
   TVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  optionsOrFunction?:
-    | QueryHookOptions<TData, TVariables>
-    | QueryHookOptionsFunction<TData, TVariables>
+  options: QueryHookOptions<TData, TVariables> = Object.create(null),
 ): QueryResult<TData, TVariables> {
-  const options = useNormalizedOptions(optionsOrFunction);
   return useInternalState(
     useApolloClient(options.client),
     query,
@@ -92,6 +87,15 @@ class InternalState<TData, TVariables> {
   // rules of React hooks: only at the top level of the calling function, and
   // without any dynamic conditional logic.
   public useQuery(options: QueryHookOptions<TData, TVariables>) {
+    // The renderPromises field gets initialized here in the useQuery method, at
+    // the beginning of everything (for a given component rendering, at least),
+    // so we can safely use this.renderPromises in other/later InternalState
+    // methods without worrying it might be uninitialized. Even after
+    // initialization, this.renderPromises is usually undefined (unless SSR is
+    // happening), but that's fine as long as it has been initialized that way,
+    // rather than left uninitialized.
+    this.renderPromises = useContext(getApolloContext()).renderPromises;
+
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
@@ -105,10 +109,10 @@ class InternalState<TData, TVariables> {
     return this.toQueryResult(result);
   }
 
-  // These members are all populated by the useOptions method, which is called
-  // unconditionally at the beginning of the useQuery method, so we can safely
-  // use these members in other/later methods without worrying about the
-  // possibility they might be undefined.
+  // These members (except for renderPromises) are all populated by the
+  // useOptions method, which is called unconditionally at the beginning of the
+  // useQuery method, so we can safely use these members in other/later methods
+  // without worrying they might be uninitialized.
   private renderPromises: ApolloContextValue["renderPromises"];
   private queryHookOptions: QueryHookOptions<TData, TVariables>;
   private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
@@ -117,11 +121,10 @@ class InternalState<TData, TVariables> {
   private useOptions(
     options: QueryHookOptions<TData, TVariables>,
   ) {
-    this.renderPromises = useContext(getApolloContext()).renderPromises;
-
     const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options,
     );
+
     // Update this.watchQueryOptions, but only when they have changed, which
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
@@ -129,10 +132,10 @@ class InternalState<TData, TVariables> {
       this.watchQueryOptions = watchQueryOptions;
     }
 
-    this.ssrDisabled = !!(options && (
+    this.ssrDisabled = !!(
       options.ssr === false ||
       options.skip
-    ));
+    );
 
     // Make sure state.onCompleted and state.onError always reflect the latest
     // options.onCompleted and options.onError callbacks provided to useQuery,
@@ -140,37 +143,87 @@ class InternalState<TData, TVariables> {
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
-
-    this.onCompleted = options
-      && options.onCompleted
-      || InternalState.prototype.onCompleted;
-
-    this.onError = options
-      && options.onError
-      || InternalState.prototype.onError;
+    this.onCompleted = options.onCompleted || InternalState.prototype.onCompleted;
+    this.onError = options.onError || InternalState.prototype.onError;
   }
 
   // A function to massage options before passing them to ObservableQuery.
-  private createWatchQueryOptions<TData, TVariables>({
+  private createWatchQueryOptions({
     skip,
     ssr,
     onCompleted,
     onError,
     displayName,
+    defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<TVariables, TData> {
-    // TODO: For some reason, we pass context, which is the React Apollo Context,
-    // into observable queries, and test for that.
+    // We use the mergeOptions helper function (which uses compact(...) and
+    // shallow-merges variables) to combine globalDefaults with any local
+    // defaultOptions provided to useQuery.
+    const toMerge: Partial<WatchQueryOptions<TVariables, TData>>[] = [];
+
+    // Merge global client.watchQuery default options with the lowest priority.
+    const globalDefaults = this.client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+
+    // Next, merge any defaultOptions passed directly to useQuery.
+    if (defaultOptions) toMerge.push(defaultOptions);
+
+    const latestOptions = this.observable && this.observable.options;
+    if (latestOptions && toMerge.length) {
+      // If we already have this.watchQueryOptions, those options should take
+      // precedence over default options of the same name. It might be simpler
+      // to do toMerge.push(this.watchQueryOptions), but that potentially
+      // (re)injects unrelated/unwanted options. Passing Object.create(null) as
+      // the second argument to toMerge.reduce ensures the result is a newly
+      // created object, so we can safely modify it in the forEach loop below.
+      const defaults = toMerge.reduce(mergeOptions, Object.create(null));
+
+      // Compact the toMerge array to hold only the merged defaults. This is
+      // equivalent to toMerge.splice(0, toMerge.length, defaults).
+      toMerge.length = 1;
+      toMerge[0] = defaults;
+
+      Object.keys(defaults).forEach(
+        (defaultOptionName: keyof WatchQueryOptions<TVariables, TData>) => {
+          const currentOptionValue = latestOptions[defaultOptionName];
+          if (
+            hasOwnProperty.call(latestOptions, defaultOptionName) &&
+            !equal(defaults[defaultOptionName], currentOptionValue)
+          ) {
+            // If you keep passing useQuery({ defaultOptions: { variables }}),
+            // those default variables continue to provide their default values
+            // every time, though in most cases this.watchQueryOptions.variables
+            // will have a current value for every default variable name, so the
+            // defaults don't matter. However, if a variable has been removed
+            // from this.watchQueryOptions.variables, future useQuery calls can
+            // restore its default value from defaultOptions.variables.
+            defaults[defaultOptionName] = defaultOptionName === "variables"
+              ? { ...defaults.variables, ...currentOptionValue }
+              : currentOptionValue;
+          }
+        },
+      );
+    }
+
+    // Give highest precedence to any non-default WatchQueryOptions passed
+    // directly to useQuery.
+    toMerge.push(otherOptions);
+
+    const merged = toMerge.reduce(mergeOptions, Object.create(null));
+
+    // This Object.assign is safe because merged is the fresh object created by
+    // the Object.create(null) argument to toMerge.reduce.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(otherOptions, { query: this.query });
+      Object.assign(merged, { query: this.query });
 
     if (skip) {
       watchQueryOptions.fetchPolicy = 'standby';
     } else if (
-      watchQueryOptions.context?.renderPromises &&
+      this.renderPromises &&
       (
         watchQueryOptions.fetchPolicy === 'network-only' ||
         watchQueryOptions.fetchPolicy === 'cache-and-network'
@@ -180,11 +233,10 @@ class InternalState<TData, TVariables> {
       // https://github.com/apollographql/react-apollo/pull/1579
       watchQueryOptions.fetchPolicy = 'cache-first';
     } else if (!watchQueryOptions.fetchPolicy) {
-      const defaultOptions = this.client.defaultOptions.watchQuery;
-      // cache-first is the default policy, but we explicitly assign it here so
-      // the cache policies computed based on options can be cleared
-      watchQueryOptions.fetchPolicy =
-        defaultOptions && defaultOptions.fetchPolicy || 'cache-first';
+      // We applied all available fetchPolicy default values above (from
+      // globalDefaults and defaultOptions), so, if fetchPolicy is still
+      // undefined, fall back to the default default (no typo), cache-first.
+      watchQueryOptions.fetchPolicy = 'cache-first';
     }
 
     if (!watchQueryOptions.variables) {

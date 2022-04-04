@@ -8,6 +8,7 @@ import {
   ApolloClient,
   ApolloError,
   NetworkStatus,
+  OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from '../../../core';
@@ -761,7 +762,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe("options functions", () => {
+  describe("options.defaultOptions", () => {
     it("can provide a default fetchPolicy", async () => {
       const query = gql`query { hello }`;
       const link = mockSingleLink(
@@ -774,33 +775,22 @@ describe('useQuery Hook', () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        ssrMode: true,
       });
 
-      const fetchPolicyLog: Array<{
-        oldFetchPolicy: string | undefined;
-        newFetchPolicy: string;
-      }> = [];
+      const fetchPolicyLog: (string | undefined)[] = [];
 
       let defaultFetchPolicy: WatchQueryFetchPolicy = "cache-and-network";
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, oldOptions => {
-          const {
-            fetchPolicy = defaultFetchPolicy,
-          } = oldOptions;
-
-          const newOptions = {
-            fetchPolicy,
-          };
-
-          fetchPolicyLog.push({
-            oldFetchPolicy: oldOptions.fetchPolicy,
-            newFetchPolicy: newOptions.fetchPolicy,
+        () => {
+          const result = useQuery(query, {
+            defaultOptions: {
+              fetchPolicy: defaultFetchPolicy,
+            },
           });
-
-          return newOptions;
-        }),
+          fetchPolicyLog.push(result.observable.options.fetchPolicy);
+          return result;
+        },
         {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>
@@ -813,10 +803,7 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
       expect(fetchPolicyLog).toEqual([
-        {
-          oldFetchPolicy: void 0,
-          newFetchPolicy: "cache-and-network",
-        },
+        "cache-and-network",
       ]);
 
       // Change the default fetchPolicy to verify that it is not used the second
@@ -828,43 +815,61 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'from link' });
       expect(fetchPolicyLog).toEqual([
-        {
-          oldFetchPolicy: void 0,
-          newFetchPolicy: "cache-and-network",
-        },
-        {
-          oldFetchPolicy: "cache-and-network",
-          newFetchPolicy: "cache-and-network",
-        },
+        "cache-and-network",
+        "cache-and-network",
       ]);
     });
 
-    it("can mutate old options object directly", async () => {
-      const query = gql`query { hello }`;
-      const link = mockSingleLink(
-        {
-          request: { query },
-          result: { data: { hello: 'from link' } },
-        },
-      );
+    it("can provide individual default variables", async () => {
+      const query: TypedDocumentNode<{
+        vars: OperationVariables,
+      }, OperationVariables> = gql`
+        query VarsQuery {
+          vars
+        }
+      `;
 
       const client = new ApolloClient({
-        link,
+        link: new ApolloLink(request => new Observable(observer => {
+          observer.next({
+            data: {
+              vars: request.variables,
+            },
+          });
+          observer.complete();
+        })),
+
         cache: new InMemoryCache(),
-        ssrMode: true,
+
+        defaultOptions: {
+          watchQuery: {
+            variables: {
+              sourceOfVar: "global",
+              isGlobal: true,
+            },
+          },
+        },
       });
 
-      const fetchPolicyLog: WatchQueryFetchPolicy[] = [];
-      let defaultFetchPolicy: WatchQueryFetchPolicy = "network-only";
+      const fetchPolicyLog: (string | undefined)[] = [];
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, options => {
-          if (!options.fetchPolicy) {
-            options.fetchPolicy = defaultFetchPolicy;
-          }
-          fetchPolicyLog.push(options.fetchPolicy);
-          return options;
-        }),
+        () => {
+          const result = useQuery(query, {
+            defaultOptions: {
+              fetchPolicy: "cache-and-network",
+              variables: {
+                sourceOfVar: "local",
+                isGlobal: false,
+              },
+            },
+            variables: {
+              mandatory: true,
+            },
+          });
+          fetchPolicyLog.push(result.observable.options.fetchPolicy);
+          return result;
+        },
         {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>
@@ -876,115 +881,132 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
-      expect(fetchPolicyLog).toEqual([
-        "network-only",
-      ]);
-
-      // Change the default fetchPolicy to verify that it is not used the second
-      // time useQuery is called.
-      defaultFetchPolicy = "cache-first";
-
-      await waitForNextUpdate();
-
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: 'from link' });
-      expect(fetchPolicyLog).toEqual([
-        "network-only",
-        "network-only",
-      ]);
-    });
-
-    it("can provide options.client without ApolloProvider", async () => {
-      const query = gql`query { hello }`;
-      const link = mockSingleLink(
-        {
-          request: { query },
-          result: { data: { hello: 'from link' } },
-        },
-      );
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-        ssrMode: true,
+      expect(result.current.observable.variables).toEqual({
+        sourceOfVar: "local",
+        isGlobal: false,
+        mandatory: true,
       });
 
-      const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, () => ({ client })),
-        // We deliberately do not provide the usual ApolloProvider wrapper for
-        // this test, since we are providing the client directly to useQuery.
-        // {
-        //   wrapper: ({ children }) => (
-        //     <ApolloProvider client={client}>
-        //       {children}
-        //     </ApolloProvider>
-        //   ),
-        // }
-      );
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-and-network");
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBeUndefined();
+      expect(
+        // The defaultOptions field is for useQuery options (QueryHookOptions),
+        // not the more general WatchQueryOptions that ObservableQuery sees.
+        "defaultOptions" in result.current.observable.options
+      ).toBe(false);
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+      ]);
 
       await waitForNextUpdate();
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: 'from link' });
-    });
-
-    it("leaves options unchanged if omitted from returned object", async () => {
-      const query = gql`query { hello }`;
-      const defaultVariables = {
-        first: true,
-      };
-      const link = mockSingleLink(
-        {
-          request: { query, variables: defaultVariables },
-          result: { data: { hello: 'from link' } },
+      expect(result.current.data).toEqual({
+        vars: {
+          sourceOfVar: "local",
+          isGlobal: false,
+          mandatory: true,
         },
-      );
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-        ssrMode: true,
       });
 
-      const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, oldOptions => {
-          const newOptions = { client, ...oldOptions };
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+      ]);
 
-          if (newOptions.variables) {
-            // If oldOptions.variables was defined, then it will be preserved
-            // when newOptions are Object.assign'd into the oldOptions, even if
-            // we remove newOptions.variables here.
-            delete newOptions.variables;
-          } else {
-            // We need to return newOptions.variables at least once to get them
-            // into the effective options, though.
-            newOptions.variables = defaultVariables;
-          }
+      const reobservePromise = result.current.observable.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          sourceOfVar: "reobserve",
+        },
+      }).then(finalResult => {
+        expect(finalResult.loading).toBe(false);
+        expect(finalResult.data).toEqual({
+          vars: {
+            sourceOfVar: "reobserve",
+            isGlobal: false,
+            mandatory: true,
+          },
+        });
+      });
 
-          return newOptions;
-        }),
-        // We deliberately do not provide the usual ApolloProvider wrapper for
-        // this test, since we are providing the client directly to useQuery.
-        // {
-        //   wrapper: ({ children }) => (
-        //     <ApolloProvider client={client}>
-        //       {children}
-        //     </ApolloProvider>
-        //   ),
-        // }
-      );
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("network-only");
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBeUndefined();
+      expect(result.current.observable.variables).toEqual({
+        sourceOfVar: "reobserve",
+        isGlobal: false,
+        mandatory: true,
+      });
 
-      await waitForNextUpdate();
+      await reobservePromise;
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: 'from link' });
+      expect(result.current.data).toEqual({
+        vars: {
+          sourceOfVar: "reobserve",
+          isGlobal: false,
+          mandatory: true,
+        },
+      });
+      expect(
+        result.current.observable.variables
+      ).toEqual(
+        result.current.data!.vars
+      );
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+        "cache-first",
+      ]);
     });
+  });
+
+  it("can provide options.client without ApolloProvider", async () => {
+    const query = gql`query { hello }`;
+    const link = mockSingleLink(
+      {
+        request: { query },
+        result: { data: { hello: 'from link' } },
+      },
+    );
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      ssrMode: true,
+    });
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useQuery(query, { client }),
+      // We deliberately do not provide the usual ApolloProvider wrapper for
+      // this test, since we are providing the client directly to useQuery.
+      // {
+      //   wrapper: ({ children }) => (
+      //     <ApolloProvider client={client}>
+      //       {children}
+      //     </ApolloProvider>
+      //   ),
+      // }
+    );
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.data).toBeUndefined();
+
+    await waitForNextUpdate();
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data).toEqual({ hello: 'from link' });
   });
 
   describe('polling', () => {

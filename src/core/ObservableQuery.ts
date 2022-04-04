@@ -5,7 +5,6 @@ import { equal } from '@wry/equality';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   Concast,
-  compact,
   cloneDeep,
   getOperationDefinition,
   Observable,
@@ -29,6 +28,7 @@ import {
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
 import { MissingTree } from '../cache/core/types/common';
+import { mergeOptions } from './ApolloClient';
 
 const {
   assign,
@@ -756,11 +756,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     // Save the old variables, since Object.assign may modify them below.
     const oldVariables = this.options.variables;
 
+    const mergedOptions = mergeOptions(this.options, newOptions || {});
     const options = useDisposableConcast
       // Disposable Concast fetches receive a shallow copy of this.options
       // (merged with newOptions), leaving this.options unmodified.
-      ? compact(this.options, newOptions)
-      : assign(this.options, compact(newOptions));
+      ? mergedOptions
+      : assign(this.options, mergedOptions);
 
     if (!useDisposableConcast) {
       // We can skip calling updatePolling if we're not changing this.options.

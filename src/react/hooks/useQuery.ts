@@ -43,7 +43,7 @@ export function useQuery<
   ).useQuery(options);
 }
 
-function useInternalState<TData, TVariables>(
+export function useInternalState<TData, TVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ) {
@@ -79,14 +79,14 @@ class InternalState<TData, TVariables> {
     verifyDocumentType(query, DocumentType.Query);
   }
 
-  public forceUpdate() {
+  forceUpdate() {
     // Replaced (in useInternalState) with a method that triggers an update.
   }
 
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
   // without any dynamic conditional logic.
-  public useQuery(options: QueryHookOptions<TData, TVariables>) {
+  useQuery(options: QueryHookOptions<TData, TVariables>) {
     // The renderPromises field gets initialized here in the useQuery method, at
     // the beginning of everything (for a given component rendering, at least),
     // so we can safely use this.renderPromises in other/later InternalState
@@ -220,9 +220,7 @@ class InternalState<TData, TVariables> {
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
       Object.assign(merged, { query: this.query });
 
-    if (skip) {
-      watchQueryOptions.fetchPolicy = 'standby';
-    } else if (
+    if (
       this.renderPromises &&
       (
         watchQueryOptions.fetchPolicy === 'network-only' ||
@@ -237,6 +235,24 @@ class InternalState<TData, TVariables> {
       // globalDefaults and defaultOptions), so, if fetchPolicy is still
       // undefined, fall back to the default default (no typo), cache-first.
       watchQueryOptions.fetchPolicy = 'cache-first';
+    }
+
+    if (skip) {
+      const {
+        // The watchQueryOptions.initialFetchPolicy field usually defaults to
+        // watchQueryOptions.fetchPolicy, which has now been properly
+        // defaulted/initialized. However, watchQueryOptions.initialFetchPolicy
+        // can be provided explicitly instead, if more control is desired.
+        initialFetchPolicy = watchQueryOptions.fetchPolicy,
+      } = watchQueryOptions;
+
+      // When skipping, we set watchQueryOptions.fetchPolicy initially to
+      // "standby", but we also need/want to preserve the initial non-standby
+      // fetchPolicy that would have been used if not skipping.
+      Object.assign(watchQueryOptions, {
+        initialFetchPolicy,
+        fetchPolicy: 'standby',
+      });
     }
 
     if (!watchQueryOptions.variables) {
@@ -270,6 +286,7 @@ class InternalState<TData, TVariables> {
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
+      reobserve: obsQuery.reobserve.bind(obsQuery),
       fetchMore: obsQuery.fetchMore.bind(obsQuery),
       updateQuery: obsQuery.updateQuery.bind(obsQuery),
       startPolling: obsQuery.startPolling.bind(obsQuery),
@@ -466,7 +483,7 @@ class InternalState<TData, TVariables> {
       };
     } else if (
       this.queryHookOptions.skip ||
-      this.queryHookOptions.fetchPolicy === 'standby'
+      this.watchQueryOptions.fetchPolicy === 'standby'
     ) {
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is
@@ -497,7 +514,7 @@ class InternalState<TData, TVariables> {
     QueryResult<TData, TVariables>
   >();
 
-  private toQueryResult(
+  toQueryResult(
     result: ApolloQueryResult<TData>,
   ): QueryResult<TData, TVariables> {
     let queryResult = this.toQueryResultCache.get(result);

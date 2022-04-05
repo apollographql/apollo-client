@@ -1,19 +1,23 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
+import { ApolloError } from '../../errors';
 import {
   LazyQueryHookOptions,
-  QueryLazyOptions,
-  QueryTuple,
+  LazyQueryResultTuple,
+  QueryResult,
 } from '../types/types';
-import { useQuery } from './useQuery';
+import { useInternalState } from './useQuery';
+import { useApolloClient } from './useApolloClient';
+import { isNonEmptyArray } from '../../utilities';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
 const EAGER_METHODS = [
   'refetch',
+  'reobserve',
   'fetchMore',
   'updateQuery',
   'startPolling',
@@ -23,66 +27,90 @@ const EAGER_METHODS = [
 export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
-): QueryTuple<TData, TVariables> {
-  const [execution, setExecution] = useState<{
-    called: boolean,
-    options?: QueryLazyOptions<TVariables>,
-  }>({
-    called: false,
-  });
+): LazyQueryResultTuple<TData, TVariables> {
+  const internalState = useInternalState(
+    useApolloClient(options && options.client),
+    query,
+  );
 
-  let result = useQuery<TData, TVariables>(query, {
+  const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
+  const defaultOptions = internalState.client.defaultOptions.watchQuery;
+  const initialFetchPolicy =
+    (options && options.fetchPolicy) ||
+    (execOptionsRef.current && execOptionsRef.current.fetchPolicy) ||
+    (defaultOptions && defaultOptions.fetchPolicy) ||
+    "cache-first";
+
+  const useQueryResult = internalState.useQuery({
     ...options,
-    ...execution.options,
-    // We don’t set skip to execution.called, because some useQuery SSR code
-    // checks skip for some reason.
-    fetchPolicy: execution.called ? options?.fetchPolicy : 'standby',
-    skip: undefined,
+    ...execOptionsRef.current,
+    skip: !execOptionsRef.current,
   });
 
-  if (!execution.called) {
-    result = {
-      ...result,
-      loading: false,
-      data: void 0 as unknown as TData,
-      error: void 0,
-      called: false,
-    };
-  }
+  const result: QueryResult<TData, TVariables> =
+    Object.assign(useQueryResult, {
+      called: !!execOptionsRef.current,
+    });
 
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = result[key];
-      eagerMethods[key] = (...args: any) => {
-        setExecution((execution) => ({ ...execution, called: true }));
-        return (method as any)(...args);
+      eagerMethods[key] = function () {
+        if (!execOptionsRef.current) {
+          execOptionsRef.current = Object.create(null);
+          // Only the first time populating execOptionsRef.current matters here.
+          internalState.forceUpdate();
+        }
+        return method.apply(this, arguments);
       };
     }
 
     return eagerMethods;
   }, []);
 
-  result.error = result.error || void 0;
   Object.assign(result, eagerMethods);
 
   const execute = useCallback<
-    QueryTuple<TData, TVariables>[0]
-  >((executeOptions?: QueryLazyOptions<TVariables>) => {
-    setExecution({ called: true, options: executeOptions });
-    const promise = result.refetch(executeOptions?.variables).then((result1) => {
-      const result2 = {
-        ...result,
-        data: result1.data,
-        error: result1.error,
-        called: true,
-        loading: false,
-      };
+    LazyQueryResultTuple<TData, TVariables>[0]
+  >(executeOptions => {
+    const promise = result.reobserve(
+      execOptionsRef.current = executeOptions ? {
+        ...executeOptions,
+        fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
+      } : {
+        fetchPolicy: initialFetchPolicy,
+      },
+    ).then(apolloQueryResult => {
+      // If this.observable.options.fetchPolicy is "standby", the
+      // apolloQueryResult we receive here can be undefined, so we call
+      // getCurrentResult to obtain a stub result.
+      // TODO Investigate whether standby queries could return this stub result
+      // in the first place.
+      apolloQueryResult = apolloQueryResult || internalState["getCurrentResult"]();
 
-      Object.assign(result2, eagerMethods);
-      return result2;
-    });
+      if (
+        apolloQueryResult.error ||
+        isNonEmptyArray(apolloQueryResult.errors)
+      ) {
+        const {
+          errorPolicy = "none",
+        } = result.observable.options;
+
+        if (errorPolicy === "none") {
+          throw apolloQueryResult.error || new ApolloError({
+            graphQLErrors: apolloQueryResult.errors,
+          });
+        }
+      }
+
+      return internalState.toQueryResult(apolloQueryResult);
+
+    }).then(queryResult => Object.assign(queryResult, eagerMethods));
+
+    // Deliver the loading state for this reobservation immediately.
+    internalState.forceUpdate();
 
     // Because the return value of `useLazyQuery` is usually floated, we need
     // to catch the promise to prevent unhandled rejections.

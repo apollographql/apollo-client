@@ -8,10 +8,7 @@ import { ApolloError } from '../../errors';
 import {
   ApolloCache,
   ApolloClient,
-  ApolloQueryResult,
   DefaultContext,
-  FetchMoreOptions,
-  FetchMoreQueryOptions,
   FetchPolicy,
   MutationOptions,
   NetworkStatus,
@@ -62,20 +59,10 @@ export type ObservableQueryFields<TData, TVariables> = Pick<
   | 'subscribeToMore'
   | 'updateQuery'
   | 'refetch'
+  | 'reobserve'
   | 'variables'
-> & {
-  fetchMore: ((
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> &
-      FetchMoreOptions<TData, TVariables>
-  ) => Promise<ApolloQueryResult<TData>>) &
-    (<TData2, TVariables2>(
-      fetchMoreOptions: { query?: DocumentNode | TypedDocumentNode<TData, TVariables> } & FetchMoreQueryOptions<
-        TVariables2,
-        TData
-      > &
-        FetchMoreOptions<TData2, TVariables2>
-    ) => Promise<ApolloQueryResult<TData2>>);
-};
+  | 'fetchMore'
+>;
 
 export interface QueryResult<TData = any, TVariables = OperationVariables>
   extends ObservableQueryFields<TData, TVariables> {
@@ -103,21 +90,34 @@ export interface QueryHookOptions<TData = any, TVariables = OperationVariables>
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables = OperationVariables
-> extends Omit<QueryFunctionOptions<TData, TVariables>, 'skip'> {
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
+> extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {}
 
+/**
+ * @deprecated TODO Delete this unused interface.
+ */
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;
   context?: DefaultContext;
 }
 
-// TODO: Delete this
+/**
+ * @deprecated TODO Delete this unused type alias.
+ */
 export type LazyQueryResult<TData, TVariables> = QueryResult<TData, TVariables>;
 
-export type QueryTuple<TData, TVariables> = [
-  (options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
-  LazyQueryResult<TData, TVariables>
+/**
+ * @deprecated TODO Delete this unused type alias.
+ */
+export type QueryTuple<TData, TVariables> =
+  LazyQueryResultTuple<TData, TVariables>;
+
+export type LazyQueryExecFunction<TData, TVariables> = (
+  options?: Partial<LazyQueryHookOptions<TData, TVariables>>,
+) => Promise<QueryResult<TData, TVariables>>;
+
+export type LazyQueryResultTuple<TData, TVariables> = [
+  LazyQueryExecFunction<TData, TVariables>,
+  QueryResult<TData, TVariables>,
 ];
 
 /* Mutation types */

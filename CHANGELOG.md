@@ -17,6 +17,9 @@
 - Remove nagging deprecation warning about passing an `options.updateQuery` function to `fetchMore`. <br/>
   [@benjamn](https://github.com/benjamn) in [#9504](https://github.com/apollographql/apollo-client/pull/9504)
 
+- Fixed bug where the `useLazyQuery` execution function would always use the `refetch` method of `ObservableQuery`, instead of properly reapplying the current `fetchPolicy` using the `reobserve` method. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9564](https://github.com/apollographql/apollo-client/pull/9564)
+
 ### Potentially disruptive changes
 
 - Calling `fetchMore` for queries using the `cache-and-network` or `network-only` fetch policies should no longer trigger additional network requests when cache results are complete. <br/>

@@ -22,7 +22,6 @@ import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  WatchQueryFetchPolicy,
   NextFetchPolicyContext,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
@@ -71,10 +70,6 @@ export class ObservableQuery<
   public get variables(): TVariables | undefined {
     return this.options.variables;
   }
-
-  // Original value of this.options.fetchPolicy (defaulting to "cache-first"),
-  // from whenever the ObservableQuery was first created.
-  private initialFetchPolicy: WatchQueryFetchPolicy;
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
@@ -145,14 +140,18 @@ export class ObservableQuery<
     // active state
     this.isTornDown = false;
 
-    // query information
-    this.options = options;
+    this.options = {
+      // Remember the initial options.fetchPolicy so we can revert back to this
+      // policy when variables change. This information can also be specified
+      // (or overridden) by providing options.initialFetchPolicy explicitly.
+      initialFetchPolicy: options.fetchPolicy || "cache-first",
+      ...options,
+    };
+
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
 
     const opDef = getOperationDefinition(options.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
-
-    this.initialFetchPolicy = options.fetchPolicy || "cache-first";
 
     // related classes
     this.queryManager = queryManager;
@@ -565,7 +564,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     return this.reobserve({
       // Reset options.fetchPolicy to its original value.
-      fetchPolicy: this.initialFetchPolicy,
+      fetchPolicy: this.options.initialFetchPolicy,
       variables,
     }, NetworkStatus.setVariables);
   }
@@ -616,10 +615,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     // options.fetchPolicy even if options !== this.options, though that happens
     // most often when the options are temporary, used for only one request and
     // then thrown away, so nextFetchPolicy may not end up mattering.
-    options: WatchQueryOptions<TVariables, TData> = this.options,
+    options: WatchQueryOptions<TVariables, TData>,
   ) {
     if (options.nextFetchPolicy) {
-      const { fetchPolicy = "cache-first" } = options;
+      const {
+        fetchPolicy = "cache-first",
+        initialFetchPolicy = fetchPolicy,
+      } = options;
 
       // When someone chooses "cache-and-network" or "network-only" as their
       // initial FetchPolicy, they often do not want future cache updates to
@@ -631,15 +633,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // options.nextFetchPolicy option provides an easy way to update
       // options.fetchPolicy after the initial network request, without having to
       // call observableQuery.setOptions.
+
       if (typeof options.nextFetchPolicy === "function") {
         options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
           reason,
           options,
           observable: this,
-          initialPolicy: this.initialFetchPolicy,
+          initialFetchPolicy,
         });
       } else if (reason === "variables-changed") {
-        options.fetchPolicy = this.initialFetchPolicy;
+        options.fetchPolicy = initialFetchPolicy;
       } else {
         options.fetchPolicy = options.nextFetchPolicy;
       }
@@ -755,6 +758,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     // Save the old variables, since Object.assign may modify them below.
     const oldVariables = this.options.variables;
+    const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = mergeOptions(this.options, newOptions || {});
     const options = useDisposableConcast
@@ -772,10 +776,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       if (
         newOptions &&
         newOptions.variables &&
-        !newOptions.fetchPolicy &&
-        !equal(newOptions.variables, oldVariables)
+        !equal(newOptions.variables, oldVariables) &&
+        (!newOptions.fetchPolicy || newOptions.fetchPolicy === oldFetchPolicy)
       ) {
-        this.applyNextFetchPolicy("variables-changed");
+        this.applyNextFetchPolicy("variables-changed", options);
         if (newNetworkStatus === void 0) {
           newNetworkStatus = NetworkStatus.setVariables;
         }

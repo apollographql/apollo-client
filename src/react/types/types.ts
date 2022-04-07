@@ -195,6 +195,8 @@ export type MutationTuple<
 > = [
   (
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
+    // TODO This FetchResult<TData> seems strange here, as opposed to an
+    // ApolloQueryResult<TData>
   ) => Promise<FetchResult<TData>>,
   MutationResult<TData>,
 ];

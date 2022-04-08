@@ -1,6 +1,5 @@
 ---
 title: Batch HTTP Link
-sidebar_title: HTTP Batch
 description: Batch multiple operations into a single HTTP request
 ---
 
@@ -11,7 +10,7 @@ The `BatchHttpLink` is a terminating link that batches an array of individual Gr
 ```js
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 
-const link = new BatchHttpLink({ 
+const link = new BatchHttpLink({
   uri: "http://localhost:4000/graphql",
   batchMax: 5, // No more than 5 operations per batch
   batchInterval: 20 // Wait no more than 20ms after first batched operation
@@ -233,7 +232,7 @@ The context `http` object currently supports two keys:
 * `includeExtensions`: Send the extensions object for this request.
 * `includeQuery`: Don't send the `query` field for this request.
 
-One way to use persisted queries is with [apollo-link-persisted-queries](https://github.com/apollographql/apollo-link-persisted-queries) and [Apollo Server](https://www.apollographql.com/docs/apollo-server/performance/apq/).
+One way to use persisted queries is with [apollo-link-persisted-queries](https://github.com/apollographql/apollo-link-persisted-queries) and [Apollo Server](/apollo-server/performance/apq/).
 
 ## Custom fetching
 

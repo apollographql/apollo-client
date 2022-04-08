@@ -1,10 +1,9 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   LazyQueryHookOptions,
-  LazyQueryResult,
   QueryLazyOptions,
   QueryTuple,
 } from '../types/types';
@@ -25,54 +24,21 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
 ): QueryTuple<TData, TVariables> {
-  const [execution, setExecution] = useState<
-    {
-      called: boolean,
-      options?: QueryLazyOptions<TVariables>,
-      resolves: Array<(result: LazyQueryResult<TData, TVariables>) => void>,
-    }
-  >({
+  const [execution, setExecution] = useState<{
+    called: boolean,
+    options?: QueryLazyOptions<TVariables>,
+  }>({
     called: false,
-    resolves: [],
   });
-
-  const execute = useCallback<
-    QueryTuple<TData, TVariables>[0]
-  >((executeOptions?: QueryLazyOptions<TVariables>) => {
-    let resolve!: (result: LazyQueryResult<TData, TVariables>) => void;
-    const promise = new Promise<LazyQueryResult<TData, TVariables>>(
-      (resolve1) => (resolve = resolve1),
-    );
-    setExecution((execution) => {
-      if (execution.called) {
-        result && result.refetch(executeOptions?.variables);
-      }
-
-      return {
-        called: true,
-        resolves: [...execution.resolves, resolve],
-        options: executeOptions,
-      };
-    });
-
-    return promise;
-  }, []);
 
   let result = useQuery<TData, TVariables>(query, {
     ...options,
     ...execution.options,
-    // We don’t set skip to execution.called, because we need useQuery to call
-    // addQueryPromise, so that ssr calls waits for execute to be called.
+    // We don’t set skip to execution.called, because some useQuery SSR code
+    // checks skip for some reason.
     fetchPolicy: execution.called ? options?.fetchPolicy : 'standby',
     skip: undefined,
   });
-  useEffect(() => {
-    const { resolves } = execution;
-    if (!result.loading && resolves.length) {
-      setExecution((execution) => ({ ...execution, resolves: [] }));
-      resolves.forEach((resolve) => resolve(result));
-    }
-  }, [result, execution]);
 
   if (!execution.called) {
     result = {
@@ -80,20 +46,50 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
       loading: false,
       data: void 0 as unknown as TData,
       error: void 0,
-      // TODO: fix the type of result
-      called: false as any,
+      called: false,
     };
+  }
 
-
+  // We use useMemo here to make sure the eager methods have a stable identity.
+  const eagerMethods = useMemo(() => {
+    const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = result[key];
-      result[key] = (...args: any) => {
+      eagerMethods[key] = (...args: any) => {
         setExecution((execution) => ({ ...execution, called: true }));
         return (method as any)(...args);
       };
     }
-  }
 
-  // TODO: fix the type of result
-  return [execute, result as LazyQueryResult<TData, TVariables>];
+    return eagerMethods;
+  }, []);
+
+  result.error = result.error || void 0;
+  Object.assign(result, eagerMethods);
+
+  const execute = useCallback<
+    QueryTuple<TData, TVariables>[0]
+  >((executeOptions?: QueryLazyOptions<TVariables>) => {
+    setExecution({ called: true, options: executeOptions });
+    const promise = result.refetch(executeOptions?.variables).then((result1) => {
+      const result2 = {
+        ...result,
+        data: result1.data,
+        error: result1.error,
+        called: true,
+        loading: false,
+      };
+
+      Object.assign(result2, eagerMethods);
+      return result2;
+    });
+
+    // Because the return value of `useLazyQuery` is usually floated, we need
+    // to catch the promise to prevent unhandled rejections.
+    promise.catch(() => {});
+
+    return promise;
+  }, []);
+
+  return [execute, result];
 }

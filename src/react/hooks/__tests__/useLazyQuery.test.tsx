@@ -1,4 +1,5 @@
 import React from 'react';
+import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { renderHook } from '@testing-library/react-hooks';
 
@@ -450,6 +451,7 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].previousData).toBe(undefined);
 
     setTimeout(() => execute({ variables: { id: 2 }}));
+
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
     expect(result.current[1].data).toBe(undefined);
@@ -530,8 +532,10 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
     const execute = result.current[0];
-    const mock = jest.fn();
-    setTimeout(() => mock(execute()));
+    let executeResult: any;
+    setTimeout(() => {
+      executeResult = execute();
+    });
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
@@ -539,9 +543,221 @@ describe('useLazyQuery Hook', () => {
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'world' });
+    await expect(executeResult).resolves.toEqual(result.current[1]);
+  });
 
-    expect(mock).toHaveBeenCalledTimes(1);
-    expect(mock.mock.calls[0][0]).toBeInstanceOf(Promise);
-    expect(await mock.mock.calls[0][0]).toEqual(result.current[1]);
+  it('should have matching results from execution function and hook', async () => {
+    const query = gql`
+      query GetCountries($filter: String) {
+        countries(filter: $filter) {
+          code
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: {
+          query,
+          variables: {
+            filter: "PA",
+          },
+        },
+        result: {
+          data: {
+            countries: {
+              code: "PA",
+              name: "Panama",
+            },
+          },
+        },
+        delay: 20,
+      },
+      {
+        request: {
+          query,
+          variables: {
+            filter: "BA",
+          },
+        },
+        result: {
+          data: {
+            countries: {
+              code: "BA",
+              name: "Bahamas",
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      },
+    );
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    const execute = result.current[0];
+    let executeResult: any;
+    setTimeout(() => {
+      executeResult = execute({ variables: { filter: "PA" } });
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({
+      countries: {
+        code: "PA",
+        name: "Panama",
+      },
+    });
+
+    expect(executeResult).toBeInstanceOf(Promise);
+    expect((await executeResult).data).toEqual({
+      countries: {
+        code: "PA",
+        name: "Panama",
+      },
+    });
+
+    setTimeout(() => {
+      executeResult = execute({ variables: { filter: "BA" } });
+    });
+
+    await waitForNextUpdate();
+    // TODO: Get rid of this render.
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toEqual({
+      countries: {
+        code: "BA",
+        name: "Bahamas",
+      },
+    });
+
+    expect(executeResult).toBeInstanceOf(Promise);
+    expect((await executeResult).data).toEqual({
+      countries: {
+        code: "BA",
+        name: "Bahamas",
+      },
+    });
+  });
+
+  it('the promise should reject with errors the “way useMutation does”', async () => {
+    const query = gql`{ hello }`;
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('error 1')],
+        },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('error 2')],
+        },
+        delay: 20,
+      },
+    ];
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      },
+    );
+
+    const execute = result.current[0];
+    let executeResult: any;
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    setTimeout(() => {
+      executeResult = execute();
+      executeResult.catch(() => {});
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toBe(undefined);
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toEqual(new Error('error 1'));
+
+    await expect(executeResult).rejects.toEqual(new Error('error 1'));
+
+    setTimeout(() => {
+      executeResult = execute();
+      executeResult.catch(() => {});
+    });
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toEqual(new Error('error 1'));
+
+    await waitForNextUpdate();
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].error).toEqual(new Error('error 2'));
+
+    await expect(executeResult).rejects.toEqual(new Error('error 2'));
+  });
+
+  it('the promise should not cause an unhandled rejection', async () => {
+    const query = gql`{ hello }`;
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('error 1')],
+        },
+      },
+    ];
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        ),
+      },
+    );
+
+    const execute = result.current[0];
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    setTimeout(() => {
+      execute();
+    });
+
+    await waitForNextUpdate();
+
+    // Making sure the rejection triggers a test failure.
+    await new Promise((resolve) => setTimeout(resolve, 50));
   });
 });

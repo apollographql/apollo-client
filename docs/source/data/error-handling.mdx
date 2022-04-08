@@ -1,9 +1,7 @@
 ---
 title: Handling operation errors
-sidebar_title: Error handling
 ---
 
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 import LinkChain from '../../shared/link-chain.mdx';
 
 Apollo Client can encounter a variety of errors when executing operations on your GraphQL server. Apollo Client helps you handle these errors according to their type, enabling you to show appropriate information to the user when an error occurs.
@@ -22,7 +20,7 @@ These are errors related to the server-side execution of a GraphQL operation. Th
 
 If a syntax error or validation error occurs, your server doesn't execute the operation at all because it's invalid. If resolver errors occur, your server can still return [partial data](#partial-data-with-resolver-errors).
 
-> Learn more about GraphQL errors in the [Apollo Server documentation](https://www.apollographql.com/docs/apollo-server/data/errors/).
+> Learn more about GraphQL errors in the [Apollo Server documentation](/apollo-server/data/errors/).
 
 If a GraphQL error occurs, your server includes it in the `errors` array of its response to Apollo Client:
 
@@ -106,7 +104,7 @@ Apollo Client supports the following error policies for an operation:
 
 Specify an error policy in the options object you provide your operation hook (such as `useQuery`), like so:
 
-```tsx{9}
+```tsx {9}
 const MY_QUERY = gql`
   query WillFail {
     badField # This field's resolver produces an error
@@ -164,7 +162,7 @@ The `onError` link can retry a failed operation based on the type of GraphQL err
 
 To retry an operation, you `return forward(operation)` in your `onError` function. Here's an example:
 
-```js{18}
+```js {18}
 onError(({ graphQLErrors, networkError, operation, forward }) => {
   if (graphQLErrors) {
     for (let err of graphQLErrors) {

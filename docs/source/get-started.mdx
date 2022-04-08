@@ -1,11 +1,10 @@
 ---
 title: Get started with Apollo Client
-sidebar_title: Get started
 ---
 
 Hello! This short tutorial gets you up and running with Apollo Client.
 
-> For a more complete introduction to the entire Apollo platform, [check out **Odyssey**, Apollo's new learning platform](https://odyssey.apollographql.com?utm_source=apollo_docs&utm_medium=referral). You can also complete the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/).
+> For a more complete introduction to the entire Apollo platform, [check out **Odyssey**, Apollo's new learning platform](https://odyssey.apollographql.com?utm_source=apollo_docs&utm_medium=referral). You can also complete the [full-stack tutorial](/tutorial/introduction/).
 
 ## 1. Setup
 
@@ -32,7 +31,7 @@ Now that we have the dependencies we need, let's initialize an `ApolloClient` in
 
 In `index.js`, let's first import the symbols we need from `@apollo/client`:
 
-```js:title=index.js
+```js title="index.js"
 import {
   ApolloClient,
   InMemoryCache,
@@ -42,10 +41,10 @@ import {
 } from "@apollo/client";
 ```
 
-Next we'll initialize `ApolloClient`, passing its constructor a configuration object with `uri` and `cache` fields: 
+Next we'll initialize `ApolloClient`, passing its constructor a configuration object with `uri` and `cache` fields:
 
 
-```js:title=index.js
+```js title="index.js"
 const client = new ApolloClient({
   uri: 'https://48p1r2roz4.sse.codesandbox.io',
   cache: new InMemoryCache()
@@ -59,7 +58,7 @@ That's it! Our `client` is ready to start fetching data. Now before we start usi
 
 In the same `index.js` file, call `client.query()` with the query string (wrapped in the `gql` template literal) shown below:
 
-```js:title=index.js
+```js title="index.js"
 // const client = ...
 
 client
@@ -87,7 +86,7 @@ You connect Apollo Client to React with the `ApolloProvider` component. Similar 
 
 In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest putting the `ApolloProvider` somewhere high in your app, above any component that might need to access GraphQL data.
 
-```jsx{25-27}:title=index.js
+```jsx title="index.js" {25-27}
 import React from 'react';
 import { render } from 'react-dom';
 import {
@@ -125,7 +124,7 @@ After your `ApolloProvider` is hooked up, you can start requesting data with `us
 
 Still in `index.js`, let's first define the query we want to execute by wrapping it in the `gql` template literal:
 
-```js:title=index.js
+```js title="index.js"
 const EXCHANGE_RATES = gql`
   query GetExchangeRates {
     rates(currency: "USD") {
@@ -138,7 +137,7 @@ const EXCHANGE_RATES = gql`
 
 Next, let's define a component called `ExchangeRates` that executes our `GetExchangeRates` query with the `useQuery` hook:
 
-```js{2}:title=index.js
+```js title="index.js" {2}
 function ExchangeRates() {
   const { loading, error, data } = useQuery(EXCHANGE_RATES);
 
@@ -162,7 +161,7 @@ Whenever this component renders, the `useQuery` hook automatically executes our 
 
 Finally, we'll add `ExchangeRates` to our existing component tree:
 
-```jsx{5}:title=index.js
+```jsx title="index.js" {5}
 function App() {
   return (
     <div>

@@ -1,4 +1,4 @@
-import { print } from 'graphql';
+import { DocumentNode, Kind, print } from 'graphql';
 import gql from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
 
@@ -651,6 +651,120 @@ describe('query transforms', () => {
     `;
 
     expect(print(expectedQuery)).toBe(print(newQueryDoc));
+  });
+
+  it('should be capable of modifying any ASTNode', () => {
+    const originalQuery = gql`
+      query withFragments {
+        user(id: 4) {
+          friends(first: 10) {
+            ...friendFields
+          }
+        }
+      }
+
+      fragment friendFields on User {
+        firstName
+        lastName
+      }
+    `;
+
+    const fragmentSubtree: DocumentNode = {
+      ...originalQuery,
+      definitions: originalQuery.definitions.map(def => {
+        if (def.kind === Kind.FRAGMENT_DEFINITION) {
+          return addTypenameToDocument(def);
+        }
+        return def;
+      }),
+    };
+
+    expect(print(fragmentSubtree)).toEqual(print(gql`
+      query withFragments {
+        user(id: 4) {
+          friends(first: 10) {
+            ...friendFields
+          }
+        }
+      }
+
+      fragment friendFields on User {
+        firstName
+        lastName
+        __typename
+      }
+    `));
+
+    const userFieldSubtree: DocumentNode = {
+      ...originalQuery,
+      definitions: originalQuery.definitions.map(def => {
+        if (def.kind === Kind.OPERATION_DEFINITION) {
+          return {
+            ...def,
+            selectionSet: {
+              ...def.selectionSet,
+              selections: def.selectionSet.selections.map(selection => {
+                if (
+                  selection.kind === Kind.FIELD &&
+                  selection.name.value === "user"
+                ) {
+                  return addTypenameToDocument(selection);
+                }
+                return selection;
+              }),
+            },
+          };
+        }
+        return def;
+      }),
+    };
+
+    expect(print(userFieldSubtree)).toEqual(print(gql`
+      query withFragments {
+        user(id: 4) {
+          friends(first: 10) {
+            ...friendFields
+            __typename
+          }
+          __typename
+        }
+      }
+
+      fragment friendFields on User {
+        firstName
+        lastName
+      }
+    `));
+
+    const wholeQueryFromJustTheFragment =
+      addTypenameToDocument(userFieldSubtree);
+
+    const wholeQueryFromUserFieldSubtree =
+      addTypenameToDocument(fragmentSubtree);
+
+    expect(
+      print(wholeQueryFromUserFieldSubtree)
+    ).toEqual(
+      print(wholeQueryFromJustTheFragment)
+    );
+
+    expect(print(wholeQueryFromUserFieldSubtree)).toEqual(print(gql`
+      query withFragments {
+        user(id: 4) {
+          friends(first: 10) {
+            ...friendFields
+            __typename
+          }
+          __typename
+        }
+      }
+
+      fragment friendFields on User {
+        firstName
+        lastName
+        __typename
+      }
+    `));
   });
 
   it('should be able to apply a QueryTransformer correctly', () => {

@@ -20,6 +20,9 @@
 - Fixed bug where the `useLazyQuery` execution function would always use the `refetch` method of `ObservableQuery`, instead of properly reapplying the current `fetchPolicy` using the `reobserve` method. <br/>
   [@benjamn](https://github.com/benjamn) in [#9564](https://github.com/apollographql/apollo-client/pull/9564)
 
+- Let `addTypenameToDocument` take any `ASTNode` (including `DocumentNode`, as before). <br/>
+  [@benjamn](https://github.com/benjamn) in [#9595](https://github.com/apollographql/apollo-client/pull/9595)
+
 ### Potentially disruptive changes
 
 - Calling `fetchMore` for queries using the `cache-and-network` or `network-only` fetch policies should no longer trigger additional network requests when cache results are complete. <br/>

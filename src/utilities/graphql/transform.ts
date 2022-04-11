@@ -13,6 +13,7 @@ import {
   VariableDefinitionNode,
   VariableNode,
   visit,
+  ASTNode,
 } from 'graphql';
 
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
@@ -213,10 +214,12 @@ export function removeDirectivesFromDocument(
   return modifiedDoc;
 }
 
-export const addTypenameToDocument = Object.assign(function (
-  doc: DocumentNode
-): DocumentNode {
-  return visit(checkDocument(doc), {
+export const addTypenameToDocument = Object.assign(function <
+  TNode extends ASTNode
+>(
+  doc: TNode
+): TNode {
+  return visit(doc, {
     SelectionSet: {
       enter(node, _key, parent) {
         // Don't add __typename to OperationDefinitions.

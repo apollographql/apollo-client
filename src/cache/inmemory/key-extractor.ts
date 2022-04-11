@@ -7,7 +7,7 @@ import {
   isNonNullObject,
 } from "../../utilities";
 
-import { hasOwn } from "./helpers";
+import { hasOwn, isArray } from "./helpers";
 import {
   KeySpecifier,
   KeyFieldsFunction,
@@ -197,12 +197,12 @@ export function getSpecifierPaths(spec: KeySpecifier): string[][] {
     const currentPath: string[] = [];
 
     spec.forEach((s, i) => {
-      if (Array.isArray(s)) {
+      if (isArray(s)) {
         getSpecifierPaths(s).forEach(p => paths.push(currentPath.concat(p)));
         currentPath.length = 0;
       } else {
         currentPath.push(s);
-        if (!Array.isArray(spec[i + 1])) {
+        if (!isArray(spec[i + 1])) {
           paths.push(currentPath.slice(0));
           currentPath.length = 0;
         }
@@ -238,7 +238,7 @@ export function extractKeyPath(
   // possibly unknown) is the honest answer.
   extract = extract || extractKey;
   return normalize(path.reduce(function reducer(obj, key): any {
-    return Array.isArray(obj)
+    return isArray(obj)
       ? obj.map(child => reducer(child, key))
       : obj && extract!(obj, key);
   }, object));
@@ -249,7 +249,7 @@ function normalize<T>(value: T): T {
   // key fields are scalar, but just in case we get an object or an array, we
   // need to do some normalization of the order of (nested) keys.
   if (isNonNullObject(value)) {
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
       return value.map(normalize) as any;
     }
     return collectSpecifierPaths(

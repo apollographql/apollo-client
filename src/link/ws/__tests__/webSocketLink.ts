@@ -88,7 +88,7 @@ describe('WebSocketLink', () => {
     client.request.mockReturnValueOnce(observable);
     const link = new WebSocketLink(client);
 
-    const obs = execute(link, { query: mutation });
+    const obs = execute(link, { query: subscription });
     expect(obs).toEqual(observable);
     obs.subscribe(data => {
       expect(data).toEqual(result);

@@ -3,6 +3,9 @@ import * as path from "path";
 import resolve from "resolve";
 import { distDir, eachFile, reparse, reprint } from './helpers';
 
+import { applyDistSpotFixes } from "./distSpotFixes";
+applyDistSpotFixes();
+
 // The primary goal of the 'npm run resolve' script is to make ECMAScript
 // modules exposed by Apollo Client easier to consume natively in web browsers,
 // without bundling, and without help from package.json files. It accomplishes

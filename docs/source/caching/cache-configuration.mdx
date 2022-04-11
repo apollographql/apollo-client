@@ -1,15 +1,12 @@
 ---
 title: Configuring the Apollo Client cache
-sidebar_title: Configuration
 ---
-
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 This article describes cache setup and configuration. To learn how to interact with cached data, see [Reading and writing data to the cache](./cache-interaction).
 
 ## Installation
 
-As of Apollo Client 3.0, the `InMemoryCache` class is provided by the `@apollo/client` package. No additional libraries are required.
+In Apollo Client 3, the `InMemoryCache` class is provided by the `@apollo/client` package. No additional libraries are required.
 
 ## Initialization
 
@@ -28,16 +25,15 @@ The `InMemoryCache` constructor accepts a variety of [configuration options](#co
 
 ## Configuration options
 
-Although the cache's default behavior is suitable for a wide variety of applications, you can configure its behavior to better suit your particular use case. In particular, you can:
+You can configure the cache's behavior to better suit your application. For example, you can:
 
-* Specify custom primary key fields
-* Customize the storage and retrieval of individual fields
-* Customize the interpretation of field arguments
-* Define supertype-subtype relationships for fragment matching
-* Define patterns for pagination
-* Manage client-side local state
+* Customize the format of a particular type's [cache ID](#customizing-cache-ids)
+* Customize the storage and retrieval of [individual fields](./cache-field-behavior/)
+* Define polymorphic type relationships for [fragment matching](#possibletypes)
+* Define patterns for [pagination](../pagination/overview/)
+* Manage client-side [local state](../local-state/local-state-management/)
 
-To customize cache behavior, provide an `options` object to the `InMemoryCache` constructor. This object supports the following fields:
+To customize cache behavior, you provide a configuration object to the `InMemoryCache` constructor. This object supports the following fields:
 
 <table class="field-table api-ref">
   <thead>
@@ -139,7 +135,7 @@ Deprecated in favor of the `keyFields` option of the [`TypePolicy` object](#type
 
 ## Customizing cache IDs
 
-You can customize how the `InMemoryCache` generates cache IDs for individual types in your schema ([see the default behavior](./overview/#2-generate-cache-ids)). This is helpful especially if a type uses a field (or fields!) _besides_ `id` or `_id` as its unique identifier. 
+You can customize how the `InMemoryCache` generates cache IDs for individual types in your schema ([see the default behavior](./overview/#2-generate-cache-ids)). This is helpful especially if a type uses a field (or fields!) _besides_ `id` or `_id` as its unique identifier.
 
 To accomplish this, you define a `TypePolicy` for each type you want to customize. You specify all of your cache's `typePolicies` in [the `options` object you provide to the `InMemoryCache` constructor](#configuration-options).
 
@@ -179,14 +175,14 @@ This example shows a variety of `typePolicies` with different `keyFields`:
 * The `Book` type includes a _subfield_ as part of its cache ID.
     * The `["name"]` item indicates that the `name` field of the _previous_ field in the array (`author`) is part of the cache ID. The `Book`'s `author` field must be an object that includes a `name` field for this to be valid.
     * A valid cache ID for the `Book` type has the following structure:
-        ``` 
+        ```
         Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
         ```
 * The `AllProducts` type illustrates a special strategy for a **singleton** type. If the cache will only ever contain one `AllProducts` object and that object has _no_ identifying fields, you can provide an empty array for its `keyFields`.
 
 If an object has multiple `keyFields`, the cache ID always lists those fields in the same order to ensure uniqueness.
 
-Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](https://www.apollographql.com/docs/resources/graphql-glossary/#alias).
+Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](/resources/graphql-glossary/#alias).
 
 ### Calculating an object's cache ID
 
@@ -219,7 +215,7 @@ Notice that the above function still uses different logic to generate keys based
 This code also has the following drawbacks:
 
 * It's sensitive to aliasing mistakes.
-* It does nothing to protect against undefined `object` properties.
+* It does nothing to protect against undefined object properties.
 * Accidentally using different key fields at different times can cause inconsistencies in the cache.
 
 ### Disabling normalization
@@ -232,7 +228,7 @@ Objects that are not normalized are instead embedded within their _parent_ objec
 
 ## `TypePolicy` fields
 
-To customize how the cache interacts with specific types in your schema, you can provide an object mapping `__typename` strings to `TypePolicy` objects when you create a new `InMemoryCache` object.
+To customize how the cache interacts with specific types in your schema, you can pass the `InMemoryCache` constructor an object that maps `__typename` strings to `TypePolicy` objects.
 
 A `TypePolicy` object can include the following fields:
 
@@ -273,7 +269,7 @@ type KeyFieldsFunction = (
 
 ### Overriding root operation types (uncommon)
 
-In addition to `keyFields`, a `TypePolicy` can indicate that it represents the root query, mutation, or subscription type by setting `queryType`, `mutationType`, or `subscriptionType` as `true`:
+In addition to `keyFields`, a `TypePolicy` can indicate that its type represents the root query, mutation, or subscription type by setting `queryType`, `mutationType`, or `subscriptionType` to `true`:
 
 ```ts
 const cache = new InMemoryCache({
@@ -312,10 +308,10 @@ const equivalentResult = cache.readQuery({
 });
 ```
 
-The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use the same trick for the outermost selection set of every operation, but the `__typename` of the root query or mutation is almost always `"Query"` or `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
+The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use this same method for the outermost selection set of every operation, but the `__typename`s of the root query and mutation are almost always `"Query"` and `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
 
-Compared to the `__typename`s of entity objects like `Book` or `Person`, which are vital to proper identification and normalization, the `__typename` of the root query or mutation type is not nearly as useful or important, because those types are singletons with only one instance per client.
+For most objects in a graph, the `__typename` field is vital for proper identification and normalization. For the root query and mutation types, the `__typename` is not nearly as useful or important, because those types are singletons with only one instance per client.
 
 ### The `fields` property
 
-The final property within `TypePolicy` is the `fields` property, which is a map from string field names to `FieldPolicy` objects. For more information on this field, see [Customizing the behavior of cached fields](./cache-field-behavior).
+The final property within `TypePolicy` is the `fields` property, which enables you to [customize the behavior of individual cached fields](./cache-field-behavior).

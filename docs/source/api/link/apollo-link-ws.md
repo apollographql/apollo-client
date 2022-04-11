@@ -1,9 +1,12 @@
 ---
 title: WebSocket Link
-sidebar_title: WebSocket
-description: Execute subscriptions (or other GraphQL operations) over WebSocket
+description: Execute subscriptions (or other operations) over WebSocket with the subscriptions-transport-ws library
 api_reference: true
 ---
+
+> ⚠️ **We no longer recommend using `WebSocketLink` or the `subscriptions-transport-ws` library**, because the library is not actively maintained. To execute subscriptions, We instead recommend using the newer `graphql-ws` library with the accompanying [`GraphQLWsLink`](./apollo-link-subscriptions).
+>
+> Whichever library you use, make sure you use the _same_ library in your server and any clients you support. For more information, see [Choosing a subscription library](../../data/subscriptions/#choosing-a-subscription-library).
 
 > We recommend reading [Apollo Link overview](./introduction/) before learning about individual links.
 
@@ -14,23 +17,25 @@ The `WebSocketLink` is a [terminating link](./introduction/#the-terminating-link
 ```shell
 npm install subscriptions-transport-ws
 ```
-
 ## Constructor
 
 ```js
 import { WebSocketLink } from "@apollo/client/link/ws";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-const link = new WebSocketLink({
-  uri: "ws://localhost:3000/subscriptions",
-  options: {
-    reconnect: true
-  }
+const link = new WebSocketLink(
+  new SubscriptionClient({
+    uri: "ws://localhost:3000/subscriptions",
+    options: {
+      reconnect: true,
+    },
+  }),
 });
 ```
 
 ### Options
 
-The `WebSocketLink` constructor takes an options object with the following fields:
+The `WebSocketLink` constructor takes either a `SubscriptionClient` object or an options object with the following fields. (These options are passed directly to the `SubscriptionClient` constructor.)
 
 <table class="field-table">
   <thead>

@@ -126,7 +126,7 @@ describe('useQuery Hook', () => {
       expectFrames(result, [
         { loading: true, data: void 0, networkStatus: NetworkStatus.loading },
         { loading: false, data: { hello: "world 1" }, networkStatus: NetworkStatus.ready },
-        UNNEEDED_FRAME,
+        // UNNEEDED_FRAME,
         { loading: true, data: void 0, networkStatus: NetworkStatus.setVariables },
         { loading: false, data: { hello: "world 2" }, networkStatus: NetworkStatus.ready },
       ]);

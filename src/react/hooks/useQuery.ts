@@ -1,7 +1,9 @@
 import {
   useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { equal } from '@wry/equality';
+
 import { mergeOptions, OperationVariables } from '../../core';
 import { ApolloContextValue, getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
@@ -23,7 +25,6 @@ import {
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
 const {
   prototype: {
@@ -96,84 +97,27 @@ class InternalState<TData, TVariables> {
     // happening), but that's fine as long as it has been initialized that way,
     // rather than left uninitialized.
     this.renderPromises = useContext(getApolloContext()).renderPromises;
+
     this.useOptions(options);
+
     const obsQuery = this.useObservableQuery();
-    return useSyncExternalStore(
+    this.useSubscriptionEffect(obsQuery);
+
+    useSyncExternalStore(
       (onStoreChange) => {
-        if (this.renderPromises) {
-          // The subscribe callback always expects a callback to be returned.
-          return () => {};
-        }
-
-        const onNext = () => {
-          const previousResult = this.result;
-          // We use `getCurrentResult()` instead of the onNext argument because
-          // the values differ slightly. Specifically, loading results will have
-          // an empty object for data instead of `undefined` for some reason.
-          const result = obsQuery.getCurrentResult();
-          // Make sure we're not attempting to re-render similar results
-          if (
-            previousResult &&
-            previousResult.loading === result.loading &&
-            previousResult.networkStatus === result.networkStatus &&
-            equal(previousResult.data, result.data)
-          ) {
-            return;
-          }
-
-          this.setResult(result);
-        };
-
-        const onError = (error: Error) => {
-          const last = obsQuery["last"];
-          subscription.unsubscribe();
-          // Unfortunately, if `lastError` is set in the current
-          // `observableQuery` when the subscription is re-created,
-          // the subscription will immediately receive the error, which will
-          // cause it to terminate again. To avoid this, we first clear
-          // the last error/result from the `observableQuery` before re-starting
-          // the subscription, and restore it afterwards (so the subscription
-          // has a chance to stay open).
-          try {
-            obsQuery.resetLastResults();
-            subscription = obsQuery.subscribe(onNext, onError);
-          } finally {
-            obsQuery["last"] = last;
-          }
-
-          if (!hasOwnProperty.call(error, 'graphQLErrors')) {
-            // The error is not a GraphQL error
-            throw error;
-          }
-
-          const previousResult = this.result;
-          if (
-            !previousResult ||
-            (previousResult && previousResult.loading) ||
-            !equal(error, previousResult.error)
-          ) {
-            this.setResult({
-              data: (previousResult && previousResult.data) as TData,
-              error: error as ApolloError,
-              loading: false,
-              networkStatus: NetworkStatus.error,
-            });
-          }
-        };
-
-        let subscription = obsQuery.subscribe(onNext, onError);
-        this.forceUpdate = onStoreChange;
-        return () => {
-          subscription.unsubscribe();
-        };
+        // TODO Reproduce the effect of useSubscriptionEffect here.
+        return () => {};
       },
-      () => {
-        const result = this.getCurrentResult();
-        // TODO Remove this method when we remove support for options.partialRefetch.
-        this.unsafeHandlePartialRefetch(result);
-        return this.toQueryResult(result);
-      },
+      // TODO Return this.getCurrentResult() here.
+      () => null,
     );
+
+    const result = this.getCurrentResult();
+
+    // TODO Remove this method when we remove support for options.partialRefetch.
+    this.unsafeHandlePartialRefetch(result);
+
+    return this.toQueryResult(result);
   }
 
   // These members (except for renderPromises) are all populated by the
@@ -419,6 +363,84 @@ class InternalState<TData, TVariables> {
     }, [obsQuery, this.watchQueryOptions]);
 
     return obsQuery;
+  }
+
+  private useSubscriptionEffect(
+    // We could use this.observable and not pass this obsQuery parameter, but I
+    // like the guarantee that obsQuery won't change, whereas this.observable
+    // could change without warning (in theory).
+    obsQuery: ObservableQuery<TData, TVariables>,
+  ) {
+    // An effect to subscribe to the current observable query
+    useEffect(() => {
+      if (this.renderPromises) {
+        return;
+      }
+
+      const onNext = () => {
+        const previousResult = this.result;
+        // We use `getCurrentResult()` instead of the onNext argument because
+        // the values differ slightly. Specifically, loading results will have
+        // an empty object for data instead of `undefined` for some reason.
+        const result = obsQuery.getCurrentResult();
+        // Make sure we're not attempting to re-render similar results
+        if (
+          previousResult &&
+          previousResult.loading === result.loading &&
+          previousResult.networkStatus === result.networkStatus &&
+          equal(previousResult.data, result.data)
+        ) {
+          return;
+        }
+
+        this.setResult(result);
+      };
+
+      const onError = (error: Error) => {
+        const last = obsQuery["last"];
+        subscription.unsubscribe();
+        // Unfortunately, if `lastError` is set in the current
+        // `observableQuery` when the subscription is re-created,
+        // the subscription will immediately receive the error, which will
+        // cause it to terminate again. To avoid this, we first clear
+        // the last error/result from the `observableQuery` before re-starting
+        // the subscription, and restore it afterwards (so the subscription
+        // has a chance to stay open).
+        try {
+          obsQuery.resetLastResults();
+          subscription = obsQuery.subscribe(onNext, onError);
+        } finally {
+          obsQuery["last"] = last;
+        }
+
+        if (!hasOwnProperty.call(error, 'graphQLErrors')) {
+          // The error is not a GraphQL error
+          throw error;
+        }
+
+        const previousResult = this.result;
+        if (
+          !previousResult ||
+          (previousResult && previousResult.loading) ||
+          !equal(error, previousResult.error)
+        ) {
+          this.setResult({
+            data: (previousResult && previousResult.data) as TData,
+            error: error as ApolloError,
+            loading: false,
+            networkStatus: NetworkStatus.error,
+          });
+        }
+      };
+
+      let subscription = obsQuery.subscribe(onNext, onError);
+
+      return () => subscription.unsubscribe();
+    }, [
+      obsQuery,
+      this.renderPromises,
+      this.client.disableNetworkFetches,
+    ]);
   }
 
   // These members are populated by getCurrentResult and setResult, and it's

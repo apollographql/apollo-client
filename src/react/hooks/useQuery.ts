@@ -24,7 +24,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
+import { canUseWeakMap, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
   prototype: {
@@ -163,12 +163,7 @@ class InternalState<TData, TVariables> {
     ) {
       // If SSR has been explicitly disabled, and this function has been called
       // on the server side, return the default loading state.
-      this.result = {
-        loading: true,
-        data: void 0 as unknown as TData,
-        error: void 0,
-        networkStatus: NetworkStatus.loading,
-      };
+      this.result = this.ssrDisabledResult;
     } else if (
       this.queryHookOptions.skip ||
       this.watchQueryOptions.fetchPolicy === 'standby'
@@ -183,14 +178,28 @@ class InternalState<TData, TVariables> {
       // previously received data is all of a sudden removed. Unfortunately,
       // changing this is breaking, so we'll have to wait until Apollo Client 4.0
       // to address this.
-      this.result = {
-        loading: false,
-        data: void 0 as unknown as TData,
-        error: void 0,
-        networkStatus: NetworkStatus.ready,
-      };
+      this.result = this.skipStandbyResult;
+    } else if (
+      this.result === this.ssrDisabledResult ||
+      this.result === this.skipStandbyResult
+    ) {
+      this.result = void 0;
     }
   }
+
+  private ssrDisabledResult = maybeDeepFreeze({
+    loading: true,
+    data: void 0 as unknown as TData,
+    error: void 0,
+    networkStatus: NetworkStatus.loading,
+  });
+
+  private skipStandbyResult = maybeDeepFreeze({
+    loading: false,
+    data: void 0 as unknown as TData,
+    error: void 0,
+    networkStatus: NetworkStatus.ready,
+  });
 
   // A function to massage options before passing them to ObservableQuery.
   private createWatchQueryOptions({

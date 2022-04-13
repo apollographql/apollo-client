@@ -1,5 +1,10 @@
 import {
-  useContext, useEffect, useMemo, useRef, useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { equal } from '@wry/equality';
@@ -103,7 +108,7 @@ class InternalState<TData, TVariables> {
     const obsQuery = this.useObservableQuery();
 
     const result = useSyncExternalStore(
-      () => {
+      useCallback(() => {
         if (this.renderPromises) {
           return () => {};
         }
@@ -167,8 +172,18 @@ class InternalState<TData, TVariables> {
         let subscription = obsQuery.subscribe(onNext, onError);
 
         return () => subscription.unsubscribe();
-      },
-      // TODO Return this.getCurrentResult() here.
+      }, [
+        // We memoize the subscribe function using useCallback and the following
+        // dependency keys, because the subscribe function reference is all that
+        // useSyncExternalStore uses internally as a dependency key for the
+        // useEffect ultimately responsible for the subscription, so we are
+        // effectively passing this dependency array to that useEffect buried
+        // inside useSyncExternalStore, as desired.
+        obsQuery,
+        this.renderPromises,
+        this.client.disableNetworkFetches,
+      ]),
+
       () => this.getCurrentResult(),
     );
 

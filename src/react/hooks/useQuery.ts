@@ -103,16 +103,14 @@ class InternalState<TData, TVariables> {
     const obsQuery = this.useObservableQuery();
     this.useSubscriptionEffect(obsQuery);
 
-    useSyncExternalStore(
+    const result = useSyncExternalStore(
       (onStoreChange) => {
         // TODO Reproduce the effect of useSubscriptionEffect here.
         return () => {};
       },
       // TODO Return this.getCurrentResult() here.
-      () => null,
+      () => this.getCurrentResult(),
     );
-
-    const result = this.getCurrentResult();
 
     // TODO Remove this method when we remove support for options.partialRefetch.
     this.unsafeHandlePartialRefetch(result);

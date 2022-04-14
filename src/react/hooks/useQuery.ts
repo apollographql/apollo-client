@@ -599,9 +599,18 @@ function useUnblockFetchEffect<TData, TVars>(
   renderPromises: ApolloContextValue["renderPromises"],
   resolveFetchBlockingPromise?: (result: boolean) => any,
 ) {
-  if (resolveFetchBlockingPromise && renderPromises) {
-    resolveFetchBlockingPromise(true);
+  if (resolveFetchBlockingPromise) {
+    if (renderPromises) {
+      // Since we're doing SSR, the useEffect callback will not be called, so we
+      // must unblock the fetchBlockingPromise now.
+      resolveFetchBlockingPromise(true);
+    } else {
+      // Otherwise, silently discard blocked fetches whose useEffect callbacks
+      // have not fired within 5 seconds (more than enough time to mount).
+      setTimeout(() => resolveFetchBlockingPromise(false), 5000);
+    }
   }
+
   useEffect(() => {
     if (resolveFetchBlockingPromise) {
       resolveFetchBlockingPromise(true);

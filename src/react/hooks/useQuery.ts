@@ -213,7 +213,6 @@ class InternalState<TData, TVariables> {
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
     const currentWatchQueryOptions = this.watchQueryOptions;
-    const originalResult = this.result;
     let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
 
     if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
@@ -250,23 +249,10 @@ class InternalState<TData, TVariables> {
     }
 
     useEffect(() => {
-      // If we called this.observable.reobserve above, and this.result hasn't
-      // changed since then, report the latest current result to this.setResult.
       if (resolveFetchBlockingPromise) {
         resolveFetchBlockingPromise(true);
-
-        // If we set this.result to void 0 above, we still need to call
-        // this.setResult with the new result (but here in useEffect, since
-        // setResult typically calls forceUpdate), assuming latestResult is
-        // different from what we started with.
-        if (!this.result) {
-          const latestResult = this.getCurrentResult();
-          if (!equal(latestResult, originalResult)) {
-            this.setResult(latestResult);
-          }
-        }
       }
-    }, [resolveFetchBlockingPromise, originalResult]);
+    }, [resolveFetchBlockingPromise]);
 
     this.ssrDisabled = !!(
       options.ssr === false ||

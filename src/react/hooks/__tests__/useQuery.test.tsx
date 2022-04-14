@@ -83,8 +83,6 @@ describe('useQuery Hook', () => {
       expect(actualPartialFrames).toEqual(expectedPartialFrames);
     };
 
-    const UNNEEDED_FRAME = {};
-
     it("useQuery produces the expected frames initially", async () => {
       const query = gql`{ hello }`;
       const mocks = [ {
@@ -98,7 +96,8 @@ describe('useQuery Hook', () => {
       expectFrames(result, [
         { loading: true, data: void 0 },
         { loading: false, data: { hello: "world" } },
-        UNNEEDED_FRAME
+        // Repeat frame because rerender forces useQuery to be called again
+        { loading: false, data: { hello: "world" } },
       ]);
     });
 
@@ -126,7 +125,6 @@ describe('useQuery Hook', () => {
       expectFrames(result, [
         { loading: true, data: void 0, networkStatus: NetworkStatus.loading },
         { loading: false, data: { hello: "world 1" }, networkStatus: NetworkStatus.ready },
-        // UNNEEDED_FRAME,
         { loading: true, data: void 0, networkStatus: NetworkStatus.setVariables },
         { loading: false, data: { hello: "world 2" }, networkStatus: NetworkStatus.ready },
       ]);

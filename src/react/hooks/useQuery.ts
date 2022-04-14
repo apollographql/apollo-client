@@ -228,14 +228,14 @@ class InternalState<TData, TVariables> {
         // variables have changed). To prevent any risk of premature/unwanted
         // network traffic, we use a fetchBlockingPromise, which will only be
         // unblocked once the useEffect has fired.
-        this.observable.setOptions({
+        this.observable.reobserve({
           fetchBlockingPromise: new Promise<boolean>(resolve => {
             resolveFetchBlockingPromise = resolve;
           }),
           // If watchQueryOptions.fetchBlockingPromise is also defined, it takes
           // precedence over the fetchBlockingPromise we just created.
           ...watchQueryOptions,
-        }).catch(() => {});
+        });
 
         this.previousData = this.result?.data || this.previousData;
         this.result = void 0;

@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js';
 import { equal } from '@wry/equality';
 
 import { mergeOptions, OperationVariables } from '../../core';

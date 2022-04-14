@@ -229,8 +229,6 @@ class InternalState<TData, TVariables> {
         // network traffic, we use a fetchBlockingPromise, which will only be
         // unblocked once the useEffect has fired.
         this.observable.setOptions({
-          // TODO Do we need this for the initial useQuery call as well? Does
-          // that introduce too much asynchrony?
           fetchBlockingPromise: new Promise<boolean>(resolve => {
             resolveFetchBlockingPromise = resolve;
           }),
@@ -443,11 +441,26 @@ class InternalState<TData, TVariables> {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
+    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
     const obsQuery = this.observable =
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
         || this.observable // Reuse this.observable if possible (and not SSR)
-        || this.client.watchQuery(this.watchQueryOptions);
+        || this.client.watchQuery({
+          fetchBlockingPromise: new Promise<boolean>(resolve => {
+            resolveFetchBlockingPromise = resolve;
+          }),
+          ...this.watchQueryOptions,
+        });
+
+    if (resolveFetchBlockingPromise && this.renderPromises) {
+      resolveFetchBlockingPromise(true);
+    }
+    useEffect(() => {
+      if (resolveFetchBlockingPromise) {
+        resolveFetchBlockingPromise(true);
+      }
+    }, [resolveFetchBlockingPromise]);
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),

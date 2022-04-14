@@ -1,7 +1,14 @@
 import {
-  useContext, useEffect, useMemo, useRef, useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react';
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js';
 import { equal } from '@wry/equality';
+
 import { mergeOptions, OperationVariables } from '../../core';
 import { ApolloContextValue, getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
@@ -22,7 +29,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, isNonEmptyArray } from '../../utilities';
+import { canUseWeakMap, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
   prototype: {
@@ -46,7 +53,7 @@ export function useQuery<
 export function useInternalState<TData, TVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-) {
+): InternalState<TData, TVariables> {
   const stateRef = useRef<InternalState<TData, TVariables>>();
   if (
     !stateRef.current ||
@@ -99,9 +106,86 @@ class InternalState<TData, TVariables> {
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
-    this.useSubscriptionEffect(obsQuery);
 
-    const result = this.getCurrentResult();
+    const result = useSyncExternalStore(
+      useCallback(() => {
+        if (this.renderPromises) {
+          return () => {};
+        }
+
+        const onNext = () => {
+          const previousResult = this.result;
+          // We use `getCurrentResult()` instead of the onNext argument because
+          // the values differ slightly. Specifically, loading results will have
+          // an empty object for data instead of `undefined` for some reason.
+          const result = obsQuery.getCurrentResult();
+          // Make sure we're not attempting to re-render similar results
+          if (
+            previousResult &&
+            previousResult.loading === result.loading &&
+            previousResult.networkStatus === result.networkStatus &&
+            equal(previousResult.data, result.data)
+          ) {
+            return;
+          }
+
+          this.setResult(result);
+        };
+
+        const onError = (error: Error) => {
+          const last = obsQuery["last"];
+          subscription.unsubscribe();
+          // Unfortunately, if `lastError` is set in the current
+          // `observableQuery` when the subscription is re-created,
+          // the subscription will immediately receive the error, which will
+          // cause it to terminate again. To avoid this, we first clear
+          // the last error/result from the `observableQuery` before re-starting
+          // the subscription, and restore it afterwards (so the subscription
+          // has a chance to stay open).
+          try {
+            obsQuery.resetLastResults();
+            subscription = obsQuery.subscribe(onNext, onError);
+          } finally {
+            obsQuery["last"] = last;
+          }
+
+          if (!hasOwnProperty.call(error, 'graphQLErrors')) {
+            // The error is not a GraphQL error
+            throw error;
+          }
+
+          const previousResult = this.result;
+          if (
+            !previousResult ||
+            (previousResult && previousResult.loading) ||
+            !equal(error, previousResult.error)
+          ) {
+            this.setResult({
+              data: (previousResult && previousResult.data) as TData,
+              error: error as ApolloError,
+              loading: false,
+              networkStatus: NetworkStatus.error,
+            });
+          }
+        };
+
+        let subscription = obsQuery.subscribe(onNext, onError);
+
+        return () => subscription.unsubscribe();
+      }, [
+        // We memoize the subscribe function using useCallback and the following
+        // dependency keys, because the subscribe function reference is all that
+        // useSyncExternalStore uses internally as a dependency key for the
+        // useEffect ultimately responsible for the subscription, so we are
+        // effectively passing this dependency array to that useEffect buried
+        // inside useSyncExternalStore, as desired.
+        obsQuery,
+        this.renderPromises,
+        this.client.disableNetworkFetches,
+      ]),
+
+      () => this.getCurrentResult(),
+    );
 
     // TODO Remove this method when we remove support for options.partialRefetch.
     this.unsafeHandlePartialRefetch(result);
@@ -145,7 +229,50 @@ class InternalState<TData, TVariables> {
     // base state object (without modifying the prototype).
     this.onCompleted = options.onCompleted || InternalState.prototype.onCompleted;
     this.onError = options.onError || InternalState.prototype.onError;
+
+    if (
+      (this.renderPromises || this.client.disableNetworkFetches) &&
+      this.queryHookOptions.ssr === false
+    ) {
+      // If SSR has been explicitly disabled, and this function has been called
+      // on the server side, return the default loading state.
+      this.result = this.ssrDisabledResult;
+    } else if (
+      this.queryHookOptions.skip ||
+      this.watchQueryOptions.fetchPolicy === 'standby'
+    ) {
+      // When skipping a query (ie. we're not querying for data but still want to
+      // render children), make sure the `data` is cleared out and `loading` is
+      // set to `false` (since we aren't loading anything).
+      //
+      // NOTE: We no longer think this is the correct behavior. Skipping should
+      // not automatically set `data` to `undefined`, but instead leave the
+      // previous data in place. In other words, skipping should not mandate that
+      // previously received data is all of a sudden removed. Unfortunately,
+      // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+      // to address this.
+      this.result = this.skipStandbyResult;
+    } else if (
+      this.result === this.ssrDisabledResult ||
+      this.result === this.skipStandbyResult
+    ) {
+      this.result = void 0;
+    }
   }
+
+  private ssrDisabledResult = maybeDeepFreeze({
+    loading: true,
+    data: void 0 as unknown as TData,
+    error: void 0,
+    networkStatus: NetworkStatus.loading,
+  });
+
+  private skipStandbyResult = maybeDeepFreeze({
+    loading: false,
+    data: void 0 as unknown as TData,
+    error: void 0,
+    networkStatus: NetworkStatus.ready,
+  });
 
   // A function to massage options before passing them to ObservableQuery.
   private createWatchQueryOptions({
@@ -354,84 +481,6 @@ class InternalState<TData, TVariables> {
     return obsQuery;
   }
 
-  private useSubscriptionEffect(
-    // We could use this.observable and not pass this obsQuery parameter, but I
-    // like the guarantee that obsQuery won't change, whereas this.observable
-    // could change without warning (in theory).
-    obsQuery: ObservableQuery<TData, TVariables>,
-  ) {
-    // An effect to subscribe to the current observable query
-    useEffect(() => {
-      if (this.renderPromises) {
-        return;
-      }
-
-      const onNext = () => {
-        const previousResult = this.result;
-        // We use `getCurrentResult()` instead of the onNext argument because
-        // the values differ slightly. Specifically, loading results will have
-        // an empty object for data instead of `undefined` for some reason.
-        const result = obsQuery.getCurrentResult();
-        // Make sure we're not attempting to re-render similar results
-        if (
-          previousResult &&
-          previousResult.loading === result.loading &&
-          previousResult.networkStatus === result.networkStatus &&
-          equal(previousResult.data, result.data)
-        ) {
-          return;
-        }
-
-        this.setResult(result);
-      };
-
-      const onError = (error: Error) => {
-        const last = obsQuery["last"];
-        subscription.unsubscribe();
-        // Unfortunately, if `lastError` is set in the current
-        // `observableQuery` when the subscription is re-created,
-        // the subscription will immediately receive the error, which will
-        // cause it to terminate again. To avoid this, we first clear
-        // the last error/result from the `observableQuery` before re-starting
-        // the subscription, and restore it afterwards (so the subscription
-        // has a chance to stay open).
-        try {
-          obsQuery.resetLastResults();
-          subscription = obsQuery.subscribe(onNext, onError);
-        } finally {
-          obsQuery["last"] = last;
-        }
-
-        if (!hasOwnProperty.call(error, 'graphQLErrors')) {
-          // The error is not a GraphQL error
-          throw error;
-        }
-
-        const previousResult = this.result;
-        if (
-          !previousResult ||
-          (previousResult && previousResult.loading) ||
-          !equal(error, previousResult.error)
-        ) {
-          this.setResult({
-            data: (previousResult && previousResult.data) as TData,
-            error: error as ApolloError,
-            loading: false,
-            networkStatus: NetworkStatus.error,
-          });
-        }
-      };
-
-      let subscription = obsQuery.subscribe(onNext, onError);
-
-      return () => subscription.unsubscribe();
-    }, [
-      obsQuery,
-      this.renderPromises,
-      this.client.disableNetworkFetches,
-    ]);
-  }
-
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   private result: undefined | ApolloQueryResult<TData>;
@@ -460,50 +509,15 @@ class InternalState<TData, TVariables> {
   }
 
   private getCurrentResult(): ApolloQueryResult<TData> {
-    let { result } = this;
     // Using this.result as a cache ensures getCurrentResult continues returning
     // the same (===) result object, unless state.setResult has been called, or
     // we're doing server rendering and therefore override the result below.
-    if (!result) {
-      result = this.result = this.observable.getCurrentResult();
-      this.handleErrorOrCompleted(result);
+    if (!this.result) {
+      this.handleErrorOrCompleted(
+        this.result = this.observable.getCurrentResult()
+      );
     }
-
-    if (
-      (this.renderPromises || this.client.disableNetworkFetches) &&
-      this.queryHookOptions.ssr === false
-    ) {
-      // If SSR has been explicitly disabled, and this function has been called
-      // on the server side, return the default loading state.
-      result = {
-        loading: true,
-        data: void 0 as unknown as TData,
-        error: void 0,
-        networkStatus: NetworkStatus.loading,
-      };
-    } else if (
-      this.queryHookOptions.skip ||
-      this.watchQueryOptions.fetchPolicy === 'standby'
-    ) {
-      // When skipping a query (ie. we're not querying for data but still want to
-      // render children), make sure the `data` is cleared out and `loading` is
-      // set to `false` (since we aren't loading anything).
-      //
-      // NOTE: We no longer think this is the correct behavior. Skipping should
-      // not automatically set `data` to `undefined`, but instead leave the
-      // previous data in place. In other words, skipping should not mandate that
-      // previously received data is all of a sudden removed. Unfortunately,
-      // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-      // to address this.
-      result = {
-        loading: false,
-        data: void 0 as unknown as TData,
-        error: void 0,
-        networkStatus: NetworkStatus.ready,
-      };
-    }
-
-    return result;
+    return this.result;
   }
 
   // This cache allows the referential stability of this.result (as returned by

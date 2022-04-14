@@ -217,33 +217,54 @@ class InternalState<TData, TVariables> {
     // this.watchQueryOptions elsewhere.
     const currentWatchQueryOptions = this.watchQueryOptions;
     const currentResult = this.result;
-    let needToSetResult = false;
+    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
+
     if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
       this.watchQueryOptions = watchQueryOptions;
       if (currentWatchQueryOptions && this.observable) {
-        // Though it might be tempting to postpone this line to the useEffect
-        // block, we need getCurrentResult to return an appropriate loading
-        // result synchronously (later within the same call to useQuery). Since
-        // we already have this.observable here (not true for the very first
-        // call to useQuery), we are not initiating any new subscriptions,
-        // though it does feel less than ideal to be (potentially) kicking off a
-        // network request (for example, if the variables have changed).
-        this.observable.setOptions(watchQueryOptions).catch(() => {});
-        needToSetResult = true;
+        // Though it might be tempting to postpone this setOptions call to the
+        // useEffect block, we need getCurrentResult to return an appropriate
+        // loading:true result synchronously (later within the same call to
+        // useQuery). Since we already have this.observable here (not true for
+        // the very first call to useQuery), we are not initiating any new
+        // subscriptions, though it does feel less than ideal that setOptions
+        // (potentially) kicks off a network request (for example, when the
+        // variables have changed). To prevent any risk of premature/unwanted
+        // network traffic, we use a fetchBlockingPromise, which will only be
+        // unblocked once the useEffect has fired.
+        this.observable.setOptions({
+          // TODO Do we need this for the initial useQuery call as well? Does
+          // that introduce too much asynchrony?
+          fetchBlockingPromise: new Promise<boolean>(resolve => {
+            resolveFetchBlockingPromise = resolve;
+          }),
+          // If watchQueryOptions.fetchBlockingPromise is also defined, it takes
+          // precedence over the fetchBlockingPromise we just created.
+          ...watchQueryOptions,
+        }).catch(() => {});
       }
     }
+
+    if (resolveFetchBlockingPromise && this.renderPromises) {
+      resolveFetchBlockingPromise(true);
+    }
+
     useEffect(() => {
       // If we called this.observable.reobserve above, and this.result hasn't
       // changed since then, report the latest current result to this.setResult.
-      if (needToSetResult && this.result === currentResult) {
-        const latestResult = this.observable.getCurrentResult();
-        if (!equal(latestResult, currentResult)) {
-          // This usually forces a rerender, which is why it must be done in
-          // useEffect.
-          this.setResult(latestResult);
+      if (resolveFetchBlockingPromise) {
+        resolveFetchBlockingPromise(true);
+
+        if (this.result === currentResult) {
+          const latestResult = this.observable.getCurrentResult();
+          if (!equal(latestResult, currentResult)) {
+            // This usually forces a rerender, which is why it must be done in
+            // useEffect.
+            this.setResult(latestResult);
+          }
         }
       }
-    }, [needToSetResult, currentResult]);
+    }, [resolveFetchBlockingPromise, currentResult]);
 
     this.ssrDisabled = !!(
       options.ssr === false ||

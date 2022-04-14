@@ -184,9 +184,6 @@ class InternalState<TData, TVariables> {
         this.client.disableNetworkFetches,
       ]),
 
-      // TODO This may return an old result when we really should start a full
-      // reobservation (possibly including a network request). Need to determine
-      // based on options when a new request is being made.
       () => this.getCurrentResult(),
     );
 
@@ -216,7 +213,7 @@ class InternalState<TData, TVariables> {
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
     const currentWatchQueryOptions = this.watchQueryOptions;
-    const currentResult = this.result;
+    const originalResult = this.result;
     let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
 
     if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
@@ -242,6 +239,9 @@ class InternalState<TData, TVariables> {
           // precedence over the fetchBlockingPromise we just created.
           ...watchQueryOptions,
         }).catch(() => {});
+
+        this.previousData = this.result?.data || this.previousData;
+        this.result = void 0;
       }
     }
 
@@ -255,16 +255,18 @@ class InternalState<TData, TVariables> {
       if (resolveFetchBlockingPromise) {
         resolveFetchBlockingPromise(true);
 
-        if (this.result === currentResult) {
-          const latestResult = this.observable.getCurrentResult();
-          if (!equal(latestResult, currentResult)) {
-            // This usually forces a rerender, which is why it must be done in
-            // useEffect.
+        // If we set this.result to void 0 above, we still need to call
+        // this.setResult with the new result (but here in useEffect, since
+        // setResult typically calls forceUpdate), assuming latestResult is
+        // different from what we started with.
+        if (!this.result) {
+          const latestResult = this.getCurrentResult();
+          if (!equal(latestResult, originalResult)) {
             this.setResult(latestResult);
           }
         }
       }
-    }, [resolveFetchBlockingPromise, currentResult]);
+    }, [resolveFetchBlockingPromise, originalResult]);
 
     this.ssrDisabled = !!(
       options.ssr === false ||

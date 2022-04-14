@@ -242,15 +242,7 @@ class InternalState<TData, TVariables> {
       }
     }
 
-    if (resolveFetchBlockingPromise && this.renderPromises) {
-      resolveFetchBlockingPromise(true);
-    }
-
-    useEffect(() => {
-      if (resolveFetchBlockingPromise) {
-        resolveFetchBlockingPromise(true);
-      }
-    }, [resolveFetchBlockingPromise]);
+    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
 
     this.ssrDisabled = !!(
       options.ssr === false ||
@@ -438,10 +430,11 @@ class InternalState<TData, TVariables> {
   >;
 
   private useObservableQuery() {
+    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
+
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
-    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
     const obsQuery = this.observable =
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
@@ -453,14 +446,7 @@ class InternalState<TData, TVariables> {
           ...this.watchQueryOptions,
         });
 
-    if (resolveFetchBlockingPromise && this.renderPromises) {
-      resolveFetchBlockingPromise(true);
-    }
-    useEffect(() => {
-      if (resolveFetchBlockingPromise) {
-        resolveFetchBlockingPromise(true);
-      }
-    }, [resolveFetchBlockingPromise]);
+    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
@@ -607,4 +593,18 @@ class InternalState<TData, TVariables> {
       this.observable.refetch();
     }
   }
+}
+
+function useUnblockFetchEffect<TData, TVars>(
+  renderPromises: ApolloContextValue["renderPromises"],
+  resolveFetchBlockingPromise?: (result: boolean) => any,
+) {
+  if (resolveFetchBlockingPromise && renderPromises) {
+    resolveFetchBlockingPromise(true);
+  }
+  useEffect(() => {
+    if (resolveFetchBlockingPromise) {
+      resolveFetchBlockingPromise(true);
+    }
+  }, [resolveFetchBlockingPromise]);
 }

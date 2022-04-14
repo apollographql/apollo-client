@@ -53,15 +53,10 @@ describe('[queries] lifecycle', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           try {
             const { data } = this.props;
-            switch (count) {
-              case 0:
+            switch (++count) {
+              case 1:
                 expect(prevProps.data!.loading).toBe(true);
                 expect(prevProps.data!.allPeople).toBe(undefined);
-                expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual(variables1);
-                expect(data!.allPeople).toEqual(data1.allPeople);
-                break;
-              case 1:
                 expect(data!.loading).toBe(false);
                 expect(data!.variables).toEqual(variables1);
                 expect(data!.allPeople).toEqual(data1.allPeople);
@@ -76,9 +71,9 @@ describe('[queries] lifecycle', () => {
                 expect(data!.variables).toEqual(variables2);
                 expect(data!.allPeople).toEqual(data2.allPeople);
                 break;
+              default:
+                reject(`Too many renders (${count})`);
             }
-
-            count++;
           } catch (err) {
             reject(err);
           }
@@ -110,7 +105,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync('rebuilds the queries on prop change when using `options`', (resolve, reject) => {
@@ -215,16 +210,11 @@ describe('[queries] lifecycle', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           try {
             const { data } = this.props;
-            switch (count) {
-              case 0:
+            switch (++count) {
+              case 1:
                 expect(prevProps.data!.loading).toBe(true);
                 expect(prevProps.data!.variables).toEqual({ first: 1 });
                 expect(prevProps.data!.allPeople).toBe(undefined);
-                expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual({ first: 1 });
-                expect(data!.allPeople).toEqual(data1.allPeople);
-                break;
-              case 1:
                 expect(data!.loading).toBe(false);
                 expect(data!.variables).toEqual({ first: 1 });
                 expect(data!.allPeople).toEqual(data1.allPeople);
@@ -239,12 +229,12 @@ describe('[queries] lifecycle', () => {
                 expect(data!.variables).toEqual({ first: 2 });
                 expect(data!.allPeople).toEqual(data2.allPeople);
                 break;
+              default:
+                reject(`Too many renders (${count})`);
             }
           } catch (err) {
             reject(err);
           }
-
-          count++;
         }
 
         render() {
@@ -273,7 +263,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync('reruns the queries on prop change when using passed props', (resolve, reject) => {
@@ -312,16 +302,11 @@ describe('[queries] lifecycle', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           try {
             const { data } = this.props;
-            switch (count) {
-              case 0:
+            switch (++count) {
+              case 1:
                 expect(prevProps.data!.loading).toBe(true);
                 expect(prevProps.data!.variables).toEqual({ first: 1 });
                 expect(prevProps.data!.allPeople).toBe(undefined);
-                expect(data!.loading).toBe(false);
-                expect(data!.variables).toEqual({ first: 1 });
-                expect(data!.allPeople).toEqual(data1.allPeople);
-                break;
-              case 1:
                 expect(data!.loading).toBe(false);
                 expect(data!.variables).toEqual({ first: 1 });
                 expect(data!.allPeople).toEqual(data1.allPeople);
@@ -340,8 +325,6 @@ describe('[queries] lifecycle', () => {
           } catch (err) {
             reject(err);
           }
-
-          count++;
         }
         render() {
           return null;
@@ -369,7 +352,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
   itAsync('stays subscribed to updates after irrelevant prop changes', (resolve, reject) => {

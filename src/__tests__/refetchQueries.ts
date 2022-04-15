@@ -461,6 +461,8 @@ describe("client.refetchQueries", () => {
           expect(diff.result).toEqual({ b: "B" });
         } else if (obs === abObs) {
           expect(diff.result).toEqual({ a: "A", b: "B" });
+        } else if (obs === extraObs) {
+          expect(diff.result).toEqual({ a: "A", b: "B" });
         } else {
           reject(`unexpected ObservableQuery ${
             obs.queryId
@@ -474,6 +476,7 @@ describe("client.refetchQueries", () => {
 
     expect(activeResults).toEqual([
       { a: "A" },
+      { a: "A", b: "B" },
       { a: "A", b: "B" },
       { b: "B" },
     ]);

@@ -3742,7 +3742,7 @@ describe('QueryManager', () => {
       }, 50);
     });
 
-    itAsync('should not call refetch on a non-subscribed Observable if the store is reset', (resolve, reject) => {
+    itAsync('should not call refetch on a standby Observable if the store is reset', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -3758,6 +3758,7 @@ describe('QueryManager', () => {
 
       const options = {
         query,
+        fetchPolicy: "standby",
       } as WatchQueryOptions;
 
       let refetchCount = 0;
@@ -4225,7 +4226,7 @@ describe('QueryManager', () => {
       }, 50);
     });
 
-    itAsync('should not call refetch on a non-subscribed Observable', (resolve, reject) => {
+    itAsync('should not call refetch on a standby Observable', (resolve, reject) => {
       const query = gql`
         query {
           author {
@@ -4240,7 +4241,8 @@ describe('QueryManager', () => {
       });
 
       const options = {
-        query
+        query,
+        fetchPolicy: "standby",
       } as WatchQueryOptions;
 
       let refetchCount = 0;

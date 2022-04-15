@@ -59,7 +59,7 @@ You can then fetch your data using Apollo Client:
 ```js
 // Invoke the query and log the person's name
 client.query({ query }).then(response => {
-  console.log(response.data.name);
+  console.log(response.data.person.name);
 });
 ```
 

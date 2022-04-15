@@ -463,34 +463,7 @@ class InternalState<TData, TVariables> {
 
       if (!this.ssrDisabled && obsQuery.getCurrentResult().loading) {
         // TODO: This is a legacy API which could probably be cleaned up
-        this.renderPromises.addQueryPromise({
-          // The only options which seem to actually be used by the
-          // RenderPromises class are query and variables.
-          getOptions: () => obsQuery.options,
-          fetchData: () => new Promise<void>((resolve) => {
-            const sub = obsQuery.subscribe({
-              next(result) {
-                if (!result.loading) {
-                  resolve()
-                  sub.unsubscribe();
-                }
-              },
-              error() {
-                resolve();
-                sub.unsubscribe();
-              },
-              complete() {
-                resolve();
-              },
-            });
-          }),
-        },
-        // This callback never seemed to do anything
-        () => null);
-
-        // TODO: This is a hack to make sure useLazyQuery executions update the
-        // obsevable query options for ssr.
-        obsQuery.setOptions(this.watchQueryOptions).catch(() => {});
+        this.renderPromises.addObservableQueryPromise(obsQuery);
       }
     }
 

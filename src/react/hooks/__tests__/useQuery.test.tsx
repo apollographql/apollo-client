@@ -1078,6 +1078,103 @@ describe('useQuery Hook', () => {
     expect(result.current.data).toEqual({ hello: 'from link' });
   });
 
+  describe('options.fetchBlockingPromise', () => {
+    it("should prevent duplicate network requests in <React.StrictMode>", async () => {
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`query Counter { linkCount }`;
+
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          if (request.operationName === "Counter") {
+            observer.next({
+              data: {
+                linkCount: ++linkCount,
+              },
+            });
+            observer.complete();
+          }
+        })),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {
+          fetchPolicy: "cache-and-network",
+        }),
+        {
+          wrapper: ({ children }) => (
+            <React.StrictMode>
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            </React.StrictMode>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        linkCount: 1,
+      });
+
+      function checkObservableQueries(expectedLinkCount: number) {
+        const obsQueries = client.getObservableQueries("all");
+        expect(obsQueries.size).toBe(2);
+
+        const activeSet = new Set<typeof result.current.observable>();
+        const inactiveSet = new Set<typeof result.current.observable>();
+        obsQueries.forEach(obsQuery => {
+          if (obsQuery.hasObservers()) {
+            expect(inactiveSet.has(obsQuery)).toBe(false);
+            activeSet.add(obsQuery);
+            expect(obsQuery.getCurrentResult()).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                linkCount: expectedLinkCount,
+              },
+            });
+          } else {
+            expect(activeSet.has(obsQuery)).toBe(false);
+            inactiveSet.add(obsQuery);
+            const { fetchBlockingPromise } = obsQuery.options;
+            expect(fetchBlockingPromise).toBeInstanceOf(Promise);
+          }
+        });
+        expect(activeSet.size).toBe(1);
+        expect(inactiveSet.size).toBe(1);
+      }
+
+      checkObservableQueries(1);
+
+      const reobservePromise = result.current.reobserve().then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual({
+          linkCount: 2,
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        linkCount: 2,
+      });
+
+      checkObservableQueries(2);
+
+      await reobservePromise;
+    });
+  });
+
   describe('polling', () => {
     it('should support polling', async () => {
       const query = gql`{ hello }`;

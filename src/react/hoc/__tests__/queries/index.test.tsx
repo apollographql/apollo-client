@@ -182,13 +182,9 @@ describe('queries', () => {
           break;
         case 2:
           expect(data!.loading).toBe(true);
-          expect(data!.variables).toEqual({ someId: 1 });
-          break;
-        case 3:
-          expect(data!.loading).toBe(true);
           expect(data!.variables).toEqual({ someId: 2 });
           break;
-        case 4:
+        case 3:
           expect(data!.loading).toBe(false);
           expect(data!.variables).toEqual({ someId: 2 });
           break;
@@ -211,7 +207,7 @@ describe('queries', () => {
     );
 
     waitFor(() => {
-      expect(count).toBe(4);
+      expect(count).toBe(3);
     }).then(resolve, reject);
   });
 

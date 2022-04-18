@@ -212,9 +212,37 @@ class InternalState<TData, TVariables> {
     // Update this.watchQueryOptions, but only when they have changed, which
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
-    if (!equal(watchQueryOptions, this.watchQueryOptions)) {
+    const currentWatchQueryOptions = this.watchQueryOptions;
+    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
+
+    if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
       this.watchQueryOptions = watchQueryOptions;
+      if (currentWatchQueryOptions && this.observable) {
+        // Though it might be tempting to postpone this setOptions call to the
+        // useEffect block, we need getCurrentResult to return an appropriate
+        // loading:true result synchronously (later within the same call to
+        // useQuery). Since we already have this.observable here (not true for
+        // the very first call to useQuery), we are not initiating any new
+        // subscriptions, though it does feel less than ideal that setOptions
+        // (potentially) kicks off a network request (for example, when the
+        // variables have changed). To prevent any risk of premature/unwanted
+        // network traffic, we use a fetchBlockingPromise, which will only be
+        // unblocked once the useEffect has fired.
+        this.observable.reobserve({
+          fetchBlockingPromise: new Promise<boolean>(resolve => {
+            resolveFetchBlockingPromise = resolve;
+          }),
+          // If watchQueryOptions.fetchBlockingPromise is also defined, it takes
+          // precedence over the fetchBlockingPromise we just created.
+          ...watchQueryOptions,
+        });
+
+        this.previousData = this.result?.data || this.previousData;
+        this.result = void 0;
+      }
     }
+
+    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
 
     this.ssrDisabled = !!(
       options.ssr === false ||
@@ -402,6 +430,8 @@ class InternalState<TData, TVariables> {
   >;
 
   private useObservableQuery() {
+    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
+
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
@@ -409,7 +439,14 @@ class InternalState<TData, TVariables> {
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
         || this.observable // Reuse this.observable if possible (and not SSR)
-        || this.client.watchQuery(this.watchQueryOptions);
+        || this.client.watchQuery({
+          fetchBlockingPromise: new Promise<boolean>(resolve => {
+            resolveFetchBlockingPromise = resolve;
+          }),
+          ...this.watchQueryOptions,
+        });
+
+    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
@@ -426,57 +463,9 @@ class InternalState<TData, TVariables> {
 
       if (!this.ssrDisabled && obsQuery.getCurrentResult().loading) {
         // TODO: This is a legacy API which could probably be cleaned up
-        this.renderPromises.addQueryPromise({
-          // The only options which seem to actually be used by the
-          // RenderPromises class are query and variables.
-          getOptions: () => obsQuery.options,
-          fetchData: () => new Promise<void>((resolve) => {
-            const sub = obsQuery.subscribe({
-              next(result) {
-                if (!result.loading) {
-                  resolve()
-                  sub.unsubscribe();
-                }
-              },
-              error() {
-                resolve();
-                sub.unsubscribe();
-              },
-              complete() {
-                resolve();
-              },
-            });
-          }),
-        },
-        // This callback never seemed to do anything
-        () => null);
-
-        // TODO: This is a hack to make sure useLazyQuery executions update the
-        // obsevable query options for ssr.
-        obsQuery.setOptions(this.watchQueryOptions).catch(() => {});
+        this.renderPromises.addObservableQueryPromise(obsQuery);
       }
     }
-
-    const prevOptionsRef = useRef({
-      watchQueryOptions: this.watchQueryOptions,
-    });
-
-    // An effect to keep obsQuery.options up to date in case
-    // state.watchQueryOptions changes.
-    useEffect(() => {
-      if (this.renderPromises) {
-        // Do nothing during server rendering.
-      } else if (
-        // The useOptions method only updates this.watchQueryOptions if new new
-        // watchQueryOptions are not deep-equal to the previous options, so we
-        // only need a reference check (!==) here.
-        this.watchQueryOptions !== prevOptionsRef.current.watchQueryOptions
-      ) {
-        obsQuery.setOptions(this.watchQueryOptions).catch(() => {});
-        prevOptionsRef.current.watchQueryOptions = this.watchQueryOptions;
-        this.setResult(obsQuery.getCurrentResult());
-      }
-    }, [obsQuery, this.watchQueryOptions]);
 
     return obsQuery;
   }
@@ -577,4 +566,27 @@ class InternalState<TData, TVariables> {
       this.observable.refetch();
     }
   }
+}
+
+function useUnblockFetchEffect<TData, TVars>(
+  renderPromises: ApolloContextValue["renderPromises"],
+  resolveFetchBlockingPromise?: (result: boolean) => any,
+) {
+  if (resolveFetchBlockingPromise) {
+    if (renderPromises) {
+      // Since we're doing SSR, the useEffect callback will not be called, so we
+      // must unblock the fetchBlockingPromise now.
+      resolveFetchBlockingPromise(true);
+    } else {
+      // Otherwise, silently discard blocked fetches whose useEffect callbacks
+      // have not fired within 5 seconds (more than enough time to mount).
+      setTimeout(() => resolveFetchBlockingPromise(false), 5000);
+    }
+  }
+
+  useEffect(() => {
+    if (resolveFetchBlockingPromise) {
+      resolveFetchBlockingPromise(true);
+    }
+  }, [resolveFetchBlockingPromise]);
 }

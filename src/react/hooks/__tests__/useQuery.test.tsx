@@ -1,3 +1,4 @@
+import { RenderResult } from "@testing-library/react-hooks/src/types";
 import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
@@ -17,9 +18,9 @@ import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
+import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
-import { QueryResult } from '../../types/types';
 
 describe('useQuery Hook', () => {
   describe('General use', () => {
@@ -60,6 +61,73 @@ describe('useQuery Hook', () => {
       const oldResult = result.current;
       rerender({ children: null });
       expect(oldResult === result.current).toBe(true);
+    });
+
+    const expectFrames = <TData, TVariables>(result: RenderResult<QueryResult<TData, TVariables>>, expectedPartialFrames: Partial<QueryResult<TData, TVariables>>[]) => {
+      const actualPartialFrames = result.all.map((actualFrame, i) => {
+      const expectedPartialFrame = expectedPartialFrames[i];
+        if (actualFrame instanceof Error) {
+          return {
+            error: actualFrame,
+          };
+        }
+        if (expectedPartialFrame) {
+          const actualPartialFrame: Partial<Record<keyof QueryResult<TData, TVariables>, any>> = {};
+          (Object.keys(expectedPartialFrame) as (keyof typeof expectedPartialFrame)[]).forEach((key) => {
+            actualPartialFrame[key] = actualFrame[key];
+          });
+          return actualPartialFrame;
+        }
+        return {};
+      });
+      expect(actualPartialFrames).toEqual(expectedPartialFrames);
+    };
+
+    it("useQuery produces the expected frames initially", async () => {
+      const query = gql`{ hello }`;
+      const mocks = [ {
+        request: { query },
+        result: { data: { hello: "world" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
+      await waitFor(() => result.current.loading === false);
+      rerender({ children: null });
+      expectFrames(result, [
+        { loading: true, data: void 0 },
+        { loading: false, data: { hello: "world" } },
+        // Repeat frame because rerender forces useQuery to be called again
+        { loading: false, data: { hello: "world" } },
+      ]);
+    });
+
+    it("useQuery produces the expected frames when variables change", async () => {
+      const query = gql`
+        query ($id: Int) {
+        hello(id: $id)
+      }
+      `;
+      const mocks = [ {
+        request: { query, variables: { id: 1 } },
+        result: { data: { hello: "world 1" } },
+      }, {
+        request: { query, variables: { id: 2 } },
+        result: { data: { hello: "world 2" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, rerender, waitFor } = renderHook(
+        (options) => useQuery(query, options),
+        { wrapper, initialProps: { variables: { id: 1 } } },
+      );
+      await waitFor(() => result.current.loading === false);
+      rerender({ variables: { id: 2 } });
+      await waitFor(() => result.current.loading === false);
+      expectFrames(result, [
+        { loading: true, data: void 0, networkStatus: NetworkStatus.loading },
+        { loading: false, data: { hello: "world 1" }, networkStatus: NetworkStatus.ready },
+        { loading: true, data: void 0, networkStatus: NetworkStatus.setVariables },
+        { loading: false, data: { hello: "world 2" }, networkStatus: NetworkStatus.ready },
+      ]);
     });
 
     it('should read and write results from the cache', async () => {
@@ -1008,6 +1076,103 @@ describe('useQuery Hook', () => {
 
     expect(result.current.loading).toBe(false);
     expect(result.current.data).toEqual({ hello: 'from link' });
+  });
+
+  describe('options.fetchBlockingPromise', () => {
+    it("should prevent duplicate network requests in <React.StrictMode>", async () => {
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`query Counter { linkCount }`;
+
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          if (request.operationName === "Counter") {
+            observer.next({
+              data: {
+                linkCount: ++linkCount,
+              },
+            });
+            observer.complete();
+          }
+        })),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {
+          fetchPolicy: "cache-and-network",
+        }),
+        {
+          wrapper: ({ children }) => (
+            <React.StrictMode>
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            </React.StrictMode>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        linkCount: 1,
+      });
+
+      function checkObservableQueries(expectedLinkCount: number) {
+        const obsQueries = client.getObservableQueries("all");
+        expect(obsQueries.size).toBe(2);
+
+        const activeSet = new Set<typeof result.current.observable>();
+        const inactiveSet = new Set<typeof result.current.observable>();
+        obsQueries.forEach(obsQuery => {
+          if (obsQuery.hasObservers()) {
+            expect(inactiveSet.has(obsQuery)).toBe(false);
+            activeSet.add(obsQuery);
+            expect(obsQuery.getCurrentResult()).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                linkCount: expectedLinkCount,
+              },
+            });
+          } else {
+            expect(activeSet.has(obsQuery)).toBe(false);
+            inactiveSet.add(obsQuery);
+            const { fetchBlockingPromise } = obsQuery.options;
+            expect(fetchBlockingPromise).toBeInstanceOf(Promise);
+          }
+        });
+        expect(activeSet.size).toBe(1);
+        expect(inactiveSet.size).toBe(1);
+      }
+
+      checkObservableQueries(1);
+
+      const reobservePromise = result.current.reobserve().then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual({
+          linkCount: 2,
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        linkCount: 2,
+      });
+
+      checkObservableQueries(2);
+
+      await reobservePromise;
+    });
   });
 
   describe('polling', () => {

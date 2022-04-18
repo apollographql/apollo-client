@@ -58,7 +58,7 @@ export class RenderPromises {
 
   public addQueryPromise(
     queryInstance: QueryData,
-    finish: () => React.ReactNode
+    finish?: () => React.ReactNode,
   ): React.ReactNode {
     if (!this.stopped) {
       const info = this.lookupQueryInfo(queryInstance.getOptions());
@@ -74,7 +74,34 @@ export class RenderPromises {
         return null;
       }
     }
-    return finish();
+    return finish ? finish() : null;
+  }
+
+  public addObservableQueryPromise<TData, TVariables>(
+    obsQuery: ObservableQuery<TData, TVariables>,
+  ) {
+    return this.addQueryPromise({
+      // The only options which seem to actually be used by the
+      // RenderPromises class are query and variables.
+      getOptions: () => obsQuery.options,
+      fetchData: () => new Promise<void>((resolve) => {
+        const sub = obsQuery.subscribe({
+          next(result) {
+            if (!result.loading) {
+              resolve()
+              sub.unsubscribe();
+            }
+          },
+          error() {
+            resolve();
+            sub.unsubscribe();
+          },
+          complete() {
+            resolve();
+          },
+        });
+      }),
+    });
   }
 
   public hasPromises() {

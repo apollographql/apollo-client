@@ -1407,7 +1407,23 @@ export class QueryManager<TStore> {
       // allowing any network requests, and only proceed if fetchBlockingPromise
       // resolves to true. If it resolves to false, the request is discarded.
       return fetchBlockingPromise ? fetchBlockingPromise.then(
-        ok => ok ? get() : Observable.of<ApolloQueryResult<TData>>()
+        ok => ok ? get() : Observable.of<ApolloQueryResult<TData>>(),
+        error => {
+          const apolloError = isApolloError(error)
+            ? error
+            : new ApolloError({ clientErrors: [error] });
+
+          if (errorPolicy !== "ignore") {
+            queryInfo.markError(apolloError);
+          }
+
+          return Observable.of<ApolloQueryResult<TData>>({
+            loading: false,
+            networkStatus: NetworkStatus.error,
+            error: apolloError,
+            data: readCache().result,
+          });
+        },
       ) : get();
     }
 

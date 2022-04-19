@@ -200,7 +200,6 @@ class InternalState<TData, TVariables> {
   private renderPromises: ApolloContextValue["renderPromises"];
   private queryHookOptions: QueryHookOptions<TData, TVariables>;
   private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
-  private ssrDisabled: boolean;
 
   private useOptions(
     options: QueryHookOptions<TData, TVariables>,
@@ -243,11 +242,6 @@ class InternalState<TData, TVariables> {
     }
 
     useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
-
-    this.ssrDisabled = !!(
-      options.ssr === false ||
-      options.skip
-    );
 
     // Make sure state.onCompleted and state.onError always reflect the latest
     // options.onCompleted and options.onError callbacks provided to useQuery,
@@ -461,7 +455,12 @@ class InternalState<TData, TVariables> {
     if (this.renderPromises) {
       this.renderPromises.registerSSRObservable(obsQuery);
 
-      if (!this.ssrDisabled && obsQuery.getCurrentResult().loading) {
+      const ssrAllowed = !(
+        this.queryHookOptions.ssr === false ||
+        this.queryHookOptions.skip
+      );
+
+      if (ssrAllowed && obsQuery.getCurrentResult().loading) {
         // TODO: This is a legacy API which could probably be cleaned up
         this.renderPromises.addObservableQueryPromise(obsQuery);
       }

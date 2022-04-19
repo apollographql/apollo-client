@@ -385,6 +385,7 @@ Array [
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
+  "mergeOptions",
   "offsetLimitPagination",
   "relayStylePagination",
   "removeArgumentsFromDocument",

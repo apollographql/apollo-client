@@ -14,6 +14,7 @@ import {
   isNonEmptyArray,
   fixObservableSubclass,
   getQueryDefinition,
+  mergeOptions,
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
@@ -31,7 +32,6 @@ import {
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
 import { MissingTree } from '../cache/core/types/common';
-import { mergeOptions } from './ApolloClient';
 
 const {
   assign,

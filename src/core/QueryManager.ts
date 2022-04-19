@@ -640,9 +640,9 @@ export class QueryManager<TStore> {
     this.queries.set(observable.queryId, queryInfo);
 
     queryInfo.init({
-      document: options.query,
+      document: observable.query,
       observableQuery: observable,
-      variables: options.variables,
+      variables: observable.variables,
     });
 
     return observable;
@@ -1343,7 +1343,7 @@ export class QueryManager<TStore> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
-      document: query,
+      document: this.transform(query).document,
       variables,
       networkStatus,
     });

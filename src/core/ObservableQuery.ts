@@ -17,7 +17,11 @@ import {
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
-import { ApolloQueryResult, OperationVariables } from './types';
+import {
+  ApolloQueryResult,
+  OperationVariables,
+  TypedDocumentNode,
+} from './types';
 import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
@@ -64,6 +68,12 @@ export class ObservableQuery<
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;
+
+  public get query(): TypedDocumentNode<TData, TVariables> {
+    // This transform is heavily cached, so it should not be expensive to
+    // transform the same this.options.query document repeatedly.
+    return this.queryManager.transform(this.options.query).document;
+  }
 
   // Computed shorthand for this.options.variables, preserved for
   // backwards compatibility.
@@ -137,6 +147,10 @@ export class ObservableQuery<
       };
     });
 
+    // related classes
+    this.queryInfo = queryInfo;
+    this.queryManager = queryManager;
+
     // active state
     this.isTornDown = false;
 
@@ -150,12 +164,8 @@ export class ObservableQuery<
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
 
-    const opDef = getOperationDefinition(options.query);
+    const opDef = getOperationDefinition(this.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
-
-    // related classes
-    this.queryManager = queryManager;
-    this.queryInfo = queryInfo;
   }
 
   public result(): Promise<ApolloQueryResult<TData>> {
@@ -335,7 +345,7 @@ export class ObservableQuery<
     }
 
     if (__DEV__ && variables && hasOwnProperty.call(variables, "variables")) {
-      const queryDef = getQueryDefinition(this.options.query);
+      const queryDef = getQueryDefinition(this.query);
       const vars = queryDef.variableDefinitions;
       if (!vars || !vars.some(v => v.variable.name.value === "variables")) {
         invariant.warn(`Called refetch(${
@@ -374,6 +384,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
+        query: this.query,
         ...fetchMoreOptions,
         variables: {
           ...this.options.variables,
@@ -422,7 +433,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
           const { updateQuery } = fetchMoreOptions;
           if (updateQuery) {
             cache.updateQuery({
-              query: this.options.query,
+              query: this.query,
               variables: this.variables,
               returnPartialData: true,
               optimistic: false,
@@ -445,7 +456,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
           }
         },
 
-        onWatchUpdated(watch) {
+        onWatchUpdated: watch => {
           // Record the DocumentNode associated with any watched query whose
           // data were updated by the cache writes above.
           updatedQuerySet.add(watch.query);
@@ -460,7 +471,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // likely because the written data were the same as what was already in
       // the cache, we still want fetchMore to deliver its final loading:false
       // result with the unchanged data.
-      if (!updatedQuerySet.has(this.options.query)) {
+      if (!updatedQuerySet.has(this.query)) {
         reobserveCacheFirst(this);
       }
     });

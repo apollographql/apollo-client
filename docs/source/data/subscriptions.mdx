@@ -107,6 +107,25 @@ const wsLink = new GraphQLWsLink(createClient({
 
 Replace the value of the `url` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](/apollo-server/data/subscriptions/#enabling-subscriptions).
 
+Finally, there is a special case to take into consideration. When your client application is running on top of a solution that has server-side rendering, like [NextJS](https://nextjs.org/) for example, you must add an extra validation to check that the runtime in which the apollo client instance is being created is the browser side. and not the server side. Otherwise it won't work.
+
+```js title="index.js"
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+
+const isServer = typeof window === "undefined";
+
+const wsLink = !isServer
+  ? new GraphQLWsLink(
+      createClient({
+        url: "ws://localhost:3000/graphql",
+      })
+    )
+  : httpLink;
+```
+
+A WebSocket only works on the client side, so if it is on the server side, the HTTP link will be used.
+
 ### 3. Split communication by operation (recommended)
 
 Although Apollo Client _can_ use your `GraphQLWsLink` to execute all operation types, in most cases it should continue using HTTP for queries and mutations. This is because queries and mutations don't require a stateful or long-lasting connection, making HTTP more efficient and scalable if a WebSocket connection isn't already present.

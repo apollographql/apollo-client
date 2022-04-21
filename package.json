@@ -84,7 +84,7 @@
     "@wry/context": "^0.6.0",
     "@wry/equality": "^0.5.0",
     "@wry/trie": "^0.3.0",
-    "graphql-tag": "^2.12.3",
+    "graphql-tag": "^2.12.6",
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.16.1",
     "prop-types": "^15.7.2",

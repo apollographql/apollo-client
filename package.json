@@ -126,7 +126,7 @@
     "rimraf": "3.0.2",
     "rollup": "2.70.2",
     "rollup-plugin-terser": "7.0.2",
-    "rxjs": "6.6.7",
+    "rxjs": "7.5.5",
     "subscriptions-transport-ws": "0.11.0",
     "terser": "5.12.1",
     "ts-jest": "27.1.4",

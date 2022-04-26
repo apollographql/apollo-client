@@ -13,6 +13,9 @@
 
   > Since this `reobserve` method is useful and used internally, we have now exposed it as `use[Lazy]Query(...).reobserve` (which optionally takes a `Partial<WatchQueryOptions>` of new options), to supplement the existing `refetch` method. Note that `reobserve` permanently updates the `variables` and other options of the `ObservableQuery`, unlike `refetch({ ...variables })`, which does not save those `variables`.
 
+- The internal use of `options.fetchBlockingPromise` by `useQuery` and `useLazyQuery` may slightly delay the delivery of network results, compared to previous versions of Apollo Client. Since network results are already delivered asynchronously, these timing differences should not be disruptive in most cases. Nevertheless, please open an issue if the timing differences are a problem for you (and you have no easy workaround). <br/>
+  [@benjamn](https://github.com/benjamn) in [#9599](https://github.com/apollographql/apollo-client/pull/9599)
+
 ### React 18
 
 In both its `peerDependencies` and its internal implementation, Apollo Client v3.6 should no longer prevent you from updating to React 18 in your applications.

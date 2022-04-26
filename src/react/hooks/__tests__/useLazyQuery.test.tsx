@@ -7,6 +7,7 @@ import { ApolloClient, InMemoryCache } from '../../../core';
 import { ApolloProvider } from '../../../react';
 import { MockedProvider, mockSingleLink } from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
+import { QueryResult } from '../../types/types';
 
 describe('useLazyQuery Hook', () => {
   it('should hold query execution until manually triggered', async () => {
@@ -532,18 +533,22 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
     const execute = result.current[0];
-    let executeResult: any;
-    setTimeout(() => {
-      executeResult = execute();
+
+    const executeResult = new Promise<QueryResult<any, any>>(resolve => {
+      setTimeout(() => resolve(execute()));
     });
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
 
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world' });
-    await expect(executeResult).resolves.toEqual(result.current[1]);
+    const latestRenderResult = result.current[1];
+    expect(latestRenderResult.loading).toBe(false);
+    expect(latestRenderResult.data).toEqual({ hello: 'world' });
+
+    return executeResult.then(finalResult => {
+      expect(finalResult).toEqual(latestRenderResult);
+    });
   });
 
   it('should have matching results from execution function and hook', async () => {

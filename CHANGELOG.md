@@ -43,6 +43,9 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - Let `addTypenameToDocument` take any `ASTNode` (including `DocumentNode`, as before). <br/>
   [@benjamn](https://github.com/benjamn) in [#9595](https://github.com/apollographql/apollo-client/pull/9595)
 
+- Set `useMutation` internal `isMounted` variable to `true` again when component remounted. <br/>
+  [@devpeerapong](https://github.com/devpeerapong) in [#9561](https://github.com/apollographql/apollo-client/pull/9561)
+
 ## Apollo Client 3.5.10 (2022-02-24)
 
 ### Improvements

@@ -1284,6 +1284,7 @@ export class QueryManager<TStore> {
         if (onQueryUpdated) {
           if (!diff) {
             const info = oq["queryInfo"];
+            info.reset(); // Force info.getDiff() to read from cache.
             diff = info.getDiff(info.variables, true);
           }
           result = onQueryUpdated(oq, diff, lastDiff);

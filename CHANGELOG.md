@@ -37,7 +37,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - Allow passing `defaultOptions` to `useQuery` to avoid clobbering/resetting existing options when `useQuery` is called repeatedly. <br/>
   [@benjamn](https://github.com/benjamn) in [#9563](https://github.com/apollographql/apollo-client/pull/9563), superseding [#9223](https://github.com/apollographql/apollo-client/pull/9223)
 
-- Provide additional context to `nextFetchPolicy` functions to assist with `fetchPolicy` transitions. More details can be found in the [`nextFetchPolicy` documentation](https://deploy-preview-9067--apollo-client-docs.netlify.app/data/queries/#nextfetchpolicy). <br/>
+- Provide additional context to `nextFetchPolicy` functions to assist with `fetchPolicy` transitions. More details can be found in the [`nextFetchPolicy` documentation](https://www.apollographql.com/docs/react/data/queries/#nextfetchpolicy). <br/>
   [@benjamn](https://github.com/benjamn) in [#9222](https://github.com/apollographql/apollo-client/pull/9222)
 
 - Remove nagging deprecation warning about passing an `options.updateQuery` function to `fetchMore`. <br/>

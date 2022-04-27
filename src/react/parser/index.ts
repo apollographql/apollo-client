@@ -51,24 +51,31 @@ export function parser(document: DocumentNode): IDocumentDefinition {
       `to convert your operation into a document`
   );
 
-  const fragments = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'FragmentDefinition'
-  );
+  const fragments: DefinitionNode[] = []
+  const queries: DefinitionNode[] = []
+  const mutations: DefinitionNode[] = []
+  const subscriptions: DefinitionNode[] = []
 
-  const queries = document.definitions.filter(
-    (x: DefinitionNode) =>
-      x.kind === 'OperationDefinition' && x.operation === 'query'
-  );
+  for (const x of document.definitions) {
+    if (x.kind === 'FragmentDefinition') {
+      fragments.push(x);
+      continue
+    }
 
-  const mutations = document.definitions.filter(
-    (x: DefinitionNode) =>
-      x.kind === 'OperationDefinition' && x.operation === 'mutation'
-  );
-
-  const subscriptions = document.definitions.filter(
-    (x: DefinitionNode) =>
-      x.kind === 'OperationDefinition' && x.operation === 'subscription'
-  );
+    if (x.kind === 'OperationDefinition') {
+      switch (x.operation) {
+        case 'query':
+          queries.push(x);
+          break;
+        case 'mutation':
+          mutations.push(x);
+          break;
+        case 'subscription':
+          subscriptions.push(x);
+          break;
+      }
+    }
+  }
 
   invariant(
     !fragments.length ||

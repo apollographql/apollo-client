@@ -1093,7 +1093,6 @@ export class QueryManager<TStore> {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-    fetchBlockingPromise?: Promise<boolean>,
   ): Concast<ApolloQueryResult<TData>> {
     const query = this.transform(options.query).document;
     const variables = this.getVariables(query, options.variables) as TVars;
@@ -1127,7 +1126,6 @@ export class QueryManager<TStore> {
         queryInfo,
         normalized,
         networkStatus,
-        fetchBlockingPromise,
       );
     };
 
@@ -1340,7 +1338,6 @@ export class QueryManager<TStore> {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus: NetworkStatus,
-    fetchBlockingPromise?: Promise<boolean>,
   ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
@@ -1393,41 +1390,16 @@ export class QueryManager<TStore> {
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 
-    const resultsFromLink = () => {
-      const get = () => this.getResultsFromLink<TData, TVars>(
-        queryInfo,
-        cacheWriteBehavior,
-        {
-          variables,
-          context,
-          fetchPolicy,
-          errorPolicy,
-        },
-      );
-
-      // If we have a fetchBlockingPromise, wait for it to be resolved before
-      // allowing any network requests, and only proceed if fetchBlockingPromise
-      // resolves to true. If it resolves to false, the request is discarded.
-      return fetchBlockingPromise ? fetchBlockingPromise.then(
-        ok => ok ? get() : Observable.of<ApolloQueryResult<TData>>(),
-        error => {
-          const apolloError = isApolloError(error)
-            ? error
-            : new ApolloError({ clientErrors: [error] });
-
-          if (errorPolicy !== "ignore") {
-            queryInfo.markError(apolloError);
-          }
-
-          return Observable.of<ApolloQueryResult<TData>>({
-            loading: false,
-            networkStatus: NetworkStatus.error,
-            error: apolloError,
-            data: readCache().result,
-          });
-        },
-      ) : get();
-    }
+    const resultsFromLink = () => this.getResultsFromLink<TData, TVars>(
+      queryInfo,
+      cacheWriteBehavior,
+      {
+        variables,
+        context,
+        fetchPolicy,
+        errorPolicy,
+      },
+    );
 
     const shouldNotify =
       notifyOnNetworkStatusChange &&

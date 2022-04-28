@@ -1,3 +1,10 @@
+## Apollo Client 3.6.1 (unreleased)
+
+### Bug Fixes
+
+- Remove recently-added, internal `fetchBlockingPromise` option from the `WatchQueryOptions` interface, due to regressions. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9504](https://github.com/apollographql/apollo-client/pull/9504)
+
 ## Apollo Client 3.6.0 (2022-04-26)
 
 ### Potentially disruptive changes

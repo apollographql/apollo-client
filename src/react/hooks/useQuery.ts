@@ -227,21 +227,36 @@ class InternalState<TData, TVariables> {
         // variables have changed). To prevent any risk of premature/unwanted
         // network traffic, we use a fetchBlockingPromise, which will only be
         // unblocked once the useEffect has fired.
-        this.observable.reobserve({
-          fetchBlockingPromise: new Promise<boolean>(resolve => {
+        this.observable.reobserve(
+          watchQueryOptions,
+          void 0,
+          new Promise<boolean>(resolve => {
             resolveFetchBlockingPromise = resolve;
           }),
-          // If watchQueryOptions.fetchBlockingPromise is also defined, it takes
-          // precedence over the fetchBlockingPromise we just created.
-          ...watchQueryOptions,
-        });
+        );
 
         this.previousData = this.result?.data || this.previousData;
         this.result = void 0;
       }
     }
 
-    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
+    if (resolveFetchBlockingPromise) {
+      if (this.renderPromises) {
+        // Since we're doing SSR, the useEffect callback will not be called, so
+        // we must unblock the fetchBlockingPromise now.
+        resolveFetchBlockingPromise(true);
+      } else {
+        // Otherwise, silently discard blocked fetches whose useEffect callbacks
+        // have not fired within 5 seconds (more than enough time to mount).
+        setTimeout(() => resolveFetchBlockingPromise!(false), 5000);
+      }
+    }
+
+    useEffect(() => {
+      if (resolveFetchBlockingPromise) {
+        resolveFetchBlockingPromise(true);
+      }
+    }, [resolveFetchBlockingPromise]);
 
     // Make sure state.onCompleted and state.onError always reflect the latest
     // options.onCompleted and options.onError callbacks provided to useQuery,
@@ -424,8 +439,6 @@ class InternalState<TData, TVariables> {
   >;
 
   private useObservableQuery() {
-    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
-
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
@@ -434,13 +447,8 @@ class InternalState<TData, TVariables> {
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
         || this.observable // Reuse this.observable if possible (and not SSR)
         || this.client.watchQuery({
-          fetchBlockingPromise: new Promise<boolean>(resolve => {
-            resolveFetchBlockingPromise = resolve;
-          }),
           ...this.watchQueryOptions,
         });
-
-    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
@@ -565,27 +573,4 @@ class InternalState<TData, TVariables> {
       this.observable.refetch();
     }
   }
-}
-
-function useUnblockFetchEffect<TData, TVars>(
-  renderPromises: ApolloContextValue["renderPromises"],
-  resolveFetchBlockingPromise?: (result: boolean) => any,
-) {
-  if (resolveFetchBlockingPromise) {
-    if (renderPromises) {
-      // Since we're doing SSR, the useEffect callback will not be called, so we
-      // must unblock the fetchBlockingPromise now.
-      resolveFetchBlockingPromise(true);
-    } else {
-      // Otherwise, silently discard blocked fetches whose useEffect callbacks
-      // have not fired within 5 seconds (more than enough time to mount).
-      setTimeout(() => resolveFetchBlockingPromise(false), 5000);
-    }
-  }
-
-  useEffect(() => {
-    if (resolveFetchBlockingPromise) {
-      resolveFetchBlockingPromise(true);
-    }
-  }, [resolveFetchBlockingPromise]);
 }

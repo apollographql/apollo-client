@@ -665,6 +665,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
     newNetworkStatus?: NetworkStatus,
+    fetchBlockingPromise?: Promise<boolean>,
   ): Concast<ApolloQueryResult<TData>> {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
@@ -673,6 +674,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       this.queryId,
       options,
       newNetworkStatus,
+      fetchBlockingPromise,
     );
   }
 
@@ -754,6 +756,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus,
+    fetchBlockingPromise?: Promise<boolean>,
   ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;
 
@@ -800,7 +803,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     }
 
     const variables = options.variables && { ...options.variables };
-    const concast = this.fetch(options, newNetworkStatus);
+    const concast = this.fetch(options, newNetworkStatus, fetchBlockingPromise);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
         this.reportResult(result, variables);

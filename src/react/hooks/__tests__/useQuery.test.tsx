@@ -1143,8 +1143,6 @@ describe('useQuery Hook', () => {
           } else {
             expect(activeSet.has(obsQuery)).toBe(false);
             inactiveSet.add(obsQuery);
-            const { fetchBlockingPromise } = obsQuery.options;
-            expect(fetchBlockingPromise).toBeInstanceOf(Promise);
           }
         });
         expect(activeSet.size).toBe(1);

@@ -1093,6 +1093,7 @@ export class QueryManager<TStore> {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
+    fetchBlockingPromise?: Promise<boolean>,
   ): Concast<ApolloQueryResult<TData>> {
     const query = this.transform(options.query).document;
     const variables = this.getVariables(query, options.variables) as TVars;
@@ -1126,6 +1127,7 @@ export class QueryManager<TStore> {
         queryInfo,
         normalized,
         networkStatus,
+        fetchBlockingPromise,
       );
     };
 
@@ -1333,12 +1335,12 @@ export class QueryManager<TStore> {
       returnPartialData,
       context,
       notifyOnNetworkStatusChange,
-      fetchBlockingPromise,
     }: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus: NetworkStatus,
+    fetchBlockingPromise?: Promise<boolean>,
   ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
     const oldNetworkStatus = queryInfo.networkStatus;
 

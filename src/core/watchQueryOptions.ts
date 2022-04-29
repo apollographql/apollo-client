@@ -145,14 +145,6 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
    * behavior, for backwards compatibility with Apollo Client 3.x.
    */
   refetchWritePolicy?: RefetchWritePolicy;
-
-  /**
-   * If provided, stalls any network activity for this request until the Promise
-   * has resolved. If the Promise resolves to true, the network request will
-   * proceed. If the Promise resolves to false, the network request will be
-   * silently discarded.
-   */
-  fetchBlockingPromise?: Promise<boolean>;
 }
 
 export interface NextFetchPolicyContext<TData, TVariables> {

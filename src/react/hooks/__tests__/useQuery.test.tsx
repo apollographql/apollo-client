@@ -1078,8 +1078,8 @@ describe('useQuery Hook', () => {
     expect(result.current.data).toEqual({ hello: 'from link' });
   });
 
-  describe('options.fetchBlockingPromise', () => {
-    it("should prevent duplicate network requests in <React.StrictMode>", async () => {
+  describe('<React.StrictMode>', () => {
+    it("double-rendering should not trigger duplicate network requests", async () => {
       const query: TypedDocumentNode<{
         linkCount: number;
       }> = gql`query Counter { linkCount }`;
@@ -1143,8 +1143,6 @@ describe('useQuery Hook', () => {
           } else {
             expect(activeSet.has(obsQuery)).toBe(false);
             inactiveSet.add(obsQuery);
-            const { fetchBlockingPromise } = obsQuery.options;
-            expect(fetchBlockingPromise).toBeInstanceOf(Promise);
           }
         });
         expect(activeSet.size).toBe(1);

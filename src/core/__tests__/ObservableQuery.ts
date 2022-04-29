@@ -1199,7 +1199,7 @@ describe('ObservableQuery', () => {
       });
 
       expect(observable.options.fetchPolicy).toBe('cache-and-network');
-      expect(observable["initialFetchPolicy"]).toBe('cache-and-network');
+      expect(observable.options.initialFetchPolicy).toBe('cache-and-network');
 
       subscribeAndCount(reject, observable, (handleCount, result) => {
         expect(result.error).toBeUndefined();

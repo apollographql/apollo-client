@@ -56,8 +56,10 @@ describe('Query component', () => {
         {(result: any) => {
           const {
             client: clientResult,
+            observable,
             fetchMore,
             refetch,
+            reobserve,
             startPolling,
             stopPolling,
             subscribeToMore,
@@ -1060,15 +1062,17 @@ describe('Query component', () => {
           return (
             <AllPeopleQuery query={query} variables={variables}>
               {(result: any) => {
-                if (result.loading) {
-                  return null;
-                }
-
                 try {
-                  switch (count) {
-                    case 0:
+                  switch (++count) {
+                    case 1:
+                      expect(result.loading).toBe(true);
+                      expect(result.data).toBeUndefined();
                       expect(variables).toEqual({ first: 1 });
+                      break;
+                    case 2:
+                      expect(result.loading).toEqual(false);
                       expect(result.data).toEqual(data1);
+                      expect(variables).toEqual({ first: 1 });
                       setTimeout(() => {
                         this.setState({
                           variables: {
@@ -1077,20 +1081,23 @@ describe('Query component', () => {
                         });
                       });
                       break;
-                    case 1:
+                    case 3:
+                      expect(result.loading).toEqual(true);
+                      expect(result.data).toBeUndefined();
                       expect(variables).toEqual({ first: 2 });
-                      expect(result.data).toEqual(data1);
                       break;
-                    case 2:
-                      expect(variables).toEqual({ first: 2 });
+                    case 4:
+                      expect(result.loading).toEqual(false);
                       expect(result.data).toEqual(data2);
+                      expect(variables).toEqual({ first: 2 });
                       break;
+                    default:
+                      reject(`Too many renders (${count})`);
                   }
                 } catch (error) {
                   reject(error);
                 }
 
-                count++;
                 return null;
               }}
             </AllPeopleQuery>
@@ -1104,7 +1111,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(4)).then(resolve, reject);
     });
 
     itAsync('if the query changes', (resolve, reject) => {
@@ -1148,28 +1155,26 @@ describe('Query component', () => {
               {(result: any) => {
                 if (result.loading) return null;
                 try {
-                  switch (count) {
-                    case 0:
+                  switch (++count) {
+                    case 1:
                       expect(query).toEqual(query1);
                       expect(result.data).toEqual(data1);
                       setTimeout(() => {
                         this.setState({ query: query2 });
                       });
                       break;
-                    case 1:
-                      expect(query).toEqual(query2);
-                      expect(result.data).toEqual(data1);
-                      break;
                     case 2:
                       expect(query).toEqual(query2);
                       expect(result.data).toEqual(data2);
+                      break;
+                    default:
+                      reject(`Too many renders (${count})`);
                       break;
                   }
                 } catch (error) {
                   reject(error);
                 }
 
-                count++;
                 return null;
               }}
             </Query>
@@ -1183,7 +1188,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(2)).then(resolve, reject);
     });
 
     itAsync('with data while loading', (resolve, reject) => {
@@ -1232,27 +1237,27 @@ describe('Query component', () => {
             <AllPeopleQuery query={query} variables={variables}>
               {(result: any) => {
                 try {
-                  switch (count) {
-                    case 0:
+                  switch (++count) {
+                    case 1:
                       expect(result.loading).toBe(true);
                       expect(result.data).toBeUndefined();
                       expect(result.networkStatus).toBe(NetworkStatus.loading);
                       break;
-                    case 1:
-                      setTimeout(() => {
-                        this.setState({ variables: { first: 2 } });
-                      });
-                      // fallthrough
                     case 2:
                       expect(result.loading).toBe(false);
                       expect(result.data).toEqual(data1);
                       expect(result.networkStatus).toBe(NetworkStatus.ready);
+                      setTimeout(() => {
+                        this.setState({ variables: { first: 2 } });
+                      });
                       break;
                     case 3:
                       expect(result.loading).toBe(true);
+                      expect(result.data).toBeUndefined();
                       expect(result.networkStatus).toBe(NetworkStatus.setVariables);
                       break;
                     case 4:
+                      expect(result.loading).toBe(false);
                       expect(result.data).toEqual(data2);
                       expect(result.networkStatus).toBe(NetworkStatus.ready);
                       break;
@@ -1261,7 +1266,6 @@ describe('Query component', () => {
                   reject(err);
                 }
 
-                count++;
                 return null;
               }}
             </AllPeopleQuery>
@@ -1275,7 +1279,7 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      waitFor(() => expect(count).toBe(5)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(4)).then(resolve, reject);
     });
 
     itAsync('should update if a manual `refetch` is triggered after a state change', (resolve, reject) => {
@@ -1720,17 +1724,18 @@ describe('Query component', () => {
             onCompleted={this.onCompleted}
           >
             {({ loading, data }: any) => {
-              switch (renderCount) {
-                case 0:
-                  expect(loading).toBe(true);
-                  break;
+              switch (++renderCount) {
                 case 1:
+                  expect(loading).toBe(true);
+                  expect(data).toBeUndefined();
+                  break;
                 case 2:
                   expect(loading).toBe(false);
                   expect(data).toEqual(data1);
                   break;
                 case 3:
                   expect(loading).toBe(true);
+                  expect(data).toBeUndefined();
                   break;
                 case 4:
                   expect(loading).toBe(false);
@@ -1738,16 +1743,14 @@ describe('Query component', () => {
                   setTimeout(() => {
                     this.setState({ variables: { first: 1 } });
                   });
-                case 5:
-                  expect(loading).toBe(false);
-                  expect(data).toEqual(data2);
                   break;
-                case 6:
+                case 5:
                   expect(loading).toBe(false);
                   expect(data).toEqual(data1);
                   break;
+                default:
+                  reject(`Too many renders (${renderCount})`);
               }
-              renderCount += 1;
               return null;
             }}
           </AllPeopleQuery>
@@ -1762,6 +1765,7 @@ describe('Query component', () => {
     );
 
     waitFor(() => {
+      expect(renderCount).toBe(5);
       expect(onCompletedCallCount).toBe(3);
     }).then(resolve, reject);
   });

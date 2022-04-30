@@ -108,7 +108,7 @@
     "@types/lodash": "4.14.182",
     "@types/node": "16.11.32",
     "@types/react": "17.0.44",
-    "@types/react-dom": "17.0.15",
+    "@types/react-dom": "17.0.16",
     "@types/use-sync-external-store": "0.0.3",
     "acorn": "8.6.0",
     "bundlesize": "0.18.1",

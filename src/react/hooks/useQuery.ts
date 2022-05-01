@@ -184,6 +184,7 @@ class InternalState<TData, TVariables> {
       ]),
 
       () => this.getCurrentResult(),
+      () => this.getCurrentResult(),
     );
 
     // TODO Remove this method when we remove support for options.partialRefetch.

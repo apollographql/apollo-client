@@ -335,12 +335,12 @@ If your server uses `subscriptions-transport-ws` instead of the newer `graphql-w
 3. Instead of `import { GraphQLWsLink } from '@apollo/client/link/subscriptions'`:
 
     ```js
-    import { WebSocketLink } from '@apollo/client/link/ws
+    import { WebSocketLink } from '@apollo/client/link/ws'
     ```
 
 4. The options you pass to `new SubscriptionClient` differ slightly from those passed to `createClient`:
 
-    * The subscription URL is specified via the `uri` option instead of the `url` option.
+    * The first argument passed to the `SubscriptionClient` constructor is the URL for your subscription server.
     * The `connectionParams` option is nested under an options object called `options` instead of being at the top level. (You can also pass the `new SubscriptionClient` constructor arguments directly to `new WebSocketLink`.)
     * See [the `subscriptions-transport-ws` README](https://www.npmjs.com/package/subscriptions-transport-ws) for complete `SubscriptionClient` API docs.
 
@@ -353,8 +353,7 @@ import { WebSocketLink } from "@apollo/client/link/ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const wsLink = new WebSocketLink(
-  new SubscriptionClient({
-    uri: "ws://localhost:4000/subscriptions",
+  new SubscriptionClient("ws://localhost:4000/subscriptions", {
     options: {
       connectionParams: {
         authToken: user.authToken,

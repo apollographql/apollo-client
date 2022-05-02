@@ -1,3 +1,8 @@
+## Apollo Client 3.6.2 (unreleased)
+
+- Consider `networkError.result.errors` in addition to `result.errors` in `PersistedQueryLink`. <br/>
+  [@redaid113](https://github.com/redaid113) and [@benjamn](https://github.com/benjamn) in [#9410](https://github.com/apollographql/apollo-client/pull/9410)
+
 ## Apollo Client 3.6.1 (2022-04-28)
 
 ### Bug Fixes

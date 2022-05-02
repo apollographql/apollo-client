@@ -204,9 +204,38 @@ class InternalState<TData, TVariables> {
   private useOptions(
     options: QueryHookOptions<TData, TVariables>,
   ) {
+    const prevQueryHookOptions = this.queryHookOptions;
     const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options,
     );
+
+    if (options.skip) {
+      const {
+        fetchPolicy,
+        initialFetchPolicy = fetchPolicy,
+      } = watchQueryOptions;
+
+      // When skipping, we set watchQueryOptions.fetchPolicy initially to
+      // "standby", but we also need/want to preserve the initial non-standby
+      // fetchPolicy that would have been used if not skipping.
+      Object.assign(watchQueryOptions, {
+        initialFetchPolicy,
+        fetchPolicy: 'standby',
+      });
+
+    } else if (
+      prevQueryHookOptions &&
+      prevQueryHookOptions.skip &&
+      !watchQueryOptions.fetchPolicy
+    ) {
+      // When we're coming out of skip/standby mode, we have to provide a truthy
+      // fetchPolicy to override fetchPolicy:"standby", rather than leaving
+      // watchQueryOptions.fetchPolicy undefined.
+      watchQueryOptions.fetchPolicy =
+        options.defaultOptions?.fetchPolicy ||
+        this.client.defaultOptions.watchQuery?.fetchPolicy ||
+        'cache-first';
+    }
 
     // Update this.watchQueryOptions, but only when they have changed, which
     // allows us to depend on the referential stability of
@@ -295,65 +324,10 @@ class InternalState<TData, TVariables> {
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<TVariables, TData> {
-    // We use the mergeOptions helper function (which uses compact(...) and
-    // shallow-merges variables) to combine globalDefaults with any local
-    // defaultOptions provided to useQuery.
-    const toMerge: Partial<WatchQueryOptions<TVariables, TData>>[] = [];
-
-    // Merge global client.watchQuery default options with the lowest priority.
-    const globalDefaults = this.client.defaultOptions.watchQuery;
-    if (globalDefaults) toMerge.push(globalDefaults);
-
-    // Next, merge any defaultOptions passed directly to useQuery.
-    if (defaultOptions) toMerge.push(defaultOptions);
-
-    const latestOptions = this.observable && this.observable.options;
-    if (latestOptions && toMerge.length) {
-      // If we already have this.watchQueryOptions, those options should take
-      // precedence over default options of the same name. It might be simpler
-      // to do toMerge.push(this.watchQueryOptions), but that potentially
-      // (re)injects unrelated/unwanted options. Passing Object.create(null) as
-      // the second argument to toMerge.reduce ensures the result is a newly
-      // created object, so we can safely modify it in the forEach loop below.
-      const defaults = toMerge.reduce(mergeOptions, Object.create(null));
-
-      // Compact the toMerge array to hold only the merged defaults. This is
-      // equivalent to toMerge.splice(0, toMerge.length, defaults).
-      toMerge.length = 1;
-      toMerge[0] = defaults;
-
-      Object.keys(defaults).forEach(
-        (defaultOptionName: keyof WatchQueryOptions<TVariables, TData>) => {
-          const currentOptionValue = latestOptions[defaultOptionName];
-          if (
-            hasOwnProperty.call(latestOptions, defaultOptionName) &&
-            !equal(defaults[defaultOptionName], currentOptionValue)
-          ) {
-            // If you keep passing useQuery({ defaultOptions: { variables }}),
-            // those default variables continue to provide their default values
-            // every time, though in most cases this.watchQueryOptions.variables
-            // will have a current value for every default variable name, so the
-            // defaults don't matter. However, if a variable has been removed
-            // from this.watchQueryOptions.variables, future useQuery calls can
-            // restore its default value from defaultOptions.variables.
-            defaults[defaultOptionName] = defaultOptionName === "variables"
-              ? { ...defaults.variables, ...currentOptionValue }
-              : currentOptionValue;
-          }
-        },
-      );
-    }
-
-    // Give highest precedence to any non-default WatchQueryOptions passed
-    // directly to useQuery.
-    toMerge.push(otherOptions);
-
-    const merged = toMerge.reduce(mergeOptions, Object.create(null));
-
-    // This Object.assign is safe because merged is the fresh object created by
-    // the Object.create(null) argument to toMerge.reduce.
+    // This Object.assign is safe because otherOptions is a fresh ...rest object
+    // that did not exist until just now, so modifications are still allowed.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(merged, { query: this.query });
+      Object.assign(otherOptions, { query: this.query });
 
     if (
       this.renderPromises &&
@@ -365,29 +339,6 @@ class InternalState<TData, TVariables> {
       // this behavior was added to react-apollo without explanation in this PR
       // https://github.com/apollographql/react-apollo/pull/1579
       watchQueryOptions.fetchPolicy = 'cache-first';
-    } else if (!watchQueryOptions.fetchPolicy) {
-      // We applied all available fetchPolicy default values above (from
-      // globalDefaults and defaultOptions), so, if fetchPolicy is still
-      // undefined, fall back to the default default (no typo), cache-first.
-      watchQueryOptions.fetchPolicy = 'cache-first';
-    }
-
-    if (skip) {
-      const {
-        // The watchQueryOptions.initialFetchPolicy field usually defaults to
-        // watchQueryOptions.fetchPolicy, which has now been properly
-        // defaulted/initialized. However, watchQueryOptions.initialFetchPolicy
-        // can be provided explicitly instead, if more control is desired.
-        initialFetchPolicy = watchQueryOptions.fetchPolicy,
-      } = watchQueryOptions;
-
-      // When skipping, we set watchQueryOptions.fetchPolicy initially to
-      // "standby", but we also need/want to preserve the initial non-standby
-      // fetchPolicy that would have been used if not skipping.
-      Object.assign(watchQueryOptions, {
-        initialFetchPolicy,
-        fetchPolicy: 'standby',
-      });
     }
 
     if (!watchQueryOptions.variables) {
@@ -417,9 +368,13 @@ class InternalState<TData, TVariables> {
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
         || this.observable // Reuse this.observable if possible (and not SSR)
-        || this.client.watchQuery({
-          ...this.watchQueryOptions,
-        });
+        || this.client.watchQuery(mergeOptions(
+          // Any options.defaultOptions passed to useQuery serve as default
+          // options because we use them only here, when first creating the
+          // ObservableQuery by calling client.watchQuery.
+          this.queryHookOptions.defaultOptions,
+          this.watchQueryOptions,
+        ));
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),

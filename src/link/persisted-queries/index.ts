@@ -177,14 +177,28 @@ export const createPersistedQueryLink = (
       ) => {
         if (!retried && ((response && response.errors) || networkError)) {
           retried = true;
+
+          const graphQLErrors: GraphQLError[] = [];
+
+          const responseErrors = response && response.errors;
+          if (isNonEmptyArray(responseErrors)) {
+            graphQLErrors.push(...responseErrors);
+          }
+
           // Network errors can return GraphQL errors on for example a 403
-          const graphQLErrors = response ? response.errors : networkError && networkError.result && networkError.result.errors;
+          const networkErrors =
+            networkError &&
+            networkError.result &&
+            networkError.result.errors as GraphQLError[];
+          if (isNonEmptyArray(networkErrors)) {
+            graphQLErrors.push(...networkErrors);
+          }
 
           const disablePayload = {
             response,
             networkError,
             operation,
-            graphQLErrors,
+            graphQLErrors: isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
           };
 
           // if the server doesn't support persisted queries, don't try anymore

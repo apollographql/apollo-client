@@ -16,7 +16,7 @@ For up to date release notes, refer to the project's [Change Log](https://github
 
 1. Web Cache and performance improvements through new hooks (useBackgroundQuery, useFragment)
    - [#8694](https://github.com/apollographql/apollo-client/issues/8694)
-   - [#8263](https://github.com/apollographql/apollo-client/issues/8263)
+   - [#8236](https://github.com/apollographql/apollo-client/issues/8236)
 2. RefetchQueries not working when using string array after mutation
    - [#5419](https://github.com/apollographql/apollo-client/issues/5419)
 3. Adding React suspense + data fetching support

@@ -34,18 +34,16 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   );
 
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
-  const defaultOptions = internalState.client.defaultOptions.watchQuery;
-  const initialFetchPolicy =
-    (options && options.fetchPolicy) ||
-    (execOptionsRef.current && execOptionsRef.current.fetchPolicy) ||
-    (defaultOptions && defaultOptions.fetchPolicy) ||
-    "cache-first";
 
   const useQueryResult = internalState.useQuery({
     ...options,
     ...execOptionsRef.current,
     skip: !execOptionsRef.current,
   });
+
+  const initialFetchPolicy =
+    useQueryResult.observable.options.initialFetchPolicy ||
+    internalState.getDefaultFetchPolicy();
 
   const result: QueryResult<TData, TVariables> =
     Object.assign(useQueryResult, {

@@ -1,3 +1,10 @@
+## Apollo Client 3.6.3 (unreleased)
+
+### Bug Fixes
+
+- Simplify `useQuery(query, { defaultOptions })` default options processing in order to fix bug where `skip: true` queries failed to execute upon switching to `skip: false`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9665](https://github.com/apollographql/apollo-client/pull/9665)
+
 ## Apollo Client 3.6.2 (2022-05-02)
 
 ### Bug Fixes

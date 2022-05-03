@@ -154,12 +154,31 @@ export class ObservableQuery<
     // active state
     this.isTornDown = false;
 
+    const {
+      watchQuery: {
+        fetchPolicy: defaultFetchPolicy = "cache-first",
+      } = {},
+    } = queryManager.defaultOptions;
+
+    const {
+      fetchPolicy = defaultFetchPolicy,
+      initialFetchPolicy = (
+        // Make sure we don't store "standby" as the initialFetchPolicy.
+        fetchPolicy === "standby" ? defaultFetchPolicy : fetchPolicy
+      ),
+    } = options;
+
     this.options = {
+      ...options,
+
       // Remember the initial options.fetchPolicy so we can revert back to this
       // policy when variables change. This information can also be specified
       // (or overridden) by providing options.initialFetchPolicy explicitly.
-      initialFetchPolicy: options.fetchPolicy || "cache-first",
-      ...options,
+      initialFetchPolicy,
+
+      // This ensures this.options.fetchPolicy always has a string value, in
+      // case options.fetchPolicy was not provided.
+      fetchPolicy,
     };
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();

@@ -1172,7 +1172,7 @@ describe('fetchMore on an observable query', () => {
             },
           });
 
-          expect(observable.options.fetchPolicy).toBeUndefined();
+          expect(observable.options.fetchPolicy).toBe("cache-first");
         });
 
       } else if (count === 2) {

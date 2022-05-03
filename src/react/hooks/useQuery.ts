@@ -8,7 +8,7 @@ import {
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js';
 import { equal } from '@wry/equality';
 
-import { mergeOptions, OperationVariables } from '../../core';
+import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';
 import { ApolloContextValue, getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
@@ -204,38 +204,9 @@ class InternalState<TData, TVariables> {
   private useOptions(
     options: QueryHookOptions<TData, TVariables>,
   ) {
-    const prevQueryHookOptions = this.queryHookOptions;
     const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options,
     );
-
-    if (options.skip) {
-      const {
-        fetchPolicy,
-        initialFetchPolicy = fetchPolicy,
-      } = watchQueryOptions;
-
-      // When skipping, we set watchQueryOptions.fetchPolicy initially to
-      // "standby", but we also need/want to preserve the initial non-standby
-      // fetchPolicy that would have been used if not skipping.
-      Object.assign(watchQueryOptions, {
-        initialFetchPolicy,
-        fetchPolicy: 'standby',
-      });
-
-    } else if (
-      prevQueryHookOptions &&
-      prevQueryHookOptions.skip &&
-      !watchQueryOptions.fetchPolicy
-    ) {
-      // When we're coming out of skip/standby mode, we have to provide a truthy
-      // fetchPolicy to override fetchPolicy:"standby", rather than leaving
-      // watchQueryOptions.fetchPolicy undefined.
-      watchQueryOptions.fetchPolicy =
-        options.defaultOptions?.fetchPolicy ||
-        this.client.defaultOptions.watchQuery?.fetchPolicy ||
-        'cache-first';
-    }
 
     // Update this.watchQueryOptions, but only when they have changed, which
     // allows us to depend on the referential stability of
@@ -345,7 +316,34 @@ class InternalState<TData, TVariables> {
       watchQueryOptions.variables = {} as TVariables;
     }
 
+    if (skip) {
+      const {
+        fetchPolicy = this.getDefaultFetchPolicy(),
+        initialFetchPolicy = fetchPolicy,
+      } = watchQueryOptions;
+
+      // When skipping, we set watchQueryOptions.fetchPolicy initially to
+      // "standby", but we also need/want to preserve the initial non-standby
+      // fetchPolicy that would have been used if not skipping.
+      Object.assign(watchQueryOptions, {
+        initialFetchPolicy,
+        fetchPolicy: 'standby',
+      });
+    } else if (!watchQueryOptions.fetchPolicy) {
+      watchQueryOptions.fetchPolicy =
+        this.observable?.options.initialFetchPolicy ||
+        this.getDefaultFetchPolicy();
+    }
+
     return watchQueryOptions;
+  }
+
+  getDefaultFetchPolicy(): WatchQueryFetchPolicy {
+    return (
+      this.queryHookOptions.defaultOptions?.fetchPolicy ||
+      this.client.defaultOptions.watchQuery?.fetchPolicy ||
+      "cache-first"
+    );
   }
 
   // Defining these methods as no-ops on the prototype allows us to call

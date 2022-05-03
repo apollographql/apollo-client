@@ -1039,6 +1039,111 @@ describe('useQuery Hook', () => {
         "cache-first",
       ]);
     });
+
+    it("defaultOptions do not confuse useQuery when unskipping a query (issue #9635)", async () => {
+      const query: TypedDocumentNode<{
+        counter: number;
+      }> = gql`
+        query GetCounter {
+          counter
+        }
+      `;
+
+      let count = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          if (request.operationName === "GetCounter") {
+            observer.next({
+              data: {
+                counter: ++count,
+              },
+            });
+            setTimeout(() => {
+              observer.complete();
+            }, 10);
+          } else {
+            observer.error(new Error(`Unknown query: ${
+              request.operationName || request.query
+            }`));
+          }
+        })),
+      });
+
+      const defaultFetchPolicy = "network-only";
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [skip, setSkip] = useState(true);
+          return {
+            setSkip,
+            query: useQuery(query, {
+              skip,
+              defaultOptions: {
+                fetchPolicy: defaultFetchPolicy,
+              },
+            }),
+          };
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toBeUndefined();
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setSkip(false);
+      });
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.query.data).toBeUndefined();
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toEqual({ counter: 1 });
+
+      const { options } = result.current.query.observable;
+      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setSkip(true);
+      });
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toBeUndefined();
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setSkip(false);
+      });
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.query.data).toEqual({ counter: 1 });
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toEqual({ counter: 2 });
+
+      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+    });
   });
 
   it("can provide options.client without ApolloProvider", async () => {

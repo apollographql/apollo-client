@@ -14,12 +14,12 @@ type OptionsUnion<TData, TVariables, TContext> =
 export function mergeOptions<
   TOptions extends OptionsUnion<any, any, any>
 >(
-  defaults: TOptions | Partial<TOptions>,
+  defaults: TOptions | Partial<TOptions> | undefined,
   options: TOptions | Partial<TOptions>,
 ): TOptions {
   return compact(defaults, options, options.variables && {
     variables: {
-      ...defaults.variables,
+      ...(defaults && defaults.variables),
       ...options.variables,
     },
   });

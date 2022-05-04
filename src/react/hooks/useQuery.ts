@@ -384,15 +384,15 @@ class InternalState<TData, TVariables> {
       subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
     }), [obsQuery]);
 
-    if (this.renderPromises) {
+    const ssrAllowed = !(
+      this.queryHookOptions.ssr === false ||
+      this.queryHookOptions.skip
+    );
+
+    if (this.renderPromises && ssrAllowed) {
       this.renderPromises.registerSSRObservable(obsQuery);
 
-      const ssrAllowed = !(
-        this.queryHookOptions.ssr === false ||
-        this.queryHookOptions.skip
-      );
-
-      if (ssrAllowed && obsQuery.getCurrentResult().loading) {
+      if (obsQuery.getCurrentResult().loading) {
         // TODO: This is a legacy API which could probably be cleaned up
         this.renderPromises.addObservableQueryPromise(obsQuery);
       }

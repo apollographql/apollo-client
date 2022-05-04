@@ -3,10 +3,12 @@ import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { renderHook } from '@testing-library/react-hooks';
 
-import { ApolloClient, InMemoryCache } from '../../../core';
+import { ApolloClient, ApolloLink, InMemoryCache, TypedDocumentNode } from '../../../core';
+import { Observable } from '../../../utilities';
 import { ApolloProvider } from '../../../react';
 import { MockedProvider, mockSingleLink } from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
+import { QueryResult } from '../../types/types';
 
 describe('useLazyQuery Hook', () => {
   it('should hold query execution until manually triggered', async () => {
@@ -532,18 +534,22 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
     const execute = result.current[0];
-    let executeResult: any;
-    setTimeout(() => {
-      executeResult = execute();
+
+    const executeResult = new Promise<QueryResult<any, any>>(resolve => {
+      setTimeout(() => resolve(execute()));
     });
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
 
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world' });
-    await expect(executeResult).resolves.toEqual(result.current[1]);
+    const latestRenderResult = result.current[1];
+    expect(latestRenderResult.loading).toBe(false);
+    expect(latestRenderResult.data).toEqual({ hello: 'world' });
+
+    return executeResult.then(finalResult => {
+      expect(finalResult).toEqual(latestRenderResult);
+    });
   });
 
   it('should have matching results from execution function and hook', async () => {
@@ -760,4 +766,92 @@ describe('useLazyQuery Hook', () => {
     // Making sure the rejection triggers a test failure.
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
+
+  describe("options.defaultOptions", () => {
+    it("defaultOptions do not confuse useLazyQuery", async () => {
+      const counterQuery: TypedDocumentNode<{
+        counter: number;
+      }> = gql`
+        query GetCounter {
+          counter
+        }
+      `;
+
+      let count = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          if (request.operationName === "GetCounter") {
+            observer.next({
+              data: {
+                counter: ++count,
+              },
+            });
+            setTimeout(() => {
+              observer.complete();
+            }, 10);
+          } else {
+            observer.error(new Error(`Unknown query: ${
+              request.operationName || request.query
+            }`));
+          }
+        })),
+      });
+
+      const defaultFetchPolicy = "network-only";
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [exec, query] = useLazyQuery(counterQuery, {
+            defaultOptions: {
+              fetchPolicy: defaultFetchPolicy,
+              notifyOnNetworkStatusChange: true,
+            },
+          });
+          return {
+            exec,
+            query,
+          };
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.called).toBe(false);
+      expect(result.current.query.data).toBeUndefined();
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      const execPromise = result.current.exec().then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.called).toBe(true);
+        expect(result.data).toEqual({ counter: 1 });
+      });
+
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.called).toBe(true);
+      expect(result.current.query.data).toBeUndefined();
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.called).toBe(true);
+      expect(result.current.query.data).toEqual({ counter: 1 });
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      await execPromise;
+
+      const { options } = result.current.query.observable;
+      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+    });
+  })
 });

@@ -4,7 +4,7 @@ import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
 import { ApolloCache, DataProxy } from '../cache';
-import { Observable, compact } from '../utilities';
+import { Observable } from '../utilities';
 import { version } from '../version';
 import { HttpLink, UriFunction } from '../link/http';
 
@@ -62,24 +62,12 @@ export type ApolloClientOptions<TCacheShape> = {
   version?: string;
 };
 
-type OptionsUnion<TData, TVariables, TContext> =
-  | WatchQueryOptions<TVariables, TData>
-  | QueryOptions<TVariables, TData>
-  | MutationOptions<TData, TVariables, TContext>;
-
-export function mergeOptions<
-  TOptions extends OptionsUnion<any, any, any>
->(
-  defaults: Partial<TOptions>,
-  options: TOptions,
-): TOptions {
-  return compact(defaults, options, options.variables && {
-    variables: {
-      ...defaults.variables,
-      ...options.variables,
-    },
-  });
-}
+// Though mergeOptions now resides in @apollo/client/utilities, it was
+// previously declared and exported from this module, and then reexported from
+// @apollo/client/core. Since we need to preserve that API anyway, the easiest
+// solution is to reexport mergeOptions where it was previously declared (here).
+import { mergeOptions } from "../utilities";
+export { mergeOptions }
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -93,7 +81,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
-  public defaultOptions: DefaultOptions = {};
+  public defaultOptions: DefaultOptions;
   public readonly typeDefs: ApolloClientOptions<TCacheShape>['typeDefs'];
 
   private queryManager: QueryManager<TCacheShape>;
@@ -183,7 +171,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.cache = cache;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || {};
+    this.defaultOptions = defaultOptions || Object.create(null);
     this.typeDefs = typeDefs;
 
     if (ssrForceFetchDelay) {
@@ -246,6 +234,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.queryManager = new QueryManager({
       cache: this.cache,
       link: this.link,
+      defaultOptions: this.defaultOptions,
       queryDeduplication,
       ssrMode,
       clientAwareness: {

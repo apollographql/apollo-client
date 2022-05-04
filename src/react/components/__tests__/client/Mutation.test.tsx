@@ -1027,33 +1027,32 @@ describe('General Mutation testing', () => {
                   if (count === 0) {
                     // "first: 1" loading
                     expect(resultQuery.loading).toBe(true);
+                    expect(resultQuery.data).toBeUndefined();
                   } else if (count === 1) {
                     // "first: 1" loaded
                     expect(resultQuery.loading).toBe(false);
                     expect(resultQuery.data).toEqual(peopleData1);
                     setTimeout(() => setVariables({ first: 2 }));
                   } else if (count === 2) {
-                    expect(resultQuery.loading).toBe(false);
-                    expect(resultQuery.data).toEqual(peopleData1);
-                  } else if (count === 3) {
-                    // "first: 2" loading
                     expect(resultQuery.loading).toBe(true);
-                  } else if (count === 4) {
-                    // "first: 2" loaded
+                    expect(resultQuery.data).toBeUndefined();
+                  } else if (count === 3) {
                     expect(resultQuery.loading).toBe(false);
                     expect(resultQuery.data).toEqual(peopleData2);
                     setTimeout(() => createTodo());
-                  } else if (count === 5) {
+                  } else if (count === 4) {
                     // mutation loading
                     expect(resultMutation.loading).toBe(true);
-                  } else if (count === 6) {
+                  } else if (count === 5) {
                     // mutation loaded
                     expect(resultMutation.loading).toBe(false);
-                  } else if (count === 7) {
+                  } else if (count === 6) {
                     // query refetched
                     expect(resultQuery.loading).toBe(false);
                     expect(resultMutation.loading).toBe(false);
                     expect(resultQuery.data).toEqual(peopleData3);
+                  } else {
+                    reject(`Too many renders (${count})`);
                   }
                   count++;
                 } catch (err) {
@@ -1074,7 +1073,7 @@ describe('General Mutation testing', () => {
     );
 
     waitFor(() => {
-      expect(count).toEqual(8);
+      expect(count).toEqual(7);
     }).then(resolve, reject);
   }));
 

@@ -108,6 +108,7 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     }).then(queryResult => Object.assign(queryResult, eagerMethods));
 
     // Deliver the loading state for this reobservation immediately.
+    // TODO What if internalState.forceUpdate returned a Promise for the result?
     internalState.forceUpdate();
 
     // Because the return value of `useLazyQuery` is usually floated, we need

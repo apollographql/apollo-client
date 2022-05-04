@@ -3,7 +3,7 @@ title: File uploads
 description: Enabling file uploads in Apollo Client
 ---
 
-Apollo Boost doesn't support upload feature out of the box. If you'd like to enable upload, you will have to set Apollo Client up manually. Follow [this instruction](https://www.apollographql.com/docs/react/migrating/boost-migration) to migrate from Apollo Boost.
+Apollo Boost doesn't support upload feature out of the box. If you'd like to enable upload, you will have to set Apollo Client up manually. Follow [this instruction](https://www.apollographql.com/docs/react/v2/migrating/boost-migration/) to migrate from Apollo Boost.
 
 Then you need to add this dependency [apollo-upload-client](https://github.com/jaydenseric/apollo-upload-client)
 

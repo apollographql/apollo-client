@@ -9,6 +9,9 @@ const ReactWithSESHook = React as (typeof React & {
 
 let didWarnUncachedGetSnapshot = false;
 
+// Adapted from https://www.npmjs.com/package/use-sync-external-store, with
+// Apollo Client deviations called out by "// DEVIATION ..." comments.
+
 export function useSyncExternalStore<Snapshot>(
   subscribe: (onStoreChange: () => void) => () => void,
   getSnapshot: () => Snapshot,
@@ -26,11 +29,15 @@ export function useSyncExternalStore<Snapshot>(
   // always synchronous.
   const value = getSnapshot();
   if (
+    // DEVIATION: Using our own __DEV__ polyfill (from ../../utilities/globals).
     __DEV__ &&
     !didWarnUncachedGetSnapshot &&
+    // DEVIATION: Not using Object.is because we know our snapshots will never
+    // be exotic primitive values like NaN, which is !== itself.
     value !== getSnapshot()
   ) {
     didWarnUncachedGetSnapshot = true;
+    // DEVIATION: Using invariant.error instead of console.error directly.
     invariant.error(
       'The result of getSnapshot should be cached to avoid an infinite loop',
     );
@@ -56,6 +63,9 @@ export function useSyncExternalStore<Snapshot>(
   // in the layout phase so we can access it during the tearing check that
   // happens on subscribe.
   if (canUseDOM) {
+    // DEVIATION: We avoid calling useLayoutEffect when !canUseDOM, which may
+    // seem like a conditional hook, but this code ends up behaving
+    // unconditionally (one way or the other) because canUseDOM is constant.
     React.useLayoutEffect(() => {
       Object.assign(inst, { value, getSnapshot });
       // Whenever getSnapshot or subscribe changes, we need to check in the
@@ -78,7 +88,9 @@ export function useSyncExternalStore<Snapshot>(
       // Force a re-render.
       forceUpdate({inst});
     }
-    const handleStoreChange = () => {
+
+    // Subscribe to the store and return a clean-up function.
+    return subscribe(function handleStoreChange() {
       // TODO: Because there is no cross-renderer API for batching updates, it's
       // up to the consumer of this library to wrap their subscription event
       // with unstable_batchedUpdates. Should we try to detect when this isn't
@@ -90,9 +102,7 @@ export function useSyncExternalStore<Snapshot>(
         // Force a re-render.
         forceUpdate({inst});
       }
-    };
-    // Subscribe to the store and return a clean-up function.
-    return subscribe(handleStoreChange);
+    });
   }, [subscribe]);
 
   return value;

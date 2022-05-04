@@ -354,10 +354,8 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const wsLink = new WebSocketLink(
   new SubscriptionClient("ws://localhost:4000/subscriptions", {
-    options: {
-      connectionParams: {
-        authToken: user.authToken,
-      },
+    connectionParams: {
+      authToken: user.authToken,
     },
   }),
 );

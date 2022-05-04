@@ -7,13 +7,20 @@ import {
   Reference,
 } from '../../utilities';
 import { FieldValueGetter } from './entityStore';
-import { KeyFieldsFunction, StorageType, FieldMergeFunction } from './policies';
+import {
+  TypePolicies,
+  PossibleTypesMap,
+  KeyFieldsFunction,
+  StorageType,
+  FieldMergeFunction,
+} from './policies';
 import {
   Modifier,
   Modifiers,
   ToReferenceFunction,
   CanReadFunction,
 } from '../core/types/common';
+
 export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
@@ -33,7 +40,13 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
-  merge(dataId: string, incoming: StoreObject): void;
+
+  // The store.merge method allows either argument to be a string ID, but
+  // the other argument has to be a StoreObject. Either way, newer fields
+  // always take precedence over older fields.
+  merge(olderId: string, newerObject: StoreObject): void;
+  merge(olderObject: StoreObject, newerId: string): void;
+
   modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
@@ -97,6 +110,7 @@ export type ReadQueryOptions = {
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;
+  canonizeResults?: boolean;
   rootId?: string;
   config?: ApolloReducerConfig;
 };
@@ -109,6 +123,14 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
   addTypename?: boolean;
 };
+
+export interface InMemoryCacheConfig extends ApolloReducerConfig {
+  resultCaching?: boolean;
+  possibleTypes?: PossibleTypesMap;
+  typePolicies?: TypePolicies;
+  resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
+}
 
 export interface MergeInfo {
   field: FieldNode;

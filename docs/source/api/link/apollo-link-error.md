@@ -1,6 +1,5 @@
 ---
 title: Error Link
-sidebar_title: Error
 description: Handle and inspect errors in your GraphQL network stack.
 ---
 
@@ -14,7 +13,7 @@ import { onError } from "@apollo/client/link/error";
 // Log any GraphQL errors or network error that occurred
 const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
-    graphQLErrors.map(({ message, locations, path }) =>
+    graphQLErrors.forEach(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
@@ -65,7 +64,7 @@ The details of the GraphQL operation that produced an error.
 
 The (possibly modified) GraphQL result from the server, passed by the next link down the chain (i.e., the link closer to the terminating link).
 
-[See type definition](https://github.com/graphql/graphql-js/blob/main/src/execution/execute.d.ts#L49-L57)
+[See type definition](https://github.com/graphql/graphql-js/blob/main/src/execution/execute.ts#L104-L111)
 </td>
 </tr>
 
@@ -81,7 +80,7 @@ The (possibly modified) GraphQL result from the server, passed by the next link 
 
 An array of [GraphQL errors](../../data/error-handling/#graphql-errors) that occurred while executing the operation, if any.
 
-[See type definition](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.d.ts)
+[See type definition](https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts)
 
 </td>
 </tr>

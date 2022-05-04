@@ -178,7 +178,7 @@ export class Concast<T> extends Observable<T> {
         // Delay unsubscribing from the underlying subscription slightly,
         // so that immediately subscribing another observer can keep the
         // subscription active.
-        if (sub) Promise.resolve().then(() => sub.unsubscribe());
+        if (sub) setTimeout(() => sub.unsubscribe());
         this.sub = null;
         this.latest = ["error", error];
         this.reject(error);

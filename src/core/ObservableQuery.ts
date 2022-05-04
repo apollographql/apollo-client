@@ -1,8 +1,10 @@
-import { invariant } from 'ts-invariant';
+import { invariant } from '../utilities/globals';
+import { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
+  Concast,
   cloneDeep,
   getOperationDefinition,
   Observable,
@@ -11,17 +13,30 @@ import {
   iterateObserversSafely,
   isNonEmptyArray,
   fixObservableSubclass,
+  getQueryDefinition,
+  mergeOptions,
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
-import { ApolloQueryResult, OperationVariables } from './types';
+import {
+  ApolloQueryResult,
+  OperationVariables,
+  TypedDocumentNode,
+} from './types';
 import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
+  NextFetchPolicyContext,
 } from './watchQueryOptions';
-import { Reobserver } from './Reobserver';
 import { QueryInfo } from './QueryInfo';
+import { MissingFieldError } from '../cache';
+import { MissingTree } from '../cache/core/types/common';
+
+const {
+  assign,
+  hasOwnProperty,
+} = Object;
 
 export interface FetchMoreOptions<
   TData = any,
@@ -40,7 +55,11 @@ export interface UpdateQueryOptions<TVariables> {
   variables?: TVariables;
 }
 
-let warnedAboutUpdateQuery = false;
+interface Last<TData, TVariables> {
+  result: ApolloQueryResult<TData>;
+  variables?: TVariables;
+  error?: ApolloError;
+}
 
 export class ObservableQuery<
   TData = any,
@@ -49,6 +68,12 @@ export class ObservableQuery<
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;
+
+  public get query(): TypedDocumentNode<TData, TVariables> {
+    // This transform is heavily cached, so it should not be expensive to
+    // transform the same this.options.query document repeatedly.
+    return this.queryManager.transform(this.options.query).document;
+  }
 
   // Computed shorthand for this.options.variables, preserved for
   // backwards compatibility.
@@ -61,10 +86,19 @@ export class ObservableQuery<
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
   private subscriptions = new Set<ObservableSubscription>();
 
-  private lastResult: ApolloQueryResult<TData>;
-  private lastResultSnapshot: ApolloQueryResult<TData>;
-  private lastError: ApolloError;
+  private last?: Last<TData, TVariables>;
+
   private queryInfo: QueryInfo;
+
+  // When this.concast is defined, this.observer is the Observer currently
+  // subscribed to that Concast.
+  private concast?: Concast<ApolloQueryResult<TData>>;
+  private observer?: Observer<ApolloQueryResult<TData>>;
+
+  private pollingInfo?: {
+    interval: number;
+    timeout: ReturnType<typeof setTimeout>;
+  };
 
   constructor({
     queryManager,
@@ -75,28 +109,89 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer: Observer<ApolloQueryResult<TData>>) =>
-      this.onSubscribe(observer),
-    );
+    super((observer: Observer<ApolloQueryResult<TData>>) => {
+      // Zen Observable has its own error function, so in order to log correctly
+      // we need to provide a custom error callback.
+      try {
+        var subObserver = (observer as any)._subscription._observer;
+        if (subObserver && !subObserver.error) {
+          subObserver.error = defaultSubscriptionObserverErrorCallback;
+        }
+      } catch {}
+
+      const first = !this.observers.size;
+      this.observers.add(observer);
+
+      // Deliver most recent error or result.
+      const last = this.last;
+      if (last && last.error) {
+        observer.error && observer.error(last.error);
+      } else if (last && last.result) {
+        observer.next && observer.next(last.result);
+      }
+
+      // Initiate observation of this query if it hasn't been reported to
+      // the QueryManager yet.
+      if (first) {
+        // Blindly catching here prevents unhandled promise rejections,
+        // and is safe because the ObservableQuery handles this error with
+        // this.observer.error, so we're not just swallowing the error by
+        // ignoring it here.
+        this.reobserve().catch(() => {});
+      }
+
+      return () => {
+        if (this.observers.delete(observer) && !this.observers.size) {
+          this.tearDownQuery();
+        }
+      };
+    });
+
+    // related classes
+    this.queryInfo = queryInfo;
+    this.queryManager = queryManager;
 
     // active state
     this.isTornDown = false;
 
-    // query information
-    this.options = options;
-    this.queryId = queryManager.generateQueryId();
+    const {
+      watchQuery: {
+        fetchPolicy: defaultFetchPolicy = "cache-first",
+      } = {},
+    } = queryManager.defaultOptions;
 
-    const opDef = getOperationDefinition(options.query);
+    const {
+      fetchPolicy = defaultFetchPolicy,
+      initialFetchPolicy = (
+        // Make sure we don't store "standby" as the initialFetchPolicy.
+        fetchPolicy === "standby" ? defaultFetchPolicy : fetchPolicy
+      ),
+    } = options;
+
+    this.options = {
+      ...options,
+
+      // Remember the initial options.fetchPolicy so we can revert back to this
+      // policy when variables change. This information can also be specified
+      // (or overridden) by providing options.initialFetchPolicy explicitly.
+      initialFetchPolicy,
+
+      // This ensures this.options.fetchPolicy always has a string value, in
+      // case options.fetchPolicy was not provided.
+      fetchPolicy,
+    };
+
+    this.queryId = queryInfo.queryId || queryManager.generateQueryId();
+
+    const opDef = getOperationDefinition(this.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
-
-    // related classes
-    this.queryManager = queryManager;
-
-    this.queryInfo = queryInfo;
   }
 
   public result(): Promise<ApolloQueryResult<TData>> {
     return new Promise((resolve, reject) => {
+      // TODO: this code doesn’t actually make sense insofar as the observer
+      // will never exist in this.observers due how zen-observable wraps observables.
+      // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
       const observer: Observer<ApolloQueryResult<TData>> = {
         next: (result: ApolloQueryResult<TData>) => {
           resolve(result);
@@ -127,58 +222,75 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
-    const { lastResult } = this;
+    // Use the last result as long as the variables match this.variables.
+    const lastResult = this.getLastResult(true);
 
     const networkStatus =
       this.queryInfo.networkStatus ||
       (lastResult && lastResult.networkStatus) ||
       NetworkStatus.ready;
 
-    const result: ApolloQueryResult<TData> = {
+    const result = {
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-    };
+    } as ApolloQueryResult<TData>;
 
-    if (this.isTornDown) {
-      return result;
-    }
-
-    const { fetchPolicy = 'cache-first' } = this.options;
-    if (fetchPolicy === 'no-cache' ||
-        fetchPolicy === 'network-only') {
-      // Similar to setting result.partial to false, but taking advantage
-      // of the falsiness of missing fields.
-      delete result.partial;
-    } else if (
-      !result.data ||
+    const { fetchPolicy = "cache-first" } = this.options;
+    if (
+      // These fetch policies should never deliver data from the cache, unless
+      // redelivering a previously delivered result.
+      fetchPolicy === 'network-only' ||
+      fetchPolicy === 'no-cache' ||
+      fetchPolicy === 'standby' ||
       // If this.options.query has @client(always: true) fields, we cannot
-      // trust result.data, since it was read from the cache without
-      // running local resolvers (and it's too late to run resolvers now,
-      // since we must return a result synchronously). TODO In the future
-      // (after Apollo Client 3.0), we should find a way to trust
-      // this.lastResult in more cases, and read from the cache only in
-      // cases when no result has been received yet.
-      !this.queryManager.transform(this.options.query).hasForcedResolvers
+      // trust diff.result, since it was read from the cache without running
+      // local resolvers (and it's too late to run resolvers now, since we must
+      // return a result synchronously).
+      this.queryManager.transform(this.options.query).hasForcedResolvers
     ) {
+      // Fall through.
+    } else {
       const diff = this.queryInfo.getDiff();
-      result.data = (
-        diff.complete ||
-        this.options.returnPartialData
-      ) ? diff.result : void 0;
+
+      if (diff.complete || this.options.returnPartialData) {
+        result.data = diff.result;
+      }
+
+      if (equal(result.data, {})) {
+        result.data = void 0 as any;
+      }
+
       if (diff.complete) {
+        // Similar to setting result.partial to false, but taking advantage of the
+        // falsiness of missing fields.
+        delete result.partial;
+
         // If the diff is complete, and we're using a FetchPolicy that
-        // terminates after a complete cache read, we can assume the next
-        // result we receive will have NetworkStatus.ready and !loading.
-        if (result.networkStatus === NetworkStatus.loading &&
-            (fetchPolicy === 'cache-first' ||
-             fetchPolicy === 'cache-only')) {
+        // terminates after a complete cache read, we can assume the next result
+        // we receive will have NetworkStatus.ready and !loading.
+        if (
+          diff.complete &&
+          result.networkStatus === NetworkStatus.loading &&
+          (fetchPolicy === 'cache-first' ||
+          fetchPolicy === 'cache-only')
+        ) {
           result.networkStatus = NetworkStatus.ready;
           result.loading = false;
         }
-        delete result.partial;
       } else {
         result.partial = true;
+      }
+
+      if (
+        __DEV__ &&
+        !diff.complete &&
+        !this.options.partialRefetch &&
+        !result.loading &&
+        !result.data &&
+        !result.error
+      ) {
+        logMissingFieldErrors(diff.missing);
       }
     }
 
@@ -192,23 +304,33 @@ export class ObservableQuery<
   // Compares newResult to the snapshot we took of this.lastResult when it was
   // first received.
   public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
-    return !equal(this.lastResultSnapshot, newResult);
+    return !this.last || !equal(this.last.result, newResult);
   }
 
-  // Returns the last result that observer.next was called with. This is not the same as
-  // getCurrentResult! If you're not sure which you need, then you probably need getCurrentResult.
-  public getLastResult(): ApolloQueryResult<TData> {
-    return this.lastResult;
+  private getLast<K extends keyof Last<TData, TVariables>>(
+    key: K,
+    variablesMustMatch?: boolean,
+  ) {
+    const last = this.last;
+    if (
+      last &&
+      last[key] &&
+      (!variablesMustMatch || equal(last.variables, this.variables))
+    ) {
+      return last[key];
+    }
   }
 
-  public getLastError(): ApolloError {
-    return this.lastError;
+  public getLastResult(variablesMustMatch?: boolean): ApolloQueryResult<TData> | undefined {
+    return this.getLast("result", variablesMustMatch);
+  }
+
+  public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
+    return this.getLast("error", variablesMustMatch);
   }
 
   public resetLastResults(): void {
-    delete this.lastResult;
-    delete this.lastResultSnapshot;
-    delete this.lastError;
+    delete this.last;
     this.isTornDown = false;
   }
 
@@ -233,11 +355,25 @@ export class ObservableQuery<
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
     const { fetchPolicy } = this.options;
-    if (fetchPolicy !== 'no-cache' &&
-        fetchPolicy !== 'cache-and-network') {
+    if (fetchPolicy === 'cache-and-network') {
+      reobserveOptions.fetchPolicy = fetchPolicy;
+    } else if (fetchPolicy === 'no-cache') {
+      reobserveOptions.fetchPolicy = 'no-cache';
+    } else {
       reobserveOptions.fetchPolicy = 'network-only';
-      // Go back to the original options.fetchPolicy after this refetch.
-      reobserveOptions.nextFetchPolicy = fetchPolicy || "cache-first";
+    }
+
+    if (__DEV__ && variables && hasOwnProperty.call(variables, "variables")) {
+      const queryDef = getQueryDefinition(this.query);
+      const vars = queryDef.variableDefinitions;
+      if (!vars || !vars.some(v => v.variable.name.value === "variables")) {
+        invariant.warn(`Called refetch(${
+          JSON.stringify(variables)
+        }) for query ${
+          queryDef.name?.value || JSON.stringify(queryDef)
+        }, which does not declare a $variables variable.
+Did you mean to call refetch(variables) instead of refetch({ variables })?`);
+      }
     }
 
     if (variables && !equal(this.options.variables, variables)) {
@@ -248,19 +384,26 @@ export class ObservableQuery<
       } as TVariables;
     }
 
-    return this.newReobserver(false).reobserve(
-      reobserveOptions,
-      NetworkStatus.refetch,
-    );
+    this.queryInfo.resetLastWrite();
+    return this.reobserve(reobserveOptions, NetworkStatus.refetch);
   }
 
-  public fetchMore<K extends keyof TVariables>(
-    fetchMoreOptions: FetchMoreQueryOptions<TVariables, K, TData> &
-      FetchMoreOptions<TData, TVariables>,
-  ): Promise<ApolloQueryResult<TData>> {
+  public fetchMore<
+    TFetchData = TData,
+    TFetchVars = TVariables,
+  >(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+    updateQuery?: (
+      previousQueryResult: TData,
+      options: {
+        fetchMoreResult: TFetchData;
+        variables: TFetchVars;
+      },
+    ) => TData;
+  }): Promise<ApolloQueryResult<TFetchData>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
+        query: this.query,
         ...fetchMoreOptions,
         variables: {
           ...this.options.variables,
@@ -273,64 +416,83 @@ export class ObservableQuery<
       // fetchMore to provide an updateQuery callback that determines how
       // the data gets written to the cache.
       fetchPolicy: "no-cache",
-    } as WatchQueryOptions;
+    } as WatchQueryOptions<TFetchVars, TFetchData>;
 
     const qid = this.queryManager.generateQueryId();
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
+    const { queryInfo } = this;
+    const originalNetworkStatus = queryInfo.networkStatus;
+    queryInfo.networkStatus = NetworkStatus.fetchMore;
     if (combinedOptions.notifyOnNetworkStatusChange) {
-      this.queryInfo.networkStatus = NetworkStatus.fetchMore;
       this.observe();
     }
+
+    const updatedQuerySet = new Set<DocumentNode>();
 
     return this.queryManager.fetchQuery(
       qid,
       combinedOptions,
       NetworkStatus.fetchMore,
     ).then(fetchMoreResult => {
-      const data = fetchMoreResult.data as TData;
-      const { updateQuery } = fetchMoreOptions;
+      this.queryManager.removeQuery(qid);
 
-      if (updateQuery) {
-        if (process.env.NODE_ENV !== "production" &&
-            !warnedAboutUpdateQuery) {
-          invariant.warn(
-`The updateQuery callback for fetchMore is deprecated, and will be removed
-in the next major version of Apollo Client.
-
-Please convert updateQuery functions to field policies with appropriate
-read and merge functions, or use/adapt a helper function (such as
-concatPagination, offsetLimitPagination, or relayStylePagination) from
-@apollo/client/utilities.
-
-The field policy system handles pagination more effectively than a
-hand-written updateQuery function, and you only need to define the policy
-once, rather than every time you call fetchMore.`);
-          warnedAboutUpdateQuery = true;
-        }
-        this.updateQuery(previous => updateQuery(previous, {
-          fetchMoreResult: data,
-          variables: combinedOptions.variables as TVariables,
-        }));
-      } else {
-        // If we're using a field policy instead of updateQuery, the only
-        // thing we need to do is write the new data to the cache using
-        // combinedOptions.variables (instead of this.variables, which is
-        // what this.updateQuery uses, because it works by abusing the
-        // original field value, keyed by the original variables).
-        this.queryManager.cache.writeQuery({
-          query: combinedOptions.query,
-          variables: combinedOptions.variables,
-          data,
-        });
+      if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
+        queryInfo.networkStatus = originalNetworkStatus;
       }
 
-      return fetchMoreResult as ApolloQueryResult<TData>;
+      // Performing this cache update inside a cache.batch transaction ensures
+      // any affected cache.watch watchers are notified at most once about any
+      // updates. Most watchers will be using the QueryInfo class, which
+      // responds to notifications by calling reobserveCacheFirst to deliver
+      // fetchMore cache results back to this ObservableQuery.
+      this.queryManager.cache.batch({
+        update: cache => {
+          const { updateQuery } = fetchMoreOptions;
+          if (updateQuery) {
+            cache.updateQuery({
+              query: this.query,
+              variables: this.variables,
+              returnPartialData: true,
+              optimistic: false,
+            }, previous => updateQuery(previous!, {
+              fetchMoreResult: fetchMoreResult.data,
+              variables: combinedOptions.variables as TFetchVars,
+            }));
+
+          } else {
+            // If we're using a field policy instead of updateQuery, the only
+            // thing we need to do is write the new data to the cache using
+            // combinedOptions.variables (instead of this.variables, which is
+            // what this.updateQuery uses, because it works by abusing the
+            // original field value, keyed by the original variables).
+            cache.writeQuery({
+              query: combinedOptions.query,
+              variables: combinedOptions.variables,
+              data: fetchMoreResult.data,
+            });
+          }
+        },
+
+        onWatchUpdated: watch => {
+          // Record the DocumentNode associated with any watched query whose
+          // data were updated by the cache writes above.
+          updatedQuerySet.add(watch.query);
+        },
+      });
+
+      return fetchMoreResult as ApolloQueryResult<TFetchData>;
 
     }).finally(() => {
-      this.queryManager.stopQuery(qid);
-      this.reobserve();
+      // In case the cache writes above did not generate a broadcast
+      // notification (which would have been intercepted by onWatchUpdated),
+      // likely because the written data were the same as what was already in
+      // the cache, we still want fetchMore to deliver its final loading:false
+      // result with the unchanged data.
+      if (!updatedQuerySet.has(this.query)) {
+        reobserveCacheFirst(this);
+      }
     });
   }
 
@@ -410,10 +572,6 @@ once, rather than every time you call fetchMore.`);
    *
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
-   *
-   * @param tryFetch: Try and fetch new results even if the variables haven't
-   * changed (we may still just hit the store, but if there's nothing in there
-   * this will refetch)
    */
   public setVariables(
     variables: TVariables,
@@ -434,23 +592,11 @@ once, rather than every time you call fetchMore.`);
       return Promise.resolve();
     }
 
-    let { fetchPolicy = 'cache-first' } = this.options;
-    const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
-      fetchPolicy,
+    return this.reobserve({
+      // Reset options.fetchPolicy to its original value.
+      fetchPolicy: this.options.initialFetchPolicy,
       variables,
-    };
-
-    if (fetchPolicy !== 'cache-first' &&
-        fetchPolicy !== 'no-cache' &&
-        fetchPolicy !== 'network-only') {
-      reobserveOptions.fetchPolicy = 'cache-and-network';
-      reobserveOptions.nextFetchPolicy = fetchPolicy;
-    }
-
-    return this.reobserve(
-      reobserveOptions,
-      NetworkStatus.setVariables,
-    );
+    }, NetworkStatus.setVariables);
   }
 
   public updateQuery<TVars = TVariables>(
@@ -463,7 +609,6 @@ once, rather than every time you call fetchMore.`);
     const { result } = queryManager.cache.diff<TData>({
       query: this.options.query,
       variables: this.variables,
-      previousResult: this.lastResult?.data,
       returnPartialData: true,
       optimistic: false,
     });
@@ -484,100 +629,145 @@ once, rather than every time you call fetchMore.`);
   }
 
   public startPolling(pollInterval: number) {
-    this.getReobserver().updateOptions({ pollInterval });
+    this.options.pollInterval = pollInterval;
+    this.updatePolling();
   }
 
   public stopPolling() {
-    if (this.reobserver) {
-      this.reobserver.updateOptions({ pollInterval: 0 });
-    }
+    this.options.pollInterval = 0;
+    this.updatePolling();
   }
 
-  private updateLastResult(newResult: ApolloQueryResult<TData>) {
-    const previousResult = this.lastResult;
-    this.lastResult = newResult;
-    this.lastResultSnapshot = this.queryManager.assumeImmutableResults
-      ? newResult
-      : cloneDeep(newResult);
-    if (!isNonEmptyArray(newResult.errors)) {
-      delete this.lastError;
-    }
-    return previousResult;
-  }
+  // Update options.fetchPolicy according to options.nextFetchPolicy.
+  private applyNextFetchPolicy(
+    reason: NextFetchPolicyContext<TData, TVariables>["reason"],
+    // It's possible to use this method to apply options.nextFetchPolicy to
+    // options.fetchPolicy even if options !== this.options, though that happens
+    // most often when the options are temporary, used for only one request and
+    // then thrown away, so nextFetchPolicy may not end up mattering.
+    options: WatchQueryOptions<TVariables, TData>,
+  ) {
+    if (options.nextFetchPolicy) {
+      const {
+        fetchPolicy = "cache-first",
+        initialFetchPolicy = fetchPolicy,
+      } = options;
 
-  private onSubscribe(observer: Observer<ApolloQueryResult<TData>>) {
-    // Subscribing using this.observer will create an infinite notificaion
-    // loop, but the intent of broadcasting results to all the other
-    // this.observers can be satisfied without doing anything, which is
-    // why we do not bother throwing an error here.
-    if (observer === this.observer) {
-      return () => {};
-    }
+      // When someone chooses "cache-and-network" or "network-only" as their
+      // initial FetchPolicy, they often do not want future cache updates to
+      // trigger unconditional network requests, which is what repeatedly
+      // applying the "cache-and-network" or "network-only" policies would seem
+      // to imply. Instead, when the cache reports an update after the initial
+      // network request, it may be desirable for subsequent network requests to
+      // be triggered only if the cache result is incomplete. To that end, the
+      // options.nextFetchPolicy option provides an easy way to update
+      // options.fetchPolicy after the initial network request, without having to
+      // call observableQuery.setOptions.
 
-    // Zen Observable has its own error function, so in order to log correctly
-    // we need to provide a custom error callback.
-    try {
-      var subObserver = (observer as any)._subscription._observer;
-      if (subObserver && !subObserver.error) {
-        subObserver.error = defaultSubscriptionObserverErrorCallback;
+      if (typeof options.nextFetchPolicy === "function") {
+        options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
+          reason,
+          options,
+          observable: this,
+          initialFetchPolicy,
+        });
+      } else if (reason === "variables-changed") {
+        options.fetchPolicy = initialFetchPolicy;
+      } else {
+        options.fetchPolicy = options.nextFetchPolicy;
       }
-    } catch {}
-
-    const first = !this.observers.size;
-    this.observers.add(observer);
-
-    // Deliver most recent error or result.
-    if (this.lastError) {
-      observer.error && observer.error(this.lastError);
-    } else if (this.lastResult) {
-      observer.next && observer.next(this.lastResult);
     }
 
-    // Initiate observation of this query if it hasn't been reported to
-    // the QueryManager yet.
-    if (first) {
-      this.reobserve().catch(_ => {
-        // Blindly catching here prevents unhandled promise rejections,
-        // and is safe because the ObservableQuery handles this error with
-        // this.observer.error, so we're not just swallowing the error by
-        // ignoring it here.
-      });
+    return options.fetchPolicy;
+  }
+
+  private fetch(
+    options: WatchQueryOptions<TVariables, TData>,
+    newNetworkStatus?: NetworkStatus,
+  ): Concast<ApolloQueryResult<TData>> {
+    // TODO Make sure we update the networkStatus (and infer fetchVariables)
+    // before actually committing to the fetch.
+    this.queryManager.setObservableQuery(this);
+    return this.queryManager.fetchQueryObservable(
+      this.queryId,
+      options,
+      newNetworkStatus,
+    );
+  }
+
+  // Turns polling on or off based on this.options.pollInterval.
+  private updatePolling() {
+    // Avoid polling in SSR mode
+    if (this.queryManager.ssrMode) {
+      return;
     }
 
-    return () => {
-      if (this.observers.delete(observer) && !this.observers.size) {
-        this.tearDownQuery();
+    const {
+      pollingInfo,
+      options: {
+        pollInterval,
+      },
+    } = this;
+
+    if (!pollInterval) {
+      if (pollingInfo) {
+        clearTimeout(pollingInfo.timeout);
+        delete this.pollingInfo;
+      }
+      return;
+    }
+
+    if (pollingInfo &&
+        pollingInfo.interval === pollInterval) {
+      return;
+    }
+
+    invariant(
+      pollInterval,
+      'Attempted to start a polling query without a polling interval.',
+    );
+
+    const info = pollingInfo || (this.pollingInfo = {} as any);
+    info.interval = pollInterval;
+
+    const maybeFetch = () => {
+      if (this.pollingInfo) {
+        if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
+          this.reobserve({
+            fetchPolicy: "network-only",
+          }, NetworkStatus.poll).then(poll, poll);
+        } else {
+          poll();
+        }
+      };
+    };
+
+    const poll = () => {
+      const info = this.pollingInfo;
+      if (info) {
+        clearTimeout(info.timeout);
+        info.timeout = setTimeout(maybeFetch, info.interval);
       }
     };
+
+    poll();
   }
 
-  private reobserver?: Reobserver<TData, TVariables>;
-
-  private getReobserver(): Reobserver<TData, TVariables> {
-    return this.reobserver || (this.reobserver = this.newReobserver(true));
-  }
-
-  private newReobserver(shareOptions: boolean) {
-    const { queryManager, queryId } = this;
-    queryManager.setObservableQuery(this);
-    return new Reobserver<TData, TVariables>(
-      this.observer,
-      // Sharing options allows this.reobserver.options to be ===
-      // this.options, so we don't have to worry about synchronizing the
-      // properties of two distinct objects.
-      shareOptions ? this.options : { ...this.options },
-      (currentOptions, newNetworkStatus) => {
-        queryManager.setObservableQuery(this);
-        return queryManager.fetchQueryObservable(
-          queryId,
-          currentOptions,
-          newNetworkStatus,
-        );
-      },
-      // Avoid polling during SSR and when the query is already in flight.
-      !queryManager.ssrMode && (
-        () => !isNetworkRequestInFlight(this.queryInfo.networkStatus))
-    );
+  private updateLastResult(
+    newResult: ApolloQueryResult<TData>,
+    variables = this.variables,
+  ) {
+    this.last = {
+      ...this.last,
+      result: this.queryManager.assumeImmutableResults
+        ? newResult
+        : cloneDeep(newResult),
+      variables,
+    };
+    if (!isNonEmptyArray(newResult.errors)) {
+      delete this.last.error;
+    }
+    return this.last;
   }
 
   public reobserve(
@@ -585,41 +775,124 @@ once, rather than every time you call fetchMore.`);
     newNetworkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;
-    return this.getReobserver().reobserve(newOptions, newNetworkStatus);
-  }
 
-  // Pass the current result to this.observer.next without applying any
-  // fetch policies, bypassing the Reobserver.
-  private observe() {
-    // Passing false is important so that this.getCurrentResult doesn't
-    // save the fetchMore result as this.lastResult, causing it to be
-    // ignored due to the this.isDifferentFromLastResult check in
-    // this.observer.next.
-    this.observer.next(this.getCurrentResult(false));
-  }
+    const useDisposableConcast =
+      // Refetching uses a disposable Concast to allow refetches using different
+      // options/variables, without permanently altering the options of the
+      // original ObservableQuery.
+      newNetworkStatus === NetworkStatus.refetch ||
+      // The fetchMore method does not actually call the reobserve method, but,
+      // if it did, it would definitely use a disposable Concast.
+      newNetworkStatus === NetworkStatus.fetchMore ||
+      // Polling uses a disposable Concast so the polling options (which force
+      // fetchPolicy to be "network-only") won't override the original options.
+      newNetworkStatus === NetworkStatus.poll;
 
-  private observer = {
-    next: (result: ApolloQueryResult<TData>) => {
-      if (this.lastError || this.isDifferentFromLastResult(result)) {
-        this.updateLastResult(result);
-        iterateObserversSafely(this.observers, 'next', result);
+    // Save the old variables, since Object.assign may modify them below.
+    const oldVariables = this.options.variables;
+    const oldFetchPolicy = this.options.fetchPolicy;
+
+    const mergedOptions = mergeOptions(this.options, newOptions || {});
+    const options = useDisposableConcast
+      // Disposable Concast fetches receive a shallow copy of this.options
+      // (merged with newOptions), leaving this.options unmodified.
+      ? mergedOptions
+      : assign(this.options, mergedOptions);
+
+    if (!useDisposableConcast) {
+      // We can skip calling updatePolling if we're not changing this.options.
+      this.updatePolling();
+
+      // Reset options.fetchPolicy to its original value when variables change,
+      // unless a new fetchPolicy was provided by newOptions.
+      if (
+        newOptions &&
+        newOptions.variables &&
+        !equal(newOptions.variables, oldVariables) &&
+        (!newOptions.fetchPolicy || newOptions.fetchPolicy === oldFetchPolicy)
+      ) {
+        this.applyNextFetchPolicy("variables-changed", options);
+        if (newNetworkStatus === void 0) {
+          newNetworkStatus = NetworkStatus.setVariables;
+        }
       }
-    },
+    }
 
-    error: (error: ApolloError) => {
-      // Since we don't get the current result on errors, only the error, we
-      // must mirror the updates that occur in QueryStore.markQueryError here
-      this.updateLastResult({
-        ...this.lastResult,
-        error,
-        errors: error.graphQLErrors,
-        networkStatus: NetworkStatus.error,
-        loading: false,
-      });
+    const variables = options.variables && { ...options.variables };
+    const concast = this.fetch(options, newNetworkStatus);
+    const observer: Observer<ApolloQueryResult<TData>> = {
+      next: result => {
+        this.reportResult(result, variables);
+      },
+      error: error => {
+        this.reportError(error, variables);
+      },
+    };
 
-      iterateObserversSafely(this.observers, 'error', this.lastError = error);
-    },
-  };
+    if (!useDisposableConcast) {
+      // We use the {add,remove}Observer methods directly to avoid wrapping
+      // observer with an unnecessary SubscriptionObserver object, in part so
+      // that we can remove it here without triggering any unsubscriptions,
+      // because we just want to ignore the old observable, not prematurely shut
+      // it down, since other consumers may be awaiting this.concast.promise.
+      if (this.concast && this.observer) {
+        this.concast.removeObserver(this.observer, true);
+      }
+
+      this.concast = concast;
+      this.observer = observer;
+    }
+
+    concast.addObserver(observer);
+
+    return concast.promise;
+  }
+
+  // (Re)deliver the current result to this.observers without applying fetch
+  // policies or making network requests.
+  private observe() {
+    this.reportResult(
+      // Passing false is important so that this.getCurrentResult doesn't
+      // save the fetchMore result as this.lastResult, causing it to be
+      // ignored due to the this.isDifferentFromLastResult check in
+      // this.reportResult.
+      this.getCurrentResult(false),
+      this.variables,
+    );
+  }
+
+  private reportResult(
+    result: ApolloQueryResult<TData>,
+    variables: TVariables | undefined,
+  ) {
+    const lastError = this.getLastError();
+    if (lastError || this.isDifferentFromLastResult(result)) {
+      if (lastError || !result.partial || this.options.returnPartialData) {
+        this.updateLastResult(result, variables);
+      }
+
+      iterateObserversSafely(this.observers, 'next', result);
+    }
+  }
+
+  private reportError(
+    error: ApolloError,
+    variables: TVariables | undefined,
+  ) {
+    // Since we don't get the current result on errors, only the error, we
+    // must mirror the updates that occur in QueryStore.markQueryError here
+    const errorResult = {
+      ...this.getLastResult(),
+      error,
+      errors: error.graphQLErrors,
+      networkStatus: NetworkStatus.error,
+      loading: false,
+    } as ApolloQueryResult<TData>;
+
+    this.updateLastResult(errorResult, variables);
+
+    iterateObserversSafely(this.observers, 'error', this.last!.error = error);
+  }
 
   public hasObservers() {
     return this.observers.size > 0;
@@ -627,20 +900,18 @@ once, rather than every time you call fetchMore.`);
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-
-    if (this.reobserver) {
-      this.reobserver.stop();
-      delete this.reobserver;
+    if (this.concast && this.observer) {
+      this.concast.removeObserver(this.observer);
+      delete this.concast;
+      delete this.observer;
     }
 
+    this.stopPolling();
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();
-
     this.queryManager.stopQuery(this.queryId);
-
     this.observers.clear();
-
     this.isTornDown = true;
   }
 }
@@ -649,6 +920,54 @@ once, rather than every time you call fetchMore.`);
 // signature than the Observable constructor.
 fixObservableSubclass(ObservableQuery);
 
+// Reobserve with fetchPolicy effectively set to "cache-first", triggering
+// delivery of any new data from the cache, possibly falling back to the network
+// if any cache data are missing. This allows _complete_ cache results to be
+// delivered without also kicking off unnecessary network requests when
+// this.options.fetchPolicy is "cache-and-network" or "network-only". When
+// this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
+// "standby", or "no-cache"), we call this.reobserve() as usual.
+export function reobserveCacheFirst<TData, TVars>(
+  obsQuery: ObservableQuery<TData, TVars>,
+) {
+  const { fetchPolicy, nextFetchPolicy } = obsQuery.options;
+
+  if (
+    fetchPolicy === "cache-and-network" ||
+    fetchPolicy === "network-only"
+  ) {
+    return obsQuery.reobserve({
+      fetchPolicy: "cache-first",
+      // Use a temporary nextFetchPolicy function that replaces itself with the
+      // previous nextFetchPolicy value and returns the original fetchPolicy.
+      nextFetchPolicy(this: WatchQueryOptions<TVars, TData>) {
+        // Replace this nextFetchPolicy function in the options object with the
+        // original this.options.nextFetchPolicy value.
+        this.nextFetchPolicy = nextFetchPolicy;
+        // If the original nextFetchPolicy value was a function, give it a
+        // chance to decide what happens here.
+        if (typeof nextFetchPolicy === "function") {
+          return nextFetchPolicy.apply(this, arguments);
+        }
+        // Otherwise go back to the original this.options.fetchPolicy.
+        return fetchPolicy!;
+      },
+    });
+  }
+
+  return obsQuery.reobserve();
+}
+
 function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
   invariant.error('Unhandled error', error.message, error.stack);
+}
+
+export function logMissingFieldErrors(
+  missing: MissingFieldError[] | MissingTree | undefined,
+) {
+  if (__DEV__ && missing) {
+    invariant.debug(`Missing cache result fields: ${
+      JSON.stringify(missing)
+    }`, missing);
+  }
 }

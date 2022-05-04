@@ -6,7 +6,6 @@ import { ApolloClient } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { useApolloClient, useQuery } from '../../hooks';
-import { render, wait } from '@testing-library/react';
 import { renderToStringWithData } from '..';
 
 describe('useQuery Hook SSR', () => {
@@ -109,9 +108,7 @@ describe('useQuery Hook SSR', () => {
     });
   });
 
-  it(
-    'should skip both SSR tree rendering and SSR component rendering if ' +
-      '`ssr` option is `false` and `ssrMode` is `true`',
+  it('should skip both SSR tree rendering and SSR component rendering if `ssr` option is `false` and `ssrMode` is `true`',
     async () => {
       const link = mockSingleLink({
         request: { query: CAR_QUERY },
@@ -136,6 +133,7 @@ describe('useQuery Hook SSR', () => {
             break;
           case 1: // FAIL; should not render a second time
           default:
+            throw new Error("Duplicate render");
         }
 
         renderCount += 1;
@@ -148,22 +146,12 @@ describe('useQuery Hook SSR', () => {
         </ApolloProvider>
       );
 
-      await renderToStringWithData(app).then(result => {
-        expect(renderCount).toBe(1);
-        expect(result).toEqual('');
-      });
-
-      renderCount = 0;
-
-      render(
-        <ApolloProvider client={client}>
-          <Component />
-        </ApolloProvider>
-      );
-
-      await wait(() => {
-        expect(renderCount).toBe(1);
-      });
+      const result = await renderToStringWithData(app);
+      expect(renderCount).toBe(1);
+      expect(result).toEqual('');
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(renderCount).toBe(1);
+      expect(result).toEqual('');
     }
   );
 

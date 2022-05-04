@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { DataValue } from '../../types';
 
@@ -52,7 +52,7 @@ describe('[queries] reducer', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(2)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(2)).then(resolve, reject);
   });
 
   itAsync('allows custom mapping of a result to props that includes the passed props', (resolve, reject) => {
@@ -103,10 +103,13 @@ describe('[queries] reducer', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(count).toBe(2);
+    }).then(resolve, reject);
   });
 
   itAsync('allows custom mapping of a result to props 2', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query thing {
         getThing {
@@ -138,7 +141,8 @@ describe('[queries] reducer', () => {
 
     class Container extends React.Component<FinalProps> {
       componentDidUpdate() {
-        expect(stripSymbols(this.props.thingy)).toEqual(expectedData.getThing);
+        expect(this.props.thingy).toEqual(expectedData.getThing);
+        done = true;
       }
       render() {
         return null;
@@ -153,7 +157,9 @@ describe('[queries] reducer', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true)
+    }).then(resolve, reject);
   });
 
   itAsync('passes the prior props to the result-props mapper', (resolve, reject) => {
@@ -207,7 +213,7 @@ describe('[queries] reducer', () => {
     let done = false;
     class Container extends React.Component<FinalProps> {
       componentDidUpdate(nextProps: FinalProps) {
-        expect(stripSymbols(this.props.wrapper.thingy)).toEqual(
+        expect(this.props.wrapper.thingy).toEqual(
           expectedData.getThing
         );
         if (counter === 1) {
@@ -231,6 +237,6 @@ describe('[queries] reducer', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 });

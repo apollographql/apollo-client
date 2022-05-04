@@ -1,27 +1,37 @@
-# Apollo Client Roadmap
+# 🔮 Apollo Client Roadmap
 
-*Last updated: March 2021*
+**Last updated: April 2022**
 
-> **Please note:** This is an approximation of larger effort work planned for the next 6 months. It does not cover all new functionality that will be added, and nothing here is set in stone. Also note that each of these releases, and several patch releases in-between, will include bug fixes (based on issue triaging) and community submitted PR's.
+For up to date release notes, refer to the project's [Change Log](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
-## 3.4
+> **Please note:** This is an approximation of **larger effort** work planned for the next 6 - 12 months. It does not cover all new functionality that will be added, and nothing here is set in stone. Also note that each of these releases, and several patch releases in-between, will include bug fixes (based on issue triaging) and community submitted PR's.
 
-**Estimated release:** Q1 2021
+## ✋ Community feedback & prioritization
 
-* A new API for reobserving/refetching queries after a mutation, eliminating the need for `updateQueries`, `refetchQueries`, and `awaitRefetchQueries` in a lot of cases.
+- Please report feature requests or bugs as a new [issue](https://github.com/apollographql/apollo-client/issues/new/choose).
+- If you already see an issue that interests you please add a 👍 or a comment so we can measure community interest.
 
-* Guarantee `===` equality for cache objects that are deeply equal, regardless of how they were computed / where they appear in result trees for different queries ([ref](https://github.com/apollographql/apollo-client/issues/4141#issuecomment-733091694)).
+---
+## 3.7
 
-## 3.5
+1. Web Cache and performance improvements through new hooks (useBackgroundQuery, useFragment)
+   - [#8694](https://github.com/apollographql/apollo-client/issues/8694)
+   - [#8236](https://github.com/apollographql/apollo-client/issues/8236)
+2. RefetchQueries not working when using string array after mutation
+   - [#5419](https://github.com/apollographql/apollo-client/issues/5419)
+3. Adding React suspense + data fetching support
+   - [#9627](https://github.com/apollographql/apollo-client/issues/9627)
 
-**Estimated release:** Q1/Q2 2021
+## 3.8
 
-* `@defer` support.
-* `@stream` support.
+- *TBD*
 
-## 3.6
+## 3.9
 
-**Estimated release:** Q2/Q3 2021
+- *TBD*
 
-* Out of the box cache persistence, providing a way for web/mobile users to save their application state for a defined period of time (along the lines of [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist)).
-* An improved story for async `read` functions, involving setting reactive vars from promises (enabling batching of multi-var updates).
+## 4.0
+
+- Full React layer rewrite ([#8245](https://github.com/apollographql/apollo-client/issues/8245))
+-  Removal of React from the default `@apollo/client` entry point ([#8190](https://github.com/apollographql/apollo-client/issues/8190))
+- Core APIs to facilitate client/cache persistence (making life simpler for tools like [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist), for example) ([#8591](https://github.com/apollographql/apollo-client/issues/8591))

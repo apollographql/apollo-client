@@ -1,6 +1,5 @@
 ---
 title: HTTP Link
-sidebar_title: HTTP
 description: Get GraphQL results over a network using HTTP fetch.
 ---
 
@@ -148,6 +147,31 @@ Note that if you set `fetchOptions.method` to `GET`, `HttpLink` follows [standar
 If `true`, the link uses an HTTP GET request when sending query operations to your GraphQL endpoint. Mutation operations continue to use `POST` requests. If you want _all_ operations to use `GET` requests, set [`fetchOptions.method`](#fetchoptions) instead.
 
 The default value is `false`.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `print`
+
+`Function`
+</td>
+
+<td>
+
+An optional function to use when transforming a query or mutation `DocumentNode` into a string. It accepts an `ASTNode` (typically a `DocumentNode`) and the original `print` function as arguments, and is expected to return a string. This option can be used with `stripIgnoredCharacters` to remove whitespace from queries.
+
+```js
+import { stripIgnoredCharacters } from 'graphql';
+
+const httpLink = new HttpLink({
+  uri: '/graphql',
+  print: (ast, originalPrint) => stripIgnoredCharacters(originalPrint(ast)),
+});
+```
+
+By default the bare [GraphQL `print` function](https://graphql.org/graphql-js/language/#print) is used.
 </td>
 </tr>
 

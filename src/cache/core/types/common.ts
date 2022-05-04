@@ -1,4 +1,4 @@
-import { FieldNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import {
   Reference,
@@ -18,12 +18,15 @@ import { StorageType } from '../../inmemory/policies';
 // Readonly<any>, somewhat surprisingly.
 export type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
+export type MissingTree = string | {
+  readonly [key: string]: MissingTree;
+};
+
 export class MissingFieldError {
   constructor(
     public readonly message: string,
-    public readonly path: (string | number)[],
-    public readonly query: import('graphql').DocumentNode,
-    public readonly clientOnly: boolean,
+    public readonly path: MissingTree | Array<string | number>,
+    public readonly query: DocumentNode,
     public readonly variables?: Record<string, any>,
   ) {}
 }

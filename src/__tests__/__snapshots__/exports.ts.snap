@@ -347,6 +347,7 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseDOM",
   "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",

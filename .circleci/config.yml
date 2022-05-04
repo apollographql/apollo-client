@@ -1,9 +1,12 @@
-version: 2
+version: 2.1
+
+orbs:
+  codecov: codecov/codecov@3.2.2
 
 jobs:
   Filesize:
     docker:
-      - image: circleci/node:16.13.1
+      - image: cimg/node:16.14
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -27,7 +30,7 @@ jobs:
 
   Tests:
     docker:
-      - image: circleci/node:16.13.1
+      - image: cimg/node:16.14
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -52,6 +55,7 @@ jobs:
           command: npm run test:ci
           environment:
             JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+      - codecov/upload
       - store_test_results:
           path: reports/junit
       - store_artifacts:

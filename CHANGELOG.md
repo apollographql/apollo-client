@@ -11,6 +11,9 @@
 - Update `ts-invariant` to version 0.10.2 to fix source map warnings. <br/>
   [@benjamn](https://github.com/benjamn) in [#9672](https://github.com/apollographql/apollo-client/pull/9672)
 
+- Test that `useQuery` queries with `skip: true` do not stall server-side rendering. <br/>
+  [@nathanmarks](https://github.com/nathanmarks) and [@benjamn](https://github.com/benjamn) in [#9677](https://github.com/apollographql/apollo-client/pull/9677)
+
 ## Apollo Client 3.6.2 (2022-05-02)
 
 ### Bug Fixes

@@ -288,7 +288,8 @@ class InternalState<TData, TVariables> {
 
     if (
       (this.renderPromises || this.client.disableNetworkFetches) &&
-      this.queryHookOptions.ssr === false
+      this.queryHookOptions.ssr === false &&
+      !this.queryHookOptions.skip
     ) {
       // If SSR has been explicitly disabled, and this function has been called
       // on the server side, return the default loading state.

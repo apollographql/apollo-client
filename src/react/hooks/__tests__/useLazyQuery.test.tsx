@@ -265,7 +265,7 @@ describe('useLazyQuery Hook', () => {
     setTimeout(() => execute());
 
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].loading).toBe(true);
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
 
     await waitForNextUpdate();
@@ -687,34 +687,36 @@ describe('useLazyQuery Hook', () => {
     );
 
     const execute = result.current[0];
-    let executeResult: any;
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    setTimeout(() => {
-      executeResult = execute();
-      executeResult.catch(() => {});
-    });
+    expect(result.current[1].data).toBeUndefined();
+
+    const executePromise = Promise.resolve().then(() => execute());
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].data).toBeUndefined();
     expect(result.current[1].error).toBe(undefined);
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].data).toBeUndefined();
     expect(result.current[1].error).toEqual(new Error('error 1'));
 
-    await expect(executeResult).rejects.toEqual(new Error('error 1'));
-
-    setTimeout(() => {
-      executeResult = execute();
-      executeResult.catch(() => {});
+    await executePromise.then(result => {
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+      expect(result.error!.message).toBe('error 1');
     });
 
+    await expect(waitForNextUpdate({
+      timeout: 20,
+    })).rejects.toThrow('Timed out');
+
+    setTimeout(() => execute());
+
     await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBeUndefined();
     expect(result.current[1].error).toEqual(new Error('error 1'));
 
     await waitForNextUpdate();

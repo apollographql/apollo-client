@@ -10,5 +10,8 @@ export const canUseSymbol =
   typeof Symbol === 'function' &&
   typeof Symbol.for === 'function';
 
+const isNode = !!maybe(() => `v${process.versions.node}` === process.version);
+
 export const canUseDOM =
+  !isNode &&
   typeof maybe(() => window.document.createElement) === "function";

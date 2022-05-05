@@ -3,7 +3,7 @@ import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { renderHook } from '@testing-library/react-hooks';
 
-import { ApolloClient, ApolloLink, InMemoryCache, TypedDocumentNode } from '../../../core';
+import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
 import { ApolloProvider } from '../../../react';
 import { MockedProvider, mockSingleLink } from '../../../testing';
@@ -761,6 +761,74 @@ describe('useLazyQuery Hook', () => {
 
     // Making sure the rejection triggers a test failure.
     await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+
+  describe("network errors", () => {
+    async function check(errorPolicy: ErrorPolicy) {
+      const networkError = new Error("from the network");
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          setTimeout(() => {
+            observer.error(networkError);
+          });
+        })),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useLazyQuery(helloQuery, {
+          errorPolicy,
+        }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      const execute = result.current[0];
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current[1].data).toBeUndefined();
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      setTimeout(execute);
+
+      await waitForNextUpdate();
+      expect(result.current[1].loading).toBe(true);
+      expect(result.current[1].networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current[1].data).toBeUndefined();
+
+      await waitForNextUpdate();
+      expect(result.current[1].loading).toBe(false);
+      expect(result.current[1].networkStatus).toBe(NetworkStatus.error);
+      expect(result.current[1].data).toBeUndefined();
+      expect(result.current[1].error!.message).toBe("from the network");
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+    }
+
+    // For errorPolicy:"none", we expect result.error to be defined and
+    // result.data to be undefined, which is what we test above.
+    it('handles errorPolicy:"none" appropriately', () => check("none"));
+
+    // If there was any data to report, errorPolicy:"all" would report both
+    // result.data and result.error, but there is no GraphQL data when we
+    // encounter a network error, so the test again captures desired behavior.
+    it('handles errorPolicy:"all" appropriately', () => check("all"));
+
+    // Technically errorPolicy:"ignore" is supposed to throw away result.error,
+    // but in the case of network errors, since there's no actual data to
+    // report, it's useful/important that we report result.error anyway.
+    it('handles errorPolicy:"ignore" appropriately', () => check("ignore"));
   });
 
   describe("options.defaultOptions", () => {

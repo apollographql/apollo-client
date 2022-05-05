@@ -187,8 +187,8 @@ describe('[queries] loading', () => {
         componentDidUpdate(prevProps: ChildProps<Vars, Data, Vars>) {
           try {
             // variables changed, new query is loading, but old data is still there
-            switch (count) {
-              case 0:
+            switch (++count) {
+              case 1:
                 expect(prevProps.data!.loading).toBe(true);
                 expect(prevProps.data!.variables).toEqual(variables1);
                 expect(prevProps.data!.allPeople).toBe(undefined);
@@ -200,22 +200,9 @@ describe('[queries] loading', () => {
                 expect(this.props.data!.error).toBe(undefined);
                 expect(this.props.data!.networkStatus).toBe(NetworkStatus.ready);
                 break;
-              case 1:
-                // TODO: What is this extra render
-                expect(prevProps.data!.loading).toBe(false);
-                expect(prevProps.data!.variables).toEqual(variables1);
-                expect(prevProps.data!.allPeople).toEqual(data1.allPeople);
-                expect(prevProps.data!.error).toBe(undefined);
-                expect(prevProps.data!.networkStatus).toBe(NetworkStatus.ready);
-                expect(this.props.data!.loading).toBe(false);
-                expect(this.props.data!.variables).toEqual(variables2);
-                expect(this.props.data!.allPeople).toEqual(data1.allPeople);
-                expect(this.props.data!.error).toBe(undefined);
-                expect(prevProps.data!.networkStatus).toBe(NetworkStatus.ready);
-                break;
               case 2:
                 expect(prevProps.data!.loading).toBe(false);
-                expect(prevProps.data!.variables).toEqual(variables2);
+                expect(prevProps.data!.variables).toEqual(variables1);
                 expect(prevProps.data!.allPeople).toEqual(data1.allPeople);
                 expect(prevProps.data!.error).toBe(undefined);
                 expect(this.props.data!.loading).toBe(true);
@@ -238,7 +225,6 @@ describe('[queries] loading', () => {
                 done = true;
                 break;
             }
-            count++;
           } catch (err) {
             reject(err);
           }
@@ -642,23 +628,24 @@ describe('[queries] loading', () => {
             try {
               switch (count) {
                 case 0:
-                  expect(this.props.data!.loading).toBeTruthy(); // has initial data
+                  expect(this.props.data!.loading).toBe(true);
+                  expect(this.props.data!.allPeople).toBeUndefined();
                   break;
                 case 1:
-                  expect(this.props.data!.loading).toBeFalsy();
+                  expect(this.props.data!.loading).toBe(false);
+                  expect(this.props.data!.allPeople).toBe(data.allPeople);
                   setTimeout(() => {
                     this.props.setFirst(2);
                   });
                   break;
                 case 2:
-                  expect(this.props.data!.loading).toBeFalsy(); // on variables change
-                  break;
-                case 3:
-                  expect(this.props.data!.loading).toBeTruthy(); // on variables change
+                  expect(this.props.data!.loading).toBe(true); // on variables change
+                  expect(this.props.data!.allPeople).toBeUndefined();
                   break;
                 case 4:
                   // new data after fetch
-                  expect(this.props.data!.loading).toBeFalsy();
+                  expect(this.props.data!.loading).toBe(false);
+                  expect(this.props.data!.allPeople).toBe(data.allPeople);
                   break;
               }
             } catch (err) {
@@ -679,7 +666,7 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   itAsync(
@@ -761,26 +748,24 @@ describe('[queries] loading', () => {
             render() {
               const { props } = this;
               try {
-                switch (count) {
-                  case 0:
-                    expect(props.data!.loading).toBeTruthy();
-                    break;
+                switch (++count) {
                   case 1:
+                    expect(props.data!.loading).toBe(true);
+                    break;
+                  case 2:
+                    expect(props.data!.loading).toBe(false); // has initial data
+                    expect(props.data!.allPeople).toEqual(data.allPeople);
                     setTimeout(() => {
                       this.props.setFirst(2);
                     });
-                    //fallthrough
-                  case 2:
-                    expect(props.data!.loading).toBeFalsy(); // has initial data
-                    expect(props.data!.allPeople).toEqual(data.allPeople);
                     break;
-
                   case 3:
-                    expect(props.data!.loading).toBeTruthy(); // on variables change
+                    expect(props.data!.loading).toBe(true);
+                    expect(props.data!.allPeople).toBeUndefined();
                     break;
                   case 4:
                     // new data after fetch
-                    expect(props.data!.loading).toBeFalsy();
+                    expect(props.data!.loading).toBe(false);
                     expect(props.data!.allPeople).toEqual(data.allPeople);
                     break;
                 }
@@ -788,7 +773,6 @@ describe('[queries] loading', () => {
                 reject(err);
               }
 
-              count++;
               return null;
             }
           }
@@ -801,7 +785,7 @@ describe('[queries] loading', () => {
         </ApolloProvider>
       );
 
-      waitFor(() => expect(count).toBe(5)).then(resolve, reject);
+      waitFor(() => expect(count).toBe(4)).then(resolve, reject);
     }
   );
 });

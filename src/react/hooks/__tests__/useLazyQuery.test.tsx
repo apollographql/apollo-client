@@ -11,17 +11,20 @@ import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
 
 describe('useLazyQuery Hook', () => {
+  const helloQuery: TypedDocumentNode<{
+    hello: string;
+  }> = gql`query { hello }`;
+
   it('should hold query execution until manually triggered', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world' } },
         delay: 20,
       },
     ];
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query),
+      () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -45,16 +48,15 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should set `called` to false by default', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world' } },
         delay: 20,
       },
     ];
     const { result } = renderHook(
-      () => useLazyQuery(query),
+      () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -70,17 +72,16 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should set `called` to true after calling the lazy execute function', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world' } },
         delay: 20,
       },
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query),
+      () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -105,10 +106,9 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should override `skip` if lazy mode execution function is called', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world' } },
         delay: 20,
       },
@@ -116,7 +116,7 @@ describe('useLazyQuery Hook', () => {
 
     const { result, waitForNextUpdate } = renderHook(
       // skip isn’t actually an option on the types
-      () => useLazyQuery(query, { skip: true } as any),
+      () => useLazyQuery(helloQuery, { skip: true } as any),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -225,22 +225,21 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world 1' } },
         delay: 20,
       },
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world 2' } },
         delay: 20,
       },
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query, {
+      () => useLazyQuery(helloQuery, {
         fetchPolicy: 'network-only',
       }),
       {
@@ -275,22 +274,21 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should persist previous data when a query is re-run', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world 1' } },
         delay: 20,
       },
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world 2' } },
         delay: 20,
       },
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query, {
+      () => useLazyQuery(helloQuery, {
         notifyOnNetworkStatusChange: true,
       }),
       {
@@ -333,19 +331,18 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should allow for the query to start with polling', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: "world 1" } },
         delay: 10,
       },
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: "world 2" } },
       },
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: "world 3" } },
       },
     ];
@@ -355,7 +352,7 @@ describe('useLazyQuery Hook', () => {
     );
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query),
+      () => useLazyQuery(helloQuery),
       { wrapper },
     );
 
@@ -466,12 +463,10 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should work with cache-and-network fetch policy', async () => {
-    const query = gql`{ hello }`;
-
     const cache = new InMemoryCache();
     const link = mockSingleLink(
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'from link' } },
         delay: 20,
       },
@@ -482,10 +477,10 @@ describe('useLazyQuery Hook', () => {
       cache,
     });
 
-    cache.writeQuery({ query, data: { hello: 'from cache' }});
+    cache.writeQuery({ query: helloQuery, data: { hello: 'from cache' }});
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query, { fetchPolicy: 'cache-and-network' }),
+      () => useLazyQuery(helloQuery, { fetchPolicy: 'cache-and-network' }),
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>
@@ -512,16 +507,15 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('should return a promise from the execution function which resolves with the result', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: { data: { hello: 'world' } },
         delay: 20,
       },
     ];
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query),
+      () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -664,17 +658,16 @@ describe('useLazyQuery Hook', () => {
   });
 
   it('the promise should reject with errors the “way useMutation does”', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: {
           errors: [new GraphQLError('error 1')],
         },
         delay: 20,
       },
       {
-        request: { query },
+        request: { query: helloQuery },
         result: {
           errors: [new GraphQLError('error 2')],
         },
@@ -683,7 +676,7 @@ describe('useLazyQuery Hook', () => {
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query),
+      () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -729,14 +722,15 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].error).toEqual(new Error('error 2'));
 
-    await expect(executeResult).rejects.toEqual(new Error('error 2'));
+    await expect(waitForNextUpdate({
+      timeout: 20,
+    })).rejects.toThrow('Timed out');
   });
 
   it('the promise should not cause an unhandled rejection', async () => {
-    const query = gql`{ hello }`;
     const mocks = [
       {
-        request: { query },
+        request: { query: helloQuery },
         result: {
           errors: [new GraphQLError('error 1')],
         },
@@ -744,7 +738,7 @@ describe('useLazyQuery Hook', () => {
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query),
+      () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>

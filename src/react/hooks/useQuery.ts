@@ -1,3 +1,5 @@
+import { invariant } from '../../utilities/globals';
+
 import {
   useCallback,
   useContext,
@@ -28,7 +30,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { canUseWeakMap, canUseWeakSet, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
   prototype: {
@@ -87,7 +89,24 @@ class InternalState<TData, TVariables> {
 
   forceUpdate() {
     // Replaced (in useInternalState) with a method that triggers an update.
+    invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
+
+  asyncUpdate() {
+    return new Promise<QueryResult<TData, TVariables>>(resolve => {
+      this.asyncResolveFns.add(resolve);
+      this.optionsToIgnoreOnce.add(this.watchQueryOptions);
+      this.forceUpdate();
+    });
+  }
+
+  private asyncResolveFns = new Set<
+    (result: QueryResult<TData, TVariables>) => void
+  >();
+
+  private optionsToIgnoreOnce = new (canUseWeakSet ? WeakSet : Set)<
+    WatchQueryOptions<TVariables, TData>
+  >();
 
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
@@ -190,7 +209,14 @@ class InternalState<TData, TVariables> {
     // TODO Remove this method when we remove support for options.partialRefetch.
     this.unsafeHandlePartialRefetch(result);
 
-    return this.toQueryResult(result);
+    const queryResult = this.toQueryResult(result);
+
+    if (!queryResult.loading && this.asyncResolveFns.size) {
+      this.asyncResolveFns.forEach(resolve => resolve(queryResult));
+      this.asyncResolveFns.clear();
+    }
+
+    return queryResult;
   }
 
   // These members (except for renderPromises) are all populated by the
@@ -212,9 +238,27 @@ class InternalState<TData, TVariables> {
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
     const currentWatchQueryOptions = this.watchQueryOptions;
-    if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
+
+    // To force this equality test to "fail," thereby reliably triggering
+    // observable.reobserve, add any current WatchQueryOptions object(s) you
+    // want to be ignored to this.optionsToIgnoreOnce. A similar effect could be
+    // achieved by nullifying this.watchQueryOptions so the equality test
+    // immediately fails because currentWatchQueryOptions is null, but this way
+    // we can promise a truthy this.watchQueryOptions at all times.
+    if (
+      this.optionsToIgnoreOnce.has(currentWatchQueryOptions) ||
+      !equal(watchQueryOptions, currentWatchQueryOptions)
+    ) {
       this.watchQueryOptions = watchQueryOptions;
+
       if (currentWatchQueryOptions && this.observable) {
+        // As advertised in the -Once of this.optionsToIgnoreOnce, this trick is
+        // only good for one forced execution of observable.reobserve per
+        // ignored WatchQueryOptions object, though it is unlikely we will ever
+        // see this exact currentWatchQueryOptions object again here, since we
+        // just replaced this.watchQueryOptions with watchQueryOptions.
+        this.optionsToIgnoreOnce.delete(currentWatchQueryOptions);
+
         // Though it might be tempting to postpone this reobserve call to the
         // useEffect block, we need getCurrentResult to return an appropriate
         // loading:true result synchronously (later within the same call to
@@ -224,6 +268,10 @@ class InternalState<TData, TVariables> {
         // (potentially) kicks off a network request (for example, when the
         // variables have changed), which is technically a side-effect.
         this.observable.reobserve(watchQueryOptions);
+
+        // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+        // but save the current data as this.previousData, just like setResult
+        // usually does.
         this.previousData = this.result?.data || this.previousData;
         this.result = void 0;
       }
@@ -240,7 +288,8 @@ class InternalState<TData, TVariables> {
 
     if (
       (this.renderPromises || this.client.disableNetworkFetches) &&
-      this.queryHookOptions.ssr === false
+      this.queryHookOptions.ssr === false &&
+      !this.queryHookOptions.skip
     ) {
       // If SSR has been explicitly disabled, and this function has been called
       // on the server side, return the default loading state.

@@ -434,6 +434,7 @@ class InternalState<TData, TVariables> {
     }), [obsQuery]);
 
     const ssrAllowed = !(
+			this.watchQueryOptions.fetchPolicy === 'standby' ||
       this.queryHookOptions.ssr === false ||
       this.queryHookOptions.skip
     );

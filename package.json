@@ -17,6 +17,10 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/main.cjs"
+    },
     "./core": {
       "import": "./core/index.js",
       "require": "./core/core.cjs"

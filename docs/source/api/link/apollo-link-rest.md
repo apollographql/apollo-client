@@ -480,7 +480,7 @@ An `@rest(…)` directive takes two required and several optional arguments:
 | `pathBuilder?: /function/` | `string` | If provided, this function gets to control what path is produced for this request. |
 | `bodyKey?: "input"` | `string` | This is the name of the `variable` to use when looking to build a REST request-body for a `PUT` or `POST` request. It defaults to `input` if not supplied. |
 | `bodyBuilder?: /function/` | `string` | If provided, this is the name a `function` that you provided to `variables`, that is called when a request-body needs to be built. This lets you combine arguments or encode the body in some format other than JSON. |
-| `bodySerializer?: /string | function/` | `string` | String key to look up a function in `bodySerializers` or a custom serialization function for the body/headers of this request before it is passed to the fetch call. Defaults to `JSON.stringify` and setting `Content-Type: application-json`. |
+| `bodySerializer?: /string \| function/` | `string` | String key to look up a function in `bodySerializers` or a custom serialization function for the body/headers of this request before it is passed to the fetch call. Defaults to `JSON.stringify` and setting `Content-Type: application-json`. |
 
 ### Variables
 

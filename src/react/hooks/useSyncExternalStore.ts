@@ -1,7 +1,7 @@
 import { invariant } from '../../utilities/globals';
 import * as React from 'react';
 
-import { canUseDOM } from '../../utilities';
+import { canUseLayoutEffect } from '../../utilities';
 
 const ReactWithSESHook = React as (typeof React & {
   useSyncExternalStore?: typeof useSyncExternalStore;
@@ -62,10 +62,11 @@ export function useSyncExternalStore<Snapshot>(
   // Track the latest getSnapshot function with a ref. This needs to be updated
   // in the layout phase so we can access it during the tearing check that
   // happens on subscribe.
-  if (canUseDOM) {
-    // DEVIATION: We avoid calling useLayoutEffect when !canUseDOM, which may
-    // seem like a conditional hook, but this code ends up behaving
-    // unconditionally (one way or the other) because canUseDOM is constant.
+  if (canUseLayoutEffect) {
+    // DEVIATION: We avoid calling useLayoutEffect when !canUseLayoutEffect,
+    // which may seem like a conditional hook, but this code ends up behaving
+    // unconditionally (one way or the other) because canUseLayoutEffect is
+    // constant.
     React.useLayoutEffect(() => {
       Object.assign(inst, { value, getSnapshot });
       // Whenever getSnapshot or subscribe changes, we need to check in the

@@ -3,22 +3,27 @@ import * as React from 'react';
 
 import { canUseLayoutEffect } from '../../utilities';
 
-const ReactWithSESHook = React as (typeof React & {
-  useSyncExternalStore?: typeof useSyncExternalStore;
-});
-
 let didWarnUncachedGetSnapshot = false;
+
+type RealUseSESHookType =
+  // This import depends only on the @types/use-sync-external-store package, not
+  // the actual use-sync-external-store package, which is not installed. It
+  // might be nice to get this type from React 18, but it still needs to work
+  // when only React 17 or earlier is installed.
+  typeof import("use-sync-external-store").useSyncExternalStore;
 
 // Adapted from https://www.npmjs.com/package/use-sync-external-store, with
 // Apollo Client deviations called out by "// DEVIATION ..." comments.
 
-export function useSyncExternalStore<Snapshot>(
-  subscribe: (onStoreChange: () => void) => () => void,
-  getSnapshot: () => Snapshot,
-  getServerSnapshot?: () => Snapshot,
-): Snapshot {
+export const useSyncExternalStore: RealUseSESHookType = (
+  subscribe,
+  getSnapshot,
+  getServerSnapshot,
+) => {
   // When/if React.useSyncExternalStore is defined, delegate fully to it.
-  const realHook = ReactWithSESHook.useSyncExternalStore;
+  const realHook = (React as {
+    useSyncExternalStore?: RealUseSESHookType;
+  }).useSyncExternalStore;
   if (realHook) {
     return realHook(subscribe, getSnapshot, getServerSnapshot);
   }

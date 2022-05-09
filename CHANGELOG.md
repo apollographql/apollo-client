@@ -1,3 +1,10 @@
+## Apollo Client 3.6.4 (unreleased)
+
+### Improvements
+
+- Internalize `useSyncExternalStore` shim, for more control than `use-sync-external-store` provides, fixing some React Native issues. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9675](https://github.com/apollographql/apollo-client/pull/9675)
+
 ## Apollo Client 3.6.3 (unreleased)
 
 ### Bug Fixes

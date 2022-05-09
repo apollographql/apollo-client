@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js';
+import { useSyncExternalStore } from './useSyncExternalStore';
 import { equal } from '@wry/equality';
 
 import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';

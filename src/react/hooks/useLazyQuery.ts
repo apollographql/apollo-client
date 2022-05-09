@@ -3,7 +3,6 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useCallback, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
-import { ApolloError } from '../../errors';
 import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
@@ -11,7 +10,6 @@ import {
 } from '../types/types';
 import { useInternalState } from './useQuery';
 import { useApolloClient } from './useApolloClient';
-import { isNonEmptyArray } from '../../utilities';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -73,42 +71,16 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    const promise = result.reobserve(
-      execOptionsRef.current = executeOptions ? {
-        ...executeOptions,
-        fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
-      } : {
-        fetchPolicy: initialFetchPolicy,
-      },
-    ).then(apolloQueryResult => {
-      // If this.observable.options.fetchPolicy is "standby", the
-      // apolloQueryResult we receive here can be undefined, so we call
-      // getCurrentResult to obtain a stub result.
-      // TODO Investigate whether standby queries could return this stub result
-      // in the first place.
-      apolloQueryResult = apolloQueryResult || internalState["getCurrentResult"]();
+    execOptionsRef.current = executeOptions ? {
+      ...executeOptions,
+      fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
+    } : {
+      fetchPolicy: initialFetchPolicy,
+    };
 
-      if (
-        apolloQueryResult.error ||
-        isNonEmptyArray(apolloQueryResult.errors)
-      ) {
-        const {
-          errorPolicy = "none",
-        } = result.observable.options;
-
-        if (errorPolicy === "none") {
-          throw apolloQueryResult.error || new ApolloError({
-            graphQLErrors: apolloQueryResult.errors,
-          });
-        }
-      }
-
-      return internalState.toQueryResult(apolloQueryResult);
-
-    }).then(queryResult => Object.assign(queryResult, eagerMethods));
-
-    // Deliver the loading state for this reobservation immediately.
-    internalState.forceUpdate();
+    const promise = internalState
+      .asyncUpdate() // Like internalState.forceUpdate, but returns a Promise.
+      .then(queryResult => Object.assign(queryResult, eagerMethods));
 
     // Because the return value of `useLazyQuery` is usually floated, we need
     // to catch the promise to prevent unhandled rejections.

@@ -29,4 +29,50 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       },
     });
   });
+
+  itAsync("behaves appropriately if unsubscribed before first result", (resolve, reject) => {
+    const concast = new Concast([
+      new Promise(resolve => setTimeout(resolve, 100)).then(
+        () => Observable.of(1, 2, 3),
+      ),
+    ]);
+
+    const cleanupCounts = {
+      first: 0,
+      second: 0,
+    };
+
+    concast.cleanup(() => {
+      ++cleanupCounts.first;
+    });
+
+    const unsubscribe = concast.subscribe({
+      next() {
+        reject("should not have called observer.next");
+      },
+      error() {
+        reject("should not have called observer.error");
+      },
+      complete() {
+        reject("should not have called observer.complete");
+      },
+    });
+
+    concast.cleanup(() => {
+      ++cleanupCounts.second;
+    });
+
+    // Immediately unsubscribe the observer we just added, triggering
+    // completion.
+    unsubscribe.unsubscribe();
+
+    return concast.promise.then(finalResult => {
+      expect(finalResult).toBeUndefined();
+      expect(cleanupCounts).toEqual({
+        first: 1,
+        second: 1,
+      });
+      resolve();
+    }).catch(reject);
+  });
 });

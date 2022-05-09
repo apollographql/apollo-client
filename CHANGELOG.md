@@ -1,6 +1,18 @@
-## Apollo Client 3.7.0 (not yet released)
+## Apollo Client 3.7.0 (in development)
 
 TODO
+
+## Apollo Client 3.6.4 (unreleased)
+
+### Bug Fixes
+
+- Guarantee `Concast` cleanup without `Observable cancelled prematurely` rejection, potentially solving long-standing issues involving that error. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9701](https://github.com/apollographql/apollo-client/pull/9701)
+
+### Improvements
+
+- Internalize `useSyncExternalStore` shim, for more control than `use-sync-external-store` provides, fixing some React Native issues. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9675](https://github.com/apollographql/apollo-client/pull/9675)
 
 ## Apollo Client 3.6.3 (unreleased)
 
@@ -11,6 +23,18 @@ TODO
 
 - Add tests of skipping/unskipping and `useLazyQuery` with `defaultOptions`, and fix a bug causing duplicate requests. <br/>
   [@benjamn](https://github.com/benjamn) in [#9666](https://github.com/apollographql/apollo-client/pull/9666)
+
+- Update `ts-invariant` to version 0.10.2 to fix source map warnings. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9672](https://github.com/apollographql/apollo-client/pull/9672)
+
+- Test that `useQuery` queries with `skip: true` do not stall server-side rendering. <br/>
+  [@nathanmarks](https://github.com/nathanmarks) and [@benjamn](https://github.com/benjamn) in [#9677](https://github.com/apollographql/apollo-client/pull/9677)
+
+- Prevent `useLazyQuery` from making duplicate requests when its execution function is first called, and stop rejecting the `Promise` it returns when `result.error` is defined. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9684](https://github.com/apollographql/apollo-client/pull/9684)
+
+- Fix issue with `useQuery` returning `loading: true` state during server-side rendering with `skip: true`. <br/>
+  [@nathanmarks](https://github.com/nathanmarks) in [#9679](https://github.com/apollographql/apollo-client/pull/9679)
 
 ## Apollo Client 3.6.2 (2022-05-02)
 

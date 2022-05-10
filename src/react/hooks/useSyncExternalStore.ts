@@ -12,6 +12,13 @@ type RealUseSESHookType =
   // when only React 17 or earlier is installed.
   typeof import("use-sync-external-store").useSyncExternalStore;
 
+// Prevent webpack from complaining about our feature detection of the
+// useSyncExternalStore property of the React namespace, which is expected not
+// to exist when using React 17 and earlier, and that's fine.
+const obfuscatedReactNamespace: typeof React & {
+  useSyncExternalStore?: RealUseSESHookType;
+} = React;
+
 // Adapted from https://www.npmjs.com/package/use-sync-external-store, with
 // Apollo Client deviations called out by "// DEVIATION ..." comments.
 
@@ -21,9 +28,7 @@ export const useSyncExternalStore: RealUseSESHookType = (
   getServerSnapshot,
 ) => {
   // When/if React.useSyncExternalStore is defined, delegate fully to it.
-  const realHook = (React as {
-    useSyncExternalStore?: RealUseSESHookType;
-  }).useSyncExternalStore;
+  const realHook = obfuscatedReactNamespace.useSyncExternalStore;
   if (realHook) {
     return realHook(subscribe, getSnapshot, getServerSnapshot);
   }

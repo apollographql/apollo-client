@@ -9,7 +9,7 @@ import {
   SubscriptionHookOptions,
   SubscriptionResult
 } from '../types/types';
-import { OperationVariables } from '../../core';
+import { FetchResult, Observable, OperationVariables } from '../../core';
 import { useApolloClient } from './useApolloClient';
 
 export function useSubscription<TData = any, TVariables = OperationVariables>(
@@ -25,18 +25,20 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     variables: options?.variables,
   });
 
-  const [observable, setObservable] = useState(() => {
+  const [observable, setObservable] = useState<Observable<FetchResult<TData>> | null>(null);
+
+  useEffect(() => {
     if (options?.skip) {
-      return null;
+      return;
     }
 
-    return client.subscribe({
+    setObservable(client.subscribe({
       query: subscription,
       variables: options?.variables,
       fetchPolicy: options?.fetchPolicy,
       context: options?.context,
-    });
-  });
+    }));
+  }, []);
 
   const ref = useRef({ client, subscription, options });
   useEffect(() => {

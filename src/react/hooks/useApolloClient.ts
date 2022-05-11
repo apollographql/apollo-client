@@ -11,8 +11,8 @@ export function useApolloClient(
   invariant(
     !!client,
     'Could not find "client" in the context or passed in as an option. ' +
-    'Wrap the root component in an <ApolloProvider>, or pass an ApolloClient' +
-    'ApolloClient instance in via options.',
+    'Wrap the root component in an <ApolloProvider>, or pass an ApolloClient ' +
+    'instance in via options.',
   );
 
   return client;

@@ -4,7 +4,7 @@ import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
 import { ApolloCache, DataProxy } from '../cache';
-import { Observable, compact } from '../utilities';
+import { Observable } from '../utilities';
 import { version } from '../version';
 import { HttpLink, UriFunction } from '../link/http';
 
@@ -62,24 +62,12 @@ export type ApolloClientOptions<TCacheShape> = {
   version?: string;
 };
 
-type OptionsUnion<TData, TVariables, TContext> =
-  | WatchQueryOptions<TVariables, TData>
-  | QueryOptions<TVariables, TData>
-  | MutationOptions<TData, TVariables, TContext>;
-
-export function mergeOptions<
-  TOptions extends OptionsUnion<any, any, any>
->(
-  defaults: Partial<TOptions>,
-  options: TOptions,
-): TOptions {
-  return compact(defaults, options, options.variables && {
-    variables: {
-      ...defaults.variables,
-      ...options.variables,
-    },
-  });
-}
+// Though mergeOptions now resides in @apollo/client/utilities, it was
+// previously declared and exported from this module, and then reexported from
+// @apollo/client/core. Since we need to preserve that API anyway, the easiest
+// solution is to reexport mergeOptions where it was previously declared (here).
+import { mergeOptions } from "../utilities";
+export { mergeOptions }
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -93,7 +81,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
-  public defaultOptions: DefaultOptions = {};
+  public defaultOptions: DefaultOptions;
   public readonly typeDefs: ApolloClientOptions<TCacheShape>['typeDefs'];
 
   private queryManager: QueryManager<TCacheShape>;
@@ -125,9 +113,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *
    * @param assumeImmutableResults When this option is true, the client will assume results
    *                               read from the cache are never mutated by application code,
-   *                               which enables substantial performance optimizations. Passing
-   *                               `{ freezeResults: true }` to the `InMemoryCache` constructor
-   *                               can help enforce this immutability.
+   *                               which enables substantial performance optimizations.
    *
    * @param name A custom name that can be used to identify this client, when
    *             using Apollo client awareness features. E.g. "iOS".
@@ -183,7 +169,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.cache = cache;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || {};
+    this.defaultOptions = defaultOptions || Object.create(null);
     this.typeDefs = typeDefs;
 
     if (ssrForceFetchDelay) {
@@ -246,6 +232,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.queryManager = new QueryManager({
       cache: this.cache,
       link: this.link,
+      defaultOptions: this.defaultOptions,
       queryDeduplication,
       ssrMode,
       clientAwareness: {
@@ -281,18 +268,18 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * This watches the cache store of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
    * receive updated results through a GraphQL observer when the cache store changes.
-   * <p /><p />
+   *
    * Note that this method is not an implementation of GraphQL subscriptions. Rather,
    * it uses Apollo's store in order to reactively deliver updates to your query results.
-   * <p /><p />
+   *
    * For example, suppose you call watchQuery on a GraphQL query that fetches a person's
    * first and last name and this person has a particular object identifier, provided by
    * dataIdFromObject. Later, a different query fetches that same person's
    * first and last name and the first name has now changed. Then, any observers associated
    * with the results of the first query will be updated with a new result object.
-   * <p /><p />
+   *
    * Note that if the cache does not change, the subscriber will *not* be notified.
-   * <p /><p />
+   *
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
    */

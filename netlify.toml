@@ -1,14 +1,20 @@
 [build]
-  base    = "docs"
   publish = "docs/public"
-  command = "cd .. && npm i && npm run build && cd docs && npm i && npm run types && gatsby build"
+  command = "npx typedoc src/index.ts --json docs/public/docs.json"
+
 [build.environment]
-  NPM_VERSION = "6"
-[context.production.environment]
-  PREFIX_PATHS = "true"
-[context.branch-deploy.environment]
-  PREFIX_PATHS = "true"
-[dev]
-  command = "npm run build"
-[context.dev.environment]
-  SKIP_INDEXING = "false"
+  NODE_VERSION = "16"
+
+[context.deploy-preview.build]
+  base = "docs"
+  ignore = "git diff --quiet HEAD^ HEAD ."
+  command = """\
+  cd ../
+  rm -rf monodocs
+  git clone https://github.com/apollographql/docs --branch main --single-branch monodocs
+  cd monodocs
+  npm i
+  cp -r ../docs local
+  DOCS_LOCAL=true npm run build \
+  """
+  publish = "monodocs/public"

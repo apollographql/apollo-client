@@ -45,14 +45,16 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
       shouldResubscribe = !!shouldResubscribe(options!);
     }
 
-    if (options?.skip && !options?.skip !== !ref.current.options?.skip) {
-      setResult({
-        loading: false,
-        data: void 0,
-        error: void 0,
-        variables: options?.variables,
-      });
-      setObservable(null);
+    if (options?.skip) {
+      if (!options?.skip !== !ref.current.options?.skip) {
+        setResult({
+          loading: false,
+          data: void 0,
+          error: void 0,
+          variables: options?.variables,
+        });
+        setObservable(null);
+      }
     } else if (
       shouldResubscribe !== false && (
         client !== ref.current.client ||

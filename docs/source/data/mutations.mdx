@@ -205,7 +205,7 @@ If you know that your app usually needs to refetch certain queries after a parti
 // Refetches two queries after mutation completes
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
   refetchQueries: [
-    GET_POST, // DocumentNode object parsed with gql
+    {query: GET_POST}, // DocumentNode object parsed with gql
     'GetComments' // Query name
   ],
 });
@@ -213,7 +213,7 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
 
 Each element in the `refetchQueries` array is one of the following:
 
-* A `DocumentNode` object parsed with the `gql` function
+* An object referencing `query` (a `DocumentNode` object parsed with the `gql` function) and `variables`
 * The name of a query you've previously executed, as a string (e.g., `GetComments`)
   * To refer to queries by name, make sure each of your app's queries has a _unique_ name.
 

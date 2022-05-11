@@ -1,6 +1,5 @@
 ---
 title: Mutations in Apollo Client
-sidebar_title: Mutations
 description: Modify data with the useMutation hook
 ---
 
@@ -26,7 +25,7 @@ The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the
 
 To execute a mutation, you first call `useMutation` within a React component and pass it the mutation you want to execute, like so:
 
-```jsx{13}:title=my-component.jsx
+```jsx {13} title="my-component.jsx"
 import { gql, useMutation } from '@apollo/client';
 
 // Define mutation
@@ -56,7 +55,7 @@ When your component renders, `useMutation` returns a tuple that includes:
 
 Let's say we're creating a to-do list application and we want the user to be able to add items to their list. First, we'll create a corresponding GraphQL mutation named `ADD_TODO`. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
-```jsx:title=add-todo.jsx
+```jsx title="add-todo.jsx"
 import { gql, useMutation } from '@apollo/client';
 
 const ADD_TODO = gql`
@@ -72,7 +71,7 @@ const ADD_TODO = gql`
 Next, we'll create a component named `AddTodo` that represents the submission form for the to-do list. Inside it, we'll pass our
 `ADD_TODO` mutation to the `useMutation` hook:
 
-```jsx{3,13}:title=add-todo.jsx
+```jsx {3,13} title="add-todo.jsx"
 function AddTodo() {
   let input;
   const [addTodo, { data, loading, error }] = useMutation(ADD_TODO);
@@ -163,7 +162,7 @@ Call `reset` to reset the mutation's result to its initial state (i.e., _before_
 
 > Calling `reset` does _not_ remove any cached data returned by the mutation's execution. It only affects the state associated with the `useMutation` hook, causing the corresponding component to rerender.
 
-```js{2,15}
+```js {2,15}
 function LoginPage () {
   const [login, { error, reset }] = useMutation(LOGIN_MUTATION);
 
@@ -202,7 +201,7 @@ If you're just getting started with Apollo Client, we recommend refetching queri
 
 If you know that your app usually needs to refetch certain queries after a particular mutation, you can include a `refetchQueries` array in that mutation's options:
 
-```js{3-6}
+```js {3-6}
 // Refetches two queries after mutation completes
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
   refetchQueries: [
@@ -252,7 +251,7 @@ When a [mutation's response](#include-modified-objects-in-mutation-responses) is
 
 You provide an `update` function to `useMutation`, like so:
 
-```jsx{12-29}
+```jsx {12-29}
 const GET_TODOS = gql`
   query GetTodos {
     todos {
@@ -325,7 +324,7 @@ An `update` function attempts to replicate a mutation's back-end modifications i
 
 However, an `update` function might get this replication _wrong_ by setting a cached value incorrectly. You can "double check" your `update` function's modifications by refetching affected active queries. To do so, you first provide an `onQueryUpdated` callback function to your mutate function:
 
-```js{6-11}
+```js {6-11}
 addTodo({
   variables: { type: input.value },
   update(cache, result) {

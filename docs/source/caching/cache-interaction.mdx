@@ -1,11 +1,6 @@
 ---
 title: Reading and writing data to the cache
-sidebar_title: Reading and writing
 ---
-
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 You can read and write data directly to the Apollo Client cache, _without_ communicating with your GraphQL server. You can interact with data that you previously fetched from your server, _and_ with data that's only available [locally](../local-state/local-state-management/).
 
@@ -21,7 +16,7 @@ Apollo Client supports multiple strategies for interacting with cached data:
 
 > All code samples below assume that you have initialized an instance of `ApolloClient` and that you have imported the `gql` function from `@apollo/client`. If you haven't, [get started](../get-started).
 >
->In a React component, you can access your instance of `ApolloClient` using [`ApolloProvider`](https://www.apollographql.com/docs/react/api/react/hooks/#the-apolloprovider-component) and the [`useApolloClient`](https://www.apollographql.com/docs/react/api/react/hooks/#useapolloclient) hook.
+>In a React component, you can access your instance of `ApolloClient` using [`ApolloProvider`](../api/react/hooks/#the-apolloprovider-component) and the [`useApolloClient`](../api/react/hooks/#useapolloclient) hook.
 
 ## Using GraphQL queries
 
@@ -31,7 +26,7 @@ You can read and write cache data using GraphQL queries that are similar (or eve
 
 The `readQuery` method enables you to execute a GraphQL query directly on your cache, like so:
 
-```js{12-17}
+```js {12-17}
 const READ_TODO = gql`
   query ReadTodo($id: ID!) {
     todo(id: $id) {
@@ -115,7 +110,7 @@ Note the following about `writeQuery`:
 
 In the example above, if your cache _already_ contains a `Todo` object with ID `5`, `writeQuery` overwrites the fields that are included in `data` (other fields are preserved):
 
-```js{6-7,17-18}
+```js {6-7,17-18}
 // BEFORE
 {
   'Todo:5': {
@@ -238,7 +233,7 @@ client.writeQuery({
 
 As a convenience, you can use `cache.updateQuery` or `cache.updateFragment` to combine reading and writing cached data with a single method call:
 
-```js{12-17}
+```js {12-17}
 // Query to fetch all todo items
 const query = gql`
   query MyTodoAppQuery {
@@ -484,7 +479,7 @@ If a type in your cache uses a [custom cache ID](./cache-configuration/#customiz
 
 Let's say we have a JavaScript representation of a cached GraphQL object, like this:
 
-```js{3}
+```js {3}
 const invisibleManBook = {
   __typename: 'Book',
   isbn: '9780679601395', // The key field for this type's cache ID
@@ -500,7 +495,7 @@ If we want to interact with this object in our cache with methods like [`writeFr
 
 Instead of needing to look up that our `Book` type uses the `isbn` field for its cache ID, we can use the `cache.identify` method, like so:
 
-```js{8}
+```js {8}
 const bookYearFragment = gql`
   fragment BookYear on Book {
     publicationYear

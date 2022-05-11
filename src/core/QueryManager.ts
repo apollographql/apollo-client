@@ -1,5 +1,8 @@
+import { invariant, InvariantError } from '../utilities/globals';
+
 import { DocumentNode } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
@@ -29,11 +32,10 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  WatchQueryFetchPolicy,
   ErrorPolicy,
   MutationFetchPolicy,
 } from './watchQueryOptions';
-import { ObservableQuery, applyNextFetchPolicy, logMissingFieldErrors } from './ObservableQuery';
+import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
@@ -75,9 +77,13 @@ interface TransformCacheEntry {
   asQuery: DocumentNode;
 }
 
+type DefaultOptions = import("./ApolloClient").DefaultOptions;
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
+  public defaultOptions: DefaultOptions;
+
   public readonly assumeImmutableResults: boolean;
   public readonly ssrMode: boolean;
 
@@ -101,6 +107,7 @@ export class QueryManager<TStore> {
   constructor({
     cache,
     link,
+    defaultOptions,
     queryDeduplication = false,
     onBroadcast,
     ssrMode = false,
@@ -110,6 +117,7 @@ export class QueryManager<TStore> {
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
+    defaultOptions?: DefaultOptions;
     queryDeduplication?: boolean;
     onBroadcast?: () => void;
     ssrMode?: boolean;
@@ -119,6 +127,7 @@ export class QueryManager<TStore> {
   }) {
     this.cache = cache;
     this.link = link;
+    this.defaultOptions = defaultOptions || Object.create(null);
     this.queryDeduplication = queryDeduplication;
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache });
@@ -162,8 +171,8 @@ export class QueryManager<TStore> {
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
     onQueryUpdated,
-    errorPolicy = 'none',
-    fetchPolicy = 'network-only',
+    fetchPolicy = this.defaultOptions.mutate?.fetchPolicy || "network-only",
+    errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>> {
@@ -571,7 +580,7 @@ export class QueryManager<TStore> {
           definitions: transformed.definitions.map(def => {
             if (def.kind === "OperationDefinition" &&
                 def.operation !== "query") {
-              return { ...def, operation: "query" };
+              return { ...def, operation: "query" as OperationTypeNode };
             }
             return def;
           }),
@@ -631,9 +640,9 @@ export class QueryManager<TStore> {
     this.queries.set(observable.queryId, queryInfo);
 
     queryInfo.init({
-      document: options.query,
+      document: observable.query,
       observableQuery: observable,
-      variables: options.variables,
+      variables: observable.variables,
     });
 
     return observable;
@@ -695,7 +704,9 @@ export class QueryManager<TStore> {
     if (queryInfo) queryInfo.stop();
   }
 
-  public clearStore(): Promise<void> {
+  public clearStore(options: Cache.ResetOptions = {
+    discardWatches: true,
+  }): Promise<void> {
     // Before we have sent the reset action to the store, we can no longer
     // rely on the results returned by in-flight requests since these may
     // depend on values that previously existed in the data portion of the
@@ -720,19 +731,7 @@ export class QueryManager<TStore> {
     }
 
     // begin removing data from the store
-    return this.cache.reset();
-  }
-
-  public resetStore(): Promise<ApolloQueryResult<any>[]> {
-    // Similarly, we have to have to refetch each of the queries currently being
-    // observed. We refetch instead of error'ing on these since the assumption is that
-    // resetting the store doesn't eliminate the need for the queries currently being
-    // watched. If there is an existing query in flight when the store is reset,
-    // the promise for it will be rejected and its results will not be written to the
-    // store.
-    return this.clearStore().then(() => {
-      return this.reFetchObservableQueries();
-    });
+    return this.cache.reset(options);
   }
 
   public getObservableQueries(
@@ -766,8 +765,10 @@ export class QueryManager<TStore> {
           options: { fetchPolicy },
         } = oq;
 
-        if (fetchPolicy === "standby" || !oq.hasObservers()) {
-          // Skip inactive queries unless include === "all".
+        if (
+          fetchPolicy === "standby" ||
+          (include === "active" && !oq.hasObservers())
+        ) {
           return;
         }
 
@@ -926,8 +927,10 @@ export class QueryManager<TStore> {
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
-    this.getQuery(queryId).stop();
-    this.queries.delete(queryId);
+    if (this.queries.has(queryId)) {
+      this.getQuery(queryId).stop();
+      this.queries.delete(queryId);
+    }
   }
 
   public broadcastQueries() {
@@ -1057,11 +1060,12 @@ export class QueryManager<TStore> {
         const aqr: ApolloQueryResult<TData> = {
           data: result.data,
           loading: false,
-          networkStatus: queryInfo.networkStatus || NetworkStatus.ready,
+          networkStatus: NetworkStatus.ready,
         };
 
         if (hasErrors && options.errorPolicy !== "ignore") {
           aqr.errors = result.errors;
+          aqr.networkStatus = NetworkStatus.error;
         }
 
         return aqr;
@@ -1094,9 +1098,10 @@ export class QueryManager<TStore> {
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 
+    const defaults = this.defaultOptions.watchQuery;
     let {
-      fetchPolicy = "cache-first" as WatchQueryFetchPolicy,
-      errorPolicy = "none" as ErrorPolicy,
+      fetchPolicy = defaults && defaults.fetchPolicy || "cache-first",
+      errorPolicy = defaults && defaults.errorPolicy || "none",
       returnPartialData = false,
       notifyOnNetworkStatusChange = false,
       context = {},
@@ -1127,9 +1132,8 @@ export class QueryManager<TStore> {
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     this.fetchCancelFns.set(queryId, reason => {
-      // Delaying the cancellation using a Promise ensures that the
-      // concast variable has been initialized.
-      Promise.resolve().then(() => concast.cancel(reason));
+      // This delay ensures the concast variable has been initialized.
+      setTimeout(() => concast.cancel(reason));
     });
 
     // A Concast<T> can be created either from an Iterable<Observable<T>>
@@ -1154,7 +1158,10 @@ export class QueryManager<TStore> {
 
     concast.cleanup(() => {
       this.fetchCancelFns.delete(queryId);
-      applyNextFetchPolicy(options);
+
+      if (queryInfo.observableQuery) {
+        queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
+      }
     });
 
     return concast;
@@ -1256,9 +1263,9 @@ export class QueryManager<TStore> {
                 results.set(oq, result as InternalRefetchQueriesResult<TResult>);
               }
 
-              // Prevent the normal cache broadcast of this result, since we've
-              // already handled it.
-              return false;
+              // Allow the default cache broadcast to happen, except when
+              // onQueryUpdated returns false.
+              return result;
             }
 
             if (onQueryUpdated !== null) {
@@ -1335,7 +1342,7 @@ export class QueryManager<TStore> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
-      document: query,
+      document: this.transform(query).document,
       variables,
       networkStatus,
     });
@@ -1383,13 +1390,16 @@ export class QueryManager<TStore> {
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 
-    const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
+    const resultsFromLink = () => this.getResultsFromLink<TData, TVars>(
+      queryInfo,
+      cacheWriteBehavior,
+      {
         variables,
         context,
         fetchPolicy,
         errorPolicy,
-      });
+      },
+    );
 
     const shouldNotify =
       notifyOnNetworkStatusChange &&

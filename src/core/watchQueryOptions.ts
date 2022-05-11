@@ -11,6 +11,7 @@ import {
   InternalRefetchQueriesInclude,
 } from './types';
 import { ApolloCache } from '../cache';
+import { ObservableQuery } from './ObservableQuery';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -106,7 +107,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /**
    * Whether to canonize cache results before returning them. Canonization
    * takes some extra time, but it speeds up future deep equality comparisons.
-   * Defaults to true.
+   * Defaults to false.
    */
   canonizeResults?: boolean;
 }
@@ -120,13 +121,23 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
    * Specifies the {@link FetchPolicy} to be used for this query.
    */
   fetchPolicy?: WatchQueryFetchPolicy;
+
   /**
    * Specifies the {@link FetchPolicy} to be used after this query has completed.
    */
   nextFetchPolicy?: WatchQueryFetchPolicy | ((
     this: WatchQueryOptions<TVariables, TData>,
-    lastFetchPolicy: WatchQueryFetchPolicy,
+    currentFetchPolicy: WatchQueryFetchPolicy,
+    context: NextFetchPolicyContext<TData, TVariables>,
   ) => WatchQueryFetchPolicy);
+
+  /**
+   * Defaults to the initial value of options.fetchPolicy, but can be explicitly
+   * configured to specify the WatchQueryFetchPolicy to revert back to whenever
+   * variables change (unless nextFetchPolicy intervenes).
+   */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+
   /**
    * Specifies whether a {@link NetworkStatus.refetch} operation should merge
    * incoming field data with existing data, or overwrite the existing data.
@@ -134,6 +145,15 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
    * behavior, for backwards compatibility with Apollo Client 3.x.
    */
   refetchWritePolicy?: RefetchWritePolicy;
+}
+
+export interface NextFetchPolicyContext<TData, TVariables> {
+  reason:
+    | "after-fetch"
+    | "variables-changed";
+  observable: ObservableQuery<TData, TVariables>;
+  options: WatchQueryOptions<TVariables, TData>;
+  initialFetchPolicy: WatchQueryFetchPolicy;
 }
 
 export interface FetchMoreQueryOptions<TVariables, TData = any> {
@@ -248,7 +268,7 @@ export interface MutationBaseOptions<
    * This function will be called twice over the lifecycle of a mutation. Once
    * at the very beginning if an `optimisticResponse` was provided. The writes
    * created from the optimistic data will be rolled back before the second time
-   * this function is called which is when the mutation has succesfully
+   * this function is called which is when the mutation has successfully
    * resolved. At that point `update` will be called with the *actual* mutation
    * result and those writes will not be rolled back.
    *
@@ -281,7 +301,7 @@ export interface MutationBaseOptions<
    * The context to be passed to the link execution chain. This context will
    * only be used with this mutation. It will not be used with
    * `refetchQueries`. Refetched queries use the context they were
-   * initialized with (since the intitial context is stored as part of the
+   * initialized with (since the initial context is stored as part of the
    * `ObservableQuery` instance). If a specific context is needed when
    * refetching queries, make sure it is configured (via the
    * [query `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))

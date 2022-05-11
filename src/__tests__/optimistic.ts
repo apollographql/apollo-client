@@ -762,7 +762,7 @@ describe('optimistic mutation results', () => {
                 const incomingText = mResult.data.createTodo.todos[0].text;
                 expect(readText).toEqual(incomingText);
               } else {
-                fail("too many update calls");
+                reject("too many update calls");
               }
             },
           });
@@ -812,7 +812,7 @@ describe('optimistic mutation results', () => {
                   todoListMutationResult.data.createTodo.todos[0].text,
                 );
               } else {
-                fail("too many update calls");
+                reject("too many update calls");
               }
             },
           });

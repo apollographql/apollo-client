@@ -8,6 +8,7 @@ import {
   WatchQueryFetchPolicy,
   QueryOptions,
   ObservableQuery,
+  TypedDocumentNode,
 } from '../core';
 
 import { Observable, ObservableSubscription } from '../utilities';
@@ -2335,7 +2336,7 @@ describe('client', () => {
     expect(count).toEqual(2);
   });
 
-  it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
+  itAsync('invokes onResetStore callbacks before notifying queries during resetStore call', async (resolve, reject) => {
     const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const query = gql`
@@ -2414,8 +2415,8 @@ describe('client', () => {
       })
       .subscribe({
         next,
-        error: fail,
-        complete: fail,
+        error: reject,
+        complete: reject,
       });
 
     expect(count).toEqual(0);
@@ -2423,6 +2424,8 @@ describe('client', () => {
     expect(count).toEqual(2);
     //watchQuery should only receive data twice
     expect(next).toHaveBeenCalledTimes(2);
+
+    resolve();
   });
 
   it('has a reFetchObservableQueries method which calls QueryManager', async () => {
@@ -2590,15 +2593,16 @@ describe('client', () => {
         subscription.unsubscribe();
 
         const lastError = observable.getLastError();
-        const lastResult = observable.getLastResult();
+        expect(lastError).toBeInstanceOf(ApolloError);
+        expect(lastError!.networkError).toEqual(error);
 
+        const lastResult = observable.getLastResult();
         expect(lastResult).toBeTruthy();
         expect(lastResult!.loading).toBe(false);
         expect(lastResult!.networkStatus).toBe(8);
 
         observable.resetLastResults();
         subscription = observable.subscribe(observerOptions);
-        Object.assign(observable, { lastError, lastResult });
 
         // The error arrived, run a refetch to get the third result
         // which should now contain valid data.
@@ -3309,10 +3313,16 @@ describe('@connection', () => {
 
         defaultOptions: {
           watchQuery: {
-            nextFetchPolicy(fetchPolicy) {
+            nextFetchPolicy(fetchPolicy, context) {
               expect(++nextFetchPolicyCallCount).toBe(1);
               expect(this.query).toBe(query);
               expect(fetchPolicy).toBe("cache-first");
+
+              expect(context.reason).toBe("after-fetch");
+              expect(context.observable).toBe(obs);
+              expect(context.options).toBe(obs.options);
+              expect(context.initialFetchPolicy).toBe("cache-first");
+
               // Usually options.nextFetchPolicy applies only once, but a
               // nextFetchPolicy function can set this.nextFetchPolicy
               // again to perform an additional transition.
@@ -3320,6 +3330,7 @@ describe('@connection', () => {
                 ++nextFetchPolicyCallCount;
                 return "cache-first";
               };
+
               return "cache-and-network";
             },
           },
@@ -3364,17 +3375,114 @@ describe('@connection', () => {
         } else if (handleCount === 4) {
           expect(result.data).toEqual({ count: "secondary" });
           expect(nextFetchPolicyCallCount).toBe(3);
+          client.cache.evict({ fieldName: "count" });
         } else if (handleCount === 5) {
           expect(result.data).toEqual({ count: 1 });
-          expect(nextFetchPolicyCallCount).toBe(3);
-          client.cache.evict({ fieldName: "count" });
-        } else if (handleCount === 6) {
-          expect(result.data).toEqual({ count: 2 });
           expect(nextFetchPolicyCallCount).toBe(4);
           expect(obs.options.fetchPolicy).toBe("cache-first");
           setTimeout(resolve, 50);
         } else {
           reject("too many results");
+        }
+      });
+    });
+
+    itAsync('can override global defaultOptions.watchQuery.nextFetchPolicy', (resolve, reject) => {
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          observer.next({
+            data: {
+              linkCount: ++linkCount,
+            },
+          });
+          observer.complete();
+        })),
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy(currentFetchPolicy) {
+              reject(new Error("should not have called global nextFetchPolicy"));
+              return currentFetchPolicy;
+            },
+          }
+        }
+      });
+
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`query CountQuery { linkCount }`;
+
+      let fetchPolicyRecord: WatchQueryFetchPolicy[] = [];
+      const observable = client.watchQuery({
+        query,
+        nextFetchPolicy(currentFetchPolicy) {
+          fetchPolicyRecord.push(currentFetchPolicy);
+          return "cache-first";
+        }
+      });
+
+      subscribeAndCount(reject, observable, (resultCount, result) => {
+        if (resultCount === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 1 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+          ]);
+
+          return client.refetchQueries({
+            include: ["CountQuery"],
+          }).then(results => {
+            expect(results.length).toBe(1);
+            results.forEach(result => {
+              expect(result.loading).toBe(false);
+              expect(result.data).toEqual({ linkCount: 2 });
+            });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+            ]);
+          });
+
+        } else if (resultCount === 2) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 2 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+          ]);
+
+          return observable.reobserve({
+            // Allow delivery of loading:true result.
+            notifyOnNetworkStatusChange: true,
+            // Force a network request in addition to loading:true cache result.
+            fetchPolicy: "cache-and-network",
+          }).then(finalResult => {
+            expect(finalResult.loading).toBe(false);
+            expect(finalResult.data).toEqual({ linkCount: 3 });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+              "cache-and-network",
+            ]);
+          });
+
+        } else if (resultCount === 3) {
+          expect(result.loading).toBe(true);
+          expect(result.data).toEqual({ linkCount: 2 });
+
+        } else if (resultCount === 4) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 3 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+            "cache-and-network",
+          ]);
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(new Error(`Too many results (${resultCount})`));
         }
       });
     });

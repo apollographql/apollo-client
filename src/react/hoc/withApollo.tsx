@@ -1,6 +1,6 @@
+import { invariant } from '../../utilities/globals';
 import * as React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
-import { invariant } from 'ts-invariant';
 
 import { ApolloConsumer } from '../context';
 import { OperationOption, WithApolloClient } from './types';

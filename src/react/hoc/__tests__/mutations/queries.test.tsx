@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, wait } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -77,7 +77,7 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
       expect(mutateFired).toBeTruthy();
     }).then(resolve, reject);
   });
@@ -208,7 +208,7 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
       expect(renderCount).toBe(2);
     }).then(resolve, reject);
   });
@@ -333,7 +333,7 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    return wait(() => {
+    waitFor(() => {
       expect(count).toBe(3);
     }).then(resolve, reject);
   });
@@ -411,7 +411,7 @@ describe('graphql(mutation) query integration', () => {
       </ApolloProvider>
     );
 
-    await wait(() => {
+    await waitFor(() => {
       expect(renderCount).toBe(3);
     });
   });

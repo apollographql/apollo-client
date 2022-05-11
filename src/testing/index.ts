@@ -1,4 +1,3 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "../utilities";
-invariant("boolean" === typeof DEV, DEV);
-export * from '../utilities/testing';
+import '../utilities/globals';
+export { MockedProvider, MockedProviderProps } from './react/MockedProvider';
+export * from './core';

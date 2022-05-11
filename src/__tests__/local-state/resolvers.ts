@@ -15,8 +15,8 @@ import { InMemoryCache } from '../../cache';
 import { Observable, Observer } from '../../utilities';
 import { ApolloLink } from '../../link/core';
 import { itAsync } from '../../testing';
-import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
-import wrap from '../../utilities/testing/wrap';
+import mockQueryManager from '../../testing/core/mocking/mockQueryManager';
+import wrap from '../../testing/core/wrap';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.

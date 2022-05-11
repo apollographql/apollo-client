@@ -18,9 +18,10 @@ Thank you to all the Apollo community members who have contributed custom Apollo
 | [link-http-dataloader](https://github.com/graphcool/http-link-dataloader) | [@graphcool](https://github.com/graphcool) | Batching and caching provided by dataloader. |
 | [@absinthe/socket-apollo-link](https://github.com/absinthe-graphql/absinthe-socket/tree/master/packages/socket-apollo-link) | [@absinthe-graphql](https://github.com/absinthe-graphql) | Communicate over an Absinthe socket. |
 | [apollo-absinthe-upload-link](https://github.com/bytewitchcraft/apollo-absinthe-upload-link) | [@bytewitchcraft](https://github.com/bytewitchcraft) | Enables file uploading to Absinthe backends. |
-| [apollo-link-logger](https://github.com/blackxored/apollo-link-logger) | [@blackxored](https://github.com/blackxored) | Logger that uses similar format to redux-logger and includes performance infomation. |
+| [apollo-link-logger](https://github.com/blackxored/apollo-link-logger) | [@blackxored](https://github.com/blackxored) | Logger that uses similar format to redux-logger and includes performance information. |
 | [apollo-link-queue](https://github.com/helfer/apollo-link-queue) | [@helfer](https://github.com/helfer) | Buffers requests on a toggle, such as an on/offline event. |
 | [apollo-link-optimistic](https://github.com/helfer/apollo-link-optimistic) | [@helfer](https://github.com/helfer) | Returns an immediate optimistic response before returning server results. |
 | [apollo-link-serialize](https://github.com/helfer/apollo-link-serialize) | [@helfer](https://github.com/helfer) | Serializes requests by key to ensure execution order. |
 | [apollo-link-debounce](https://github.com/helfer/apollo-link-debounce) | [@helfer](https://github.com/helfer) | Debounce requests made within an interval. |
 | [apollo-link-segment](https://github.com/hobochild/apollo-link-segment) | [@hobochild](https://github.com/hobochild) | Automatically track apollo operations with [segment](https://segment.com/). |
+| [apollo-multi-endpoint-link](https://github.com/habx/apollo-multi-endpoint-link) | [@habx](https://github.com/habx) | Add directive to redirect requests to right endpoint |

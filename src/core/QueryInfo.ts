@@ -3,7 +3,7 @@ import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
-import { ObservableQuery } from './ObservableQuery';
+import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
 import { FetchResult } from '../link/core';
 import {
@@ -192,13 +192,12 @@ export class QueryInfo {
   }
 
   private getDiffOptions(variables = this.variables): Cache.DiffOptions {
-    const oq = this.observableQuery;
     return {
       query: this.document!,
       variables,
       returnPartialData: true,
       optimistic: true,
-      canonizeResults: !oq || oq.options.canonizeResults !== false,
+      canonizeResults: this.observableQuery?.options.canonizeResults,
     };
   }
 
@@ -230,15 +229,24 @@ export class QueryInfo {
     if (oq) {
       oq["queryInfo"] = this;
       this.listeners.add(this.oqListener = () => {
-        // If this.diff came from an optimistic transaction, deliver the
-        // current cache data to the ObservableQuery, but don't perform a
-        // full reobservation, since oq.reobserve might make a network
-        // request, and we don't want to trigger network requests for
-        // optimistic updates.
-        if (this.getDiff().fromOptimisticTransaction) {
+        const diff = this.getDiff();
+        if (diff.fromOptimisticTransaction) {
+          // If this diff came from an optimistic transaction, deliver the
+          // current cache data to the ObservableQuery, but don't perform a
+          // reobservation, since oq.reobserveCacheFirst might make a network
+          // request, and we never want to trigger network requests in the
+          // middle of optimistic updates.
           oq["observe"]();
         } else {
-          oq.reobserve();
+          // Otherwise, make the ObservableQuery "reobserve" the latest data
+          // using a temporary fetch policy of "cache-first", so complete cache
+          // results have a chance to be delivered without triggering additional
+          // network requests, even when options.fetchPolicy is "network-only"
+          // or "cache-and-network". All other fetch policies are preserved by
+          // this method, and are handled by calling oq.reobserve(). If this
+          // reobservation is spurious, isDifferentFromLastResult still has a
+          // chance to catch it before delivery to ObservableQuery subscribers.
+          reobserveCacheFirst(oq);
         }
       });
     } else {
@@ -296,7 +304,7 @@ export class QueryInfo {
   // updateWatch method.
   private cancel() {}
 
-  private lastWatch?: Cache.WatchOptions<QueryInfo>;
+  private lastWatch?: Cache.WatchOptions;
 
   private updateWatch(variables = this.variables) {
     const oq = this.observableQuery;
@@ -304,7 +312,7 @@ export class QueryInfo {
       return;
     }
 
-    const watchOptions: Cache.WatchOptions<QueryInfo> = {
+    const watchOptions: Cache.WatchOptions = {
       // Although this.getDiffOptions returns Cache.DiffOptions instead of
       // Cache.WatchOptions, all the overlapping options should be the same, so
       // we can reuse getDiffOptions here, for consistency.

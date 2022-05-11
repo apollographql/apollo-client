@@ -1,19 +1,19 @@
 // externals
 import gql from 'graphql-tag';
 
-import { Observable } from '../../../utilities/observables/Observable';
+import { Observable, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
 
 // mocks
-import { MockSubscriptionLink } from '../../../utilities/testing/mocking/mockSubscriptionLink';
+import { itAsync, MockSubscriptionLink } from '../../../testing/core';
 
 // core
 import { QueryManager } from '../../QueryManager';
 import { NextLink, Operation, Reference } from '../../../core';
 
 describe('Link interactions', () => {
-  it('includes the cache on the context for eviction links', done => {
+  itAsync('includes the cache on the context for eviction links', (resolve, reject) => {
     const query = gql`
       query CachedLuke {
         people_one(id: 1) {
@@ -41,7 +41,7 @@ describe('Link interactions', () => {
           expect(cacheResult).toEqual(initialData);
           expect(cacheResult).toEqual(result.data);
           if (count === 1) {
-            done();
+            resolve();
           }
         }, 10);
         return result;
@@ -73,7 +73,7 @@ describe('Link interactions', () => {
     // fire off first result
     mockLink.simulateResult({ result: { data: initialData } });
   });
-  it('cleans up all links on the final unsubscribe from watchQuery', done => {
+  itAsync('cleans up all links on the final unsubscribe from watchQuery', (resolve, reject) => {
     const query = gql`
       query WatchedLuke {
         people_one(id: 1) {
@@ -104,7 +104,7 @@ describe('Link interactions', () => {
     });
 
     let count = 0;
-    let four: ZenObservable.Subscription;
+    let four: ObservableSubscription;
     // first watch
     const one = observable.subscribe(result => count++);
     // second watch
@@ -141,10 +141,10 @@ describe('Link interactions', () => {
 
     link.onUnsubscribe(() => {
       expect(count).toEqual(6);
-      done();
+      resolve();
     });
   });
-  it('cleans up all links on the final unsubscribe from watchQuery [error]', done => {
+  itAsync('cleans up all links on the final unsubscribe from watchQuery [error]', (resolve, reject) => {
     const query = gql`
       query WatchedLuke {
         people_one(id: 1) {
@@ -175,7 +175,7 @@ describe('Link interactions', () => {
     });
 
     let count = 0;
-    let four: ZenObservable.Subscription;
+    let four: ObservableSubscription;
     // first watch
     const one = observable.subscribe(result => count++);
     // second watch
@@ -205,7 +205,7 @@ describe('Link interactions', () => {
 
       setTimeout(() => {
         expect(count).toEqual(0);
-        done();
+        resolve();
       }, 10);
     }, 10);
 
@@ -213,7 +213,7 @@ describe('Link interactions', () => {
       expect(count).toEqual(4);
     });
   });
-  it('includes the cache on the context for mutations', done => {
+  itAsync('includes the cache on the context for mutations', (resolve, reject) => {
     const mutation = gql`
       mutation UpdateLuke {
         people_one(id: 1) {
@@ -235,7 +235,7 @@ describe('Link interactions', () => {
     const evictionLink = (operation: Operation, forward: NextLink) => {
       const { cache } = operation.getContext();
       expect(cache).toBeDefined();
-      done();
+      resolve();
       return forward(operation);
     };
 
@@ -251,7 +251,8 @@ describe('Link interactions', () => {
     // fire off first result
     mockLink.simulateResult({ result: { data: initialData } });
   });
-  it('includes passed context in the context for mutations', done => {
+
+  itAsync('includes passed context in the context for mutations', (resolve, reject) => {
     const mutation = gql`
       mutation UpdateLuke {
         people_one(id: 1) {
@@ -273,7 +274,7 @@ describe('Link interactions', () => {
     const evictionLink = (operation: Operation, forward: NextLink) => {
       const { planet } = operation.getContext();
       expect(planet).toBe('Tatooine');
-      done();
+      resolve();
       return forward(operation);
     };
 

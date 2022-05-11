@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -62,6 +62,7 @@ describe('fragments', () => {
   });
 
   itAsync('correctly fetches a query with inline fragments', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -101,6 +102,7 @@ describe('fragments', () => {
           expect(this.props.data!.allPeople).toEqual(
             data.allPeople
           );
+          done = true;
         }
         render() {
           return null;
@@ -114,6 +116,8 @@ describe('fragments', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 });

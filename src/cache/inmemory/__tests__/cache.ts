@@ -3,13 +3,15 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
 import { Cache } from '../../../cache';
-import { InMemoryCache, InMemoryCacheConfig } from '../inMemoryCache';
+import { InMemoryCache } from '../inMemoryCache';
+import { InMemoryCacheConfig } from '../types';
 
 jest.mock('optimism');
 import { wrap } from 'optimism';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { ObjectCanon } from '../object-canon';
+import { TypePolicies } from '../policies';
 
 disableFragmentWarnings();
 
@@ -1296,6 +1298,166 @@ describe('Cache', () => {
     );
   });
 
+  describe("cache.updateQuery and cache.updateFragment", () => {
+    it('should be batched', () => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Person: {
+            keyFields: ["name"],
+          },
+        },
+      });
+
+      type QueryData = {
+        me: {
+          __typename: string;
+          name: string;
+        },
+      };
+
+      const query: TypedDocumentNode<QueryData> = gql`query { me { name } }`;
+      const results: QueryData[] = [];
+
+      const cancel = cache.watch({
+        query,
+        optimistic: true,
+        callback(diff) {
+          results.push(diff.result!);
+        },
+      });
+
+      cache.updateQuery({ query }, data => {
+        expect(data).toBe(null);
+
+        cache.writeQuery({
+          query,
+          data: {
+            me: {
+              __typename: "Person",
+              name: "Ben",
+            },
+          },
+        });
+
+        return {
+          me: {
+            __typename: "Person",
+            name: "Ben Newman",
+          },
+        };
+      });
+
+      expect(results).toEqual([
+        { me: { __typename: "Person", name: "Ben Newman" }},
+      ]);
+
+      expect(cache.extract()).toEqual({
+        'Person:{"name":"Ben Newman"}': {
+          __typename: "Person",
+          name: "Ben Newman",
+        },
+        'Person:{"name":"Ben"}': {
+          __typename: "Person",
+          name: "Ben",
+        },
+        ROOT_QUERY: {
+          __typename: "Query",
+          me: {
+            __ref: 'Person:{"name":"Ben Newman"}',
+          },
+        },
+      });
+
+      const usernameFragment = gql`
+        fragment UsernameFragment on Person {
+          username
+        }
+      `;
+
+      const bnId = cache.identify({
+        __typename: "Person",
+        name: "Ben Newman",
+      });
+
+      cache.updateFragment({
+        id: bnId,
+        fragment: usernameFragment,
+        returnPartialData: true,
+      }, data => {
+        expect(data).toEqual({
+          __typename: "Person",
+        });
+
+        cache.writeQuery({
+          query,
+          data: {
+            me: {
+              __typename: "Person",
+              name: "Brian Kim",
+            },
+          },
+        });
+
+        cache.writeFragment({
+          id: cache.identify({
+            __typename: "Person",
+            name: "Brian Kim",
+          }),
+          fragment: usernameFragment,
+          data: {
+            username: "brainkim",
+          },
+        });
+
+        expect(results.length).toBe(1);
+
+        return {
+          ...data,
+          name: "Ben Newman",
+          username: "benjamn",
+        };
+      });
+
+      // Still just two results, thanks to cache.update{Query,Fragment} using
+      // cache.batch behind the scenes.
+      expect(results).toEqual([
+        { me: { __typename: "Person", name: "Ben Newman" }},
+        { me: { __typename: "Person", name: "Brian Kim" }},
+      ]);
+
+      expect(cache.extract()).toEqual({
+        'Person:{"name":"Ben"}': {
+          __typename: "Person",
+          name: "Ben",
+        },
+        'Person:{"name":"Ben Newman"}': {
+          __typename: "Person",
+          name: "Ben Newman",
+          username: "benjamn",
+        },
+        'Person:{"name":"Brian Kim"}': {
+          __typename: "Person",
+          name: "Brian Kim",
+          username: "brainkim",
+        },
+        ROOT_QUERY: {
+          __typename: "Query",
+          me: {
+            __ref: 'Person:{"name":"Brian Kim"}',
+          },
+        },
+        __META: {
+          extraRootIds: [
+            'Person:{"name":"Ben Newman"}',
+            'Person:{"name":"Brian Kim"}',
+          ],
+        },
+      });
+
+      cancel();
+    });
+  });
+
   describe('cache.restore', () => {
     it('replaces cache.{store{Reader,Writer},maybeBroadcastWatch}', () => {
       const cache = new InMemoryCache;
@@ -1377,7 +1539,7 @@ describe('Cache', () => {
 
       const dirtied = new Map<Cache.WatchOptions, Cache.DiffResult<any>>();
 
-      cache.batch({
+      const aUpdateResult = cache.batch({
         update(cache) {
           cache.writeQuery({
             query: aQuery,
@@ -1385,12 +1547,14 @@ describe('Cache', () => {
               a: "ay",
             },
           });
+          return "aQuery updated";
         },
         optimistic: true,
         onWatchUpdated(w, diff) {
           dirtied.set(w, diff);
         },
       });
+      expect(aUpdateResult).toBe("aQuery updated");
 
       expect(dirtied.size).toBe(2);
       expect(dirtied.has(aInfo.watch)).toBe(true);
@@ -1418,7 +1582,7 @@ describe('Cache', () => {
 
       dirtied.clear();
 
-      cache.batch({
+      const bUpdateResult = cache.batch({
         update(cache) {
           cache.writeQuery({
             query: bQuery,
@@ -1426,12 +1590,14 @@ describe('Cache', () => {
               b: "bee",
             },
           });
+          // Not returning anything, so beUpdateResult will be undefined.
         },
         optimistic: true,
         onWatchUpdated(w, diff) {
           dirtied.set(w, diff);
         },
       });
+      expect(bUpdateResult).toBeUndefined();
 
       expect(dirtied.size).toBe(2);
       expect(dirtied.has(aInfo.watch)).toBe(false);
@@ -1653,6 +1819,98 @@ describe('Cache', () => {
       aInfo.cancel();
       abInfo.cancel();
       bInfo.cancel();
+    });
+
+    it("returns options.update result for optimistic and non-optimistic batches", () => {
+      const cache = new InMemoryCache;
+      const expected = Symbol.for("expected");
+
+      expect(cache.batch({
+        optimistic: false,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { value }`,
+            data: { value: 12345 },
+          });
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: false,
+        update(c) {
+          c.reset();
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: false,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { optimistic }`,
+            data: { optimistic: false },
+          });
+          return expected;
+        },
+        onWatchUpdated() {
+          throw new Error("onWatchUpdated should not have been called");
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: true,
+        update(c) {
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: true,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { optimistic }`,
+            data: { optimistic: true },
+          });
+          return expected;
+        },
+        onWatchUpdated() {
+          throw new Error("onWatchUpdated should not have been called");
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        // The optimistic option defaults to true.
+        // optimistic: true,
+        update(c) {
+          return expected;
+        },
+      })).toBe(expected);
+
+      expect(cache.batch({
+        optimistic: "some optimistic ID",
+        update(c) {
+          expect(c.readQuery({
+            query: gql`query { __typename }`,
+          })).toEqual({ __typename: "Query" });
+          return expected;
+        },
+      })).toBe(expected);
+
+      const optimisticId = "some optimistic ID";
+      expect(cache.batch({
+        optimistic: optimisticId,
+        update(c) {
+          c.writeQuery({
+            query: gql`query { optimistic }`,
+            data: { optimistic: optimisticId },
+          });
+          return expected;
+        },
+        onWatchUpdated() {
+          throw new Error("onWatchUpdated should not have been called");
+        },
+      })).toBe(expected);
     });
   });
 
@@ -1911,6 +2169,169 @@ describe("InMemoryCache#broadcastWatches", function () {
       received2AllCaps,
     ]);
   });
+
+  it("should pass WatchOptions through to cache.diff", () => {
+    const typePolicies: TypePolicies = {
+      Query: {
+        fields: {
+          object(_, { variables }) {
+            return { name: variables?.name ?? "UNKNOWN" };
+          },
+        },
+      },
+    };
+
+    const canonicalCache = new InMemoryCache({
+      canonizeResults: true,
+      typePolicies,
+    });
+
+    const nonCanonicalCache = new InMemoryCache({
+      canonizeResults: false,
+      typePolicies,
+    });
+
+    const query = gql`
+      query {
+        object {
+          name
+        }
+      }
+    `;
+
+    const unwatchers = new Set<() => void>();
+
+    type Diff = Cache.DiffResult<{
+      object: {
+        name: string;
+      };
+    }>;
+    const diffs: Record<string, Diff[]> = Object.create(null);
+    function addDiff(name: string, diff: Diff) {
+      (diffs[name] || (diffs[name] = [])).push(diff);
+    }
+
+    const commonWatchOptions = {
+      query,
+      optimistic: true,
+      immediate: true,
+      callback(diff: Diff) {
+        addDiff(diff.result!.object.name, diff);
+      },
+    };
+
+    unwatchers.add(canonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "canonicalByDefault" },
+      // Pass nothing for canonizeResults to let the default for canonicalCache
+      // (true) prevail.
+    }));
+
+    unwatchers.add(nonCanonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "nonCanonicalByDefault" },
+      // Pass nothing for canonizeResults to let the default for
+      // nonCanonicalCache (false) prevail.
+    }));
+
+    unwatchers.add(nonCanonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "canonicalByChoice" },
+      canonizeResults: true, // Override the default.
+    }));
+
+    unwatchers.add(canonicalCache.watch({
+      ...commonWatchOptions,
+      variables: { name: "nonCanonicalByChoice" },
+      canonizeResults: false, // Override the default.
+    }));
+
+    function makeDiff(name: string): Diff {
+      return {
+        complete: true,
+        result: {
+          object: { name },
+        },
+      };
+    }
+
+    const canonicalByDefaultDiff = makeDiff("canonicalByDefault");
+    const nonCanonicalByDefaultDiff = makeDiff("nonCanonicalByDefault");
+    const canonicalByChoiceDiff = makeDiff("canonicalByChoice");
+    const nonCanonicalByChoiceDiff = makeDiff("nonCanonicalByChoice");
+
+    expect(diffs).toEqual({
+      canonicalByDefault: [canonicalByDefaultDiff],
+      nonCanonicalByDefault: [nonCanonicalByDefaultDiff],
+      canonicalByChoice: [canonicalByChoiceDiff],
+      nonCanonicalByChoice: [nonCanonicalByChoiceDiff],
+    });
+
+    [ canonicalCache,
+      nonCanonicalCache,
+    ].forEach(cache => {
+      // Hack: delete every watch.lastDiff, so subsequent results will be
+      // broadcast, even though they are deeply equal to the previous results.
+      cache["watches"].forEach(watch => {
+        delete watch.lastDiff;
+      });
+    });
+
+    // Evict Query.object to invalidate the result cache.
+    canonicalCache.evict({
+      fieldName: "object",
+    });
+    nonCanonicalCache.evict({
+      fieldName: "object",
+    });
+
+    // Every watcher receives the same (deeply equal) Diff a second time.
+    expect(diffs).toEqual({
+      canonicalByDefault: [
+        canonicalByDefaultDiff,
+        canonicalByDefaultDiff,
+      ],
+      nonCanonicalByDefault: [
+        nonCanonicalByDefaultDiff,
+        nonCanonicalByDefaultDiff,
+      ],
+      canonicalByChoice: [
+        canonicalByChoiceDiff,
+        canonicalByChoiceDiff,
+      ],
+      nonCanonicalByChoice: [
+        nonCanonicalByChoiceDiff,
+        nonCanonicalByChoiceDiff,
+      ],
+    });
+
+    function expectCanonical(name: string) {
+      const count = diffs[name].length;
+      const firstDiff = diffs[name][0];
+      for (let i = 1; i < count; ++i) {
+        expect(firstDiff).toEqual(diffs[name][i]);
+        expect(firstDiff.result).toBe(diffs[name][i].result);
+      }
+    }
+
+    function expectNonCanonical(name: string) {
+      const count = diffs[name].length;
+      const firstDiff = diffs[name][0];
+      for (let i = 1; i < count; ++i) {
+        expect(firstDiff).toEqual(diffs[name][i]);
+        expect(firstDiff.result).not.toBe(diffs[name][i].result);
+      }
+    }
+
+    // However, some of the diff.result objects are canonized and thus ===, and
+    // others are deeply equal but not canonized (and thus not ===).
+    expectCanonical("canonicalByDefault");
+    expectCanonical("canonicalByChoice");
+    expectNonCanonical("nonCanonicalByDefault");
+    expectNonCanonical("nonCanonicalByChoice");
+
+    unwatchers.forEach(unwatch => unwatch());
+  });
 });
 
 describe("InMemoryCache#modify", () => {
@@ -2013,6 +2434,7 @@ describe("InMemoryCache#modify", () => {
 
   it("should allow invalidation using details.INVALIDATE", () => {
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Book: {
           keyFields: ["isbn"],
@@ -2946,7 +3368,10 @@ describe("ReactiveVar and makeVar", () => {
   it("should work with resultCaching disabled (unusual)", () => {
     const { cache, nameVar, query } = makeCacheAndVar(false);
 
-    const result1 = cache.readQuery({ query });
+    const result1 = cache.readQuery({
+      query,
+      canonizeResults: true,
+    });
     expect(result1).toEqual({
       onCall: {
         __typename: "Person",
@@ -2954,14 +3379,20 @@ describe("ReactiveVar and makeVar", () => {
       },
     });
 
-    const result2 = cache.readQuery({ query });
+    const result2 = cache.readQuery({
+      query,
+      canonizeResults: true,
+    });
     expect(result2).toEqual(result1);
     expect(result2).toBe(result1);
 
     expect(nameVar()).toBe("Ben");
     expect(nameVar("Hugh")).toBe("Hugh");
 
-    const result3 = cache.readQuery({ query });
+    const result3 = cache.readQuery({
+      query,
+      canonizeResults: true,
+    });
     expect(result3).toEqual({
       onCall: {
         __typename: "Person",
@@ -3019,6 +3450,116 @@ describe("ReactiveVar and makeVar", () => {
     expect(cache["watches"].size).toBe(0);
     expect(spy).toBeCalledTimes(1);
     expect(spy).toBeCalledWith(cache);
+  });
+
+  it("should remove all watchers when cache.reset() called", () => {
+    const { cache, query, nameVar } = makeCacheAndVar(false);
+    const unwatchers: Record<string, Array<() => void>> = Object.create(null);
+    const diffCounts: Record<string, number> = Object.create(null);
+
+    function watch(id: string) {
+      const fns = unwatchers[id] || (unwatchers[id] = []);
+      fns.push(cache.watch({
+        query,
+        optimistic: true,
+        immediate: true,
+        callback() {
+          diffCounts[id] = (diffCounts[id] || 0) + 1;
+        },
+      }));
+    }
+
+    watch("a");
+    watch("b");
+    watch("c");
+    watch("a");
+    watch("d");
+
+    expect(cache["watches"].size).toBe(5);
+    expect(diffCounts).toEqual({
+      a: 2,
+      b: 1,
+      c: 1,
+      d: 1,
+    });
+
+    unwatchers.a.forEach(unwatch => unwatch());
+    unwatchers.a.length = 0;
+    expect(cache["watches"].size).toBe(3);
+
+    nameVar("Hugh");
+    expect(diffCounts).toEqual({
+      a: 2,
+      b: 2,
+      c: 2,
+      d: 2,
+    });
+
+    cache.reset({ discardWatches: true });
+    expect(cache["watches"].size).toBe(0);
+
+    expect(diffCounts).toEqual({
+      a: 2,
+      b: 2,
+      c: 2,
+      d: 2,
+    });
+
+    nameVar("Brian");
+    // No change because cache.reset() called.
+    expect(diffCounts).toEqual({
+      a: 2,
+      b: 2,
+      c: 2,
+      d: 2,
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        onCall: {
+          __typename: "Person",
+        },
+      },
+    });
+
+    watch("e");
+    watch("f");
+
+    expect(diffCounts).toEqual({
+      a: 2,
+      b: 2,
+      c: 2,
+      d: 2,
+      e: 1,
+      f: 1,
+    });
+
+    nameVar("Trevor");
+    expect(cache["watches"].size).toBe(2);
+    expect(diffCounts).toEqual({
+      a: 2,
+      b: 2,
+      c: 2,
+      d: 2,
+      e: 2,
+      f: 2,
+    });
+
+    cache.reset({ discardWatches: true });
+    expect(cache["watches"].size).toBe(0);
+
+    nameVar("Danielle");
+    expect(diffCounts).toEqual({
+      a: 2,
+      b: 2,
+      c: 2,
+      d: 2,
+      e: 2,
+      f: 2,
+    });
+
+    expect(cache["watches"].size).toBe(0);
   });
 
   it("should recall forgotten vars once cache has watches again", () => {

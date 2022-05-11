@@ -170,14 +170,18 @@ describe('EntityStore', () => {
       },
     });
 
-    const resultBeforeGC = cache.readQuery({ query });
+    function read() {
+      return cache.readQuery({ query, canonizeResults: true });
+    }
+
+    const resultBeforeGC = read();
 
     expect(cache.gc().sort()).toEqual([
       'Author:Ray Bradbury',
       'Book:9781451673319',
     ]);
 
-    const resultAfterGC = cache.readQuery({ query });
+    const resultAfterGC = read();
     expect(resultBeforeGC).toBe(resultAfterGC);
 
     expect(cache.extract()).toEqual({
@@ -207,7 +211,7 @@ describe('EntityStore', () => {
       resetResultCache: true,
     })).toEqual([]);
     expect(cache["storeReader"]).not.toBe(originalReader);
-    const resultAfterResetResultCache = cache.readQuery({ query });
+    const resultAfterResetResultCache = read();
     expect(resultAfterResetResultCache).toBe(resultBeforeGC);
     expect(resultAfterResetResultCache).toBe(resultAfterGC);
 
@@ -217,7 +221,7 @@ describe('EntityStore', () => {
       resetResultIdentities: true,
     })).toEqual([]);
 
-    const resultAfterFullGC = cache.readQuery({ query });
+    const resultAfterFullGC = read();
     expect(resultAfterFullGC).toEqual(resultBeforeGC);
     expect(resultAfterFullGC).toEqual(resultAfterGC);
     // These !== relations are triggered by passing resetResultIdentities:true
@@ -225,7 +229,7 @@ describe('EntityStore', () => {
     expect(resultAfterFullGC).not.toBe(resultBeforeGC);
     expect(resultAfterFullGC).not.toBe(resultAfterGC);
     // Result caching immediately begins working again after the intial reset.
-    expect(cache.readQuery({ query })).toBe(resultAfterFullGC);
+    expect(read()).toBe(resultAfterFullGC);
 
     // Go back to the pre-GC snapshot.
     cache.restore(snapshot);
@@ -1049,6 +1053,7 @@ describe('EntityStore', () => {
     `;
 
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -1322,14 +1327,13 @@ describe('EntityStore', () => {
       },
       missing: [
         new MissingFieldError(
-          'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-          ["authorOfBook", "hobby"],
-          expect.anything(), // query
-          expect.anything(), // variables
-        ),
-        new MissingFieldError(
-          'Can\'t find field \'publisherOfBook\' on ROOT_QUERY object',
-          ["publisherOfBook"],
+          "Can't find field 'hobby' on Author:{\"name\":\"Ted Chiang\"} object",
+          {
+            publisherOfBook: "Can't find field 'publisherOfBook' on ROOT_QUERY object",
+            authorOfBook: {
+              hobby: "Can't find field 'hobby' on Author:{\"name\":\"Ted Chiang\"} object",
+            },
+          },
           expect.anything(), // query
           expect.anything(), // variables
         ),
@@ -1772,9 +1776,21 @@ describe('EntityStore', () => {
       c: 3,
     })).toBe('ABCs:{"b":2,"a":1,"c":3}');
 
-    expect(() => cache.identify(ABCs)).toThrowError(
-      "Missing field 'b' while computing key fields",
-    );
+    { // TODO Extact this to a helper function.
+      const consoleWarnSpy = jest.spyOn(console, "warn");
+      consoleWarnSpy.mockImplementation(() => {});
+      try {
+        expect(cache.identify(ABCs)).toBeUndefined();
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          new Error(`Missing field 'b' while extracting keyFields from ${
+            JSON.stringify(ABCs)
+          }`),
+        );
+      } finally {
+        consoleWarnSpy.mockRestore();
+      }
+    }
 
     expect(cache.readFragment({
       id: cache.identify({
@@ -1922,7 +1938,11 @@ describe('EntityStore', () => {
     const missing = [
       new MissingFieldError(
         "Dangling reference to missing Author:2 object",
-        ["book", "author"],
+        {
+          book: {
+            author: "Dangling reference to missing Author:2 object",
+          },
+        },
         expect.anything(), // query
         expect.anything(), // variables
       ),
@@ -2191,7 +2211,11 @@ describe('EntityStore', () => {
       missing: [
         new MissingFieldError(
           'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-          ["book", "title"],
+          {
+            book: {
+              title: 'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
+            },
+          },
           expect.anything(), // query
           expect.anything(), // variables
         ),
@@ -2391,6 +2415,7 @@ describe('EntityStore', () => {
     const isbnsWeHaveRead: string[] = [];
 
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {

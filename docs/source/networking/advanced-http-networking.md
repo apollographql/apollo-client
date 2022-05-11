@@ -192,10 +192,29 @@ The `HttpLink` constructor accepts the following options:
 | `credentials` | A string representing the credentials policy to use for the `fetch` call. (valid values: `omit`, `include`, `same-origin`) |
 | `fetchOptions` | Include this to override the values of certain options that are provided to the `fetch` call. |
 | `useGETForQueries` | If `true`, `HttpLink` uses `GET` requests instead of `POST` requests to execute query operations (but not mutation operations). (default: `false`) |
+| `print` | A function to customize AST formatting in requests. See [Overriding the default `print` function](#overriding-the-default-print-function).  |
 
 #### Providing a `fetch` replacement for certain environments
 
 `HttpLink` requires that `fetch` is present in your runtime environment. This is the case for React Native and most modern browsers. If you're targeting an environment that _doesn't_ include `fetch` (such as older browsers or the server), you need to pass your own `fetch` to `HttpLink` via its [constructor options](#constructor-options). We recommend using [`cross-fetch`](https://www.npmjs.com/package/cross-fetch) for older browsers and Node.
+
+#### Overriding the default `print` function
+
+The `print` option is useful for customizing the way `DocumentNode` objects are transformed back into strings before they are sent over the network. If no custom `print` function is provided, the [GraphQL `print` function](https://graphql.org/graphql-js/language/#print) will be used. A custom `print` function should accept an `ASTNode` (typically a `DocumentNode`) and the original `print` function as arguments, and return a string. This option can be used with `stripIgnoredCharacters` to remove whitespace from queries:
+
+```ts
+import { ASTNode, stripIgnoredCharacters } from 'graphql';
+
+const httpLink = new HttpLink({
+  uri: '/graphql',
+  print(
+    ast: ASTNode,
+    originalPrint: (ast: ASTNode) => string,
+  ) {
+    return stripIgnoredCharacters(originalPrint(ast));
+  },
+});
+```
 
 ### Overriding options
 

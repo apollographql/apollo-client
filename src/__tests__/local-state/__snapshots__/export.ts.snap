@@ -5,11 +5,20 @@ exports[`@client @export tests should NOT refetch if an @export variable has not
   "calls": Array [
     Array [
       "Missing field 'postCount' while writing result {
+  \\"currentAuthorId\\": 101
+}",
+    ],
+    Array [
+      "Missing field 'postCount' while writing result {
   \\"currentAuthorId\\": 100
 }",
     ],
   ],
   "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
     Object {
       "type": "return",
       "value": undefined,

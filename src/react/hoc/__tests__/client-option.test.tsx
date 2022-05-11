@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -39,7 +39,7 @@ describe('client option', () => {
       }
     };
     const ContainerWithData = graphql<{}, Data>(query, config)(() => null);
-    render(
+    const { unmount } = render(
       <ApolloProvider
         client={
           new ApolloClient({
@@ -51,6 +51,7 @@ describe('client option', () => {
         <ContainerWithData />
       </ApolloProvider>
     );
+    unmount();
   });
 
   itAsync('doesnt require a recycler', (resolve, reject) => {
@@ -79,13 +80,20 @@ describe('client option', () => {
         client
       }
     };
-    const ContainerWithData = graphql<{}, Data>(query, config)(() => null);
+    let renderCount = 0
+    const ContainerWithData = graphql<{}, Data>(query, config)(() => {
+      renderCount += 1;
+      return null;
+    });
     render(<ContainerWithData />);
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(renderCount).toBe(2);
+    }).then(resolve, reject);
   });
 
   itAsync('ignores client from context if client from options is present', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -131,6 +139,7 @@ describe('client option', () => {
         expect(data!.allPeople).toEqual({
           people: [{ name: 'Luke Skywalker' }]
         });
+        done = true;
       }
       render() {
         return null;
@@ -143,10 +152,13 @@ describe('client option', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('exposes refetch as part of the props api', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people($first: Int) {
         allPeople(first: $first) {
@@ -176,6 +188,7 @@ describe('client option', () => {
         componentDidUpdate() {
           const { data } = this.props;
           expect(data!.loading).toBeFalsy(); // first data
+          done = true;
         }
         render() {
           return null;
@@ -189,6 +202,8 @@ describe('client option', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 });

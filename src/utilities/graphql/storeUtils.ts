@@ -1,3 +1,5 @@
+import { InvariantError } from '../globals';
+
 import {
   DirectiveNode,
   FieldNode,
@@ -18,7 +20,6 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import { InvariantError } from 'ts-invariant';
 import { isNonNullObject } from '../common/objects';
 import { FragmentMap, getFragmentFromSelection } from './fragments';
 

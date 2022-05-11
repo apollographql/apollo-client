@@ -100,7 +100,13 @@ export class DeepMerger<TContextArgs extends any[]> {
   private pastCopies = new Set<any>();
 
   public shallowCopyForMerge<T>(value: T): T {
-    if (isNonNullObject(value) && !this.pastCopies.has(value)) {
+    if (isNonNullObject(value)) {
+      if (this.pastCopies.has(value)) {
+        // In order to reuse a past copy, it must be mutable, but copied objects
+        // can sometimes be frozen while this DeepMerger is still active.
+        if (!Object.isFrozen(value)) return value;
+        this.pastCopies.delete(value);
+      }
       if (Array.isArray(value)) {
         value = (value as any).slice(0);
       } else {

@@ -6,7 +6,7 @@ import { ApolloClient } from '../../../../core';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { ApolloProvider, getApolloContext } from '../../../context';
 import { getDataFromTree } from '../../../ssr';
-import { mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
 
 describe('SSR', () => {
@@ -73,7 +73,7 @@ describe('SSR', () => {
       });
     });
 
-    it('should pass any GraphQL errors in props along with data during a SSR when errorPolicy="all"', done => {
+    itAsync('should pass any GraphQL errors in props along with data during a SSR when errorPolicy="all"', (resolve, reject) => {
       const query: DocumentNode = gql`
         query people {
           allPeople {
@@ -110,7 +110,7 @@ describe('SSR', () => {
                 expect(error.graphQLErrors[0].message).toEqual(
                   'this is an error'
                 );
-                done();
+                resolve();
               }
               return null;
             }}

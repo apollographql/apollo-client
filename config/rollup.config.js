@@ -77,7 +77,7 @@ function prepareCJSMinified(input) {
   return {
     input,
     output: {
-      file: input.replace('.js', '.min.js'),
+      file: input.replace('.cjs', '.min.cjs'),
       format: 'cjs',
     },
     plugins: [
@@ -108,7 +108,7 @@ function prepareBundle({
       return isExternal(id, parentId, true);
     },
     output: {
-      file: `${dir}/${bundleName}.cjs.js`,
+      file: `${dir}/${bundleName}.cjs`,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
@@ -125,18 +125,9 @@ export default [
   // Convert the ESM entry point to a single CJS bundle.
   prepareCJS(
     './dist/index.js',
-    './dist/apollo-client.cjs.js',
-  ),
-  // The bundlesize check configured in package.json reflects the total size of
-  // @apollo/client/core (note the /core), rather than @apollo/client, which
-  // currently includes React-related exports that may not be used by all
-  // consumers. We are planning to confine those React exports to
-  // @apollo/client/react in AC4 (see issue #8190).
-  prepareCJS(
-    './dist/core/index.js',
-    './dist/apollo-core.cjs.js',
+    './dist/apollo-client.cjs',
   ),
   prepareCJSMinified(
-    './dist/apollo-core.cjs.js',
+    './dist/apollo-client.cjs',
   ),
 ];

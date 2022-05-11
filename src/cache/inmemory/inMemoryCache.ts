@@ -1,3 +1,5 @@
+import { invariant } from '../../utilities/globals';
+
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
@@ -14,42 +16,20 @@ import {
   Reference,
   isReference,
 } from '../../utilities';
-import {
-  ApolloReducerConfig,
-  NormalizedCacheObject,
-} from './types';
+import { InMemoryCacheConfig, NormalizedCacheObject } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
 import { makeVar, forgetCache, recallCache } from './reactiveVars';
-import {
-  defaultDataIdFromObject,
-  PossibleTypesMap,
-  Policies,
-  TypePolicies,
-} from './policies';
-import { hasOwn } from './helpers';
+import { Policies } from './policies';
+import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
-
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
-  resultCaching?: boolean;
-  possibleTypes?: PossibleTypesMap;
-  typePolicies?: TypePolicies;
-  resultCacheMaxSize?: number;
-}
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   | "optimistic"
   | "onWatchUpdated"
 >
-
-const defaultConfig: InMemoryCacheConfig = {
-  dataIdFromObject: defaultDataIdFromObject,
-  addTypename: true,
-  resultCaching: true,
-  typePolicies: {},
-};
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private data: EntityStore;
@@ -77,7 +57,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
-    this.config = { ...defaultConfig, ...config };
+    this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
@@ -121,6 +101,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         cache: this,
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
+        canonizeResults: shouldCanonizeResults(this.config),
         canon: resetResultIdentities
           ? void 0
           : previousReader && previousReader.canon,
@@ -245,7 +226,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public diff<T>(options: Cache.DiffOptions): Cache.DiffResult<T> {
+  public diff<TData, TVariables = any>(
+    options: Cache.DiffOptions<TData, TVariables>,
+  ): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({
       ...options,
       store: options.optimistic ? this.optimisticData : this.data,
@@ -254,7 +237,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
+  public watch<TData = any, TVariables = any>(
+    watch: Cache.WatchOptions<TData, TVariables>,
+  ): () => void {
     if (!this.watches.size) {
       // In case we previously called forgetCache(this) because
       // this.watches became empty (see below), reattach this cache to any
@@ -334,8 +319,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // sure that none of the primary key fields have been renamed by aliasing.
   // If you pass a Reference object, its __ref ID string will be returned.
   public identify(object: StoreObject | Reference): string | undefined {
-    return isReference(object) ? object.__ref :
-      this.policies.identify(object)[0];
+    if (isReference(object)) return object.__ref;
+    try {
+      return this.policies.identify(object)[0];
+    } catch (e) {
+      invariant.warn(e);
+    }
   }
 
   public evict(options: Cache.EvictOptions): boolean {
@@ -353,7 +342,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // this.txCount still seems like a good idea, for uniformity with
       // the other update methods.
       ++this.txCount;
-      return this.optimisticData.evict(options);
+      // Pass this.data as a limit on the depth of the eviction, so evictions
+      // during optimistic updates (when this.data is temporarily set equal to
+      // this.optimisticData) do not escape their optimistic Layer.
+      return this.optimisticData.evict(options, this.data);
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();
@@ -361,10 +353,27 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public reset(): Promise<void> {
+  public reset(options?: Cache.ResetOptions): Promise<void> {
     this.init();
-    this.broadcastWatches();
+
     canonicalStringify.reset();
+
+    if (options && options.discardWatches) {
+      // Similar to what happens in the unsubscribe function returned by
+      // cache.watch, applied to all current watches.
+      this.watches.forEach(watch => this.maybeBroadcastWatch.forget(watch));
+      this.watches.clear();
+      forgetCache(this);
+    } else {
+      // Calling this.init() above unblocks all maybeBroadcastWatch caching, so
+      // this.broadcastWatches() triggers a broadcast to every current watcher
+      // (letting them know their data is now missing). This default behavior is
+      // convenient because it means the watches do not have to be manually
+      // reestablished after resetting the cache. To prevent this broadcast and
+      // cancel all watches, pass true for options.discardWatches.
+      this.broadcastWatches();
+    }
+
     return Promise.resolve();
   }
 
@@ -378,7 +387,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private txCount = 0;
 
-  public batch(options: Cache.BatchOptions<InMemoryCache>) {
+  public batch<TUpdateResult>(
+    options: Cache.BatchOptions<InMemoryCache, TUpdateResult>,
+  ): TUpdateResult {
     const {
       update,
       optimistic = true,
@@ -386,14 +397,15 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       onWatchUpdated,
     } = options;
 
-    const perform = (layer?: EntityStore) => {
+    let updateResult: TUpdateResult;
+    const perform = (layer?: EntityStore): TUpdateResult => {
       const { data, optimisticData } = this;
       ++this.txCount;
       if (layer) {
         this.data = this.optimisticData = layer;
       }
       try {
-        update(this);
+        return updateResult = update(this);
       } finally {
         --this.txCount;
         this.data = data;
@@ -472,6 +484,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // options.onWatchUpdated.
       this.broadcastWatches(options);
     }
+
+    return updateResult!;
   }
 
   public performTransaction(
@@ -517,11 +531,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     options?: BroadcastOptions,
   ) {
     const { lastDiff } = c;
-    const diff = this.diff<any>({
-      query: c.query,
-      variables: c.variables,
-      optimistic: c.optimistic,
-    });
+
+    // Both WatchOptions and DiffOptions extend ReadOptions, and DiffOptions
+    // currently requires no additional properties, so we can use c (a
+    // WatchOptions object) as DiffOptions, without having to allocate a new
+    // object, and without having to enumerate the relevant properties (query,
+    // variables, etc.) explicitly. There will be some additional properties
+    // (lastDiff, callback, etc.), but cache.diff ignores them.
+    const diff = this.diff<any>(c);
 
     if (options) {
       if (c.optimistic &&

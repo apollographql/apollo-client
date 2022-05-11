@@ -6,17 +6,19 @@
 
 // externals
 import gql from 'graphql-tag';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import {
-  MockSubscriptionLink
-} from '../../../utilities/testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';
 import { ObservableQuery } from '../../ObservableQuery';
+import { ObservableSubscription } from '../../../utilities';
+import { itAsync } from '../../../testing';
+import { InMemoryCache } from '../../../cache';
+
+// mocks
+import { MockSubscriptionLink } from '../../../testing/core';
 
 describe('Subscription lifecycles', () => {
-  it('cleans up and reuses data like QueryRecycler wants', done => {
+  itAsync('cleans up and reuses data like QueryRecycler wants', (resolve, reject) => {
     const query = gql`
       query Luke {
         people_one(id: 1) {
@@ -48,7 +50,10 @@ describe('Subscription lifecycles', () => {
       fetchPolicy: 'cache-and-network',
     });
 
-    const observableQueries: { observableQuery: ObservableQuery, subscription: ZenObservable.Subscription; }[] = [];
+    const observableQueries: Array<{
+      observableQuery: ObservableQuery;
+      subscription: ObservableSubscription;
+    }> = [];
 
     const resubscribe = () => {
       const { observableQuery, subscription } = observableQueries.pop()!;
@@ -89,7 +94,7 @@ describe('Subscription lifecycles', () => {
           const recycled = resubscribe();
           const currentResult = recycled.getCurrentResult();
           expect(currentResult.data).toEqual(initialData);
-          done();
+          resolve();
         }, 10);
       },
     });

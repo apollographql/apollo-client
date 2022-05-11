@@ -1,6 +1,4 @@
-import { invariant } from "ts-invariant";
-import { DEV } from "../utilities";
-invariant("boolean" === typeof DEV, DEV);
+import '../utilities/globals';
 
 import { GraphQLError } from 'graphql';
 
@@ -39,9 +37,13 @@ const generateErrorMessage = (err: ApolloError) => {
   return message;
 };
 
+export type GraphQLErrors = ReadonlyArray<GraphQLError>;
+
+export type NetworkError = Error | ServerParseError | ServerError | null;
+
 export class ApolloError extends Error {
   public message: string;
-  public graphQLErrors: ReadonlyArray<GraphQLError>;
+  public graphQLErrors: GraphQLErrors;
   public clientErrors: ReadonlyArray<Error>;
   public networkError: Error | ServerParseError | ServerError | null;
 

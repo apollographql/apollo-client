@@ -1,6 +1,6 @@
 /* Core */
 
-import { DEV } from "../utilities";
+import { DEV } from '../utilities/globals';
 
 export {
   ApolloClient,
@@ -12,7 +12,6 @@ export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
-  applyNextFetchPolicy,
 } from './ObservableQuery';
 export {
   QueryOptions,

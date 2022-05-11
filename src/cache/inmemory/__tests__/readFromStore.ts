@@ -20,7 +20,6 @@ import {
 
 jest.mock('optimism');
 import { wrap } from 'optimism';
-import { withErrorSpy } from '../../../testing';
 
 describe('resultCacheMaxSize', () => {
   const cache = new InMemoryCache();
@@ -724,18 +723,21 @@ describe('reading from the store', () => {
 
     expect(missing).toEqual([
       new MissingFieldError(
-        `Can't find field 'missing' on object {
-  "present": "here"
-}`,
-        ["normal", "missing"],
-        query,
-        {}, // variables
-      ),
-      new MissingFieldError(
-        `Can't find field 'missing' on object {
-  "present": "also here"
-}`,
-        ["clientOnly", "missing"],
+        `Can't find field 'missing' on object ${JSON.stringify({
+          present: "here",
+        }, null, 2)}`,
+        {
+          normal: {
+            missing: `Can't find field 'missing' on object ${
+              JSON.stringify({ present: "here" }, null, 2)
+            }`,
+          },
+          clientOnly: {
+            missing: `Can't find field 'missing' on object ${
+              JSON.stringify({ present: "also here" }, null, 2)
+            }`,
+          },
+        },
         query,
         {}, // variables
       ),
@@ -1290,8 +1292,19 @@ describe('reading from the store', () => {
     expect(diffChickens()).toEqual({
       complete: false,
       missing: [
-        expect.anything(),
-        expect.anything(),
+        new MissingFieldError(
+          "Can't find field 'id' on object {}",
+          {
+            chickens: {
+              1: {
+                id: "Can't find field 'id' on object {}",
+                inCoop: "Can't find field 'inCoop' on object {}",
+              },
+            },
+          },
+          expect.anything(), // query
+          expect.anything(), // variables
+        ),
       ],
       result: {
         chickens: [
@@ -1375,8 +1388,9 @@ describe('reading from the store', () => {
     });
   });
 
-  withErrorSpy(it, "propagates eviction signals to parent queries", () => {
+  it("propagates eviction signals to parent queries", () => {
     const cache = new InMemoryCache({
+      canonizeResults: true,
       typePolicies: {
         Deity: {
           keyFields: ["name"],
@@ -1866,7 +1880,9 @@ describe('reading from the store', () => {
   });
 
   it("returns === results for different queries", function () {
-    const cache = new InMemoryCache;
+    const cache = new InMemoryCache({
+      canonizeResults: true,
+    });
 
     const aQuery: TypedDocumentNode<{
       a: string[];

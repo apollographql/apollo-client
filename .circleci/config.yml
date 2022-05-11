@@ -3,9 +3,10 @@ version: 2
 jobs:
   Filesize:
     docker:
-      - image: circleci/node:16
+      - image: circleci/node:16.13.1
     steps:
       - checkout
+      - run: npm run ci:precheck
       - restore_cache:
           keys:
             # When lock file changes, use increasingly general patterns to
@@ -26,9 +27,10 @@ jobs:
 
   Tests:
     docker:
-      - image: circleci/node:16
+      - image: circleci/node:16.13.1
     steps:
       - checkout
+      - run: npm run ci:precheck
       - restore_cache:
           keys:
             # When lock file changes, use increasingly general patterns to

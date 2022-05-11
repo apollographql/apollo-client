@@ -113,9 +113,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *
    * @param assumeImmutableResults When this option is true, the client will assume results
    *                               read from the cache are never mutated by application code,
-   *                               which enables substantial performance optimizations. Passing
-   *                               `{ freezeResults: true }` to the `InMemoryCache` constructor
-   *                               can help enforce this immutability.
+   *                               which enables substantial performance optimizations.
    *
    * @param name A custom name that can be used to identify this client, when
    *             using Apollo client awareness features. E.g. "iOS".

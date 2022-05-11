@@ -1632,8 +1632,8 @@ describe('useMutation Hook', () => {
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
-      let updateResolve: Function;
-      const updatePromise = new Promise((resolve) => (updateResolve = resolve));
+      let onMutationDone: Function;
+      const mutatePromise = new Promise((resolve) => (onMutationDone = resolve));
       setTimeout(() => {
         act(() => {
           mutate({
@@ -1641,8 +1641,10 @@ describe('useMutation Hook', () => {
             refetchQueries: ['getTodos'],
             update() {
               unmount();
-              updateResolve();
             },
+          }).then(result => {
+            expect(result.data).toEqual(CREATE_TODO_RESULT);
+            onMutationDone();
           });
         });
       });
@@ -1650,10 +1652,14 @@ describe('useMutation Hook', () => {
       await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
-      await updatePromise;
-      await new Promise((resolve) => setTimeout(resolve));
-      expect(client.readQuery({ query: GET_TODOS_QUERY }))
-        .toEqual(mocks[2].result.data);
+
+      await mutatePromise;
+
+      return waitFor(() => {
+        expect(
+          client.readQuery({ query: GET_TODOS_QUERY })
+        ).toEqual(mocks[2].result.data);
+      });
     });
 
     itAsync("using onQueryUpdated callback should not prevent cache broadcast", async (resolve, reject) => {

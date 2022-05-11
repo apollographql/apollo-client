@@ -489,4 +489,33 @@ describe('failure path', () => {
       },
     );
   });
+
+  itAsync('handles 400 response network error and graphql error without disabling persistedQuery support', (resolve, reject) => {
+    let failed = false;
+    fetch.mockResponseOnce(response);
+
+    const fetcher = (...args: any[]) => {
+      if (!failed) {
+        failed = true;
+        return Promise.resolve({
+          json: () => Promise.resolve(errorResponse),
+          text: () => Promise.resolve(errorResponse),
+          status: 400,
+        });
+      }
+      return fetch(...args);
+    };
+
+    const link = createPersistedQuery({ sha256 }).concat(
+      createHttpLink({ fetch: fetcher } as any),
+    );
+
+    execute(link, { query, variables }).subscribe(result => {
+      expect(result.data).toEqual(data);
+      const [, success] = fetch.mock.calls[0];
+      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+      expect(JSON.parse(success!.body!.toString()).extensions).not.toBeUndefined();
+      resolve();
+    }, reject);
+  });
 });

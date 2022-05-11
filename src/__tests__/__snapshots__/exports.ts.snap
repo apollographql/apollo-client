@@ -16,7 +16,6 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
-  "applyNextFetchPolicy",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -93,7 +92,6 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
-  "applyNextFetchPolicy",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -207,6 +205,12 @@ Array [
 exports[`exports of public entry points @apollo/client/link/schema 1`] = `
 Array [
   "SchemaLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/subscriptions 1`] = `
+Array [
+  "GraphQLWsLink",
 ]
 `;
 
@@ -343,6 +347,8 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseDOM",
+  "canUseLayoutEffect",
   "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",
@@ -381,6 +387,7 @@ Array [
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
+  "mergeOptions",
   "offsetLimitPagination",
   "relayStylePagination",
   "removeArgumentsFromDocument",

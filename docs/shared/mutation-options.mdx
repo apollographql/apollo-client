@@ -62,7 +62,7 @@ Each key in the object corresponds to a variable name, and that key's value corr
 
 Specifies how the mutation handles a response that returns both GraphQL errors and partial results.
 
-For details, see [GraphQL error policies](https://www.apollographql.com/docs/react/data/error-handling/#graphql-error-policies).
+For details, see [GraphQL error policies](/react/data/error-handling/#graphql-error-policies).
 
 The default value is `none`, meaning that the mutation result includes error details but _not_ partial results.
 
@@ -229,7 +229,7 @@ By default, the instance that's passed down via context is used, but you can pro
 
 <td>
 
-If you're using [Apollo Link](https://www.apollographql.com/docs/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
+If you're using [Apollo Link](/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
 
 </td>
 </tr>
@@ -254,7 +254,7 @@ If you're using [Apollo Link](https://www.apollographql.com/docs/react/api/link/
 
 A function used to update the Apollo Client cache after the mutation completes.
 
-For more information, see [Updating the cache after a mutation](/data/mutations#updating-the-cache-after-a-mutation).
+For more information, see [Updating the cache after a mutation](/react/data/mutations#updating-the-cache-after-a-mutation).
 
 </td>
 </tr>
@@ -271,7 +271,7 @@ For more information, see [Updating the cache after a mutation](/data/mutations#
 
 If provided, Apollo Client caches this temporary (and potentially incorrect) response until the mutation completes, enabling more responsive UI updates.
 
-For more information, see [Optimistic mutation results](/performance/optimistic-ui/).
+For more information, see [Optimistic mutation results](/react/performance/optimistic-ui/).
 
 </td>
 </tr>
@@ -290,7 +290,7 @@ Provide `no-cache` if the mutation's result should _not_ be written to the Apoll
 
 The default value is `network-only` (which means the result _is_ written to the cache).
 
-Unlike queries, mutations _do not_ support [fetch policies](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
+Unlike queries, mutations _do not_ support [fetch policies](/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
 
 </td>
 </tr>

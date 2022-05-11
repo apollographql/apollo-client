@@ -9,7 +9,7 @@ import {
   SubscriptionHookOptions,
   SubscriptionResult
 } from '../types/types';
-import { FetchResult, Observable, OperationVariables } from '../../core';
+import { OperationVariables } from '../../core';
 import { useApolloClient } from './useApolloClient';
 
 export function useSubscription<TData = any, TVariables = OperationVariables>(
@@ -25,20 +25,23 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     variables: options?.variables,
   });
 
-  const [observable, setObservable] = useState<Observable<FetchResult<TData>> | null>(null);
-
-  useEffect(() => {
+  const [observable, setObservable] = useState(() => {
     if (options?.skip) {
-      return;
+      return null;
     }
 
-    setObservable(client.subscribe({
+    return client.subscribe({
       query: subscription,
       variables: options?.variables,
       fetchPolicy: options?.fetchPolicy,
       context: options?.context,
-    }));
-  }, []);
+    });
+  });
+
+  const [canResetObservable, setCanResetObservable] = useState(false);
+  useEffect(() => {
+    return () => setCanResetObservable(true);
+  }, [])
 
   const ref = useRef({ client, subscription, options });
   useEffect(() => {
@@ -48,7 +51,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     }
 
     if (options?.skip) {
-      if (!options?.skip !== !ref.current.options?.skip) {
+      if (!options?.skip !== !ref.current.options?.skip || canResetObservable) {
         setResult({
           loading: false,
           data: void 0,
@@ -56,6 +59,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
           variables: options?.variables,
         });
         setObservable(null);
+        setCanResetObservable(false);
       }
     } else if (
       shouldResubscribe !== false && (
@@ -64,7 +68,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
         options?.fetchPolicy !== ref.current.options?.fetchPolicy ||
         !options?.skip !== !ref.current.options?.skip ||
         !equal(options?.variables, ref.current.options?.variables)
-      )
+      ) || canResetObservable
     ) {
       setResult({
         loading: true,
@@ -78,10 +82,11 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
         fetchPolicy: options?.fetchPolicy,
         context: options?.context,
       }));
+      setCanResetObservable(false);
     }
 
     Object.assign(ref.current, { client, subscription, options });
-  }, [client, subscription, options]);
+  }, [client, subscription, options, canResetObservable]);
 
   useEffect(() => {
     if (!observable) {

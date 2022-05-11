@@ -32,6 +32,9 @@ export function offsetLimitPagination<T = Reference>(
     keyArgs,
     merge(existing, incoming, { args }) {
       const merged = existing ? existing.slice(0) : [];
+
+      if (!incoming) return merged;
+
       if (args) {
         // Assume an offset of 0 if args.offset omitted.
         const { offset = 0 } = args;

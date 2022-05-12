@@ -3,10 +3,6 @@ title: Testing React components
 description: Using MockedProvider and associated APIs
 ---
 
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
-
 This article describes best practices for testing React components that use Apollo Client.
 
 The examples below use [Jest](https://facebook.github.io/jest/docs/en/tutorial-react.html) and React's [test renderer](https://reactjs.org/docs/test-renderer.html) instead of tools like [Enzyme](https://github.com/airbnb/enzyme) or [react-testing-library](https://github.com/kentcdodds/react-testing-library), but the concepts apply to any testing framework.
@@ -23,7 +19,7 @@ Let's say we want to test the following `Dog` component, which executes a basic 
 
 <ExpansionPanel title="Click to expand 🐶">
 
-```jsx:title=dog.jsx
+```jsx title="dog.jsx"
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
 
@@ -58,7 +54,7 @@ export function Dog({ name }) {
 
 A basic rendering test for the component looks like this (minus mocked responses):
 
-```jsx:title=dog.test.js
+```jsx title="dog.test.js"
 import TestRenderer from 'react-test-renderer';
 import { MockedProvider } from '@apollo/client/testing';
 import { GET_DOG_QUERY, Dog } from './dog';
@@ -81,7 +77,7 @@ it('renders without error', () => {
 
 The `mocks` prop of `MockedProvider` is an array of objects, each of which defines the mock response for a single operation. Let's define a mocked response for `GET_DOG_QUERY` when it's passed the `name` `Buck`:
 
-```jsx:title=dog.test.js
+```jsx title="dog.test.js"
 const mocks = [
   {
     request: {
@@ -121,7 +117,7 @@ Combining our code above, we get the following complete test:
 
 <ExpansionPanel title="Click to expand 🐶">
 
-```jsx:title=dog.test.js
+```jsx title="dog.test.js"
 import TestRenderer from 'react-test-renderer';
 import { MockedProvider } from '@apollo/client/testing';
 import { GET_DOG_QUERY, Dog } from './dog';
@@ -266,7 +262,7 @@ You test components that use `useMutation` similarly to how you test components 
 
 The following `DeleteButton` component executes the `DELETE_DOG_MUTATION` to delete a dog named `Buck` from our graph (don't worry, Buck will be fine 🐶):
 
-```jsx:title=delete-dog.jsx
+```jsx title="delete-dog.jsx"
 export const DELETE_DOG_MUTATION = gql`
   mutation deleteDog($name: String!) {
     deleteDog(name: $name) {
@@ -294,7 +290,7 @@ export function DeleteButton() {
 
 We can test the initial rendering of this component just like we [tested our `Dog` component](#example):
 
-```jsx:title=delete-dog.test.js
+```jsx title="delete-dog.test.js"
 import TestRenderer from 'react-test-renderer';
 import { MockedProvider } from '@apollo/client/testing';
 import DeleteButton, { DELETE_DOG_MUTATION } from './delete-dog';
@@ -312,7 +308,7 @@ In the test above, `DELETE_DOG_MUTATION` is _not_ executed, because the mutate f
 
 The following test _does_ execute the mutation by clicking the button:
 
-```jsx:title=delete-dog.test.js
+```jsx title="delete-dog.test.js"
 it('should render loading state initially', () => {
   const deleteDog = { name: 'Buck', breed: 'Poodle', id: 1 };
   const mocks = [

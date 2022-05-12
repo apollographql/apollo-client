@@ -6,10 +6,11 @@ import {
   canUseWeakSet,
   isNonNullObject as isObjectOrArray,
 } from "../../utilities";
+import { isArray } from "./helpers";
 
 function shallowCopy<T>(value: T): T {
   if (isObjectOrArray(value)) {
-    return Array.isArray(value)
+    return isArray(value)
       ? value.slice(0) as any as T
       : { __proto__: Object.getPrototypeOf(value), ...value };
   }

@@ -1,14 +1,11 @@
 ---
 title: Local-only fields in Apollo Client
-sidebar_title: Local-only fields
 description: Fetch local and remote data with one GraphQL query
 ---
 
-import { ExpansionPanel } from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
-
 Your Apollo Client queries can include **local-only fields** that _aren't_ defined in your GraphQL server's schema:
 
-```graphql{5}
+```graphql {5}
 query ProductDetails($productId: ID!) {
   product(id: $productId) {
     name
@@ -67,7 +64,7 @@ You can use `read` functions to perform any sort of logic you want, including:
 
 Now that we've defined a field policy for `isInCart`, we can include the field in a query that _also_ queries our back-end server, like so:
 
-```js{6}
+```js {6}
 const GET_PRODUCT_DETAILS = gql`
   query ProductDetails($productId: ID!) {
     product(id: $productId) {
@@ -85,7 +82,7 @@ That's it! The `@client` directive tells Apollo Client that `isInCart` is a loca
 >
 > <ExpansionPanel title="See example">
 >
-> ```js{6-9}
+> ```js {6-9}
 > const GET_PRODUCT_DETAILS = gql`
   query ProductDetails($productId: ID!) {
     product(id: $productId) {
@@ -109,7 +106,7 @@ You can use Apollo Client to query local state, regardless of how you _store_ th
 * [Reactive variables](#storing-local-state-in-reactive-variables)
 * [The Apollo Client cache itself](#storing-local-state-in-the-cache)
 
-> **Note:** Apollo Client >= 3 no longer recommends the [local resolver](./local-resolvers) approach of using `client.mutate` / `useMutation` combined with an `@client` mutation operation to [update local state](/local-state/local-resolvers/#local-resolvers). To update local state, we recommend using [`writeQuery`](/caching/cache-interaction/#writequery), [`writeFragment`](/caching/cache-interaction/#writefragment), or [reactive variables](/local-state/reactive-variables/).
+> **Note:** Apollo Client >= 3 no longer recommends the [local resolver](./local-resolvers) approach of using `client.mutate` / `useMutation` combined with an `@client` mutation operation to [update local state](./local-resolvers/#local-resolvers). To update local state, we recommend using [`writeQuery`](../caching/cache-interaction/#writequery), [`writeFragment`](../caching/cache-interaction/#writefragment), or [reactive variables](./reactive-variables/).
 
 ### Storing local state in reactive variables
 
@@ -123,7 +120,7 @@ Apollo Client [reactive variables](./reactive-variables) are great for represent
 
 Returning to our e-commerce application, let's say we want to fetch a list of the item IDs in a user's cart, and this list is stored locally. The query to do that looks like this:
 
-```js:title=Cart.js
+```js title="Cart.js"
 export const GET_CART_ITEMS = gql`
   query GetCartItems {
     cartItems @client
@@ -133,7 +130,7 @@ export const GET_CART_ITEMS = gql`
 
 Let's use the `makeVar` function to initialize a reactive variable that stores our local list of cart items:
 
-```js{3}:title=cache.js
+```js {3} title="cache.js"
 import { makeVar } from '@apollo/client';
 
 export const cartItemsVar = makeVar([]);
@@ -141,9 +138,9 @@ export const cartItemsVar = makeVar([]);
 
 This initializes a reactive variable with an empty array (you can pass any initial value to `makeVar`). Note that the return value of `makeVar` isn't the variable itself, but rather a _function_. We get the variable's current value by calling `cartItemsVar()`, and we set a _new_ value by calling `cartItemsVar(newValue)`.
 
-Next, let's define the field policy for `cartItems`. As always, we pass this to the constructor of `InMemoryCache`: 
+Next, let's define the field policy for `cartItems`. As always, we pass this to the constructor of `InMemoryCache`:
 
-```js{5-9}:title=cache.js
+```js {5-9} title="cache.js"
 export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
@@ -163,7 +160,7 @@ This `read` function returns the value of our reactive variable whenever `cartIt
 
 Now, let's create a button component that enables the user to add a product to their cart:
 
-```jsx{7}:title=AddToCartButton.js
+```jsx {7} title="AddToCartButton.js"
 import { cartItemsVar } from './cache';
 // ... other imports
 
@@ -182,7 +179,7 @@ On click, this button updates the value of `cartItemsVar` to append the button's
 
 Here's a `Cart` component that uses the `GET_CART_ITEMS` query and therefore refreshes automatically whenever the value of `cartItemsVar` changes:
 
-```jsx:title=Cart.js
+```jsx title="Cart.js"
 export const GET_CART_ITEMS = gql`
   query GetCartItems {
     cartItems @client
@@ -214,7 +211,7 @@ export function Cart() {
 
 Instead of querying for `cartItems`, the `Cart` component can read and react to a reactive variable directly with the `useReactiveVar` hook:
 
-```jsx{1,4}:title=Cart.js
+```jsx {1,4} title="Cart.js"
 import { useReactiveVar } from '@apollo/client';
 
 export function Cart() {
@@ -343,7 +340,7 @@ By default, neither a reactive variable nor the `InMemoryCache` persists its sta
 
 The `apollo-3-cache-persist` library helps you persist and rehydrate the Apollo Client cache between sessions. For details, see [Persisting the cache](../caching/advanced-topics/#persisting-the-cache).
 
-There is currently no built-in API for persisting reactive variables, but you can write variable values to `localStorage` (or another store) whenever they're modified, and initialize those variables with their stored value (if any) on app load. 
+There is currently no built-in API for persisting reactive variables, but you can write variable values to `localStorage` (or another store) whenever they're modified, and initialize those variables with their stored value (if any) on app load.
 
 ## Modifying
 
@@ -361,7 +358,7 @@ If your GraphQL query uses variables, the local-only fields of that query can pr
 
 To do so, you apply the `@export(as: "variableName")` directive, like so:
 
-```js{3}
+```js {3}
 const GET_CURRENT_AUTHOR_POST_COUNT = gql`
   query CurrentAuthorPostCount($authorId: Int!) {
     currentAuthorId @client @export(as: "authorId")
@@ -370,7 +367,7 @@ const GET_CURRENT_AUTHOR_POST_COUNT = gql`
 `;
 ```
 
-In the query above, the result of the local-only field `currentAuthorId` is used as the value of the `$authorId` variable that's passed to `postCount`. 
+In the query above, the result of the local-only field `currentAuthorId` is used as the value of the `$authorId` variable that's passed to `postCount`.
 
 You can do this even if `postCount` is _also_ a local-only field (i.e., if it's also marked as `@client`).
 

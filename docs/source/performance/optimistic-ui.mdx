@@ -10,7 +10,7 @@ For example, let's say we have a blog application that supports the following mu
 ```graphql
 type Mutation {
   updateComment(commentId: ID!, content: String!): Comment!
-  
+
   # ...other mutations...
 }
 ```
@@ -25,7 +25,7 @@ To enable this optimistic UI behavior, we provide an `optimisticResponse` option
 
 Let's look at some code:
 
-```jsx{20-26}:title=CommentPageWithData.jsx
+```jsx {20-26} title="CommentPageWithData.jsx"
 // Mutation definition
 const UPDATE_COMMENT = gql`
   mutation UpdateComment($commentId: ID!, $commentContent: String!) {
@@ -77,7 +77,7 @@ As this example shows, the value of `optimisticResponse` is an object that match
 
 The previous example shows how to provide an optimistic result for an object that's _already_ in the Apollo Client cache. But what about a mutation that creates a _new_ object? This works similarly.
 
-The biggest difference here is that the client doesn't yet have the new object's `id` (or other identifying field). This means you have to provide a dummy value for the `id` so the Apollo Client cache can store the optimistic result as an object of the correct type.
+The biggest difference here is that the client doesn't yet have the new object's `id` (or other identifying field). This means you have to provide a temporary value for the `id` so the Apollo Client cache can store the optimistic result as an object of the correct type.
 
 For example, here's an `optimisticResponse` for an `addTodo` mutation that creates a new item in a user's to-do list:
 

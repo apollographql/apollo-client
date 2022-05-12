@@ -85,12 +85,6 @@ It’s important that every piece of code in Apollo packages is reviewed by at l
 npm run build
 ```
 
-**Build and watch for file changes:**
-
-```
-npm run watch
-```
-
 ### Testing
 
 **Run all tests once:**

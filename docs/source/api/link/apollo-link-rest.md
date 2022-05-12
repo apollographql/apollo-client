@@ -383,7 +383,7 @@ const link = new RestLink({
       bodySnippet...
     }
   },
-  defaultSerializer: (body: any, headers: Headers) => {
+  defaultSerializer: (data: any, headers: Headers) => {
     const formData = new FormData();
     for (let key in body) {
       formData.append(key, body[key]);

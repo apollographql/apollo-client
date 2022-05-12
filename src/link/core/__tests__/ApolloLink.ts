@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 import { print } from 'graphql';
 
 import { Observable } from '../../../utilities/observables/Observable';
+import { itAsync } from '../../../testing';
 import { FetchResult, Operation, NextLink, GraphQLRequest } from '../types';
 import { ApolloLink } from '../ApolloLink';
 import { DocumentNode } from 'graphql';
@@ -75,7 +76,7 @@ export const setContext = () => ({ add: 1 });
 
 describe('ApolloClient', () => {
   describe('context', () => {
-    it('should merge context when using a function', done => {
+    itAsync('should merge context when using a function', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) => {
         op.setContext((context: { add: number; }) => ({ add: context.add + 2 }));
@@ -94,11 +95,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [3],
-        done,
+        done: resolve,
       });
     });
 
-    it('should merge context when not using a function', done => {
+    itAsync('should merge context when not using a function', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) => {
         op.setContext({ add: 3 });
@@ -117,13 +118,13 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [3],
-        done,
+        done: resolve,
       });
     });
   });
 
   describe('concat', () => {
-    it('should concat a function', done => {
+    itAsync('should concat a function', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const link = returnOne.concat((operation, forward) => {
         return Observable.of({ data: { count: operation.getContext().add } });
@@ -132,11 +133,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [{ count: 1 }],
-        done,
+        done: resolve,
       });
     });
 
-    it('should concat a Link', done => {
+    itAsync('should concat a Link', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink(op =>
         Observable.of({ data: op.getContext().add }),
@@ -146,11 +147,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [1],
-        done,
+        done: resolve,
       });
     });
 
-    it("should pass error to observable's error", done => {
+    itAsync("should pass error to observable's error", (resolve, reject) => {
       const error = new Error('thrown');
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink(
@@ -165,11 +166,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [1, error],
-        done,
+        done: resolve,
       });
     });
 
-    it('should concat a Link and function', done => {
+    itAsync('should concat a Link and function', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) => {
         op.setContext((context: { add: number; }) => ({ add: context.add + 2 }));
@@ -182,11 +183,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [3],
-        done,
+        done: resolve,
       });
     });
 
-    it('should concat a function and Link', done => {
+    itAsync('should concat a function and Link', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) =>
         Observable.of({ data: op.getContext().add }),
@@ -203,11 +204,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [3],
-        done,
+        done: resolve,
       });
     });
 
-    it('should concat two functions', done => {
+    itAsync('should concat two functions', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const link = returnOne
         .concat((operation, forward) => {
@@ -220,11 +221,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [3],
-        done,
+        done: resolve,
       });
     });
 
-    it('should concat two Links', done => {
+    itAsync('should concat two Links', (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const mock1 = new ApolloLink((operation, forward) => {
         operation.setContext({
@@ -240,11 +241,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [3],
-        done,
+        done: resolve,
       });
     });
 
-    it("should return an link that can be concat'd multiple times", done => {
+    itAsync("should return an link that can be concat'd multiple times", (resolve, reject) => {
       const returnOne = new SetContextLink(setContext);
       const mock1 = new ApolloLink((operation, forward) => {
         operation.setContext({
@@ -267,22 +268,22 @@ describe('ApolloClient', () => {
       testLinkResults({
         link: link.concat(mock3),
         results: [6],
-        done,
+        done: resolve,
       });
     });
   });
 
   describe('empty', () => {
-    it('should returns an immediately completed Observable', done => {
+    itAsync('should returns an immediately completed Observable', (resolve, reject) => {
       testLinkResults({
         link: ApolloLink.empty(),
-        done,
+        done: resolve,
       });
     });
   });
 
   describe('execute', () => {
-    it('transforms an opearation with context into something serlizable', done => {
+    itAsync('transforms an opearation with context into something serlizable', (resolve, reject) => {
       const query = gql`
         {
           id
@@ -308,7 +309,7 @@ describe('ApolloClient', () => {
         query,
         variables: { id: 1 },
         extensions: { cache: true },
-      }).subscribe(noop, noop, done);
+      }).subscribe(noop, noop, resolve);
     });
 
     describe('execute', () => {
@@ -325,36 +326,36 @@ describe('ApolloClient', () => {
         console.warn = _warn;
       });
 
-      it('should return an empty observable when a link returns null', done => {
+      itAsync('should return an empty observable when a link returns null', (resolve, reject) => {
         const link = new ApolloLink();
         link.request = () => null;
         testLinkResults({
           link,
           results: [],
-          done,
+          done: resolve,
         });
       });
 
-      it('should return an empty observable when a link is empty', done => {
+      itAsync('should return an empty observable when a link is empty', (resolve, reject) => {
         testLinkResults({
           link: ApolloLink.empty(),
           results: [],
-          done,
+          done: resolve,
         });
       });
 
-      it("should return an empty observable when a concat'd link returns null", done => {
+      itAsync("should return an empty observable when a concat'd link returns null", (resolve, reject) => {
         const link = new ApolloLink((operation, forward) => {
           return forward(operation);
         }).concat(() => null);
         testLinkResults({
           link,
           results: [],
-          done,
+          done: resolve,
         });
       });
 
-      it('should return an empty observable when a split link returns null', done => {
+      itAsync('should return an empty observable when a split link returns null', (resolve, reject) => {
         let context = { test: true };
         const link = new SetContextLink(() => context).split(
           op => op.getContext().test,
@@ -369,11 +370,11 @@ describe('ApolloClient', () => {
         testLinkResults({
           link,
           results: [],
-          done,
+          done: resolve,
         });
       });
 
-      it('should set a default context, variable, and query on a copy of operation', done => {
+      itAsync('should set a default context, variable, and query on a copy of operation', (resolve, reject) => {
         const operation = {
           query: gql`
             {
@@ -393,7 +394,7 @@ describe('ApolloClient', () => {
         });
 
         ApolloLink.execute(link, operation).subscribe({
-          complete: done,
+          complete: resolve,
         });
       });
     })
@@ -407,11 +408,11 @@ describe('ApolloClient', () => {
       extensions: {},
     };
 
-    it('should create an observable that completes when passed an empty array', done => {
+    itAsync('should create an observable that completes when passed an empty array', (resolve, reject) => {
       const observable = ApolloLink.execute(ApolloLink.from([]), {
         query: sampleQuery,
       });
-      observable.subscribe(() => expect(false), () => expect(false), done);
+      observable.subscribe(() => expect(false), () => expect(false), resolve);
     });
 
     it('can create chain of one', () => {
@@ -427,7 +428,7 @@ describe('ApolloClient', () => {
       ).not.toThrow();
     });
 
-    it('should receive result of one link', done => {
+    itAsync('should receive result of one link', (resolve, reject) => {
       const data: FetchResult = {
         data: {
           hello: 'world',
@@ -443,7 +444,7 @@ describe('ApolloClient', () => {
         error: () => {
           throw new Error();
         },
-        complete: () => done(),
+        complete: () => resolve(),
       });
     });
 
@@ -466,7 +467,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('should pass operation from one link to next with modifications', done => {
+    itAsync('should pass operation from one link to next with modifications', (resolve, reject) => {
       const chain = ApolloLink.from([
         new ApolloLink((op, forward) =>
           forward({
@@ -481,13 +482,18 @@ describe('ApolloClient', () => {
             query: sampleQuery,
             variables: {},
           }).toEqual(op);
-          return done();
+
+          resolve();
+
+          return new Observable(observer => {
+            observer.error("should not have invoked observable");
+          });
         }),
       ]);
       ApolloLink.execute(chain, uniqueOperation);
     });
 
-    it('should pass result of one link to another with forward', done => {
+    itAsync('should pass result of one link to another with forward', (resolve, reject) => {
       const data: FetchResult = {
         data: {
           hello: 'world',
@@ -505,7 +511,7 @@ describe('ApolloClient', () => {
             error: () => {
               throw new Error();
             },
-            complete: done,
+            complete: resolve,
           });
 
           return observable;
@@ -515,7 +521,7 @@ describe('ApolloClient', () => {
       ApolloLink.execute(chain, uniqueOperation);
     });
 
-    it('should receive final result of two link chain', done => {
+    itAsync('should receive final result of two link chain', (resolve, reject) => {
       const data: FetchResult = {
         data: {
           hello: 'world',
@@ -559,11 +565,11 @@ describe('ApolloClient', () => {
         error: () => {
           throw new Error();
         },
-        complete: done,
+        complete: resolve,
       });
     });
 
-    it('should chain together a function with links', done => {
+    itAsync('should chain together a function with links', (resolve, reject) => {
       const add1 = new ApolloLink((operation: Operation, forward: NextLink) => {
         operation.setContext((context: { num: number; }) => ({ num: context.num + 1 }));
         return forward(operation);
@@ -587,13 +593,13 @@ describe('ApolloClient', () => {
         link,
         results: [{ num: 5 }],
         context: { num: 0 },
-        done,
+        done: resolve,
       });
     });
   });
 
   describe('split', () => {
-    it('should split two functions', done => {
+    itAsync('should split two functions', (resolve, reject) => {
       const context = { add: 1 };
       const returnOne = new SetContextLink(() => context);
       const link1 = returnOne.concat((operation, forward) =>
@@ -618,11 +624,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [4],
-        done,
+        done: resolve,
       });
     });
 
-    it('should split two Links', done => {
+    itAsync('should split two Links', (resolve, reject) => {
       const context = { add: 1 };
       const returnOne = new SetContextLink(() => context);
       const link1 = returnOne.concat(
@@ -651,11 +657,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [4],
-        done,
+        done: resolve,
       });
     });
 
-    it('should split a link and a function', done => {
+    itAsync('should split a link and a function', (resolve, reject) => {
       const context = { add: 1 };
       const returnOne = new SetContextLink(() => context);
       const link1 = returnOne.concat((operation, forward) =>
@@ -682,11 +688,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link,
         results: [4],
-        done,
+        done: resolve,
       });
     });
 
-    it('should allow concat after split to be join', done => {
+    itAsync('should allow concat after split to be join', (resolve, reject) => {
       const context = { test: true, add: 1 };
       const start = new SetContextLink(() => ({ ...context }));
       const link = start
@@ -717,11 +723,11 @@ describe('ApolloClient', () => {
         link,
         context,
         results: [3],
-        done,
+        done: resolve,
       });
     });
 
-    it('should allow default right to be empty or passthrough when forward available', done => {
+    itAsync('should allow default right to be empty or passthrough when forward available', (resolve, reject) => {
       let context = { test: true };
       const start = new SetContextLink(() => context);
       const link = start.split(
@@ -756,11 +762,11 @@ describe('ApolloClient', () => {
       testLinkResults({
         link: concat,
         results: [{ count: 2 }],
-        done,
+        done: resolve,
       });
     });
 
-    it('should create filter when single link passed in', done => {
+    itAsync('should create filter when single link passed in', (resolve, reject) => {
       const link = ApolloLink.split(
         operation => operation.getContext().test,
         (operation, forward) => Observable.of({ data: { count: 1 } }),
@@ -780,11 +786,11 @@ describe('ApolloClient', () => {
         link,
         results: [],
         context,
-        done,
+        done: resolve,
       });
     });
 
-    it('should split two functions', done => {
+    itAsync('should split two functions', (resolve, reject) => {
       const link = ApolloLink.split(
         operation => operation.getContext().test,
         (operation, forward) => Observable.of({ data: { count: 1 } }),
@@ -805,11 +811,11 @@ describe('ApolloClient', () => {
         link,
         results: [{ count: 2 }],
         context,
-        done,
+        done: resolve,
       });
     });
 
-    it('should split two Links', done => {
+    itAsync('should split two Links', (resolve, reject) => {
       const link = ApolloLink.split(
         operation => operation.getContext().test,
         (operation, forward) => Observable.of({ data: { count: 1 } }),
@@ -832,11 +838,11 @@ describe('ApolloClient', () => {
         link,
         results: [{ count: 2 }],
         context,
-        done,
+        done: resolve,
       });
     });
 
-    it('should split a link and a function', done => {
+    itAsync('should split a link and a function', (resolve, reject) => {
       const link = ApolloLink.split(
         operation => operation.getContext().test,
         (operation, forward) => Observable.of({ data: { count: 1 } }),
@@ -859,11 +865,11 @@ describe('ApolloClient', () => {
         link,
         results: [{ count: 2 }],
         context,
-        done,
+        done: resolve,
       });
     });
 
-    it('should allow concat after split to be join', done => {
+    itAsync('should allow concat after split to be join', (resolve, reject) => {
       const context = { test: true };
       const link = ApolloLink.split(
         operation => operation.getContext().test,
@@ -885,11 +891,11 @@ describe('ApolloClient', () => {
         link,
         context,
         results: [{ count: 1 }],
-        done,
+        done: resolve,
       });
     });
 
-    it('should allow default right to be passthrough', done => {
+    itAsync('should allow default right to be passthrough', (resolve, reject) => {
       const context = { test: true };
       const link = ApolloLink.split(
         operation => operation.getContext().test,
@@ -908,7 +914,7 @@ describe('ApolloClient', () => {
         link,
         context,
         results: [{ count: 1 }],
-        done,
+        done: resolve,
       });
     });
   });

@@ -1,6 +1,5 @@
 ---
-title: 'Cursor-based pagination'
-sidebar_title: 'Cursor-based'
+title: Cursor-based pagination
 ---
 
 > We recommend reading [Core pagination API](./core-api) before learning about considerations specific to cursor-based pagination.
@@ -243,7 +242,7 @@ function CommentsWithData() {
         if (pageInfo.hasNextPage) {
           fetchMore({
             variables: {
-              cursor: data.comments.pageInfo.endCursor,
+              cursor: pageInfo.endCursor,
             },
           });
         }

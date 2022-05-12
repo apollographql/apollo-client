@@ -141,10 +141,10 @@ export class Concast<T> extends Observable<T> {
     if (this.observers.delete(observer) &&
         --this.addCount < 1 &&
         !quietly) {
-      // In case there are still any cleanup observers in this.observers,
-      // and no error or completion has been broadcast yet, make sure
-      // those observers receive an error that terminates them.
-      this.handlers.error(new Error("Observable cancelled prematurely"));
+      // In case there are still any cleanup observers in this.observers, and no
+      // error or completion has been broadcast yet, make sure those observers
+      // have a chance to run and then remove themselves from this.observers.
+      this.handlers.complete();
     }
   }
 
@@ -178,7 +178,7 @@ export class Concast<T> extends Observable<T> {
         // Delay unsubscribing from the underlying subscription slightly,
         // so that immediately subscribing another observer can keep the
         // subscription active.
-        if (sub) Promise.resolve().then(() => sub.unsubscribe());
+        if (sub) setTimeout(() => sub.unsubscribe());
         this.sub = null;
         this.latest = ["error", error];
         this.reject(error);
@@ -187,9 +187,11 @@ export class Concast<T> extends Observable<T> {
     },
 
     complete: () => {
-      if (this.sub !== null) {
+      const { sub } = this;
+      if (sub !== null) {
         const value = this.sources.shift();
         if (!value) {
+          if (sub) setTimeout(() => sub.unsubscribe());
           this.sub = null;
           if (this.latest &&
               this.latest[0] === "next") {

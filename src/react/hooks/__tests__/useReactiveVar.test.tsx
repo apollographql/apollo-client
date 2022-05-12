@@ -1,5 +1,5 @@
 import React, { StrictMode, useEffect } from "react";
-import { render, wait, act } from "@testing-library/react";
+import { render, waitFor, act } from "@testing-library/react";
 
 import { itAsync } from "../../../testing";
 import { makeVar } from "../../../core";
@@ -36,7 +36,7 @@ describe("useReactiveVar Hook", () => {
 
     render(<Component/>);
 
-    return wait(() => {
+    waitFor(() => {
       expect(renderCount).toBe(3);
       expect(counterVar()).toBe(3);
     }).then(resolve, reject);
@@ -89,7 +89,7 @@ describe("useReactiveVar Hook", () => {
 
     render(<Parent/>);
 
-    await wait(() => {
+    await waitFor(() => {
       expect(parentRenderCount).toBe(1);
       expect(childRenderCount).toBe(1);
     });
@@ -99,7 +99,7 @@ describe("useReactiveVar Hook", () => {
       counterVar(1);
     });
 
-    await wait(() => {
+    await waitFor(() => {
       expect(parentRenderCount).toBe(2);
       expect(childRenderCount).toBe(2);
     });
@@ -109,7 +109,7 @@ describe("useReactiveVar Hook", () => {
       counterVar(counterVar() + 10);
     });
 
-    await wait(() => {
+    await waitFor(() => {
       expect(parentRenderCount).toBe(3);
       expect(childRenderCount).toBe(3);
     });
@@ -159,7 +159,7 @@ describe("useReactiveVar Hook", () => {
 
     const { unmount } = render(<Component/>);
 
-    return wait(() => {
+    return waitFor(() => {
       expect(attemptedUpdateAfterUnmount).toBe(true);
     }).then(() => {
       expect(renderCount).toBe(3);
@@ -197,7 +197,7 @@ describe("useReactiveVar Hook", () => {
         </>
       );
 
-      await wait(() => {
+      await waitFor(() => {
         expect(getAllByText("1")).toHaveLength(2);
       });
 
@@ -230,7 +230,7 @@ describe("useReactiveVar Hook", () => {
         </>
       );
 
-      await wait(() => {
+      await waitFor(() => {
         expect(getAllByText("1")).toHaveLength(2);
       });
 
@@ -264,7 +264,7 @@ describe("useReactiveVar Hook", () => {
         </StrictMode>
       );
 
-      await wait(() => {
+      await waitFor(() => {
         expect(mock).toHaveBeenCalledWith(1);
       });
 
@@ -293,7 +293,7 @@ describe("useReactiveVar Hook", () => {
         counterVar(10);
       });
 
-      await wait(() => {
+      await waitFor(() => {
         expect(getAllByText("10")).toHaveLength(1);
       });
 

@@ -5,8 +5,8 @@ import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
 import {
-  stripSymbols,
   createMockClient,
+  itAsync,
   MockedProvider,
 } from '../../../../testing';
 import { NormalizedCacheObject } from '../../../../cache';
@@ -145,7 +145,7 @@ describe('graphql(mutation)', () => {
     );
   });
 
-  it('does not swallow children errors', done => {
+  itAsync('does not swallow children errors', (resolve, reject) => {
     let bar: any;
     const ContainerWithData = graphql(query)(() => {
       bar(); // this will throw
@@ -156,7 +156,7 @@ describe('graphql(mutation)', () => {
       componentDidCatch(e: Error) {
         expect(e.name).toMatch(/TypeError/);
         expect(e.message).toMatch(/bar is not a function/);
-        done();
+        resolve();
       }
 
       render() {
@@ -173,13 +173,13 @@ describe('graphql(mutation)', () => {
     );
   });
 
-  it('can execute a mutation', done => {
+  itAsync('can execute a mutation', (resolve, reject) => {
     const Container = graphql(query)(
       class extends React.Component<ChildProps> {
         componentDidMount() {
           this.props.mutate!().then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
-            done();
+            expect(result && result.data).toEqual(expectedData);
+            resolve();
           });
         }
         render() {
@@ -195,7 +195,7 @@ describe('graphql(mutation)', () => {
     );
   });
 
-  it('can execute a mutation with variables from props', done => {
+  itAsync('can execute a mutation with variables from props', (resolve, reject) => {
     const queryWithVariables = gql`
       mutation addPerson($first: Int) {
         allPeople(first: $first) {
@@ -217,8 +217,8 @@ describe('graphql(mutation)', () => {
       class extends React.Component<ChildProps<Props>> {
         componentDidMount() {
           this.props.mutate!().then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
-            done();
+            expect(result && result.data).toEqual(expectedData);
+            resolve();
           });
         }
         render() {
@@ -234,7 +234,7 @@ describe('graphql(mutation)', () => {
     );
   });
 
-  it('can execute a mutation with variables from BOTH options and arguments', done => {
+  itAsync('can execute a mutation with variables from BOTH options and arguments', (resolve, reject) => {
     const queryWithVariables = gql`
       mutation addPerson($first: Int!, $second: Int!) {
         allPeople(first: $first) {
@@ -270,8 +270,8 @@ describe('graphql(mutation)', () => {
           this.props.mutate!({
             variables: { second: 2 }
           }).then(result => {
-            expect(stripSymbols(result && result.data)).toEqual(expectedData);
-            done();
+            expect(result && result.data).toEqual(expectedData);
+            resolve();
           });
         }
         render() {

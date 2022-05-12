@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -70,7 +70,7 @@ describe('[queries] polling', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   const allPeopleQuery: DocumentNode = gql`
@@ -98,6 +98,7 @@ describe('[queries] polling', () => {
   }));
 
   itAsync('exposes stopPolling as part of the props api', (resolve, reject) => {
+    let done = false;
     const client = new ApolloClient({
       link: lukeLink,
       cache: new Cache({ addTypename: false })
@@ -111,6 +112,7 @@ describe('[queries] polling', () => {
             expect(data!.stopPolling).toBeTruthy();
             expect(data!.stopPolling instanceof Function).toBeTruthy();
             expect(data!.stopPolling).not.toThrow();
+            done = true;
           } catch (e) {
             reject(e);
           }
@@ -126,10 +128,13 @@ describe('[queries] polling', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('exposes startPolling as part of the props api', (resolve, reject) => {
+    let done = false;
     const client = new ApolloClient({
       link: lukeLink,
       cache: new Cache({ addTypename: false })
@@ -142,6 +147,7 @@ describe('[queries] polling', () => {
             const { data } = this.props;
             expect(data!.startPolling).toBeTruthy();
             expect(data!.startPolling instanceof Function).toBeTruthy();
+            done = true;
           } catch (e) {
             reject(e);
           }
@@ -158,6 +164,8 @@ describe('[queries] polling', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 });

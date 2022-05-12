@@ -81,7 +81,6 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.1.1",
-    "@types/use-sync-external-store": "^0.0.3",
     "@wry/context": "^0.6.0",
     "@wry/equality": "^0.5.0",
     "@wry/trie": "^0.3.0",
@@ -109,6 +108,7 @@
     "@types/node": "16.11.33",
     "@types/react": "17.0.45",
     "@types/react-dom": "17.0.16",
+    "@types/use-sync-external-store": "^0.0.3",
     "acorn": "8.7.1",
     "bundlesize": "0.18.1",
     "cross-fetch": "3.1.5",

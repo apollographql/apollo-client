@@ -42,7 +42,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       second: 0,
     };
 
-    concast.cleanup(() => {
+    concast.beforeNext(() => {
       ++cleanupCounts.first;
     });
 
@@ -58,7 +58,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       },
     });
 
-    concast.cleanup(() => {
+    concast.beforeNext(() => {
       ++cleanupCounts.second;
     });
 

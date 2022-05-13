@@ -989,7 +989,7 @@ export class QueryManager<TStore> {
 
           byVariables.set(varJson, observable = concast);
 
-          concast.cleanup(() => {
+          concast.beforeNext(() => {
             if (byVariables.delete(varJson) &&
                 byVariables.size < 1) {
               inFlightLinkObservables.delete(serverQuery);
@@ -1161,7 +1161,7 @@ export class QueryManager<TStore> {
         : fromVariables(normalized.variables!)
     );
 
-    concast.cleanup(() => {
+    concast.beforeNext(() => {
       this.fetchCancelFns.delete(queryId);
 
       if (queryInfo.observableQuery) {

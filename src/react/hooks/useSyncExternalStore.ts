@@ -12,22 +12,21 @@ type RealUseSESHookType =
   // when only React 17 or earlier is installed.
   typeof import("use-sync-external-store").useSyncExternalStore;
 
+// Prevent webpack from complaining about our feature detection of the
+// useSyncExternalStore property of the React namespace, which is expected not
+// to exist when using React 17 and earlier, and that's fine.
+const uSESKey = "useSyncExternalStore" as keyof typeof React;
+const realHook = React[uSESKey] as RealUseSESHookType | undefined;
+
 // Adapted from https://www.npmjs.com/package/use-sync-external-store, with
 // Apollo Client deviations called out by "// DEVIATION ..." comments.
 
-export const useSyncExternalStore: RealUseSESHookType = (
+// When/if React.useSyncExternalStore is defined, delegate fully to it.
+export const useSyncExternalStore: RealUseSESHookType = realHook || ((
   subscribe,
   getSnapshot,
   getServerSnapshot,
 ) => {
-  // When/if React.useSyncExternalStore is defined, delegate fully to it.
-  const realHook = (React as {
-    useSyncExternalStore?: RealUseSESHookType;
-  }).useSyncExternalStore;
-  if (realHook) {
-    return realHook(subscribe, getSnapshot, getServerSnapshot);
-  }
-
   // Read the current snapshot from the store on every render. Again, this
   // breaks the rules of React, and only works here because of specific
   // implementation details, most importantly that updates are
@@ -112,7 +111,7 @@ export const useSyncExternalStore: RealUseSESHookType = (
   }, [subscribe]);
 
   return value;
-}
+});
 
 function checkIfSnapshotChanged<Snapshot>({
   value,

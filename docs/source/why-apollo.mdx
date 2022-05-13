@@ -66,7 +66,7 @@ One of the key features that sets Apollo Client apart from other data management
 The Apollo Client cache is easy to get started with and [configure](./caching/cache-configuration) as you go:
 
 ```js
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -131,7 +131,7 @@ If we've run the above `GET_ALL_DOGS` query at any point, the data for our `GET_
 Below we define a custom [`FieldPolicy`](./caching/advanced-topics/#cache-redirects) that returns a reference to our previously cached `Dog` object data:
 
 ```js
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const cache = new InMemoryCache({
   typePolicies: {
@@ -139,7 +139,7 @@ const cache = new InMemoryCache({
       fields: {
         dog(_, { args, toReference }) {
           return toReference({
-            __typename: "Dog",
+            __typename: 'Dog',
             id: args.id,
           });
         },
@@ -181,4 +181,4 @@ Companies ranging from enterprises to startups trust Apollo Client to power thei
 - [Expo](https://blog.apollographql.com/using-graphql-apollo-at-expo-4c1f21f0f115): Developing their React Native app with Apollo enabled the Expo engineers to focus on improving their product instead of writing data fetching logic.
 - [KLM](https://youtu.be/T2njjXHdKqw): Learn how the KLM team scaled their Angular app with GraphQL and Apollo.
 
-If your company uses Apollo Client in production, we'd love to feature a case study on our blog! Please get in touch via [our community forums](https://community.apollographql.com) so we can learn more about how you're using Apollo. Alternatively, please send in a PR if you already have a blog post or a conference talk that you'd like to feature here.
+If your company uses Apollo Client in production, we'd love to feature a case study on our blog! Please get in touch via [our community forums](https://community.apollographql.com) so we can learn more about how you're using Apollo. Alternatively, please file a PR if you already have a blog post or a conference talk that you'd like to feature here.

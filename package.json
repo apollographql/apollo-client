@@ -91,7 +91,7 @@
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.10.2",
     "tslib": "^2.3.0",
-    "zen-observable-ts": "^1.2.0"
+    "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
     "@babel/parser": "7.17.10",

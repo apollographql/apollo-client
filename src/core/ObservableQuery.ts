@@ -831,12 +831,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     if (!useDisposableConcast) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
-      // observer with an unnecessary SubscriptionObserver object, in part so
-      // that we can remove it here without triggering any unsubscriptions,
-      // because we just want to ignore the old observable, not prematurely shut
-      // it down, since other consumers may be awaiting this.concast.promise.
+      // observer with an unnecessary SubscriptionObserver object.
       if (this.concast && this.observer) {
-        this.concast.removeObserver(this.observer, true);
+        this.concast.removeObserver(this.observer);
       }
 
       this.concast = concast;

@@ -130,23 +130,16 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
-  public removeObserver(
-    observer: Observer<T>,
-    quietly?: boolean,
-  ) {
+  public removeObserver(observer: Observer<T>) {
     if (
       this.observers.delete(observer) &&
       this.observers.size < 1
     ) {
-      if (quietly) {
-        // In case there are still any listeners in this.nextResultListeners,
-        // and no error or completion has been broadcast yet, make sure those
-        // observers have a chance to run and then remove themselves from
-        // this.observers.
-        this.notify("complete");
-      } else {
-        this.handlers.complete();
-      }
+      // In case there are still any listeners in this.nextResultListeners, and
+      // no error or completion has been broadcast yet, make sure those
+      // observers have a chance to run and then remove themselves from
+      // this.observers.
+      this.handlers.complete();
     }
   }
 

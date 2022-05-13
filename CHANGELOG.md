@@ -10,6 +10,9 @@
 - Internalize `useSyncExternalStore` shim, for more control than `use-sync-external-store` provides, fixing some React Native issues. <br/>
   [@benjamn](https://github.com/benjamn) in [#9675](https://github.com/apollographql/apollo-client/pull/9675) and [#9709](https://github.com/apollographql/apollo-client/pull/9709)
 
+- Provide `@apollo/client/**/*.cjs.native.js` versions of every `@apollo/client/**/*.cjs` bundle (including dependencies `ts-invariant` and `zen-observable-ts`) to help React Native's Metro bundler automatically resolve CommonJS entry point modules. These changes render unnecessary the advice we gave in the v3.5.4 section below about `metro.config.js`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9716](https://github.com/apollographql/apollo-client/pull/9716)
+
 ## Apollo Client 3.6.3 (unreleased)
 
 ### Bug Fixes
@@ -174,10 +177,13 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
 ### Notices
 
+> ⚠️ The following advice about `metro.config.js` should no longer be necessary, as of Apollo Client v3.6.4.
+
 - [Relevant if you use Apollo Client with React Native] Since Apollo Client v3.5.0, CommonJS bundles provided by `@apollo/client` use a `.cjs` file extension rather than `.cjs.js`, so Node.js won't interpret them as ECMAScript modules. While this change should be an implementation detail, it may cause problems for the [Metro bundler](https://facebook.github.io/metro/) used by React Native, whose [`resolver.sourceExts`](https://facebook.github.io/metro/docs/configuration#sourceexts) configuration does not include the `cjs` extension by default.
 
   As a workaround until [this issue](https://github.com/facebook/metro/issues/535) is resolved, you can configure Metro to understand the `.cjs` file extension by creating a `metro.config.js` file in the root of your React Native project:
   ```js
+  // NOTE: No longer necessary in @apollo/client@3.6.4!
   const { getDefaultConfig } = require("metro-config");
   const { resolver: defaultResolver } = getDefaultConfig.getDefaultValues();
   exports.resolver = {

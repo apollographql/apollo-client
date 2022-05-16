@@ -5,6 +5,9 @@
 - Guarantee `Concast` cleanup without `Observable cancelled prematurely` rejection, potentially solving long-standing issues involving that error. <br/>
   [@benjamn](https://github.com/benjamn) in [#9701](https://github.com/apollographql/apollo-client/pull/9701)
 
+- Ensure `useSubscription` subscriptions are properly restarted after unmounting/remounting by React 18 in `<StrictMode>`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9707](https://github.com/apollographql/apollo-client/pull/9707)
+
 ### Improvements
 
 - Internalize `useSyncExternalStore` shim, for more control than `use-sync-external-store` provides, fixing some React Native issues. <br/>

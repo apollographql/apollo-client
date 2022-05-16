@@ -16,6 +16,9 @@
 - Provide `@apollo/client/**/*.cjs.native.js` versions of every `@apollo/client/**/*.cjs` bundle (including dependencies `ts-invariant` and `zen-observable-ts`) to help React Native's Metro bundler automatically resolve CommonJS entry point modules. **These changes should render unnecessary [the advice we gave in the v3.5.4 section below about `metro.config.js`](#apollo-client-354-2021-11-19).** <br/>
   [@benjamn](https://github.com/benjamn) in [#9716](https://github.com/apollographql/apollo-client/pull/9716)
 
+- Handle falsy `incoming` data more gracefully in `offetLimitPagination().merge` function. <br/>
+  [@shobhitsharma](https://github.com/shobhitsharma) in [#9705](https://github.com/apollographql/apollo-client/pull/9705)
+
 ## Apollo Client 3.6.3 (tagged as `next` on npm)
 
 ### Bug Fixes

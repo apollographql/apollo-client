@@ -3,22 +3,28 @@
 - Replace `concast.cleanup` method with simpler `concast.beforeNext` API, which promises to call the given callback function just before the next result/error is delivered. In addition, `concast.removeObserver` no longer takes a `quietly?: boolean` parameter, since that parameter was partly responsible for cleanup callbacks sometimes not getting called. <br/>
   [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
 
-## Apollo Client 3.6.4 (unreleased)
+## Apollo Client 3.6.4 (2022-05-16)
 
 ### Bug Fixes
 
 - Guarantee `Concast` cleanup without `Observable cancelled prematurely` rejection, potentially solving long-standing issues involving that error. <br/>
   [@benjamn](https://github.com/benjamn) in [#9701](https://github.com/apollographql/apollo-client/pull/9701)
 
+- Ensure `useSubscription` subscriptions are properly restarted after unmounting/remounting by React 18 in `<StrictMode>`. <br/>
+  [@kazekyo](https://github.com/kazekyo) in [#9707](https://github.com/apollographql/apollo-client/pull/9707)
+
 ### Improvements
 
 - Internalize `useSyncExternalStore` shim, for more control than `use-sync-external-store` provides, fixing some React Native issues. <br/>
   [@benjamn](https://github.com/benjamn) in [#9675](https://github.com/apollographql/apollo-client/pull/9675) and [#9709](https://github.com/apollographql/apollo-client/pull/9709)
 
-- Provide `@apollo/client/**/*.cjs.native.js` versions of every `@apollo/client/**/*.cjs` bundle (including dependencies `ts-invariant` and `zen-observable-ts`) to help React Native's Metro bundler automatically resolve CommonJS entry point modules. These changes render unnecessary the advice we gave in the v3.5.4 section below about `metro.config.js`. <br/>
+- Provide `@apollo/client/**/*.cjs.native.js` versions of every `@apollo/client/**/*.cjs` bundle (including dependencies `ts-invariant` and `zen-observable-ts`) to help React Native's Metro bundler automatically resolve CommonJS entry point modules. **These changes should render unnecessary [the advice we gave in the v3.5.4 section below about `metro.config.js`](#apollo-client-354-2021-11-19).** <br/>
   [@benjamn](https://github.com/benjamn) in [#9716](https://github.com/apollographql/apollo-client/pull/9716)
 
-## Apollo Client 3.6.3 (unreleased)
+- Handle falsy `incoming` data more gracefully in `offetLimitPagination().merge` function. <br/>
+  [@shobhitsharma](https://github.com/shobhitsharma) in [#9705](https://github.com/apollographql/apollo-client/pull/9705)
+
+## Apollo Client 3.6.3 (2022-05-05, only tagged `next` on npm)
 
 ### Bug Fixes
 

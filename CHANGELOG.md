@@ -19,7 +19,7 @@
 - Handle falsy `incoming` data more gracefully in `offetLimitPagination().merge` function. <br/>
   [@shobhitsharma](https://github.com/shobhitsharma) in [#9705](https://github.com/apollographql/apollo-client/pull/9705)
 
-## Apollo Client 3.6.3 (tagged as `next` on npm)
+## Apollo Client 3.6.3 (2022-05-05, only tagged `next` on npm)
 
 ### Bug Fixes
 

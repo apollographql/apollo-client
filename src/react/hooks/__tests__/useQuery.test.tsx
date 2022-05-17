@@ -437,11 +437,16 @@ describe('useQuery Hook', () => {
       expect(result.current[0].loading).toBe(true);
       expect(result.current[0].data).toBe(undefined);
       expect(result.current[0].variables).toEqual({ name: "world 2" });
+
       await waitForNextUpdate();
 
-      expect(result.current[0].loading).toBe(false);
-      expect(result.current[0].data).toEqual({ hello: "world 2" });
-      expect(result.current[0].variables).toEqual({ name: "world 2" });
+      // TODO(investigate) Without waitFor, loading is sometimes still true
+      // here, after awaiting waitForNextUpdate().
+      return waitFor(() => {
+        expect(result.current[0].loading).toBe(false);
+        expect(result.current[0].data).toEqual({ hello: "world 2" });
+        expect(result.current[0].variables).toEqual({ name: "world 2" });
+      });
     });
 
     // TODO: Rewrite this test

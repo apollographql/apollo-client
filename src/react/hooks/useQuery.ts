@@ -90,7 +90,7 @@ class InternalState<TData, TVariables> {
     if (previousData) {
       // Reuse previousData from previous InternalState (if any) to provide
       // continuity of previousData even if/when the query or client changes.
-      this.previousData = previous.previousData;
+      this.previousData = previousData;
     }
   }
 

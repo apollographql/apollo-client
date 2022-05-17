@@ -4221,6 +4221,153 @@ describe('useQuery Hook', () => {
       expect(result.current.previousData).toEqual(data1);
     });
 
+    it('should persist result.previousData even if query changes', async () => {
+      const aQuery: TypedDocumentNode<{
+        a: string;
+      }> = gql`query A { a }`;
+
+      const abQuery: TypedDocumentNode<{
+        a: string;
+        b: number;
+      }> = gql`query AB { a b }`;
+
+      const bQuery: TypedDocumentNode<{
+        b: number;
+      }> = gql`query B { b }`;
+
+      let stringOfAs = "";
+      let countOfBs = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          switch (request.operationName) {
+            case "A": {
+              observer.next({
+                data: {
+                  a: stringOfAs += 'a',
+                },
+              });
+              break;
+            }
+            case "AB": {
+              observer.next({
+                data: {
+                  a: stringOfAs += 'a',
+                  b: countOfBs += 1,
+                },
+              });
+              break;
+            }
+            case "B": {
+              observer.next({
+                data: {
+                  b: countOfBs += 1,
+                },
+              });
+              break;
+            }
+          }
+          setTimeout(() => {
+            observer.complete();
+          }, 10);
+        })),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [query, setQuery] = useState<DocumentNode>(aQuery);
+          return {
+            query,
+            setQuery,
+            useQueryResult: useQuery(query, {
+              fetchPolicy: "cache-and-network",
+              notifyOnNetworkStatusChange: true,
+            }),
+          };
+        },
+        {
+          wrapper: ({ children }: any) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toBeUndefined();
+        expect(previousData).toBeUndefined();
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "a" });
+        expect(previousData).toBe(undefined);
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setQuery(abQuery);
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toBeUndefined();
+        expect(previousData).toBeUndefined();
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "aa", b: 1 });
+        expect(previousData).toBe(undefined);
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      await act(() => {
+        return result.current.useQueryResult.reobserve().then(result => {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ a: "aaa", b: 2 });
+        });
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "aaa", b: 2 });
+        expect(previousData).toEqual({ a: "aa", b: 1 });
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setQuery(bQuery);
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toEqual({ b: 2 });
+        expect(previousData).toEqual({ a: "aa", b: 1 });
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ b: 3 });
+        expect(previousData).toEqual({ b: 2 });
+      }
+    });
+
     it("should be cleared when variables change causes cache miss", async () => {
       const peopleData = [
         { id: 1, name: 'John Smith', gender: 'male' },

@@ -1,3 +1,10 @@
+## Apollo Client 3.6.5 (unreleased)
+
+### Bug Fixes
+
+- Restore pre-v3.6 `variables` replacement behavior of `ObservableQuery#reobserve` method, fixing a regression that prevented removal of variables. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9741](https://github.com/apollographql/apollo-client/pull/9741)
+
 ## Apollo Client 3.6.4 (2022-05-16)
 
 ### Bug Fixes

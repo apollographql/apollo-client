@@ -935,7 +935,7 @@ describe('useQuery Hook', () => {
               variables: {
                 sourceOfVar: "local",
                 isGlobal: false,
-              },
+              } as OperationVariables,
             },
             variables: {
               mandatory: true,
@@ -991,10 +991,14 @@ describe('useQuery Hook', () => {
         "cache-and-network",
       ]);
 
-      const reobservePromise = result.current.observable.reobserve({
+      const reobservePromise = act(() => result.current.observable.reobserve({
         fetchPolicy: "network-only",
         nextFetchPolicy: "cache-first",
         variables: {
+          // Since reobserve replaces the variables object rather than merging
+          // the individual variables together, we need to include the current
+          // variables manually if we want them to show up in the output below.
+          ...result.current.observable.variables,
           sourceOfVar: "reobserve",
         },
       }).then(finalResult => {
@@ -1006,7 +1010,7 @@ describe('useQuery Hook', () => {
             mandatory: true,
           },
         });
-      });
+      }));
 
       expect(
         result.current.observable.options.fetchPolicy
@@ -1041,6 +1045,60 @@ describe('useQuery Hook', () => {
       expect(fetchPolicyLog).toEqual([
         "cache-and-network",
         "cache-and-network",
+        "cache-first",
+      ]);
+
+      const reobserveNoVarMergePromise = act(() => result.current.observable.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          // This reobservation is like the one above, with no variable merging.
+          // ...result.current.observable.variables,
+          sourceOfVar: "reobserve without variable merge",
+        },
+      }).then(finalResult => {
+        expect(finalResult.loading).toBe(false);
+        expect(finalResult.data).toEqual({
+          vars: {
+            sourceOfVar: "reobserve without variable merge",
+            // Since we didn't merge in result.current.observable.variables, we
+            // don't see these variables anymore:
+            // isGlobal: false,
+            // mandatory: true,
+          },
+        });
+      }));
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("network-only");
+
+      expect(result.current.observable.variables).toEqual({
+        sourceOfVar: "reobserve without variable merge",
+      });
+
+      await reobserveNoVarMergePromise;
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        vars: {
+          sourceOfVar: "reobserve without variable merge",
+        },
+      });
+      expect(
+        result.current.observable.variables
+      ).toEqual(
+        result.current.data!.vars
+      );
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+        "cache-first",
         "cache-first",
       ]);
     });

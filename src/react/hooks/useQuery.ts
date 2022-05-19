@@ -86,10 +86,12 @@ class InternalState<TData, TVariables> {
     previous?: InternalState<TData, TVariables>,
   ) {
     verifyDocumentType(query, DocumentType.Query);
-    const previousData = previous && previous.previousData;
+
+    // Reuse previousData from previous InternalState (if any) to provide
+    // continuity of previousData even if/when the query or client changes.
+    const previousResult = previous && previous.result;
+    const previousData = previousResult && previousResult.data;
     if (previousData) {
-      // Reuse previousData from previous InternalState (if any) to provide
-      // continuity of previousData even if/when the query or client changes.
       this.previousData = previousData;
     }
   }

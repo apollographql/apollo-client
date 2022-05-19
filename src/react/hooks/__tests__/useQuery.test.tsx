@@ -4319,14 +4319,14 @@ describe('useQuery Hook', () => {
         const { loading, data, previousData } = result.current.useQueryResult;
         expect(loading).toBe(true);
         expect(data).toBeUndefined();
-        expect(previousData).toBeUndefined();
+        expect(previousData).toEqual({ a: "a" });
       }
       await waitForNextUpdate();
       {
         const { loading, data, previousData } = result.current.useQueryResult;
         expect(loading).toBe(false);
         expect(data).toEqual({ a: "aa", b: 1 });
-        expect(previousData).toBe(undefined);
+        expect(previousData).toEqual({ a: "a" });
       }
 
       await expect(waitForNextUpdate({
@@ -4357,7 +4357,7 @@ describe('useQuery Hook', () => {
         const { loading, data, previousData } = result.current.useQueryResult;
         expect(loading).toBe(true);
         expect(data).toEqual({ b: 2 });
-        expect(previousData).toEqual({ a: "aa", b: 1 });
+        expect(previousData).toEqual({ a: "aaa", b: 2 });
       }
       await waitForNextUpdate();
       {

@@ -6,6 +6,7 @@ import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   Concast,
   cloneDeep,
+  compact,
   getOperationDefinition,
   Observable,
   Observer,
@@ -14,7 +15,6 @@ import {
   isNonEmptyArray,
   fixObservableSubclass,
   getQueryDefinition,
-  mergeOptions,
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
@@ -792,7 +792,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const oldVariables = this.options.variables;
     const oldFetchPolicy = this.options.fetchPolicy;
 
-    const mergedOptions = mergeOptions(this.options, newOptions || {});
+    const mergedOptions = compact(this.options, newOptions || {});
     const options = useDisposableConcast
       // Disposable Concast fetches receive a shallow copy of this.options
       // (merged with newOptions), leaving this.options unmodified.

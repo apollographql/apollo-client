@@ -935,7 +935,7 @@ describe('useQuery Hook', () => {
               variables: {
                 sourceOfVar: "local",
                 isGlobal: false,
-              },
+              } as OperationVariables,
             },
             variables: {
               mandatory: true,
@@ -991,10 +991,14 @@ describe('useQuery Hook', () => {
         "cache-and-network",
       ]);
 
-      const reobservePromise = result.current.observable.reobserve({
+      const reobservePromise = act(() => result.current.observable.reobserve({
         fetchPolicy: "network-only",
         nextFetchPolicy: "cache-first",
         variables: {
+          // Since reobserve replaces the variables object rather than merging
+          // the individual variables together, we need to include the current
+          // variables manually if we want them to show up in the output below.
+          ...result.current.observable.variables,
           sourceOfVar: "reobserve",
         },
       }).then(finalResult => {
@@ -1006,7 +1010,7 @@ describe('useQuery Hook', () => {
             mandatory: true,
           },
         });
-      });
+      }));
 
       expect(
         result.current.observable.options.fetchPolicy
@@ -1041,6 +1045,60 @@ describe('useQuery Hook', () => {
       expect(fetchPolicyLog).toEqual([
         "cache-and-network",
         "cache-and-network",
+        "cache-first",
+      ]);
+
+      const reobserveNoVarMergePromise = act(() => result.current.observable.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          // This reobservation is like the one above, with no variable merging.
+          // ...result.current.observable.variables,
+          sourceOfVar: "reobserve without variable merge",
+        },
+      }).then(finalResult => {
+        expect(finalResult.loading).toBe(false);
+        expect(finalResult.data).toEqual({
+          vars: {
+            sourceOfVar: "reobserve without variable merge",
+            // Since we didn't merge in result.current.observable.variables, we
+            // don't see these variables anymore:
+            // isGlobal: false,
+            // mandatory: true,
+          },
+        });
+      }));
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("network-only");
+
+      expect(result.current.observable.variables).toEqual({
+        sourceOfVar: "reobserve without variable merge",
+      });
+
+      await reobserveNoVarMergePromise;
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        vars: {
+          sourceOfVar: "reobserve without variable merge",
+        },
+      });
+      expect(
+        result.current.observable.variables
+      ).toEqual(
+        result.current.data!.vars
+      );
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+        "cache-first",
         "cache-first",
       ]);
     });
@@ -4219,6 +4277,153 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data3);
       expect(result.current.previousData).toEqual(data1);
+    });
+
+    it('should persist result.previousData even if query changes', async () => {
+      const aQuery: TypedDocumentNode<{
+        a: string;
+      }> = gql`query A { a }`;
+
+      const abQuery: TypedDocumentNode<{
+        a: string;
+        b: number;
+      }> = gql`query AB { a b }`;
+
+      const bQuery: TypedDocumentNode<{
+        b: number;
+      }> = gql`query B { b }`;
+
+      let stringOfAs = "";
+      let countOfBs = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          switch (request.operationName) {
+            case "A": {
+              observer.next({
+                data: {
+                  a: stringOfAs += 'a',
+                },
+              });
+              break;
+            }
+            case "AB": {
+              observer.next({
+                data: {
+                  a: stringOfAs += 'a',
+                  b: countOfBs += 1,
+                },
+              });
+              break;
+            }
+            case "B": {
+              observer.next({
+                data: {
+                  b: countOfBs += 1,
+                },
+              });
+              break;
+            }
+          }
+          setTimeout(() => {
+            observer.complete();
+          }, 10);
+        })),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [query, setQuery] = useState<DocumentNode>(aQuery);
+          return {
+            query,
+            setQuery,
+            useQueryResult: useQuery(query, {
+              fetchPolicy: "cache-and-network",
+              notifyOnNetworkStatusChange: true,
+            }),
+          };
+        },
+        {
+          wrapper: ({ children }: any) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toBeUndefined();
+        expect(previousData).toBeUndefined();
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "a" });
+        expect(previousData).toBe(undefined);
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setQuery(abQuery);
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toBeUndefined();
+        expect(previousData).toEqual({ a: "a" });
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "aa", b: 1 });
+        expect(previousData).toEqual({ a: "a" });
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      await act(() => {
+        return result.current.useQueryResult.reobserve().then(result => {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ a: "aaa", b: 2 });
+        });
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "aaa", b: 2 });
+        expect(previousData).toEqual({ a: "aa", b: 1 });
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setQuery(bQuery);
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toEqual({ b: 2 });
+        expect(previousData).toEqual({ a: "aaa", b: 2 });
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ b: 3 });
+        expect(previousData).toEqual({ b: 2 });
+      }
     });
 
     it("should be cleared when variables change causes cache miss", async () => {

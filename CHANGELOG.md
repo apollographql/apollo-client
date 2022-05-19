@@ -3,6 +3,19 @@
 - Replace `concast.cleanup` method with simpler `concast.beforeNext` API, which promises to call the given callback function just before the next result/error is delivered. In addition, `concast.removeObserver` no longer takes a `quietly?: boolean` parameter, since that parameter was partly responsible for cleanup callbacks sometimes not getting called. <br/>
   [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
 
+## Apollo Client 3.6.5 (unreleased)
+
+### Bug Fixes
+
+- Restore pre-v3.6 `variables` replacement behavior of `ObservableQuery#reobserve` method, fixing a regression that prevented removal of variables. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9741](https://github.com/apollographql/apollo-client/pull/9741)
+
+- Preserve `previousData` even when different query or client provided to `useQuery`, instead of resetting `previousData` to undefined in those cases, matching behavior prior to v3.6.0. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9734](https://github.com/apollographql/apollo-client/pull/9734)
+
+- Limit scope of `DeepMerger` object reuse, and avoid using `Object.isFrozen`, which can introduce differences between development and production if objects that were frozen using `Object.freeze` in development are left unfrozen in production. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9742](https://github.com/apollographql/apollo-client/pull/9742)
+
 ## Apollo Client 3.6.4 (2022-05-16)
 
 ### Bug Fixes

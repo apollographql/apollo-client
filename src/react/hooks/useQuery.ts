@@ -61,7 +61,7 @@ export function useInternalState<TData, TVariables>(
     client !== stateRef.current.client ||
     query !== stateRef.current.query
   ) {
-    stateRef.current = new InternalState(client, query);
+    stateRef.current = new InternalState(client, query, stateRef.current);
   }
   const state = stateRef.current;
 
@@ -83,8 +83,17 @@ class InternalState<TData, TVariables> {
   constructor(
     public readonly client: ReturnType<typeof useApolloClient>,
     public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    previous?: InternalState<TData, TVariables>,
   ) {
     verifyDocumentType(query, DocumentType.Query);
+
+    // Reuse previousData from previous InternalState (if any) to provide
+    // continuity of previousData even if/when the query or client changes.
+    const previousResult = previous && previous.result;
+    const previousData = previousResult && previousResult.data;
+    if (previousData) {
+      this.previousData = previousData;
+    }
   }
 
   forceUpdate() {

@@ -651,6 +651,66 @@ describe('useMutation Hook', () => {
       expect(onError).toHaveBeenCalledWith(errors[0]);
     });
 
+    it('should allow updating onError while mutation is executing', async () => {
+      const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            },
+          },
+          result: {
+            errors,
+          },
+        }
+      ];
+
+      const onCompleted = jest.fn();
+      const onError = jest.fn();
+      const { result, rerender } = renderHook(
+        ({ onCompleted, onError }) => {
+          return useMutation<
+            { createTodo: Todo },
+            { priority: string, description: string }
+          >(CREATE_TODO_MUTATION, { onCompleted, onError });
+        },
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: { onCompleted, onError },
+        },
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const mutationPromise = act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+        });
+      });
+
+      const onError1 = jest.fn();
+      rerender({ onCompleted, onError: onError1 });
+      await mutationPromise;
+
+      expect(fetchResult).toEqual({
+        data: undefined,
+        // Not sure why we unwrap errors here.
+        errors: errors[0],
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onError1).toHaveBeenCalledTimes(1);
+      expect(onError1).toHaveBeenCalledWith(errors[0]);
+    });
+
     it('should never allow onCompleted handler to be stale', async () => {
       const CREATE_TODO_DATA = {
         createTodo: {
@@ -703,6 +763,68 @@ describe('useMutation Hook', () => {
           variables: { priority: 'Low', description: 'Get milk.' },
         });
       });
+
+      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+      expect(onCompleted1).toHaveBeenCalledTimes(1);
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA);
+    });
+
+    it('should allow updating onCompleted while mutation is executing', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            }
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          },
+        }
+      ];
+
+      const onCompleted = jest.fn();
+      const { result, rerender } = renderHook(
+        ({ onCompleted }) => {
+          return useMutation<
+            { createTodo: Todo },
+            { priority: string, description: string }
+          >(CREATE_TODO_MUTATION, { onCompleted });
+        },
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: { onCompleted },
+        },
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const mutationPromise = act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+        });
+      });
+
+      const onCompleted1 = jest.fn();
+      rerender({ onCompleted: onCompleted1 });
+      await mutationPromise;
 
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);

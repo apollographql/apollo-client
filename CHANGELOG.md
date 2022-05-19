@@ -5,6 +5,9 @@
 - Restore pre-v3.6 `variables` replacement behavior of `ObservableQuery#reobserve` method, fixing a regression that prevented removal of variables. <br/>
   [@benjamn](https://github.com/benjamn) in [#9741](https://github.com/apollographql/apollo-client/pull/9741)
 
+- Preserve `previousData` even when different query or client provided to `useQuery`, instead of resetting `previousData` to undefined in those cases, matching behavior prior to v3.6.0. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9734](https://github.com/apollographql/apollo-client/pull/9734)
+
 ## Apollo Client 3.6.4 (2022-05-16)
 
 ### Bug Fixes

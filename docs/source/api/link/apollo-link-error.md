@@ -1,6 +1,5 @@
 ---
 title: Error Link
-sidebar_title: Error
 description: Handle and inspect errors in your GraphQL network stack.
 ---
 

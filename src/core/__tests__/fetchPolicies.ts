@@ -9,6 +9,10 @@ import {
   itAsync,
   mockSingleLink,
 } from '../../testing';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { WatchQueryFetchPolicy, WatchQueryOptions } from '../watchQueryOptions';
+import { ApolloQueryResult } from '../types';
+import { ObservableQuery } from '../ObservableQuery';
 
 const query = gql`
   query {
@@ -743,5 +747,440 @@ describe('cache-and-network', function() {
         resolve();
       }
     });
+  });
+});
+
+describe("nextFetchPolicy", () => {
+  type TData = {
+    linkCounter: number;
+    opName: string;
+    opVars: Record<string, any>;
+  }
+
+  const EchoQuery: TypedDocumentNode<TData> = gql`
+    query EchoQuery {
+      linkCounter
+      opName
+      opVars
+    }
+  `;
+
+  function makeLink() {
+    let linkCounter = 0;
+    return new ApolloLink(request => new Observable(observer => {
+      setTimeout(() => {
+        observer.next({
+          data: {
+            linkCounter: ++linkCounter,
+            opName: request.operationName,
+            opVars: request.variables,
+          },
+        });
+        observer.complete();
+      }, 10);
+    }));
+  }
+
+  const checkNextFetchPolicy = <TData, TVars>(args: {
+    fetchPolicy: WatchQueryFetchPolicy;
+    nextFetchPolicy: WatchQueryOptions<TVars, TData>["nextFetchPolicy"];
+    useDefaultOptions: boolean;
+    onResult(info: {
+      count: number;
+      result: ApolloQueryResult<TData>;
+      observable: ObservableQuery<TData, TVars>;
+      resolve(result?: any): void;
+      reject(reason?: any): void;
+    }): void;
+  }) => itAsync(`transitions ${args.fetchPolicy} to ${
+    typeof args.nextFetchPolicy === "function"
+      ? args.nextFetchPolicy.name
+      : args.nextFetchPolicy
+  } (${
+    args.useDefaultOptions ? "" : "not "
+  }using defaults)`, (resolve, reject) => {
+    const client = new ApolloClient({
+      link: makeLink(),
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        watchQuery: args.useDefaultOptions ? {
+          nextFetchPolicy: args.nextFetchPolicy,
+        } : {},
+      },
+    });
+
+    const watchQueryOptions: WatchQueryOptions<TVars, TData> = {
+      query: EchoQuery,
+      fetchPolicy: args.fetchPolicy,
+    };
+
+    if (!args.useDefaultOptions) {
+      watchQueryOptions.nextFetchPolicy = args.nextFetchPolicy;
+    }
+
+    const observable = client.watchQuery(watchQueryOptions);
+
+    expect(observable.options.fetchPolicy).toBe(args.fetchPolicy);
+
+    subscribeAndCount(reject, observable, (count, result) => {
+      return args.onResult({
+        observable,
+        count,
+        result,
+        resolve,
+        reject,
+      });
+    });
+  });
+
+  type CheckOptions = Parameters<typeof checkNextFetchPolicy>[0];
+  type NextFetchPolicy = CheckOptions["nextFetchPolicy"];
+  type OnResultCallback = CheckOptions["onResult"];
+
+  // We'll use this same OnResultCallback for multiple tests, to make it easier
+  // to tell that the behavior of the tests is the same.
+  const onResultNetworkOnlyToCacheFirst: OnResultCallback = ({
+    observable,
+    count,
+    result,
+    resolve,
+    reject,
+  }) => {
+    if (count === 1) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 1,
+        opName: "EchoQuery",
+        opVars: {},
+      });
+
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      observable.refetch({
+        refetching: true,
+      }).then(result => {
+        expect(result.data).toEqual({
+          linkCounter: 2,
+          opName: "EchoQuery",
+          opVars: {
+            refetching: true,
+          },
+        });
+      }).catch(reject);
+
+    } else if (count === 2) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 2,
+        opName: "EchoQuery",
+        opVars: {
+          refetching: true,
+        },
+      });
+
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      observable.reobserve({
+        variables: {
+          refetching: false,
+        },
+      }).then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({
+          linkCounter: 3,
+          opName: "EchoQuery",
+          opVars: {
+            refetching: false,
+          },
+        });
+      }).catch(reject);
+
+      // Changing variables resets the fetchPolicy to its initial value.
+      expect(observable.options.fetchPolicy).toBe("network-only");
+
+    } else if (count === 3) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 3,
+        opName: "EchoQuery",
+        opVars: {
+          refetching: false,
+        },
+      });
+
+      // But nextFetchPolicy is applied again after the first request.
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      setTimeout(resolve, 20);
+    } else {
+      reject(`Too many results (${count})`);
+    }
+  };
+
+  checkNextFetchPolicy({
+    useDefaultOptions: false,
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "cache-first",
+    onResult: onResultNetworkOnlyToCacheFirst,
+  });
+
+  checkNextFetchPolicy({
+    useDefaultOptions: true,
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "cache-first",
+    onResult: onResultNetworkOnlyToCacheFirst,
+  });
+
+  const nextFetchPolicyNetworkOnlyToCacheFirst: NextFetchPolicy = function (
+    currentFetchPolicy,
+    context,
+  ): WatchQueryFetchPolicy {
+    expect(currentFetchPolicy).toBe(context.options.fetchPolicy);
+    switch (context.reason) {
+      case "variables-changed":
+        expect(context.initialFetchPolicy).toBe(context.options.initialFetchPolicy);
+        return context.initialFetchPolicy;
+      default:
+      case "after-fetch":
+        return "cache-first";
+    }
+  };
+
+  checkNextFetchPolicy({
+    useDefaultOptions: false,
+    fetchPolicy: "network-only",
+    nextFetchPolicy: nextFetchPolicyNetworkOnlyToCacheFirst,
+    onResult: onResultNetworkOnlyToCacheFirst,
+  });
+
+  checkNextFetchPolicy({
+    useDefaultOptions: true,
+    fetchPolicy: "network-only",
+    nextFetchPolicy: nextFetchPolicyNetworkOnlyToCacheFirst,
+    onResult: onResultNetworkOnlyToCacheFirst,
+  });
+
+  const onResultCacheAndNetworkToCacheFirst: OnResultCallback = ({
+    observable,
+    count,
+    result,
+    resolve,
+    reject,
+  }) => {
+    if (count === 1) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 1,
+        opName: "EchoQuery",
+        opVars: {},
+      });
+
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      observable.refetch({
+        refetching: true,
+      }).then(result => {
+        expect(result.data).toEqual({
+          linkCounter: 2,
+          opName: "EchoQuery",
+          opVars: {
+            refetching: true,
+          },
+        });
+      }).catch(reject);
+
+    } else if (count === 2) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 2,
+        opName: "EchoQuery",
+        opVars: {
+          refetching: true,
+        },
+      });
+
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      observable.reobserve({
+        variables: {
+          refetching: false,
+        },
+      }).then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({
+          linkCounter: 3,
+          opName: "EchoQuery",
+          opVars: {
+            refetching: false,
+          },
+        });
+      }).catch(reject);
+
+      // Changing variables resets the fetchPolicy to its initial value.
+      // expect(observable.options.fetchPolicy).toBe("cache-and-network");
+
+    } else if (count === 3) {
+      expect(result.loading).toBe(true);
+      expect(result.data).toEqual({
+        linkCounter: 2,
+        opName: "EchoQuery",
+        opVars: {
+          refetching: true,
+        },
+      });
+
+      // But nextFetchPolicy is applied again after the first request.
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+    } else if (count === 4) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 3,
+        opName: "EchoQuery",
+        opVars: {
+          refetching: false,
+        },
+      });
+
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      setTimeout(resolve, 20);
+    } else {
+      reject(`Too many results (${count})`);
+    }
+  };
+
+  checkNextFetchPolicy({
+    useDefaultOptions: false,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+    onResult: onResultCacheAndNetworkToCacheFirst,
+  });
+
+  checkNextFetchPolicy({
+    useDefaultOptions: true,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+    onResult: onResultCacheAndNetworkToCacheFirst,
+  });
+
+  const nextFetchPolicyCacheAndNetworkToCacheFirst: NextFetchPolicy = function (
+    currentFetchPolicy,
+    context,
+  ): WatchQueryFetchPolicy {
+    expect(currentFetchPolicy).toBe(context.options.fetchPolicy);
+    switch (context.reason) {
+      case "variables-changed":
+        expect(context.initialFetchPolicy).toBe(context.options.initialFetchPolicy);
+        return context.initialFetchPolicy;
+      default:
+      case "after-fetch":
+        return "cache-first";
+    }
+  };
+
+  checkNextFetchPolicy({
+    useDefaultOptions: false,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: nextFetchPolicyCacheAndNetworkToCacheFirst,
+    onResult: onResultCacheAndNetworkToCacheFirst,
+  });
+
+  checkNextFetchPolicy({
+    useDefaultOptions: true,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: nextFetchPolicyCacheAndNetworkToCacheFirst,
+    onResult: onResultCacheAndNetworkToCacheFirst,
+  });
+
+  const nextFetchPolicyAlwaysCacheFirst: NextFetchPolicy = function (
+    currentFetchPolicy,
+    context,
+  ): WatchQueryFetchPolicy {
+    expect(currentFetchPolicy).toBe(context.options.fetchPolicy);
+    // Return cache-first no matter what context.reason was.
+    return "cache-first";
+  };
+
+  const onResultCacheAndNetworkAlwaysCacheFirst: OnResultCallback = ({
+    observable,
+    count,
+    result,
+    resolve,
+    reject,
+  }) => {
+    if (count === 1) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 1,
+        opName: "EchoQuery",
+        opVars: {},
+      });
+
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      observable.refetch({
+        refetching: true,
+      }).then(result => {
+        expect(result.data).toEqual({
+          linkCounter: 2,
+          opName: "EchoQuery",
+          opVars: {
+            refetching: true,
+          },
+        });
+      }).catch(reject);
+
+    } else if (count === 2) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 2,
+        opName: "EchoQuery",
+        opVars: {
+          refetching: true,
+        },
+      });
+
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      observable.reobserve({
+        variables: {
+          refetching: false,
+        },
+      }).then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({
+          linkCounter: 2,
+          opName: "EchoQuery",
+          opVars: {
+            refetching: true,
+          },
+        });
+      }).catch(reject);
+
+      // The nextFetchPolicy function we provided always returnes cache-first,
+      // even when context.reason is variables-changed (which by default
+      // resets the fetchPolicy to context.initialPolicy), so cache-first is
+      // still what we see here.
+      expect(observable.options.fetchPolicy).toBe("cache-first");
+
+      setTimeout(resolve, 20);
+    } else {
+      reject(`Too many results (${count})`);
+    }
+  };
+
+  checkNextFetchPolicy({
+    useDefaultOptions: false,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: nextFetchPolicyAlwaysCacheFirst,
+    onResult: onResultCacheAndNetworkAlwaysCacheFirst,
+  });
+
+  checkNextFetchPolicy({
+    useDefaultOptions: true,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: nextFetchPolicyAlwaysCacheFirst,
+    onResult: onResultCacheAndNetworkAlwaysCacheFirst,
   });
 });

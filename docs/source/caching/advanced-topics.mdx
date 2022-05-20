@@ -1,6 +1,5 @@
 ---
 title: Advanced topics on caching in Apollo Client
-sidebar_title: Advanced topics
 ---
 
 This article describes special cases and considerations when using the Apollo Client cache.
@@ -19,7 +18,7 @@ Operations that use this fetch policy don't write their result to the cache, and
 
 ## Persisting the cache
 
-You can persist and rehydrate the `InMemoryCache` from a storage provider like `AsyncStorage` or `localStorage`. To do so, use the [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist) library. This library works with a variety of [storage providers](https://github.com/apollographql/apollo-cache-persist#storage-providers).
+You can persist and rehydrate the `InMemoryCache` from a storage provider like `AsyncStorage` or `localStorage`. To do so, use the [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist) library. This library works with a variety of [storage providers](https://github.com/apollographql/apollo-cache-persist/blob/master/docs/storage-providers.md).
 
 To get started, pass your cache and a storage provider to `persistCache`. By default, the contents of your cache are immediately restored asynchronously, and they're persisted on every write to the cache with a short configurable debounce interval.
 
@@ -85,7 +84,7 @@ You can also call `client.onResetStore` from your React components. This can be 
 
 The `client.onResetStore` method's return value is a function you can call to unregister your callback:
 
-```js{6-8,12}
+```js {6-8,12}
 import { withApollo } from "@apollo/react-hoc";
 
 export class Foo extends Component {
@@ -147,7 +146,7 @@ query Book($id: ID!) {
 
 In a case like this, _we_ know that the second query's data might already be in the cache, but because that data was fetched by a different query, _Apollo Client_ doesn't know that. To tell Apollo Client where to look for the cached `Book` object, we can define a field policy `read` function for the `book` field:
 
-```js{9-14}
+```js {9-14}
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
@@ -166,7 +165,7 @@ const client = new ApolloClient({
         }
       }
     }
-  }
+  })
 });
 ```
 

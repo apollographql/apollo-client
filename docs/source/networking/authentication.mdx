@@ -4,7 +4,7 @@ title: Authentication
 
 Unless all of the data you are loading is completely public, your app has some sort of users, accounts and permissions systems. If different users have different permissions in your application, then you need a way to tell the server which user is associated with each request.
 
-Apollo Client uses the ultra flexible [Apollo Link](https://www.apollographql.com/docs/link) that includes several options for authentication.
+Apollo Client uses the ultra flexible [Apollo Link](../api/link/introduction/) that includes several options for authentication.
 
 ## Cookie
 
@@ -39,6 +39,7 @@ app.use(cors(corsOptions));
 
 Another common way to identify yourself when using HTTP is to send along an authorization header. Add an `authorization` header to every HTTP request by chaining together Apollo Links. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
+ReactJS example:
 ```js
 import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
@@ -64,7 +65,32 @@ const client = new ApolloClient({
   cache: new InMemoryCache()
 });
 ```
+VueJS example:
+```js
+import ApolloClient from "apollo-client";
+import { HttpLink } from "apollo-link-http";
+import { ApolloLink, concat, split } from "apollo-link";
+import { InMemoryCache } from "apollo-cache-inmemory";
+import { getMainDefinition } from "apollo-utilities";
 
+const httpLink = new HttpLink({ uri: process.env.VUE_APP_API_TARGET });
+
+const authMiddleware = new ApolloLink((operation, forward) => {
+  // add the authorization to the headers
+const token = localStorage.getItem('token');
+  operation.setContext({
+    headers: {
+      authorization: token ? `Bearer ${token}` : "",
+    },
+  });
+  return forward(operation);
+});
+export const apolloClient = new ApolloClient({
+  link: concat(authMiddleware, httpLink),
+  cache: new InMemoryCache(),
+});
+
+```
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 
 ## Reset store on logout

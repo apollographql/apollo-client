@@ -96,6 +96,18 @@ const defaultHttpOptions: HttpQueryOptions = {
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
   accept: '*/*',
+  // The content-type header describes the type of the body of the request, and
+  // so it typically only is sent with requests that actually have bodies. One
+  // could imagine that Apollo Client would remove this header when constructing
+  // a GET request (which has no body), but we historically have not done that.
+  // This means that browsers will preflight all Apollo Client requests (even
+  // GET requests). Apollo Server's CSRF prevention feature (introduced in
+  // AS3.7) takes advantage of this fact and does not block requests with this
+  // header. If you want to drop this header from GET requests, then you should
+  // probably replace it with a `apollo-require-preflight` header, or servers
+  // with CSRF prevention enabled might block your GET request. See
+  // https://www.apollographql.com/docs/apollo-server/security/cors/#preventing-cross-site-request-forgery-csrf
+  // for more details.
   'content-type': 'application/json',
 };
 

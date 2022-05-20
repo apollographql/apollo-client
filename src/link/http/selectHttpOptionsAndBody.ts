@@ -1,6 +1,10 @@
-import { print } from 'graphql';
+import { ASTNode, print } from 'graphql';
 
 import { Operation } from '../core';
+
+export interface Printer {
+  (node: ASTNode, originalPrint: typeof print): string
+};
 
 export interface UriFunction {
   (operation: Operation): string;
@@ -54,6 +58,22 @@ export interface HttpOptions {
    * to POST).
    */
   useGETForQueries?: boolean;
+
+  /**
+   * If set to true, the default behavior of stripping unused variables
+   * from the request will be disabled.
+   *
+   * Unused variables are likely to trigger server-side validation errors,
+   * per https://spec.graphql.org/draft/#sec-All-Variables-Used, but this
+   * includeUnusedVariables option can be useful if your server deviates
+   * from the GraphQL specification by not strictly enforcing that rule.
+   */
+  includeUnusedVariables?: boolean;
+  /**
+   * A function to substitute for the default query print function. Can be
+   * used to apply changes to the results of the print function.
+   */
+   print?: Printer;
 }
 
 export interface HttpQueryOptions {
@@ -76,6 +96,18 @@ const defaultHttpOptions: HttpQueryOptions = {
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
   accept: '*/*',
+  // The content-type header describes the type of the body of the request, and
+  // so it typically only is sent with requests that actually have bodies. One
+  // could imagine that Apollo Client would remove this header when constructing
+  // a GET request (which has no body), but we historically have not done that.
+  // This means that browsers will preflight all Apollo Client requests (even
+  // GET requests). Apollo Server's CSRF prevention feature (introduced in
+  // AS3.7) takes advantage of this fact and does not block requests with this
+  // header. If you want to drop this header from GET requests, then you should
+  // probably replace it with a `apollo-require-preflight` header, or servers
+  // with CSRF prevention enabled might block your GET request. See
+  // https://www.apollographql.com/docs/apollo-server/security/cors/#preventing-cross-site-request-forgery-csrf
+  // for more details.
   'content-type': 'application/json',
 };
 
@@ -89,32 +121,42 @@ export const fallbackHttpConfig = {
   options: defaultOptions,
 };
 
-export const selectHttpOptionsAndBody = (
+export const defaultPrinter: Printer = (ast, printer) => printer(ast);
+
+export function selectHttpOptionsAndBody(
   operation: Operation,
   fallbackConfig: HttpConfig,
   ...configs: Array<HttpConfig>
-) => {
-  let options: HttpConfig & Record<string, any> = {
-    ...fallbackConfig.options,
-    headers: fallbackConfig.headers,
-    credentials: fallbackConfig.credentials,
-  };
-  let http: HttpQueryOptions = fallbackConfig.http || {};
+) {
+  configs.unshift(fallbackConfig);
+  return selectHttpOptionsAndBodyInternal(
+    operation,
+    defaultPrinter,
+    ...configs,
+  );
+}
 
-  /*
-   * use the rest of the configs to populate the options
-   * configs later in the list will overwrite earlier fields
-   */
+export function selectHttpOptionsAndBodyInternal(
+  operation: Operation,
+  printer: Printer,
+  ...configs: HttpConfig[]
+) {
+  let options = {} as HttpConfig & Record<string, any>;
+  let http = {} as HttpQueryOptions;
+
   configs.forEach(config => {
     options = {
       ...options,
       ...config.options,
       headers: {
         ...options.headers,
-        ...config.headers,
+        ...headersToLowerCase(config.headers),
       },
     };
-    if (config.credentials) options.credentials = config.credentials;
+
+    if (config.credentials) {
+      options.credentials = config.credentials;
+    }
 
     http = {
       ...http,
@@ -129,10 +171,23 @@ export const selectHttpOptionsAndBody = (
   if (http.includeExtensions) (body as any).extensions = extensions;
 
   // not sending the query (i.e persisted queries)
-  if (http.includeQuery) (body as any).query = print(query);
+  if (http.includeQuery) (body as any).query = printer(query, print);
 
   return {
     options,
     body,
   };
 };
+
+function headersToLowerCase(
+  headers: Record<string, string> | undefined
+): typeof headers {
+  if (headers) {
+    const normalized = Object.create(null);
+    Object.keys(Object(headers)).forEach(name => {
+      normalized[name.toLowerCase()] = headers[name];
+    });
+    return normalized;
+  }
+  return headers;
+}

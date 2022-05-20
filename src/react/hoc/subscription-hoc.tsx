@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
@@ -63,11 +63,17 @@ export function withSubscription<
         this.state = { resubscribe: false };
       }
 
-      componentDidUpate(prevProps: TProps) {
-        if (shouldResubscribe) {
-          this.setState({
-            resubscribe: shouldResubscribe(prevProps, this.props)
-          });
+      updateResubscribe(resubscribe: boolean) {
+        this.setState({ resubscribe });
+      }
+
+      componentDidUpdate(prevProps: TProps) {
+        const resubscribe = !!(
+          shouldResubscribe &&
+          shouldResubscribe(prevProps, this.props)
+        );
+        if (this.state.resubscribe !== resubscribe) {
+          this.updateResubscribe(resubscribe);
         }
       }
 

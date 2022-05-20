@@ -161,6 +161,12 @@ Object {
 
 exports[`ApolloClient write then read will write data locally which will then be read back 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "d": 8,
@@ -203,8 +209,32 @@ Object {
 }
 `;
 
+exports[`ApolloClient writeFragment should warn when the data provided does not match the fragment shape 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'e' while writing result {
+  \\"__typename\\": \\"Bar\\",
+  \\"i\\": 10
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 1`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -221,6 +251,11 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 2`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -241,6 +276,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 3`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -261,6 +302,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 4`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -281,6 +328,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 5`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 7,
@@ -301,6 +354,12 @@ Object {
 
 exports[`ApolloClient writeFragment will write some deeply nested data into the store at any id 6`] = `
 Object {
+  "__META": Object {
+    "extraRootIds": Array [
+      "bar",
+      "foo",
+    ],
+  },
   "bar": Object {
     "__typename": "Bar",
     "i": 10,
@@ -316,6 +375,26 @@ Object {
       "__ref": "bar",
     },
   },
+}
+`;
+
+exports[`ApolloClient writeQuery should warn when the data provided does not match the query shape 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Missing field 'description' while writing result {
+  \\"id\\": \\"1\\",
+  \\"name\\": \\"Todo 1\\",
+  \\"__typename\\": \\"Todo\\"
+}",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
 }
 `;
 

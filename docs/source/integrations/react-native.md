@@ -36,7 +36,7 @@ For more information on setting up Apollo Client, see [Getting started](../get-s
 
 [This sample application](https://github.com/GraphQLGuide/guide-react-native) maintained by [The GraphQL Guide](https://graphql.guide/) uses Apollo Client with React Native.
 
-## Apollo Devtools
+## Apollo Client Devtools
 
 [React Native Debugger](https://github.com/jhen0409/react-native-debugger) supports the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools):
 

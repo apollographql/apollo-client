@@ -1,10 +1,11 @@
+import { invariant } from '../../utilities/globals';
+
 import {
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,
   OperationDefinitionNode
 } from 'graphql';
-import { invariant } from 'ts-invariant';
 
 export enum DocumentType {
   Query,
@@ -36,7 +37,7 @@ export function operationName(type: DocumentType) {
   return name;
 }
 
-// This parser is mostly used to saftey check incoming documents.
+// This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
   const cached = cache.get(document);
   if (cached) return cached;
@@ -50,24 +51,31 @@ export function parser(document: DocumentNode): IDocumentDefinition {
       `to convert your operation into a document`
   );
 
-  const fragments = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'FragmentDefinition'
-  );
+  const fragments: DefinitionNode[] = []
+  const queries: DefinitionNode[] = []
+  const mutations: DefinitionNode[] = []
+  const subscriptions: DefinitionNode[] = []
 
-  const queries = document.definitions.filter(
-    (x: DefinitionNode) =>
-      x.kind === 'OperationDefinition' && x.operation === 'query'
-  );
+  for (const x of document.definitions) {
+    if (x.kind === 'FragmentDefinition') {
+      fragments.push(x);
+      continue
+    }
 
-  const mutations = document.definitions.filter(
-    (x: DefinitionNode) =>
-      x.kind === 'OperationDefinition' && x.operation === 'mutation'
-  );
-
-  const subscriptions = document.definitions.filter(
-    (x: DefinitionNode) =>
-      x.kind === 'OperationDefinition' && x.operation === 'subscription'
-  );
+    if (x.kind === 'OperationDefinition') {
+      switch (x.operation) {
+        case 'query':
+          queries.push(x);
+          break;
+        case 'mutation':
+          mutations.push(x);
+          break;
+        case 'subscription':
+          subscriptions.push(x);
+          break;
+      }
+    }
+  }
 
   invariant(
     !fragments.length ||
@@ -113,3 +121,15 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   cache.set(document, payload);
   return payload;
 }
+
+export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
+  const operation = parser(document);
+  const requiredOperationName = operationName(type);
+  const usedOperationName = operationName(operation.type);
+  invariant(
+    operation.type === type,
+    `Running a ${requiredOperationName} requires a graphql ` +
+      `${requiredOperationName}, but a ${usedOperationName} was used instead.`
+  );
+}
+

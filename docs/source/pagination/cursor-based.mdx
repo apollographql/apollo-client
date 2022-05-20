@@ -1,6 +1,5 @@
 ---
-title: 'Cursor-based pagination'
-sidebar_title: 'Cursor-based'
+title: Cursor-based pagination
 ---
 
 > We recommend reading [Core pagination API](./core-api) before learning about considerations specific to cursor-based pagination.
@@ -229,24 +228,25 @@ const COMMENTS_QUERY = gql`
 `;
 
 function CommentsWithData() {
-  const {
-    data,
-    loading,
-    fetchMore,
-  } = useQuery(COMMENTS_QUERY);
+  const { data, loading, fetchMore } = useQuery(COMMENTS_QUERY);
 
-  if (loading) return <Loading/>;
+  if (loading) return <Loading />;
 
-  const nodes = data.comments.edges.map(edge => edge.node);
+  const nodes = data.comments.edges.map((edge) => edge.node);
+  const pageInfo = data.comments.pageInfo;
 
   return (
     <Comments
       entries={nodes}
-      onLoadMore={() => fetchMore({
-        variables: {
-          cursor: data.comments.pageInfo.endCursor,
-        },
-      })}
+      onLoadMore={() => {
+        if (pageInfo.hasNextPage) {
+          fetchMore({
+            variables: {
+              cursor: pageInfo.endCursor,
+            },
+          });
+        }
+      }}
     />
   );
 }
@@ -270,4 +270,4 @@ const cache = new InMemoryCache({
 
 Whenever you need to consume a Relay pagination API using Apollo Client, `relayStylePagination` is a great tool to try first, even if you end up copy/pasting its code and making changes to suit your specific needs.
 
-Note that the `relayStylePagination` function generates a field policy with a `read` function that simply returns all available data, ignoring `args`, which makes `relayStylePagination` easier to use with `fetchMore`. This is the second kind of `read` function described in [Two kinds of `read` function](./core-api/#two-kinds-of-read-function). There's nothing stopping you from adapting this `read` function to use `args` to return individual pages, as long as you remember to update the variables of your original query after calling `fetchMore`.
+Note that the `relayStylePagination` function generates a field policy with a `read` function that simply returns all available data, ignoring `args`, which makes `relayStylePagination` easier to use with `fetchMore`. This is a [non-paginated `read` function](./core-api/#non-paginated-read-functions). There's nothing stopping you from adapting this `read` function to use `args` to return individual pages, as long as you remember to update the variables of your original query after calling `fetchMore`.

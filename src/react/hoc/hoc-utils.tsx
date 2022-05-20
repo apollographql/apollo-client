@@ -1,5 +1,5 @@
-import React from 'react';
-import { invariant } from 'ts-invariant';
+import { invariant } from '../../utilities/globals';
+import * as React from 'react';
 import { OperationVariables } from '../../core';
 import { IDocumentDefinition } from '../parser';
 

@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../core';
 import { ApolloProvider } from '../../context';
 import { InMemoryCache as Cache } from '../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../testing';
+import { itAsync, mockSingleLink } from '../../../testing';
 import { graphql } from '../graphql';
 import { ChildProps } from '../types';
 
@@ -40,7 +40,7 @@ describe('fragments', () => {
           componentDidUpdate() {
             const { props } = this;
             expect(props.data!.loading).toBeFalsy();
-            expect(stripSymbols(props.data!.allPeople)).toEqual(
+            expect(props.data!.allPeople).toEqual(
               expectedData.allPeople
             );
           }
@@ -62,6 +62,7 @@ describe('fragments', () => {
   });
 
   itAsync('correctly fetches a query with inline fragments', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -98,9 +99,10 @@ describe('fragments', () => {
       class extends React.Component<ChildProps<{}, Data>> {
         componentDidUpdate() {
           expect(this.props.data!.loading).toBeFalsy();
-          expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+          expect(this.props.data!.allPeople).toEqual(
             data.allPeople
           );
+          done = true;
         }
         render() {
           return null;
@@ -114,6 +116,8 @@ describe('fragments', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 });

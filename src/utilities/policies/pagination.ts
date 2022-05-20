@@ -32,57 +32,61 @@ export function offsetLimitPagination<T = Reference>(
     keyArgs,
     merge(existing, incoming, { args }) {
       const merged = existing ? existing.slice(0) : [];
-      if (args) {
-        // Assume an offset of 0 if args.offset omitted.
-        const { offset = 0 } = args;
-        for (let i = 0; i < incoming.length; ++i) {
-          merged[offset + i] = incoming[i];
+
+      if (incoming) {
+        if (args) {
+          // Assume an offset of 0 if args.offset omitted.
+          const { offset = 0 } = args;
+          for (let i = 0; i < incoming.length; ++i) {
+            merged[offset + i] = incoming[i];
+          }
+        } else {
+          // It's unusual (probably a mistake) for a paginated field not
+          // to receive any arguments, so you might prefer to throw an
+          // exception here, instead of recovering by appending incoming
+          // onto the existing array.
+          merged.push.apply(merged, incoming);
         }
-      } else {
-        // It's unusual (probably a mistake) for a paginated field not
-        // to receive any arguments, so you might prefer to throw an
-        // exception here, instead of recovering by appending incoming
-        // onto the existing array.
-        merged.push.apply(merged, incoming);
       }
+
       return merged;
     },
   };
 }
 
-// Whether TEdge<TNode> is a normalized Reference or a non-normalized
+// Whether TRelayEdge<TNode> is a normalized Reference or a non-normalized
 // object, it needs a .cursor property where the relayStylePagination
 // merge function can store cursor strings taken from pageInfo. Storing an
 // extra reference.cursor property should be safe, and is easier than
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-type TEdge<TNode> = {
+export type TRelayEdge<TNode> = {
   cursor?: string;
   node: TNode;
 } | (Reference & { cursor?: string });
 
-type TPageInfo = {
+export type TRelayPageInfo = {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
   startCursor: string;
   endCursor: string;
 };
 
-type TExistingRelay<TNode> = Readonly<{
-  edges: TEdge<TNode>[];
-  pageInfo: TPageInfo;
+export type TExistingRelay<TNode> = Readonly<{
+  edges: TRelayEdge<TNode>[];
+  pageInfo: TRelayPageInfo;
 }>;
 
-type TIncomingRelay<TNode> = {
-  edges?: TEdge<TNode>[];
-  pageInfo?: TPageInfo;
+export type TIncomingRelay<TNode> = {
+  edges?: TRelayEdge<TNode>[];
+  pageInfo?: TRelayPageInfo;
 };
 
-type RelayFieldPolicy<TNode> = FieldPolicy<
-  TExistingRelay<TNode>,
-  TIncomingRelay<TNode>,
-  TIncomingRelay<TNode>
+export type RelayFieldPolicy<TNode> = FieldPolicy<
+  TExistingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null
 >;
 
 // As proof of the flexibility of field policies, this function generates
@@ -95,22 +99,27 @@ export function relayStylePagination<TNode = Reference>(
     keyArgs,
 
     read(existing, { canRead, readField }) {
-      if (!existing) return;
+      if (!existing) return existing;
 
-      const edges: TEdge<TNode>[] = [];
-      let startCursor = "";
-      let endCursor = "";
+      const edges: TRelayEdge<TNode>[] = [];
+      let firstEdgeCursor = "";
+      let lastEdgeCursor = "";
       existing.edges.forEach(edge => {
         // Edges themselves could be Reference objects, so it's important
         // to use readField to access the edge.edge.node property.
         if (canRead(readField("node", edge))) {
           edges.push(edge);
           if (edge.cursor) {
-            startCursor = startCursor || edge.cursor;
-            endCursor = edge.cursor;
+            firstEdgeCursor = firstEdgeCursor || edge.cursor || "";
+            lastEdgeCursor = edge.cursor || lastEdgeCursor;
           }
         }
       });
+
+      const {
+        startCursor,
+        endCursor,
+      } = existing.pageInfo || {};
 
       return {
         // Some implementations return additional Connection fields, such
@@ -120,13 +129,23 @@ export function relayStylePagination<TNode = Reference>(
         edges,
         pageInfo: {
           ...existing.pageInfo,
-          startCursor,
-          endCursor,
+          // If existing.pageInfo.{start,end}Cursor are undefined or "", default
+          // to firstEdgeCursor and/or lastEdgeCursor.
+          startCursor: startCursor || firstEdgeCursor,
+          endCursor: endCursor || lastEdgeCursor,
         },
       };
     },
 
-    merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
+    merge(existing, incoming, { args, isReference, readField }) {
+      if (!existing) {
+        existing = makeEmptyData();
+      }
+
+      if (!incoming) {
+        return existing;
+      }
+
       const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
         if (isReference(edge = { ...edge })) {
           // In case edge is a Reference, we read out its cursor field and
@@ -198,7 +217,7 @@ export function relayStylePagination<TNode = Reference>(
         ...suffix,
       ];
 
-      const pageInfo: TPageInfo = {
+      const pageInfo: TRelayPageInfo = {
         // The ordering of these two ...spreads may be surprising, but it
         // makes sense because we want to combine PageInfo properties with a
         // preference for existing values, *unless* the existing values are
@@ -212,7 +231,15 @@ export function relayStylePagination<TNode = Reference>(
         const {
           hasPreviousPage, hasNextPage,
           startCursor, endCursor,
+          ...extras
         } = incoming.pageInfo;
+
+        // If incoming.pageInfo had any extra non-standard properties,
+        // assume they should take precedence over any existing properties
+        // of the same name, regardless of where this page falls with
+        // respect to the existing data.
+        Object.assign(pageInfo, extras);
+
         // Keep existing.pageInfo.has{Previous,Next}Page unless the
         // placement of the incoming edges means incoming.hasPreviousPage
         // or incoming.hasNextPage should become the new values for those

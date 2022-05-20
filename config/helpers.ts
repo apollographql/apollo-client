@@ -11,7 +11,7 @@ export function eachFile(dir: string, callback: (
 ) => any) {
   const promises: Promise<any>[] = [];
 
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     glob(`${dir}/**/*.js`, (error, files) => {
       if (error) return reject(error);
 
@@ -22,7 +22,9 @@ export function eachFile(dir: string, callback: (
         if (relPath.startsWith("../")) return;
 
         // Avoid re-transforming CommonJS bundle files.
+        if (relPath.endsWith(".cjs")) return;
         if (relPath.endsWith(".cjs.js")) return;
+        if (relPath.endsWith(".cjs.native.js")) return;
 
         // Avoid re-transforming CommonJS bundle files.
         if (relPath.endsWith(".min.js")) return;

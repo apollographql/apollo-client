@@ -5,13 +5,15 @@ description: Apollo Client React server side rendering API
 
 ## Installation
 
-```
-npm install @apollo/react-ssr
-```
+Apollo Client >= 3 includes React hooks functionality out of the box. You don't need to install any additional packages.
 
 ## `getDataFromTree`
 
 The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all.
+
+```js
+import { getDataFromTree } from "@apollo/client/react/ssr";
+```
 
 ### Params
 
@@ -26,11 +28,15 @@ The `getDataFromTree` function takes your React tree, determines which queries a
 
 ### Example
 
-Refer to the [Using `getDataFromTree`](../../performance/server-side-rendering/#using-getdatafromtree) section of the docs.
+See [Executing queries with `getDataFromTree`](../../performance/server-side-rendering/#executing-queries-with-getdatafromtree).
 
 ## `renderToStringWithData`
 
 The `renderToStringWithData` function is similar to `getDataFromTree`, but uses [`ReactDOMServer.renderToString`](https://reactjs.org/docs/react-dom-server.html#rendertostring) to render its result instead of [`ReactDOMServer.renderToStaticMarkup`](https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup) (the React docs help explain the difference).
+
+```js
+import { renderToStringWithData } from "@apollo/client/react/ssr";
+```
 
 ### Params
 
@@ -41,7 +47,3 @@ The `renderToStringWithData` function is similar to `getDataFromTree`, but uses 
 ### Result
 
 `renderToStringWithData` returns a promise (`Promise<string>`) which resolves when the data is ready in your Apollo Client store. The result is generated using [`ReactDOMServer.renderToString`](https://reactjs.org/docs/react-dom-server.html#rendertostring) under the hood.
-
-### Example
-
-Refer to the [Using `renderToStringWithData`](../../performance/server-side-rendering/#using-rendertostringwithdata) section of the docs.

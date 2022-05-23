@@ -14,6 +14,9 @@
 - Limit scope of `DeepMerger` object reuse, and avoid using `Object.isFrozen`, which can introduce differences between development and production if objects that were frozen using `Object.freeze` in development are left unfrozen in production. <br/>
   [@benjamn](https://github.com/benjamn) in [#9742](https://github.com/apollographql/apollo-client/pull/9742)
 
+- Properly merge `variables` from original `useLazyQuery(query, { variables })` with `variables` passed to execution function. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9758](https://github.com/apollographql/apollo-client/pull/9758)
+
 ## Apollo Client 3.6.4 (2022-05-16)
 
 ### Bug Fixes

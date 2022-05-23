@@ -229,10 +229,13 @@ describe('useLazyQuery Hook', () => {
     const counterQuery: TypedDocumentNode<{
       counter: number;
     }, {
-      varPassedDirectlyToHook?: any;
-      varPassedToExecFunc?: any;
+      hookVar?: any;
+      execVar?: any;
     }> = gql`
-      query GetCounter {
+      query GetCounter (
+        $hookVar: Boolean
+        $execVar: Boolean
+      ) {
         counter
         vars
       }
@@ -265,7 +268,7 @@ describe('useLazyQuery Hook', () => {
         const [exec, query] = useLazyQuery(counterQuery, {
           notifyOnNetworkStatusChange: true,
           variables: {
-            varPassedDirectlyToHook: true,
+            hookVar: true,
           },
         });
         return {
@@ -293,14 +296,14 @@ describe('useLazyQuery Hook', () => {
     const expectedFinalData = {
       counter: 1,
       vars: {
-        varPassedDirectlyToHook: true,
-        varPassedToExecFunc: true,
+        hookVar: true,
+        execVar: true,
       },
     };
 
     const execPromise = act(() => result.current.exec({
       variables: {
-        varPassedToExecFunc: true,
+        execVar: true,
       }
     }).then(finalResult => {
       expect(finalResult.loading).toBe(false);

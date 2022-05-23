@@ -2,6 +2,7 @@ import React from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { renderHook } from '@testing-library/react-hooks';
+import { act } from 'react-dom/test-utils';
 
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
@@ -222,6 +223,107 @@ describe('useLazyQuery Hook', () => {
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toEqual({ hello: 'world 2' });
+  });
+
+  it('should merge variables from original hook and execution function', async () => {
+    const counterQuery: TypedDocumentNode<{
+      counter: number;
+    }, {
+      hookVar?: any;
+      execVar?: any;
+    }> = gql`
+      query GetCounter (
+        $hookVar: Boolean
+        $execVar: Boolean
+      ) {
+        counter
+        vars
+      }
+    `;
+
+    let count = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(request => new Observable(observer => {
+        if (request.operationName === "GetCounter") {
+          observer.next({
+            data: {
+              counter: ++count,
+              vars: request.variables,
+            },
+          });
+          setTimeout(() => {
+            observer.complete();
+          }, 10);
+        } else {
+          observer.error(new Error(`Unknown query: ${
+            request.operationName || request.query
+          }`));
+        }
+      })),
+    });
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => {
+        const [exec, query] = useLazyQuery(counterQuery, {
+          notifyOnNetworkStatusChange: true,
+          variables: {
+            hookVar: true,
+          },
+        });
+        return {
+          exec,
+          query,
+        };
+      },
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    expect(result.current.query.loading).toBe(false);
+    expect(result.current.query.called).toBe(false);
+    expect(result.current.query.data).toBeUndefined();
+
+    await expect(waitForNextUpdate({
+      timeout: 20,
+    })).rejects.toThrow('Timed out');
+
+    const expectedFinalData = {
+      counter: 1,
+      vars: {
+        hookVar: true,
+        execVar: true,
+      },
+    };
+
+    const execPromise = act(() => result.current.exec({
+      variables: {
+        execVar: true,
+      }
+    }).then(finalResult => {
+      expect(finalResult.loading).toBe(false);
+      expect(finalResult.called).toBe(true);
+      expect(finalResult.data).toEqual(expectedFinalData);
+    }));
+
+    expect(result.current.query.loading).toBe(true);
+    expect(result.current.query.called).toBe(true);
+    expect(result.current.query.data).toBeUndefined();
+    await waitForNextUpdate();
+    expect(result.current.query.loading).toBe(false);
+    expect(result.current.query.called).toBe(true);
+    expect(result.current.query.data).toEqual(expectedFinalData);
+
+    await execPromise;
+
+    await expect(waitForNextUpdate({
+      timeout: 20,
+    })).rejects.toThrow('Timed out');
   });
 
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {

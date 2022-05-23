@@ -139,7 +139,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       throw new InvariantError(
         "In order to initialize Apollo Client, you must specify 'link' and 'cache' properties in the options object.\n" +
         "These options are part of the upgrade requirements when migrating from Apollo Client 1.x to Apollo Client 2.x.\n" +
-        "For more information, please visit: https://www.apollographql.com/docs/tutorial/client.html#apollo-client-setup"
+        "For more information, please visit: https://www.apollographql.com/tutorials/fullstack-quickstart/setting-up-apollo-client"
       );
     }
 

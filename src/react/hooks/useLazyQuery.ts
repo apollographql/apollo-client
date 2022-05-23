@@ -3,6 +3,7 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useCallback, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
+import { mergeOptions } from '../../utilities';
 import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
@@ -32,10 +33,12 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
   );
 
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
+  const merged = execOptionsRef.current
+    ? mergeOptions(options, execOptionsRef.current)
+    : options;
 
   const useQueryResult = internalState.useQuery({
-    ...options,
-    ...execOptionsRef.current,
+    ...merged,
     skip: !execOptionsRef.current,
   });
 

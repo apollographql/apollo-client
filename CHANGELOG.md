@@ -11,6 +11,9 @@
 - Fix bug where `onCompleted()` and `onError()` are stale for `useMutation()`. <br/>
   [@charle692](https://github.com/charle692) in [#9740](https://github.com/apollographql/apollo-client/pull/9740)
 
+- Limit scope of `DeepMerger` object reuse, and avoid using `Object.isFrozen`, which can introduce differences between development and production if objects that were frozen using `Object.freeze` in development are left unfrozen in production. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9742](https://github.com/apollographql/apollo-client/pull/9742)
+
 ## Apollo Client 3.6.4 (2022-05-16)
 
 ### Bug Fixes

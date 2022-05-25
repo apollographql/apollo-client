@@ -28,7 +28,18 @@ export class MissingFieldError {
     public readonly path: MissingTree | Array<string | number>,
     public readonly query: DocumentNode,
     public readonly variables?: Record<string, any>,
-  ) {}
+  ) {
+    if (Array.isArray(this.path)) {
+      this.missing = this.message;
+      for (let i = this.path.length - 1; i >= 0; --i) {
+        this.missing = { [this.path[i]]: this.missing };
+      }
+    } else {
+      this.missing = this.path;
+    }
+  }
+
+  public readonly missing: MissingTree;
 }
 
 export interface FieldSpecifier {

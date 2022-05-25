@@ -1,5 +1,10 @@
 ## Apollo Client 3.7.0 (in development)
 
+### New Features
+
+- Implement `useFragment` hook, which represents a lightweight live binding into the `ApolloCache`, and never triggers network requests of its own. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8782](https://github.com/apollographql/apollo-client/pull/8782)
+
 - Replace `concast.cleanup` method with simpler `concast.beforeNext` API, which promises to call the given callback function just before the next result/error is delivered. In addition, `concast.removeObserver` no longer takes a `quietly?: boolean` parameter, since that parameter was partly responsible for cleanup callbacks sometimes not getting called. <br/>
   [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
 

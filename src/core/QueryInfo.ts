@@ -38,9 +38,13 @@ const destructiveMethodCounts = new (
   canUseWeakMap ? WeakMap : Map
 )<ApolloCache<any>, number>();
 
+type KeyOfType<T, U> = {
+  [P in keyof T]: T[P] extends U ? P : never
+}[keyof T]
+
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: keyof ApolloCache<any>,
+  methodName: KeyOfType<ApolloCache<any>, Function>,
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {

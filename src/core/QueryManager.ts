@@ -119,7 +119,7 @@ export class QueryManager<TStore> {
     ssrMode = false,
     clientAwareness = {},
     localState,
-    assumeImmutableResults,
+    assumeImmutableResults = !!cache.assumeImmutableResults,
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
@@ -138,7 +138,7 @@ export class QueryManager<TStore> {
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
-    this.assumeImmutableResults = !!assumeImmutableResults;
+    this.assumeImmutableResults = assumeImmutableResults;
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }

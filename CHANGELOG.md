@@ -8,7 +8,14 @@
 - Replace `concast.cleanup` method with simpler `concast.beforeNext` API, which promises to call the given callback function just before the next result/error is delivered. In addition, `concast.removeObserver` no longer takes a `quietly?: boolean` parameter, since that parameter was partly responsible for cleanup callbacks sometimes not getting called. <br/>
   [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
 
-## Apollo Client 3.6.5 (unreleased)
+## Apollo Client 3.6.6 (2022-05-26)
+
+### Bug Fixes
+
+- Allow `useLazyQuery(query, { defaultOptions })` to benefit from `defaultOptions.variables` and `client.defaultOptions.watchQuery.variables` merging. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9762](https://github.com/apollographql/apollo-client/pull/9762)
+
+## Apollo Client 3.6.5 (2022-05-23)
 
 ### Bug Fixes
 
@@ -18,8 +25,14 @@
 - Preserve `previousData` even when different query or client provided to `useQuery`, instead of resetting `previousData` to undefined in those cases, matching behavior prior to v3.6.0. <br/>
   [@benjamn](https://github.com/benjamn) in [#9734](https://github.com/apollographql/apollo-client/pull/9734)
 
+- Fix bug where `onCompleted()` and `onError()` are stale for `useMutation()`. <br/>
+  [@charle692](https://github.com/charle692) in [#9740](https://github.com/apollographql/apollo-client/pull/9740)
+
 - Limit scope of `DeepMerger` object reuse, and avoid using `Object.isFrozen`, which can introduce differences between development and production if objects that were frozen using `Object.freeze` in development are left unfrozen in production. <br/>
   [@benjamn](https://github.com/benjamn) in [#9742](https://github.com/apollographql/apollo-client/pull/9742)
+
+- Properly merge `variables` from original `useLazyQuery(query, { variables })` with `variables` passed to execution function. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9758](https://github.com/apollographql/apollo-client/pull/9758)
 
 ## Apollo Client 3.6.4 (2022-05-16)
 

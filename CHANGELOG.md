@@ -1,4 +1,4 @@
-## Apollo Client 3.6.6 (unreleased)
+## Apollo Client 3.6.6 (2022-05-26)
 
 ### Bug Fixes
 

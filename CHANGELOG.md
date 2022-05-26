@@ -1,3 +1,10 @@
+## Apollo Client 3.6.6 (unreleased)
+
+### Bug Fixes
+
+- Allow `useLazyQuery(query, { defaultOptions })` to benefit from `defaultOptions.variables` and `client.defaultOptions.watchQuery.variables` merging. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9762](https://github.com/apollographql/apollo-client/pull/9762)
+
 ## Apollo Client 3.6.5 (2022-05-23)
 
 ### Bug Fixes

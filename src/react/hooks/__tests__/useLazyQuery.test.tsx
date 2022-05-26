@@ -229,12 +229,16 @@ describe('useLazyQuery Hook', () => {
     const counterQuery: TypedDocumentNode<{
       counter: number;
     }, {
-      hookVar?: any;
-      execVar?: any;
+      hookVar?: boolean;
+      execVar?: boolean;
+      localDefaultVar?: boolean;
+      globalDefaultVar?: boolean;
     }> = gql`
       query GetCounter (
         $hookVar: Boolean
         $execVar: Boolean
+        $localDefaultVar: Boolean
+        $globalDefaultVar: Boolean
       ) {
         counter
         vars
@@ -243,6 +247,13 @@ describe('useLazyQuery Hook', () => {
 
     let count = 0;
     const client = new ApolloClient({
+      defaultOptions: {
+        watchQuery: {
+          variables: {
+            globalDefaultVar: true,
+          },
+        },
+      },
       cache: new InMemoryCache(),
       link: new ApolloLink(request => new Observable(observer => {
         if (request.operationName === "GetCounter") {
@@ -270,6 +281,11 @@ describe('useLazyQuery Hook', () => {
           variables: {
             hookVar: true,
           },
+          defaultOptions: {
+            variables: {
+              localDefaultVar: true,
+            },
+          },
         });
         return {
           exec,
@@ -296,6 +312,8 @@ describe('useLazyQuery Hook', () => {
     const expectedFinalData = {
       counter: 1,
       vars: {
+        globalDefaultVar: true,
+        localDefaultVar: true,
         hookVar: true,
         execVar: true,
       },
@@ -304,7 +322,7 @@ describe('useLazyQuery Hook', () => {
     const execPromise = act(() => result.current.exec({
       variables: {
         execVar: true,
-      }
+      },
     }).then(finalResult => {
       expect(finalResult.loading).toBe(false);
       expect(finalResult.called).toBe(true);
@@ -320,6 +338,80 @@ describe('useLazyQuery Hook', () => {
     expect(result.current.query.data).toEqual(expectedFinalData);
 
     await execPromise;
+
+    await expect(waitForNextUpdate({
+      timeout: 20,
+    })).rejects.toThrow('Timed out');
+
+    const refetchPromise = act(() => result.current.query.reobserve({
+      fetchPolicy: "network-only",
+      nextFetchPolicy: "cache-first",
+      variables: {
+        execVar: false,
+      },
+    }).then(finalResult => {
+      expect(finalResult.loading).toBe(false);
+      expect(finalResult.data).toEqual({
+        counter: 2,
+        vars: {
+          execVar: false,
+        },
+      });
+    }));
+    await waitForNextUpdate();
+    expect(result.current.query.loading).toBe(false);
+    expect(result.current.query.called).toBe(true);
+    expect(result.current.query.data).toEqual({
+      counter: 2,
+      vars: {
+        execVar: false,
+      },
+    });
+
+    await refetchPromise;
+
+    await expect(waitForNextUpdate({
+      timeout: 20,
+    })).rejects.toThrow('Timed out');
+
+    const execPromise2 = act(() => result.current.exec({
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
+      variables: {
+        execVar: true,
+      },
+    }).then(finalResult => {
+      expect(finalResult.loading).toBe(false);
+      expect(finalResult.called).toBe(true);
+      expect(finalResult.data).toEqual({
+        counter: 3,
+        vars: {
+          ...expectedFinalData.vars,
+          execVar: true,
+        },
+      });
+    }));
+
+    expect(result.current.query.loading).toBe(true);
+    expect(result.current.query.called).toBe(true);
+    expect(result.current.query.data).toEqual({
+      counter: 2,
+      vars: {
+        execVar: false,
+      },
+    });
+    await waitForNextUpdate();
+    expect(result.current.query.loading).toBe(false);
+    expect(result.current.query.called).toBe(true);
+    expect(result.current.query.data).toEqual({
+      counter: 3,
+      vars: {
+        ...expectedFinalData.vars,
+        execVar: true,
+      },
+    });
+
+    await execPromise2;
 
     await expect(waitForNextUpdate({
       timeout: 20,

@@ -30,7 +30,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, canUseWeakSet, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { canUseWeakMap, canUseWeakSet, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
   prototype: {
@@ -276,7 +276,7 @@ class InternalState<TData, TVariables> {
         // subscriptions, though it does feel less than ideal that reobserve
         // (potentially) kicks off a network request (for example, when the
         // variables have changed), which is technically a side-effect.
-        this.observable.reobserve(watchQueryOptions);
+        this.observable.reobserve(this.getObsQueryOptions());
 
         // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
         // but save the current data as this.previousData, just like setResult
@@ -324,6 +324,38 @@ class InternalState<TData, TVariables> {
     ) {
       this.result = void 0;
     }
+  }
+
+  private getObsQueryOptions(): WatchQueryOptions<TVariables, TData> {
+    const toMerge: Array<
+      Partial<WatchQueryOptions<TVariables, TData>>
+    > = [];
+
+    const globalDefaults = this.client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+
+    if (this.queryHookOptions.defaultOptions) {
+      toMerge.push(this.queryHookOptions.defaultOptions);
+    }
+
+    // We use compact rather than mergeOptions for this part of the merge,
+    // because we want watchQueryOptions.variables (if defined) to replace
+    // this.observable.options.variables whole. This replacement allows
+    // removing variables by removing them from the variables input to
+    // useQuery. If the variables were always merged together (rather than
+    // replaced), there would be no way to remove existing variables.
+    // However, the variables from options.defaultOptions and globalDefaults
+    // (if provided) should be merged, to ensure individual defaulted
+    // variables always have values, if not otherwise defined in
+    // observable.options or watchQueryOptions.
+    toMerge.push(compact(
+      this.observable && this.observable.options,
+      this.watchQueryOptions,
+    ));
+
+    return toMerge.reduce(
+      mergeOptions
+    ) as WatchQueryOptions<TVariables, TData>;
   }
 
   private ssrDisabledResult = maybeDeepFreeze({
@@ -424,13 +456,7 @@ class InternalState<TData, TVariables> {
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
         || this.observable // Reuse this.observable if possible (and not SSR)
-        || this.client.watchQuery(mergeOptions(
-          // Any options.defaultOptions passed to useQuery serve as default
-          // options because we use them only here, when first creating the
-          // ObservableQuery by calling client.watchQuery.
-          this.queryHookOptions.defaultOptions,
-          this.watchQueryOptions,
-        ));
+        || this.client.watchQuery(this.getObsQueryOptions());
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),

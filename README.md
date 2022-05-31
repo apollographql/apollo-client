@@ -19,12 +19,11 @@ The Apollo Client API reference can be found at: <br/>
 Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apollo's official learning platform: <br/>
 [https://odyssey.apollographql.com/](https://odyssey.apollographql.com/)
 
-## Maintainers
+## Apollo Maintainers
 
-- [@benjamn](https://github.com/benjamn) (Apollo)
-- [@brainkim](https://github.com/brainkim) (Apollo)
-- [@jcreighton](https://github.com/jcreighton) (Netflix)
-- [@hwillson](https://github.com/hwillson) (Apollo)
+- [@benjamn](https://github.com/benjamn)
+- [@hwillson](https://github.com/hwillson)
+- [@jpvajda](https://github.com/jpvajda)
 
 ## Who is Apollo?
 

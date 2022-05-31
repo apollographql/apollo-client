@@ -2,14 +2,18 @@ import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
+import userEvent from '@testing-library/user-event';
+import fetchMock from "fetch-mock";
+
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { BatchHttpLink } from '../../../link/batch-http';
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -2074,6 +2078,75 @@ describe('useMutation Hook', () => {
       expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].called).toBe(true);
+    });
+
+    it("refetchQueries should work with BatchHttpLink", async () => {
+      const MUTATION_1 = gql`
+        mutation DoSomething {
+          doSomething {
+            message
+          }
+        }
+      `;
+
+      const QUERY_1 = gql`
+        query Items {
+          items {
+            id
+          }
+        }
+      `;
+
+      fetchMock.restore();
+
+      const responseBodies = [
+        { data: { items: [{ id: 1 }, { id: 2 }] }},
+        { data: { doSomething: { message: 'success' }}},
+        { data: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] }},
+      ];
+
+      fetchMock.post("/graphql", (url, opts) => new Promise(resolve => {
+        resolve({
+          body: responseBodies.shift(),
+        });
+      }));
+
+      const Test = () => {
+        const { data } = useQuery(QUERY_1);
+        const [mutate] = useMutation(MUTATION_1, {
+          awaitRefetchQueries: true,
+          refetchQueries: [QUERY_1],
+        });
+
+        const { items = [] } = data || {};
+
+        return <>
+          <button onClick={() => {
+            return mutate();
+          }} type="button">
+            mutate
+          </button>
+          {items.map((c: any) => (
+            <div key={c.id}>item {c.id}</div>
+          ))}
+        </>;
+      };
+
+      const client = new ApolloClient({
+        link: new BatchHttpLink({
+          uri: '/graphql',
+          batchMax: 10,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      render(<ApolloProvider client={client}><Test /></ApolloProvider>);
+
+      await screen.findByText('item 1');
+
+      userEvent.click(screen.getByRole('button', { name: /mutate/i }));
+
+      await screen.findByText('item 3');
     });
   });
 });

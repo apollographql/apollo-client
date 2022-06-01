@@ -22,9 +22,10 @@ import {
   getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
-  DeepMerger,
   getFragmentFromSelection,
   maybeDeepFreeze,
+  mergeDeepArray,
+  DeepMerger,
   isNonNullObject,
   canUseWeakMap,
   compact,
@@ -49,8 +50,6 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   canonizeResults: boolean;
   fragmentMap: FragmentMap;
-  // General-purpose deep-merge function for use during reads.
-  merge<T>(existing: T, incoming: T): T;
 };
 
 export type ExecResult<R = any> = {
@@ -233,7 +232,6 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
-    const merger = new DeepMerger;
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: rootRef,
@@ -246,15 +244,6 @@ export class StoreReader {
         varString: canonicalStringify(variables),
         canonizeResults,
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-        merge(a, b) {
-          // We use the same DeepMerger instance throughout the read, so any
-          // merged objects created during this read can be updated later in the
-          // read using in-place/destructive property assignments. Once the read
-          // is finished, these objects will be frozen, but in the meantime it's
-          // good for performance and memory usage if we avoid allocating a new
-          // object for every merged property.
-          return merger.merge(a, b);
-        },
       },
     });
 
@@ -325,8 +314,9 @@ export class StoreReader {
     const { variables, policies, store } = context;
     const typename = store.getFieldValue<string>(objectOrReference, "__typename");
 
-    let result: any = {};
+    const objectsToMerge: Record<string, any>[] = [];
     let missing: MissingTree | undefined;
+    const missingMerger = new DeepMerger();
 
     if (this.config.addTypename &&
         typeof typename === "string" &&
@@ -334,12 +324,12 @@ export class StoreReader {
       // Ensure we always include a default value for the __typename
       // field, if we have one, and this.config.addTypename is true. Note
       // that this field can be overridden by other merged objects.
-      result = { __typename: typename };
+      objectsToMerge.push({ __typename: typename });
     }
 
     function handleMissing<T>(result: ExecResult<T>, resultName: string): T {
       if (result.missing) {
-        missing = context.merge(missing, { [resultName]: result.missing });
+        missing = missingMerger.merge(missing, { [resultName]: result.missing });
       }
       return result.result;
     }
@@ -363,7 +353,7 @@ export class StoreReader {
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
-            missing = context.merge(missing, {
+            missing = missingMerger.merge(missing, {
               [resultName]: `Can't find field '${
                 selection.name.value
               }' on ${
@@ -404,7 +394,7 @@ export class StoreReader {
         }
 
         if (fieldValue !== void 0) {
-          result = context.merge(result, { [resultName]: fieldValue });
+          objectsToMerge.push({ [resultName]: fieldValue });
         }
 
       } else {
@@ -419,6 +409,7 @@ export class StoreReader {
       }
     });
 
+    const result = mergeDeepArray(objectsToMerge);
     const finalResult: ExecResult = { result, missing };
     const frozen = context.canonizeResults
       ? this.canon.admit(finalResult)
@@ -443,10 +434,11 @@ export class StoreReader {
     context,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: MissingTree | undefined;
+    let missingMerger = new DeepMerger<MissingTree[]>();
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
-        missing = context.merge(missing, { [i]: childResult.missing });
+        missing = missingMerger.merge(missing, { [i]: childResult.missing });
       }
       return childResult.result;
     }

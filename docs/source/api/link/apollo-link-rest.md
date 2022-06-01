@@ -59,7 +59,7 @@ You can then fetch your data using Apollo Client:
 ```js
 // Invoke the query and log the person's name
 client.query({ query }).then(response => {
-  console.log(response.data.name);
+  console.log(response.data.person.name);
 });
 ```
 
@@ -384,11 +384,11 @@ const link = new RestLink({
   },
   defaultSerializer: (data: any, headers: Headers) => {
     const formData = new FormData();
-    for (let key in body) {
-      formData.append(key, body[key]);
+    for (let key in data) {
+      formData.append(key, data[key]);
     }
     headers.set("Content-Type", "x-www-form-encoded")
-    return {body: formData, headers};
+    return {data: formData, headers};
   }
 });
 ```

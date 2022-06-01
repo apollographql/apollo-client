@@ -59,10 +59,10 @@ Let's say we're creating a to-do list application and we want the user to be abl
 import { gql, useMutation } from '@apollo/client';
 
 const ADD_TODO = gql`
-  mutation AddTodo($text: String!) {
-    addTodo(text: $text) {
+  mutation AddTodo($type: String!) {
+    addTodo(type: $type) {
       id
-      text
+      type
     }
   }
 `;
@@ -84,7 +84,7 @@ function AddTodo() {
       <form
         onSubmit={e => {
           e.preventDefault();
-          addTodo({ variables: { text: input.value } });
+          addTodo({ variables: { type: input.value } });
           input.value = '';
         }}
       >
@@ -111,7 +111,7 @@ The `useMutation` hook accepts an `options` object as its second parameter. Here
 ```js
 const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
   variables: {
-    text: "placeholder",
+    type: "placeholder",
     someOtherVariable: 1234,
   },
 });
@@ -124,18 +124,18 @@ You can _also_ provide options directly to your mutate function, as demonstrated
 ```js
 addTodo({
   variables: {
-    text: input.value,
+    type: input.value,
   },
 });
 ```
 
-Here, we use the `variables` option to provide the values of any GraphQL variables that our mutation requires (specifically, the `text` of the created to-do item).
+Here, we use the `variables` option to provide the values of any GraphQL variables that our mutation requires (specifically, the `type` of the created to-do item).
 
 #### Option precedence
 
 If you provide the same option to both `useMutation` _and_ your mutate function, the mutate function's value takes precedence. In the specific case of the `variables` option, the two objects are merged _shallowly_, which means any variables provided only to `useMutation` are preserved in the resulting object. This helps you set default values for variables.
 
-In [the example snippets above](#providing-options), `input.value` would override `"placeholder"` as the value of the `text` variable. The value of `someOtherVariable` (`1234`) would be preserved.
+In [the example snippets above](#providing-options), `input.value` would override `"placeholder"` as the value of the `type` variable. The value of `someOtherVariable` (`1234`) would be preserved.
 
 ### Tracking mutation status
 
@@ -235,7 +235,7 @@ In most cases, a mutation response should include any object(s) the mutation mod
 {
   "__typename": "Todo",
   "id": "5",
-  "text": "Buy grapes 🍇"
+  "type": "groceries"
 }
 ```
 

@@ -38,6 +38,13 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     });
   });
 
+  const canResetObservableRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      canResetObservableRef.current = true;
+    };
+  }, []);
+
   const ref = useRef({ client, subscription, options });
   useEffect(() => {
     let shouldResubscribe = options?.shouldResubscribe;
@@ -46,7 +53,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     }
 
     if (options?.skip) {
-      if (!options?.skip !== !ref.current.options?.skip) {
+      if (!options?.skip !== !ref.current.options?.skip || canResetObservableRef.current) {
         setResult({
           loading: false,
           data: void 0,
@@ -54,15 +61,16 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
           variables: options?.variables,
         });
         setObservable(null);
+        canResetObservableRef.current = false;
       }
     } else if (
-      shouldResubscribe !== false && (
-        client !== ref.current.client ||
-        subscription !== ref.current.subscription ||
-        options?.fetchPolicy !== ref.current.options?.fetchPolicy ||
-        !options?.skip !== !ref.current.options?.skip ||
-        !equal(options?.variables, ref.current.options?.variables)
-      )
+      (shouldResubscribe !== false &&
+        (client !== ref.current.client ||
+          subscription !== ref.current.subscription ||
+          options?.fetchPolicy !== ref.current.options?.fetchPolicy ||
+          !options?.skip !== !ref.current.options?.skip ||
+          !equal(options?.variables, ref.current.options?.variables))) ||
+      canResetObservableRef.current
     ) {
       setResult({
         loading: true,
@@ -76,10 +84,11 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
         fetchPolicy: options?.fetchPolicy,
         context: options?.context,
       }));
+      canResetObservableRef.current = false;
     }
 
     Object.assign(ref.current, { client, subscription, options });
-  }, [client, subscription, options]);
+  }, [client, subscription, options, canResetObservableRef.current]);
 
   useEffect(() => {
     if (!observable) {

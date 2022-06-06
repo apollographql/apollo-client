@@ -15,7 +15,7 @@ For up to date release notes, refer to the project's [Change Log](https://github
 
 ## 3.7
 
-Release 3.7: will focus on: cache & performance improvements as well as adding new hooks: `useBackgroundQuery`, `useFragment` See Github [3.7 Milestone](https://github.com/apollographql/apollo-client/milestone/28) for more details.
+- Release 3.7: will focus on cache & performance improvements as well as adding new hooks: `useBackgroundQuery`, `useFragment` See Github [3.7 Milestone](https://github.com/apollographql/apollo-client/milestone/28) for more details.
 
 ## 3.8
 

@@ -119,8 +119,7 @@ export class OperationBatcher {
               requestCopy.subscribers.size < 1) {
             // If this is last request from queue, remove queue entirely
             if (batch.delete(requestCopy) && batch.size < 1) {
-              clearTimeout(this.scheduledBatchTimer);
-              this.batchesByKey.delete(key);
+              this.consumeQueue(key);
               // If queue was in flight, cancel it
               batch.subscription?.unsubscribe();
             }

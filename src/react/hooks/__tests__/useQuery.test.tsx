@@ -2214,9 +2214,8 @@ describe('useQuery Hook', () => {
       rerender({ variables: { first: 1 } });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
+      await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(3));
       expect(onCompleted).toHaveBeenLastCalledWith(data1);
-
-      expect(onCompleted).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -2941,7 +2940,7 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
       expect(onCompleted).toHaveBeenCalledWith({ hello: 'world' });
       await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
       expect(onCompleted).toHaveBeenCalledTimes(1);
@@ -3106,6 +3105,52 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world 3' });
       expect(onCompleted).toHaveBeenCalledTimes(3);
+    });
+
+    // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794
+    it("onCompleted can set state without causing react errors", async () => {
+      const errorSpy = jest.spyOn(console, "error");
+      const query = gql`
+        {
+          hello
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      cache.writeQuery({
+        query,
+        data: { hello: "world" },
+      });
+
+      const ChildComponent: React.FC<{
+        setOnCompletedCalled: React.Dispatch<React.SetStateAction<boolean>>;
+      }> = ({ setOnCompletedCalled }) => {
+        useQuery(query, {
+          fetchPolicy: "cache-only",
+          onCompleted: () => {
+            setOnCompletedCalled(true);
+          },
+        });
+
+        return null;
+      };
+
+      const ParentComponent: React.FC = () => {
+        const [onCompletedCalled, setOnCompletedCalled] = useState(false);
+        return (
+          <MockedProvider mocks={[]} cache={cache}>
+            <div>
+              <ChildComponent setOnCompletedCalled={setOnCompletedCalled} />
+              onCompletedCalled: {String(onCompletedCalled)}
+            </div>
+          </MockedProvider>
+        );
+      };
+
+      const { findByText } = render(<ParentComponent />);
+      await findByText("onCompletedCalled: true");
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
   });
 

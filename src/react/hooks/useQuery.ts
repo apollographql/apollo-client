@@ -517,9 +517,8 @@ class InternalState<TData, TVariables> {
     // the same (===) result object, unless state.setResult has been called, or
     // we're doing server rendering and therefore override the result below.
     if (!this.result) {
-      this.handleErrorOrCompleted(
-        this.result = this.observable.getCurrentResult()
-      );
+      const result = (this.result = this.observable.getCurrentResult());
+      setTimeout(() => this.handleErrorOrCompleted(result), 0);
     }
     return this.result;
   }

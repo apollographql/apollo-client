@@ -317,5 +317,147 @@ describe('relayStylePagination', () => {
         }
       });
     });
+
+    it("replaces the existing data if a query using `after` is repeated", () => {
+      const page = {
+        edges: [{ cursor: "alpha", node: makeReference("fakeAlpha") }],
+        pageInfo: {
+          hasPreviousPage: false,
+          hasNextPage: true,
+          startCursor: "alpha",
+          endCursor: "alpha",
+        },
+      };
+
+      const result = merge(page, page, {
+        ...options,
+        args: {
+          // Represents the cursor that comes immediately before 'alpha'
+          after: "zeta",
+        },
+      });
+
+      expect(result).toEqual(page);
+    });
+
+    it("replaces the existing data if a query using `before` is repeated", () => {
+      const page = {
+        edges: [{ cursor: "alpha", node: makeReference("fakeAlpha") }],
+        pageInfo: {
+          hasPreviousPage: true,
+          hasNextPage: false,
+          startCursor: "alpha",
+          endCursor: "alpha",
+        },
+      };
+
+      const result = merge(page, page, {
+        ...options,
+        args: {
+          // Represents the cursor that comes immediately after 'alpha'
+          before: "beta",
+        },
+      });
+
+      expect(result).toEqual(page);
+    });
+
+    it("slices the existing data if two pages overlap when using `after`", () => {
+      const existingEdges = [
+        { cursor: "alpha", node: makeReference("fakeAlpha") },
+        { cursor: "beta", node: makeReference("fakeBeta") },
+      ];
+
+      const incomingEdges = [
+        { cursor: "beta", node: makeReference("fakeBeta2") },
+        { cursor: "gamma", node: makeReference("fakeGamma") },
+      ];
+
+      const result = merge(
+        {
+          edges: existingEdges,
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: "alpha",
+            endCursor: "beta",
+          },
+        },
+        {
+          edges: incomingEdges,
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: true,
+            startCursor: "beta",
+            endCursor: "gamma",
+          },
+        },
+        {
+          ...options,
+          args: {
+            after: "alpha",
+          },
+        }
+      );
+
+      expect(result).toEqual({
+        edges: [existingEdges[0], ...incomingEdges],
+        pageInfo: {
+          hasPreviousPage: false,
+          hasNextPage: true,
+          startCursor: "alpha",
+          endCursor: "gamma",
+        },
+      });
+    });
+
+    it("slices the existing data if two pages overlap when using `before`", () => {
+      const existingEdges = [
+        { cursor: "beta", node: makeReference("fakeBeta") },
+        { cursor: "gamma", node: makeReference("fakeGamma") },
+      ];
+
+      const incomingEdges = [
+        { cursor: "alpha", node: makeReference("fakeAlpha") },
+        { cursor: "beta", node: makeReference("fakeBeta2") },
+      ];
+
+      const result = merge(
+        {
+          edges: existingEdges,
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: false,
+            startCursor: "beta",
+            endCursor: "gamma",
+          },
+        },
+        {
+          edges: incomingEdges,
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: true,
+            startCursor: "alpha",
+            endCursor: "beta",
+          },
+        },
+        {
+          ...options,
+          args: {
+            before: "gamma",
+          },
+        }
+      );
+
+      expect(result).toEqual({
+        edges: [...incomingEdges, existingEdges[1]],
+        pageInfo: {
+          hasPreviousPage: true,
+          hasNextPage: false,
+          startCursor: "alpha",
+          endCursor: "gamma",
+        },
+      });
+    });
   })
 });

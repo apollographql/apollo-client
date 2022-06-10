@@ -11,6 +11,9 @@
 - Ensure `useQuery(query, { skip: true }).called === false` rather than always returning `called` as `true`. <br/>
   [@KucharskiPiotr](https://github.com/KucharskiPiotr) in [#9798](https://github.com/apollographql/apollo-client/pull/9798)
 
+- Allow abandoned `reobserve` requests to unsubscribe from their underlying `Observable`. <br/>
+  [@javier-garcia-meteologica](https://github.com/javier-garcia-meteologica) in [#9791](https://github.com/apollographql/apollo-client/pull/9791)
+
 ## Apollo Client 3.6.7 (2022-06-10)
 
 ### Bug Fixes

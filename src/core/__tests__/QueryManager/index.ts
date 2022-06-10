@@ -29,6 +29,7 @@ import { QueryManager } from '../../QueryManager';
 import { ApolloError } from '../../../errors';
 
 // testing utils
+import { waitFor } from '@testing-library/react';
 import wrap from '../../../testing/core/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
@@ -646,21 +647,15 @@ describe('QueryManager', () => {
     // Check that reobserve cancels the previous connection while watchQuery remains active
     observableQuery.reobserve({ variables: { offset: 20 } });
 
-    return new Promise(
-      // Unsubscribing from the link requires around 5ms to take effect
-      resolve => setTimeout(resolve, 5)
-    ).then(async () => {
+    return waitFor(() => {
       // Verify that previous connection was aborted by reobserve
       expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
-
+    }).then(() => {
       subscription.unsubscribe();
-
-      // Unsubscribing from the link requires around 5ms to take effect
-      await new Promise(resolve => setTimeout(resolve, 5))
-
-      expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
-      // Verify that all connections were finally aborted (reobserve + unsubscribe)
-      expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
+      return waitFor(() => {
+        expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
+        expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
+      });
     }).then(resolve, reject);
   });
 

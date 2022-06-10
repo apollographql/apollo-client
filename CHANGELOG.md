@@ -8,6 +8,9 @@
 - Improve repository build scripts to work better on Windows. <br/>
   [@dylanwulf](https://github.com/dylanwulf) in [#9805](https://github.com/apollographql/apollo-client/pull/9805)
 
+- Ensure `useQuery(query, { skip: true }).called === false` rather than always returning `called` as `true`. <br/>
+  [@KucharskiPiotr](https://github.com/KucharskiPiotr) in [#9798](https://github.com/apollographql/apollo-client/pull/9798)
+
 ## Apollo Client 3.6.7 (2022-06-10)
 
 ### Bug Fixes

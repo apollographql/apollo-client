@@ -546,7 +546,7 @@ class InternalState<TData, TVariables> {
       client: this.client,
       observable: this.observable,
       variables: this.observable.variables,
-      called: true,
+      called: !this.queryHookOptions.skip,
       previousData: this.previousData,
     });
 

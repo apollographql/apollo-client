@@ -1,6 +1,5 @@
 ---
 title: class InMemoryCache
-sidebar_title: InMemoryCache
 description: API reference
 api_reference: true
 ---
@@ -152,7 +151,7 @@ The default value is `false`.
 
 ### Signature
 
-```ts:title=src/cache/core/cache.ts
+```ts title="src/cache/core/cache.ts"
 readQuery<QueryType, TVariables = any>(
   options: DataProxy.Query<TVariables>,
   optimistic: boolean = false,
@@ -299,7 +298,7 @@ The default value is `false`.
 
 ### Signature
 
-```ts:title=src/cache/core/cache.ts
+```ts title="src/cache/core/cache.ts"
 writeQuery<TData = any, TVariables = any>(
   options: Cache.WriteQueryOptions<TData, TVariables>,
 ): Reference | undefined
@@ -436,7 +435,7 @@ The returned value is automatically passed to [`writeQuery`](#writequery), which
 
 ### Signature
 
-```ts:title=src/cache/core/cache.ts
+```ts title="src/cache/core/cache.ts"
 public updateQuery<TData = any, TVariables = any>(
   options: Cache.UpdateQueryOptions<TData, TVariables>,
   update: (data: TData | null) => TData | null | void,
@@ -599,7 +598,7 @@ The default value is `false`.
 
 ### Signature
 
-```ts:title=src/cache/core/cache.ts
+```ts title="src/cache/core/cache.ts"
 readFragment<FragmentType, TVariables = any>(
   options: DataProxy.Fragment<TVariables>,
   optimistic: boolean = false,
@@ -752,7 +751,7 @@ The default value is `false`.
 
 ### Signature
 
-```ts:title=src/cache/core/cache.ts
+```ts title="src/cache/core/cache.ts"
 writeFragment<TData = any, TVariables = any>(
   options: Cache.WriteFragmentOptions<TData, TVariables>,
 ): Reference | undefined
@@ -895,7 +894,7 @@ The returned value is automatically passed to [`writeFragment`](#writefragment),
 
 ### Signature
 
-```ts:title=src/cache/core/cache.ts
+```ts title="src/cache/core/cache.ts"
 public updateFragment<TData = any, TVariables = any>(
   options: Cache.UpdateFragmentOptions<TData, TVariables>,
   update: (data: TData | null) => TData | null | void,
@@ -942,7 +941,7 @@ Accepts the following parameters:
 
 ### Signature
 
-```ts:title=src/cache/inmemory/inMemoryCache.ts
+```ts title="src/cache/inmemory/inMemoryCache.ts"
 identify(object: StoreObject | Reference): string | undefined
 ```
 
@@ -1139,7 +1138,7 @@ A sentinel object that you can return from a modifier function to indicate that 
 
 ### Signature
 
-```ts:title=src/cache/inmemory/inMemoryCache.ts
+```ts title="src/cache/inmemory/inMemoryCache.ts"
 modify(options: Cache.ModifyOptions): boolean
 ```
 
@@ -1157,7 +1156,7 @@ For usage instructions, see [`cache.gc`](../../caching/garbage-collection/#cache
 
 ### Signature
 
-```ts:title=src/cache/inmemory/inMemoryCache.ts
+```ts title="src/cache/inmemory/inMemoryCache.ts"
 gc()
 ```
 
@@ -1254,7 +1253,7 @@ The default value is `true`.
 
 ### Signature
 
-```ts:title=src/cache/inmemory/inMemoryCache.ts
+```ts title="src/cache/inmemory/inMemoryCache.ts"
 evict(options: Cache.EvictOptions): boolean
 ```
 
@@ -1294,7 +1293,7 @@ The default value is `false`.
 
 ### Signature
 
-```ts:title=src/cache/inmemory/inMemoryCache.ts
+```ts title="src/cache/inmemory/inMemoryCache.ts"
 extract(optimistic: boolean = false): NormalizedCacheObject
 ```
 
@@ -1334,7 +1333,7 @@ Accepts the following parameters:
 
 ### Signature
 
-```ts:title=src/cache/inmemory/inMemoryCache.ts
+```ts title="src/cache/inmemory/inMemoryCache.ts"
 restore(data: NormalizedCacheObject): this
 ```
 
@@ -1380,6 +1379,6 @@ The reactive variable's initial value.
 
 ### Signature
 
-```ts:title=src/cache/inmemory/inMemoryCache.ts
+```ts title="src/cache/inmemory/inMemoryCache.ts"
 makeVar<T>(value: T): ReactiveVar<T>
 ```

@@ -101,7 +101,7 @@ export function useMutation<
         }
       }
 
-      baseOptions.onCompleted?.(response.data!);
+      ref.current.options?.onCompleted?.(response.data!);
       executeOptions.onCompleted?.(response.data!);
       return response;
     }).catch((error) => {
@@ -122,8 +122,8 @@ export function useMutation<
         }
       }
 
-      if (baseOptions.onError || clientOptions.onError) {
-        baseOptions.onError?.(error);
+      if (ref.current.options?.onError || clientOptions.onError) {
+        ref.current.options?.onError?.(error);
         executeOptions.onError?.(error);
         // TODO(brian): why are we returning this here???
         return { data: void 0, errors: error };
@@ -137,8 +137,12 @@ export function useMutation<
     setResult({ called: false, loading: false, client });
   }, []);
 
-  useEffect(() => () => {
-    ref.current.isMounted = false;
+  useEffect(() => {
+    ref.current.isMounted = true;
+
+    return () => {
+      ref.current.isMounted = false;
+    };
   }, []);
 
   return [execute, { reset, ...result }];

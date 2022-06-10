@@ -1,10 +1,7 @@
 ---
 title: Caching in Apollo Client
 description: Overview
-sidebar_title: Overview
 ---
-
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 Apollo Client stores the results of your GraphQL queries in a local, [normalized](#data-normalization), in-memory cache. This enables Apollo Client to respond almost immediately to queries for already-cached data, without even sending a network request.
 
@@ -93,7 +90,7 @@ Next, the cache takes each field that contains an object and replaces its value 
 
 For example, here's the `Person` object from the example above _before_ reference replacement:
 
-```json{5-9}
+```json {5-9}
 {
   "__typename": "Person",
   "id": "cGVvcGxlOjE=",
@@ -108,7 +105,7 @@ For example, here's the `Person` object from the example above _before_ referenc
 
 And here's that same object _after_ replacement:
 
-```json{5-7}
+```json {5-7}
 {
   "__typename": "Person",
   "id": "cGVvcGxlOjE=",

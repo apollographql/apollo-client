@@ -1,9 +1,6 @@
 ---
 title: Customizing the behavior of cached fields
-sidebar_title: Customizing field behavior
 ---
-
-import {ExpansionPanel} from 'gatsby-theme-apollo-docs';
 
 You can customize how a particular field in your Apollo Client cache is read and written. To do so, you define a **field policy** for the field. A field policy can include:
 
@@ -13,7 +10,7 @@ You can customize how a particular field in your Apollo Client cache is read and
 
 You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whichever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the field's parent type. The following example defines a field policy for the `name` field of a `Person` type:
 
-```ts{5-10}
+```ts {5-10}
 const cache = new InMemoryCache({
   typePolicies: {
     Person: {
@@ -81,6 +78,43 @@ const cache = new InMemoryCache({
   },
 });
 ```
+
+If a field requires numerous parameters then each parameter must be wrapped in a variable that is then destructured and returned.
+Each parameter will be available as individual subfields.
+
+The following `read` function assigns a default value of `UNKNOWN FIRST_NAME` to the `first_name` subfield of a `fullName` field and a `UNKNOWN LAST_NAME` to the `last_name` of a `fullName` field.
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        fullName: {
+          read(full_name = {
+            first_name: "UNKNOWN FIRST_NAME",
+            last_name: "UNKNOWN LAST_NAME",
+          }) {
+            return { ...full_name };
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+The following `query` returns the `first_name` and `last_name` subfields from the `fullName` field:
+
+```graphql
+query personWithFullName {
+  fullName {
+    first_name
+    last_name
+  }
+}
+```
+
+If a field accepts arguments, the second parameter includes the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
 
 You can define a `read` function for a field that isn't even defined in your schema. For example, the following `read` function enables you to query a `userId` field that is always populated with locally stored data:
 
@@ -280,7 +314,7 @@ In summary, the `Book.author` policy above allows the cache to safely merge the 
 
 Beginning with Apollo Client 3.3, you can avoid having to configure `merge` functions for lots of different fields that might hold an `Author` object, and instead put the `merge` configuration in the `Author` type policy:
 
-```ts{13}
+```ts {13}
 const cache = new InMemoryCache({
   typePolicies: {
     Book: {

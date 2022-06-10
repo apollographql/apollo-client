@@ -1,3 +1,10 @@
+## Apollo Client 3.6.7 (2022-06-10)
+
+### Bug Fixes
+
+- Fix regression (introduced in v3.6.0) that caused `BatchHttpLink` to discard pending batched queries on early completion of the underlying `Observable`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9793](https://github.com/apollographql/apollo-client/pull/9793)
+
 ## Apollo Client 3.6.6 (2022-05-26)
 
 ### Bug Fixes

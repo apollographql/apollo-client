@@ -1650,6 +1650,80 @@ describe("type policies", function () {
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
 
+    it("should return correct variables in read function", function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Country: {
+            fields: {
+              isCanada: {
+                read(_, { readField }) {
+                  return readField("name") === "CA";
+                }
+              },
+              name: {
+                read(_, { variables }) {
+                  return variables?.code;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      cache.writeQuery({
+        query: gql`
+          query Countries($code: ID!) {
+            country(code: $code) {
+              name
+            }
+          }
+        `,
+        data: {
+          country: {
+            __typename: "Country",
+            name: "CA",
+          },
+        },
+        variables: {
+          code: "CA",
+        },
+      });
+
+      const expectedExtraction = {
+        ROOT_QUERY: {
+          __typename: "Query",
+          "country({\"code\":\"CA\"})": {
+            __typename: "Country",
+            name: "CA",
+          },
+        },
+      };
+
+      expect(cache.extract(true)).toEqual(expectedExtraction);
+
+      const expectedResult = {
+        country: {
+          __typename: "Country",
+          name: "CA",
+          isCanada: true,
+        },
+      };
+
+      expect(cache.readQuery({
+        query: gql`
+          query Countries($code: ID!) {
+            country(code: $code) {
+              name
+              isCanada @client
+            }
+          }
+        `,
+        variables: {
+          code: "CA",
+        },
+      })).toEqual(expectedResult);
+    });
+
     it("read and merge can cooperate through options.storage", function () {
       const cache = new InMemoryCache({
         typePolicies: {

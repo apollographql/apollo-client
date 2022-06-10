@@ -1,3 +1,10 @@
+## Apollo Client 3.6.8 (unreleased)
+
+### Bug Fixes
+
+- Fix incorrect `variables` passed in `FieldFunctionOptions` for nested `readField` calls in `read` and `merge` functions. <br/>
+  [@stardustxx](https://github.com/stardustxx) in [#9808](https://github.com/apollographql/apollo-client/pull/9808)
+
 ## Apollo Client 3.6.7 (2022-06-10)
 
 ### Bug Fixes

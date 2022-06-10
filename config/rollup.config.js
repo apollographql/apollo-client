@@ -1,6 +1,8 @@
+import path from 'path';
+import { promises as fs } from "fs";
+
 import nodeResolve from '@rollup/plugin-node-resolve';
 import { terser as minify } from 'rollup-plugin-terser';
-import path from 'path';
 
 const entryPoints = require('./entryPoints');
 const distDir = './dist';
@@ -102,13 +104,16 @@ function prepareBundle({
   extensions,
 }) {
   const dir = path.join(distDir, ...dirs);
+  const inputFile = `${dir}/index.js`;
+  const outputFile = `${dir}/${bundleName}.cjs`;
+
   return {
-    input: `${dir}/index.js`,
+    input: inputFile,
     external(id, parentId) {
       return isExternal(id, parentId, true);
     },
     output: {
-      file: `${dir}/${bundleName}.cjs`,
+      file: outputFile,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
@@ -116,6 +121,16 @@ function prepareBundle({
     },
     plugins: [
       extensions ? nodeResolve({ extensions }) : nodeResolve(),
+      {
+        name: "copy *.cjs to *.cjs.native.js",
+        async writeBundle({ file }) {
+          const buffer = await fs.readFile(file);
+          await fs.writeFile(
+            file + ".native.js",
+            buffer,
+          );
+        },
+      },
     ],
   };
 }

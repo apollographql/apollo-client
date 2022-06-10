@@ -32,11 +32,10 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  WatchQueryFetchPolicy,
   ErrorPolicy,
   MutationFetchPolicy,
 } from './watchQueryOptions';
-import { ObservableQuery, applyNextFetchPolicy, logMissingFieldErrors } from './ObservableQuery';
+import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   ApolloQueryResult,
@@ -78,9 +77,13 @@ interface TransformCacheEntry {
   asQuery: DocumentNode;
 }
 
+type DefaultOptions = import("./ApolloClient").DefaultOptions;
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
+  public defaultOptions: DefaultOptions;
+
   public readonly assumeImmutableResults: boolean;
   public readonly ssrMode: boolean;
 
@@ -104,6 +107,7 @@ export class QueryManager<TStore> {
   constructor({
     cache,
     link,
+    defaultOptions,
     queryDeduplication = false,
     onBroadcast,
     ssrMode = false,
@@ -113,6 +117,7 @@ export class QueryManager<TStore> {
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
+    defaultOptions?: DefaultOptions;
     queryDeduplication?: boolean;
     onBroadcast?: () => void;
     ssrMode?: boolean;
@@ -122,6 +127,7 @@ export class QueryManager<TStore> {
   }) {
     this.cache = cache;
     this.link = link;
+    this.defaultOptions = defaultOptions || Object.create(null);
     this.queryDeduplication = queryDeduplication;
     this.clientAwareness = clientAwareness;
     this.localState = localState || new LocalState({ cache });
@@ -165,8 +171,8 @@ export class QueryManager<TStore> {
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
     onQueryUpdated,
-    errorPolicy = 'none',
-    fetchPolicy = 'network-only',
+    fetchPolicy = this.defaultOptions.mutate?.fetchPolicy || "network-only",
+    errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>> {
@@ -634,9 +640,9 @@ export class QueryManager<TStore> {
     this.queries.set(observable.queryId, queryInfo);
 
     queryInfo.init({
-      document: options.query,
+      document: observable.query,
       observableQuery: observable,
-      variables: options.variables,
+      variables: observable.variables,
     });
 
     return observable;
@@ -921,8 +927,10 @@ export class QueryManager<TStore> {
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
-    this.getQuery(queryId).stop();
-    this.queries.delete(queryId);
+    if (this.queries.has(queryId)) {
+      this.getQuery(queryId).stop();
+      this.queries.delete(queryId);
+    }
   }
 
   public broadcastQueries() {
@@ -1052,11 +1060,12 @@ export class QueryManager<TStore> {
         const aqr: ApolloQueryResult<TData> = {
           data: result.data,
           loading: false,
-          networkStatus: queryInfo.networkStatus || NetworkStatus.ready,
+          networkStatus: NetworkStatus.ready,
         };
 
         if (hasErrors && options.errorPolicy !== "ignore") {
           aqr.errors = result.errors;
+          aqr.networkStatus = NetworkStatus.error;
         }
 
         return aqr;
@@ -1089,9 +1098,10 @@ export class QueryManager<TStore> {
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 
+    const defaults = this.defaultOptions.watchQuery;
     let {
-      fetchPolicy = "cache-first" as WatchQueryFetchPolicy,
-      errorPolicy = "none" as ErrorPolicy,
+      fetchPolicy = defaults && defaults.fetchPolicy || "cache-first",
+      errorPolicy = defaults && defaults.errorPolicy || "none",
       returnPartialData = false,
       notifyOnNetworkStatusChange = false,
       context = {},
@@ -1148,7 +1158,10 @@ export class QueryManager<TStore> {
 
     concast.cleanup(() => {
       this.fetchCancelFns.delete(queryId);
-      applyNextFetchPolicy(options);
+
+      if (queryInfo.observableQuery) {
+        queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
+      }
     });
 
     return concast;
@@ -1329,7 +1342,7 @@ export class QueryManager<TStore> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
-      document: query,
+      document: this.transform(query).document,
       variables,
       networkStatus,
     });
@@ -1377,13 +1390,16 @@ export class QueryManager<TStore> {
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 
-    const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
+    const resultsFromLink = () => this.getResultsFromLink<TData, TVars>(
+      queryInfo,
+      cacheWriteBehavior,
+      {
         variables,
         context,
         fetchPolicy,
         errorPolicy,
-      });
+      },
+    );
 
     const shouldNotify =
       notifyOnNetworkStatusChange &&

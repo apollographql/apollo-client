@@ -2,14 +2,18 @@ import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
+import userEvent from '@testing-library/user-event';
+import fetchMock from "fetch-mock";
+
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { BatchHttpLink } from '../../../link/batch-http';
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -651,6 +655,66 @@ describe('useMutation Hook', () => {
       expect(onError).toHaveBeenCalledWith(errors[0]);
     });
 
+    it('should allow updating onError while mutation is executing', async () => {
+      const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            },
+          },
+          result: {
+            errors,
+          },
+        }
+      ];
+
+      const onCompleted = jest.fn();
+      const onError = jest.fn();
+      const { result, rerender } = renderHook(
+        ({ onCompleted, onError }) => {
+          return useMutation<
+            { createTodo: Todo },
+            { priority: string, description: string }
+          >(CREATE_TODO_MUTATION, { onCompleted, onError });
+        },
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: { onCompleted, onError },
+        },
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const mutationPromise = act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+        });
+      });
+
+      const onError1 = jest.fn();
+      rerender({ onCompleted, onError: onError1 });
+      await mutationPromise;
+
+      expect(fetchResult).toEqual({
+        data: undefined,
+        // Not sure why we unwrap errors here.
+        errors: errors[0],
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onError1).toHaveBeenCalledTimes(1);
+      expect(onError1).toHaveBeenCalledWith(errors[0]);
+    });
+
     it('should never allow onCompleted handler to be stale', async () => {
       const CREATE_TODO_DATA = {
         createTodo: {
@@ -703,6 +767,68 @@ describe('useMutation Hook', () => {
           variables: { priority: 'Low', description: 'Get milk.' },
         });
       });
+
+      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+      expect(onCompleted1).toHaveBeenCalledTimes(1);
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA);
+    });
+
+    it('should allow updating onCompleted while mutation is executing', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: 'Low',
+              description: 'Get milk.',
+            }
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          },
+        }
+      ];
+
+      const onCompleted = jest.fn();
+      const { result, rerender } = renderHook(
+        ({ onCompleted }) => {
+          return useMutation<
+            { createTodo: Todo },
+            { priority: string, description: string }
+          >(CREATE_TODO_MUTATION, { onCompleted });
+        },
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
+          initialProps: { onCompleted },
+        },
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const mutationPromise = act(async () => {
+        fetchResult = await createTodo({
+          variables: { priority: 'Low', description: 'Get milk.' },
+        });
+      });
+
+      const onCompleted1 = jest.fn();
+      rerender({ onCompleted: onCompleted1 });
+      await mutationPromise;
 
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
@@ -1632,8 +1758,8 @@ describe('useMutation Hook', () => {
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
-      let updateResolve: Function;
-      const updatePromise = new Promise((resolve) => (updateResolve = resolve));
+      let onMutationDone: Function;
+      const mutatePromise = new Promise((resolve) => (onMutationDone = resolve));
       setTimeout(() => {
         act(() => {
           mutate({
@@ -1641,8 +1767,10 @@ describe('useMutation Hook', () => {
             refetchQueries: ['getTodos'],
             update() {
               unmount();
-              updateResolve();
             },
+          }).then(result => {
+            expect(result.data).toEqual(CREATE_TODO_RESULT);
+            onMutationDone();
           });
         });
       });
@@ -1650,10 +1778,14 @@ describe('useMutation Hook', () => {
       await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
-      await updatePromise;
-      await new Promise((resolve) => setTimeout(resolve));
-      expect(client.readQuery({ query: GET_TODOS_QUERY }))
-        .toEqual(mocks[2].result.data);
+
+      await mutatePromise;
+
+      return waitFor(() => {
+        expect(
+          client.readQuery({ query: GET_TODOS_QUERY })
+        ).toEqual(mocks[2].result.data);
+      });
     });
 
     itAsync("using onQueryUpdated callback should not prevent cache broadcast", async (resolve, reject) => {
@@ -1946,6 +2078,75 @@ describe('useMutation Hook', () => {
       expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].called).toBe(true);
+    });
+
+    it("refetchQueries should work with BatchHttpLink", async () => {
+      const MUTATION_1 = gql`
+        mutation DoSomething {
+          doSomething {
+            message
+          }
+        }
+      `;
+
+      const QUERY_1 = gql`
+        query Items {
+          items {
+            id
+          }
+        }
+      `;
+
+      fetchMock.restore();
+
+      const responseBodies = [
+        { data: { items: [{ id: 1 }, { id: 2 }] }},
+        { data: { doSomething: { message: 'success' }}},
+        { data: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] }},
+      ];
+
+      fetchMock.post("/graphql", (url, opts) => new Promise(resolve => {
+        resolve({
+          body: responseBodies.shift(),
+        });
+      }));
+
+      const Test = () => {
+        const { data } = useQuery(QUERY_1);
+        const [mutate] = useMutation(MUTATION_1, {
+          awaitRefetchQueries: true,
+          refetchQueries: [QUERY_1],
+        });
+
+        const { items = [] } = data || {};
+
+        return <>
+          <button onClick={() => {
+            return mutate();
+          }} type="button">
+            mutate
+          </button>
+          {items.map((c: any) => (
+            <div key={c.id}>item {c.id}</div>
+          ))}
+        </>;
+      };
+
+      const client = new ApolloClient({
+        link: new BatchHttpLink({
+          uri: '/graphql',
+          batchMax: 10,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      render(<ApolloProvider client={client}><Test /></ApolloProvider>);
+
+      await screen.findByText('item 1');
+
+      userEvent.click(screen.getByRole('button', { name: /mutate/i }));
+
+      await screen.findByText('item 3');
     });
   });
 });

@@ -24,13 +24,12 @@ import { WebSocketLink } from "@apollo/client/link/ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const link = new WebSocketLink(
-  new SubscriptionClient({
-    uri: "ws://localhost:3000/subscriptions",
+  new SubscriptionClient("ws://localhost:4000/graphql", {
     options: {
       reconnect: true,
     },
-  }),
-});
+  })
+);
 ```
 
 ### Options

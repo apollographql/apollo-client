@@ -36,6 +36,7 @@ function mockClient(subscribe: Client["subscribe"]): Client {
     // GraphQLWsLink doesn't use these methods
     on: () => () => {},
     dispose: () => {},
+    terminate: () => {},
   };
 }
 

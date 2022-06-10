@@ -8,6 +8,22 @@
 - Replace `concast.cleanup` method with simpler `concast.beforeNext` API, which promises to call the given callback function just before the next result/error is delivered. In addition, `concast.removeObserver` no longer takes a `quietly?: boolean` parameter, since that parameter was partly responsible for cleanup callbacks sometimes not getting called. <br/>
   [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
 
+## Apollo Client 3.6.8 (2022-06-10)
+
+### Bug Fixes
+
+- Fix incorrect `variables` passed in `FieldFunctionOptions` for nested `readField` calls in `read` and `merge` functions. <br/>
+  [@stardustxx](https://github.com/stardustxx) in [#9808](https://github.com/apollographql/apollo-client/pull/9808)
+
+- Improve repository build scripts to work better on Windows. <br/>
+  [@dylanwulf](https://github.com/dylanwulf) in [#9805](https://github.com/apollographql/apollo-client/pull/9805)
+
+- Ensure `useQuery(query, { skip: true }).called === false` rather than always returning `called` as `true`. <br/>
+  [@KucharskiPiotr](https://github.com/KucharskiPiotr) in [#9798](https://github.com/apollographql/apollo-client/pull/9798)
+
+- Allow abandoned `reobserve` requests to unsubscribe from their underlying `Observable`. <br/>
+  [@javier-garcia-meteologica](https://github.com/javier-garcia-meteologica) in [#9791](https://github.com/apollographql/apollo-client/pull/9791)
+
 ## Apollo Client 3.6.7 (2022-06-10)
 
 ### Bug Fixes

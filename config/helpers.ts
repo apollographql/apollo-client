@@ -12,7 +12,7 @@ export function eachFile(dir: string, callback: (
   const promises: Promise<any>[] = [];
 
   return new Promise<void>((resolve, reject) => {
-    glob(`${dir}/**/*.js`, (error, files) => {
+    glob(`${dir.replace(/\\/g, '/')}/**/*.js`, (error, files) => {
       if (error) return reject(error);
 
       files.sort().forEach(file => {

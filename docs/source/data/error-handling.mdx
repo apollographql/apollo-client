@@ -2,8 +2,6 @@
 title: Handling operation errors
 ---
 
-import LinkChain from '../../shared/link-chain.mdx';
-
 Apollo Client can encounter a variety of errors when executing operations on your GraphQL server. Apollo Client helps you handle these errors according to their type, enabling you to show appropriate information to the user when an error occurs.
 
 ## Error types
@@ -42,7 +40,7 @@ If a GraphQL error occurs, your server includes it in the `errors` array of its 
         "exception": {
           "stacktrace": [
             "GraphQLError: Cannot query field \"nonexistentField\" on type \"Query\".",
-            "...additional lines...",
+            "...additional lines..."
           ]
         }
       }
@@ -61,7 +59,6 @@ If a GraphQL error prevents Apollo Server from executing your operation at all, 
 #### Partial data with resolver errors
 
 An operation that produces resolver errors might _also_ return **partial data**. This means that some (but not all) of the data your operation requested is included in your server's response. Apollo Client _ignores_ partial data by default, but you can override this behavior by [setting a GraphQL error policy](#graphql-error-policies).
-
 
 ### Network errors
 
@@ -83,7 +80,7 @@ If a GraphQL operation produces one or more [resolver errors](#graphql-errors), 
   },
   "errors": [
     {
-      "message": "Failed to get string!",
+      "message": "Failed to get string!"
       // ...additional fields...
     }
   ]
@@ -94,11 +91,11 @@ By default, Apollo Client throws away partial data and populates [the `error.gra
 
 Apollo Client supports the following error policies for an operation:
 
-| Policy | Description |
-|--------|-------------|
-| `none` | If the response includes GraphQL errors, they are returned on `error.graphQLErrors` and the response `data` is set to `undefined` even if the server returns `data` in its response. This means network errors and GraphQL errors result in a similar response shape. This is the default error policy. |
-| `ignore` | `graphQLErrors` are ignored (`error.graphQLErrors`  is _not_ populated), and any returned `data` is cached and rendered as if no errors occurred. |
-| `all` | Both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information. |
+| Policy   | Description                                                                                                                                                                                                                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `none`   | If the response includes GraphQL errors, they are returned on `error.graphQLErrors` and the response `data` is set to `undefined` even if the server returns `data` in its response. This means network errors and GraphQL errors result in a similar response shape. This is the default error policy. |
+| `ignore` | `graphQLErrors` are ignored (`error.graphQLErrors` is _not_ populated), and any returned `data` is cached and rendered as if no errors occurred.                                                                                                                                                        |
+| `all`    | Both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information.                                                                                                                                                                                 |
 
 ### Setting an error policy
 
@@ -113,15 +110,17 @@ const MY_QUERY = gql`
 `;
 
 function ShowingSomeErrors() {
-  const { loading, error, data } = useQuery(MY_QUERY, { errorPolicy: 'all' });
+  const { loading, error, data } = useQuery(MY_QUERY, { errorPolicy: "all" });
 
-  if (loading) return <span>loading...</span>
+  if (loading) return <span>loading...</span>;
   return (
     <div>
       <h2>Good: {data.goodField}</h2>
-      <pre>Bad: {error.graphQLErrors.map(({ message }, i) => (
-        <span key={i}>{message}</span>
-      ))}
+      <pre>
+        Bad:{" "}
+        {error.graphQLErrors.map(({ message }, i) => (
+          <span key={i}>{message}</span>
+        ))}
       </pre>
     </div>
   );
@@ -140,12 +139,25 @@ The example below passes the `ApolloClient` constructor a link chain with two li
 
 * An `onError` link that checks for `graphQLErrors` or a `networkError` in the server's response. It logs the details of whichever error(s) it finds.
 * An `HttpLink` that sends each GraphQL operation to your server.
-    * _This is the chain's [terminating link](../api/link/introduction/#the-terminating-link)._
-
+  * _This is the chain's [terminating link](../api/link/introduction/#the-terminating-link)._
 
 <ExpansionPanel title="Click to expand example">
 
-<LinkChain/>
+```tsx
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { RetryLink } from "@apollo/client/link/retry";
+
+const directionalLink = new RetryLink().split(
+  (operation) => operation.getContext().version === 1,
+  new HttpLink({ uri: "http://localhost:4000/v1/graphql" }),
+  new HttpLink({ uri: "http://localhost:4000/v2/graphql" })
+);
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: directionalLink,
+});
+```
 
 </ExpansionPanel>
 
@@ -169,8 +181,7 @@ onError(({ graphQLErrors, networkError, operation, forward }) => {
       switch (err.extensions.code) {
         // Apollo Server sets code to UNAUTHENTICATED
         // when an AuthenticationError is thrown in a resolver
-        case 'UNAUTHENTICATED':
-
+        case "UNAUTHENTICATED":
           // Modify the operation context with a new token
           const oldHeaders = operation.getContext().headers;
           operation.setContext({
@@ -212,7 +223,7 @@ onError(({ response, operation }) => {
   if (operation.operationName === "IgnoreErrorsQuery") {
     response.errors = null;
   }
-})
+});
 ```
 
 ### `onError` link options

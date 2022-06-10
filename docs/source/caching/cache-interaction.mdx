@@ -40,7 +40,7 @@ const READ_TODO = gql`
 // Fetch the cached to-do item with ID 5
 const { todo } = client.readQuery({
   query: READ_TODO,
-  variables: { // Provide any required variables here
+  variables: { // Provide any required variables here.  Variables of mismatched types will return `null`.
     id: 5,
   },
 });

@@ -218,6 +218,29 @@ describe('useQuery Hook', () => {
       unmount();
     });
 
+    it('should set called to false when skip option is true', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+          <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const { result, unmount } = renderHook(
+          () => useQuery(query, { skip: true }),
+          { wrapper },
+      );
+
+      expect(result.current.called).toBe(false);
+      unmount();
+    });
+
     it('should work with variables', async () => {
       const query = gql`
         query ($id: Int) {

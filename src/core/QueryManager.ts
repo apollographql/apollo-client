@@ -1122,11 +1122,13 @@ export class QueryManager<TStore> {
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
       normalized.variables = variables;
-      return this.fetchQueryByPolicy<TData, TVars>(
+      const concastSources = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
         networkStatus,
       );
+      // TODO Call applyNextFetchPolicy here?
+      return concastSources;
     };
 
     // This cancel function needs to be set before the concast is created,
@@ -1157,9 +1159,12 @@ export class QueryManager<TStore> {
     );
 
     concast.cleanup(() => {
+      // TODO This ends the window for cancellation before the first event,
+      // which may just be a result from the cache.
       this.fetchCancelFns.delete(queryId);
 
       if (queryInfo.observableQuery) {
+        // TODO Only do this if fetchPolicy wasn't "standby"
         queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
       }
     });

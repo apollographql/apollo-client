@@ -21,7 +21,7 @@ import {
   asyncMap,
   isNonEmptyArray,
   Concast,
-  ConcastSourcesIterable,
+  ConcastSourcesArray,
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
@@ -1122,12 +1122,25 @@ export class QueryManager<TStore> {
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
       normalized.variables = variables;
+
       const concastSources = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
         networkStatus,
       );
-      // TODO Call applyNextFetchPolicy here?
+
+      if (
+        // If we're in standby, postpone advancing options.fetchPolicy using
+        // applyNextFetchPolicy.
+        normalized.fetchPolicy !== "standby" &&
+        // The "standby" policy currently returns [] from fetchQueryByPolicy, so
+        // this is another way to detect when nothing was done/fetched.
+        concastSources.length > 0 &&
+        queryInfo.observableQuery
+      ) {
+        queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
+      }
+
       return concastSources;
     };
 
@@ -1162,11 +1175,6 @@ export class QueryManager<TStore> {
       // TODO This ends the window for cancellation before the first event,
       // which may just be a result from the cache.
       this.fetchCancelFns.delete(queryId);
-
-      if (queryInfo.observableQuery) {
-        // TODO Only do this if fetchPolicy wasn't "standby"
-        queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
-      }
     });
 
     return concast;
@@ -1343,7 +1351,7 @@ export class QueryManager<TStore> {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus: NetworkStatus,
-  ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
+  ): ConcastSourcesArray<ApolloQueryResult<TData>> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({

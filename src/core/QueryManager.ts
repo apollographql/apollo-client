@@ -1146,7 +1146,9 @@ export class QueryManager<TStore> {
 
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
+    const cleanupCancelFn = () => this.fetchCancelFns.delete(queryId);
     this.fetchCancelFns.set(queryId, reason => {
+      cleanupCancelFn();
       // This delay ensures the concast variable has been initialized.
       setTimeout(() => concast.cancel(reason));
     });
@@ -1171,11 +1173,7 @@ export class QueryManager<TStore> {
         : fromVariables(normalized.variables!)
     );
 
-    concast.cleanup(() => {
-      // TODO This ends the window for cancellation before the first event,
-      // which may just be a result from the cache.
-      this.fetchCancelFns.delete(queryId);
-    });
+    concast.promise.then(cleanupCancelFn, cleanupCancelFn);
 
     return concast;
   }

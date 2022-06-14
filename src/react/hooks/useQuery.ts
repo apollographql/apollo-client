@@ -504,11 +504,14 @@ class InternalState<TData, TVariables> {
 
   private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
     if (!result.loading) {
-      if (result.error) {
-        this.onError(result.error);
-      } else if (result.data) {
-        this.onCompleted(result.data);
-      }
+      // wait a tick in case we are in the middle of rendering a component
+      Promise.resolve().then(() => {
+        if (result.error) {
+          this.onError(result.error);
+        } else if (result.data) {
+          this.onCompleted(result.data);
+        }
+      });
     }
   }
 
@@ -517,8 +520,9 @@ class InternalState<TData, TVariables> {
     // the same (===) result object, unless state.setResult has been called, or
     // we're doing server rendering and therefore override the result below.
     if (!this.result) {
-      const result = (this.result = this.observable.getCurrentResult());
-      setTimeout(() => this.handleErrorOrCompleted(result), 0);
+      this.handleErrorOrCompleted(
+        this.result = this.observable.getCurrentResult()
+      );
     }
     return this.result;
   }

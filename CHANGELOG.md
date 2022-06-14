@@ -1,3 +1,10 @@
+## Apollo Client 3.6.9 (unreleased)
+
+### Bug Fixes
+
+- Leave `fetchPolicy` unchanged when `skip: true` (or in standby) and `nextFetchPolicy` is available, even if `variables` change. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9823](https://github.com/apollographql/apollo-client/pull/9823)
+
 ## Apollo Client 3.6.8 (2022-06-10)
 
 ### Bug Fixes

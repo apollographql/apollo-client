@@ -836,7 +836,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // because we just want to ignore the old observable, not prematurely shut
       // it down, since other consumers may be awaiting this.concast.promise.
       if (this.concast && this.observer) {
-        this.concast.removeObserver(this.observer, true);
+        this.concast.removeObserver(this.observer);
       }
 
       this.concast = concast;

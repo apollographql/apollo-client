@@ -3,7 +3,7 @@ import * as path from "path";
 import { distDir } from './helpers';
 import glob = require("glob");
 
-glob(`${distDir}/**/*.js.map`, (error, files) => {
+glob(`${distDir.replace(/\\/g, '/')}/**/*.js.map`, (error, files) => {
   if (error) throw error;
 
   const rootDir = path.dirname(distDir);

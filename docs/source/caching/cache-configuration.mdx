@@ -124,9 +124,7 @@ Each key in the object is the `__typename` of a type to customize, and the corre
 </td>
 <td>
 
-**Deprecated.** A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store.
-
-Deprecated in favor of the `keyFields` option of the [`TypePolicy` object](#typepolicy-fields).
+A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store.
 
 </td>
 </tr>
@@ -208,7 +206,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-> The `dataIdFromObject` API is included in Apollo Client 3 to ease the transition from Apollo Client 2.x. The API might be removed in a future version of `@apollo/client`.
+> The `dataIdFromObject` API is included in Apollo Client 3 to ease the transition from Apollo Client 2.x.
 
 Notice that the above function still uses different logic to generate keys based on an object's `__typename`. In a case like this, you should almost always define `keyFields` arrays for the `Product` and `Person` types via `typePolicies`.
 

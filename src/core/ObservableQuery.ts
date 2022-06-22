@@ -59,6 +59,7 @@ interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
   variables?: TVariables;
   error?: ApolloError;
+  reportedResult: ApolloQueryResult<TData>
 }
 
 export class ObservableQuery<
@@ -303,8 +304,8 @@ export class ObservableQuery<
 
   // Compares newResult to the snapshot we took of this.lastResult when it was
   // first received.
-  public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
-    return !this.last || !equal(this.last.result, newResult);
+  public isDifferentFromLastReportedResult(newResult: ApolloQueryResult<TData>) {
+    return !this.last || !equal(this.last.reportedResult, newResult);
   }
 
   private getLast<K extends keyof Last<TData, TVariables>>(
@@ -758,17 +759,32 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     newResult: ApolloQueryResult<TData>,
     variables = this.variables,
   ) {
+    const immutableResult = this.queryManager.assumeImmutableResults
+      ? newResult
+      : cloneDeep(newResult);
     this.last = {
       ...this.last,
-      result: this.queryManager.assumeImmutableResults
-        ? newResult
-        : cloneDeep(newResult),
+      result: immutableResult,
+      reportedResult: immutableResult,
       variables,
     };
     if (!isNonEmptyArray(newResult.errors)) {
       delete this.last.error;
     }
     return this.last;
+  }
+
+  private updateLastReportedResultOnly(
+    newResult: ApolloQueryResult<TData>
+  ) {
+    if (!this.last) return;
+
+    this.last = {
+      ...this.last,
+      reportedResult: this.queryManager.assumeImmutableResults
+        ? newResult
+        : cloneDeep(newResult)
+    };
   }
 
   public reobserve(
@@ -871,9 +887,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     variables: TVariables | undefined,
   ) {
     const lastError = this.getLastError();
-    if (lastError || this.isDifferentFromLastResult(result)) {
+    if (lastError || this.isDifferentFromLastReportedResult(result)) {
       if (lastError || !result.partial || this.options.returnPartialData) {
         this.updateLastResult(result, variables);
+      } else {
+        this.updateLastReportedResultOnly(result);
       }
 
       iterateObserversSafely(this.observers, 'next', result);

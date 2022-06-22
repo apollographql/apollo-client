@@ -2443,4 +2443,43 @@ describe('ObservableQuery', () => {
       error: reject,
     });
   });
+
+  itAsync("ObservableQuery uses last.reportedResult for dirty checks, not last.result", (resolve, reject) => {
+    const manager = mockQueryManager(
+      reject,
+      {
+        request: { query, variables },
+        result: { data: dataOne },
+      },
+      {
+        request: { query, variables: differentVariables },
+        result: { data: dataOne },
+      },
+    );
+
+    const observable = manager.watchQuery({
+      query,
+      variables,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    subscribeAndCount(reject, observable, async (handleCount, result) => {
+      if (handleCount === 1) {
+        // Should be saved as last.reportedResult and last.result
+        expect(result.data).toEqual(dataOne);
+        expect(result.loading).toBe(false);
+        await observable.setVariables(differentVariables);
+      } else if (handleCount === 2) {
+        // Should be saved as last.reportedResult but not as last.result
+        expect(result.loading).toBe(true);
+        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
+      } else if (handleCount === 3) {
+        // Should compare this result against last.reportedResult (loading=true) and send a notification
+        // Otherwise the subscriber would be stuck with loading=true forever
+        expect(result.data).toEqual(dataOne);
+        expect(result.loading).toBe(false);
+        resolve();
+      }
+    });
+  });
 });

@@ -3,7 +3,7 @@ import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient, NetworkStatus } from '../../../../core';
+import { ApolloClient, NetworkStatus, WatchQueryFetchPolicy } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { itAsync, mockSingleLink } from '../../../../testing';
@@ -360,32 +360,46 @@ describe('[queries] loading', () => {
 
     let count = 0;
 
+    const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
     const Container = graphql<{}, Data>(query, {
       options: {
         fetchPolicy: 'network-only',
-        nextFetchPolicy: 'cache-first',
+        nextFetchPolicy(currentFetchPolicy, info) {
+          if (info.reason === "variables-changed") {
+            return info.initialFetchPolicy;
+          }
+          usedFetchPolicies.push(currentFetchPolicy);
+          if (info.reason === "after-fetch") {
+            return "cache-first";
+          }
+          return currentFetchPolicy;
+        }
       },
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
+          ++count;
           if (count === 1) {
+            expect(this.props.data!.loading).toBe(true);
+            expect(this.props.data!.allPeople).toBeUndefined();
+          } else if (count === 2) {
+            expect(this.props.data!.loading).toBe(false);
+            expect(this.props.data!.allPeople!.people[0].name).toMatch(
+              /Darth Skywalker - /
+            );
             // Has data
-            setTimeout(() => {
-              render(App);
-            }, 0);
-          }
-          if (count === 2) {
+            setTimeout(() => render(App));
+          } else if (count === 3) {
             // Loading after remount
-            expect(this.props.data!.loading).toBeTruthy();
-          }
-          if (count === 3) {
+            expect(this.props.data!.loading).toBe(true);
+            expect(this.props.data!.allPeople).toBeUndefined();
+          } else if (count >= 4) {
             // Fetched data loading after remount
-            expect(this.props.data!.loading).toBeFalsy();
+            expect(this.props.data!.loading).toBe(false);
             expect(this.props.data!.allPeople!.people[0].name).toMatch(
               /Darth Skywalker - /
             );
           }
-          count += 1;
           return null;
         }
       }
@@ -399,7 +413,14 @@ describe('[queries] loading', () => {
 
     render(App);
 
-    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
+    return waitFor(() => {
+      expect(usedFetchPolicies).toEqual([
+        "network-only",
+        "network-only",
+        "cache-first",
+      ]);
+      expect(count).toBe(6);
+    }).then(resolve, reject);
   });
 
   itAsync('correctly sets loading state on remounted component with changed variables', (resolve, reject) => {

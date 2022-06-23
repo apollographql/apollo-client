@@ -22,6 +22,7 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 ## Apollo Maintainers
 
 - [@benjamn](https://github.com/benjamn)
+- [@alessbell](https://github.com/alessbell)
 - [@hwillson](https://github.com/hwillson)
 - [@jpvajda](https://github.com/jpvajda)
 

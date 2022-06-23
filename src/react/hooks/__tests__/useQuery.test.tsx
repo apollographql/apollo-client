@@ -1037,7 +1037,7 @@ describe('useQuery Hook', () => {
 
       expect(
         result.current.observable.options.fetchPolicy
-      ).toBe("network-only");
+      ).toBe("cache-first");
 
       expect(result.current.observable.variables).toEqual({
         sourceOfVar: "reobserve",
@@ -1094,7 +1094,7 @@ describe('useQuery Hook', () => {
 
       expect(
         result.current.observable.options.fetchPolicy
-      ).toBe("network-only");
+      ).toBe("cache-first");
 
       expect(result.current.observable.variables).toEqual({
         sourceOfVar: "reobserve without variable merge",

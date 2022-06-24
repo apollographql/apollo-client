@@ -4,11 +4,11 @@ title: Get started with Apollo Client
 
 Hello! 👋 This short tutorial gets you up and running with Apollo Client.
 
-> For an introduction to the entire Apollo platform, [check out **Odyssey**, Apollo's new learning platform](https://odyssey.apollographql.com?utm_source=apollo_docs&utm_medium=referral).
+> For an introduction to the entire Apollo platform, [check out **Odyssey**, Apollo's interactive learning platform](https://www.apollographql.com/tutorials/?utm_source=apollo_docs&utm_medium=referral).
 
 ## Step 1: Setup
 
-Before starting this tutorial, we recommend you either:
+To start this tutorial, do one of the following:
 
 - Create a new React project locally with [Create React App](https://create-react-app.dev/), or
 - Create a new React sandbox on [CodeSandbox](https://codesandbox.io/).
@@ -28,13 +28,13 @@ npm install @apollo/client graphql
 
 > If you are using a React sandbox and running into issues, try downgrading your `graphql` package. You can use `npm install graphql@15.8.0` to downgrade.
 
-We'll use the [FlyBy API](https://flyby-gateway.herokuapp.com/) from the [Voyage I: Federation from Day One](https://www.apollographql.com/tutorials/voyage-part1/) Odyssey course as our GraphQL server for this example. The Flyby API provides a list of intergalactic locations and details about those locations.
+Our example application will use the [FlyBy GraphQL API](https://flyby-gateway.herokuapp.com/) from the [Voyage tutorial series](https://www.apollographql.com/tutorials/voyage-part1/) in Apollo Odyssey. This API provides a list of intergalactic travel locations and details about those locations 👽
 
 ## Step 3: Initialize `ApolloClient`
 
 With our dependencies set up, we can now initialize an `ApolloClient` instance.
 
-In `index.js`, let's first import the things we need from `@apollo/client`:
+In `index.js`, let's first import the symbols we need from `@apollo/client`:
 
 ```js title="index.js"
 import { ApolloClient, InMemoryCache, ApolloProvider, useQuery, gql } from '@apollo/client';
@@ -64,7 +64,7 @@ In the same `index.js` file, call `client.query()` with the query string (wrappe
 client
   .query({
     query: gql`
-      query getLocations {
+      query GetLocations {
         locations {
           id
           name
@@ -125,7 +125,7 @@ Still in `index.js`, let's first define the query we want to execute by wrapping
 
 ```js title="index.js"
 const GET_LOCATIONS = gql`
-  query getLocations {
+  query GetLocations {
     locations {
       id
       name
@@ -160,7 +160,7 @@ function DisplayLocations() {
 
 Whenever this component renders, the `useQuery` hook automatically executes our query and returns a result object containing `loading`, `error`, and `data` properties:
 
-- Apollo Client tracks a query's error and loading states for you, reflected in the `loading` and `error` properties.
+- Apollo Client automatically tracks a query's loading and error states, which are reflected in the `loading` and `error` properties.
 - When the result of your query comes back, it's attached to the `data` property.
 
 Finally, we'll add `DisplayLocations` to our existing component tree:
@@ -176,7 +176,7 @@ function App() {
 }
 ```
 
-When your app reloads, you should briefly see a loading indicator, followed by a list of locations and details about those locations! If you don't, you can compare your code against the [completed app on CodeSandbox](https://codesandbox.io/s/get-started-apollo-client-demo-bert8s?file=/src/index.js).
+When your app reloads, you should briefly see a loading indicator, followed by a list of locations and details about those locations! If you don't, you can compare your code against the [completed app on CodeSandbox](https://codesandbox.io/s/get-started-apollo-client-demo-bert8s).
 
 Congrats, you just made your first component that renders with GraphQL data from Apollo Client! 🎉 Now you can try building more components that use `useQuery` and experiment with the concepts you just learned.
 

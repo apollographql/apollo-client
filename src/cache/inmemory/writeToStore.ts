@@ -290,7 +290,7 @@ export class StoreWriter {
 
       fieldNodeSet.add(field);
 
-      if (value !== void 0) {
+      if (resultFieldKey in result) {
         const storeFieldName = policies.getStoreFieldName({
           typename,
           fieldName: field.name.value,

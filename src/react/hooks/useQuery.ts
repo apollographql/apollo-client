@@ -511,6 +511,8 @@ class InternalState<TData, TVariables> {
         } else if (result.data) {
           this.onCompleted(result.data);
         }
+      }).catch(error => {
+        invariant.warn(error);
       });
     }
   }

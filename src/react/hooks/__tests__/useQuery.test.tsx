@@ -1604,8 +1604,11 @@ describe('useQuery Hook', () => {
       unmount();
 
       await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
-      expect(requestSpy).toHaveBeenCalledTimes(1);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
+
+      return waitFor(() => {
+        expect(requestSpy).toHaveBeenCalledTimes(1);
+        expect(onErrorFn).toHaveBeenCalledTimes(0);
+      });
     });
 
     it('should start and stop polling in Strict Mode', async () => {

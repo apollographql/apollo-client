@@ -653,18 +653,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         initialFetchPolicy = fetchPolicy,
       } = options;
 
-      // When someone chooses "cache-and-network" or "network-only" as their
-      // initial FetchPolicy, they often do not want future cache updates to
-      // trigger unconditional network requests, which is what repeatedly
-      // applying the "cache-and-network" or "network-only" policies would seem
-      // to imply. Instead, when the cache reports an update after the initial
-      // network request, it may be desirable for subsequent network requests to
-      // be triggered only if the cache result is incomplete. To that end, the
-      // options.nextFetchPolicy option provides an easy way to update
-      // options.fetchPolicy after the initial network request, without having to
-      // call observableQuery.setOptions.
-
-      if (typeof options.nextFetchPolicy === "function") {
+      if (fetchPolicy === "standby") {
+        // Do nothing, leaving options.fetchPolicy unchanged.
+      } else if (typeof options.nextFetchPolicy === "function") {
+        // When someone chooses "cache-and-network" or "network-only" as their
+        // initial FetchPolicy, they often do not want future cache updates to
+        // trigger unconditional network requests, which is what repeatedly
+        // applying the "cache-and-network" or "network-only" policies would
+        // seem to imply. Instead, when the cache reports an update after the
+        // initial network request, it may be desirable for subsequent network
+        // requests to be triggered only if the cache result is incomplete. To
+        // that end, the options.nextFetchPolicy option provides an easy way to
+        // update options.fetchPolicy after the initial network request, without
+        // having to call observableQuery.setOptions.
         options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
           reason,
           options,
@@ -809,7 +810,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         newOptions &&
         newOptions.variables &&
         !equal(newOptions.variables, oldVariables) &&
-        (!newOptions.fetchPolicy || newOptions.fetchPolicy === oldFetchPolicy)
+        // Don't mess with the fetchPolicy if it's currently "standby".
+        options.fetchPolicy !== "standby" &&
+        // If we're changing the fetchPolicy anyway, don't try to change it here
+        // using applyNextFetchPolicy. The explicit options.fetchPolicy wins.
+        options.fetchPolicy === oldFetchPolicy
       ) {
         this.applyNextFetchPolicy("variables-changed", options);
         if (newNetworkStatus === void 0) {

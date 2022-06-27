@@ -12,6 +12,7 @@ function isPromiseLike<T>(value: MaybeAsync<T>): value is PromiseLike<T> {
 type Source<T> = MaybeAsync<Observable<T>>;
 
 export type ConcastSourcesIterable<T> = Iterable<Source<T>>;
+export type ConcastSourcesArray<T> = Array<Source<T>>;
 
 // A Concast<T> observable concatenates the given sources into a single
 // non-overlapping sequence of Ts, automatically unwrapping any promises,

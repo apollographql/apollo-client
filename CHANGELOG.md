@@ -8,6 +8,13 @@
 - Replace `concast.cleanup` method with simpler `concast.beforeNext` API, which promises to call the given callback function just before the next result/error is delivered. In addition, `concast.removeObserver` no longer takes a `quietly?: boolean` parameter, since that parameter was partly responsible for cleanup callbacks sometimes not getting called. <br/>
   [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
 
+## Apollo Client 3.6.9 (2022-06-21)
+
+### Bug Fixes
+
+- Leave `fetchPolicy` unchanged when `skip: true` (or in standby) and `nextFetchPolicy` is available, even if `variables` change. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9823](https://github.com/apollographql/apollo-client/pull/9823)
+
 ## Apollo Client 3.6.8 (2022-06-10)
 
 ### Bug Fixes

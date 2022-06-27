@@ -545,12 +545,9 @@ describe('QueryManager', () => {
 
     subscription.unsubscribe();
 
-    return new Promise(
-      // Unsubscribing from the link requires around 5ms to take effect
-      resolve => setTimeout(resolve, 5)
-    ).then(() => {
-      expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+    return waitFor(() => {
       expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+      expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
     }).then(resolve, reject);
   });
 

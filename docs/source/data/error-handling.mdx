@@ -214,18 +214,6 @@ To retry operations that encounter a network error, we recommend adding a `Retry
 
 See the [documentation for `RetryLink`](../api/link/apollo-link-retry/).
 
-### Ignoring errors
-
-To conditionally ignore errors, you can set `response.errors` to `null` in your `onError` link:
-
-```js
-onError(({ response, operation }) => {
-  if (operation.operationName === "IgnoreErrorsQuery") {
-    response.errors = null;
-  }
-});
-```
-
 ### `onError` link options
 
 See the [`onError` API reference](../api/link/apollo-link-error/#options).

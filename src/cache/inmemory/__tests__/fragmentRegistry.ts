@@ -114,6 +114,110 @@ describe("FragmentRegistry", () => {
     });
   });
 
+  it("throws an error when not all used fragments are defined", () => {
+    const cache = new InMemoryCache({
+      fragments: createFragmentRegistry(gql`
+        fragment IncompleteFragment on Person {
+          __typename
+          id
+          ...MustBeDefinedByQuery
+        }
+      `),
+    });
+
+    const queryWithoutFragment = gql`
+      query WithoutFragment {
+        me {
+          ...IncompleteFragment
+        }
+      }
+    `;
+
+    const queryWithFragment = gql`
+      query WithFragment {
+        me {
+          ...IncompleteFragment
+        }
+      }
+
+      fragment MustBeDefinedByQuery on Person {
+        name
+      }
+    `;
+
+    expect(() => {
+      cache.writeQuery({
+        query: queryWithoutFragment,
+        data: {
+          me: {
+            __typename: "Person",
+            id: 12345,
+            name: "Ben",
+          },
+        },
+      });
+    }).toThrow(
+      /No fragment named MustBeDefinedByQuery/
+    );
+
+    expect(cache.extract()).toEqual({
+      // Nothing written because the cache.writeQuery failed above.
+    });
+
+    cache.writeQuery({
+      query: queryWithFragment,
+      data: {
+        me: {
+          __typename: "Person",
+          id: 12345,
+          name: "Ben Newman",
+        },
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        me: { __ref: "Person:12345" },
+      },
+      "Person:12345": {
+        __typename: "Person",
+        id: 12345,
+        name: "Ben Newman",
+      },
+    });
+
+    expect(() => {
+      cache.diff({
+        query: queryWithoutFragment,
+        returnPartialData: true,
+        optimistic: true,
+      });
+    }).toThrow(
+      /No fragment named MustBeDefinedByQuery/
+    );
+
+    expect(() => {
+      cache.readQuery({
+        query: queryWithoutFragment
+      });
+    }).toThrow(
+      /No fragment named MustBeDefinedByQuery/
+    );
+
+    expect(
+      cache.readQuery({
+        query: queryWithFragment,
+      }),
+    ).toEqual({
+      me: {
+        __typename: "Person",
+        id: 12345,
+        name: "Ben Newman",
+      },
+    });
+  });
+
   it("can register fragments with unbound ...spreads", () => {
     const cache = new InMemoryCache({
       fragments: createFragmentRegistry(gql`

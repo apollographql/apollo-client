@@ -1,8 +1,9 @@
-import { invariant } from '../../utilities/globals';
+import { invariant, InvariantError } from '../../utilities/globals';
 
 import {
   DocumentNode,
   FieldNode,
+  Kind,
   SelectionSetNode,
 } from 'graphql';
 import { wrap, OptimisticWrapperFunction } from 'optimism';
@@ -405,6 +406,10 @@ export class StoreReader {
           selection,
           context.lookupFragment,
         );
+
+        if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
+          throw new InvariantError(`No fragment named ${selection.name.value}`);
+        }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
           fragment.selectionSet.selections.forEach(workSet.add, workSet);

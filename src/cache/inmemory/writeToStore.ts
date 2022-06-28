@@ -4,6 +4,7 @@ import { Trie } from '@wry/trie';
 import {
   SelectionSetNode,
   FieldNode,
+  Kind,
 } from 'graphql';
 
 import {
@@ -565,6 +566,10 @@ export class StoreWriter {
             selection,
             context.lookupFragment,
           );
+
+          if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
+            throw new InvariantError(`No fragment named ${selection.name.value}`);
+          }
 
           if (fragment &&
               policies.fragmentMatches(

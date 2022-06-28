@@ -133,8 +133,6 @@ class FragmentRegistry implements FragmentRegistryAPI {
         const def = map[name];
         if (def) {
           defsToAppend.push(def);
-        } else {
-          // TODO Warn? Error?
         }
       });
 

@@ -26,6 +26,8 @@ export default function transformer(file, api) {
   removeModuleIfEmpty('@apollo/react-components')
   removeModuleIfEmpty('@apollo/react-hoc')
 
+  moveTestUtils()
+
 
   moveSpecifiersToApolloClient('react-apollo');
   moveSpecifiersToApolloClient('@apollo/react-hooks');
@@ -147,6 +149,18 @@ export default function transformer(file, api) {
     ))
 
     col.remove()
+  }
+
+  function moveTestUtils() {
+    const modImport = getImport("react-apollo/test-utils");
+    if (!modImport.size()) {
+      return
+    }
+
+    modImport.replaceWith(path => ({
+      ...path.value,
+      source: j.literal("@apollo/client/testing")
+    }))
   }
 
   function moveSpecifiersToApolloClient(

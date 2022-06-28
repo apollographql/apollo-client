@@ -37,7 +37,7 @@ With our dependencies set up, we can now initialize an `ApolloClient` instance.
 In `index.js`, let's first import the symbols we need from `@apollo/client`:
 
 ```js title="index.js"
-import { ApolloClient, InMemoryCache, ApolloProvider, useQuery, gql } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider, gql } from '@apollo/client';
 ```
 
 Next we'll initialize `ApolloClient`, passing its constructor a configuration object with the `uri` and `cache` fields:
@@ -48,7 +48,6 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 ```
-
 
 - `uri` specifies the URL of our GraphQL server.
 - `cache` is an instance of `InMemoryCache`, which Apollo Client uses to cache query results after fetching them.
@@ -91,20 +90,13 @@ In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest put
 ```jsx title="index.js" {22-24}
 import { React } from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { ApolloClient, InMemoryCache, ApolloProvider, useQuery, gql } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import App from './App';
 
 const client = new ApolloClient({
   uri: 'https://flyby-gateway.herokuapp.com/',
   cache: new InMemoryCache(),
 });
-
-function App() {
-  return (
-    <div>
-      <h2>My first Apollo app 🚀</h2>
-    </div>
-  );
-}
 
 // Supported in React 18+
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -120,9 +112,24 @@ root.render(
 
 After your `ApolloProvider` is hooked up, you can start requesting data with `useQuery`. The `useQuery` hook is a [React hook](https://reactjs.org/docs/hooks-intro.html) that shares GraphQL data with your UI.
 
-Still in `index.js`, let's first define the query we want to execute by wrapping it in the `gql` template literal:
+Switching over to our `App.js` file, we'll start by replacing our existing file contents with the code snippet below:
 
-```js title="index.js"
+```js title="App.js"
+// Import everything needed to use the `useQuery` hook
+import { useQuery, gql } from '@apollo/client';
+
+export default function App() {
+  return (
+    <div>
+      <h2>My first Apollo app 🚀</h2>
+    </div>
+  );
+}
+```
+
+We can define the query we want to execute by wrapping it in the `gql` template literal:
+
+```js title="App.js"
 const GET_LOCATIONS = gql`
   query GetLocations {
     locations {
@@ -137,7 +144,7 @@ const GET_LOCATIONS = gql`
 
 Next, let's define a component named `DisplayLocations` that executes our `GET_LOCATIONS` query with the `useQuery` hook:
 
-```js title="index.js" {2}
+```js title="App.js" {2}
 function DisplayLocations() {
   const { loading, error, data } = useQuery(GET_LOCATIONS);
 
@@ -164,11 +171,12 @@ Whenever this component renders, the `useQuery` hook automatically executes our 
 
 Finally, we'll add `DisplayLocations` to our existing component tree:
 
-```jsx title="index.js" {5}
-function App() {
+```jsx title="App.js" {6}
+export default function App() {
   return (
     <div>
       <h2>My first Apollo app 🚀</h2>
+      <br/>
       <DisplayLocations />
     </div>
   );

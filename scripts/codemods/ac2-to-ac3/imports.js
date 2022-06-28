@@ -14,6 +14,14 @@ export default function transformer(file, api) {
 
   renameOrCreateApolloClientImport();
 
+  ensureModule('@apollo/react-components')
+  ensureModule('@apollo/react-hoc')
+
+  moveOldSpecifiersToApolloReact()
+
+  removeModuleIfEmpty('@apollo/react-components')
+  removeModuleIfEmpty('@apollo/react-hoc')
+
   moveSpecifiersToApolloClient('react-apollo');
   moveSpecifiersToApolloClient('@apollo/react-hooks');
   moveSpecifiersToApolloClient('apollo-cache-inmemory');
@@ -45,6 +53,25 @@ export default function transformer(file, api) {
 
   return source.toSource();
 
+  function ensureModule(modName = "modName") {
+    const modImport = getImport(modName);
+    if (modImport.size()) {
+      return;
+    }
+
+    source.find(j.ImportDeclaration).at(0).insertBefore(() => j.importDeclaration([], j.literal(modName)));
+  }
+
+  function removeModuleIfEmpty(modName = "modName") {
+    const modImport = getImport(modName);
+    if (
+      modImport.size() &&
+      !modImport.get('specifiers', 'length').value
+    ) {
+      modImport.remove();
+    }
+  }
+
   function renameOrCreateApolloClientImport() {
     const ac3Import = getImport('@apollo/client');
     if (ac3Import.size()) {
@@ -67,6 +94,31 @@ export default function transformer(file, api) {
       !ac3Import.get('specifiers', 'length').value
     ) {
       ac3Import.remove();
+    }
+  }
+
+  function moveOldSpecifiersToApolloReact(moduleName = "react-apollo") {
+    const moduleImport = getImport(moduleName);
+      const reactComponents = getImport('@apollo/react-components');
+      const reactHoc = getImport('@apollo/react-hoc');
+
+    if (moduleImport.size()) {
+      function moveImport(importedName= "graphql", targetModule) {
+        const a = moduleImport.find(j.ImportSpecifier, {
+          imported: {
+            name: importedName
+          }
+        })
+        if (a.size()) {
+          targetModule.get('specifiers').push(...a.nodes()); 
+        }
+
+        a.remove()
+      }
+
+      moveImport("graphql", reactHoc)
+      moveImport("Query", reactComponents)
+      moveImport("Mutation", reactComponents)
     }
   }
 

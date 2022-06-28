@@ -25,6 +25,7 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 - [@alessbell](https://github.com/alessbell)
 - [@hwillson](https://github.com/hwillson)
 - [@jpvajda](https://github.com/jpvajda)
+- [@mrdoombringer](https://github.com/mrdoombringer)
 
 ## Who is Apollo?
 

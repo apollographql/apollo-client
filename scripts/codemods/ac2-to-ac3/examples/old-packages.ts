@@ -1,3 +1,2 @@
-import { graphql } from "@apollo/client/react/hoc";
-import { Query, Mutation } from "@apollo/client/react/components";
+import { Query, Mutation, graphql } from 'react-apollo';
 

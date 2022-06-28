@@ -128,29 +128,23 @@ export default function transformer(file, api) {
   }
 
   function moveComposeToLodash() {
-    const modImport = getImport("apollo-client");
-    console.log(modImport)
-    //return
+    const modImport = getImport("react-apollo");
     const col = modImport.find(j.ImportSpecifier, {
       imported: {
         name: "compose"
       }
     })
-    console.log(col, col.size())
-
 
     if (!col.size()) {
       return
     }
 
     const lodashImport = getImport("lodash")
-    const a = j.importSpecifier(
+    lodashImport.get("specifiers").push(
+      j.importSpecifier(
         j.identifier('flowRight'),
         j.identifier('compose'),
-      )
-    console.log(a)
-    lodashImport.get("specifiers").push(a)
-
+    ))
 
     col.remove()
   }

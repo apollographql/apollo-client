@@ -12,6 +12,10 @@ export default function transformer(file, api) {
 
   const source = j(file.source);
 
+  ensureModule('lodash')
+  moveComposeToLodash()
+  removeModuleIfEmpty('lodash')
+
   renameOrCreateApolloClientImport();
 
   ensureModule('@apollo/react-components')
@@ -21,6 +25,7 @@ export default function transformer(file, api) {
 
   removeModuleIfEmpty('@apollo/react-components')
   removeModuleIfEmpty('@apollo/react-hoc')
+
 
   moveSpecifiersToApolloClient('react-apollo');
   moveSpecifiersToApolloClient('@apollo/react-hooks');
@@ -120,6 +125,34 @@ export default function transformer(file, api) {
       moveImport("Query", reactComponents)
       moveImport("Mutation", reactComponents)
     }
+  }
+
+  function moveComposeToLodash() {
+    const modImport = getImport("apollo-client");
+    console.log(modImport)
+    //return
+    const col = modImport.find(j.ImportSpecifier, {
+      imported: {
+        name: "compose"
+      }
+    })
+    console.log(col, col.size())
+
+
+    if (!col.size()) {
+      return
+    }
+
+    const lodashImport = getImport("lodash")
+    const a = j.importSpecifier(
+        j.identifier('flowRight'),
+        j.identifier('compose'),
+      )
+    console.log(a)
+    lodashImport.get("specifiers").push(a)
+
+
+    col.remove()
   }
 
   function moveSpecifiersToApolloClient(

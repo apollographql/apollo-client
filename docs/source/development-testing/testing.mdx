@@ -451,12 +451,19 @@ In order to properly test local state using `MockedProvider`, you'll need to pas
 `MockedProvider` creates its own ApolloClient instance behind the scenes like this:
 
 ```jsx
-const { mocks, addTypename, defaultOptions, cache, resolvers, link } =
-  this.props;
-const client = new ApolloClient({
-  cache: cache || new Cache({ addTypename }),
+const {
+  mocks = [],
   defaultOptions,
-  link: link || new MockLink(mocks || [], addTypename),
+  addTypename = true,
+  cache = new InMemoryCache({ addTypename }),
+  link = new MockLink(mocks, addTypename),
+  resolvers,
+} = this.props;
+
+const client = new ApolloClient({
+  cache,
+  link,
+  defaultOptions,
   resolvers,
 });
 ```

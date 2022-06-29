@@ -126,6 +126,7 @@ export default function transformer(file, api) {
       moveImport("graphql", reactHoc)
       moveImport("Query", reactComponents)
       moveImport("Mutation", reactComponents)
+      moveImport("Subscription", reactComponents)
     }
   }
 

@@ -26,7 +26,7 @@ Run the following command to install both of these packages:
 npm install @apollo/client graphql
 ```
 
-> If you are using a React sandbox from CodeSandbox and running into issues, try downgrading your `graphql` package. You can use `npm install graphql@15.8.0` to downgrade.
+> If you're using a React sandbox from CodeSandbox and you encounter a `TypeError`, try downgrading the version of the `graphql` package to `15.8.0` in the Dependencies panel. If you encounter a _different_ error after downgrading, refresh the page.
 
 Our example application will use the [FlyBy GraphQL API](https://flyby-gateway.herokuapp.com/) from Apollo Odyssey's [Voyage tutorial series](https://www.apollographql.com/tutorials/voyage-part1/). This API provides a list of intergalactic travel locations and details about those locations 👽
 
@@ -87,7 +87,7 @@ You connect Apollo Client to React with the `ApolloProvider` component. Similar 
 
 In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest putting the `ApolloProvider` somewhere high in your app, above any component that might need to access GraphQL data.
 
-```jsx title="index.js" {22-24}
+```jsx title="index.js" {15-17}
 import { React } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';

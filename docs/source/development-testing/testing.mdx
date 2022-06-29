@@ -459,7 +459,7 @@ If you're using Apollo Client 2.x [local resolvers](../local-state/local-resolve
 ```
 
 
-`MockedProvider` creates its own ApolloClient instance behind the scenes like this:
+This is necessary because otherwise, the `MockedProvider` component doesn't know how resolve [local-only fields](../local-state/managing-state-with-field-policies/) in your queries.
 
 ```jsx
 const {

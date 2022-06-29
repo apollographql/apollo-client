@@ -446,7 +446,18 @@ export const cache = new ApolloClient({
 
 ## Testing local state
 
-In order to properly test local state using `MockedProvider`, you'll need to passed a configured cache into `MockedProvider` itself.
+To test local state with `MockedProvider`, you need to pass it your configured `InMemoryCache` instance, like so:
+
+```jsx
+<MockedProvider mocks={mocks} cache={cache} ...
+```
+
+If you're using Apollo Client 2.x [local resolvers](../local-state/local-resolvers/), you _also_ need to pass your resolver map:
+
+```jsx
+<MockedProvider mocks={mocks} cache={cache} resolvers={resolvers} ...
+```
+
 
 `MockedProvider` creates its own ApolloClient instance behind the scenes like this:
 

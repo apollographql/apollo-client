@@ -106,23 +106,23 @@ export default function transformer(file, api) {
 
   function moveOldSpecifiersToApolloReact(moduleName = "react-apollo") {
     const moduleImport = getImport(moduleName);
-      const reactComponents = getImport('@apollo/react-components');
-      const reactHoc = getImport('@apollo/react-hoc');
+    const reactComponents = getImport('@apollo/react-components');
+    const reactHoc = getImport('@apollo/react-hoc');
 
-    if (moduleImport.size()) {
-      function moveImport(importedName= "graphql", targetModule) {
-        const a = moduleImport.find(j.ImportSpecifier, {
-          imported: {
-            name: importedName
-          }
-        })
-        if (a.size()) {
-          targetModule.get('specifiers').push(...a.nodes()); 
+    function moveImport(importedName= "graphql", targetModule) {
+      const speci = moduleImport.find(j.ImportSpecifier, {
+        imported: {
+          name: importedName
         }
-
-        a.remove()
+      })
+      if (speci.size()) {
+        targetModule.get('specifiers').push(...speci.nodes()); 
       }
 
+      speci.remove()
+    }
+
+    if (moduleImport.size()) {
       moveImport("graphql", reactHoc)
       moveImport("Query", reactComponents)
       moveImport("Mutation", reactComponents)

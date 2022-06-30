@@ -25,9 +25,7 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const link = new WebSocketLink(
   new SubscriptionClient("ws://localhost:4000/graphql", {
-    options: {
-      reconnect: true,
-    },
+    reconnect: true
   })
 );
 ```

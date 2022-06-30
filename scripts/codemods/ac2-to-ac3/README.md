@@ -60,7 +60,6 @@ This transform does not currently handle
 
 * `export ... from "apollo-*"` declarations
 * `import * as namespace from "apollo-*"` declarations
-* Imports from the older `react-apollo` package
 * Checking for proper usage of moved imports
 
 If you discover other shortcomings, please feel free to suggest additions

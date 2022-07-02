@@ -106,7 +106,7 @@
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "27.5.2",
     "@types/lodash": "4.14.182",
-    "@types/node": "16.11.41",
+    "@types/node": "16.11.42",
     "@types/react": "17.0.47",
     "@types/react-dom": "17.0.17",
     "@types/use-sync-external-store": "^0.0.3",

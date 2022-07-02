@@ -117,7 +117,7 @@
     "fetch-mock": "9.11.0",
     "glob": "8.0.3",
     "graphql": "16.5.0",
-    "graphql-ws": "5.9.0",
+    "graphql-ws": "5.9.1",
     "jest": "27.5.1",
     "jest-fetch-mock": "3.0.3",
     "jest-junit": "13.2.0",

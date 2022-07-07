@@ -81,6 +81,7 @@ export class LocalState<TCacheShape> {
   private client: ApolloClient<TCacheShape>;
   private resolvers?: Resolvers;
   private fragmentMatcher: FragmentMatcher;
+  private selectionsToResolve = new WeakMap<ExecutableDefinitionNode, Set<SelectionNode>>()
 
   constructor({
     cache,
@@ -482,7 +483,7 @@ export class LocalState<TCacheShape> {
     // This function takes into account transitive fragment spreads.
     // Complexity equals to a single `visit` over the full document.
     const isNode = (node: ASTNode | readonly ASTNode[]): node is ASTNode => !Array.isArray(node);
-    const selectionsToResolve = new Map<ExecutableDefinitionNode, Set<SelectionNode>>();
+    const selectionsToResolve = this.selectionsToResolve;
 
     function collectByDefinition(definitionNode: ExecutableDefinitionNode): Set<SelectionNode> {
       if (!selectionsToResolve.has(definitionNode)) {

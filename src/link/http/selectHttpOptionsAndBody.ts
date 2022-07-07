@@ -148,10 +148,10 @@ export function selectHttpOptionsAndBodyInternal(
     options = {
       ...options,
       ...config.options,
-      headers: {
-        ...options.headers,
-        ...headersToLowerCase(config.headers),
-      },
+      headers: normalizeHeaders({
+        ...options.headers, 
+        ...config.headers
+      }),
     };
 
     if (config.credentials) {
@@ -179,15 +179,36 @@ export function selectHttpOptionsAndBodyInternal(
   };
 };
 
-function headersToLowerCase(
+function normalizeHeaders(
   headers: Record<string, string> | undefined
 ): typeof headers {
-  if (headers) {
-    const normalized = Object.create(null);
-    Object.keys(Object(headers)).forEach(name => {
-      normalized[name.toLowerCase()] = headers[name];
-    });
-    return normalized;
+  if (!headers) {
+    return headers
   }
-  return headers;
+
+  // Remove potential duplicates, preserving
+  // last (by insertion order). Save the original 
+  // capitalization of each header for later.
+  // This is done to prevent unintentionally duplicating 
+  // a header instead of overwriting it, see 
+  // apollo-client/#8447 and #8449).
+  debugger;
+  const headerNames = Object.create(null);
+  Object.keys(Object(headers)).forEach(name => {
+    headerNames[name.toLowerCase()] = {originalName: name, value:headers[name]}
+  });
+
+  // Go through our headers and, now that we're sure there's no
+  // duplicate names, set the names back to their original 
+  // capitalization.
+  // This is done to allow for non-http-spec-compliant servers 
+  // that expect intentionally capitalized header names 
+  // (See #6741).
+  const normalizedHeaders = Object.create(null);
+  Object.keys(headerNames).forEach(name => {
+    const originalName = headerNames[name].originalName;
+    normalizedHeaders[originalName] = headerNames[name].value;
+  });
+
+  return normalizedHeaders;
 }

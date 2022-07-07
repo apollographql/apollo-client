@@ -1,3 +1,88 @@
+## Apollo Client 3.6.3 (unreleased)
+
+### Bug Fixes
+
+- Simplify `useQuery(query, { defaultOptions })` default options processing in order to fix bug where `skip: true` queries failed to execute upon switching to `skip: false`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9665](https://github.com/apollographql/apollo-client/pull/9665)
+
+- Add tests of skipping/unskipping and `useLazyQuery` with `defaultOptions`, and fix a bug causing duplicate requests. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9666](https://github.com/apollographql/apollo-client/pull/9666)
+
+- Update `ts-invariant` to version 0.10.2 to fix source map warnings. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9672](https://github.com/apollographql/apollo-client/pull/9672)
+
+- Test that `useQuery` queries with `skip: true` do not stall server-side rendering. <br/>
+  [@nathanmarks](https://github.com/nathanmarks) and [@benjamn](https://github.com/benjamn) in [#9677](https://github.com/apollographql/apollo-client/pull/9677)
+
+## Apollo Client 3.6.2 (2022-05-02)
+
+### Bug Fixes
+
+- Pass `getServerSnapshot` function to `useSyncExternalStore` in addition to `getSnapshot`, though the two functions behave identically. This change should fix/unbreak React 18 server rendering. <br/>
+  [@hungphongbk](https://github.com/hungphongbk) in [#9652](https://github.com/apollographql/apollo-client/pull/9652)
+
+### Improvements
+
+- Consider `networkError.result.errors` in addition to `result.errors` in `PersistedQueryLink`. <br/>
+  [@redaid113](https://github.com/redaid113) and [@benjamn](https://github.com/benjamn) in [#9410](https://github.com/apollographql/apollo-client/pull/9410)
+
+## Apollo Client 3.6.1 (2022-04-28)
+
+### Bug Fixes
+
+- Remove recently-added, internal `fetchBlockingPromise` option from the `WatchQueryOptions` interface, due to regressions. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9504](https://github.com/apollographql/apollo-client/pull/9504)
+
+## Apollo Client 3.6.0 (2022-04-26)
+
+### Potentially disruptive changes
+
+- Calling `fetchMore` for queries using the `cache-and-network` or `network-only` fetch policies will no longer trigger additional network requests when cache results are complete. Instead, those complete cache results will be delivered as if using the `cache-first` fetch policy. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9504](https://github.com/apollographql/apollo-client/pull/9504)
+
+- Reimplement `useQuery` and `useLazyQuery` to use the [proposed `useSyncExternalStore` API](https://github.com/reactwg/react-18/discussions/86) from React 18. <br/>
+  [@brainkim](https://github.com/brainkim) and [@benjamn](https://github.com/benjamn) in [#8785](https://github.com/apollographql/apollo-client/pull/8785) and [#9596](https://github.com/apollographql/apollo-client/pull/9596)
+
+- Fixed bug where the `useLazyQuery` execution function would always use the `refetch` method of `ObservableQuery`, instead of properly reapplying the current `fetchPolicy` using the `reobserve` method. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9564](https://github.com/apollographql/apollo-client/pull/9564)
+
+  > Since this `reobserve` method is useful and used internally, we have now exposed it as `use[Lazy]Query(...).reobserve` (which optionally takes a `Partial<WatchQueryOptions>` of new options), to supplement the existing `refetch` method. Note that `reobserve` permanently updates the `variables` and other options of the `ObservableQuery`, unlike `refetch({ ...variables })`, which does not save those `variables`.
+
+- The internal use of `options.fetchBlockingPromise` by `useQuery` and `useLazyQuery` may slightly delay the delivery of network results, compared to previous versions of Apollo Client. Since network results are already delivered asynchronously, these timing differences should not be disruptive in most cases. Nevertheless, please open an issue if the timing differences are a problem for you (and you have no easy workaround). <br/>
+  [@benjamn](https://github.com/benjamn) in [#9599](https://github.com/apollographql/apollo-client/pull/9599)
+
+### React 18
+
+In both its `peerDependencies` and its internal implementation, Apollo Client v3.6 should no longer prevent you from updating to React 18 in your applications.
+
+Internally, we have refactored `useQuery` and `useLazyQuery` to be implemented in terms of React's new (shimmable) `useSyncExternalStore` hook, demonstrating Apollo Client can serve as an external store with a referentially stable, synchronous API, as needed by React.
+
+As part of this refactoring, we also improved the behavior of `useQuery` and `useLazyQuery` when used in `<React.StrictMode>`, which [double-renders components in development](https://github.com/reactwg/react-18/discussions/96). While this double-rendering always results in calling `useQuery` twice, forcing Apollo Client to create and then discard an unnecessary `ObservableQuery` object, we now have multiple defenses in place against executing any network queries for the unused `ObservableQuery` objects.
+
+In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling our server-side rendering utilities (`getDataFromTree` et al.), and introducing suspenseful versions of our hooks, to take full advantage of the new patterns React 18+ enables for data management libraries like Apollo Client.
+
+### Improvements
+
+- Allow `BatchLink` to cancel queued and in-flight operations. <br/>
+  [@PowerKiKi](https://github.com/PowerKiKi) and [@benjamn](https://github.com/benjamn) in [#9248](https://github.com/apollographql/apollo-client/pull/9248)
+
+- Add `GraphQLWsLink` in `@apollo/client/link/subscriptions`. This link is similar to the existing `WebSocketLink` in `@apollo/client/link/ws`, but uses the newer [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) package and protocol instead of the older `subscriptions-transport-ws` implementation. This functionality was technically first released in `@apollo/client@3.5.10`, but semantically belongs in the 3.6.0 minor version.
+  [@glasser](https://github.com/glasser) in [#9369](https://github.com/apollographql/apollo-client/pull/9369)
+
+- Allow passing `defaultOptions` to `useQuery` to avoid clobbering/resetting existing options when `useQuery` is called repeatedly. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9563](https://github.com/apollographql/apollo-client/pull/9563), superseding [#9223](https://github.com/apollographql/apollo-client/pull/9223)
+
+- Provide additional context to `nextFetchPolicy` functions to assist with `fetchPolicy` transitions. More details can be found in the [`nextFetchPolicy` documentation](https://www.apollographql.com/docs/react/data/queries/#nextfetchpolicy). <br/>
+  [@benjamn](https://github.com/benjamn) in [#9222](https://github.com/apollographql/apollo-client/pull/9222)
+
+- Remove nagging deprecation warning about passing an `options.updateQuery` function to `fetchMore`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9504](https://github.com/apollographql/apollo-client/pull/9504)
+
+- Let `addTypenameToDocument` take any `ASTNode` (including `DocumentNode`, as before). <br/>
+  [@benjamn](https://github.com/benjamn) in [#9595](https://github.com/apollographql/apollo-client/pull/9595)
+
+- Set `useMutation` internal `isMounted` variable to `true` again when component remounted. <br/>
+  [@devpeerapong](https://github.com/devpeerapong) in [#9561](https://github.com/apollographql/apollo-client/pull/9561)
 
 ## Apollo Client 3.5.10 (2022-02-24)
 
@@ -107,8 +192,8 @@
 
 ## Apollo Client 3.5.2 (2021-11-10)
 
-- Fix useMutation execute function returning non-identical execution functions when passing similar options. <br/>
-  [@brainkim](https://github.com/brainkim) in [#9093](https://github.com/apollographql/apollo-client/pull/9037)
+- Fix `useMutation` execute function returning non-identical execution functions when passing similar options. <br/>
+  [@brainkim](https://github.com/brainkim) in [#9037](https://github.com/apollographql/apollo-client/pull/9037)
 
 ## Apollo Client 3.5.1 (2021-11-09)
 
@@ -729,7 +814,7 @@
 - The [Pagination](https://www.apollographql.com/docs/react/pagination/overview/) article has been completely rewritten (and split into multiple pages) to cover Apollo Client 3 field policies. <br/>
   [@benjamn](https://github.com/benjamn) and [@StephenBarlow](https://github.com/StephenBarlow) in [#7175](https://github.com/apollographql/apollo-client/pull/7175)
 
-- Revamp [local state tutorial chapter](https://www.apollographql.com/docs/tutorial/local-state/) for Apollo Client 3, including reactive variables. <br/>
+- Revamp [local state tutorial chapter](https://www.apollographql.com/tutorials/fullstack-quickstart/managing-local-state) for Apollo Client 3, including reactive variables. <br/>
   [@StephenBarlow](https://github.com/StephenBarlow) in [`apollographql@apollo#1050`](https://github.com/apollographql/apollo/pull/1050)
 
 - Add examples of using `ApolloLink` to modify response data asynchronously. <br/>

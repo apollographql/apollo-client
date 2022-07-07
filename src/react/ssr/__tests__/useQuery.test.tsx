@@ -184,6 +184,56 @@ describe('useQuery Hook SSR', () => {
     });
   });
 
+  it('should render SSR tree rendering if `skip` option is `true` for only one instance of the query', async () => {
+    let renderCount = 0;
+
+    const AnotherComponent = () => {
+      const {
+        loading,
+        data,
+      } = useQuery(CAR_QUERY, { skip: false });
+
+      renderCount += 1;
+
+      if (!loading) {
+        expect(data).toEqual(CAR_RESULT_DATA);
+        const { make, model, vin } = data.cars[0];
+        return (
+          <div>
+            {make}, {model}, {vin}
+          </div>
+        );
+      }
+
+      return null;
+    };
+
+    const Component = () => {
+      const {
+        loading,
+        data,
+      } = useQuery(CAR_QUERY, { skip: true });
+      renderCount += 1;
+
+      expect(loading).toBeFalsy();
+      expect(data).toBeUndefined();
+
+      return <AnotherComponent />;
+    };
+
+    const app = (
+      <MockedProvider mocks={CAR_MOCKS}>
+        <Component />
+      </MockedProvider>
+    );
+
+    return renderToStringWithData(app).then(result => {
+      expect(renderCount).toBe(4);
+      expect(result).toMatch(/Audi/);
+      expect(result).toMatch(/RS8/);
+    });
+  });
+
   it('should return data written previously to cache during SSR pass if using cache-only fetchPolicy', async () => {
     const cache = new InMemoryCache({
       typePolicies: {

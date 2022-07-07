@@ -70,7 +70,7 @@ it("renders without error", async () => {
 });
 ```
 
-> Note that `@testing-library/jest-dom` is typically imported in your [test setup file](https://jestjs.io/docs/configuration) and makes certain [custom jest matchers](https://github.com/testing-library/jest-dom#custom-matchers) like `toBeInTheDocument` available. It is included in the code you'll find on this page for completeness.
+> **Note:** Usually, you import `@testing-library/jest-dom` in your [test setup file](https://jestjs.io/docs/configuration), which provides certain [custom jest matchers](https://github.com/testing-library/jest-dom#custom-matchers) (such as `toBeInTheDocument`). The import is included in these examples for completeness.
 
 #### Defining mocked responses
 
@@ -164,7 +164,7 @@ To test how your component is rendered after its query completes, Testing Librar
 
 > `findBy` queries work when you expect an element to appear but the change to the DOM might not happen immediately.
 
-We can use the asynchronous `screen.findByText` method to query the DOM elements containing the loading message first, followed by the success message `"Buck is a poodle"` which appears after our query completes:
+We can use the asynchronous `screen.findByText` method to query the DOM elements containing the loading message first, followed by the success message `"Buck is a poodle"` (which appears after our query completes):
 
 ```jsx
 it("should render dog", async () => {

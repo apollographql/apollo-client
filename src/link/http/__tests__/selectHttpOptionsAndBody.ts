@@ -111,8 +111,8 @@ describe('selectHttpOptionsAndBody', () => {
     expect(body).not.toHaveProperty('extensions');
 
     expect(options.headers).toEqual({
-      accept: 'application/octet-stream',
-      'content-type': 'application/json',
+      Accept: 'application/octet-stream',
+      'CONTENT-type': 'application/json',
     });
   });
 

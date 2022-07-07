@@ -36,7 +36,7 @@ export const GET_DOG_QUERY = gql`
 
 export function Dog({ name }) {
   const { loading, error, data } = useQuery(GET_DOG_QUERY, {
-    variables: { name },
+    variables: { name }
   });
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error.message}</p>;
@@ -53,10 +53,10 @@ export function Dog({ name }) {
 A basic rendering test for the component looks like this (minus mocked responses):
 
 ```jsx title="dog.test.js"
-import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
+import "@testing-library/jest-dom";
+import { render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
-import { GET_DOG_QUERY, Dog } from "./Dog";
+import { GET_DOG_QUERY, Dog } from "./dog";
 
 const mocks = []; // We'll fill this in next
 
@@ -82,15 +82,15 @@ const mocks = [
     request: {
       query: GET_DOG_QUERY,
       variables: {
-        name: "Buck",
-      },
+        name: "Buck"
+      }
     },
     result: {
       data: {
-        dog: { id: "1", name: "Buck", breed: "bulldog" },
-      },
-    },
-  },
+        dog: { id: "1", name: "Buck", breed: "bulldog" }
+      }
+    }
+  }
 ];
 ```
 
@@ -117,25 +117,25 @@ Combining our code above, we get the following complete test:
 <ExpansionPanel title="Click to expand 🐶">
 
 ```jsx title="dog.test.js"
-import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
+import "@testing-library/jest-dom";
+import { render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
-import { GET_DOG_QUERY, Dog } from "./Dog";
+import { GET_DOG_QUERY, Dog } from "./dog";
 
 const mocks = [
   {
     request: {
       query: GET_DOG_QUERY,
       variables: {
-        name: "Buck",
-      },
+        name: "Buck"
+      }
     },
     result: {
       data: {
-        dog: { id: "1", name: "Buck", breed: "bulldog" },
-      },
-    },
-  },
+        dog: { id: "1", name: "Buck", breed: "bulldog" }
+      }
+    }
+  }
 ];
 
 it("renders without error", async () => {
@@ -171,11 +171,11 @@ it("should render dog", async () => {
   const dogMock = {
     request: {
       query: GET_DOG_QUERY,
-      variables: { name: "Buck" },
+      variables: { name: "Buck" }
     },
     result: {
-      data: { dog: { id: 1, name: "Buck", breed: "poodle" } },
-    },
+      data: { dog: { id: 1, name: "Buck", breed: "poodle" } }
+    }
   };
   render(
     <MockedProvider mocks={[dogMock]} addTypename={false}>
@@ -203,9 +203,9 @@ it("should show error UI", async () => {
   const dogMock = {
     request: {
       query: GET_DOG_QUERY,
-      variables: { name: "Buck" },
+      variables: { name: "Buck" }
     },
-    error: new Error("An error occurred"),
+    error: new Error("An error occurred")
   };
   render(
     <MockedProvider mocks={[dogMock]} addTypename={false}>
@@ -293,16 +293,16 @@ In the test above, `DELETE_DOG_MUTATION` is _not_ executed, because the mutate f
 The following test _does_ execute the mutation by clicking the button:
 
 ```jsx title="delete-dog.test.js"
-it("should render loading state initially", async () => {
+it("should render loading and success states on delete", async () => {
   const deleteDog = { name: "Buck", breed: "Poodle", id: 1 };
   const mocks = [
     {
       request: {
         query: DELETE_DOG_MUTATION,
-        variables: { name: "Buck" },
+        variables: { name: "Buck" }
       },
-      result: { data: deleteDog },
-    },
+      result: { data: deleteDog }
+    }
   ];
 
   render(
@@ -433,4 +433,4 @@ This is necessary because otherwise, the `MockedProvider` component doesn't know
 
 For a working example that demonstrates how to test components, check out this project on CodeSandbox:
 
-[![Edit React-Apollo Testing](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/40k7j708n4)
+[![Edit React-Apollo Testing](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/react-apollo-testing-rwwrx6)

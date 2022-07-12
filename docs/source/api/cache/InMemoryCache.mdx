@@ -976,24 +976,24 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 </td>
 <td>
 
-**Required.** A map that specifies the modifier function to call for each modified field.
+**Required.** A map that specifies the modifier function to call for each modified field of the cached object.
 
 See [Modifier function API](#modifier-function-api) below.
 </td>
 </tr>
 
-<tr class="required">
+<tr>
 <td>
 
 ###### `id`
 
-`String`
+`string`
 </td>
 <td>
 
-The ID of the cached object to modify. **Required** in most cases, but technically optional if the object being modified is a query, as the default value (ROOT_QUERY) is the hard-coded ID of the root query singleton object.
+The ID of the cached object to modify.
 
-The default value is `ROOT_QUERY`
+The default value is `ROOT_QUERY` (the ID of the root query singleton object).
 </td>
 </tr>
 

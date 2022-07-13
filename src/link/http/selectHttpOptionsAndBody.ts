@@ -191,11 +191,10 @@ function normalizeHeaders(
   // capitalization of each header for later.
   // This is done to prevent unintentionally duplicating 
   // a header instead of overwriting it, see 
-  // apollo-client/#8447 and #8449).
-  debugger;
+  // #8447 and #8449).
   const headerNames = Object.create(null);
   Object.keys(Object(headers)).forEach(name => {
-    headerNames[name.toLowerCase()] = {originalName: name, value:headers[name]}
+    headerNames[name.toLowerCase()] = { originalName: name, value: headers[name] }
   });
 
   // Go through our headers and, now that we're sure there's no

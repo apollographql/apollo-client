@@ -190,11 +190,9 @@ export function selectHttpOptionsAndBodyInternal(
   };
 };
 
-// 
 // Remove potential duplicates, preserving last (by insertion order).
 // This is done to prevent unintentionally duplicating a header
 // instead of overwriting it, see #8447 and #8449).
-// 
 function removeDuplicates(
   headers: Record<string, string>,
   preserveHeaderCase: boolean | undefined

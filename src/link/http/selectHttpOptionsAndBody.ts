@@ -173,7 +173,7 @@ export function selectHttpOptionsAndBodyInternal(
     };
   });
 
-  options.headers = removeDuplicates(options.headers, http.preserveHeaderCase);
+  options.headers = removeDuplicateHeaders(options.headers, http.preserveHeaderCase);
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
@@ -190,10 +190,10 @@ export function selectHttpOptionsAndBodyInternal(
   };
 };
 
-// Remove potential duplicates, preserving last (by insertion order).
-// This is done to prevent unintentionally duplicating a header
-// instead of overwriting it, see #8447 and #8449).
-function removeDuplicates(
+// Remove potential duplicate header names, preserving last (by insertion order).
+// This is done to prevent unintentionally duplicating a header instead of 
+// overwriting it (See #8447 and #8449).
+function removeDuplicateHeaders(
   headers: Record<string, string>,
   preserveHeaderCase: boolean | undefined
 ): typeof headers {

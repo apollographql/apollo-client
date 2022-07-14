@@ -204,6 +204,49 @@ describe('useMutation Hook', () => {
       expect(result.current[1].data).toEqual(data2);
     });
 
+    it('should not call setResult on an unmounted component', async () => {
+      const errorSpy = jest.spyOn(console, "error");
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const useCreateTodo = () => {
+        const [createTodo, { reset }] = useMutation(
+          CREATE_TODO_MUTATION
+        );
+        return { reset, createTodo };
+      };
+
+      const { result, unmount } = renderHook(
+        () => useCreateTodo(),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
+      );
+
+      unmount();
+
+      await act(async () => {
+        await result.current.createTodo({ variables });
+        await result.current.reset();
+      })
+
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
+    });
+
     it('should resolve mutate function promise with mutation results', async () => {
       const variables = {
         description: 'Get milk!'

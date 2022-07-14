@@ -49,8 +49,7 @@ itAsync(
     client
       .watchQuery({
         query,
-        // fetchPolicy: "cache-first", // ℹ️ change to "cache-and-network" will make it work
-        fetchPolicy: "cache-and-network",
+        fetchPolicy: "cache-first", // ℹ️ change to "cache-and-network" will make it work
         variables: {
           ids: ["1", "2", "3"],
         },

@@ -31,8 +31,8 @@ const cache = new InMemoryCache({
 
 itAsync(
   "does network request when ids are not found in cache",
-  (resolve, reject) => {
-    const client = new ApolloClient({
+  (resolve, reject) =>
+    new ApolloClient({
       link: ApolloLink.from([
         (operation, forward) => {
           // indicates, that an outgoing query attempted is being done
@@ -45,9 +45,7 @@ itAsync(
         },
       ]),
       cache,
-    });
-
-    client
+    })
       .watchQuery({
         query,
         fetchPolicy: "cache-first",
@@ -55,6 +53,5 @@ itAsync(
           ids: ["1", "2", "3"],
         },
       })
-      .subscribe({ error: reject });
-  }
+      .subscribe({ error: reject })
 );

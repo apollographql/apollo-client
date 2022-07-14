@@ -20,6 +20,7 @@ const cache = new InMemoryCache({
           read(_, { args, toReference }) {
             // ℹ️ uncommenting the following line will make it work
             // return false;
+
             return args?.ids.map((id: string) => toReference(`Product:${id}`));
           },
         },
@@ -49,7 +50,7 @@ itAsync(
     client
       .watchQuery({
         query,
-        fetchPolicy: "cache-first", // ℹ️ change to "cache-and-network" will make it work
+        fetchPolicy: "cache-first",
         variables: {
           ids: ["1", "2", "3"],
         },

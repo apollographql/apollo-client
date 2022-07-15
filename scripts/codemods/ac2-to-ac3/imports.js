@@ -124,6 +124,11 @@ export default function transformer(file, api) {
 
     if (moduleImport.size()) {
       moveImport("graphql", reactHoc)
+      moveImport("DataProps", reactHoc)
+      moveImport("DataValue", reactHoc)
+      moveImport("QueryControls", reactHoc)
+
+
       moveImport("Query", reactComponents)
       moveImport("Mutation", reactComponents)
       moveImport("Subscription", reactComponents)

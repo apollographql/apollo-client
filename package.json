@@ -29,6 +29,7 @@
   },
   "homepage": "https://www.apollographql.com/docs/react/",
   "scripts": {
+    "postinstall": "patch-package",
     "prebuild": "npm run clean",
     "build": "tsc",
     "postbuild": "npm run update-version && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run postprocess-dist && npm run verify-version",
@@ -123,6 +124,7 @@
     "jest-fetch-mock": "3.0.3",
     "jest-junit": "14.0.0",
     "lodash": "4.17.21",
+    "patch-package": "6.4.7",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "recast": "0.21.1",

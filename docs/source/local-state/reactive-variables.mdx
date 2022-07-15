@@ -9,6 +9,32 @@ New in Apollo Client 3, **reactive variables** are a useful mechanism for repres
 
 > A query "depends on" a reactive variable if any of the query's requested fields defines a [`read` function](../caching/cache-field-behavior/#the-read-function) that reads the variable's value.
 
+## useReactiveVar hook
+
+The `useReactiveVar` hook can be used to read from a reactive variable in a way that allows the React component to rerender if/when the variable is next updated.
+
+Previously, the only way for a reactive variable to trigger a React component rerender was through the use of `useQuery`. Now you don't have to be using `useQuery` to benefit from the reactivity that `ReactiveVar<T>` provides.
+
+Implementing `useReactiveVar` required generalizing the `ReactiveVar<T>` API to allow arbitrary listeners (not just InMemoryCache objects) like so:
+
+```tsx
+import { ReactiveVar, makeVar } from "@apollo/client";
+
+const todosInitialValue: Todos = [
+  {
+    id: 0,
+    completed: false,
+    text: "Use Apollo Client 3"
+  }
+]
+
+export const todosVar: ReactiveVar<Todos> = makeVar<Todos>(
+  todosInitialValue
+);
+
+```
+
+
 ## Creating
 
 Create a reactive variable with the `makeVar` method, like so:
@@ -19,7 +45,7 @@ import { makeVar } from '@apollo/client';
 const cartItemsVar = makeVar([]);
 ```
 
-This code creates a reactive variable with an empty array as its initial value. 
+This code creates a reactive variable with an empty array as its initial value.
 
 > **Important:** The return value of `makeVar` is a _function_ that you call to read or modify your reactive variable's value.
 

@@ -9,32 +9,6 @@ New in Apollo Client 3, **reactive variables** are a useful mechanism for repres
 
 > A query "depends on" a reactive variable if any of the query's requested fields defines a [`read` function](../caching/cache-field-behavior/#the-read-function) that reads the variable's value.
 
-## useReactiveVar hook
-
-The `useReactiveVar` hook can be used to read from a reactive variable in a way that allows the React component to rerender if/when the variable is next updated.
-
-Previously, the only way for a reactive variable to trigger a React component rerender was through the use of `useQuery`. Now you don't have to be using `useQuery` to benefit from the reactivity that `ReactiveVar<T>` provides.
-
-Implementing `useReactiveVar` required generalizing the `ReactiveVar<T>` API to allow arbitrary listeners (not just InMemoryCache objects) like so:
-
-```tsx
-import { ReactiveVar, makeVar } from "@apollo/client";
-
-const todosInitialValue: Todos = [
-  {
-    id: 0,
-    completed: false,
-    text: "Use Apollo Client 3"
-  }
-]
-
-export const todosVar: ReactiveVar<Todos> = makeVar<Todos>(
-  todosInitialValue
-);
-
-```
-
-
 ## Creating
 
 Create a reactive variable with the `makeVar` method, like so:
@@ -86,6 +60,23 @@ With the `useReactiveVar` hook, React components can also include reactive varia
 
 For more information, see [Storing local state in reactive variables](./managing-state-with-field-policies/#storing-local-state-in-reactive-variables).
 
+### useReactiveVar hook
+
+The `useReactiveVar` hook can be used to read from a reactive variable in a way that allows the React component to rerender if/when the variable is next updated.
+
+Previously, the only way for a reactive variable to trigger a React component rerender was through the use of `useQuery`. Now you don't have to be using `useQuery` to benefit from the reactivity that `ReactiveVar<T>` provides.
+
+```tsx
+import { makeVar, useReactiveVar } from "@apollo/client";
+export const cartItemsVar = makeVar([]);
+
+export function Cart() {
+  const cartItems = useReactiveVar(cartItemsVar);
+  // ...
+```
+
 ## Example application
 
 [This example to-do list application](https://github.com/apollographql/ac3-state-management-examples/tree/master/apollo-local-state) uses reactive variables to track both the current list of to-do items and the filter that determines which items to display. See [`cache.tsx`](https://github.com/apollographql/ac3-state-management-examples/blob/master/apollo-local-state/src/cache.tsx) in particular.
+
+

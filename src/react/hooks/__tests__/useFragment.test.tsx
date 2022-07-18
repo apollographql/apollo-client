@@ -1,12 +1,23 @@
 import * as React from "react";
-import { render, waitFor } from "@testing-library/react";
+import { render, waitFor, screen } from "@testing-library/react";
 import { renderHook } from '@testing-library/react-hooks';
+import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
 import { useFragment } from "../useFragment";
 import { MockedProvider } from "../../../testing";
-import { InMemoryCache, gql, TypedDocumentNode, Reference } from "../../../core";
+import { ApolloProvider } from "../../context";
+import {
+  InMemoryCache,
+  gql,
+  TypedDocumentNode,
+  Reference,
+  ApolloClient,
+  Observable,
+  ApolloLink,
+} from "../../../core";
 import { useQuery } from "../useQuery";
+import { useBackgroundQuery } from "../useBackgroundQuery";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -763,5 +774,162 @@ describe("useFragment", () => {
     });
 
     expect(cache.gc().sort()).toEqual(["Item:5"]);
+  });
+  it("returns new diff when UseFragmentOptions change", async () => {
+    type Item = {
+      __typename: string;
+      id: number;
+      text?: string;
+    };
+
+    const ListFragment: TypedDocumentNode<QueryData> = gql`
+      fragment ListFragment on Query {
+        list {
+          id
+        }
+      }
+    `;
+
+    const ItemFragment: TypedDocumentNode<Item> = gql`
+      fragment ItemFragment on Item {
+        text
+      }
+    `;
+
+    type QueryData = {
+      list: Item[];
+    };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Item: {
+          fields: {
+            text(existing, { readField }) {
+              return existing || `Item #${readField("id")}`;
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(operation => new Observable(observer => {
+        if (operation.operationName === "ListQueryWithItemFragment") {
+          setTimeout(() => {
+            observer.next({
+              data: {
+                list: [
+                  { __typename: "Item", id: 1 },
+                  { __typename: "Item", id: 2 },
+                  { __typename: "Item", id: 5 },
+                ],
+              }
+            });
+            observer.complete();
+          }, 10);
+        } else {
+          observer.error(`unexpected query ${
+            operation.operationName ||
+            operation.query
+          }`);
+        }
+      })),
+    });
+
+    const listQuery: TypedDocumentNode<QueryData> = gql`
+      query ListQueryWithItemFragment {
+        list {
+          id
+          ...ItemFragment
+        }
+      }
+      ${ItemFragment}
+    `;
+
+    const renders: string[] = [];
+
+    function List() {
+      renders.push("list");
+      const [currentItem, setCurrentItem] = React.useState(1);
+      useBackgroundQuery({
+        query: listQuery,
+      });
+
+      const { complete, data } = useFragment({
+        fragment: ListFragment,
+        from: { __typename: "Query" },
+      });
+
+      return complete ? (
+        <>
+          <select onChange={(e) => {
+            setCurrentItem(parseInt(e.currentTarget.value))
+          }}>
+            {data!.list.map(item => <option key={item.id} value={item.id}>Select item {item.id}</option>)}
+          </select>
+          <div>
+            Currently selected item: {currentItem}
+            <Item id={currentItem} />
+          </div>
+          <ol>
+          {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+          </ol>
+        </>
+      ) : null;
+    }
+
+    function Item({ id }: { id: number }) {
+      renders.push("item " + id);
+      const { complete, data } = useFragment({
+        fragment: ItemFragment,
+        from: {
+          __typename: "Item",
+          id,
+        },
+      });
+      return <li>{complete ? data!.text : "incomplete"}</li>;
+    }
+
+    const { getAllByText } = render(
+      <ApolloProvider client={client}>
+        <List />
+      </ApolloProvider>
+    );
+
+    function getItemTexts() {
+      return getAllByText(/^Item/).map(
+        li => li.firstChild!.textContent
+      );
+    }
+
+    await waitFor(() => {
+      expect(getItemTexts()).toEqual([
+        // On initial render, Item #1 is selected
+        // and renders above the list
+        "Item #1",
+        "Item #1",
+        "Item #2",
+        "Item #5",
+      ]);
+    });
+
+    // Select Item #2 item via <select />
+    const user = userEvent.setup();
+    await user.selectOptions(
+      screen.getByRole('combobox'),
+      screen.getByRole('option', { name: 'Select item 2' })
+    );
+
+    await waitFor(() => {
+      expect(getItemTexts()).toEqual([
+        // Now the currently selected item at the top should render
+        // "Item #2" + the list of items below
+        "Item #2",
+        "Item #1",
+        "Item #2",
+        "Item #5",
+      ]);
+    });
   });
 });

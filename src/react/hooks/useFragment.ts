@@ -90,8 +90,10 @@ export function useFragment<TData, TVars>(
     },
 
     () => {
-      return resultRef.current ||
-        (resultRef.current = diffToResult(latestDiff));
+      return resultRef.current &&
+        equal(resultRef.current.data, diffToResult(latestDiff).data)
+        ? resultRef.current
+        : (resultRef.current = diffToResult(latestDiff));
     },
   );
 }

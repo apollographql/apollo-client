@@ -775,13 +775,8 @@ describe("useFragment", () => {
 
     expect(cache.gc().sort()).toEqual(["Item:5"]);
   });
-  it("returns new diff when UseFragmentOptions change", async () => {
-    type Item = {
-      __typename: string;
-      id: number;
-      text?: string;
-    };
 
+  it("returns new diff when UseFragmentOptions change", async () => {
     const ListFragment: TypedDocumentNode<QueryData> = gql`
       fragment ListFragment on Query {
         list {
@@ -789,16 +784,6 @@ describe("useFragment", () => {
         }
       }
     `;
-
-    const ItemFragment: TypedDocumentNode<Item> = gql`
-      fragment ItemFragment on Item {
-        text
-      }
-    `;
-
-    type QueryData = {
-      list: Item[];
-    };
 
     const cache = new InMemoryCache({
       typePolicies: {
@@ -847,10 +832,7 @@ describe("useFragment", () => {
       ${ItemFragment}
     `;
 
-    const renders: string[] = [];
-
     function List() {
-      renders.push("list");
       const [currentItem, setCurrentItem] = React.useState(1);
       useBackgroundQuery({
         query: listQuery,
@@ -869,7 +851,6 @@ describe("useFragment", () => {
             {data!.list.map(item => <option key={item.id} value={item.id}>Select item {item.id}</option>)}
           </select>
           <div>
-            Currently selected item: {currentItem}
             <Item id={currentItem} />
           </div>
           <ol>
@@ -880,7 +861,6 @@ describe("useFragment", () => {
     }
 
     function Item({ id }: { id: number }) {
-      renders.push("item " + id);
       const { complete, data } = useFragment({
         fragment: ItemFragment,
         from: {
@@ -891,14 +871,14 @@ describe("useFragment", () => {
       return <li>{complete ? data!.text : "incomplete"}</li>;
     }
 
-    const { getAllByText } = render(
+    render(
       <ApolloProvider client={client}>
         <List />
       </ApolloProvider>
     );
 
     function getItemTexts() {
-      return getAllByText(/^Item/).map(
+      return screen.getAllByText(/^Item/).map(
         li => li.firstChild!.textContent
       );
     }
@@ -914,7 +894,7 @@ describe("useFragment", () => {
       ]);
     });
 
-    // Select Item #2 item via <select />
+    // Select "Item #2" via <select />
     const user = userEvent.setup();
     await user.selectOptions(
       screen.getByRole('combobox'),
@@ -923,7 +903,7 @@ describe("useFragment", () => {
 
     await waitFor(() => {
       expect(getItemTexts()).toEqual([
-        // Now the currently selected item at the top should render
+        // Now the selected item at the top should render
         // "Item #2" + the list of items below
         "Item #2",
         "Item #1",

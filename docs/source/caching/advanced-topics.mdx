@@ -118,7 +118,7 @@ Inheritance is a powerful code-sharing tool, and it works well with Apollo Clien
 
  * A single subtype can have multiple supertypes in a GraphQL schema, which is difficult to model using the single inheritance model of classes or prototypes. In other words, supporting multiple inheritance in JavaScript requires building a system something like this one, rather than just reusing built-in language features.
 
- * Developers can add their own client-only supertypes to the `possibleTypes` map, as a way of reusing behavior across types, even if their schema knows nothing about those made-up supertypes
+ * Developers can add their own client-only supertypes to the `possibleTypes` map, as a way of reusing behavior across types, even if their schema knows nothing about those supertypes.
 
  * The `possibleTypes` map is currently used only for fragment matching purposes, which is an important but fairly small part of what the client does. Inheritance adds another compelling use for `possibleTypes`, and should drastically reduce repetition of `typePolicies` when used effectively.
 

@@ -18,7 +18,7 @@ export function withQuery<
   TProps extends TGraphQLVariables | {} = {},
   TData extends {} = {},
   TGraphQLVariables extends {} = {},
-  TChildProps extends DataProps<TData, TGraphQLVariables> = DataProps<TData, TGraphQLVariables>
+  TChildProps extends Partial<DataProps<TData, TGraphQLVariables>> = DataProps<TData, TGraphQLVariables>
 >(
   document: DocumentNode,
   operationOptions: OperationOption<

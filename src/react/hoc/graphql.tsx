@@ -5,13 +5,16 @@ import { withQuery } from './query-hoc';
 import { withMutation } from './mutation-hoc';
 import { withSubscription } from './subscription-hoc';
 import { OperationOption, DataProps, MutateProps } from './types';
+import { OperationVariables } from '../../core';
+
+type ChildProps<TData extends {}, TGraphQLVariables extends OperationVariables> =
+  Partial<DataProps<TData, TGraphQLVariables>> & Partial<MutateProps<TData, TGraphQLVariables>>;
 
 export function graphql<
   TProps extends TGraphQLVariables | {} = {},
-  TData = {},
-  TGraphQLVariables = {},
-  TChildProps = Partial<DataProps<TData, TGraphQLVariables>> &
-    Partial<MutateProps<TData, TGraphQLVariables>>
+  TData extends {} = {},
+  TGraphQLVariables extends OperationVariables = {},
+  TChildProps extends ChildProps<TData, TGraphQLVariables> = ChildProps<TData, TGraphQLVariables>
 >(
   document: DocumentNode,
   operationOptions: OperationOption<

@@ -3,7 +3,7 @@ import { ObservableSubscription, asyncMap } from '../../utilities';
 
 export default function subscribeAndCount<
   TData,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   reject: (reason: any) => any,
   observable: ObservableQuery<TData, TVariables>,

@@ -92,7 +92,7 @@ export type RelayFieldPolicy<TNode> = FieldPolicy<
 // As proof of the flexibility of field policies, this function generates
 // one that handles Relay-style pagination, without Apollo Client knowing
 // anything about connections, edges, cursors, or pageInfo objects.
-export function relayStylePagination<TNode = Reference>(
+export function relayStylePagination<TNode extends Reference = Reference>(
   keyArgs: KeyArgs = false,
 ): RelayFieldPolicy<TNode> {
   return {

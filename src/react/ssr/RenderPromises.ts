@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import { ObservableQuery } from '../../core';
+import { ObservableQuery, OperationVariables } from '../../core';
 import { QueryDataOptions } from '../types/types';
 
 // TODO: A vestigial interface from when hooks were implemented with utility
@@ -42,7 +42,7 @@ export class RenderPromises {
   }
 
   // Registers the server side rendered observable.
-  public registerSSRObservable<TData, TVariables>(
+  public registerSSRObservable<TData, TVariables extends OperationVariables>(
     observable: ObservableQuery<any, TVariables>,
   ) {
     if (this.stopped) return;
@@ -50,7 +50,7 @@ export class RenderPromises {
   }
 
   // Get's the cached observable that matches the SSR Query instances query and variables.
-  public getSSRObservable<TData, TVariables>(
+  public getSSRObservable<TData, TVariables extends OperationVariables>(
     props: QueryDataOptions<TData, TVariables>
   ): ObservableQuery<any, TVariables> | null {
     return this.lookupQueryInfo(props).observable;
@@ -77,7 +77,7 @@ export class RenderPromises {
     return finish ? finish() : null;
   }
 
-  public addObservableQueryPromise<TData, TVariables>(
+  public addObservableQueryPromise<TData, TVariables extends OperationVariables>(
     obsQuery: ObservableQuery<TData, TVariables>,
   ) {
     return this.addQueryPromise({
@@ -127,7 +127,7 @@ export class RenderPromises {
     return Promise.all(promises);
   }
 
-  private lookupQueryInfo<TData, TVariables>(
+  private lookupQueryInfo<TData, TVariables extends OperationVariables>(
     props: QueryDataOptions<TData, TVariables>
   ): QueryInfo {
     const { queryInfoTrie } = this;

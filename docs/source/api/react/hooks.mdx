@@ -328,11 +328,9 @@ function useApolloClient(): ApolloClient<object> {}
 | Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
 
 
-##  useReactiveVar
+## `useReactiveVar`
 
-The `useReactiveVar` hook can be used to read from a reactive variable in a way that allows the React component to re-render if/when the variable is next updated.
-
-Previously, the only way for a reactive variable to trigger a React component rerender was through the use of `useQuery`. Now you don't have to be using `useQuery` to benefit from the reactivity that `ReactiveVar<T>` provides.
+Reads the value of a [reactive variable](../../local-state/reactive-variables/) and re-renders the containing component whenever that variable's value changes. This enables a reactive variable to trigger changes _without_ relying on the `useQuery` hook.
 
 ### Example
 

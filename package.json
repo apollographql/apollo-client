@@ -97,7 +97,7 @@
     "@babel/parser": "7.18.9",
     "@graphql-tools/schema": "8.5.0",
     "@rollup/plugin-node-resolve": "11.2.1",
-    "@testing-library/react": "12.1.5",
+    "@testing-library/react": "13.3.0",
     "@testing-library/react-hooks": "8.0.1",
     "@testing-library/user-event": "14.3.0",
     "@types/fast-json-stable-stringify": "2.0.0",

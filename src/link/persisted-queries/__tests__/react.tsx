@@ -77,7 +77,7 @@ describe('react application', () => {
       ssrMode: true,
     });
 
-    const Query = graphql(query)(({ data, children }) => {
+    const Query = graphql<React.PropsWithChildren>(query)(({ data, children }) => {
       if (data!.loading) return null;
 
       return (

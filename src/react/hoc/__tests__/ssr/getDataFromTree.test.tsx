@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom/server';
@@ -277,7 +278,7 @@ describe('SSR', () => {
           variables: { id: data!.currentUser!.id }
         })
       });
-      const Component: React.StatelessComponent<any> = ({
+      const Component: React.FunctionComponent<any> = ({
         data
       }) => (
         <div>
@@ -300,7 +301,7 @@ describe('SSR', () => {
       });
     });
 
-    it.skip('should return the first of multiple errors thrown by nested wrapped components', () => {
+    it('should return the first of multiple errors thrown by nested wrapped components', () => {
       const lastNameQuery = gql`
         {
           currentUser {
@@ -360,7 +361,7 @@ describe('SSR', () => {
 
       const WrappedBorkedComponent = withLastName(BorkedComponent);
 
-      const ContainerComponent: React.StatelessComponent<WithLastNameProps> = ({
+      const ContainerComponent: React.FunctionComponent<WithLastNameProps> = ({
         data
       }) => (
         <div>
@@ -419,7 +420,7 @@ describe('SSR', () => {
       const WrappedElement = graphql<Props, Data>(
         query
       )(({ data }: ChildProps<Props, Data>) => (
-        <div>{!data || data.loading ? 'loading' : data.error}</div>
+        <div>{!data || data.loading ? 'loading' : data.error?.toString()}</div>
       ));
 
       const Page = () => (
@@ -923,7 +924,7 @@ describe('SSR', () => {
         }
       });
 
-      const Element: React.StatelessComponent<QueryChildProps & {
+      const Element: React.FunctionComponent<QueryChildProps & {
         action: (variables: {}) => Promise<any>;
       }> = ({ data }) => (
         <div>
@@ -1003,7 +1004,7 @@ describe('SSR', () => {
         }
       });
 
-      const Element: React.StatelessComponent<ChildProps<
+      const Element: React.FunctionComponent<ChildProps<
         ChildProps<Props, MutationData>,
         QueryData,
         {}
@@ -1061,7 +1062,7 @@ describe('SSR', () => {
         </div>
       ));
 
-      class MyRootContainer extends React.Component<{}, { color: string }> {
+      class MyRootContainer extends React.Component<React.PropsWithChildren, { color: string }> {
         constructor(props: {}) {
           super(props);
           this.state = { color: 'purple' };

@@ -2,8 +2,7 @@ import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor, screen } from '@testing-library/react';
-import { renderHook } from '@testing-library/react-hooks';
+import { render, waitFor, screen, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import fetchMock from "fetch-mock";
 
@@ -59,7 +58,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation(CREATE_TODO_MUTATION),
         { wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -75,8 +74,9 @@ describe('useMutation Hook', () => {
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current[1].loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current[1].data).toEqual(CREATE_TODO_RESULT);
     });
 
@@ -106,7 +106,7 @@ describe('useMutation Hook', () => {
         return { loading, data };
       };
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useCreateTodo(),
         { wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -118,8 +118,9 @@ describe('useMutation Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(CREATE_TODO_RESULT);
     });
 
@@ -167,7 +168,7 @@ describe('useMutation Hook', () => {
         },
       ];
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
         {
           wrapper: ({ children }) => (
@@ -190,17 +191,19 @@ describe('useMutation Hook', () => {
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 })
       expect(result.current[0]).toBe(createTodo);
-      expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(data1);
 
       rerender({ variables: variables2 });
       act(() => void createTodo());
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 })
       expect(result.current[0]).toBe(createTodo);
-      expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(data2);
     });
 
@@ -558,7 +561,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation<
           { createTodo: Todo },
           { priority: string, description: string }
@@ -584,8 +587,9 @@ describe('useMutation Hook', () => {
         result.current[1].reset();
       });
 
-      await waitForNextUpdate();
-      expect(result.current[1].data).toBe(undefined);
+      await waitFor(() => {
+        expect(result.current[1].data).toBe(undefined);
+      });
     });
   });
 
@@ -736,15 +740,15 @@ describe('useMutation Hook', () => {
 
       const createTodo = result.current[0];
       let fetchResult: any;
-      const mutationPromise = act(async () => {
+
+      const onError1 = jest.fn();
+      rerender({ onCompleted, onError: onError1 });
+
+      await act(async () => {
         fetchResult = await createTodo({
           variables: { priority: 'Low', description: 'Get milk.' },
         });
       });
-
-      const onError1 = jest.fn();
-      rerender({ onCompleted, onError: onError1 });
-      await mutationPromise;
 
       expect(fetchResult).toEqual({
         data: undefined,
@@ -863,15 +867,15 @@ describe('useMutation Hook', () => {
 
       const createTodo = result.current[0];
       let fetchResult: any;
-      const mutationPromise = act(async () => {
+
+      const onCompleted1 = jest.fn();
+      rerender({ onCompleted: onCompleted1 });
+
+      await act(async () => {
         fetchResult = await createTodo({
           variables: { priority: 'Low', description: 'Get milk.' },
         });
       });
-
-      const onCompleted1 = jest.fn();
-      rerender({ onCompleted: onCompleted1 });
-      await mutationPromise;
 
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
@@ -930,7 +934,7 @@ describe('useMutation Hook', () => {
         }),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation(mutation),
         { wrapper: ({ children }) => (
           <ApolloProvider client={client}>
@@ -1002,8 +1006,9 @@ describe('useMutation Hook', () => {
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current[1].loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      });
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBeDefined();
 
@@ -1047,7 +1052,7 @@ describe('useMutation Hook', () => {
         }),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation(mutation, {
           keepRootFields: true,
         }),
@@ -1119,8 +1124,9 @@ describe('useMutation Hook', () => {
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current[1].loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      });
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBeDefined();
 
@@ -1541,7 +1547,7 @@ describe('useMutation Hook', () => {
       onUpdatePromise.catch(() => {});
 
       let finishedReobserving = false;
-      const { result, waitForNextUpdate } = renderHook(() => ({
+      const { result } = renderHook(() => ({
         query: useQuery(countQuery),
         mutation: useMutation(CREATE_TODO_MUTATION, {
           optimisticResponse,
@@ -1587,16 +1593,18 @@ describe('useMutation Hook', () => {
       expect(result.current.mutation[1].data).toBe(undefined);
       expect(finishedReobserving).toBe(false);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.data).toEqual({ todoCount: 1 });
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual({ todoCount: 1 });
       expect(result.current.mutation[1].loading).toBe(true);
       expect(result.current.mutation[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.mutation[1].loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual({ todoCount: 1 });
-      expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].data).toEqual(CREATE_TODO_RESULT);
       expect(finishedReobserving).toBe(true);
 
@@ -1635,7 +1643,7 @@ describe('useMutation Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate, waitForValueToChange } = renderHook(
+      const { result } = renderHook(
         () => ({
           query: useQuery(GET_TODOS_QUERY),
           mutation: useMutation(CREATE_TODO_MUTATION),
@@ -1651,23 +1659,24 @@ describe('useMutation Hook', () => {
 
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
-      setTimeout(() => {
-        act(() => {
-          mutate({
-            variables,
-            refetchQueries: ['getTodos'],
-          });
+
+      act(() => {
+        mutate({
+          variables,
+          refetchQueries: ['getTodos'],
         });
       });
 
-      await waitForValueToChange(() => result.current.query.data);
+      await waitFor(() => {
+        expect(result.current.query.data).toEqual(mocks[2].result.data);
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(mocks[2].result.data);
 
       expect(client.readQuery({ query: GET_TODOS_QUERY}))
         .toEqual(mocks[2].result.data);
@@ -1707,7 +1716,7 @@ describe('useMutation Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => ({
           query: useQuery(GET_TODOS_QUERY),
           mutation: useMutation(CREATE_TODO_MUTATION),
@@ -1723,13 +1732,15 @@ describe('useMutation Hook', () => {
 
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
+      let mutation: Promise<unknown>;
       act(() => {
-        mutate({
+        mutation = mutate({
           variables,
           refetchQueries: [GET_TODOS_QUERY],
         });
@@ -1737,13 +1748,16 @@ describe('useMutation Hook', () => {
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
-      await waitForNextUpdate();
+      await act(async () => {
+        await mutation;
+      });
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.data).toEqual(mocks[2].result.data);
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(mocks[2].result.data);
       expect(client.readQuery({ query: GET_TODOS_QUERY }))
         .toEqual(mocks[2].result.data);
     });
@@ -1780,7 +1794,7 @@ describe('useMutation Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate, unmount } = renderHook(
+      const { result, unmount } = renderHook(
         () => ({
           query: useQuery(GET_TODOS_QUERY),
           mutation: useMutation(CREATE_TODO_MUTATION),
@@ -1796,13 +1810,15 @@ describe('useMutation Hook', () => {
 
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
       let onMutationDone: Function;
       const mutatePromise = new Promise((resolve) => (onMutationDone = resolve));
+      // let mutation: Promise<unknown>;
       setTimeout(() => {
         act(() => {
           mutate({
@@ -1818,7 +1834,6 @@ describe('useMutation Hook', () => {
         });
       });
 
-      await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
@@ -1932,7 +1947,7 @@ describe('useMutation Hook', () => {
         }
       `;
 
-      const { result, waitForNextUpdate } = renderHook(() => ({
+      const { result } = renderHook(() => ({
         query: useQuery(NumbersQuery, {
           notifyOnNetworkStatusChange: true,
         }),
@@ -2027,9 +2042,10 @@ describe('useMutation Hook', () => {
       expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].called).toBe(false);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].called).toBe(false);
@@ -2185,11 +2201,11 @@ describe('useMutation Hook', () => {
 
       render(<ApolloProvider client={client}><Test /></ApolloProvider>);
 
-      await screen.findByText('item 1');
+      await waitFor(() => { screen.findByText('item 1') });
 
       userEvent.click(screen.getByRole('button', { name: /mutate/i }));
 
-      await screen.findByText('item 3');
+      await waitFor(() => { screen.findByText('item 3') });
     });
   });
 });

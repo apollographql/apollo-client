@@ -23,6 +23,9 @@ coverage
 # node-waf configuration
 .lock-wscript
 
+# wallaby config file
+wallaby.js
+
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 build/Release
 

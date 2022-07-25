@@ -1,24 +1,21 @@
 ---
 title: Introduction to Apollo Client
-sidebar_title: Introduction
 ---
 
-import { Button } from '@apollo/space-kit/Button';
 import { Link } from 'gatsby';
-import { colors } from 'gatsby-theme-apollo-core';
 
 **Apollo Client** is a comprehensive state management library for JavaScript that enables you to manage both local and remote data with GraphQL. Use it to fetch, cache, and modify application data, all while automatically updating your UI.
 
 Apollo Client helps you structure code in an economical, predictable, and declarative way that's consistent with modern development practices. The core `@apollo/client` library provides built-in integration with React, and the larger Apollo community maintains [integrations for other popular view layers](#community-integrations).
 
 <p>
-  <Button
-    size="large"
-    color={colors.primary}
-    as={<Link to="/get-started/" />}
+  <ButtonLink
+    size="lg"
+    colorScheme="indigo"
+    href="./get-started/"
   >
     Get started!
-  </Button>
+  </ButtonLink>
 </p>
 
 ## Features
@@ -55,5 +52,5 @@ This documentation set focuses on React, but Apollo Client supports many other l
 - Web Components
   - [Apollo Elements](integrations/integrations/#web-components)
 - Native mobile
-  - [Native iOS with Swift](https://www.apollographql.com/docs/ios)
-  - [Native Android with Java and Kotlin](https://www.apollographql.com/docs/android)
+  - [Native iOS with Swift](/ios)
+  - [Native Android with Java and Kotlin](/kotlin)

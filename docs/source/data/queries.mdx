@@ -10,7 +10,7 @@ This article shows how to fetch GraphQL data in React with the `useQuery` hook a
 
 ## Prerequisites
 
-This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend [this guide](http://graphql.org/learn/queries/). You can also build example queries against Apollo's [full-stack tutorial server](https://apollo-fullstack-tutorial.herokuapp.com/).
+This article assumes you're familiar with building basic GraphQL queries. If you need a refresher, we recommend [this guide](http://graphql.org/learn/queries/). You can also build example queries against Apollo's [full-stack tutorial server](https://apollo-fullstack-tutorial.herokuapp.com/graphql).
 
 This article also assumes that you've already set up Apollo Client and have wrapped your React app in an `ApolloProvider` component. For more information, see the [getting started guide](../get-started/).
 
@@ -22,7 +22,7 @@ The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the pr
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
-```tsx:title=index.js
+```tsx title="index.js"
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
@@ -37,7 +37,7 @@ const GET_DOGS = gql`
 
 Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS` query to the `useQuery` hook:
 
-```tsx:title=index.js
+```tsx title="index.js"
 function Dogs({ onDogSelected }) {
   const { loading, error, data } = useQuery(GET_DOGS);
 
@@ -45,8 +45,8 @@ function Dogs({ onDogSelected }) {
   if (error) return `Error! ${error.message}`;
 
   return (
-    <select name="dog" onChange={onDogSelected}>
-      {data.dogs.map(dog => (
+    <select name='dog' onChange={onDogSelected}>
+      {data.dogs.map((dog) => (
         <option key={dog.id} value={dog.breed}>
           {dog.breed}
         </option>
@@ -67,11 +67,11 @@ In the next step, we'll associate the dropdown with a more sophisticated query t
 
 ## Caching query results
 
-Whenever Apollo Client fetches query results from your server, it automatically **caches** those results locally. This makes subsequent executions of the same query extremely fast.
+Whenever Apollo Client fetches query results from your server, it automatically **caches** those results locally. This makes later executions of that same query extremely fast.
 
 To see this caching in action, let's build a new component called `DogPhoto`. `DogPhoto` accepts a prop called `breed` that reflects the current value of the dropdown menu in our `Dogs` component:
 
-```jsx:title=index.js
+```jsx title="index.js"
 const GET_DOG_PHOTO = gql`
   query Dog($breed: String!) {
     dog(breed: $breed) {
@@ -97,7 +97,7 @@ function DogPhoto({ breed }) {
 
 Notice that we're providing a configuration option (`variables`) to the `useQuery` hook this time. The `variables` option is an object that contains all of the variables we want to pass to our GraphQL query. In this case, we want to pass the currently selected `breed` from the dropdown.
 
-Select `bulldog` from the dropdown to see its photo appear. Then switch to another breed, and then switch _back_ to `bulldog`. You'll notice that the bulldog photo loads instantly the second time around. This is the Apollo cache at work!
+Select `bulldog` from the dropdown to see its photo appear. Then switch to another breed, and then switch _back_ to `bulldog`. You'll notice that the bulldog photo loads instantly the second time around. This is the cache at work!
 
 Next, let's learn some techniques for ensuring that our cached data is fresh.
 
@@ -109,7 +109,7 @@ Sometimes, you want to make sure that your query's cached data is up to date wit
 
 Polling provides near-real-time synchronization with your server by executing your query periodically at a specified interval. To enable polling for a query, pass a `pollInterval` configuration option to the `useQuery` hook with an interval in milliseconds:
 
-```jsx:title=index.js
+```jsx title="index.js" {4}
 function DogPhoto({ breed }) {
   const { loading, error, data } = useQuery(GET_DOG_PHOTO, {
     variables: { breed },
@@ -127,7 +127,7 @@ function DogPhoto({ breed }) {
 
 By setting `pollInterval` to 500, we fetch the current breed's image from the server every 0.5 seconds. Note that if you set `pollInterval` to `0`, the query does **not** poll.
 
-> You can also start and stop polling dynamically with the [`startPolling` and `stopPolling` functions](#startpolling) that are returned by the `useQuery` hook.
+> You can also start and stop polling dynamically with the [`startPolling` and `stopPolling` functions](#startpolling) that are returned by the `useQuery` hook. When using these functions, set the `pollInterval` configuration option as a parameter of the `startPolling` function.
 
 ### Refetching
 
@@ -137,14 +137,14 @@ action, as opposed to using a fixed interval.
 Let's add a button to our `DogPhoto` component that calls our query's
 `refetch` function whenever it's clicked.
 
-You can optionally provide a new `variables` object to
-the `refetch` function. If you don't (as is the case in the following example),
-the query uses the same variables that it used in its previous execution.
+You can optionally provide a new `variables` object to the `refetch` function.
+If you avoid passing a `variables` object and use only `refetch()`, the query
+uses the same `variables` that it used in its previous execution.
 
-```jsx{2,12}:title=index.js
+```jsx {2,12} title="index.js"
 function DogPhoto({ breed }) {
   const { loading, error, data, refetch } = useQuery(GET_DOG_PHOTO, {
-    variables: { breed }
+    variables: { breed },
   });
 
   if (loading) return null;
@@ -153,7 +153,9 @@ function DogPhoto({ breed }) {
   return (
     <div>
       <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      <button onClick={() => refetch()}>Refetch!</button>
+      <button onClick={() => refetch({ breed: 'new_dog_breed' })}>
+        Refetch new breed!
+      </button>
     </div>
   );
 }
@@ -166,9 +168,15 @@ Click the button and notice that the UI updates with a new dog photo. Refetching
 You call `refetch` with a new set of variables like so:
 
 ```jsx
-<button onClick={() => refetch({
-  breed: 'dalmatian' // Always refetches a dalmatian instead of original breed
-})}>Refetch!</button>
+<button
+  onClick={() =>
+    refetch({
+      breed: 'dalmatian', // Always refetches a dalmatian instead of original breed
+    })
+  }
+>
+  Refetch!
+</button>
 ```
 
 If you provide new values for _some_ of your original query's variables but not _all_ of them, `refetch` uses each omitted variable's original value.
@@ -180,9 +188,9 @@ We've already seen that the `useQuery` hook exposes our query's current loading 
 Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component doesn't re-render until the new data arrives. What if we want to indicate to the user that we're refetching the photo?
 
 The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
-of this information, we set the `notifyOnNetworkStatusChange` option to `true` so our query component re-renders while a refetch is in flight:
+of this information, we set the `notifyOnNetworkStatusChange` option to `true` so our [query component](../api/react/components/ "Components - Client (React) - Apollo GraphQL Docs") re-renders while a refetch is in flight:
 
-```jsx:title=index.js
+```jsx title="index.js" {4,8,12}
 import { NetworkStatus } from '@apollo/client';
 
 function DogPhoto({ breed }) {
@@ -191,7 +199,7 @@ function DogPhoto({ breed }) {
     {
       variables: { breed },
       notifyOnNetworkStatusChange: true,
-    },
+    }
   );
 
   if (networkStatus === NetworkStatus.refetch) return 'Refetching!';
@@ -201,7 +209,9 @@ function DogPhoto({ breed }) {
   return (
     <div>
       <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      <button onClick={() => refetch()}>Refetch!</button>
+      <button onClick={() => refetch({ breed: 'new_dog_breed' })}>
+        Refetch!
+      </button>
     </div>
   );
 }
@@ -230,7 +240,7 @@ The `useLazyQuery` hook is perfect for executing queries in response to events b
 
 Here's an example:
 
-```jsx{2,5,13}:title=index.js
+```jsx {2,5,13} title="index.js"
 import React from 'react';
 import { useLazyQuery } from '@apollo/client';
 
@@ -263,9 +273,9 @@ By default, the `useQuery` hook checks the Apollo Client cache to see if all the
 
 You can specify a different fetch policy for a given query. To do so, include the `fetchPolicy` option in your call to `useQuery`:
 
-```js{2}
+```js {2}
 const { loading, error, data } = useQuery(GET_DOGS, {
-  fetchPolicy: "network-only" // Doesn't check cache before making a network request
+  fetchPolicy: 'network-only', // Doesn't check cache before making a network request
 });
 ```
 
@@ -273,14 +283,111 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 
 You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used to determine how the query responds to future cache updates:
 
-```js{3}
+```js {3}
 const { loading, error, data } = useQuery(GET_DOGS, {
-  fetchPolicy: "network-only",   // Used for first execution
-  nextFetchPolicy: "cache-first" // Used for subsequent executions
+  fetchPolicy: 'network-only', // Used for first execution
+  nextFetchPolicy: 'cache-first', // Used for subsequent executions
 });
 ```
 
 For example, this is helpful if you want a query to always make an initial network request, but you're comfortable reading from the cache after that.
+
+#### `nextFetchPolicy` functions
+
+If you want to apply a single `nextFetchPolicy` by default, because you find yourself manually providing `nextFetchPolicy` for most of your queries, you can configure `defaultOptions.watchQuery.nextFetchPolicy` when creating your `ApolloClient` instance:
+
+```js
+new ApolloClient({
+  link,
+  client,
+  defaultOptions: {
+    watchQuery: {
+      nextFetchPolicy: 'cache-only',
+    },
+  },
+});
+```
+
+This configuration applies to all `client.watchQuery` calls and `useQuery` calls that do not otherwise configure `nextFetchPolicy`.
+
+If you want more control over how `nextFetchPolicy` behaves, you can provide a function instead of a `WatchQueryFetchPolicy` string:
+
+```js
+new ApolloClient({
+  link,
+  client,
+  defaultOptions: {
+    watchQuery: {
+      nextFetchPolicy(currentFetchPolicy) {
+        if (
+          currentFetchPolicy === 'network-only' ||
+          currentFetchPolicy === 'cache-and-network'
+        ) {
+          // Demote the network policies (except "no-cache") to "cache-first"
+          // after the first request.
+          return 'cache-first';
+        }
+        // Leave all other fetch policies unchanged.
+        return currentFetchPolicy;
+      },
+    },
+  },
+});
+```
+
+This `nextFetchPolicy` function will be called after each request, and uses the `currentFetchPolicy` parameter to decide how to modify the fetch policy.
+
+In addition to being called after each request, your `nextFetchPolicy` function will also be called when variables change, which by default resets the `fetchPolicy` to its initial value, which is often important to trigger a fresh network request for queries that started out with `cache-and-network` or `network-only` fetch policies.
+
+To intercept and handle the `variables-changed` case yourself, you can use the `NextFetchPolicyContext` object passed as the second argument to your `nextFetchPolicy` function:
+
+```js
+new ApolloClient({
+  link,
+  client,
+  defaultOptions: {
+    watchQuery: {
+      nextFetchPolicy(
+        currentFetchPolicy,
+        {
+          // Either "after-fetch" or "variables-changed", indicating why the
+          // nextFetchPolicy function was invoked.
+          reason,
+          // The rest of the options (currentFetchPolicy === options.fetchPolicy).
+          options,
+          // The original value of options.fetchPolicy, before nextFetchPolicy was
+          // applied for the first time.
+          initialPolicy,
+          // The ObservableQuery associated with this client.watchQuery call.
+          observable,
+        }
+      ) {
+        // When variables change, the default behavior is to reset
+        // options.fetchPolicy to context.initialPolicy. If you omit this logic,
+        // your nextFetchPolicy function can override this default behavior to
+        // prevent options.fetchPolicy from changing in this case.
+        if (reason === 'variables-changed') {
+          return initialPolicy;
+        }
+
+        if (
+          currentFetchPolicy === 'network-only' ||
+          currentFetchPolicy === 'cache-and-network'
+        ) {
+          // Demote the network policies (except "no-cache") to "cache-first"
+          // after the first request.
+          return 'cache-first';
+        }
+
+        // Leave all other fetch policies unchanged.
+        return currentFetchPolicy;
+      },
+    },
+  },
+});
+```
+
+In order to debug these `nextFetchPolicy` transitions, it can be useful to add `console.log` or `debugger` statements to the function body, to see when and why the function is called.
 
 ### Supported fetch policies
 
@@ -296,6 +403,7 @@ For example, this is helpful if you want a query to always make an initial netwo
 <td>
 
 ###### `cache-first`
+
 </td>
 <td>
 
@@ -304,77 +412,82 @@ Apollo Client first executes the query against the cache. If _all_ requested dat
 Prioritizes minimizing the number of network requests sent by your application.
 
 This is the default fetch policy.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
 
 ###### `cache-only`
+
 </td>
 <td>
 
 Apollo Client executes the query _only_ against the cache. It never queries your server in this case.
 
 A `cache-only` query throws an error if the cache does not contain data for all requested fields.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
 
 ###### `cache-and-network`
+
 </td>
 <td>
 
 Apollo Client executes the full query against both the cache _and_ your GraphQL server. The query automatically updates if the result of the server-side query modifies cached fields.
 
 Provides a fast response while also helping to keep cached data consistent with server data.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
 
 ###### `network-only`
+
 </td>
 <td>
 
 Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache.
 
 Prioritizes consistency with server data, but can't provide a near-instantaneous response when cached data is available.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
 
 ###### `no-cache`
+
 </td>
 <td>
 
 Similar to `network-only`, except the query's result _is not_ stored in the cache.
+
 </td>
 </tr>
-
 
 <tr>
 <td>
 
 ###### `standby`
+
 </td>
 <td>
 
 Uses the same logic as `cache-first`, except this query does _not_ automatically update when underlying field values change. You can still _manually_ update this query with `refetch` and `updateQueries`.
+
 </td>
 </tr>
 </tbody>
 </table>
-
 
 ## `useQuery` API
 

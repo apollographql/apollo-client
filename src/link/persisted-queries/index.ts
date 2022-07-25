@@ -13,13 +13,16 @@ import {
   Observer,
   ObservableSubscription,
   compact,
+  isNonEmptyArray,
 } from '../../utilities';
+import { NetworkError } from '../../errors';
+import { ServerError } from '../utils';
 
 export const VERSION = 1;
 
 export interface ErrorResponse {
   graphQLErrors?: readonly GraphQLError[];
-  networkError?: Error;
+  networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;
 }
@@ -46,16 +49,27 @@ export namespace PersistedQueryLink {
   export type Options = SHA256Options | GenerateHashOptions;
 }
 
+function collectErrorsByMessage<TError extends Error>(
+  graphQLErrors: TError[] | readonly TError[] | undefined,
+): Record<string, TError> {
+  const collected: Record<string, TError> = Object.create(null);
+  if (isNonEmptyArray(graphQLErrors)) {
+    graphQLErrors.forEach(error => collected[error.message] = error);
+  }
+  return collected;
+}
+
 const defaultOptions = {
   disable: ({ graphQLErrors, operation }: ErrorResponse) => {
+    const errorMessages = collectErrorsByMessage(graphQLErrors);
+
     // if the server doesn't support persisted queries, don't try anymore
-    if (
-      graphQLErrors &&
-      graphQLErrors.some(
-        ({ message }) => message === 'PersistedQueryNotSupported',
-      )
-    ) {
+    if (errorMessages.PersistedQueryNotSupported) {
       return true;
+    }
+
+    if (errorMessages.PersistedQueryNotFound) {
+      return false;
     }
 
     const { response } = operation.getContext();
@@ -158,17 +172,33 @@ export const createPersistedQueryLink = (
         {
           response,
           networkError,
-        }: { response?: ExecutionResult; networkError?: Error },
+        }: { response?: ExecutionResult; networkError?: ServerError },
         cb: () => void,
       ) => {
         if (!retried && ((response && response.errors) || networkError)) {
           retried = true;
 
+          const graphQLErrors: GraphQLError[] = [];
+
+          const responseErrors = response && response.errors;
+          if (isNonEmptyArray(responseErrors)) {
+            graphQLErrors.push(...responseErrors);
+          }
+
+          // Network errors can return GraphQL errors on for example a 403
+          const networkErrors =
+            networkError &&
+            networkError.result &&
+            networkError.result.errors as GraphQLError[];
+          if (isNonEmptyArray(networkErrors)) {
+            graphQLErrors.push(...networkErrors);
+          }
+
           const disablePayload = {
             response,
             networkError,
             operation,
-            graphQLErrors: response ? response.errors : undefined,
+            graphQLErrors: isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
           };
 
           // if the server doesn't support persisted queries, don't try anymore
@@ -176,12 +206,7 @@ export const createPersistedQueryLink = (
 
           // if its not found, we can try it again, otherwise just report the error
           if (
-            (response &&
-              response.errors &&
-              response.errors.some(
-                ({ message }: { message: string }) =>
-                  message === 'PersistedQueryNotFound',
-              )) ||
+            collectErrorsByMessage(graphQLErrors).PersistedQueryNotFound ||
             !supportsPersistedQueries
           ) {
             // need to recall the link chain
@@ -213,7 +238,7 @@ export const createPersistedQueryLink = (
         next: (response: ExecutionResult) => {
           retry({ response }, () => observer.next!(response));
         },
-        error: (networkError: Error) => {
+        error: (networkError: ServerError) => {
           retry({ networkError }, () => observer.error!(networkError));
         },
         complete: observer.complete!.bind(observer),

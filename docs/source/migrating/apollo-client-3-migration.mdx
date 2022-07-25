@@ -2,13 +2,11 @@
 title: Migrating to Apollo Client 3.0
 ---
 
-import {VideoFrame} from 'gatsby-theme-apollo-docs'
+This article walks you through migrating your application to Apollo Client 3.0 from previous versions of Apollo Client.
 
-This article walks you through migrating your application to Apollo Client 3.0 from previous versions of Apollo Client. 
+To illustrate the migration process, we've also made this video that uses the example app from our [full-stack quickstart](https://www.apollographql.com/tutorials/fullstack-quickstart/introduction) as a starting point, updating it from Apollo client 2.6 to 3.0:
 
-To illustrate the migration process, we've also made this video that uses the example app from our [full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/) as a starting point, updating it from Apollo client 2.6 to 3.0: 
-
-<VideoFrame src="https://www.youtube.com/embed/dlKzlksOUtU" />
+<YouTube youTubeId="dlKzlksOUtU" />
 
 ## What’s new in 3.0
 
@@ -55,6 +53,12 @@ import { ApolloProvider, useQuery, useApolloClient } from '@apollo/client'
 ```
 
 As part of migrating, we recommend removing all `@apollo/react-hooks` dependencies.
+
+**Breaking Changes:**
+
+* `useQuery` [no longer maintains the previously fetched results](https://github.com/apollographql/apollo-client/pull/6566) in its `data` result when loading new data. Instead, when new data is being loaded (i.e. `loading` === `true`) the `data` result of `useQuery` is set to `undefined`. Use the `previousData` result as a bridge to the old v2 behavior.
+* `refetch` functionality of `useQuery` [was broken in v3.5.x until it was fixed in v3.5.8](https://github.com/apollographql/apollo-client/issues/9101). Previous to this version, if the `skip: true` option was used, `refetch` would always be `undefined`.
+
 
 ### @apollo/react-ssr
 

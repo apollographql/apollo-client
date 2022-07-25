@@ -53,7 +53,6 @@ describe('queries', () => {
     const ContainerWithData = graphql<any, Data>(query)(
       ({ data }: DataProps<Data>) => {
         expect(data).toBeTruthy();
-        expect(data.loading).toBeTruthy();
         done = true;
         return null;
       }
@@ -176,19 +175,23 @@ describe('queries', () => {
       options
     )(({ data }: ChildProps<Variables, Data, Variables>) => {
       expect(data).toBeTruthy();
-      switch (count) {
-        case 0:
-          expect(data!.variables.someId).toEqual(1);
-          break;
+      switch (++count) {
         case 1:
-          expect(data!.variables.someId).toEqual(2);
+          expect(data!.loading).toBe(true);
+          expect(data!.variables).toEqual({ someId: 1 });
           break;
         case 2:
-          expect(data!.variables.someId).toEqual(2);
+          expect(data!.loading).toBe(true);
+          expect(data!.variables).toEqual({ someId: 2 });
           break;
+        case 3:
+          expect(data!.loading).toBe(false);
+          expect(data!.variables).toEqual({ someId: 2 });
+          break;
+        default:
+          reject(`too many renders (${count})`);
       }
 
-      count += 1;
       return null;
     });
 

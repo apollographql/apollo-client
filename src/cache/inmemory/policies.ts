@@ -914,7 +914,7 @@ function makeFieldFunctionOptions(
     canRead,
     readField<T>() {
       return policies.readField<T>(
-        normalizeReadFieldOptions(arguments, objectOrReference, context),
+        normalizeReadFieldOptions(arguments, objectOrReference, variables),
         context,
       );
     },

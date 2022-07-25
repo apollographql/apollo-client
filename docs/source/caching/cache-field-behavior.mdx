@@ -1,6 +1,5 @@
 ---
 title: Customizing the behavior of cached fields
-sidebar_title: Customizing field behavior
 ---
 
 You can customize how a particular field in your Apollo Client cache is read and written. To do so, you define a **field policy** for the field. A field policy can include:
@@ -9,9 +8,9 @@ You can customize how a particular field in your Apollo Client cache is read and
 * A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
 * An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
-You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whatever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the type that contains the field. The following example defines a field policy for the `name` field of a `Person` type:
+You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whichever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the field's parent type. The following example defines a field policy for the `name` field of a `Person` type:
 
-```ts{5-10}
+```ts {5-10}
 const cache = new InMemoryCache({
   typePolicies: {
     Person: {
@@ -56,7 +55,9 @@ const cache = new InMemoryCache({
 });
 ```
 
-If a field accepts arguments, the second parameter includes the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
+If a field accepts arguments, the `read` function's second parameter includes the values of those arguments.
+
+The following `read` function checks whether the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
 
 ```ts
 const cache = new InMemoryCache({
@@ -77,6 +78,43 @@ const cache = new InMemoryCache({
   },
 });
 ```
+
+If a field requires numerous parameters then each parameter must be wrapped in a variable that is then destructured and returned.
+Each parameter will be available as individual subfields.
+
+The following `read` function assigns a default value of `UNKNOWN FIRST_NAME` to the `first_name` subfield of a `fullName` field and a `UNKNOWN LAST_NAME` to the `last_name` of a `fullName` field.
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        fullName: {
+          read(full_name = {
+            first_name: "UNKNOWN FIRST_NAME",
+            last_name: "UNKNOWN LAST_NAME",
+          }) {
+            return { ...full_name };
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+The following `query` returns the `first_name` and `last_name` subfields from the `fullName` field:
+
+```graphql
+query personWithFullName {
+  fullName {
+    first_name
+    last_name
+  }
+}
+```
+
+If a field accepts arguments, the second parameter includes the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
 
 You can define a `read` function for a field that isn't even defined in your schema. For example, the following `read` function enables you to query a `userId` field that is always populated with locally stored data:
 
@@ -99,7 +137,7 @@ const cache = new InMemoryCache({
 Other use cases for a `read` function include:
 
 * Transforming cached data to suit your client's needs, such as rounding floating-point values to the nearest integer
-* Deriving local-only fields from one or more schema fields on the same object (such as deriving an `age` field from a `birthDate` field)
+* Deriving [local-only fields](../local-state/managing-state-with-field-policies/) from one or more schema fields on the same object (such as deriving an `age` field from a `birthDate` field)
 * Deriving local-only fields from one or more schema fields across _multiple_ objects
 
 For a full list of the options provided to the `read` function, see the [API reference](#fieldpolicy-api-reference). You will almost never need to use all of these options, but each one has an important role when reading fields from the cache.
@@ -134,111 +172,17 @@ Note that `existing` is undefined the very first time this function is called fo
 
 ### Merging non-normalized objects
 
-Another common use case for custom field `merge` functions is to combine nested objects that do not have IDs, but are known (by you, the application developer) to represent the same logical object, assuming the parent object is the same.
+You can use a `merge` function to intelligently combine nested objects that are _not_ normalized in your cache, assuming those objects are nested within the same normalized parent.
 
-Suppose that a `Book` type has an `author` field, which is an object containing information like the author's `name`, `language`, and `dateOfBirth`. The `Book` object has `__typename: "Book"` and a unique `isbn` field, so the cache can tell when two `Book` result objects represent the same logical entity. However, for whatever reason, the query that retrieved this `Book` did not ask for enough information about the `book.author` object. Perhaps no `keyFields` were specified for the `Author` type, and there is no default `id` field.
+<ExpansionPanel title="See the code">
 
-This lack of identifying information poses a problem for the cache, because it cannot determine automatically whether two `Author` result objects are the same. If multiple queries ask for different information about the author of this `Book`, the order of the queries matters, because the `favoriteBook.author` object from the second query cannot be safely merged with the `favoriteBook.author` object from the first query, and vice-versa:
-
-```graphql
-query BookWithAuthorName {
-  favoriteBook {
-    isbn
-    title
-    author {
-      name
-    }
-  }
-}
-
-query BookWithAuthorLanguage {
-  favoriteBook {
-    isbn
-    title
-    author {
-      language
-    }
-  }
-}
-```
-
-In such situations, the cache defaults to _replacing_ the existing `favoriteBook.author` data with the incoming data, without merging the `name` and `language` fields together, because the risk of merging inconsistent `name` and `language` fields from different authors is unacceptable.
-
-> Note: Apollo Client 2.x would sometimes merge unidentified objects. While this behavior might accidentally have aligned with the intentions of the developer, it led to subtle inconsistencies within the cache. Apollo Client 3.0 refuses to perform unsafe merges, and instead warns about potential loss of unidentified data.
-
-You could fix this problem by modifying your queries to request an `id` field for the `favoriteBook.author` objects, or by specifying custom `keyFields` in the `Author` type policy, such as `["name", "dateOfBirth"]`. Providing the cache with this information allows it to know when two `Author` objects represent the same logical entity, so it can safely merge their fields. This solution is recommended, when feasible.
-
-However, you may encounter situations where your graph does not provide any uniquely identifying fields for `Author` objects. In these rare scenarios, it might be safe to assume that a given `Book` has one and only one primary `Author`, and the author never changes. In other words, the identity of the author is implied by the identity of the book. This common-sense knowledge is something you have at your disposal, as a human, but it must be communicated to the cache, which is neither human nor capable of telepathy.
-
-In such situations, you can define a custom `merge` function for the `author` field within the type policy for `Book`:
-
-```ts
+```ts{6-8}
 const cache = new InMemoryCache({
   typePolicies: {
     Book: {
       fields: {
-        author: {
-          merge(existing, incoming) {
-            // Better, but not quite correct.
-            return { ...existing, ...incoming };
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-Alternatively, if you prefer to keep the default behavior of completely replacing the `existing` data with the `incoming` data, while also silencing the warnings, the following `merge` function will explicitly permit replacement:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Book: {
-      fields: {
-        author: {
-          merge(existing, incoming) {
-            // Equivalent to what happens if there is no custom merge function.
-            return incoming;
-          },
-        },
-      },
-    },
-  },
-});
-```
-
-Since writing this kind of `merge` function can become repetitive, the following shorthand will provide the same behavior:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Book: {
-      fields: {
-        author: {
-          // Short for always preferring incoming over existing data.
-          merge: false,
-        },
-      },
-    },
-  },
-});
-```
-
-When you use `{ ...existing, ...incoming }`, `Author` objects with differing fields (`name`, `dateOfBirth`) can be combined without losing fields, which is definitely an improvement over blind replacement.
-
-But what if the `Author` type defines its own custom `merge` functions for fields of the `incoming` object? Since we're using [object spread syntax](https://2ality.com/2016/10/rest-spread-properties.html), such fields will immediately overwrite fields in `existing`, without triggering any nested `merge` functions. The `{ ...existing, ...incoming }` syntax may be an improvement, but it is not fully correct.
-
-Fortunately, you can find a helper function called `options.mergeObjects` in the options passed to the `merge` function, which generally behaves the same as `{ ...existing, ...incoming }`, except when the `incoming` fields have custom `merge` functions. When `options.mergeObjects` encounters custom `merge` functions for any of the fields in its second argument (`incoming`), those nested `merge` functions will be called before combining the fields of `existing` and `incoming`, as desired:
-
-```ts
-const cache = new InMemoryCache({
-  typePolicies: {
-    Book: {
-      fields: {
-        author: {
+        author: { // Non-normalized Author object within Book
           merge(existing, incoming, { mergeObjects }) {
-            // Correct, thanks to invoking nested merge functions.
             return mergeObjects(existing, incoming);
           },
         },
@@ -248,9 +192,106 @@ const cache = new InMemoryCache({
 });
 ```
 
-Because this `Book.author` field policy has no `Book`- or `Author`-specific logic in it, you can reuse this `merge` function for any field that needs this kind of handling.
+</ExpansionPanel>
 
-Since writing this kind of `merge` function can become repetitive, the following shorthand will provide the same behavior:
+#### Example
+
+Let's say our graph's schema includes the following types:
+
+```graphql
+type Book {
+  id: ID!
+  title: String!
+  author: Author!
+}
+
+type Author { # Has no key fields
+  name: String!
+  dateOfBirth: String!
+}
+
+type Query {
+  favoriteBook: Book!
+}
+```
+
+With this schema, our cache can normalize `Book` objects because they have an `id` field. However, `Author` objects have no `id` field, and they also have no _other_ fields that can uniquely identify a particular instance. Therefore, the cache _can't_ normalize `Author` objects, and it can't tell when two different `Author` objects actually represent the _same_ author.
+
+Now, let's say our client executes the following two queries, in order:
+
+```graphql{5,14}
+query BookWithAuthorName {
+  favoriteBook {
+    id
+    author {
+      name
+    }
+  }
+}
+
+query BookWithAuthorBirthdate {
+  favoriteBook {
+    id
+    author {
+      dateOfBirth
+    }
+  }
+}
+```
+
+When the _first_ query returns, Apollo Client writes a `Book` object like the following to the cache:
+
+```json
+{
+  "__typename": "Book",
+  "id": "abc123",
+  "author": {
+    "__typename": "Author",
+    "name": "George Eliot"
+  }
+}
+```
+
+> Remember that because `Author` objects can't be normalized, they're nested directly within their parent object.
+
+Now, when the _second_ query returns, the cached `Book` object is updated to the following:
+
+```json{6}
+{
+  "__typename": "Book",
+  "id": "abc123",
+  "author": {
+    "__typename": "Author",
+    "dateOfBirth": "1819-11-22"
+  }
+}
+```
+
+The `Author`'s `name` field has been removed! This is because Apollo Client can't be sure that the `Author` objects returned by the two queries actually refer to the same author. So instead of merging fields of the two objects, Apollo Client completely _overwrites_ the object (and logs a warning).
+
+However, _we_ are confident that these two objects represent the same author, because a book's author virtually never changes. Therefore, we can tell the cache to treat `Book.author` objects as the _same_ object as long as they belong to the same `Book`. This enables the cache to merge the `name` and `dateOfBirth` fields returned by different queries above.
+
+To achieve this, we can define a custom `merge` function for the `author` field within the type policy for `Book`:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        author: {
+          merge(existing, incoming, { mergeObjects }) {
+            return mergeObjects(existing, incoming);
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Here, we use the `mergeObjects` helper function to merge values from the `existing` and `incoming` `Author` objects. It's important to use `mergeObjects` here instead of merging the objects with [object spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax), because `mergeObjects` makes sure to call any defined `merge` functions for _subfields_ of `Book.author`.
+
+Notice that this `merge` function has zero `Book`- or `Author`-specific logic in it! This means you can reuse it for any number of non-normalized object fields. And because this exact `merge` function definition is so common, you can also define it with the following shorthand:
 
 ```ts
 const cache = new InMemoryCache({
@@ -273,7 +314,7 @@ In summary, the `Book.author` policy above allows the cache to safely merge the 
 
 Beginning with Apollo Client 3.3, you can avoid having to configure `merge` functions for lots of different fields that might hold an `Author` object, and instead put the `merge` configuration in the `Author` type policy:
 
-```ts{13}
+```ts {13}
 const cache = new InMemoryCache({
   typePolicies: {
     Book: {

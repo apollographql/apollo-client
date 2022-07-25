@@ -1,6 +1,5 @@
 ---
 title: Using Apollo with TypeScript
-sidebar_title: Using TypeScript
 ---
 
 As your application grows, you may find it helpful to include a type system to assist in development. Apollo supports type definitions for TypeScript out of the box. Apollo Client ships with definitions in its associated npm package, so installation should be done for you after the libraries are included in your project.

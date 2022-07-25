@@ -1,12 +1,7 @@
 ---
 title: Caching in Apollo Client
 description: Overview
-sidebar_title: Overview
 ---
-
-import {
-  ExpansionPanel,
-} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 Apollo Client stores the results of your GraphQL queries in a local, [normalized](#data-normalization), in-memory cache. This enables Apollo Client to respond almost immediately to queries for already-cached data, without even sending a network request.
 
@@ -36,7 +31,7 @@ The Apollo Client cache is highly configurable. You can customize its behavior f
 
 ## How is data stored?
 
-Apollo Client's `InMemoryCache` maintains a **flat lookup table** of objects that can reference each other. These objects accumulate field information from objects that are returned by your GraphQL queries. A single cached object might include fields returned by multiple queries, if those queries fetch _different_ fields of the _same_ object.
+Apollo Client's `InMemoryCache` stores data as a **flat lookup table** of objects that can reference each other. These objects correspond to the objects that are returned by your GraphQL queries. A single cached object might include fields returned by multiple queries, if those queries fetch _different_ fields of the _same_ object.
 
 The cache is flat, but objects returned by a GraphQL query often _aren't_! In fact, their nesting can be arbitrarily deep. Take a look at this example query response:
 
@@ -59,7 +54,7 @@ The cache is flat, but objects returned by a GraphQL query often _aren't_! In fa
 
 This response contains a `Person` object, which in turn contains a `Planet` object in its `homeworld` field.
 
-So how does the `InMemoryCache` store _hierarchical_ data in a _flat_ lookup table? Before storing this data, the cache needs to **normalize** it.
+So how does the `InMemoryCache` store _nested_ data in a _flat_ lookup table? Before storing this data, the cache needs to **normalize** it.
 
 ### Data normalization
 
@@ -67,11 +62,14 @@ Whenever the Apollo Client cache receives query response data, it does the follo
 
 #### 1. Identify objects
 
-First, the cache identifies all of the distinct objects included in a query response. In [the example above](#how-is-data-stored), there are two objects: a `Person` with `id` `cGVvcGxlOjE=`, and a `Planet` with `id` `cGxhbmV0czox`.
+First, the cache identifies all of the distinct objects included in a query response. In [the example above](#how-is-data-stored), there are two objects:
+
+* A `Person` with `id` `cGVvcGxlOjE=`
+* A `Planet` with `id` `cGxhbmV0czox`
 
 #### 2. Generate cache IDs
 
-Second, the cache generates a **cache ID** for each identified object. A cache ID uniquely identifies a particular object while it's in the `InMemoryCache`.
+After identifying all objects, the cache generates a **cache ID** for each one. A cache ID uniquely identifies a particular object while it's in the `InMemoryCache`.
 
 By default, an object's cache ID is the concatenation of the object's `__typename` and `id` (or `_id`) fields, separated by a colon (`:`).
 
@@ -84,15 +82,15 @@ So, the default cache IDs for the objects in [the example above](#how-is-data-st
 
 > You can customize the cache ID format for a particular object type. See [Customizing cache IDs](./cache-configuration/#customizing-cache-ids).
 
-If the cache _can't_ generate a cache ID for a particular object (for example, if no `__typename` field is present), that object is cached directly inside its _parent_ object and it must be referenced via the parent (this means the cache isn't always _completely_ flat).
+If the cache _can't_ generate a cache ID for a particular object (for example, if no `id` or `_id` field is present), that object is cached directly inside its _parent_ object, and it must be referenced via the parent (this means the cache isn't always _completely_ flat).
 
 #### 3. Replace object fields with references
 
-Third, the cache takes each field that contains an object and replaces its value with a **reference** to the appropriate object.
+Next, the cache takes each field that contains an object and replaces its value with a **reference** to the appropriate object.
 
 For example, here's the `Person` object from the example above _before_ reference replacement:
 
-```json{5-9}
+```json {5-9}
 {
   "__typename": "Person",
   "id": "cGVvcGxlOjE=",
@@ -105,9 +103,9 @@ For example, here's the `Person` object from the example above _before_ referenc
 }
 ```
 
-And here it is _after_ replacement:
+And here's that same object _after_ replacement:
 
-```json{5-7}
+```json {5-7}
 {
   "__typename": "Person",
   "id": "cGVvcGxlOjE=",
@@ -126,9 +124,9 @@ Later, if you query for _another_ `Person` who has the same `homeworld`, that no
 
 #### 4. Store normalized objects
 
-The resulting objects are all stored in the cache's flat lookup table.
+Finally, the resulting objects are all stored in the cache's flat lookup table.
 
-Whenever an incoming object has the same cache ID as an _existing_ cached object, the fields of those objects are _merged_:
+Whenever an incoming object has the same cache ID as an _existing_ cached object, the fields of those objects are _merged:_
 
 * If the incoming object and the existing object share any fields, the incoming object _overwrites_ the cached values for those fields.
 * Fields that appear in _only_ the existing object or _only_ the incoming object are preserved.
@@ -209,7 +207,7 @@ This query returns the following result of three `Person` objects, each with a c
 
 </ExpansionPanel>
 
-> Notice that each object in the result includes a `__typename` field, even though our query string _didn't_ include this field. That's because Apollo Client _automatically_ queries for every object's `__typename` field.
+> Notice that each object in the result includes a `__typename` field, even though our query string _didn't_ include this field. That's because Apollo Client _automatically_ queries for every object's `__typename`.
 
 After the result is cached, we can view the state of our cache in the Apollo Client Devtools:
 

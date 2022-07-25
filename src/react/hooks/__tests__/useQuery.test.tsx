@@ -20,7 +20,6 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
-  // green
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
@@ -872,7 +871,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe("options.defaultOptions", () => {
     it("can provide a default fetchPolicy", async () => {
       const query = gql`query { hello }`;
@@ -1248,7 +1246,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   it("can provide options.client without ApolloProvider", async () => {
     const query = gql`query { hello }`;
     const link = mockSingleLink(
@@ -1287,7 +1284,6 @@ describe('useQuery Hook', () => {
     expect(result.current.data).toEqual({ hello: 'from link' });
   });
 
-  // green
   describe('<React.StrictMode>', () => {
     it("double-rendering should not trigger duplicate network requests", async () => {
       const query: TypedDocumentNode<{
@@ -1386,7 +1382,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('polling', () => {
     it('should support polling', async () => {
       const query = gql`{ hello }`;
@@ -1741,7 +1736,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Error handling', () => {
     it('should pass along GraphQL errors', async () => {
       const query = gql`
@@ -2299,7 +2293,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Pagination', () => {
     const query = gql`
       query letters($limit: Int) {
@@ -2607,7 +2600,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Refetching', () => {
     it('refetching with different variables', async () => {
       const query = gql`
@@ -3022,7 +3014,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Callbacks', () => {
     it('onCompleted is called once with cached data', async () => {
       const query = gql`{ hello }`;
@@ -3236,7 +3227,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Optimistic data', () => {
     it('should display rolled back optimistic data when an error occurs', async () => {
       const query = gql`
@@ -3383,7 +3373,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Partial refetch', () => {
     it('should attempt a refetch when data is missing and partialRefetch is true', async () => {
       const errorSpy = jest.spyOn(console, 'error')
@@ -3576,7 +3565,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Client Resolvers', () => {
     it('should receive up to date @client(always: true) fields on entity update', async () => {
       const query = gql`
@@ -3691,7 +3679,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Skipping', () => {
     const query = gql`query greeting($someVar: Boolean) { hello }`;
     const mocks = [
@@ -3993,7 +3980,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe('Missing Fields', () => {
     it('should log debug messages about MissingFieldErrors from the cache', async () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -4862,7 +4848,6 @@ describe('useQuery Hook', () => {
     });
   });
 
-  // green
   describe("multiple useQuery calls per component", () => {
     type ABFields = {
       id: number;
@@ -4991,7 +4976,6 @@ describe('useQuery Hook', () => {
     ));
   });
 
-  // green
   describe('regression test issue #9204', () => {
     itAsync('should handle a simple query', (resolve, reject) => {
       const query = gql`{ hello }`;

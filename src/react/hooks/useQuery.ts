@@ -560,7 +560,10 @@ class InternalState<TData, TVariables> {
       // decided upon, we map errors (graphQLErrors) to the error options.
       // TODO: Is it possible for both result.error and result.errors to be
       // defined here?
-      queryResult.error = new ApolloError({ graphQLErrors: result.errors });
+      queryResult.error = new ApolloError({ 
+        graphQLErrors: result.errors,
+        networkError: result.error,
+       });
     }
 
     return queryResult;

@@ -34,9 +34,10 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
       try {
         sub = forward(operation).subscribe({
           next: result => {
-            if (result.errors) {
+            if (result.errors || result.error) {
               retriedResult = errorHandler({
                 graphQLErrors: result.errors,
+                networkError: result.error,
                 response: result,
                 operation,
                 forward,
@@ -58,10 +59,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
               operation,
               networkError,
               //Network errors can return GraphQL errors on for example a 403
-              graphQLErrors:
-                networkError &&
-                networkError.result &&
-                networkError.result.errors,
+              graphQLErrors: networkError?.result?.errors,
               forward,
             });
             if (retriedResult) {

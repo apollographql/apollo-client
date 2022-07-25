@@ -1,6 +1,6 @@
 export type ServerError = Error & {
   response: Response;
-  result: Record<string, any>;
+  result: Record<string, any> | undefined;
   statusCode: number;
 };
 

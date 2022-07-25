@@ -1056,6 +1056,7 @@ export class QueryManager<TStore> {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
               graphQLErrors: result.errors,
+              networkError: result.error,
             }));
           }
           queryInfo.markResult(result, options, cacheWriteBehavior);
@@ -1070,6 +1071,7 @@ export class QueryManager<TStore> {
 
         if (hasErrors && options.errorPolicy !== "ignore") {
           aqr.errors = result.errors;
+          aqr.error = result.error;
           aqr.networkStatus = NetworkStatus.error;
         }
 

@@ -1026,15 +1026,18 @@ describe('HttpLink', () => {
 
   describe('Error handling', () => {
     let responseBody: any;
+    const networkError = new Error(`Response not successful: Received status code 400.`) as ServerError;
     const text = jest.fn(() => {
       const responseBodyText = '{}';
       responseBody = JSON.parse(responseBodyText);
+      responseBody.errorNetwork = networkError
       return Promise.resolve(responseBodyText);
     });
     const textWithData = jest.fn(() => {
       responseBody = {
         data: { stub: { id: 1 } },
         errors: [{ message: 'dangit' }],
+        errorNetwork: networkError,
       };
 
       return Promise.resolve(JSON.stringify(responseBody));
@@ -1043,6 +1046,7 @@ describe('HttpLink', () => {
     const textWithErrors = jest.fn(() => {
       responseBody = {
         errors: [{ message: 'dangit' }],
+        errorNetwork: networkError,
       };
 
       return Promise.resolve(JSON.stringify(responseBody));
@@ -1053,18 +1057,13 @@ describe('HttpLink', () => {
     beforeEach(() => {
       fetch.mockReset();
     });
-    itAsync('makes it easy to do stuff on a 401', (resolve, reject) => {
+    itAsync('observables continue after a 401 error', (resolve, reject) => {
       const middleware = new ApolloLink((operation, forward) => {
         return new Observable(ob => {
           fetch.mockReturnValueOnce(Promise.resolve({ status: 401, text }));
           const op = forward(operation);
           const sub = op.subscribe({
             next: ob.next.bind(ob),
-            error: makeCallback(resolve, reject, (e: ServerError) => {
-              expect(e.message).toMatch(/Received status code 401/);
-              expect(e.statusCode).toEqual(401);
-              ob.error(e);
-            }),
             complete: ob.complete.bind(ob),
           });
 
@@ -1078,7 +1077,9 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          reject('next should have been thrown from the network');
+          expect(result.errorNetwork?.statusCode).toEqual(401);
+          expect(result.errorNetwork?.message).toMatch(/Received status code 401/);
+          resolve();
         },
         () => {},
       );
@@ -1090,13 +1091,11 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          reject('next should have been thrown from the network');
+          expect(result.errorNetwork?.statusCode).toBe(400);
+          expect(result.errorNetwork?.message).toMatch(/Received status code 400/);
+          expect(result).toEqual(responseBody);
+          resolve();
         },
-        makeCallback(resolve, reject, (e: ServerError) => {
-          expect(e.message).toMatch(/Received status code 400/);
-          expect(e.statusCode).toBe(400);
-          expect(e.result).toEqual(responseBody);
-        }),
       );
     });
     itAsync('throws an error if response code is > 300 and returns data', (resolve, reject) => {
@@ -1106,18 +1105,11 @@ describe('HttpLink', () => {
 
       const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
-      let called = false;
-
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          called = true;
+          expect(result.errorNetwork?.statusCode).toBe(400);
+          expect(result.errorNetwork?.message).toMatch(/Received status code 400/);
           expect(result).toEqual(responseBody);
-        },
-        e => {
-          expect(called).toBe(true);
-          expect(e.message).toMatch(/Received status code 400/);
-          expect(e.statusCode).toBe(400);
-          expect(e.result).toEqual(responseBody);
           resolve();
         },
       );
@@ -1131,12 +1123,9 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          reject('should not have called result because we have no data');
-        },
-        e => {
-          expect(e.message).toMatch(/Received status code 400/);
-          expect(e.statusCode).toBe(400);
-          expect(e.result).toEqual(responseBody);
+          expect(result.errorNetwork?.statusCode).toEqual(400);
+          expect(result.errorNetwork?.message).toMatch(/Received status code 400/);
+          expect(result.errorNetwork?.result).toBe(undefined);
           resolve();
         },
       );
@@ -1148,13 +1137,10 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          reject('next should have been thrown from the network');
+          expect(result.errorNetwork?.message).toMatch(/Server response was missing for query 'SampleQuery'./);
+          resolve();
         },
-        makeCallback(resolve, reject, (e: Error) => {
-          expect(e.message).toMatch(
-            /Server response was missing for query 'SampleQuery'/,
-          );
-        }),
+        
       );
     });
     itAsync("throws if the body can't be stringified", (resolve, reject) => {

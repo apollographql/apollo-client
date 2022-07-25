@@ -18,7 +18,7 @@ describe('parseAndCheckResponse', () => {
     fetchMock.restore();
   });
 
-  const operations = [createOperation({}, { query })];
+  const operations = [createOperation({}, { query, operationName:"SampleQuery" })];
 
   itAsync('throws a parse error with a status code on unparsable response', (resolve, reject) => {
     const status = 400;
@@ -45,12 +45,13 @@ describe('parseAndCheckResponse', () => {
     });
     fetch('error')
       .then(parseAndCheckHttpResponse(operations))
-      .then(reject)
-      .catch(e => {
-        expect(e.statusCode).toBe(status);
-        expect(e.name).toBe('ServerError');
+      .then(({ data, errorNetwork:e }) => {
+        expect(data).toEqual('fail');
+        expect(e.name).toEqual("ServerError");
+        expect(e.statusCode).toEqual(status);
         expect(e).toHaveProperty('response');
-        expect(e).toHaveProperty('result');
+        expect(e.message).toEqual(`Response not successful: Received status code ${status}.`)
+        expect(e.result).toEqual(undefined)
         resolve();
       })
       .catch(reject);
@@ -58,9 +59,21 @@ describe('parseAndCheckResponse', () => {
 
   itAsync('throws a server error on incorrect data', (resolve, reject) => {
     const data = { hello: 'world' }; //does not contain data or erros
+    const status = 200;
     fetchMock.mock('begin:/incorrect', data);
     fetch('incorrect')
       .then(parseAndCheckHttpResponse(operations))
+      .then(({ data, errorNetwork:e }) => {
+        expect(data).toEqual(undefined);
+        expect(e.name).toEqual("ServerError");
+        expect(e.statusCode).toEqual(status);
+        expect(e).toHaveProperty('response');
+        const message = `Server response was missing for query '${operations.map(op => op.operationName)}'.`;
+        expect(e.message).toEqual(message)
+        expect(e.result).toEqual(undefined)
+        resolve();
+      })
+      /*
       .then(reject)
       .catch(e => {
         expect(e.statusCode).toBe(200);
@@ -68,7 +81,7 @@ describe('parseAndCheckResponse', () => {
         expect(e).toHaveProperty('response');
         expect(e.result).toEqual(data);
         resolve();
-      })
+      })*/
       .catch(reject);
   });
 

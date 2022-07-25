@@ -1,6 +1,8 @@
 import { DataProxy } from './DataProxy';
 import { Modifier, Modifiers } from './common';
 import { ApolloCache } from '../cache';
+import { ServerError } from '../../../core';
+import { GraphQLError } from 'graphql';
 
 export namespace Cache {
   export type WatchCallback<TData = any> = (
@@ -23,6 +25,8 @@ export namespace Cache {
   {
     dataId?: string;
     result: TResult;
+    error?: ServerError;
+    errors?: ReadonlyArray<GraphQLError>;
   }
 
   export interface DiffOptions<

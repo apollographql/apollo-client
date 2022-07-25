@@ -1,6 +1,5 @@
 import { Operation } from '../core';
-import { throwServerError } from '../utils';
-
+import { ServerError } from '../utils';
 const { hasOwnProperty } = Object.prototype;
 
 export type ServerParseError = Error & {
@@ -29,11 +28,13 @@ export function parseAndCheckHttpResponse(
     .then((result: any) => {
       if (response.status >= 300) {
         // Network error
-        throwServerError(
-          response,
-          result,
-          `Response not successful: Received status code ${response.status}`,
-        );
+        const message = `Response not successful: Received status code ${response.status}.`;
+        const error = new Error(message) as ServerError;
+        error.name = 'ServerError';
+        error.response = response;
+        error.statusCode = response.status;
+        result.error = error;
+        return result;
       }
 
       if (
@@ -41,16 +42,17 @@ export function parseAndCheckHttpResponse(
         !hasOwnProperty.call(result, 'data') &&
         !hasOwnProperty.call(result, 'errors')
       ) {
-        // Data error
-        throwServerError(
-          response,
-          result,
-          `Server response was missing for query '${
-            Array.isArray(operations)
-              ? operations.map(op => op.operationName)
-              : operations.operationName
-          }'.`,
-        );
+        // Data error (Missing a useful response from the server)
+        const message = `Server response was missing for query '${
+          Array.isArray(operations)
+            ? operations.map(op => op.operationName)
+            : operations.operationName
+        }'.`;
+        const error = new Error(message) as ServerError;
+        error.name = 'ServerError';
+        error.response = response;
+        error.statusCode = response.status;
+        result.error = error;        
       }
       return result;
     });

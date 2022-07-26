@@ -6,13 +6,13 @@ import { render, waitFor, screen, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import fetchMock from "fetch-mock";
 
-import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../core';
-import { InMemoryCache } from '../../cache';
-import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../testing';
-import { ApolloProvider } from '../../react/context';
-import { useQuery } from '../../react/hooks/useQuery';
-import { useMutation } from '../../react/hooks/useMutation';
-import { BatchHttpLink } from '../../link/batch-http';
+import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
+import { InMemoryCache } from '../../../cache';
+import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
+import { ApolloProvider } from '../../context';
+import { useQuery } from '../useQuery';
+import { useMutation } from '../useMutation';
+import { BatchHttpLink } from '../../../link/batch-http';
 
 describe('useMutation Hook', () => {
   interface Todo {

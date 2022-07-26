@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 jobs:
   Filesize:
@@ -25,7 +25,10 @@ jobs:
             - ~/.npm
       - run: npm run bundlesize
 
-  Tests:
+  Tests-React:
+    parameters:
+      react-version:
+        type: string
     docker:
       - image: circleci/node:16.13.1
     steps:
@@ -40,6 +43,13 @@ jobs:
             - npm-v3-
       - run: npm version
       - run: npm ci
+      - when:
+          condition:
+            equal: [ "18", << parameters.react-version >> ]
+          steps:
+            # package.json specifies React/ReactDOM v17 and Testing Library v12
+            # for React 18 tests we no-save + force install v18/v13 respectively
+          - run: npm install --no-save --force react@<< parameters.react-version >> react-dom@<< parameters.react-version >> @testing-library/react@13
       - save_cache:
           key: npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
@@ -48,10 +58,12 @@ jobs:
             # installing to guarantee a clean slate.
             - ~/.npm
       - run:
-          name: Jest suite with coverage
-          command: npm run test:ci
+          name: Jest suite for React << parameters.react-version >> with coverage
+          # Run test:ci command specific to React version,
+          # which ignores the tests for the unspecified version(s)
+          command: npm run test:ci:react-<< parameters.react-version >>
           environment:
-            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results-react-<< parameters.react-version >>.xml"
       - store_test_results:
           path: reports/junit
       - store_artifacts:
@@ -62,4 +74,7 @@ workflows:
   Build and Test:
     jobs:
       - Filesize
-      - Tests
+      - Tests-React:
+          matrix:
+            parameters:
+              react-version: ["17", "18"]

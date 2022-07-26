@@ -22,6 +22,8 @@ You _should_ use subscriptions for the following:
 
 * **Low-latency, real-time updates**. For example, a chat application's client wants to receive new messages as soon as they're available.
 
+> **Note**: Subscriptions cannot be used to listen to client events.
+
 ## Choosing a subscription library
 
 The GraphQL spec does not define a specific protocol for sending subscription requests. The first popular JavaScript library to implement subscriptions over WebSocket is called `subscriptions-transport-ws`. **This library is no longer actively maintained.** Its successor is a library called `graphql-ws`. The two libraries _do not use the same WebSocket subprotocol_, so you need to make sure that your server and clients all use the same library.

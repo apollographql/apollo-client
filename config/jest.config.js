@@ -19,7 +19,14 @@ const defaults = {
   },
 };
 
+const ignoreTSFiles = '.ts$';
+const ignoreTSXFiles = '.tsx$';
+
 const react18TestFileIgnoreList = [
+  // ignore core tests (.ts files) as they are run separately
+  // to avoid running them twice with both react versions
+  // since they do not import react
+  ignoreTSFiles,
   // failing subscriptionLink test (1)
   'src/testing/react/__tests__/mockSubscriptionLink.test.tsx',
   // failing hoc tests (8)
@@ -45,6 +52,12 @@ const react18TestFileIgnoreList = [
 
 const tsStandardConfig = {
   ...defaults,
+  displayName: 'Core Tests',
+  testPathIgnorePatterns: [ignoreTSXFiles],
+}
+
+const standardReact18Config = {
+  ...defaults,
   displayName: "ReactDOM 18",
   testPathIgnorePatterns: react18TestFileIgnoreList
 };
@@ -52,6 +65,7 @@ const tsStandardConfig = {
 const standardReact17Config = {
   ...defaults,
   displayName: "ReactDOM 17",
+  testPathIgnorePatterns: [ignoreTSFiles],
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",
@@ -65,5 +79,6 @@ module.exports = {
   projects: [
     tsStandardConfig,
     standardReact17Config,
+    standardReact18Config,
   ],
 };

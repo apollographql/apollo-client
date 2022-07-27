@@ -166,15 +166,15 @@ describe('useMutation Hook', () => {
           result: { data: data2 },
         },
       ];
-
+      const wrapper: React.FC<React.PropsWithChildren<{variables: typeof variables1 }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: {
             variables: variables1,
           },
@@ -717,6 +717,14 @@ describe('useMutation Hook', () => {
 
       const onCompleted = jest.fn();
       const onError = jest.fn();
+      const wrapper: React.FC<React.PropsWithChildren<{
+        onCompleted: typeof onCompleted;
+        onError: typeof onError
+      }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender } = renderHook(
         ({ onCompleted, onError }) => {
           return useMutation<
@@ -725,11 +733,7 @@ describe('useMutation Hook', () => {
           >(CREATE_TODO_MUTATION, { onCompleted, onError });
         },
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { onCompleted, onError },
         },
       );
@@ -784,6 +788,11 @@ describe('useMutation Hook', () => {
       ];
 
       const onCompleted = jest.fn();
+      const wrapper: React.FC<React.PropsWithChildren<{ onCompleted: typeof onCompleted }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender } = renderHook(
         ({ onCompleted }) => {
           return useMutation<
@@ -792,11 +801,7 @@ describe('useMutation Hook', () => {
           >(CREATE_TODO_MUTATION, { onCompleted });
         },
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { onCompleted },
         },
       );
@@ -844,6 +849,11 @@ describe('useMutation Hook', () => {
       ];
 
       const onCompleted = jest.fn();
+      const wrapper: React.FC<React.PropsWithChildren<{ onCompleted: typeof onCompleted }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender } = renderHook(
         ({ onCompleted }) => {
           return useMutation<
@@ -852,11 +862,7 @@ describe('useMutation Hook', () => {
           >(CREATE_TODO_MUTATION, { onCompleted });
         },
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { onCompleted },
         },
       );

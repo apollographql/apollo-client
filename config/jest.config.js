@@ -19,10 +19,35 @@ const defaults = {
   },
 };
 
-// const tsStandardConfig = {
-//   ...defaults,
-//   displayName: "ReactDOM 18",
-// };
+const react18TestFileIgnoreList = [
+  // failing subscriptionLink test (1)
+  'src/testing/react/__tests__/mockSubscriptionLink.test.tsx',
+  // failing hoc tests (8)
+  'src/react/hoc/__tests__/mutations/queries.test.tsx',
+  'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',
+  'src/react/hoc/__tests__/queries/errors.test.tsx',
+  'src/react/hoc/__tests__/queries/lifecycle.test.tsx',
+  'src/react/hoc/__tests__/queries/loading.test.tsx',
+  'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
+  'src/react/hoc/__tests__/queries/skip.test.tsx',
+  'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
+  // failing hooks tests (4)
+  'src/react/hooks/__tests__/useMutation.test.tsx',
+  'src/react/hooks/__tests__/useQuery.test.tsx',
+  'src/react/hooks/__tests__/useReactiveVar.test.tsx',
+  'src/react/hooks/__tests__/useSubscription.test.tsx',
+  // failing components tests (4)
+  'src/react/components/__tests__/ssr/server.test.tsx',
+  'src/react/components/__tests__/client/Subscription.test.tsx',
+  'src/react/components/__tests__/client/Mutation.test.tsx',
+  'src/react/components/__tests__/client/Query.test.tsx',
+];
+
+const tsStandardConfig = {
+  ...defaults,
+  displayName: "ReactDOM 18",
+  testPathIgnorePatterns: react18TestFileIgnoreList
+};
 
 const standardReact17Config = {
   ...defaults,
@@ -38,7 +63,7 @@ const standardReact17Config = {
 
 module.exports = {
   projects: [
-    // tsStandardConfig,
+    tsStandardConfig,
     standardReact17Config,
   ],
 };

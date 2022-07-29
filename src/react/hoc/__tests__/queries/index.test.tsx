@@ -580,7 +580,7 @@ describe('queries', () => {
     });
 
     const Container = graphql<{}, Data>(query)(
-      class extends React.Component<ChildProps<{}, Data>> {
+      class extends React.Component<ChildProps<React.PropsWithChildren, Data>> {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
@@ -592,7 +592,7 @@ describe('queries', () => {
       }
     );
 
-    class ContextContainer extends React.Component<{}, { color: string }> {
+    class ContextContainer extends React.Component<React.PropsWithChildren, { color: string }> {
       constructor(props: {}) {
         super(props);
         this.state = { color: 'purple' };
@@ -619,7 +619,7 @@ describe('queries', () => {
 
     let count = 0;
     let done = false;
-    class ChildContextContainer extends React.Component<any, any> {
+    class ChildContextContainer extends React.Component<React.PropsWithChildren> {
       render() {
         const { color } = this.context as any;
         if (count === 0) expect(color).toBe('purple');
@@ -687,7 +687,7 @@ describe('queries', () => {
     @graphql(query, {
       alias: 'withFoo'
     })
-    class Container extends React.Component<any, any> {
+    class Container extends React.Component {
       render(): React.ReactNode {
         return null;
       }

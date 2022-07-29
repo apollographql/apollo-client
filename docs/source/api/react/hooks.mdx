@@ -326,3 +326,25 @@ function useApolloClient(): ApolloClient<object> {}
 | Param                  | Type                       | Description                                                |
 | ---------------------- | -------------------------- | ---------------------------------------------------------- |
 | Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
+
+
+## `useReactiveVar`
+
+Reads the value of a [reactive variable](../../local-state/reactive-variables/) and re-renders the containing component whenever that variable's value changes. This enables a reactive variable to trigger changes _without_ relying on the `useQuery` hook.
+
+### Example
+
+```tsx
+import { makeVar, useReactiveVar } from "@apollo/client";
+export const cartItemsVar = makeVar([]);
+
+export function Cart() {
+  const cartItems = useReactiveVar(cartItemsVar);
+  // ...
+```
+
+### Function Signature
+
+```tsx
+function useReactiveVar<T>(rv: ReactiveVar<T>): T {}
+```

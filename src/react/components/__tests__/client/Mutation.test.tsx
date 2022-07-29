@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, PropsWithChildren } from 'react';
 import gql from 'graphql-tag';
 import { ExecutionResult, GraphQLError } from 'graphql';
 import { render, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
@@ -1016,7 +1016,7 @@ describe('General Mutation testing', () => {
 
     let count = 0;
 
-    const Component: React.FC<any> = props => {
+    const Component: React.FC<PropsWithChildren<PropsWithChildren<any>>> = props => {
       const [variables, setVariables] = useState(props.variables);
       return (
         <Mutation mutation={mutation} refetchQueries={refetchQueries}>

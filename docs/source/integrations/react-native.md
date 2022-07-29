@@ -13,7 +13,8 @@ Then wrap your application in the `ApolloProvider` component, like so:
 ```jsx
 import React from 'react';
 import { AppRegistry } from 'react-native';
-import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 
 // Initialize Apollo Client
 const client = new ApolloClient({

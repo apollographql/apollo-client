@@ -34,10 +34,15 @@ Our example application will use the [FlyBy GraphQL API](https://flyby-gateway.h
 
 With our dependencies set up, we can now initialize an `ApolloClient` instance.
 
-In `index.js`, let's first import the symbols we need from `@apollo/client`:
+In `index.js`, let's first import the symbols we need from `@apollo/client` and `@apollo/client/react`:
 
 ```js title="index.js"
-import { ApolloClient, InMemoryCache, ApolloProvider, gql } from '@apollo/client';
+import {
+  ApolloClient,
+  InMemoryCache,
+  gql
+} from "@apollo/client";
+import { ApolloProvider, useQuery } from "@apollo/client/react";
 ```
 
 Next we'll initialize `ApolloClient`, passing its constructor a configuration object with the `uri` and `cache` fields:
@@ -90,7 +95,7 @@ In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest put
 ```jsx title="index.js" {15-17}
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client/react';
 import App from './App';
 
 const client = new ApolloClient({

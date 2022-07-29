@@ -16,7 +16,8 @@ Apollo Client's `useQuery`, `useMutation` and `useSubscription` React hooks are 
 
 ```tsx
 import React from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 interface RocketInventory {
   id: number;
@@ -146,7 +147,8 @@ export function RocketInventoryList() {
 
 ```tsx
 import React, { useState } from 'react';
-import { useMutation, gql } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 
 const SAVE_ROCKET = gql`
   mutation saveRocket($rocket: RocketInput!) {
@@ -223,7 +225,8 @@ export function NewRocketForm() {
 
 ```tsx
 import React from 'react';
-import { useSubscription, gql } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useSubscription } from '@apollo/client/react';
 
 interface Message {
   content: string;
@@ -428,9 +431,9 @@ import React from "react";
 import {
   ApolloClient,
   createHttpLink,
-  InMemoryCache,
-  ApolloProvider
+  InMemoryCache
 } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react"
 
 import Character from "./Character";
 

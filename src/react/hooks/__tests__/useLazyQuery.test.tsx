@@ -7,7 +7,8 @@ import { act } from 'react-dom/test-utils';
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
 import { ApolloProvider } from '../../../react';
-import { MockedProvider, mockSingleLink } from '../../../testing';
+import { mockSingleLink } from '../../../testing';
+import { MockedProvider } from '../../../testing/react';
 import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
 

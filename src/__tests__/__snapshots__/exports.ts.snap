@@ -4,12 +4,9 @@ exports[`exports of public entry points @apollo/client 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloConsumer",
   "ApolloError",
   "ApolloLink",
-  "ApolloProvider",
   "Cache",
-  "DocumentType",
   "HttpLink",
   "InMemoryCache",
   "MissingFieldError",
@@ -31,17 +28,13 @@ Array [
   "from",
   "fromError",
   "fromPromise",
-  "getApolloContext",
   "gql",
   "isApolloError",
   "isReference",
   "makeReference",
   "makeVar",
   "mergeOptions",
-  "operationName",
   "parseAndCheckHttpResponse",
-  "parser",
-  "resetApolloContext",
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
@@ -52,13 +45,6 @@ Array [
   "split",
   "throwServerError",
   "toPromise",
-  "useApolloClient",
-  "useFragment_experimental",
-  "useLazyQuery",
-  "useMutation",
-  "useQuery",
-  "useReactiveVar",
-  "useSubscription",
 ]
 `;
 
@@ -313,7 +299,6 @@ exports[`exports of public entry points @apollo/client/testing 1`] = `
 Array [
   "MockLink",
   "MockSubscriptionLink",
-  "MockedProvider",
   "createMockClient",
   "itAsync",
   "mockObservableLink",
@@ -337,6 +322,12 @@ Array [
   "withErrorSpy",
   "withLogSpy",
   "withWarningSpy",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/react 1`] = `
+Array [
+  "MockedProvider",
 ]
 `;
 

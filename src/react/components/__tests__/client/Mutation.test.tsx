@@ -9,10 +9,10 @@ import { DataProxy, InMemoryCache as Cache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
 import {
   itAsync,
-  MockedProvider,
   MockLink,
   mockSingleLink,
 } from '../../../../testing';
+import { MockedProvider } from '../../../../testing/react';
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 

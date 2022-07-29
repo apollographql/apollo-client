@@ -5,7 +5,7 @@
  *
  */
 
-// TODO: Improve this
+// List of exports from @apollo/client/react.
 const ReactImports = new Set([
     "ApolloProvider",
     "ApolloConsumer",
@@ -24,10 +24,9 @@ const ReactImports = new Set([
 
 export default function transformer(file, api) {
     const j = api.jscodeshift;
-  
+
     const source = j(file.source);
-    let modules = []
-    
+
     pruneOldImports();
 
     return source.toSource();
@@ -39,7 +38,6 @@ export default function transformer(file, api) {
         .forEach(impDecNodePathFiltered => {
           const apolloClientReact = getApolloClientReact(impDecNodePathFiltered);
           j(impDecNodePathFiltered)
-            // find ImportSpecifier here instead of Identifier
             .find(j.ImportSpecifier)
             .forEach(impSpecNodePath => {
                 const moduleName = impSpecNodePath.node.imported.name;
@@ -55,19 +53,11 @@ export default function transformer(file, api) {
         .find(j.ImportDeclaration)
         .filter(impDecNodePath => impDecNodePath.value.source.value === '@apollo/client/react')
         if (!apolloClientReact.size()) {
-            console.log("Not found!")
             apolloClientReact = j.importDeclaration([], j.literal('@apollo/client/react'))
              j(impDecNodePathFiltered).at(0).insertBefore(() => apolloClientReact);
-             console.log(apolloClientReact)
         } else {
-            console.log("Found!")
-            apolloClientReact = apolloClientReact.at(0).at(0)
-            console.log(apolloClientReact)
+            apolloClientReact = apolloClientReact.paths()[0].value
         }
         return apolloClientReact;
     }
-
-    
-    
   }
-  

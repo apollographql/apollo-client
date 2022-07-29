@@ -615,8 +615,8 @@ describe('[queries] loading', () => {
     }
 
     const connect = (
-      component: React.ComponentType<Props>
-    ): React.ComponentType<{}> => {
+      component: React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<Props>>>
+    ): React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<{}>>> => {
       return class extends React.Component<{}, { first: number }> {
         constructor(props: {}) {
           super(props);
@@ -733,8 +733,8 @@ describe('[queries] loading', () => {
       }
 
       const connect = (
-        component: React.ComponentType<Props>
-      ): React.ComponentType<{}> => {
+        component: React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<Props>>>
+      ): React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<{}>>> => {
         return class extends React.Component<{}, { first: number }> {
           constructor(props: {}) {
             super(props);

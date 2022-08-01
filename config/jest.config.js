@@ -42,9 +42,6 @@ const react18TestFileIgnoreList = [
   'src/react/hooks/__tests__/useReactiveVar.test.tsx',
   'src/react/hooks/__tests__/useSubscription.test.tsx',
   // failing components tests (4)
-  'src/react/components/__tests__/ssr/server.test.tsx',
-  'src/react/components/__tests__/client/Subscription.test.tsx',
-  'src/react/components/__tests__/client/Mutation.test.tsx',
   'src/react/components/__tests__/client/Query.test.tsx',
 ];
 

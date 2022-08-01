@@ -16,6 +16,8 @@ import {
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 
+const IS_REACT_18 = React.version.startsWith('18');
+
 const mutation = gql`
   mutation createTodo($text: String!) {
     createTodo {
@@ -1073,7 +1075,7 @@ describe('General Mutation testing', () => {
     );
 
     waitFor(() => {
-      expect(count).toEqual(7);
+      expect(count).toEqual(IS_REACT_18 ? 6 : 7);
     }).then(resolve, reject);
   }));
 

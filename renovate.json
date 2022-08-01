@@ -1,16 +1,16 @@
 {
-  "extends": [
-    "apollo-open-source"
-  ],
+  "extends": ["apollo-open-source"],
   "pathRules": [
     {
-      "paths": [
-        "docs/package.json"
-      ],
-      "extends": [
-        "apollo-docs"
-      ]
+      "paths": ["docs/package.json"],
+      "extends": ["apollo-docs"]
     }
+  ],
+  "ignoreDeps": [
+    "typedoc",
+    "react-17",
+    "react-dom-17",
+    "@testing-library/react-12"
   ],
   "packageRules": {
     "excludePackageNames": [

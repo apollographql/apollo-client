@@ -27,8 +27,6 @@ const react18TestFileIgnoreList = [
   // to avoid running them twice with both react versions
   // since they do not import react
   ignoreTSFiles,
-  // failing subscriptionLink test (1)
-  'src/testing/react/__tests__/mockSubscriptionLink.test.tsx',
   // failing hoc tests (8)
   'src/react/hoc/__tests__/mutations/queries.test.tsx',
   'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',

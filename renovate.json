@@ -11,10 +11,5 @@
     "react-17",
     "react-dom-17",
     "@testing-library/react-12"
-  ],
-  "packageRules": {
-    "excludePackageNames": [
-      "typedoc"
-    ]
-  }
+  ]
 }

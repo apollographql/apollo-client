@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
 import { useFragment_experimental as useFragment } from "../useFragment";
-import { MockedProvider } from "../../../testing";
+import { MockedProvider } from "../../../testing/react";
 import { ApolloProvider } from "../../context";
 import {
   InMemoryCache,

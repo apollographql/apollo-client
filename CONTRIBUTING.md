@@ -122,7 +122,7 @@ It can be useful to link an Apollo Client checkout into an application, to test 
 ```
 git clone https://github.com/apollographql/apollo-client.git
 cd apollo-client
-npm i --legacy-peer-deps
+npm i
 cd ..
 ```
 

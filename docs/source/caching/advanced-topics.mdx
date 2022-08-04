@@ -22,7 +22,7 @@ You can persist and rehydrate the `InMemoryCache` from a storage provider like `
 
 To get started, pass your cache and a storage provider to `persistCache`. By default, the contents of your cache are immediately restored asynchronously, and they're persisted on every write to the cache with a short configurable debounce interval.
 
-> Note: The `persistCache` method is async and returns a `Promise`.
+> **Note:** The `persistCache` method is async and returns a `Promise`.
 
 ```js
 import { AsyncStorage } from 'react-native';
@@ -245,11 +245,11 @@ For details, see [The `fetchMore` function](../pagination/core-api/#the-fetchmor
 
 ### The `@connection` directive
 
-Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Since these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don’t care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
+Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Because these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don't care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
 
-To solve this Apollo Client 1.6 introduced the `@connection` directive to specify a custom store key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
+To solve this, you can use the `@connection` directive to specify a custom cache key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
 
-To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+To use the `@connection` directive, add it to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
 ```js
 const query = gql`

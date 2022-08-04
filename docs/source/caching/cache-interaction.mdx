@@ -26,7 +26,7 @@ You can read and write cache data using GraphQL queries that are similar (or eve
 
 The `readQuery` method enables you to execute a GraphQL query directly on your cache, like so:
 
-```js {12-17}
+```js {12-19}
 const READ_TODO = gql`
   query ReadTodo($id: ID!) {
     todo(id: $id) {
@@ -40,7 +40,9 @@ const READ_TODO = gql`
 // Fetch the cached to-do item with ID 5
 const { todo } = client.readQuery({
   query: READ_TODO,
-  variables: { // Provide any required variables here.  Variables of mismatched types will return `null`.
+  // Provide any required variables in this object.
+  // Variables of mismatched types will return `null`.
+  variables: {
     id: 5,
   },
 });
@@ -59,7 +61,7 @@ If your cache contains data for _all_ of the query's fields, `readQuery` returns
 }
 ```
 
-> Apollo Client automatically queries for every object's `__typename`, even if you don't include this field in your query string.
+> Apollo Client automatically queries for every object's `__typename` by default, even if you don't include this field in your query string.
 
 **Do not modify the returned object directly.** The same object might be returned to multiple components. To update data in the cache, see [Combining reads and writes](#combining-reads-and-writes).
 
@@ -159,7 +161,10 @@ const todo = client.readFragment({
 
 Unlike `readQuery`, `readFragment` requires an `id` option. This option specifies the cache ID for the object in your cache. [By default](./overview/#2-generate-cache-ids), cache IDs have the format `<__typename>:<id>` (which is why we provide `Todo:5` above). You can [customize this ID](./cache-configuration/#customizing-cache-ids).
 
-In the example above, `readFragment` returns `null` if no `Todo` object with ID `5` exists in the cache, or if the object exists but is missing a value for either `text` or `completed`.
+In the example above, `readFragment` returns `null` in either of the following cases:
+
+* There is no cached `Todo` object with ID `5`.
+* There _is_ a cached `Todo` object with ID `5`, but it's missing a value for either `text` or `completed`.
 
 > Prior to Apollo Client 3.3, `readFragment` threw `MissingFieldError` exceptions to report missing fields, and returned `null` only when reading a fragment from a nonexistent ID. Beginning with Apollo Client 3.3, `readFragment` always returns `null` to indicate insufficient data (missing ID or missing fields), instead of throwing a `MissingFieldError`.
 
@@ -316,7 +321,7 @@ When you define a modifier function for a field that contains a scalar, an enum,
 
 A modifier function can optionally take a second parameter, which is an object that contains several helpful utilities.
 
-A couple of these utilities (the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-function-api).
+Some of these utilities (namely, the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-function-api).
 
 ### Examples
 

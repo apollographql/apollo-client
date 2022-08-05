@@ -1382,3 +1382,79 @@ The reactive variable's initial value.
 ```ts title="src/cache/inmemory/inMemoryCache.ts"
 makeVar<T>(value: T): ReactiveVar<T>
 ```
+
+## `batch`
+
+Is similar to `performTransaction` but takes named options rather than positional parameters.
+
+```js
+;
+```
+Accepts the following parameters:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `transaction`
+
+(cache C):void
+</td>
+<td>
+
+Same as the first parameter of performTransaction, except the cache
+argument will have the subclass type rather than ApolloCache.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `optimistic`
+
+string | boolean
+</td>
+<td>
+
+Passing a string for this option creates a new optimistic layer with
+that string as its `layer.id`, just like passing a string for the
+`optimisticId` parameter of `performTransaction`. Passing `true` is the
+same as passing `undefined` to `performTransaction`, and passing `false` is
+the same as passing `null`.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `onDirty`
+
+callback function
+</td>
+<td>
+
+If you want to find out which watched queries were invalidated during
+this batch operation, pass this optional callback function. Returning
+`false` from the callback will prevent broadcasting this result.
+</td>
+</tr>
+
+</tbody>
+</table>
+
+
+
+### Signature
+
+```ts title="src/cache/inmemory/inMemoryCache.ts"
+makeVar<T>(value: T): ReactiveVar<T>
+```

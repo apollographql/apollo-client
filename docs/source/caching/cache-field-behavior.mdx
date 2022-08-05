@@ -176,7 +176,7 @@ You can use a `merge` function to intelligently combine nested objects that are 
 
 <ExpansionPanel title="See the code">
 
-```ts{6-8}
+```ts {6-8}
 const cache = new InMemoryCache({
   typePolicies: {
     Book: {
@@ -219,7 +219,7 @@ With this schema, our cache can normalize `Book` objects because they have an `i
 
 Now, let's say our client executes the following two queries, in order:
 
-```graphql{5,14}
+```graphql {5,14}
 query BookWithAuthorName {
   favoriteBook {
     id
@@ -256,7 +256,7 @@ When the _first_ query returns, Apollo Client writes a `Book` object like the fo
 
 Now, when the _second_ query returns, the cached `Book` object is updated to the following:
 
-```json{6}
+```json {6}
 {
   "__typename": "Book",
   "id": "abc123",

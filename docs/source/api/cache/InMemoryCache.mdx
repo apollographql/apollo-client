@@ -1386,9 +1386,10 @@ makeVar<T>(value: T): ReactiveVar<T>
 ## `batch`
 
 Is similar to `performTransaction` but takes named options rather than positional parameters.
+ The batch method is intended to replace both `performTransaction` and `recordOptimisticTransaction` Subclasses of ApolloCache (such as `InMemoryCache`) can override the batch method to do more interesting things with its options.
 
 ```js
-;
+?????
 ```
 Accepts the following parameters:
 
@@ -1407,7 +1408,7 @@ Accepts the following parameters:
 
 ###### `transaction`
 
-(cache C):void
+`subclass type`
 </td>
 <td>
 
@@ -1421,7 +1422,7 @@ argument will have the subclass type rather than ApolloCache.
 
 ###### `optimistic`
 
-string | boolean
+`string` `boolean`
 </td>
 <td>
 
@@ -1438,11 +1439,11 @@ the same as passing `null`.
 
 ###### `onDirty`
 
-callback function
+`callback function`
 </td>
 <td>
 
-If you want to find out which watched queries were invalidated during
+To find out which watched queries were invalidated during
 this batch operation, pass this optional callback function. Returning
 `false` from the callback will prevent broadcasting this result.
 </td>
@@ -1455,6 +1456,6 @@ this batch operation, pass this optional callback function. Returning
 
 ### Signature
 
-```ts title="src/cache/inmemory/inMemoryCache.ts"
-makeVar<T>(value: T): ReactiveVar<T>
+```ts title="src/cache/core/cache.ts"
+batch<U>(options: Cache.BatchOptions<this, U>): U
 ```

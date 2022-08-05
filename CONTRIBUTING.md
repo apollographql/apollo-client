@@ -8,12 +8,18 @@ Oh, and if you haven't already, join our [community forums](https://community.ap
 
 Here are some ways to contribute to the project, from easiest to most difficult:
 
-* [Reporting bugs](#reporting-bugs)
-* [Improving the documentation](#improving-the-documentation)
-* [Responding to issues](#responding-to-issues)
-* [Small bug fixes](#small-bug-fixes)
-* [Suggesting features](#suggesting-features)
-* [Big pull requests](#big-prs)
+- [Issues](#issues)
+  - [Reporting bugs](#reporting-bugs)
+  - [Improving the documentation](#improving-the-documentation)
+  - [Responding to issues](#responding-to-issues)
+  - [Small bug fixes](#small-bug-fixes)
+  - [Suggesting features](#suggesting-features)
+- [Big PRs](#big-prs)
+  - [Code review guidelines](#code-review-guidelines)
+- [Development](#development)
+  - [Building](#building)
+  - [Testing](#testing)
+  - [Wiring a checkout into an application](#wiring-a-checkout-into-an-application)
 
 ## Issues
 

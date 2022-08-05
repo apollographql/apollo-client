@@ -65,3 +65,6 @@ junit.xml
 
 # Local Netlify folder
 .netlify
+
+# Ignore generated test report output
+reports

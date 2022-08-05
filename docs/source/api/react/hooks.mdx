@@ -51,14 +51,15 @@ One way to access the configured Apollo Client instance directly is to create an
 ### Example
 
 ```jsx
-import React from 'react';
 import { ApolloConsumer } from '@apollo/client';
 
-const WithApolloClient = () => (
-  <ApolloConsumer>
-    {client => 'We have access to the client!' /* do stuff here */}
-  </ApolloConsumer>
-);
+function WithApolloClient() {
+  return (
+    <ApolloConsumer>
+      {client => 'We have access to the client!' /* do stuff here */}
+    </ApolloConsumer>
+  );
+}
 ```
 
 ## `useQuery`

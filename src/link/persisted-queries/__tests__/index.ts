@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
-import { sha256 } from 'crypto-hash';
 import { print } from 'graphql';
 import { times } from 'lodash';
 import fetchMock from 'fetch-mock';
+import crypto from 'crypto';
 
 import { ApolloLink, execute } from '../../core';
 import { Observable } from '../../../utilities';
@@ -47,11 +47,17 @@ const errorResponse = JSON.stringify({ errors });
 const giveUpResponse = JSON.stringify({ errors: giveUpErrors });
 const multiResponse = JSON.stringify({ errors: multipleErrors });
 
+export function sha256(data: string) {
+  const hash = crypto.createHash('sha256');
+  hash.update(data);
+  return hash.digest('hex');
+}
+
+const hash = sha256(queryString);
+
 describe('happy path', () => {
-  let hash: string;
   beforeEach(async () => {
     fetchMock.restore();
-    hash = hash || await sha256(queryString);
   });
 
   itAsync('sends a sha256 hash of the query under extensions', (resolve, reject) => {
@@ -229,10 +235,8 @@ describe('happy path', () => {
 });
 
 describe('failure path', () => {
-  let hash: string;
   beforeEach(async () => {
     fetchMock.restore();
-    hash = hash || await sha256(queryString);
   });
 
   itAsync('correctly identifies the error shape from the server', (resolve, reject) => {

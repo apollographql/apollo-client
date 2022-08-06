@@ -101,7 +101,7 @@
     "@testing-library/react": "13.3.0",
     "@testing-library/react-12": "npm:@testing-library/react@^12",
     "@testing-library/react-hooks": "8.0.1",
-    "@testing-library/user-event": "14.3.0",
+    "@testing-library/user-event": "14.4.2",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/fetch-mock": "7.3.5",
     "@types/glob": "7.2.0",

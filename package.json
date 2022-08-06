@@ -95,7 +95,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@babel/parser": "7.18.9",
+    "@babel/parser": "7.18.11",
     "@graphql-tools/schema": "8.5.0",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@testing-library/react": "13.3.0",

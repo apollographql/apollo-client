@@ -21,7 +21,7 @@ describe('parseAndCheckResponse', () => {
   const operations = [createOperation({}, { query })];
 
   itAsync('throws a parse error with a status code on unparsable response', (resolve, reject) => {
-    const status = 400;
+    const status = 200;
     fetchMock.mock('begin:/error', status);
     fetch('error')
       .then(parseAndCheckHttpResponse(operations))

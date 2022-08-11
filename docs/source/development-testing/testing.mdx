@@ -259,7 +259,7 @@ const dogMock = {
   request: {
     query: GET_DOG_QUERY
   },
-  variableMatcher (variables) => true,
+  variableMatcher: (variables) => true,
   result: {
     data: { dog: { id: 1, name: 'Buck', breed: 'poodle' } },
   },

@@ -79,6 +79,43 @@ const cache = new InMemoryCache({
 });
 ```
 
+If a field requires numerous parameters then each parameter must be wrapped in a variable that is then destructured and returned.
+Each parameter will be available as individual subfields.
+
+The following `read` function assigns a default value of `UNKNOWN FIRST_NAME` to the `first_name` subfield of a `fullName` field and a `UNKNOWN LAST_NAME` to the `last_name` of a `fullName` field.
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        fullName: {
+          read(full_name = {
+            first_name: "UNKNOWN FIRST_NAME",
+            last_name: "UNKNOWN LAST_NAME",
+          }) {
+            return { ...full_name };
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+The following `query` returns the `first_name` and `last_name` subfields from the `fullName` field:
+
+```graphql
+query personWithFullName {
+  fullName {
+    first_name
+    last_name
+  }
+}
+```
+
+If a field accepts arguments, the second parameter includes the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
+
 You can define a `read` function for a field that isn't even defined in your schema. For example, the following `read` function enables you to query a `userId` field that is always populated with locally stored data:
 
 ```ts
@@ -139,7 +176,7 @@ You can use a `merge` function to intelligently combine nested objects that are 
 
 <ExpansionPanel title="See the code">
 
-```ts{6-8}
+```ts {6-8}
 const cache = new InMemoryCache({
   typePolicies: {
     Book: {
@@ -182,7 +219,7 @@ With this schema, our cache can normalize `Book` objects because they have an `i
 
 Now, let's say our client executes the following two queries, in order:
 
-```graphql{5,14}
+```graphql {5,14}
 query BookWithAuthorName {
   favoriteBook {
     id
@@ -219,7 +256,7 @@ When the _first_ query returns, Apollo Client writes a `Book` object like the fo
 
 Now, when the _second_ query returns, the cached `Book` object is updated to the following:
 
-```json{6}
+```json {6}
 {
   "__typename": "Book",
   "id": "abc123",
@@ -299,6 +336,27 @@ const cache = new InMemoryCache({
 These configurations have the same behavior, but putting the `merge: true` in the `Author` type policy is shorter and easier to maintain, especially when `Author` objects could appear in lots of different fields besides `Book.author`.
 
 Remember that mergeable objects will only be merged with existing objects occupying the same field of the same parent object, and only when the `__typename` of the objects is the same. If you really need to work around these rules, you can write a custom `merge` function to do whatever you want, but `merge: true` follows these rules.
+
+In some cases, you might want to completely disable merge functions for certain fields. To do so, pass `merge: false` like so:
+
+```ts {13}
+const cache = new InMemoryCache({
+  typePolicies: {
+    Book: {
+      fields: {
+        // No longer necessary!
+        // author: {
+        //   merge: true,
+        // },
+      },
+    },
+
+    Author: {
+      merge: false,
+    },
+  },
+});
+```
 
 ### Merging arrays of non-normalized objects
 

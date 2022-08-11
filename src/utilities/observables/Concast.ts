@@ -12,6 +12,7 @@ function isPromiseLike<T>(value: MaybeAsync<T>): value is PromiseLike<T> {
 type Source<T> = MaybeAsync<Observable<T>>;
 
 export type ConcastSourcesIterable<T> = Iterable<Source<T>>;
+export type ConcastSourcesArray<T> = Array<Source<T>>;
 
 // A Concast<T> observable concatenates the given sources into a single
 // non-overlapping sequence of Ts, automatically unwrapping any promises,
@@ -141,10 +142,10 @@ export class Concast<T> extends Observable<T> {
     if (this.observers.delete(observer) &&
         --this.addCount < 1 &&
         !quietly) {
-      // In case there are still any cleanup observers in this.observers,
-      // and no error or completion has been broadcast yet, make sure
-      // those observers receive an error that terminates them.
-      this.handlers.error(new Error("Observable cancelled prematurely"));
+      // In case there are still any cleanup observers in this.observers, and no
+      // error or completion has been broadcast yet, make sure those observers
+      // have a chance to run and then remove themselves from this.observers.
+      this.handlers.complete();
     }
   }
 
@@ -187,9 +188,11 @@ export class Concast<T> extends Observable<T> {
     },
 
     complete: () => {
-      if (this.sub !== null) {
+      const { sub } = this;
+      if (sub !== null) {
         const value = this.sources.shift();
         if (!value) {
+          if (sub) setTimeout(() => sub.unsubscribe());
           this.sub = null;
           if (this.latest &&
               this.latest[0] === "next") {

@@ -29,6 +29,7 @@ import { QueryManager } from '../../QueryManager';
 import { ApolloError } from '../../../errors';
 
 // testing utils
+import { waitFor } from '@testing-library/react';
 import wrap from '../../../testing/core/wrap';
 import observableToPromise, {
   observableToPromiseAndSubscription,
@@ -507,10 +508,12 @@ describe('QueryManager', () => {
       return new Observable(observer => {
         onRequestSubscribe();
 
+        // Delay (100ms) must be bigger than unsubscribe await (5ms)
+        // to show clearly that the connection was aborted before completing
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 0);
+        }, 100);
 
         return () => {
           onRequestUnsubscribe();
@@ -542,14 +545,114 @@ describe('QueryManager', () => {
 
     subscription.unsubscribe();
 
-    return new Promise(
-      // Unsubscribing from the link happens after a microtask
-      // (Promise.resolve().then) delay, so we need to wait at least that
-      // long before verifying onRequestUnsubscribe was called.
-      resolve => setTimeout(resolve, 0)
-    ).then(() => {
-      expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+    return waitFor(() => {
       expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+      expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+    }).then(resolve, reject);
+  });
+
+  itAsync('causes link unsubscription after reobserve', (resolve, reject) => {
+    const expResult = {
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
+      },
+    };
+
+    const request = {
+      query: gql`
+        query people ($offset: Int) {
+          allPeople(first: $offset) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      variables: undefined
+    };
+
+    const mockedResponse = {
+      request,
+      result: expResult
+    };
+
+    const onRequestSubscribe = jest.fn();
+    const onRequestUnsubscribe = jest.fn();
+
+    const mockedSingleLink = new ApolloLink(() => {
+      return new Observable(observer => {
+        onRequestSubscribe();
+
+        // Delay (100ms) must be bigger than sum of reobserve and unsubscribe awaits (5ms each)
+        // to show clearly that the connection was aborted before completing
+        const timer = setTimeout(() => {
+          observer.next(mockedResponse.result);
+          observer.complete();
+        }, 100);
+
+        return () => {
+          onRequestUnsubscribe();
+          clearTimeout(timer);
+        };
+      });
+    });
+
+    const mockedQueryManger = new QueryManager({
+      link: mockedSingleLink,
+      cache: new InMemoryCache({ addTypename: false }),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: 'cache-and-network',
+          returnPartialData: false,
+          partialRefetch: true,
+          notifyOnNetworkStatusChange: true
+        },
+        query: {
+          fetchPolicy: 'network-only'
+        }
+      },
+      queryDeduplication: false
+    });
+
+    const observableQuery = mockedQueryManger.watchQuery<
+      (typeof expResult)['data'],
+      { offset?: number | undefined }
+    >({
+      query: request.query,
+      variables: request.variables
+    });
+
+    const observerCallback = wrap(reject, () => {
+      reject(new Error('Link subscription should have been cancelled'));
+    });
+
+    const subscription = observableQuery.subscribe({
+      next: observerCallback,
+      error: observerCallback,
+      complete: observerCallback
+    });
+
+    expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+
+    // This is the most important part of this test
+    // Check that reobserve cancels the previous connection while watchQuery remains active
+    observableQuery.reobserve({ variables: { offset: 20 } });
+
+    return waitFor(() => {
+      // Verify that previous connection was aborted by reobserve
+      expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+    }).then(() => {
+      subscription.unsubscribe();
+      return waitFor(() => {
+        expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
+        expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
+      });
     }).then(resolve, reject);
   });
 

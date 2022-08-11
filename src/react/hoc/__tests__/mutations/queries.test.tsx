@@ -272,7 +272,7 @@ describe('graphql(mutation) query integration', () => {
     const cache = new Cache({ addTypename: false });
     const client = new ApolloClient({ link, cache });
 
-    class Boundary extends React.Component {
+    class Boundary extends React.Component<React.PropsWithChildren> {
       componentDidCatch(e: any) {
         reject(e);
       }

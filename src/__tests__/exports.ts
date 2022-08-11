@@ -1,3 +1,8 @@
+/** @jest-environment node */
+// We run this in a node environment because:
+// A) JSDOM doesn't yet support the TextEncoder/TextDecoder elements, meaning certain imports will fail (See https://github.com/jsdom/jsdom/issues/2524) 
+// B) We're just testing imports/exports, so we don't need to slow down the test with a browser environment.
+
 import * as cache from "../cache";
 import * as client from "..";
 import * as core from "../core";

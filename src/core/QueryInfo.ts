@@ -2,6 +2,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
+import { mergeDeep } from "../utilities"
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
@@ -10,7 +11,6 @@ import {
   ObservableSubscription,
   isNonEmptyArray,
   graphQLResultHasError,
-  cloneDeep,
   canUseWeakMap,
 } from '../utilities';
 import {
@@ -357,25 +357,18 @@ export class QueryInfo {
     this.reset();
 
     if (result.path) {
-      let diff = this.lastDiff;
-      if (!diff) {
+      if (!this.lastDiff || !result.data) {
+        // TODO: handle this case
         throw new Error('TODO');
       }
-
-      diff = cloneDeep(diff);
-      setIn(
-        diff.diff.result,
-        result.path as Array<string | number>,
-        (value: any) => {
-          if (value == null) {
-            return result.data;
-          }
-
-          return { ...value, ...result.data };
-        },
-      );
-
-      result.data = diff.diff.result;
+      let { diff } = this.lastDiff;
+      let { data, path } = result;
+      for (let i = path.length - 1; i >= 0; --i) {
+        // TODO: fix tsignore
+        // @ts-ignore
+        data = { [path[i]]: data };
+      }
+      result.data = mergeDeep(diff.result, data);
       result.path = undefined;
     }
 
@@ -499,25 +492,4 @@ export function shouldWriteResult<T>(
     writeWithErrors = true;
   }
   return writeWithErrors;
-}
-
-// TODO: stop this function from throwing cryptic errors.
-function setIn(
-  obj: Record<string, any>,
-  path: Array<string | number>,
-  updater: Function,
-) {
-  if (!path.length) {
-    return obj;
-  }
-
-  let parent: any = obj;
-  for (let i = 0; i < path.length - 1; i++) {
-    const key = path[i];
-    parent = parent[key];
-  }
-
-  const key = path[path.length - 1];
-  parent[key] = updater(parent[key]);
-  return obj;
 }

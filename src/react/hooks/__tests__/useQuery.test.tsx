@@ -4535,7 +4535,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe('defer/stream', () => {
+  describe('defer', () => {
     it('should handle deferred queries', async () => {
       const query = gql`
         {
@@ -4820,83 +4820,6 @@ describe('useQuery Hook', () => {
             __typename: 'Person',
           },
         },
-      });
-    });
-
-    it('should handle streamed queries', async () => {
-      const query = gql`
-        {
-          alphabet @stream(initialCount: 10)
-        }
-      `;
-
-      const alphabet = 'abcdefghijklmnopqrstuvwxyz';
-      const link = new MockSubscriptionLink();
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-      });
-
-      const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>
-              {children}
-            </ApolloProvider>
-          ),
-        },
-      );
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              alphabet: alphabet.slice(0, 10).split(''),
-            },
-            hasNext: true,
-          },
-        });
-      });
-
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({
-        alphabet: alphabet.slice(0, 10).split(''),
-      });
-
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: alphabet[10] as any,
-            path: ['alphabet', 10],
-            hasNext: true,
-          },
-        });
-      });
-
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({
-        alphabet: alphabet.slice(0, 11).split(''),
-      });
-
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: alphabet[11] as any,
-            path: ['alphabet', 11],
-            hasNext: false,
-          },
-        });
-      });
-
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({
-        alphabet: alphabet.slice(0, 12).split(''),
       });
     });
   });

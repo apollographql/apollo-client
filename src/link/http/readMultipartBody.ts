@@ -12,7 +12,6 @@ export type ServerParseError = Error & {
   bodyText: string;
 };
 
-// Headers is a DOM global
 function parseHeaders(headerText: string): Headers {
   const headersInit: Record<string, string> = {};
   headerText.split("\n").forEach((line) => {
@@ -24,13 +23,13 @@ function parseHeaders(headerText: string): Headers {
     }
   });
 
+  // TODO: headers is not defined on the server
   return new Headers(headersInit);
 }
 
-// TODO: better return type
-function parseJSONBody(response: Response, bodyText: string): any {
+function parseJsonBody<T>(response: Response, bodyText: string): T {
   try {
-    return JSON.parse(bodyText);
+    return JSON.parse(bodyText) as T;
   } catch (err) {
     const parseError = err as ServerParseError;
     parseError.name = "ServerParseError";
@@ -41,15 +40,15 @@ function parseJSONBody(response: Response, bodyText: string): any {
   }
 }
 
-export function readJsonBody(
+export function readJsonBody<T = Record<string, unknown>>(
   response: Response,
   operation: Operation,
-  observer: Observer<any>
+  observer: Observer<T>
 ) {
   response
     .text()
-    .then((bodyText) => parseJSONBody(response, bodyText))
-    .then((result: any) => {
+    .then((bodyText) => parseJsonBody<T>(response, bodyText))
+    .then((result) => {
       if (response.status >= 300) {
         // Network error
         throwServerError(
@@ -58,7 +57,6 @@ export function readJsonBody(
           `Response not successful: Received status code ${response.status}`
         );
       }
-
       if (
         !Array.isArray(result) &&
         !hasOwnProperty.call(result, "data") &&
@@ -71,45 +69,59 @@ export function readJsonBody(
           `Server response was missing for query '${operation.operationName}'.`
         );
       }
-
       observer.next?.(result);
       observer.complete?.();
     })
     .catch((err) => handleError(err, observer));
 }
 
-export function readMultipartBody(response: Response, observer: Observer<any>) {
-  const contentType = response.headers.get("content-type");
-  if (!contentType || !/^multipart\/mixed/.test(contentType)) {
+export function readMultipartBody<T = Record<string, unknown>>(
+  // TODO: better type for response since response.body can be many things
+  // depending on the environment, and the builtin type for Response's body
+  // is the browser's ReadableStream<Uint8Array> | null
+  response: Response,
+  observer: Observer<T>
+) {
+  // TODO: in node, can't use headers.get
+  const ctype = response.headers.get("content-type");
+  if (!ctype || !/^multipart\/mixed/.test(ctype)) {
     throw new Error("Invalid multipart content type");
   }
+  // copied from meros
+  // https://github.com/maraisr/meros/blob/main/src/node.ts L91, 95-98
+  let idx_boundary = ctype.indexOf("boundary=");
+  let boundary = `--${
+    !!~idx_boundary
+      ? // +9 for 'boundary='.length
+        ctype
+          .substring(idx_boundary + 9)
+          .trim()
+          .replace(/['"]/g, "")
+      : "-"
+  }`;
 
-  // TODO: better parsing of boundary attribute?
-  let boundary = contentType.split("boundary=")[1];
-  if (boundary) {
-    boundary = boundary.replace(/^('|")/, "").replace(/('|")$/, "");
-  } else {
-    boundary = "-";
-  }
-
-  // response.body can be one of many things depending on the environment, so
-  // we try to handle all of these cases.
   if (response.body === null) {
     throw new Error("Missing body");
   } else if (typeof response.body.tee === "function") {
-    // WHATWG Stream
-    readMultipartWebStream(response, response.body, boundary, observer);
-  } else if (typeof (response.body as any).on === "function") {
-    readMultipartNodeStream(
+    readMultipartWebStream<T>(response, response.body, boundary, observer);
+  } else if (typeof (response.body as unknown as Readable).on === "function") {
+    readMultipartNodeStream<T>(
       response,
       response.body as unknown as Readable,
       boundary,
       observer
     );
   } else if (typeof response.body === "string") {
-    readMultipartString(response, response.body, boundary, observer);
-  } else if (typeof (response.body as any).byteLength === "number") {
-    readMultipartBuffer(response, response.body as any, boundary, observer);
+    readMultipartString<T>(response, response.body, boundary, observer);
+  } else if (
+    typeof (response.body as unknown as Buffer).byteLength === "number"
+  ) {
+    readMultipartBuffer<T>(
+      response,
+      response.body as unknown as Buffer,
+      boundary,
+      observer
+    );
   } else {
     throw new Error(
       "Streaming bodies not supported by provided fetch implementation"
@@ -117,17 +129,17 @@ export function readMultipartBody(response: Response, observer: Observer<any>) {
   }
 }
 
-async function readMultipartWebStream(
+async function readMultipartWebStream<T>(
   response: Response,
   // Not sure if the string case is possible but we’ll handle it anyways.
   body: ReadableStream<Uint8Array>,
   boundary: string,
-  observer: Observer<any>
+  observer: Observer<T>
 ) {
   // TODO: What if TextDecoder isn’t defined globally?
+  // do feature detection and use buffer.from
   const decoder = new TextDecoder("utf-8");
   let buffer = "";
-  const messageBoundary = getMessageBoundary(boundary);
   // TODO: End message boundary???
   const reader = body.getReader();
   let result: ReadableStreamDefaultReadResult<Uint8Array>;
@@ -138,22 +150,25 @@ async function readMultipartWebStream(
         ? result.value
         : decoder.decode(result.value);
     buffer += chunk;
-    // buffer index
-    let bi = buffer.indexOf(messageBoundary);
+    let bi = buffer.indexOf(boundary);
     while (bi > -1) {
       let message: string;
       [message, buffer] = [
         buffer.slice(0, bi),
-        buffer.slice(bi + messageBoundary.length),
+        buffer.slice(bi + boundary.length),
       ];
-      observeNextResult(message, response, observer);
-      bi = buffer.indexOf(messageBoundary);
+      observeNextResult<T>(message, response, observer);
+      bi = buffer.indexOf(boundary);
     }
   }
   observer.complete?.();
 }
 
-function observeNextResult(message: string, response: Response, observer: Observer<any>) {
+function observeNextResult<T>(
+  message: string,
+  response: Response,
+  observer: Observer<T>
+) {
   if (message.trim()) {
     const i = message.indexOf("\r\n\r\n");
     const headers = parseHeaders(message.slice(0, i));
@@ -162,39 +177,36 @@ function observeNextResult(message: string, response: Response, observer: Observ
       contentType !== null &&
       contentType.indexOf("application/json") === -1
     ) {
-      // TODO: handle this case
+      // TODO: handle unsupported chunk content type
       throw new Error("Unsupported patch content type");
     }
-
     const body = message.slice(i);
-    // body here doesn’t make sense because it will be a readable stream
-    const result = parseJSONBody(response, body);
+    const result = parseJsonBody<T>(response, body);
     observer.next?.(result);
   }
 }
 
-function readMultipartNodeStream(
+function readMultipartNodeStream<T>(
   response: Response,
   body: Readable,
   boundary: string,
-  observer: Observer<any>
+  observer: Observer<T>
 ) {
   let buffer = "";
-  const messageBoundary = getMessageBoundary(boundary);
   body.on("data", (chunk) => {
     chunk = typeof chunk === "string" ? chunk : chunk.toString("utf8");
     // buffer index
     buffer += chunk;
     // TODO: deduplicate logic with readMultipartWebStream
-    let bi = buffer.indexOf(messageBoundary);
+    let bi = buffer.indexOf(boundary);
     while (bi > -1) {
       let message: string;
       [message, buffer] = [
         buffer.slice(0, bi),
-        buffer.slice(bi + messageBoundary.length),
+        buffer.slice(bi + boundary.length),
       ];
-      observeNextResult(message, response, observer);
-      bi = buffer.indexOf(messageBoundary);
+      observeNextResult<T>(message, response, observer);
+      bi = buffer.indexOf(boundary);
     }
   });
   body.on("error", (err) => {
@@ -205,11 +217,11 @@ function readMultipartNodeStream(
   });
 }
 
-function readMultipartBuffer(
+function readMultipartBuffer<T>(
   response: Response,
   body: Uint8Array | Buffer,
   boundary: string,
-  observer: Observer<any>
+  observer: Observer<T>
 ) {
   let text: string;
   if (body.toString.length > 0) {
@@ -219,30 +231,25 @@ function readMultipartBuffer(
     const decoder = new TextDecoder("utf8");
     text = decoder.decode(body);
   }
-  readMultipartString(response, text, boundary, observer);
+  readMultipartString<T>(response, text, boundary, observer);
 }
 
-function getMessageBoundary(boundary: string) {
-  return "--" + boundary;
-}
-
-function readMultipartString(
+function readMultipartString<T>(
   response: Response,
   body: string,
   boundary: string,
-  observer: Observer<any>
+  observer: Observer<T>
 ) {
   let buffer = body;
-  const messageBoundary = getMessageBoundary(boundary);
-  let bi = buffer.indexOf(messageBoundary);
+  let bi = buffer.indexOf(boundary);
   while (bi > -1) {
     let message: string;
     [message, buffer] = [
       buffer.slice(0, bi),
-      buffer.slice(bi + messageBoundary.length),
+      buffer.slice(bi + boundary.length),
     ];
-    observeNextResult(message, response, observer);
-    bi = buffer.indexOf(messageBoundary);
+    observeNextResult<T>(message, response, observer);
+    bi = buffer.indexOf(boundary);
   }
   observer.complete?.();
 }

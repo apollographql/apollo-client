@@ -232,7 +232,7 @@ describe('multipart responses', () => {
       status: 200,
       body: stream,
       // TODO: Use a real headers object
-      headers: new Map([['content-type', 'multipart/mixed']]),
+      headers: new Map([['content-type', 'multipart/mixed; boundary="-"']]),
     }));
     const link = new HttpLink({
       fetch: fetch as any,

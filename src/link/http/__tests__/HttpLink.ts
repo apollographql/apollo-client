@@ -1245,7 +1245,7 @@ describe('HttpLink', () => {
     });
   });
 
-  describe.only('Multipart responses', () => {
+  describe('Multipart responses', () => {
     beforeEach(() => {
       fetchMock.restore();
     });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 import { renderHook } from '@testing-library/react-hooks';
 import gql from 'graphql-tag';
 
@@ -127,35 +127,48 @@ describe('useSubscription Hook', () => {
       }
     `;
 
+    const onSetup = jest.fn();
     const link = new MockSubscriptionLink();
+    link.onSetup(onSetup);
     const client = new ApolloClient({
       link,
       cache: new Cache({ addTypename: false })
     });
 
     const onSubscriptionData = jest.fn();
-    const { result, unmount, waitForNextUpdate } = renderHook(
-      () => useSubscription(subscription, {
-        onSubscriptionData,
+    const wrapper: React.FC<PropsWithChildren<{ variables: { foo: string } }>> = ({ children }) => (
+      <ApolloProvider client={client}>
+        {children}
+      </ApolloProvider>
+    );
+
+    const { result, unmount, waitForNextUpdate, rerender } = renderHook(
+      ({ variables }) => useSubscription(subscription, {
+        variables,
         skip: true,
+        onSubscriptionData,
       }),
       {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
-        ),
+        initialProps: {
+          variables: {
+            foo: 'bar'
+          }
+        },
+        wrapper
       },
     );
 
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
+
+    rerender({ variables: { foo: 'bar2' }});
     await expect(waitForNextUpdate({ timeout: 20 }))
       .rejects.toThrow('Timed out');
-    unmount();
 
+    expect(onSetup).toHaveBeenCalledTimes(0);
     expect(onSubscriptionData).toHaveBeenCalledTimes(0);
+    unmount();
   });
 
   it('should create a subscription after skip has changed from true to a falsy value', async () => {
@@ -181,15 +194,15 @@ describe('useSubscription Hook', () => {
       link,
       cache: new Cache({ addTypename: false })
     });
-
+    const wrapper: React.FC<PropsWithChildren<{ skip: boolean }>> = ({ children }) => (
+      <ApolloProvider client={client}>
+        {children}
+      </ApolloProvider>
+    );
     const { result, rerender, waitForNextUpdate } = renderHook(
       ({ skip }) => useSubscription(subscription, { skip }),
       {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
-        ),
+        wrapper,
         initialProps: { skip: true },
       },
     );

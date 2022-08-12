@@ -1,6 +1,5 @@
 ---
 title: REST Link
-sidebar_title: REST
 description: Call REST APIs inside your GraphQL queries.
 ---
 
@@ -15,7 +14,7 @@ Calling REST APIs from a GraphQL client opens the benefits of GraphQL for more p
 
 With `apollo-link-rest`, you can call your endpoints inside your GraphQL queries and have all your data managed by Apollo Client. `apollo-link-rest` is suitable for just dipping your toes in the water, or doing a full-steam ahead integration, and then later on migrating to a backend-driven GraphQL experience.
 
-> For more advanced or complex back-ends, you may want to consider using [`apollo-server`](https://www.apollographql.com/docs/apollo-server/).
+> For more advanced or complex back-ends, you may want to consider using [`apollo-server`](/apollo-server/).
 
 ## Quick start
 
@@ -60,7 +59,7 @@ You can then fetch your data using Apollo Client:
 ```js
 // Invoke the query and log the person's name
 client.query({ query }).then(response => {
-  console.log(response.data.name);
+  console.log(response.data.person.name);
 });
 ```
 
@@ -385,11 +384,11 @@ const link = new RestLink({
   },
   defaultSerializer: (data: any, headers: Headers) => {
     const formData = new FormData();
-    for (let key in body) {
-      formData.append(key, body[key]);
+    for (let key in data) {
+      formData.append(key, data[key]);
     }
     headers.set("Content-Type", "x-www-form-encoded")
-    return {body: formData, headers};
+    return {data: formData, headers};
   }
 });
 ```
@@ -481,7 +480,7 @@ An `@rest(…)` directive takes two required and several optional arguments:
 | `pathBuilder?: /function/` | `string` | If provided, this function gets to control what path is produced for this request. |
 | `bodyKey?: "input"` | `string` | This is the name of the `variable` to use when looking to build a REST request-body for a `PUT` or `POST` request. It defaults to `input` if not supplied. |
 | `bodyBuilder?: /function/` | `string` | If provided, this is the name a `function` that you provided to `variables`, that is called when a request-body needs to be built. This lets you combine arguments or encode the body in some format other than JSON. |
-| `bodySerializer?: /string | function/` | `string` | String key to look up a function in `bodySerializers` or a custom serialization function for the body/headers of this request before it is passed to the fetch call. Defaults to `JSON.stringify` and setting `Content-Type: application-json`. |
+| `bodySerializer?: /string \| function/` | `string` | String key to look up a function in `bodySerializers` or a custom serialization function for the body/headers of this request before it is passed to the fetch call. Defaults to `JSON.stringify` and setting `Content-Type: application-json`. |
 
 ### Variables
 
@@ -647,7 +646,7 @@ const restLink = new RestLink({
 
 The export directive re-exposes a field for use in a later (nested) query. These are the same semantics that will be supported on the server, but when used in a `RestLink` you can use the exported variables for further calls (i.e. waterfall requests from nested fields).
 
-_Note: If you're constantly using @export you may prefer to take a look at [`apollo-server`](https://www.apollographql.com/docs/apollo-server/)._
+_Note: If you're constantly using @export you may prefer to take a look at [`apollo-server`](/apollo-server/)._
 
 ### Arguments
 

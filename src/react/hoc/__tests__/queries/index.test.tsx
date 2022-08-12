@@ -53,7 +53,6 @@ describe('queries', () => {
     const ContainerWithData = graphql<any, Data>(query)(
       ({ data }: DataProps<Data>) => {
         expect(data).toBeTruthy();
-        expect(data.loading).toBeTruthy();
         done = true;
         return null;
       }
@@ -176,19 +175,23 @@ describe('queries', () => {
       options
     )(({ data }: ChildProps<Variables, Data, Variables>) => {
       expect(data).toBeTruthy();
-      switch (count) {
-        case 0:
-          expect(data!.variables.someId).toEqual(1);
-          break;
+      switch (++count) {
         case 1:
-          expect(data!.variables.someId).toEqual(2);
+          expect(data!.loading).toBe(true);
+          expect(data!.variables).toEqual({ someId: 1 });
           break;
         case 2:
-          expect(data!.variables.someId).toEqual(2);
+          expect(data!.loading).toBe(true);
+          expect(data!.variables).toEqual({ someId: 2 });
           break;
+        case 3:
+          expect(data!.loading).toBe(false);
+          expect(data!.variables).toEqual({ someId: 2 });
+          break;
+        default:
+          reject(`too many renders (${count})`);
       }
 
-      count += 1;
       return null;
     });
 
@@ -577,7 +580,7 @@ describe('queries', () => {
     });
 
     const Container = graphql<{}, Data>(query)(
-      class extends React.Component<ChildProps<{}, Data>> {
+      class extends React.Component<ChildProps<React.PropsWithChildren, Data>> {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
@@ -589,7 +592,7 @@ describe('queries', () => {
       }
     );
 
-    class ContextContainer extends React.Component<{}, { color: string }> {
+    class ContextContainer extends React.Component<React.PropsWithChildren, { color: string }> {
       constructor(props: {}) {
         super(props);
         this.state = { color: 'purple' };
@@ -616,7 +619,7 @@ describe('queries', () => {
 
     let count = 0;
     let done = false;
-    class ChildContextContainer extends React.Component<any, any> {
+    class ChildContextContainer extends React.Component<React.PropsWithChildren> {
       render() {
         const { color } = this.context as any;
         if (count === 0) expect(color).toBe('purple');
@@ -684,7 +687,7 @@ describe('queries', () => {
     @graphql(query, {
       alias: 'withFoo'
     })
-    class Container extends React.Component<any, any> {
+    class Container extends React.Component {
       render(): React.ReactNode {
         return null;
       }

@@ -128,7 +128,7 @@ describe('subscriptions', () => {
       return null;
     });
 
-    class ErrorBoundary extends React.Component {
+    class ErrorBoundary extends React.Component<React.PropsWithChildren> {
       componentDidCatch(e: any) {
         expect(e.name).toMatch(/TypeError/);
         expect(e.message).toMatch(/bar is not a function/);

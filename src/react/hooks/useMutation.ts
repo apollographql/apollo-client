@@ -61,7 +61,7 @@ export function useMutation<
   ) => {
     const {client, options, mutation} = ref.current;
     const baseOptions = { ...options, mutation };
-    if (!ref.current.result.loading && !baseOptions.ignoreResults) {
+    if (!ref.current.result.loading && !baseOptions.ignoreResults && ref.current.isMounted) {
       setResult(ref.current.result = {
         loading: true,
         error: void 0,
@@ -101,7 +101,7 @@ export function useMutation<
         }
       }
 
-      baseOptions.onCompleted?.(response.data!);
+      ref.current.options?.onCompleted?.(response.data!);
       executeOptions.onCompleted?.(response.data!);
       return response;
     }).catch((error) => {
@@ -122,8 +122,8 @@ export function useMutation<
         }
       }
 
-      if (baseOptions.onError || clientOptions.onError) {
-        baseOptions.onError?.(error);
+      if (ref.current.options?.onError || clientOptions.onError) {
+        ref.current.options?.onError?.(error);
         executeOptions.onError?.(error);
         // TODO(brian): why are we returning this here???
         return { data: void 0, errors: error };
@@ -134,11 +134,17 @@ export function useMutation<
   }, []);
 
   const reset = useCallback(() => {
-    setResult({ called: false, loading: false, client });
+    if (ref.current.isMounted) {
+      setResult({ called: false, loading: false, client });
+    }
   }, []);
 
-  useEffect(() => () => {
-    ref.current.isMounted = false;
+  useEffect(() => {
+    ref.current.isMounted = true;
+
+    return () => {
+      ref.current.isMounted = false;
+    };
   }, []);
 
   return [execute, { reset, ...result }];

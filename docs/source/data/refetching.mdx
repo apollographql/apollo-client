@@ -1,6 +1,5 @@
 ---
 title: Refetching queries in Apollo Client
-sidebar_title: Refetching
 ---
 
 import RefetchQueriesOptions from '../../shared/refetchQueries-options.mdx';
@@ -205,7 +204,7 @@ await client.refetchQueries({
     cache.evict({ fieldName: "someRootField" });
   },
 
-  onQueryUpdated(observableQuery) {
+  onQueryUpdated(observableQuery, { complete, result, missing }) {
     console.log(`Examining ObservableQuery ${
       observableQuery.queryName
     } whose latest result is ${JSON.stringify(result)} which is ${

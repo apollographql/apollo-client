@@ -18,6 +18,8 @@ const sampleDeferredQuery = gql`
   }
 `;
 
+const BOUNDARY = 'gc0p4Jq0M2Yt08jU534c0p';
+
 function matchesResults<T>(
   resolve: () => void,
   reject: (err: any) => void,
@@ -52,17 +54,31 @@ describe("multipart responses", () => {
   });
 
   const body1 = [
-    "---",
+    `--${BOUNDARY}`,
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 43",
     "",
     '{"data":{"stub":{"id":"0"}},"hasNext":true}',
-    "---",
+    `--${BOUNDARY}`,
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 58",
     "",
     '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
-    "-----",
+    `--${BOUNDARY}--`,
+  ].join("\r\n");
+
+  const body2 = [
+    `---`,
+    "Content-Type: application/json; charset=utf-8",
+    "Content-Length: 43",
+    "",
+    '{"data":{"stub":{"id":"0"}},"hasNext":true}',
+    `---`,
+    "Content-Type: application/json; charset=utf-8",
+    "Content-Length: 58",
+    "",
+    '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+    `-----`,
   ].join("\r\n");
 
   const results1 = [
@@ -87,7 +103,7 @@ describe("multipart responses", () => {
     const fetch = jest.fn(async () => ({
       status: 200,
       body: body1,
-      headers: { "Content-Type": "multipart/mixed" },
+      headers: { "Content-Type": `multipart/mixed; boundary=${BOUNDARY}` },
     }));
 
     const link = new HttpLink({
@@ -102,7 +118,7 @@ describe("multipart responses", () => {
     const fetch = jest.fn(async () => ({
       status: 200,
       body: Buffer.from(body1, "utf8"),
-      headers: { "content-type": "multipart/mixed" },
+      headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
     }));
     const link = new HttpLink({
       fetch: fetch as any,
@@ -116,7 +132,7 @@ describe("multipart responses", () => {
     const fetch = jest.fn(async () => ({
       status: 200,
       body: new TextEncoder().encode(body1),
-      headers: new Headers({ "content-type": "multipart/mixed" }),
+      headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
     }));
     const link = new HttpLink({
       fetch: fetch as any,
@@ -140,11 +156,10 @@ describe("multipart responses", () => {
       },
     });
 
-    // jest fetch mock does not handle web streams for some reason.
     const fetch = jest.fn(async () => ({
       status: 200,
       body: stream,
-      headers: new Headers({ "content-type": "multipart/mixed" }),
+      headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
     }));
 
     const link = new HttpLink({
@@ -176,11 +191,10 @@ describe("multipart responses", () => {
         },
       });
 
-      // jest fetch mock does not handle web streams for some reason.
       const fetch = jest.fn(async () => ({
         status: 200,
         body: stream,
-        headers: new Headers({ "content-type": "multipart/mixed" }),
+        headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
       }));
 
       const link = new HttpLink({
@@ -194,16 +208,14 @@ describe("multipart responses", () => {
 
   itAsync("can handle node stream bodies", (resolve, reject) => {
     const stream = Readable.from(
-      body1.split("\r\n").map((line) => line + "\r\n")
+      body2.split("\r\n").map((line) => line + "\r\n")
     );
 
-    // jest fetch mock does not handle node streams either...
     const fetch = jest.fn(async () => ({
       status: 200,
       body: stream,
-      headers: {
-        "content-type": "multipart/mixed",
-      },
+      // if no boundary is specified, default to -
+      headers: { "content-type": `multipart/mixed` },
     }));
     const link = new HttpLink({
       fetch: fetch as any,
@@ -226,7 +238,7 @@ describe("multipart responses", () => {
       const fetch = jest.fn(async () => ({
         status: 200,
         body: stream,
-        headers: { "content-type": 'multipart/mixed; boundary="-"' },
+        headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
       }));
       const link = new HttpLink({
         fetch: fetch as any,

@@ -88,8 +88,7 @@ export function readMultipartBody<T = Record<string, unknown>>(
   if (!ctype || !/^multipart\/mixed/.test(ctype)) {
     throw new Error("Invalid multipart content type");
   }
-  // copied from meros
-  // https://github.com/maraisr/meros/blob/main/src/node.ts L91, 95-98
+  // From meros https://github.com/maraisr/meros/blob/main/src/node.ts L91,95-98
   let idx_boundary = ctype.indexOf("boundary=");
   let boundary = `--${
     !!~idx_boundary
@@ -98,9 +97,8 @@ export function readMultipartBody<T = Record<string, unknown>>(
           .substring(idx_boundary + 9)
           .trim()
           .replace(/['"]/g, "")
-      : "-"
-  }`;
-
+      : "-" // if no boundary is specified, default to -
+    }`;
   if (response.body === null) {
     throw new Error("Missing body");
   } else if (typeof response.body.tee === "function") {
@@ -193,9 +191,7 @@ function readMultipartNodeStream<T>(
   let buffer = "";
   body.on("data", (chunk) => {
     chunk = typeof chunk === "string" ? chunk : chunk.toString("utf8");
-    // buffer index
     buffer += chunk;
-    // TODO: deduplicate logic with readMultipartWebStream
     let bi = buffer.indexOf(boundary);
     while (bi > -1) {
       let message: string;
@@ -223,7 +219,6 @@ function readMultipartBuffer<T>(
 ) {
   let text: string;
   if (body.toString.length > 0) {
-    // Node buffer because toString() takes multiple arguments
     text = body.toString("utf8");
   } else {
     const decoder = new TextDecoder("utf8");

@@ -95,7 +95,7 @@ See [Customizing `fetch`](#customizing-fetch).
 
 <td>
 
-An object representing headers to include in every HTTP request, such as `{Authentication: 'Bearer abc123'}`.
+An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer abc123'}`.
 </td>
 </tr>
 
@@ -220,7 +220,7 @@ The default value is `/graphql`.
 
 <td>
 
-An object representing headers to include in the HTTP request, such as `{Authentication: 'Bearer abc123'}`.
+An object representing headers to include in the HTTP request, such as `{Authorization: 'Bearer abc123'}`.
 </td>
 </tr>
 

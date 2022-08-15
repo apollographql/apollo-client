@@ -21,10 +21,11 @@ import {
   asyncMap,
   isNonEmptyArray,
   Concast,
-  ConcastSourcesIterable,
+  ConcastSourcesArray,
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
+  cloneDeep,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -984,7 +985,7 @@ export class QueryManager<TStore> {
 
           byVariables.set(varJson, observable = concast);
 
-          concast.cleanup(() => {
+          concast.beforeNext(() => {
             if (byVariables.delete(varJson) &&
                 byVariables.size < 1) {
               inFlightLinkObservables.delete(serverQuery);
@@ -1029,6 +1030,10 @@ export class QueryManager<TStore> {
       | "errorPolicy">,
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = queryInfo.lastRequestId = this.generateRequestId();
+
+    // Make sure we write the result below using the same options we were given,
+    // even though the input object may have been modified in the meantime.
+    options = cloneDeep(options);
 
     return asyncMap(
       this.getObservableFromLink(
@@ -1118,16 +1123,33 @@ export class QueryManager<TStore> {
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
       normalized.variables = variables;
-      return this.fetchQueryByPolicy<TData, TVars>(
+
+      const concastSources = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
         networkStatus,
       );
+
+      if (
+        // If we're in standby, postpone advancing options.fetchPolicy using
+        // applyNextFetchPolicy.
+        normalized.fetchPolicy !== "standby" &&
+        // The "standby" policy currently returns [] from fetchQueryByPolicy, so
+        // this is another way to detect when nothing was done/fetched.
+        concastSources.length > 0 &&
+        queryInfo.observableQuery
+      ) {
+        queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
+      }
+
+      return concastSources;
     };
 
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
+    const cleanupCancelFn = () => this.fetchCancelFns.delete(queryId);
     this.fetchCancelFns.set(queryId, reason => {
+      cleanupCancelFn();
       // This delay ensures the concast variable has been initialized.
       setTimeout(() => concast.cancel(reason));
     });
@@ -1152,13 +1174,7 @@ export class QueryManager<TStore> {
         : fromVariables(normalized.variables!)
     );
 
-    concast.cleanup(() => {
-      this.fetchCancelFns.delete(queryId);
-
-      if (queryInfo.observableQuery) {
-        queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
-      }
-    });
+    concast.promise.then(cleanupCancelFn, cleanupCancelFn);
 
     return concast;
   }
@@ -1329,13 +1345,12 @@ export class QueryManager<TStore> {
       returnPartialData,
       context,
       notifyOnNetworkStatusChange,
-      fetchBlockingPromise,
     }: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus: NetworkStatus,
-  ): ConcastSourcesIterable<ApolloQueryResult<TData>> {
+  ): ConcastSourcesArray<ApolloQueryResult<TData>> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
@@ -1387,41 +1402,16 @@ export class QueryManager<TStore> {
       ) ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
 
-    const resultsFromLink = () => {
-      const get = () => this.getResultsFromLink<TData, TVars>(
-        queryInfo,
-        cacheWriteBehavior,
-        {
-          variables,
-          context,
-          fetchPolicy,
-          errorPolicy,
-        },
-      );
-
-      // If we have a fetchBlockingPromise, wait for it to be resolved before
-      // allowing any network requests, and only proceed if fetchBlockingPromise
-      // resolves to true. If it resolves to false, the request is discarded.
-      return fetchBlockingPromise ? fetchBlockingPromise.then(
-        ok => ok ? get() : Observable.of<ApolloQueryResult<TData>>(),
-        error => {
-          const apolloError = isApolloError(error)
-            ? error
-            : new ApolloError({ clientErrors: [error] });
-
-          if (errorPolicy !== "ignore") {
-            queryInfo.markError(apolloError);
-          }
-
-          return Observable.of<ApolloQueryResult<TData>>({
-            loading: false,
-            networkStatus: NetworkStatus.error,
-            error: apolloError,
-            data: readCache().result,
-          });
-        },
-      ) : get();
-    }
+    const resultsFromLink = () => this.getResultsFromLink<TData, TVars>(
+      queryInfo,
+      cacheWriteBehavior,
+      {
+        variables,
+        context,
+        fetchPolicy,
+        errorPolicy,
+      },
+    );
 
     const shouldNotify =
       notifyOnNetworkStatusChange &&

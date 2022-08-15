@@ -2,7 +2,11 @@ import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { ApolloClient, NetworkStatus } from '../../core';
+import {
+  ApolloClient,
+  NetworkStatus,
+  WatchQueryFetchPolicy,
+} from '../../core';
 import { ObservableQuery } from '../ObservableQuery';
 import { QueryManager } from '../QueryManager';
 
@@ -1190,11 +1194,21 @@ describe('ObservableQuery', () => {
         },
       );
 
+      const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
       const observable = queryManager.watchQuery({
         query: queryWithVars,
         variables: variables1,
         fetchPolicy: 'cache-and-network',
-        nextFetchPolicy: 'cache-first',
+        nextFetchPolicy(currentFetchPolicy, info) {
+          if (info.reason === "variables-changed") {
+            return info.initialFetchPolicy;
+          }
+          usedFetchPolicies.push(currentFetchPolicy);
+          if (info.reason === "after-fetch") {
+            return "cache-first";
+          }
+          return currentFetchPolicy;
+        },
         notifyOnNetworkStatusChange: true,
       });
 
@@ -1222,7 +1236,7 @@ describe('ObservableQuery', () => {
           }).then(result => {
             expect(result.data).toEqual(data);
           }).catch(reject);
-          expect(observable.options.fetchPolicy).toBe('cache-and-network');
+          expect(observable.options.fetchPolicy).toBe('cache-first');
         } else if (handleCount === 4) {
           expect(result.loading).toBe(true);
           expect(result.networkStatus).toBe(NetworkStatus.setVariables);
@@ -1236,7 +1250,7 @@ describe('ObservableQuery', () => {
           }).then(result => {
             expect(result.data).toEqual(data2);
           }).catch(reject);
-          expect(observable.options.fetchPolicy).toBe('cache-and-network');
+          expect(observable.options.fetchPolicy).toBe('cache-first');
         } else if (handleCount === 6) {
           expect(result.data).toEqual(data2);
           expect(result.loading).toBe(true);
@@ -1245,6 +1259,14 @@ describe('ObservableQuery', () => {
           expect(result.data).toEqual(data2);
           expect(result.loading).toBe(false);
           expect(observable.options.fetchPolicy).toBe('cache-first');
+
+          expect(usedFetchPolicies).toEqual([
+            "cache-and-network",
+            "network-only",
+            "cache-and-network",
+            "cache-and-network",
+          ]);
+
           setTimeout(resolve, 10);
         } else {
           reject(`too many renders (${handleCount})`);
@@ -2419,190 +2441,6 @@ describe('ObservableQuery', () => {
         resolve();
       },
       error: reject,
-    });
-  });
-
-  describe("options.fetchBlockingPromise", () => {
-    itAsync("should not block future refetches", (resolve, reject) => {
-      const query: TypedDocumentNode<{
-        linkCount: number;
-      }> = gql`query Counter { linkCount }`;
-
-      let linkCount = 0;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new ApolloLink(request => new Observable(observer => {
-          if (request.operationName === "Counter") {
-            observer.next({
-              data: {
-                linkCount: ++linkCount,
-              },
-            });
-            observer.complete();
-          }
-        })),
-      });
-
-      let resolved = false;
-      const observable = client.watchQuery({
-        query,
-        notifyOnNetworkStatusChange: true,
-        fetchBlockingPromise: new Promise(resolve => {
-          setTimeout(() => {
-            resolved = true;
-            resolve(true);
-          }, 100);
-        }),
-      });
-
-      subscribeAndCount(reject, observable, (count, result) => {
-        if (count === 1) {
-          expect(resolved).toBe(true);
-          expect(result.loading).toBe(false);
-          expect(result.data).toEqual({
-            linkCount: 1,
-          });
-
-          client.cache.writeQuery({
-            query,
-            data: {
-              linkCount: 1234,
-            },
-          });
-
-        } else if (count === 2) {
-          expect(resolved).toBe(true);
-          expect(result.loading).toBe(false);
-          expect(result.data).toEqual({
-            linkCount: 1234,
-          });
-
-          // Make sure refetching is not blocked by the fetchBlockingPromise.
-          return observable.refetch();
-
-        } else if (count === 3) {
-          expect(resolved).toBe(true);
-          expect(result.loading).toBe(true);
-          expect(result.networkStatus).toBe(NetworkStatus.refetch);
-          expect(result.data).toEqual({
-            linkCount: 1234,
-          });
-
-        } else if (count === 4) {
-          expect(resolved).toBe(true);
-          expect(result.loading).toBe(false);
-          expect(result.networkStatus).toBe(NetworkStatus.ready);
-          expect(result.data).toEqual({
-            linkCount: 2,
-          });
-
-          const { fetchBlockingPromise } = observable.options;
-          expect(fetchBlockingPromise).toBeInstanceOf(Promise);
-          return fetchBlockingPromise!.then(ok => {
-            expect(ok).toBe(true);
-            setTimeout(resolve, 20);
-          });
-
-        } else {
-          reject(`Too many results (${count}, ${JSON.stringify(result)})`);
-        }
-      });
-    });
-
-    itAsync("should behave reasonably when rejected", (resolve, reject) => {
-      const query: TypedDocumentNode<{
-        linkCount: number;
-      }> = gql`query Counter { linkCount }`;
-
-      let linkCount = 0;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new ApolloLink(request => new Observable(observer => {
-          if (request.operationName === "Counter") {
-            observer.next({
-              data: {
-                linkCount: ++linkCount,
-              },
-            });
-            observer.complete();
-          }
-        })),
-      });
-
-      let rejected = false;
-      const observable = client.watchQuery({
-        query,
-        notifyOnNetworkStatusChange: true,
-        fetchBlockingPromise: new Promise((_, reject) => {
-          setTimeout(() => {
-            rejected = true;
-            reject(new Error("expected"));
-          }, 100);
-        }),
-      });
-
-      subscribeAndCount(reject, observable, (count, result) => {
-        if (count === 1) {
-          expect(rejected).toBe(true);
-          expect(result.loading).toBe(false);
-          expect(result.error!.message).toBe("expected");
-
-          client.cache.writeQuery({
-            query,
-            data: {
-              linkCount: 1234,
-            },
-          });
-
-        } else if (count === 2) {
-          expect(rejected).toBe(true);
-          expect(result.loading).toBe(false);
-          expect(result.networkStatus).toBe(NetworkStatus.ready);
-          expect(result.error).toBeUndefined();
-          expect(result.data).toEqual({
-            linkCount: 1234,
-          });
-
-          // Make sure refetching is not blocked by the fetchBlockingPromise.
-          return observable.refetch().then(result => {
-            expect(rejected).toBe(true);
-            expect(result.loading).toBe(false);
-            expect(result.networkStatus).toBe(NetworkStatus.error);
-            expect(result.error).toBeInstanceOf(ApolloError);
-            expect(result.error!.message).toBe("expected");
-            expect(result.data).toEqual({
-              linkCount: 1234,
-            });
-          });
-
-        } else if (count === 3) {
-          expect(rejected).toBe(true);
-          expect(result.loading).toBe(true);
-          expect(result.networkStatus).toBe(NetworkStatus.refetch);
-          expect(result.error).toBeUndefined();
-          expect(result.data).toEqual({
-            linkCount: 1234,
-          });
-
-        } else if (count === 4) {
-          expect(rejected).toBe(true);
-          expect(result.loading).toBe(false);
-          expect(result.networkStatus).toBe(NetworkStatus.error);
-          expect(result.error!.message).toBe("expected");
-
-          const { fetchBlockingPromise } = observable.options;
-          expect(fetchBlockingPromise).toBeInstanceOf(Promise);
-          return fetchBlockingPromise!.then(() => {
-            throw new Error("fetchBlockingPromise should be rejected");
-          }).catch(error => {
-            expect(error.message).toBe("expected");
-            setTimeout(resolve, 20);
-          });
-
-        } else {
-          reject(`Too many results (${count}, ${JSON.stringify(result)})`);
-        }
-      });
     });
   });
 });

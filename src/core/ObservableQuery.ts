@@ -6,6 +6,7 @@ import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   Concast,
   cloneDeep,
+  compact,
   getOperationDefinition,
   Observable,
   Observer,
@@ -14,7 +15,6 @@ import {
   isNonEmptyArray,
   fixObservableSubclass,
   getQueryDefinition,
-  mergeOptions,
 } from '../utilities';
 import { ApolloError } from '../errors';
 import { QueryManager } from './QueryManager';
@@ -154,12 +154,31 @@ export class ObservableQuery<
     // active state
     this.isTornDown = false;
 
+    const {
+      watchQuery: {
+        fetchPolicy: defaultFetchPolicy = "cache-first",
+      } = {},
+    } = queryManager.defaultOptions;
+
+    const {
+      fetchPolicy = defaultFetchPolicy,
+      initialFetchPolicy = (
+        // Make sure we don't store "standby" as the initialFetchPolicy.
+        fetchPolicy === "standby" ? defaultFetchPolicy : fetchPolicy
+      ),
+    } = options;
+
     this.options = {
+      ...options,
+
       // Remember the initial options.fetchPolicy so we can revert back to this
       // policy when variables change. This information can also be specified
       // (or overridden) by providing options.initialFetchPolicy explicitly.
-      initialFetchPolicy: options.fetchPolicy || "cache-first",
-      ...options,
+      initialFetchPolicy,
+
+      // This ensures this.options.fetchPolicy always has a string value, in
+      // case options.fetchPolicy was not provided.
+      fetchPolicy,
     };
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
@@ -634,18 +653,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         initialFetchPolicy = fetchPolicy,
       } = options;
 
-      // When someone chooses "cache-and-network" or "network-only" as their
-      // initial FetchPolicy, they often do not want future cache updates to
-      // trigger unconditional network requests, which is what repeatedly
-      // applying the "cache-and-network" or "network-only" policies would seem
-      // to imply. Instead, when the cache reports an update after the initial
-      // network request, it may be desirable for subsequent network requests to
-      // be triggered only if the cache result is incomplete. To that end, the
-      // options.nextFetchPolicy option provides an easy way to update
-      // options.fetchPolicy after the initial network request, without having to
-      // call observableQuery.setOptions.
-
-      if (typeof options.nextFetchPolicy === "function") {
+      if (fetchPolicy === "standby") {
+        // Do nothing, leaving options.fetchPolicy unchanged.
+      } else if (typeof options.nextFetchPolicy === "function") {
+        // When someone chooses "cache-and-network" or "network-only" as their
+        // initial FetchPolicy, they often do not want future cache updates to
+        // trigger unconditional network requests, which is what repeatedly
+        // applying the "cache-and-network" or "network-only" policies would
+        // seem to imply. Instead, when the cache reports an update after the
+        // initial network request, it may be desirable for subsequent network
+        // requests to be triggered only if the cache result is incomplete. To
+        // that end, the options.nextFetchPolicy option provides an easy way to
+        // update options.fetchPolicy after the initial network request, without
+        // having to call observableQuery.setOptions.
         options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
           reason,
           options,
@@ -773,7 +793,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const oldVariables = this.options.variables;
     const oldFetchPolicy = this.options.fetchPolicy;
 
-    const mergedOptions = mergeOptions(this.options, newOptions || {});
+    const mergedOptions = compact(this.options, newOptions || {});
     const options = useDisposableConcast
       // Disposable Concast fetches receive a shallow copy of this.options
       // (merged with newOptions), leaving this.options unmodified.
@@ -790,7 +810,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         newOptions &&
         newOptions.variables &&
         !equal(newOptions.variables, oldVariables) &&
-        (!newOptions.fetchPolicy || newOptions.fetchPolicy === oldFetchPolicy)
+        // Don't mess with the fetchPolicy if it's currently "standby".
+        options.fetchPolicy !== "standby" &&
+        // If we're changing the fetchPolicy anyway, don't try to change it here
+        // using applyNextFetchPolicy. The explicit options.fetchPolicy wins.
+        options.fetchPolicy === oldFetchPolicy
       ) {
         this.applyNextFetchPolicy("variables-changed", options);
         if (newNetworkStatus === void 0) {
@@ -812,12 +836,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     if (!useDisposableConcast) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
-      // observer with an unnecessary SubscriptionObserver object, in part so
-      // that we can remove it here without triggering any unsubscriptions,
-      // because we just want to ignore the old observable, not prematurely shut
-      // it down, since other consumers may be awaiting this.concast.promise.
+      // observer with an unnecessary SubscriptionObserver object.
       if (this.concast && this.observer) {
-        this.concast.removeObserver(this.observer, true);
+        this.concast.removeObserver(this.observer);
       }
 
       this.concast = concast;

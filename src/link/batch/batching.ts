@@ -101,10 +101,7 @@ export class OperationBatcher {
         }
 
         // The first enqueued request triggers the queue consumption after `batchInterval` milliseconds.
-        if (isFirstEnqueuedRequest) {
-          this.scheduleQueueConsumption(key);
-        } else if (this.batchDebounce) {
-          clearTimeout(this.scheduledBatchTimer);
+        if (isFirstEnqueuedRequest || this.batchDebounce) {
           this.scheduleQueueConsumption(key);
         }
 
@@ -119,8 +116,7 @@ export class OperationBatcher {
               requestCopy.subscribers.size < 1) {
             // If this is last request from queue, remove queue entirely
             if (batch.delete(requestCopy) && batch.size < 1) {
-              clearTimeout(this.scheduledBatchTimer);
-              this.batchesByKey.delete(key);
+              this.consumeQueue(key);
               // If queue was in flight, cancel it
               batch.subscription?.unsubscribe();
             }
@@ -215,6 +211,7 @@ export class OperationBatcher {
   }
 
   private scheduleQueueConsumption(key: string): void {
+    clearTimeout(this.scheduledBatchTimer);
     this.scheduledBatchTimer = setTimeout(() => {
       this.consumeQueue(key);
     }, this.batchInterval);

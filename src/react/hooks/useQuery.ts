@@ -1,15 +1,16 @@
+import { invariant } from '../../utilities/globals';
+
 import {
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js';
+import { useSyncExternalStore } from './useSyncExternalStore';
 import { equal } from '@wry/equality';
 
-import { mergeOptions, OperationVariables } from '../../core';
+import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';
 import { ApolloContextValue, getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
 import {
@@ -29,7 +30,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { canUseWeakMap, canUseWeakSet, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
   prototype: {
@@ -60,7 +61,7 @@ export function useInternalState<TData, TVariables>(
     client !== stateRef.current.client ||
     query !== stateRef.current.query
   ) {
-    stateRef.current = new InternalState(client, query);
+    stateRef.current = new InternalState(client, query, stateRef.current);
   }
   const state = stateRef.current;
 
@@ -82,13 +83,39 @@ class InternalState<TData, TVariables> {
   constructor(
     public readonly client: ReturnType<typeof useApolloClient>,
     public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    previous?: InternalState<TData, TVariables>,
   ) {
     verifyDocumentType(query, DocumentType.Query);
+
+    // Reuse previousData from previous InternalState (if any) to provide
+    // continuity of previousData even if/when the query or client changes.
+    const previousResult = previous && previous.result;
+    const previousData = previousResult && previousResult.data;
+    if (previousData) {
+      this.previousData = previousData;
+    }
   }
 
   forceUpdate() {
     // Replaced (in useInternalState) with a method that triggers an update.
+    invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
+
+  asyncUpdate() {
+    return new Promise<QueryResult<TData, TVariables>>(resolve => {
+      this.asyncResolveFns.add(resolve);
+      this.optionsToIgnoreOnce.add(this.watchQueryOptions);
+      this.forceUpdate();
+    });
+  }
+
+  private asyncResolveFns = new Set<
+    (result: QueryResult<TData, TVariables>) => void
+  >();
+
+  private optionsToIgnoreOnce = new (canUseWeakSet ? WeakSet : Set)<
+    WatchQueryOptions<TVariables, TData>
+  >();
 
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
@@ -185,12 +212,20 @@ class InternalState<TData, TVariables> {
       ]),
 
       () => this.getCurrentResult(),
+      () => this.getCurrentResult(),
     );
 
     // TODO Remove this method when we remove support for options.partialRefetch.
     this.unsafeHandlePartialRefetch(result);
 
-    return this.toQueryResult(result);
+    const queryResult = this.toQueryResult(result);
+
+    if (!queryResult.loading && this.asyncResolveFns.size) {
+      this.asyncResolveFns.forEach(resolve => resolve(queryResult));
+      this.asyncResolveFns.clear();
+    }
+
+    return queryResult;
   }
 
   // These members (except for renderPromises) are all populated by the
@@ -212,36 +247,44 @@ class InternalState<TData, TVariables> {
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
     const currentWatchQueryOptions = this.watchQueryOptions;
-    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
 
-    if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
+    // To force this equality test to "fail," thereby reliably triggering
+    // observable.reobserve, add any current WatchQueryOptions object(s) you
+    // want to be ignored to this.optionsToIgnoreOnce. A similar effect could be
+    // achieved by nullifying this.watchQueryOptions so the equality test
+    // immediately fails because currentWatchQueryOptions is null, but this way
+    // we can promise a truthy this.watchQueryOptions at all times.
+    if (
+      this.optionsToIgnoreOnce.has(currentWatchQueryOptions) ||
+      !equal(watchQueryOptions, currentWatchQueryOptions)
+    ) {
       this.watchQueryOptions = watchQueryOptions;
+
       if (currentWatchQueryOptions && this.observable) {
-        // Though it might be tempting to postpone this setOptions call to the
+        // As advertised in the -Once of this.optionsToIgnoreOnce, this trick is
+        // only good for one forced execution of observable.reobserve per
+        // ignored WatchQueryOptions object, though it is unlikely we will ever
+        // see this exact currentWatchQueryOptions object again here, since we
+        // just replaced this.watchQueryOptions with watchQueryOptions.
+        this.optionsToIgnoreOnce.delete(currentWatchQueryOptions);
+
+        // Though it might be tempting to postpone this reobserve call to the
         // useEffect block, we need getCurrentResult to return an appropriate
         // loading:true result synchronously (later within the same call to
         // useQuery). Since we already have this.observable here (not true for
         // the very first call to useQuery), we are not initiating any new
-        // subscriptions, though it does feel less than ideal that setOptions
+        // subscriptions, though it does feel less than ideal that reobserve
         // (potentially) kicks off a network request (for example, when the
-        // variables have changed). To prevent any risk of premature/unwanted
-        // network traffic, we use a fetchBlockingPromise, which will only be
-        // unblocked once the useEffect has fired.
-        this.observable.reobserve({
-          fetchBlockingPromise: new Promise<boolean>(resolve => {
-            resolveFetchBlockingPromise = resolve;
-          }),
-          // If watchQueryOptions.fetchBlockingPromise is also defined, it takes
-          // precedence over the fetchBlockingPromise we just created.
-          ...watchQueryOptions,
-        });
+        // variables have changed), which is technically a side-effect.
+        this.observable.reobserve(this.getObsQueryOptions());
 
+        // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+        // but save the current data as this.previousData, just like setResult
+        // usually does.
         this.previousData = this.result?.data || this.previousData;
         this.result = void 0;
       }
     }
-
-    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
 
     // Make sure state.onCompleted and state.onError always reflect the latest
     // options.onCompleted and options.onError callbacks provided to useQuery,
@@ -254,7 +297,8 @@ class InternalState<TData, TVariables> {
 
     if (
       (this.renderPromises || this.client.disableNetworkFetches) &&
-      this.queryHookOptions.ssr === false
+      this.queryHookOptions.ssr === false &&
+      !this.queryHookOptions.skip
     ) {
       // If SSR has been explicitly disabled, and this function has been called
       // on the server side, return the default loading state.
@@ -280,6 +324,38 @@ class InternalState<TData, TVariables> {
     ) {
       this.result = void 0;
     }
+  }
+
+  private getObsQueryOptions(): WatchQueryOptions<TVariables, TData> {
+    const toMerge: Array<
+      Partial<WatchQueryOptions<TVariables, TData>>
+    > = [];
+
+    const globalDefaults = this.client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+
+    if (this.queryHookOptions.defaultOptions) {
+      toMerge.push(this.queryHookOptions.defaultOptions);
+    }
+
+    // We use compact rather than mergeOptions for this part of the merge,
+    // because we want watchQueryOptions.variables (if defined) to replace
+    // this.observable.options.variables whole. This replacement allows
+    // removing variables by removing them from the variables input to
+    // useQuery. If the variables were always merged together (rather than
+    // replaced), there would be no way to remove existing variables.
+    // However, the variables from options.defaultOptions and globalDefaults
+    // (if provided) should be merged, to ensure individual defaulted
+    // variables always have values, if not otherwise defined in
+    // observable.options or watchQueryOptions.
+    toMerge.push(compact(
+      this.observable && this.observable.options,
+      this.watchQueryOptions,
+    ));
+
+    return toMerge.reduce(
+      mergeOptions
+    ) as WatchQueryOptions<TVariables, TData>;
   }
 
   private ssrDisabledResult = maybeDeepFreeze({
@@ -309,65 +385,10 @@ class InternalState<TData, TVariables> {
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<TVariables, TData> {
-    // We use the mergeOptions helper function (which uses compact(...) and
-    // shallow-merges variables) to combine globalDefaults with any local
-    // defaultOptions provided to useQuery.
-    const toMerge: Partial<WatchQueryOptions<TVariables, TData>>[] = [];
-
-    // Merge global client.watchQuery default options with the lowest priority.
-    const globalDefaults = this.client.defaultOptions.watchQuery;
-    if (globalDefaults) toMerge.push(globalDefaults);
-
-    // Next, merge any defaultOptions passed directly to useQuery.
-    if (defaultOptions) toMerge.push(defaultOptions);
-
-    const latestOptions = this.observable && this.observable.options;
-    if (latestOptions && toMerge.length) {
-      // If we already have this.watchQueryOptions, those options should take
-      // precedence over default options of the same name. It might be simpler
-      // to do toMerge.push(this.watchQueryOptions), but that potentially
-      // (re)injects unrelated/unwanted options. Passing Object.create(null) as
-      // the second argument to toMerge.reduce ensures the result is a newly
-      // created object, so we can safely modify it in the forEach loop below.
-      const defaults = toMerge.reduce(mergeOptions, Object.create(null));
-
-      // Compact the toMerge array to hold only the merged defaults. This is
-      // equivalent to toMerge.splice(0, toMerge.length, defaults).
-      toMerge.length = 1;
-      toMerge[0] = defaults;
-
-      Object.keys(defaults).forEach(
-        (defaultOptionName: keyof WatchQueryOptions<TVariables, TData>) => {
-          const currentOptionValue = latestOptions[defaultOptionName];
-          if (
-            hasOwnProperty.call(latestOptions, defaultOptionName) &&
-            !equal(defaults[defaultOptionName], currentOptionValue)
-          ) {
-            // If you keep passing useQuery({ defaultOptions: { variables }}),
-            // those default variables continue to provide their default values
-            // every time, though in most cases this.watchQueryOptions.variables
-            // will have a current value for every default variable name, so the
-            // defaults don't matter. However, if a variable has been removed
-            // from this.watchQueryOptions.variables, future useQuery calls can
-            // restore its default value from defaultOptions.variables.
-            defaults[defaultOptionName] = defaultOptionName === "variables"
-              ? { ...defaults.variables, ...currentOptionValue }
-              : currentOptionValue;
-          }
-        },
-      );
-    }
-
-    // Give highest precedence to any non-default WatchQueryOptions passed
-    // directly to useQuery.
-    toMerge.push(otherOptions);
-
-    const merged = toMerge.reduce(mergeOptions, Object.create(null));
-
-    // This Object.assign is safe because merged is the fresh object created by
-    // the Object.create(null) argument to toMerge.reduce.
+    // This Object.assign is safe because otherOptions is a fresh ...rest object
+    // that did not exist until just now, so modifications are still allowed.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(merged, { query: this.query });
+      Object.assign(otherOptions, { query: this.query });
 
     if (
       this.renderPromises &&
@@ -379,20 +400,16 @@ class InternalState<TData, TVariables> {
       // this behavior was added to react-apollo without explanation in this PR
       // https://github.com/apollographql/react-apollo/pull/1579
       watchQueryOptions.fetchPolicy = 'cache-first';
-    } else if (!watchQueryOptions.fetchPolicy) {
-      // We applied all available fetchPolicy default values above (from
-      // globalDefaults and defaultOptions), so, if fetchPolicy is still
-      // undefined, fall back to the default default (no typo), cache-first.
-      watchQueryOptions.fetchPolicy = 'cache-first';
+    }
+
+    if (!watchQueryOptions.variables) {
+      watchQueryOptions.variables = {} as TVariables;
     }
 
     if (skip) {
       const {
-        // The watchQueryOptions.initialFetchPolicy field usually defaults to
-        // watchQueryOptions.fetchPolicy, which has now been properly
-        // defaulted/initialized. However, watchQueryOptions.initialFetchPolicy
-        // can be provided explicitly instead, if more control is desired.
-        initialFetchPolicy = watchQueryOptions.fetchPolicy,
+        fetchPolicy = this.getDefaultFetchPolicy(),
+        initialFetchPolicy = fetchPolicy,
       } = watchQueryOptions;
 
       // When skipping, we set watchQueryOptions.fetchPolicy initially to
@@ -402,13 +419,21 @@ class InternalState<TData, TVariables> {
         initialFetchPolicy,
         fetchPolicy: 'standby',
       });
-    }
-
-    if (!watchQueryOptions.variables) {
-      watchQueryOptions.variables = {} as TVariables;
+    } else if (!watchQueryOptions.fetchPolicy) {
+      watchQueryOptions.fetchPolicy =
+        this.observable?.options.initialFetchPolicy ||
+        this.getDefaultFetchPolicy();
     }
 
     return watchQueryOptions;
+  }
+
+  getDefaultFetchPolicy(): WatchQueryFetchPolicy {
+    return (
+      this.queryHookOptions.defaultOptions?.fetchPolicy ||
+      this.client.defaultOptions.watchQuery?.fetchPolicy ||
+      "cache-first"
+    );
   }
 
   // Defining these methods as no-ops on the prototype allows us to call
@@ -424,8 +449,6 @@ class InternalState<TData, TVariables> {
   >;
 
   private useObservableQuery() {
-    let resolveFetchBlockingPromise: undefined | ((result: boolean) => any);
-
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
@@ -433,14 +456,7 @@ class InternalState<TData, TVariables> {
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
         || this.observable // Reuse this.observable if possible (and not SSR)
-        || this.client.watchQuery({
-          fetchBlockingPromise: new Promise<boolean>(resolve => {
-            resolveFetchBlockingPromise = resolve;
-          }),
-          ...this.watchQueryOptions,
-        });
-
-    useUnblockFetchEffect(this.renderPromises, resolveFetchBlockingPromise);
+        || this.client.watchQuery(this.getObsQueryOptions());
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
@@ -452,15 +468,15 @@ class InternalState<TData, TVariables> {
       subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
     }), [obsQuery]);
 
-    if (this.renderPromises) {
+    const ssrAllowed = !(
+      this.queryHookOptions.ssr === false ||
+      this.queryHookOptions.skip
+    );
+
+    if (this.renderPromises && ssrAllowed) {
       this.renderPromises.registerSSRObservable(obsQuery);
 
-      const ssrAllowed = !(
-        this.queryHookOptions.ssr === false ||
-        this.queryHookOptions.skip
-      );
-
-      if (ssrAllowed && obsQuery.getCurrentResult().loading) {
+      if (obsQuery.getCurrentResult().loading) {
         // TODO: This is a legacy API which could probably be cleaned up
         this.renderPromises.addObservableQueryPromise(obsQuery);
       }
@@ -488,11 +504,16 @@ class InternalState<TData, TVariables> {
 
   private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
     if (!result.loading) {
-      if (result.error) {
-        this.onError(result.error);
-      } else if (result.data) {
-        this.onCompleted(result.data);
-      }
+      // wait a tick in case we are in the middle of rendering a component
+      Promise.resolve().then(() => {
+        if (result.error) {
+          this.onError(result.error);
+        } else if (result.data) {
+          this.onCompleted(result.data);
+        }
+      }).catch(error => {
+        invariant.warn(error);
+      });
     }
   }
 
@@ -530,7 +551,7 @@ class InternalState<TData, TVariables> {
       client: this.client,
       observable: this.observable,
       variables: this.observable.variables,
-      called: true,
+      called: !this.queryHookOptions.skip,
       previousData: this.previousData,
     });
 
@@ -565,27 +586,4 @@ class InternalState<TData, TVariables> {
       this.observable.refetch();
     }
   }
-}
-
-function useUnblockFetchEffect<TData, TVars>(
-  renderPromises: ApolloContextValue["renderPromises"],
-  resolveFetchBlockingPromise?: (result: boolean) => any,
-) {
-  if (resolveFetchBlockingPromise) {
-    if (renderPromises) {
-      // Since we're doing SSR, the useEffect callback will not be called, so we
-      // must unblock the fetchBlockingPromise now.
-      resolveFetchBlockingPromise(true);
-    } else {
-      // Otherwise, silently discard blocked fetches whose useEffect callbacks
-      // have not fired within 5 seconds (more than enough time to mount).
-      setTimeout(() => resolveFetchBlockingPromise(false), 5000);
-    }
-  }
-
-  useEffect(() => {
-    if (resolveFetchBlockingPromise) {
-      resolveFetchBlockingPromise(true);
-    }
-  }, [resolveFetchBlockingPromise]);
 }

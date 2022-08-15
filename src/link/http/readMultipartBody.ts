@@ -130,7 +130,6 @@ export function readMultipartBody<T = Record<string, unknown>>(
 
 async function readMultipartWebStream<T>(
   response: Response,
-  // Not sure if the string case is possible but we’ll handle it anyways.
   body: ReadableStream<Uint8Array>,
   boundary: string,
   observer: Observer<T>

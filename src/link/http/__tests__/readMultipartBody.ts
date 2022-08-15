@@ -1,5 +1,4 @@
 import gql from "graphql-tag";
-import fetchMock from "fetch-mock";
 import { execute } from "../../core/execute";
 import { HttpLink } from "../HttpLink";
 import { itAsync, subscribeAndCount } from "../../../testing";
@@ -42,10 +41,6 @@ function matchesResults<T>(
 }
 
 describe("multipart responses", () => {
-  beforeEach(() => {
-    fetchMock.restore();
-  });
-
   let originalTextDecoder: any;
   beforeAll(() => {
     originalTextDecoder = TextDecoder;
@@ -89,13 +84,6 @@ describe("multipart responses", () => {
   ];
 
   itAsync("can handle string bodies", (resolve, reject) => {
-    // fetchMock.mock("*", {
-    //   status: 200,
-    //   body: body1,
-    //   headers: {
-    //     "content-type": "multipart/mixed",
-    //   },
-    // });
     const fetch = jest.fn(async () => ({
       status: 200,
       body: body1,

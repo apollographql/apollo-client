@@ -201,7 +201,10 @@ export class HttpLink extends ApolloLink {
         currentFetch!(chosenURI, options)
           .then(response => {
             operation.setContext({ response });
-            const contentType = response.headers?.get('content-type');
+            const contentType =
+              response.headers instanceof Headers
+                ? response.headers.get("content-type")
+                : (response.headers["content-type"] || response.headers["Content-Type"]);
             if (contentType !== null && /^multipart\/mixed/.test(contentType)) {
               readMultipartBody(response, observer);
             } else {

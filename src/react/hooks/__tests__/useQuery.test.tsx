@@ -4535,7 +4535,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe('defer', () => {
+  describe.skip('defer', () => {
     it('should handle deferred queries', async () => {
       const query = gql`
         {

@@ -866,9 +866,10 @@ describe('HttpLink', () => {
       fetchSpy.mockImplementation(() => Promise.resolve<Response>({
         text() {
           return Promise.resolve(JSON.stringify({
-            data: { hello: "from spy" },
+            data: { hello: "from spy" }
           }));
         },
+        headers: {},
       } as Response));
 
       const spyFn = window.fetch;
@@ -1246,10 +1247,6 @@ describe('HttpLink', () => {
   });
 
   describe('Multipart responses', () => {
-    beforeEach(() => {
-      fetchMock.restore();
-    });
-
     let originalTextDecoder: any;
     beforeAll(() => {
       originalTextDecoder = TextDecoder;
@@ -1275,13 +1272,11 @@ describe('HttpLink', () => {
     ].join("\r\n");
 
     itAsync('works', (resolve, reject) => {
-      fetchMock.mock('*', {
+      const fetch = jest.fn(async () => ({
         status: 200,
         body,
-        headers: {
-          'Content-Type': 'multipart/mixed',
-        },
-      });
+        headers: new Headers({ 'content-type': 'multipart/mixed' }),
+      }));
 
       const link = new HttpLink({
         fetch: fetch as any,
@@ -1327,13 +1322,11 @@ describe('HttpLink', () => {
     });
 
     it('can handle node buffer bodies', (done) => {
-      fetchMock.mock('*', {
+      const fetch = jest.fn(async () => ({
         status: 200,
         body: Buffer.from(body, "utf8"),
-        headers: {
-          'Content-Type': 'multipart/mixed',
-        },
-      });
+        headers: { 'content-type': 'multipart/mixed' }
+      }));
 
       const link = new HttpLink({
         fetch: fetch as any,
@@ -1376,12 +1369,10 @@ describe('HttpLink', () => {
     });
 
     it('can handle typed arrays bodies', (done) => {
-      // fetchMock does something confusing and terrible to typed arrays.
       const fetch = jest.fn(async () => ({
         status: 200,
         body: (new TextEncoder()).encode(body),
-        // TODO: Use a real headers object
-        headers: new Map([['content-type', 'multipart/mixed']]),
+        headers: new Headers({ 'content-type': 'multipart/mixed' }),
       }));
       const link = new HttpLink({
         fetch: fetch as any,
@@ -1444,12 +1435,10 @@ describe('HttpLink', () => {
         },
       });
 
-      // jest fetch mock does not handle web streams for some reason.
       const fetch = jest.fn(async () => ({
         status: 200,
         body: stream,
-        // TODO: Use a real headers object
-        headers: new Map([['content-type', 'multipart/mixed']]),
+        headers: new Headers({ 'content-type': 'multipart/mixed' }),
       }));
 
       const link = new HttpLink({
@@ -1501,12 +1490,10 @@ describe('HttpLink', () => {
     it('can handle node stream bodies', (done) => {
       const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
 
-      // jest fetch mock does not handle node streams either...
       const fetch = jest.fn(async () => ({
         status: 200,
         body: stream,
-        // TODO: Use a real headers object
-        headers: new Map([['content-type', 'multipart/mixed']]),
+        headers: new Headers({ 'Content-Type': 'multipart/mixed'}),
       }));
       const link = new HttpLink({
         fetch: fetch as any,

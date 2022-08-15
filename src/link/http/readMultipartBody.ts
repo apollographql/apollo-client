@@ -12,7 +12,7 @@ export type ServerParseError = Error & {
   bodyText: string;
 };
 
-function parseHeaders(headerText: string): Headers {
+function parseHeaders(headerText: string): Record<string, string> {
   const headersInit: Record<string, string> = {};
   headerText.split("\n").forEach((line) => {
     const i = line.indexOf(":");
@@ -22,9 +22,7 @@ function parseHeaders(headerText: string): Headers {
       headersInit[name] = value;
     }
   });
-
-  // TODO: headers is not defined on the server
-  return new Headers(headersInit);
+  return headersInit;
 }
 
 function parseJsonBody<T>(response: Response, bodyText: string): T {
@@ -76,14 +74,17 @@ export function readJsonBody<T = Record<string, unknown>>(
 }
 
 export function readMultipartBody<T = Record<string, unknown>>(
-  // TODO: better type for response since response.body can be many things
-  // depending on the environment, and the builtin type for Response's body
+  // TODO: better type for `response` since response.body can be many things
+  // depending on the environment, and the builtin type for Response.body
   // is the browser's ReadableStream<Uint8Array> | null
   response: Response,
   observer: Observer<T>
 ) {
-  // TODO: in node, can't use headers.get
-  const ctype = response.headers.get("content-type");
+  const ctype =
+    response.headers instanceof Headers
+      ? response.headers.get("content-type")
+      : (response.headers["content-type"] || response.headers['Content-Type']);
+
   if (!ctype || !/^multipart\/mixed/.test(ctype)) {
     throw new Error("Invalid multipart content type");
   }
@@ -172,11 +173,8 @@ function observeNextResult<T>(
   if (message.trim()) {
     const i = message.indexOf("\r\n\r\n");
     const headers = parseHeaders(message.slice(0, i));
-    const contentType = headers.get("content-type");
-    if (
-      contentType !== null &&
-      contentType.indexOf("application/json") === -1
-    ) {
+    const contentType = headers["content-type"];
+    if (contentType && contentType.indexOf("application/json") === -1) {
       // TODO: handle unsupported chunk content type
       throw new Error("Unsupported patch content type");
     }

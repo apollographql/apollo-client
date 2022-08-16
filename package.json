@@ -18,7 +18,8 @@
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "react-native": {
-    "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js"
+    "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js",
+    "react-dom/server": false
   },
   "repository": {
     "type": "git",

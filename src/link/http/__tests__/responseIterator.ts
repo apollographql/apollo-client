@@ -18,7 +18,7 @@ const sampleDeferredQuery = gql`
   }
 `;
 
-const BOUNDARY = 'gc0p4Jq0M2Yt08jU534c0p';
+const BOUNDARY = "gc0p4Jq0M2Yt08jU534c0p";
 
 function matchesResults<T>(
   resolve: () => void,
@@ -29,6 +29,7 @@ function matchesResults<T>(
   // TODO: adding a second observer to the observable will consume the
   // observable. I want to test completion, but the subscribeAndCount API
   // doesn’t have anything like that.
+
   // TODO: remove ts-ignore
   // @ts-ignore
   subscribeAndCount(reject, observable, (count, result) => {
@@ -101,49 +102,6 @@ describe("multipart responses", () => {
     },
   ];
 
-  // itAsync("can handle string bodies", (resolve, reject) => {
-  //   const fetch = jest.fn(async () => ({
-  //     status: 200,
-  //     body: body1,
-  //     headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
-  //   }));
-
-  //   const link = new HttpLink({
-  //     fetch: fetch as any,
-  //   });
-
-  //   const observable = execute(link, { query: sampleDeferredQuery });
-  //   matchesResults(resolve, reject, observable, results1);
-  // });
-
-  // itAsync("can handle node buffer bodies", (resolve, reject) => {
-  //   const fetch = jest.fn(async () => ({
-  //     status: 200,
-  //     body: Buffer.from(body1, "utf8"),
-  //     headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
-  //   }));
-  //   const link = new HttpLink({
-  //     fetch: fetch as any,
-  //   });
-
-  //   const observable = execute(link, { query: sampleDeferredQuery });
-  //   matchesResults(resolve, reject, observable, results1);
-  // });
-
-  // itAsync("can handle typed arrays bodies", (resolve, reject) => {
-  //   const fetch = jest.fn(async () => ({
-  //     status: 200,
-  //     body: new TextEncoder().encode(body1),
-  //     headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
-  //   }));
-  //   const link = new HttpLink({
-  //     fetch: fetch as any,
-  //   });
-
-  //   const observable = execute(link, { query: sampleDeferredQuery });
-  //   matchesResults(resolve, reject, observable, results1);
-  // });
-
   itAsync("can handle whatwg stream bodies", (resolve, reject) => {
     const stream = new ReadableStream({
       async start(controller) {
@@ -161,7 +119,9 @@ describe("multipart responses", () => {
     const fetch = jest.fn(async () => ({
       status: 200,
       body: stream,
-      headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
+      headers: new Headers({
+        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+      }),
     }));
 
     const link = new HttpLink({
@@ -196,7 +156,9 @@ describe("multipart responses", () => {
       const fetch = jest.fn(async () => ({
         status: 200,
         body: stream,
-        headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
+        headers: new Headers({
+          "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+        }),
       }));
 
       const link = new HttpLink({
@@ -208,24 +170,27 @@ describe("multipart responses", () => {
     }
   );
 
-  itAsync("can handle node stream bodies", (resolve, reject) => {
-    const stream = Readable.from(
-      body2.split("\r\n").map((line) => line + "\r\n")
-    );
+  itAsync(
+    "can handle node stream bodies with default boundary",
+    (resolve, reject) => {
+      const stream = Readable.from(
+        body2.split("\r\n").map((line) => line + "\r\n")
+      );
 
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      // if no boundary is specified, default to -
-      headers: { "content-type": `multipart/mixed` },
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        // if no boundary is specified, default to -
+        headers: { "content-type": `multipart/mixed` },
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
 
-    const observable = execute(link, { query: sampleDeferredQuery });
-    matchesResults(resolve, reject, observable, results1);
-  });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      matchesResults(resolve, reject, observable, results1);
+    }
+  );
 
   itAsync(
     "can handle node stream bodies with arbitrary splits",

@@ -2,6 +2,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
+import { mergeDeep } from "../utilities"
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
@@ -153,7 +154,6 @@ export class QueryInfo {
 
   reset() {
     cancelNotifyTimeout(this);
-    this.lastDiff = void 0;
     this.dirty = false;
   }
 
@@ -322,7 +322,7 @@ export class QueryInfo {
     };
 
     if (!this.lastWatch ||
-        !equal(watchOptions, this.lastWatch)) {
+      !equal(watchOptions, this.lastWatch)) {
       this.cancel();
       this.cancel = this.cache.watch(this.lastWatch = watchOptions);
     }
@@ -367,6 +367,22 @@ export class QueryInfo {
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
+
+    if (result.path) {
+      if (!this.lastDiff || !result.data) {
+        // TODO: handle this case
+        throw new Error('TODO');
+      }
+      let { diff } = this.lastDiff;
+      let { data, path } = result;
+      for (let i = path.length - 1; i >= 0; --i) {
+        // TODO: fix tsignore
+        // @ts-ignore
+        data = { [path[i]]: data };
+      }
+      result.data = mergeDeep(diff.result, data);
+      result.path = undefined;
+    }
 
     if (options.fetchPolicy === 'no-cache') {
       this.updateLastDiff(

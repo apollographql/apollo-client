@@ -1,4 +1,3 @@
-// import { AxiosResponse } from 'axios';
 import { Response as NodeResponse } from "node-fetch";
 import { Readable as NodeReadableStream } from "stream";
 
@@ -7,28 +6,19 @@ import nodeStreamIterator from "./iterators/nodeStream";
 import promiseIterator from "./iterators/promise";
 import readerIterator from "./iterators/reader";
 
-// interface CrossFetchResponse {
-//   _bodyBlob: Blob;
-// }
-
 const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;
 
-/**
- * @param response A response. Supports fetch, node-fetch, and cross-fetch
- */
 export function responseIterator<T>(
-  response: unknown
+  response: Response | NodeResponse
 ): AsyncIterableIterator<T> {
   if (response === undefined)
     throw new Error("Missing response for responseIterator");
 
   // determine the body
   let body: unknown = response;
-  if ((response as NodeResponse).body) body = (response as NodeResponse).body;
+
   // node-fetch, browser fetch, undici
-  // else if ((response as AxiosResponse).data) body = (response as AxiosResponse).data;
-  // axios
-  // else if ((response as CrossFetchResponse)._bodyBlob) body = (response as CrossFetchResponse)._bodyBlob; // cross-fetch
+  if ((response as NodeResponse).body) body = (response as NodeResponse).body;
 
   // adapt the body
   if (hasIterator && (body as AsyncIterableIterator<T>)[Symbol.asyncIterator])

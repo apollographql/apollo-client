@@ -12,8 +12,10 @@ export type ServerParseError = Error & {
 };
 
 export function getContentTypeHeaders(response: Response) {
-  return response.headers instanceof Headers
-    ? response.headers.get("content-type")
+  if (!response.headers) return null;
+  return typeof response.headers?.get === "function"
+    ? response.headers?.get("content-type")
+    // @ts-ignore TODO: fix
     : response.headers["content-type"];
 }
 
@@ -73,6 +75,7 @@ export async function readMultipartBody<T = Record<string, unknown>>(
       bi = buffer.indexOf(boundary);
     }
   }
+  observer.complete?.();
 }
 
 export function parseHeaders(headerText: string): Record<string, string> {
@@ -172,43 +175,43 @@ export function readJsonBody<T = Record<string, unknown>>(
         );
       }
       observer.next?.(result);
+      observer.complete?.();
     })
     .catch((err) => handleError(err, observer));
 }
 
 // TODO: refactor
-export function parseAndCheckHttpResponse(
-  operations: Operation | Operation[],
-) {
-  return (response: Response) => response
-    .text()
-    .then((bodyText) => parseJsonBody(response, bodyText))
-    .then((result) => {
-      if (response.status >= 300) {
-        // Network error
-        throwServerError(
-          response,
-          result,
-          `Response not successful: Received status code ${response.status}`,
-        );
-      }
+export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
+  return (response: Response) =>
+    response
+      .text()
+      .then((bodyText) => parseJsonBody(response, bodyText))
+      .then((result: any) => {
+        if (response.status >= 300) {
+          // Network error
+          throwServerError(
+            response,
+            result,
+            `Response not successful: Received status code ${response.status}`
+          );
+        }
 
-      if (
-        !Array.isArray(result) &&
-        !hasOwnProperty.call(result, 'data') &&
-        !hasOwnProperty.call(result, 'errors')
-      ) {
-        // Data error
-        throwServerError(
-          response,
-          result,
-          `Server response was missing for query '${
-            Array.isArray(operations)
-              ? operations.map(op => op.operationName)
-              : operations.operationName
-          }'.`,
-        );
-      }
-      return result;
-    });
+        if (
+          !Array.isArray(result) &&
+          !hasOwnProperty.call(result, "data") &&
+          !hasOwnProperty.call(result, "errors")
+        ) {
+          // Data error
+          throwServerError(
+            response,
+            result,
+            `Server response was missing for query '${
+              Array.isArray(operations)
+                ? operations.map((op) => op.operationName)
+                : operations.operationName
+            }'.`
+          );
+        }
+        return result;
+      });
 }

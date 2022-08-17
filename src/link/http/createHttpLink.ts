@@ -173,7 +173,6 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
           } else {
             readJsonBody(response, operation, observer);
           }
-          observer.complete?.();
         })
         .catch(err => handleError(err, observer));
 

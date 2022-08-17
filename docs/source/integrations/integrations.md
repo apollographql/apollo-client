@@ -22,7 +22,7 @@ A [Svelte](https://svelte.dev) integration is maintained by Tim Hall ([@timhall]
 
 An [Angular](https://angular.io) integration is maintained by Kamil Kisiela ([@kamilkisiela](https://github.com/kamilkisiela)). See the [website](https://apollo-angular.com) for more details.
 
-## Solid.js
+## Solidjs
 
 A [Solid.js](https://www.solidjs.com/) integration is maintained by ([@Torsten85](https://github.com/Torsten85)). See the Github [repository](https://github.com/merged-js/solid-apollo) for more details.
 

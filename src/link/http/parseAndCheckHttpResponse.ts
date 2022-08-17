@@ -15,8 +15,8 @@ export function getContentTypeHeaders(response: Response) {
   if (!response.headers) return null;
   return typeof response.headers?.get === "function"
     ? response.headers?.get("content-type")
-    // @ts-ignore TODO: fix
-    : response.headers["content-type"];
+    : // @ts-ignore TODO: fix
+      response.headers["content-type"];
 }
 
 export async function readMultipartBody<T = Record<string, unknown>>(
@@ -39,8 +39,13 @@ export async function readMultipartBody<T = Record<string, unknown>>(
 
   let buffer = "";
 
-  for await (const chunk of responseIterator(response)) {
-    buffer += chunk;
+  const iterator = responseIterator(response);
+  let running = true;
+
+  while (running) {
+    const { value, done } = await iterator.next();
+    running = !done;
+    buffer += value;
     let bi = buffer.indexOf(boundary);
 
     while (bi > -1) {

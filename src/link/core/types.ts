@@ -1,7 +1,19 @@
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 export { DocumentNode };
 
 import { Observable } from '../../utilities';
+
+export interface ExecutionPatchResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>
+> {
+  errors?: ReadonlyArray<GraphQLError>;
+  data?: TData | null;
+  path?: ReadonlyArray<string | number>;
+  label?: string;
+  hasNext?: boolean;
+  extensions?: TExtensions;
+}
 
 export interface GraphQLRequest {
   query: DocumentNode;
@@ -24,7 +36,7 @@ export interface FetchResult<
   TData = Record<string, any>,
   TContext = Record<string, any>,
   TExtensions = Record<string, any>
-> extends ExecutionResult<TData, TExtensions> {
+> extends ExecutionPatchResult<TData, TExtensions> {
   data?: TData | null | undefined;
   extensions?: TExtensions;
   context?: TContext;

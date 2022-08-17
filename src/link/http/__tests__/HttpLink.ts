@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
 import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
+import { TextEncoder, TextDecoder } from 'util';
+import { ReadableStream } from 'web-streams-polyfill/ponyfill/es2018';
+import { Readable } from 'stream';
 
 import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
@@ -25,6 +28,17 @@ const sampleMutation = gql`
   mutation SampleMutation {
     stub {
       id
+    }
+  }
+`;
+
+const sampleDeferredQuery = gql`
+  query SampleDeferredQuery {
+    stub {
+      id
+      ... on Stub @defer {
+        name
+      }
     }
   }
 `;
@@ -1245,6 +1259,302 @@ describe('HttpLink', () => {
           expect(e.response).toBeDefined();
           expect(e.bodyText).toBe(body);
         }),
+      );
+    });
+  });
+
+  describe('Multipart responses', () => {
+    let originalTextDecoder: any;
+    beforeAll(() => {
+      originalTextDecoder = TextDecoder;
+      (globalThis as any).TextDecoder = TextDecoder;
+    });
+
+    afterAll(() => {
+      globalThis.TextDecoder = originalTextDecoder;
+    });
+
+    const body = [
+      '---',
+      'Content-Type: application/json; charset=utf-8',
+      'Content-Length: 43',
+      '',
+      '{"data":{"stub":{"id":"0"}},"hasNext":true}',
+      '---',
+      'Content-Type: application/json; charset=utf-8',
+      'Content-Length: 58',
+      '',
+      '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+      '-----',
+    ].join("\r\n");
+
+    itAsync('works', (resolve, reject) => {
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body,
+        headers: new Headers({ 'content-type': 'multipart/mixed' }),
+      }));
+
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      let i = 0;
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          try {
+            if (i === 0) {
+              expect(result).toEqual({
+                data: {
+                  stub: {
+                    id: "0",
+                  },
+                },
+                hasNext: true,
+              });
+            } else if (i === 1) {
+              expect(result).toEqual({
+                data: {
+                  name: 'stubby',
+                },
+                path: ['stub'],
+                hasNext: false,
+              });
+            }
+
+          } catch (err) {
+            reject(err);
+          } finally {
+            i++;
+          }
+
+        },
+        err => {
+          reject(err);
+        },
+        () => {
+          resolve();
+        },
+      );
+    });
+
+    it('can handle node buffer bodies', (done) => {
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: Buffer.from(body, "utf8"),
+        headers: { 'content-type': 'multipart/mixed' }
+      }));
+
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      let i = 0;
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          try {
+            if (i === 0) {
+              expect(result).toEqual({
+                data: {
+                  stub: {
+                    id: "0",
+                  },
+                },
+                hasNext: true,
+              });
+            } else if (i === 1) {
+              expect(result).toEqual({
+                data: {
+                  name: 'stubby',
+                },
+                path: ['stub'],
+                hasNext: false,
+              });
+            }
+
+          } catch (err) {
+            done(err);
+          } finally {
+            i++;
+          }
+        },
+        err => {
+          done(err);
+        },
+        () => done(),
+      );
+    });
+
+    it('can handle typed arrays bodies', (done) => {
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: (new TextEncoder()).encode(body),
+        headers: new Headers({ 'content-type': 'multipart/mixed' }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      let i = 0;
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          try {
+            if (i === 0) {
+              expect(result).toEqual({
+                data: {
+                  stub: {
+                    id: "0",
+                  },
+                },
+                hasNext: true,
+              });
+            } else if (i === 1) {
+              expect(result).toEqual({
+                data: {
+                  name: 'stubby',
+                },
+                path: ['stub'],
+                hasNext: false,
+              });
+            }
+
+          } catch (err) {
+            done(err);
+          } finally {
+            i++;
+          }
+        },
+        err => {
+          done(err);
+        },
+        () => {
+          if (i !== 2) {
+            done(new Error("Unexpected end to observable"));
+          }
+
+          done();
+        },
+      );
+    });
+
+    it('can handle whatwg stream bodies', (done) => {
+      const stream = new ReadableStream({
+        async start(controller) {
+          const lines = body.split("\r\n");
+          try {
+            for (const line of lines) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              controller.enqueue(line + "\r\n");
+            }
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'content-type': 'multipart/mixed' }),
+      }));
+
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      let i = 0;
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          try {
+            if (i === 0) {
+              expect(result).toEqual({
+                data: {
+                  stub: {
+                    id: "0",
+                  },
+                },
+                hasNext: true,
+              });
+            } else if (i === 1) {
+              expect(result).toEqual({
+                data: {
+                  name: 'stubby',
+                },
+                path: ['stub'],
+                hasNext: false,
+              });
+            }
+
+          } catch (err) {
+            done(err);
+          } finally {
+            i++;
+          }
+        },
+        err => {
+          done(err);
+        },
+        () => {
+          if (i !== 2) {
+            done(new Error("Unexpected end to observable"));
+          }
+
+          done();
+        },
+      );
+    });
+
+    it('can handle node stream bodies', (done) => {
+      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      let i = 0;
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          try {
+            if (i === 0) {
+              expect(result).toEqual({
+                data: {
+                  stub: {
+                    id: "0",
+                  },
+                },
+                hasNext: true,
+              });
+            } else if (i === 1) {
+              expect(result).toEqual({
+                data: {
+                  name: 'stubby',
+                },
+                path: ['stub'],
+                hasNext: false,
+              });
+            }
+
+          } catch (err) {
+            done(err);
+          } finally {
+            i++;
+          }
+        },
+        err => {
+          done(err);
+        },
+        () => {
+          if (i !== 2) {
+            done(new Error("Unexpected end to observable"));
+          }
+
+          done();
+        },
       );
     });
   });

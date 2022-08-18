@@ -161,13 +161,8 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
-
           const ctype = getContentTypeHeaders(response);
 
-          // TODO: error if content type is undefined,
-          // ie can "Content-Type" contain upper case letters here?
-
-          // if multipart/mixed
           if (ctype !== null && /^multipart\/mixed/.test(ctype)) {
             readMultipartBody(response, observer);
           } else {

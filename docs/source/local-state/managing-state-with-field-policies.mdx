@@ -289,9 +289,10 @@ import ReactDOM from 'react-dom';
 import {
   ApolloClient,
   InMemoryCache,
+  useQuery, 
+  ApolloProvider,
   gql
-} from '@apollo/client';
-import { useQuery, ApolloProvider } from "@apollo/client/react"
+} from '@apollo/client/react';
 
 import Pages from './pages';
 import Login from './pages/login';

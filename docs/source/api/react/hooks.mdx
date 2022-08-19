@@ -68,8 +68,7 @@ function WithApolloClient() {
 ### Example
 
 ```jsx
-import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import { gql, useQuery } from '@apollo/client/react';
 
 const GET_GREETING = gql`
   query GetGreeting($language: String!) {
@@ -120,8 +119,7 @@ function useQuery<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
-import { gql } from "@apollo/client";
-import { useLazyQuery } from "@apollo/client/react";
+import { gql, useLazyQuery } from "@apollo/client/react";
 
 const GET_GREETING = gql`
   query GetGreeting($language: String!) {
@@ -187,8 +185,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
-import { gql } from '@apollo/client';
-import { useMutation } from '@apollo/client/react';
+import { gql, useMutation } from '@apollo/client/react';
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {

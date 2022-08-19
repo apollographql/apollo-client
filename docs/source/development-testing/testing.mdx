@@ -21,8 +21,7 @@ Let's say we want to test the following `Dog` component, which executes a basic 
 
 ```jsx title="dog.jsx"
 import React from 'react';
-import { gql } from '@apollo/client';
-import { useQuery } from "@apollo/client/react";
+import { gql, useQuery } from "@apollo/client/react";
 
 // Make sure that both the query and the component are exported
 export const GET_DOG_QUERY = gql`

@@ -74,11 +74,11 @@ First, here's an example `app.js` file, _without_ the code for rendering React t
 
 ```jsx title="app.js"
 import {
+  ApolloProvider,
   ApolloClient,
   createHttpLink,
   InMemoryCache
-} from '@apollo/client';
-import { ApolloProvider } from "@apollo/client/react"
+} from '@apollo/client/react';
 
 import Express from 'express';
 import React from 'react';

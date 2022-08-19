@@ -741,12 +741,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const maybeFetch = () => {
       if (this.pollingInfo) {
         if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
-          console.log(this.options.variables)
-          console.log(this)
-          
           this.reobserve({
             fetchPolicy: pollFetchPolicy,
-            variables: this.options.variables
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();

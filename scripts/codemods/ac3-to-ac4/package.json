@@ -1,9 +1,0 @@
-{
-  "private": true,
-  "devDependencies": {
-    "jscodeshift": "0.13.1"
-  },
-  "scripts": {
-    "dev": "node --inspect ./node_modules/jscodeshift/bin/jscodeshift.sh -t imports.js ./examples/import_a -p --run-in-band --extensions js --parser babylon --dry"
-  }
-}

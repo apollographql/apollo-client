@@ -28,6 +28,7 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
+  PollFetchPolicy,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
@@ -730,12 +731,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     const info = pollingInfo || (this.pollingInfo = {} as any);
     info.interval = pollInterval;
+  
+    // The fetchPolicy to be used when polling. Defaults to network-only.
+    let pollFetchPolicy:PollFetchPolicy = 'network-only';
+    if (this.options.fetchPolicy === 'no-cache') {
+      pollFetchPolicy = 'no-cache';
+    }
 
     const maybeFetch = () => {
       if (this.pollingInfo) {
         if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
+          console.log(this.options.variables)
+          console.log(this)
+          
           this.reobserve({
-            fetchPolicy: "network-only",
+            fetchPolicy: pollFetchPolicy,
+            variables: this.options.variables
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();
@@ -786,7 +797,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // if it did, it would definitely use a disposable Concast.
       newNetworkStatus === NetworkStatus.fetchMore ||
       // Polling uses a disposable Concast so the polling options (which force
-      // fetchPolicy to be "network-only") won't override the original options.
+      // fetchPolicy to be "network-only" or "no-cache") won't override the original options.
       newNetworkStatus === NetworkStatus.poll;
 
     // Save the old variables, since Object.assign may modify them below.

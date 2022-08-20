@@ -23,6 +23,8 @@ export async function readMultipartBody<T = Record<string, unknown>>(
   response: Response,
   observer: Observer<T>
 ) {
+  // TODO: What if TextDecoder isn’t defined globally?
+  const decoder = new TextDecoder('utf-8');
   const ctype = getContentTypeHeaders(response);
   // Adapted from meros https://github.com/maraisr/meros/blob/main/src/node.ts
   // L91, 95-98
@@ -44,8 +46,12 @@ export async function readMultipartBody<T = Record<string, unknown>>(
 
   while (running) {
     const { value, done } = await iterator.next();
+    const chunk = typeof value === "string"
+    ? value
+      : decoder.decode(value);
+
     running = !done;
-    buffer += value;
+    buffer += chunk;
     let bi = buffer.indexOf(boundary);
 
     while (bi > -1) {

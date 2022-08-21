@@ -3,7 +3,7 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/reader.ts
  */
 
-const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;
+import { hasIterator } from "../../../utilities/common/responseIterator";
 
 export default function readerIterator<T>(
   reader: ReadableStreamDefaultReader<T>

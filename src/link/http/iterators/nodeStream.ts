@@ -4,8 +4,7 @@
  */
 
 import { Readable as NodeReadableStream } from "stream";
-
-const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;
+import { hasIterator } from "../../../utilities/common/responseIterator";
 
 export default function nodeStreamIterator<T>(
   stream: NodeReadableStream

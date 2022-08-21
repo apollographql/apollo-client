@@ -4,14 +4,18 @@
  */
 
 import { Response as NodeResponse } from "node-fetch";
-import { Readable as NodeReadableStream } from "stream";
+import {
+  isNodeResponse,
+  isAsyncIterableIterator,
+  isReadableStream,
+  isBlob,
+  isNodeReadableStream,
+} from "../../utilities/common/responseIterator";
 
 import asyncIterator from "./iterators/async";
 import nodeStreamIterator from "./iterators/nodeStream";
 import promiseIterator from "./iterators/promise";
 import readerIterator from "./iterators/reader";
-
-const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;
 
 export function responseIterator<T>(
   response: Response | NodeResponse
@@ -19,26 +23,24 @@ export function responseIterator<T>(
   if (response === undefined)
     throw new Error("Missing response for responseIterator");
 
-  // determine the body
   let body: unknown = response;
 
-  // node-fetch, browser fetch, undici
-  if ((response as NodeResponse).body) body = (response as NodeResponse).body;
+  if (isNodeResponse(response)) body = response.body;
 
-  // adapt the body
-  if (hasIterator && (body as AsyncIterableIterator<T>)[Symbol.asyncIterator])
-    return asyncIterator<T>(body as AsyncIterableIterator<T>);
+  if (isAsyncIterableIterator(body)) return asyncIterator<T>(body);
 
-  if ((body as ReadableStream<T>).getReader)
-    return readerIterator<T>((body as ReadableStream<T>).getReader());
-  if ((body as Blob).stream)
+  if (isReadableStream(body)) return readerIterator<T>(body.getReader());
+
+  // this fails without casting to ReadableStream<T>
+  // because Blob.stream() returns a NodeJS ReadableStream
+  if (isBlob(body))
     return readerIterator<T>(
-      ((body as Blob).stream() as unknown as ReadableStream<T>).getReader()
+      (body.stream() as unknown as ReadableStream<T>).getReader()
     );
-  if ((body as Blob).arrayBuffer)
-    return promiseIterator<T>((body as Blob).arrayBuffer());
-  if ((body as NodeReadableStream).pipe)
-    return nodeStreamIterator<T>(body as NodeReadableStream);
+
+  if (isBlob(body)) return promiseIterator<T>(body.arrayBuffer());
+
+  if (isNodeReadableStream(body)) return nodeStreamIterator<T>(body);
 
   throw new Error(
     "Unknown body type for responseIterator. Maybe you are not passing a streamable response"

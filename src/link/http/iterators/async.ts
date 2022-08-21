@@ -6,8 +6,8 @@ export default function asyncIterator<T>(
     next(): Promise<IteratorResult<T, boolean>> {
       return iterator.next();
     },
-    [Symbol.asyncIterator](): AsyncIterator<T> {
+    [Symbol.asyncIterator](): AsyncIterableIterator<T> {
       return this;
     },
-  } as AsyncIterableIterator<T>;
+  };
 }

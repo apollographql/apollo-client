@@ -1,3 +1,8 @@
+/**
+ * Original source:
+ * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/reader.ts
+ */
+
 const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;
 
 export default function readerIterator<T>(

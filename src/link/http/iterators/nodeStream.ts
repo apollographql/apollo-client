@@ -1,3 +1,8 @@
+/**
+ * Original source:
+ * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/nodeStream.ts
+ */
+
 import { Readable as NodeReadableStream } from "stream";
 
 const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;

@@ -1,3 +1,8 @@
+/**
+ * Original source:
+ * https://github.com/kmalakoff/response-iterator/blob/master/src/index.ts
+ */
+
 import { Response as NodeResponse } from "node-fetch";
 import { Readable as NodeReadableStream } from "stream";
 

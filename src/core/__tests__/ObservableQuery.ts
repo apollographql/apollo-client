@@ -1860,9 +1860,11 @@ describe('ObservableQuery', () => {
     });
 
     itAsync('returns errors with data if errorPolicy is all', (resolve, reject) => {
+      const networkError = new ApolloError({errorMessage: "Oh no"})
+
       const queryManager = mockQueryManager(reject, {
         request: { query, variables },
-        result: { data: dataOne, errors: [error] },
+        result: { data: dataOne, errors: [error], error: networkError},
       });
 
       const observable = queryManager.watchQuery({
@@ -1877,7 +1879,7 @@ describe('ObservableQuery', () => {
         const currentResult = observable.getCurrentResult();
         expect(currentResult.loading).toBe(false);
         expect(currentResult.errors).toEqual([error]);
-        expect(currentResult.error).toBeUndefined();
+        expect(currentResult.error).toEqual(networkError);
       }).then(resolve, reject);
     });
 

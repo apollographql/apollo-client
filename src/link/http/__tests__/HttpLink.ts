@@ -1026,18 +1026,15 @@ describe('HttpLink', () => {
 
   describe('Error handling', () => {
     let responseBody: any;
-    const networkError = new Error(`Response not successful: Received status code 400.`) as ServerError;
     const text = jest.fn(() => {
       const responseBodyText = '{}';
       responseBody = JSON.parse(responseBodyText);
-      responseBody.errorNetwork = networkError
       return Promise.resolve(responseBodyText);
     });
     const textWithData = jest.fn(() => {
       responseBody = {
         data: { stub: { id: 1 } },
         errors: [{ message: 'dangit' }],
-        errorNetwork: networkError,
       };
 
       return Promise.resolve(JSON.stringify(responseBody));
@@ -1046,7 +1043,6 @@ describe('HttpLink', () => {
     const textWithErrors = jest.fn(() => {
       responseBody = {
         errors: [{ message: 'dangit' }],
-        errorNetwork: networkError,
       };
 
       return Promise.resolve(JSON.stringify(responseBody));
@@ -1077,8 +1073,9 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          expect(result.errorNetwork?.statusCode).toEqual(401);
-          expect(result.errorNetwork?.message).toMatch(/Received status code 401/);
+          const error = result.error?.networkError as ServerError
+          expect(error.statusCode).toEqual(401);
+          expect(error.message).toMatch(/Received status code 401/);
           resolve();
         },
         () => {},
@@ -1091,9 +1088,10 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          expect(result.errorNetwork?.statusCode).toBe(400);
-          expect(result.errorNetwork?.message).toMatch(/Received status code 400/);
-          expect(result).toEqual(responseBody);
+          const error = result.error?.networkError as ServerError
+          expect(error.statusCode).toBe(400);
+          expect(error.message).toMatch(/Received status code 400/);
+          
           resolve();
         },
       );
@@ -1107,9 +1105,9 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          expect(result.errorNetwork?.statusCode).toBe(400);
-          expect(result.errorNetwork?.message).toMatch(/Received status code 400/);
-          expect(result).toEqual(responseBody);
+          const error = result.error?.networkError as ServerError
+          expect(error.statusCode).toBe(400);
+          expect(error.message).toMatch(/Received status code 400/);
           resolve();
         },
       );
@@ -1123,9 +1121,9 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          expect(result.errorNetwork?.statusCode).toEqual(400);
-          expect(result.errorNetwork?.message).toMatch(/Received status code 400/);
-          expect(result.errorNetwork?.result).toBe(undefined);
+          const error = result.error?.networkError as ServerError
+          expect(error.statusCode).toEqual(400);
+          expect(error.message).toMatch(/Received status code 400/);
           resolve();
         },
       );
@@ -1137,7 +1135,8 @@ describe('HttpLink', () => {
 
       execute(link, { query: sampleQuery }).subscribe(
         result => {
-          expect(result.errorNetwork?.message).toMatch(/Server response was missing for query 'SampleQuery'./);
+          const error = result.error?.networkError as ServerError
+          expect(error.message).toMatch(/Server response was missing for query 'SampleQuery'./);
           resolve();
         },
         

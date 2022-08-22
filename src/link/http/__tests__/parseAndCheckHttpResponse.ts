@@ -4,6 +4,7 @@ import fetchMock from 'fetch-mock';
 import { createOperation } from '../../utils/createOperation';
 import { parseAndCheckHttpResponse } from '../parseAndCheckHttpResponse';
 import { itAsync } from '../../../testing';
+import { ServerError } from '../../utils';
 
 const query = gql`
   query SampleQuery {
@@ -36,7 +37,7 @@ describe('parseAndCheckResponse', () => {
       .catch(reject);
   });
 
-  itAsync('throws a network error with a status code and result', (resolve, reject) => {
+  itAsync('returns a network error with a status code and result', (resolve, reject) => {
     const status = 403;
     const body = { data: 'fail' }; //does not contain data or errors
     fetchMock.mock('begin:/error', {
@@ -45,7 +46,8 @@ describe('parseAndCheckResponse', () => {
     });
     fetch('error')
       .then(parseAndCheckHttpResponse(operations))
-      .then(({ data, errorNetwork:e }) => {
+      .then(({ data, error }) => {
+        const e = error.networkError as ServerError
         expect(data).toEqual('fail');
         expect(e.name).toEqual("ServerError");
         expect(e.statusCode).toEqual(status);
@@ -57,13 +59,14 @@ describe('parseAndCheckResponse', () => {
       .catch(reject);
   });
 
-  itAsync('throws a server error on incorrect data', (resolve, reject) => {
+  itAsync('returns a server error on incorrect data', (resolve, reject) => {
     const data = { hello: 'world' }; //does not contain data or erros
     const status = 200;
     fetchMock.mock('begin:/incorrect', data);
     fetch('incorrect')
       .then(parseAndCheckHttpResponse(operations))
-      .then(({ data, errorNetwork:e }) => {
+      .then(({ data, error }) => {
+        const e = error.networkError as ServerError
         expect(data).toEqual(undefined);
         expect(e.name).toEqual("ServerError");
         expect(e.statusCode).toEqual(status);
@@ -73,15 +76,6 @@ describe('parseAndCheckResponse', () => {
         expect(e.result).toEqual(undefined)
         resolve();
       })
-      /*
-      .then(reject)
-      .catch(e => {
-        expect(e.statusCode).toBe(200);
-        expect(e.name).toBe('ServerError');
-        expect(e).toHaveProperty('response');
-        expect(e.result).toEqual(data);
-        resolve();
-      })*/
       .catch(reject);
   });
 

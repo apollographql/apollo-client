@@ -1,3 +1,4 @@
+import { ApolloError } from '../../errors';
 import { Operation } from '../core';
 import { ServerError } from '../utils';
 const { hasOwnProperty } = Object.prototype;
@@ -33,7 +34,11 @@ export function parseAndCheckHttpResponse(
         error.name = 'ServerError';
         error.response = response;
         error.statusCode = response.status;
-        result.error = error;
+        if (result.error) {
+          result.error.networkError = error;
+        } else {
+          result.error = new ApolloError({networkError: error});
+        }
         return result;
       }
 
@@ -52,7 +57,11 @@ export function parseAndCheckHttpResponse(
         error.name = 'ServerError';
         error.response = response;
         error.statusCode = response.status;
-        result.error = error;        
+        if (result.error) {
+          result.error.networkError = error;
+        } else {
+          result.error = new ApolloError({networkError: error});
+        }  
       }
       return result;
     });

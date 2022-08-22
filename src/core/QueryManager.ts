@@ -1047,7 +1047,7 @@ export class QueryManager<TStore> {
       ),
 
       result => {
-        const hasErrors = isNonEmptyArray(result.errors);
+        const hasErrors = isNonEmptyArray(result.errors) || result.error;
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.

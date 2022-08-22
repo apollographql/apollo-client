@@ -732,11 +732,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const info = pollingInfo || (this.pollingInfo = {} as any);
     info.interval = pollInterval;
   
-    // The fetchPolicy to be used when polling. Defaults to network-only.
-    let pollFetchPolicy:PollFetchPolicy = 'network-only';
-    if (this.options.fetchPolicy === 'no-cache') {
-      pollFetchPolicy = 'no-cache';
-    }
+    // The fetchPolicy to be used when polling. Always network-only unless
+    // this.options.fetchPolicy is no-cache (then polling uses no-cache too).
+    const pollFetchPolicy: PollFetchPolicy =
+      this.options.fetchPolicy === 'no-cache' ? 'no-cache' : 'network-only';
 
     const maybeFetch = () => {
       if (this.pollingInfo) {

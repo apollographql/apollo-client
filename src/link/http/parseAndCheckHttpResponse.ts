@@ -15,7 +15,7 @@ export function getContentTypeHeaders(response: Response) {
   if (!response.headers) return null;
   return typeof response.headers?.get === "function"
     ? response.headers?.get("content-type")
-    : // @ts-ignore TODO: fix
+    : // @ts-ignore
       response.headers["content-type"];
 }
 
@@ -24,7 +24,7 @@ export async function readMultipartBody<T = Record<string, unknown>>(
   observer: Observer<T>
 ) {
   // TODO: What if TextDecoder isn’t defined globally?
-  const decoder = new TextDecoder('utf-8');
+  const decoder = new TextDecoder("utf-8");
   const ctype = getContentTypeHeaders(response);
   // Adapted from meros https://github.com/maraisr/meros/blob/main/src/node.ts
   // L91, 95-98
@@ -40,16 +40,12 @@ export async function readMultipartBody<T = Record<string, unknown>>(
   }`;
 
   let buffer = "";
-
   const iterator = responseIterator(response);
   let running = true;
 
   while (running) {
     const { value, done } = await iterator.next();
-    const chunk = typeof value === "string"
-    ? value
-      : decoder.decode(value);
-
+    const chunk = typeof value === "string" ? value : decoder.decode(value);
     running = !done;
     buffer += chunk;
     let bi = buffer.indexOf(boundary);
@@ -73,15 +69,15 @@ export async function readMultipartBody<T = Record<string, unknown>>(
 
         // TODO: where should I be handling \r\n characters, presumably not here
         // TODO: use readJsonBody here instead to handle network errors
-
-        const result = parseJsonBody<Record<string, unknown>>(
-          response,
-          body.replace("\r\n", "")
-        );
-
-        // TODO: fix tsignore
-        // @ts-ignore
-        observer.next?.(result);
+        try {
+          const result = parseJsonBody<T>(
+            response,
+            body.replace("\r\n", "")
+          );
+          observer.next?.(result);
+        } catch (err) {
+          handleError(err, observer);
+        }
       }
       bi = buffer.indexOf(boundary);
     }

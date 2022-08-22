@@ -5,15 +5,23 @@
 
 import { hasIterator } from "../../../utilities/common/responseIterator";
 
+interface PromiseIterator<T> {
+  next(): Promise<IteratorResult<T, ArrayBuffer | undefined>>;
+  [Symbol.asyncIterator]?(): AsyncIterator<T>;
+}
+
 export default function promiseIterator<T>(
   promise: Promise<ArrayBuffer>
 ): AsyncIterableIterator<T> {
   let resolved = false;
 
-  const iterator = {
-    next(): Promise<IteratorResult<T, boolean>> {
-      // @ts-ignore
-      if (resolved) return Promise.resolve({ value: undefined, done: true });
+  const iterator: PromiseIterator<T> = {
+    next(): Promise<IteratorResult<T, ArrayBuffer | undefined>> {
+      if (resolved)
+        return Promise.resolve({
+          value: undefined,
+          done: true,
+        });
       resolved = true;
       return new Promise(function (resolve, reject) {
         promise
@@ -27,7 +35,6 @@ export default function promiseIterator<T>(
   };
 
   if (hasIterator) {
-    // @ts-ignore
     iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
       return this;
     };

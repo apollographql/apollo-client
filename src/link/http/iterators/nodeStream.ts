@@ -6,6 +6,11 @@
 import { Readable as NodeReadableStream } from "stream";
 import { hasIterator } from "../../../utilities/common/responseIterator";
 
+interface NodeStreamIterator<T> {
+  next(): Promise<IteratorResult<T, boolean | undefined>>;
+  [Symbol.asyncIterator]?(): AsyncIterator<T>;
+}
+
 export default function nodeStreamIterator<T>(
   stream: NodeReadableStream
 ): AsyncIterableIterator<T> {
@@ -13,8 +18,15 @@ export default function nodeStreamIterator<T>(
   let error: Error | null = null;
   let done = false;
   const data: unknown[] = [];
-  // @ts-ignore
-  const waiting = [];
+
+  const waiting: [
+    (
+      value:
+        | IteratorResult<T, boolean | undefined>
+        | PromiseLike<IteratorResult<T, boolean | undefined>>
+    ) => void,
+    (reason?: any) => void
+  ][] = [];
 
   function onData(chunk: any) {
     if (error) return;
@@ -25,7 +37,6 @@ export default function nodeStreamIterator<T>(
   }
   function onError(err: Error) {
     error = err;
-    // @ts-ignore
     const all = waiting.slice();
     all.forEach(function (pair) {
       pair[1](err);
@@ -34,7 +45,6 @@ export default function nodeStreamIterator<T>(
   }
   function onEnd() {
     done = true;
-    // @ts-ignore
     const all = waiting.slice();
     all.forEach(function (pair) {
       pair[0]({ value: undefined, done: true });
@@ -56,25 +66,23 @@ export default function nodeStreamIterator<T>(
   stream.on("finish", onEnd);
   stream.on("close", onEnd);
 
-  function getNext(): Promise<IteratorResult<T, boolean>> {
+  function getNext(): Promise<IteratorResult<T, boolean | undefined>> {
     return new Promise(function (resolve, reject) {
       if (error) return reject(error);
       // @ts-ignore
       if (data.length) return resolve({ value: data.shift(), done: false });
-      // @ts-ignore
       if (done) return resolve({ value: undefined, done: true });
       waiting.push([resolve, reject]);
     });
   }
 
-  const iterator = {
-    next(): Promise<IteratorResult<T, boolean>> {
+  const iterator: NodeStreamIterator<T> = {
+    next(): Promise<IteratorResult<T, boolean | undefined>> {
       return getNext();
     },
   };
 
   if (hasIterator) {
-    // @ts-ignore
     iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
       return this;
     };

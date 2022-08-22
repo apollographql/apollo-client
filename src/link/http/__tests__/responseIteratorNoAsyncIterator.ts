@@ -194,7 +194,9 @@ describe("multipart responses", () => {
         status: 200,
         body: stream,
         // if no boundary is specified, default to -
-        headers: { "content-type": `multipart/mixed` },
+        headers: new Headers({
+          "content-type": `multipart/mixed`,
+        }),
       }));
       const link = new HttpLink({
         fetch: fetch as any,
@@ -218,7 +220,9 @@ describe("multipart responses", () => {
       const fetch = jest.fn(async () => ({
         status: 200,
         body: stream,
-        headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
+        headers: new Headers({
+          "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+        }),
       }));
       const link = new HttpLink({
         fetch: fetch as any,
@@ -242,7 +246,9 @@ describe("multipart responses", () => {
         status: 200,
         body: stream,
         // if no boundary is specified, default to -
-        headers: { "content-type": `multipart/mixed` },
+        headers: new Headers({
+          "content-type": `multipart/mixed`,
+        }),
       }));
       const link = new HttpLink({
         fetch: fetch as any,
@@ -266,7 +272,9 @@ describe("multipart responses", () => {
         status: 200,
         body: stream,
         // if no boundary is specified, default to -
-        headers: { "content-type": `multipart/mixed` },
+        headers: new Headers({
+          "content-type": `multipart/mixed`,
+        }),
       }));
       const link = new HttpLink({
         fetch: fetch as any,

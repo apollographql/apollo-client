@@ -5,18 +5,21 @@
 
 import { hasIterator } from "../../../utilities/common/responseIterator";
 
+interface ReaderIterator<T> {
+  next(): Promise<ReadableStreamDefaultReadResult<T>>;
+  [Symbol.asyncIterator]?(): AsyncIterator<T>;
+}
+
 export default function readerIterator<T>(
   reader: ReadableStreamDefaultReader<T>
 ): AsyncIterableIterator<T> {
-  const iterator = {
-    // next(): Promise<IteratorResult<T, boolean>> {
+  const iterator: ReaderIterator<T> = {
     next() {
       return reader.read();
     },
   };
 
   if (hasIterator) {
-    // @ts-ignore
     iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
       return this;
     };

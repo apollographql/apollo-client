@@ -5,11 +5,12 @@
 
 import { Response as NodeResponse } from "node-fetch";
 import {
-  isNodeResponse,
   isAsyncIterableIterator,
-  isReadableStream,
   isBlob,
+  isNodeResponse,
   isNodeReadableStream,
+  isReadableStream,
+  isStreamableBlob
 } from "../../utilities/common/responseIterator";
 
 import asyncIterator from "./iterators/async";
@@ -31,12 +32,13 @@ export function responseIterator<T>(
 
   if (isReadableStream(body)) return readerIterator<T>(body.getReader());
 
-  // this fails without casting to ReadableStream<T>
+  // this errors without casting to ReadableStream<T>
   // because Blob.stream() returns a NodeJS ReadableStream
-  if (isBlob(body))
+  if (isStreamableBlob(body)) {
     return readerIterator<T>(
       (body.stream() as unknown as ReadableStream<T>).getReader()
     );
+  }
 
   if (isBlob(body)) return promiseIterator<T>(body.arrayBuffer());
 

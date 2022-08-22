@@ -1,8 +1,7 @@
 import { Response as NodeResponse } from "node-fetch";
 import { Readable as NodeReadableStream } from "stream";
 
-export const hasIterator =
-  typeof Symbol !== "undefined" && Symbol.asyncIterator;
+export const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;
 
 export function isNodeResponse(value: any): value is NodeResponse {
   return !!(value as NodeResponse).body;
@@ -18,6 +17,10 @@ export function isAsyncIterableIterator(
   return (
     hasIterator && !!(value as AsyncIterableIterator<any>)[Symbol.asyncIterator]
   );
+}
+
+export function isStreamableBlob(value: any): value is Blob {
+  return !!(value as Blob).stream;
 }
 
 export function isBlob(value: any): value is Blob {

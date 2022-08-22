@@ -8,7 +8,16 @@ import { TextEncoder, TextDecoder } from "util";
 import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
 import { Readable } from "stream";
 
-var Blob = require('blob-polyfill').Blob;
+// As of Jest 26 there is no way to mock/unmock a module that is used indirectly
+// in a single test file, so these tests are a duplicate of responseIterator.ts
+// tests, but with `isAsyncIterableIterator: false
+// See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
+
+jest.mock('../../../utilities/common/responseIterator', () => ({
+  __esModule: true,
+  ...jest.requireActual('../../../utilities/common/responseIterator'),
+  isAsyncIterableIterator: jest.fn(() => false),
+}));
 
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
@@ -258,57 +267,6 @@ describe("multipart responses", () => {
         body: stream,
         // if no boundary is specified, default to -
         headers: { "content-type": `multipart/mixed` },
-      }));
-      const link = new HttpLink({
-        fetch: fetch as any,
-      });
-
-      const observable = execute(link, { query: sampleDeferredQuery });
-      matchesResults(resolve, reject, observable, results1);
-    }
-  );
-
-  itAsync(
-    "can handle streamable blob bodies",
-    (resolve, reject) => {
-      const body = new Blob(body1.split("\r\n"), { type: "application/text" });
-      const stream = new ReadableStream({
-        async start(controller) {
-          const lines = body1.split("\r\n");
-          try {
-            for (const line of lines) {
-              controller.enqueue(line + "\r\n");
-            }
-          } finally {
-            controller.close();
-          }
-        },
-      });
-      body.stream = () => stream;
-      const fetch = jest.fn(async () => ({
-        status: 200,
-        body,
-        headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
-      }));
-      const link = new HttpLink({
-        fetch: fetch as any,
-      });
-
-      const observable = execute(link, { query: sampleDeferredQuery });
-      matchesResults(resolve, reject, observable, results1);
-    }
-  );
-
-  itAsync(
-    "can handle non-streamable blob bodies",
-    (resolve, reject) => {
-      const body = new Blob(body1.split("\r\n").map(i => i + "\r\n"), { type: "application/text" });
-      body.stream = undefined;
-
-      const fetch = jest.fn(async () => ({
-        status: 200,
-        body,
-        headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
       }));
       const link = new HttpLink({
         fetch: fetch as any,

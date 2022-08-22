@@ -8,8 +8,7 @@ import { ApolloError } from '../../../../errors';
 import { ApolloLink } from '../../../../link/core';
 import { InMemoryCache } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
-import { itAsync, mockSingleLink } from '../../../../testing';
-import { MockedProvider } from '../../../../testing/react';
+import { itAsync, mockSingleLink, MockedProvider } from '../../../../testing/react';
 import { Query } from '../../Query';
 
 const allPeopleQuery: DocumentNode = gql`

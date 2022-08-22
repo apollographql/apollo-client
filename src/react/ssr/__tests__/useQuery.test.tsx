@@ -2,8 +2,7 @@
 import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { mockSingleLink } from '../../../testing';
-import { MockedProvider } from '../../../testing/react';
+import { mockSingleLink, MockedProvider } from '../../../testing/react';
 import { ApolloClient } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';

@@ -6,9 +6,9 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../../core';
 import {
   createMockClient,
-  itAsync
-} from '../../../../testing';
-import { MockedProvider } from '../../../../testing/react';
+  itAsync,
+  MockedProvider
+} from '../../../../testing/react';
 import { NormalizedCacheObject } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
 import { graphql } from '../../graphql';

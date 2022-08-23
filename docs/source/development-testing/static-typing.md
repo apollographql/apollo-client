@@ -572,3 +572,64 @@ export const withCharacter = graphql<InputProps, Response, {}, Prop>(HERO_QUERY,
   })
 });
 ```
+
+## Using `TypeDocumentNode`
+
+In TypeScript, all APIs that take `DocumentNode` parameters may alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation but allows the APIs to infer the data and variable types instead of requiring you to specify types explicitly at the call site. This technique could allow us to modify the [`useQuery` example](#usequery) above to use type inference:
+
+```tsx
+import React from 'react';
+import { useQuery, gql, TypedDocumentNode } from '@apollo/client';
+
+interface RocketInventoryData {
+  rocketInventory: RocketInventory[];
+}
+
+interface RocketInventoryVars {
+  year: number;
+}
+
+const GET_ROCKET_INVENTORY: TypedDocumentNode<RocketInventoryData, RocketInventoryVars> = gql`
+  query GetRocketInventory($year: Int!) {
+    rocketInventory(year: $year) {
+      id
+      model
+      year
+      stock
+    }
+  }
+`;
+
+export function RocketInventoryList() {
+  const { loading, data } = useQuery(
+    GET_ROCKET_INVENTORY,
+    { variables: { year: 2019 } }
+  );
+  return (
+    <div>
+      <h3>Available Inventory</h3>
+      {loading ? (
+        <p>Loading ...</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data && data.rocketInventory.map(inventory => (
+              <tr>
+                <td>{inventory.model}</td>
+                <td>{inventory.stock}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+```

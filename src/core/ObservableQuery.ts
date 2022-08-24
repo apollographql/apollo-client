@@ -28,7 +28,6 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
-  PollFetchPolicy,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
@@ -731,18 +730,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     const info = pollingInfo || (this.pollingInfo = {} as any);
     info.interval = pollInterval;
-  
-    // The fetchPolicy to be used when polling. Defaults to network-only.
-    let pollFetchPolicy:PollFetchPolicy = 'network-only';
-    if (this.options.fetchPolicy === 'no-cache') {
-      pollFetchPolicy = 'no-cache';
-    }
 
     const maybeFetch = () => {
       if (this.pollingInfo) {
         if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
           this.reobserve({
-            fetchPolicy: pollFetchPolicy,
+            // Most fetchPolicy options don't make sense to use in a polling context, as
+            // users wouldn't want to be polling the cache directly. However, network-only and
+            // no-cache are both useful for when the user wants to control whether or not the
+            // polled results are written to the cache.
+            fetchPolicy: this.options.fetchPolicy === 'no-cache' ? 'no-cache' : 'network-only',
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();

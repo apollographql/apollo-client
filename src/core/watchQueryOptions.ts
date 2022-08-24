@@ -37,18 +37,6 @@ export type MutationFetchPolicy = Extract<
   | 'no-cache'     // alternate behavior (results not written to cache)
 >;
 
-/**
- * Most fetchPolicy options don't make sense to use in a polling context, as
- * users wouldn't want to be polling the cache directly. However, network-only and
- * no-cache are both useful for when the user wants to control whether or not the
- * polled results are written to the cache.
- */
-export type PollFetchPolicy = Extract<
-  FetchPolicy,
-  | 'network-only' // default behavior (polled results are written to the cache)
-  | 'no-cache'     // polled results not written to cache
->;
-
 export type RefetchWritePolicy = "merge" | "overwrite";
 
 /**

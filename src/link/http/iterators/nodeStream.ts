@@ -4,7 +4,7 @@
  */
 
 import { Readable as NodeReadableStream } from "stream";
-import { hasIterator } from "../../../utilities/common/responseIterator";
+import { canUseAsyncIteratorSymbol } from "../../../utilities";
 
 interface NodeStreamIterator<T> {
   next(): Promise<IteratorResult<T, boolean | undefined>>;
@@ -82,7 +82,7 @@ export default function nodeStreamIterator<T>(
     },
   };
 
-  if (hasIterator) {
+  if (canUseAsyncIteratorSymbol) {
     iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
       return this;
     };

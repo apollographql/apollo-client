@@ -3,7 +3,7 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/reader.ts
  */
 
-import { hasIterator } from "../../../utilities/common/responseIterator";
+import { canUseAsyncIteratorSymbol } from "../../../utilities";
 
 interface ReaderIterator<T> {
   next(): Promise<ReadableStreamDefaultReadResult<T>>;
@@ -19,7 +19,7 @@ export default function readerIterator<T>(
     },
   };
 
-  if (hasIterator) {
+  if (canUseAsyncIteratorSymbol) {
     iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
       return this;
     };

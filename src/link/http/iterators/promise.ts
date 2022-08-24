@@ -3,7 +3,7 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/promise.ts
  */
 
-import { hasIterator } from "../../../utilities/common/responseIterator";
+import { canUseAsyncIteratorSymbol } from "../../../utilities";
 
 interface PromiseIterator<T> {
   next(): Promise<IteratorResult<T, ArrayBuffer | undefined>>;
@@ -34,7 +34,7 @@ export default function promiseIterator<T>(
     },
   };
 
-  if (hasIterator) {
+  if (canUseAsyncIteratorSymbol) {
     iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
       return this;
     };

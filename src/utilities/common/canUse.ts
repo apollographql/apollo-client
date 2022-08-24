@@ -6,6 +6,8 @@ export const canUseWeakMap =
 
 export const canUseWeakSet = typeof WeakSet === 'function';
 
+export const canUseAsyncIteratorSymbol = typeof Symbol !== "undefined" && Symbol.asyncIterator;
+
 export const canUseSymbol =
   typeof Symbol === 'function' &&
   typeof Symbol.for === 'function';

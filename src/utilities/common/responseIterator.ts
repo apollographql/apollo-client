@@ -1,7 +1,6 @@
 import { Response as NodeResponse } from "node-fetch";
 import { Readable as NodeReadableStream } from "stream";
-
-export const hasIterator = typeof Symbol !== "undefined" && Symbol.asyncIterator;
+import { canUseAsyncIteratorSymbol } from "./canUse";
 
 export function isNodeResponse(value: any): value is NodeResponse {
   return !!(value as NodeResponse).body;
@@ -15,7 +14,8 @@ export function isAsyncIterableIterator(
   value: any
 ): value is AsyncIterableIterator<any> {
   return (
-    hasIterator && !!(value as AsyncIterableIterator<any>)[Symbol.asyncIterator]
+    canUseAsyncIteratorSymbol &&
+    !!(value as AsyncIterableIterator<any>)[Symbol.asyncIterator]
   );
 }
 

@@ -4962,7 +4962,8 @@ describe('useQuery Hook', () => {
                 message: 'Hello world',
                 __typename: 'Greeting',
               },
-            }
+            },
+            hasNext: true
           },
         });
       });
@@ -4979,14 +4980,17 @@ describe('useQuery Hook', () => {
       setTimeout(() => {
         link.simulateResult({
           result: {
-            data: {
-              recipient: {
-                name: 'Alice',
-                __typename: 'Person',
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
               },
-              __typename: 'Greeting',
-            },
-            path: ['greeting'],
+              path: ['greeting'],
+            }],
+            hasNext: false
           },
         });
       });
@@ -5048,6 +5052,7 @@ describe('useQuery Hook', () => {
                 { message: 'Hello again', __typename: 'Greeting' },
               ],
             },
+            hasNext: true
           },
         });
       });
@@ -5064,14 +5069,17 @@ describe('useQuery Hook', () => {
       setTimeout(() => {
         link.simulateResult({
           result: {
-            data: {
-              recipient: {
-                name: 'Alice',
-                __typename: 'Person',
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
               },
-              __typename: 'Greeting',
-            },
-            path: ['greetings', 0],
+              path: ['greetings', 0],
+            }],
+            hasNext: true,
           },
         });
       });
@@ -5092,14 +5100,17 @@ describe('useQuery Hook', () => {
       setTimeout(() => {
         link.simulateResult({
           result: {
-            data: {
-              recipient: {
-                name: 'Bob',
-                __typename: 'Person',
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Bob',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
               },
-              __typename: 'Greeting',
-            },
-            path: ['greetings', 1],
+              path: ['greetings', 1],
+            }],
+            hasNext: false
           },
         });
       });
@@ -5164,7 +5175,8 @@ describe('useQuery Hook', () => {
                 message: 'Hello world',
                 __typename: 'Greeting',
               },
-            }
+            },
+            hasNext: true
           },
         });
       });
@@ -5181,14 +5193,17 @@ describe('useQuery Hook', () => {
       setTimeout(() => {
         link.simulateResult({
           result: {
-            data: {
-              recipient: {
-                name: 'Alice',
-                __typename: 'Person',
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
               },
-              __typename: 'Greeting',
-            },
-            path: ['greeting'],
+              path: ['greeting'],
+            }],
+            hasNext: false
           },
         });
       });

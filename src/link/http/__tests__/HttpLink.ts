@@ -1284,7 +1284,7 @@ describe('HttpLink', () => {
       'Content-Type: application/json; charset=utf-8',
       'Content-Length: 58',
       '',
-      '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+      '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
       '-----',
     ].join("\r\n");
 
@@ -1328,10 +1328,12 @@ describe('HttpLink', () => {
               });
             } else if (i === 1) {
               expect(result).toEqual({
-                data: {
-                  name: 'stubby',
-                },
-                path: ['stub'],
+                incremental: [{
+                  data: {
+                    name: 'stubby',
+                  },
+                  path: ['stub'],
+                }],
                 hasNext: false,
               });
             }
@@ -1382,10 +1384,12 @@ describe('HttpLink', () => {
               });
             } else if (i === 1) {
               expect(result).toEqual({
-                data: {
-                  name: 'stubby',
-                },
-                path: ['stub'],
+                incremental: [{
+                  data: {
+                    name: 'stubby',
+                  },
+                  path: ['stub'],
+                }],
                 hasNext: false,
               });
             }

@@ -70,7 +70,7 @@ describe("multipart responses", () => {
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 58",
     "",
-    '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+    '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
     `--${BOUNDARY}--`,
   ].join("\r\n");
 
@@ -84,7 +84,7 @@ describe("multipart responses", () => {
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 58",
     "",
-    '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+    '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
     `-----`,
   ].join("\r\n");
 
@@ -98,10 +98,12 @@ describe("multipart responses", () => {
       hasNext: true,
     },
     {
-      data: {
-        name: "stubby",
-      },
-      path: ["stub"],
+      incremental: [{
+        data: {
+          name: "stubby",
+        },
+        path: ["stub"],
+      }],
       hasNext: false,
     },
   ];
@@ -318,9 +320,6 @@ describe("multipart responses", () => {
       const fetch = jest.fn(async () => ({
         status: 200,
         body,
-        // headers: new Headers({
-        //   "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-        // }),
         headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
       }));
       const link = new HttpLink({

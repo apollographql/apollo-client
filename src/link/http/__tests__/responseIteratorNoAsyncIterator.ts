@@ -9,8 +9,11 @@ import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
 import { Readable } from "stream";
 
 // As of Jest 26 there is no way to mock/unmock a module that is used indirectly
-// in a single test file, so these tests are a duplicate of responseIterator.ts
-// tests, but with `isAsyncIterableIterator: false
+// via a single test file.
+// These tests duplicate __tests__ / responseIterator.ts while mocking
+// isAsyncIterableIterator = false in order to test the integration of the
+// implementations inside /iterators via src/link/http/responseIterator.ts
+// which do not execute when isAsyncIterableIterator is true
 // See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
 
 jest.mock('../../../utilities/common/responseIterator', () => ({
@@ -79,7 +82,7 @@ describe("multipart responses", () => {
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 58",
     "",
-    '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+    '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
     `--${BOUNDARY}--`,
   ].join("\r\n");
 
@@ -93,7 +96,7 @@ describe("multipart responses", () => {
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 58",
     "",
-    '{"data":{"name":"stubby"},"path":["stub"],"hasNext":false}',
+    '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
     `-----`,
   ].join("\r\n");
 
@@ -107,10 +110,12 @@ describe("multipart responses", () => {
       hasNext: true,
     },
     {
-      data: {
-        name: "stubby",
-      },
-      path: ["stub"],
+      incremental: [{
+        data: {
+          name: "stubby",
+        },
+        path: ["stub"],
+      }],
       hasNext: false,
     },
   ];
@@ -222,32 +227,6 @@ describe("multipart responses", () => {
         body: stream,
         headers: new Headers({
           "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-        }),
-      }));
-      const link = new HttpLink({
-        fetch: fetch as any,
-      });
-
-      const observable = execute(link, { query: sampleDeferredQuery });
-      matchesResults(resolve, reject, observable, results1);
-    }
-  );
-
-  itAsync(
-    "can handle node stream bodies (array buffers)",
-    (resolve, reject) => {
-      const stream = Readable.from(
-        body2
-          .split("\r\n")
-          .map((line) => new TextEncoder().encode(line + "\r\n"))
-      );
-
-      const fetch = jest.fn(async () => ({
-        status: 200,
-        body: stream,
-        // if no boundary is specified, default to -
-        headers: new Headers({
-          "content-type": `multipart/mixed`,
         }),
       }));
       const link = new HttpLink({

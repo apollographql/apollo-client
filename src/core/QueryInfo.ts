@@ -362,27 +362,31 @@ export class QueryInfo {
       | "errorPolicy">,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
-    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+    const graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
 
-    if (result.path) {
-      if (!this.lastDiff || !result.data) {
-        // TODO: handle this case
-        throw new Error('TODO');
+    if (result.incremental) {
+      for (const incrementalResult of result.incremental) {
+        let { data, path, errors } = incrementalResult;
+        for (let i = path.length - 1; i >= 0; --i) {
+          data = { [path[i]]: data };
+        }
+        if (errors) {
+          for (const incrementalResultError of errors) {
+            graphQLErrors.push(incrementalResultError);
+          }
+        }
+        // TODO: handle extensions
+        result.data = mergeDeep(this.lastDiff?.diff.result, data);
+        result.incremental = undefined;
+        result.hasNext = undefined;
       }
-      let { diff } = this.lastDiff;
-      let { data, path } = result;
-      for (let i = path.length - 1; i >= 0; --i) {
-        // TODO: fix tsignore
-        // @ts-ignore
-        data = { [path[i]]: data };
-      }
-      result.data = mergeDeep(diff.result, data);
-      result.path = undefined;
     }
+
+    this.graphQLErrors = graphQLErrors;
 
     if (options.fetchPolicy === 'no-cache') {
       this.updateLastDiff(

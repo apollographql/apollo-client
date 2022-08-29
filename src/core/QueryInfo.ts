@@ -379,7 +379,6 @@ export class QueryInfo {
             graphQLErrors.push(incrementalResultError);
           }
         }
-        // TODO: handle extensions
         result.data = mergeDeep(this.lastDiff?.diff.result, data);
         result.incremental = undefined;
         result.hasNext = undefined;

@@ -68,7 +68,6 @@ export async function readMultipartBody<T = Record<string, unknown>>(
         const body = message.slice(i);
 
         // TODO: where should I be handling \r\n characters, presumably not here
-        // TODO: use readJsonBody here instead to handle network errors
         try {
           const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
           observer.next?.(result);
@@ -176,7 +175,6 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
             `Response not successful: Received status code ${response.status}`
           );
         }
-
         if (
           !Array.isArray(result) &&
           !hasOwnProperty.call(result, "data") &&

@@ -70,10 +70,7 @@ export async function readMultipartBody<T = Record<string, unknown>>(
         // TODO: where should I be handling \r\n characters, presumably not here
         // TODO: use readJsonBody here instead to handle network errors
         try {
-          const result = parseJsonBody<T>(
-            response,
-            body.replace("\r\n", "")
-          );
+          const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
           observer.next?.(result);
         } catch (err) {
           handleError(err, observer);
@@ -157,37 +154,14 @@ export function readJsonBody<T = Record<string, unknown>>(
   operation: Operation,
   observer: Observer<T>
 ) {
-  response
-    .text()
-    .then((bodyText) => parseJsonBody<T>(response, bodyText))
+  parseAndCheckHttpResponse(operation)(response)
     .then((result) => {
-      if (response.status >= 300) {
-        // Network error
-        throwServerError(
-          response,
-          result,
-          `Response not successful: Received status code ${response.status}`
-        );
-      }
-      if (
-        !Array.isArray(result) &&
-        !hasOwnProperty.call(result, "data") &&
-        !hasOwnProperty.call(result, "errors")
-      ) {
-        // Data error
-        throwServerError(
-          response,
-          result,
-          `Server response was missing for query '${operation.operationName}'.`
-        );
-      }
       observer.next?.(result);
       observer.complete?.();
     })
     .catch((err) => handleError(err, observer));
 }
 
-// TODO: refactor
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
   return (response: Response) =>
     response

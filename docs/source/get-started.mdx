@@ -88,7 +88,7 @@ You connect Apollo Client to React with the `ApolloProvider` component. Similar 
 In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest putting the `ApolloProvider` somewhere high in your app, above any component that might need to access GraphQL data.
 
 ```jsx title="index.js" {15-17}
-import { React } from 'react';
+import React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import App from './App';

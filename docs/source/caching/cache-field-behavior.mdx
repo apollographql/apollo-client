@@ -114,8 +114,6 @@ query personWithFullName {
 }
 ```
 
-If a field accepts arguments, the second parameter includes the values of those arguments. The following `read` function checks to see if the `maxLength` argument is provided when the `name` field is queried. If it is, the function returns only the first `maxLength` characters of the person's name. Otherwise, the person's full name is returned.
-
 You can define a `read` function for a field that isn't even defined in your schema. For example, the following `read` function enables you to query a `userId` field that is always populated with locally stored data:
 
 ```ts

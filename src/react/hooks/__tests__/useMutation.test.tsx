@@ -644,7 +644,7 @@ describe('useMutation Hook', () => {
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith(CREATE_TODO_DATA, { variables, onCompleted, onError });
+      expect(onCompleted).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
       expect(onError).toHaveBeenCalledTimes(0);
     });
 
@@ -698,7 +698,7 @@ describe('useMutation Hook', () => {
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(errors[0], { variables, onCompleted, onError });
+      expect(onError).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
     });
 
     it('should allow updating onError while mutation is executing', async () => {
@@ -763,7 +763,7 @@ describe('useMutation Hook', () => {
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onError1).toHaveBeenCalledTimes(1);
-      expect(onError1).toHaveBeenCalledWith(errors[0], { variables });
+      expect(onError1).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
     });
 
     it('should never allow onCompleted handler to be stale', async () => {
@@ -826,7 +826,7 @@ describe('useMutation Hook', () => {
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onCompleted1).toHaveBeenCalledTimes(1);
-      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, { variables });
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
     });
 
     it('should allow updating onCompleted while mutation is executing', async () => {
@@ -891,7 +891,7 @@ describe('useMutation Hook', () => {
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onCompleted1).toHaveBeenCalledTimes(1);
-      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, { variables });
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
     });
   });
 

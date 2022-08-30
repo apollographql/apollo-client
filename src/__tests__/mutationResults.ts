@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 
-import { ApolloClient } from '../core';
+import { ApolloClient, FetchResult } from '../core';
 import { InMemoryCache } from '../cache';
 import { ApolloLink } from '../link/core';
 import { Observable, ObservableSubscription as Subscription } from '../utilities';
@@ -1641,6 +1641,34 @@ describe('mutation results', () => {
         subscriptionHandle.unsubscribe();
         expect(error.message).toBe(`Hello... It's me.`);
       }).then(resolve, reject);
+    });
+
+    itAsync("data might be undefined in case of failure with errorPolicy = ignore", async (resolve, reject) => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(() => new Observable<FetchResult<{ foo: string }>>(observer => {
+          observer.next({
+            data: undefined,
+          });
+          observer.complete();
+        })).setOnError(reject),
+      });
+
+      const ignoreErrorsResult = await client.mutate({
+        mutation: gql`
+            mutation Foo {
+                foo
+            }
+        `,
+        fetchPolicy: "no-cache",
+        errorPolicy: "ignore",
+      });
+
+      expect(ignoreErrorsResult).toEqual({
+        data: undefined,
+      });
+
+      resolve();
     });
   });
 });

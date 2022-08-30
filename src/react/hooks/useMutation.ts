@@ -100,9 +100,8 @@ export function useMutation<
           setResult(ref.current.result = result);
         }
       }
-
-      ref.current.options?.onCompleted?.(response.data!);
-      executeOptions.onCompleted?.(response.data!);
+      ref.current.options?.onCompleted?.(response.data!, executeOptions);
+      executeOptions.onCompleted?.(response.data!, executeOptions);
       return response;
     }).catch((error) => {
       if (
@@ -123,8 +122,8 @@ export function useMutation<
       }
 
       if (ref.current.options?.onError || clientOptions.onError) {
-        ref.current.options?.onError?.(error);
-        executeOptions.onError?.(error);
+        ref.current.options?.onError?.(error, executeOptions);
+        executeOptions.onError?.(error, executeOptions);
         // TODO(brian): why are we returning this here???
         return { data: void 0, errors: error };
       }

@@ -137,8 +137,8 @@ export interface BaseMutationOptions<
 > {
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
-  onCompleted?: (data: TData) => void;
-  onError?: (error: ApolloError) => void;
+  onCompleted?: (data: TData, executeOptions: MutationFunctionOptions) => void;
+  onError?: (error: ApolloError, executeOptions: MutationFunctionOptions) => void;
   ignoreResults?: boolean;
 }
 

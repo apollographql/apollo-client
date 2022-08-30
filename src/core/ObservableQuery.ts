@@ -739,7 +739,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
             // users wouldn't want to be polling the cache directly. However, network-only and
             // no-cache are both useful for when the user wants to control whether or not the
             // polled results are written to the cache.
-            fetchPolicy: this.options.fetchPolicy === 'no-cache' ? 'no-cache' : 'network-only',
+            fetchPolicy: this.options.initialFetchPolicy === 'no-cache' ? 'no-cache' : 'network-only',
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();

@@ -136,6 +136,10 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.method = 'GET';
     }
 
+    if (operation.query.loc?.source.body.includes('@defer')) {
+      options.headers["content-type"] = "accept: multipart/mixed; deferSpec=20220822, application/json";
+    }
+
     if (options.method === 'GET') {
       const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
       if (parseError) {

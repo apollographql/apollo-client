@@ -1418,5 +1418,32 @@ describe('HttpLink', () => {
         },
       );
     });
+
+    itAsync('sets correct headers for deferred requests', (resolve, reject) => {
+      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+      execute(link, {
+        query: sampleDeferredQuery
+      }).subscribe(
+        makeCallback(resolve, reject, () => {
+          expect(fetch).toHaveBeenCalledWith(
+            '/graphql',
+            expect.objectContaining({
+              headers: {
+                accept: "*/*",
+                "content-type": "accept: multipart/mixed; deferSpec=20220822, application/json"
+              }
+            })
+          )
+        }),
+      );
+    });
   });
 });

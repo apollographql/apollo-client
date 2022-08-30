@@ -1437,8 +1437,8 @@ describe('HttpLink', () => {
             '/graphql',
             expect.objectContaining({
               headers: {
-                accept: "*/*",
-                "content-type": "accept: multipart/mixed; deferSpec=20220822, application/json"
+                "content-type": "application/json",
+                accept: "multipart/mixed; deferSpec=20220822, application/json"
               }
             })
           )

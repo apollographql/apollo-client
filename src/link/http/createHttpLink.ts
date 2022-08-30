@@ -137,7 +137,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     if (operation.query.loc?.source.body.includes('@defer')) {
-      options.headers["content-type"] = "accept: multipart/mixed; deferSpec=20220822, application/json";
+      options.headers.accept = "multipart/mixed; deferSpec=20220822, application/json";
     }
 
     if (options.method === 'GET') {

@@ -1568,7 +1568,7 @@ describe('General Mutation testing', () => {
       const checker = () => {
         setTimeout(() => {
           success = true;
-          expect(onCompletedFn).toHaveBeenCalledWith(data);
+          expect(onCompletedFn).toHaveBeenCalledWith(data, {});
         }, 100);
       };
 

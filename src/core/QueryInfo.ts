@@ -369,6 +369,7 @@ export class QueryInfo {
     this.reset();
 
     if ('incremental' in result && result.incremental) {
+      let mergedResult = this.lastDiff?.diff.result;
       for (const incrementalResult of result.incremental) {
         let { data, path, errors } = incrementalResult;
         for (let i = path.length - 1; i >= 0; --i) {
@@ -379,13 +380,15 @@ export class QueryInfo {
             graphQLErrors.push(incrementalResultError);
           }
         }
-        result.data = mergeDeep(this.lastDiff?.diff.result, data);
-        result.incremental = undefined;
-        result.hasNext = undefined;
+        mergedResult = mergeDeep(mergedResult, data);
       }
+      result.data = mergedResult;
+      result.incremental = undefined;
+      result.hasNext = undefined;
     }
 
     this.graphQLErrors = graphQLErrors;
+
 
     if (options.fetchPolicy === 'no-cache') {
       this.updateLastDiff(

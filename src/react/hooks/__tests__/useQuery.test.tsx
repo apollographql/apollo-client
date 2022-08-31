@@ -5133,6 +5133,156 @@ describe('useQuery Hook', () => {
       });
     });
 
+    it('should handle deferred queries in lists, merging arrays', async () => {
+      const query = gql`
+        query DeferVariation {
+          allProducts {
+            delivery {
+              ...MyFragment @defer
+            }
+            sku,
+            id
+          }
+        }
+        fragment MyFragment on DeliveryEstimates {
+          estimatedDelivery
+          fastestDelivery
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              allProducts: [
+                {
+                  __typename: "Product",
+                  delivery: {
+                    __typename: "DeliveryEstimates"
+                  },
+                  id: "apollo-federation",
+                  sku: "federation"
+                },
+                {
+                  __typename: "Product",
+                  delivery: {
+                    __typename: "DeliveryEstimates"
+                  },
+                  id: "apollo-studio",
+                  sku: "studio"
+                }
+              ]
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        allProducts: [
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates"
+            },
+            id: "apollo-federation",
+            sku: "federation"
+          },
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates"
+            },
+            id: "apollo-studio",
+            sku: "studio"
+          }
+        ]
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            hasNext: true,
+            incremental: [
+              {
+                data: {
+                  __typename: "DeliveryEstimates",
+                  estimatedDelivery: "6/25/2021",
+                  fastestDelivery: "6/24/2021",
+                },
+                path: [
+                  "allProducts",
+                  0,
+                  "delivery"
+                ]
+              },
+              {
+                data: {
+                  __typename: "DeliveryEstimates",
+                  estimatedDelivery: "6/25/2021",
+                  fastestDelivery: "6/24/2021",
+                },
+                path: [
+                  "allProducts",
+                  1,
+                  "delivery"
+                ]
+              },
+            ]
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        allProducts: [
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+              estimatedDelivery: "6/25/2021",
+              fastestDelivery: "6/24/2021"
+            },
+            id: "apollo-federation",
+            sku: "federation"
+          },
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+              estimatedDelivery: "6/25/2021",
+              fastestDelivery: "6/24/2021"
+            },
+            id: "apollo-studio",
+            sku: "studio"
+          }
+        ]
+      });
+    });
+
     it('should handle deferred queries with fetch policy no-cache', async () => {
       const query = gql`
         {

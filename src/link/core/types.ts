@@ -4,23 +4,37 @@ export { DocumentNode };
 import { Observable } from "../../utilities";
 
 export type Path = ReadonlyArray<string | number>;
+type Data<T> = T | null | undefined;
 
-export interface ExecutionPatchResult<
+export type ExecutionPatchResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>
-> extends ExecutionResult {
-  incremental?: {
-    // data and path must be present
-    // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
-    data: TData | null;
-    path: Path;
-    errors?: ReadonlyArray<GraphQLError>;
-    extensions?: TExtensions;
-  }[];
-  path?: Path;
+> = (
+  | {
+      errors?: ReadonlyArray<GraphQLError>;
+      extensions?: TExtensions;
+      // if data is present, incremental is not
+      incremental?: never;
+    }
+  | {
+      incremental?: {
+        // data and path must both be present
+        // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
+        data?: Data<TData>;
+        path: Path;
+        errors?: ReadonlyArray<GraphQLError>;
+        extensions?: TExtensions;
+      }[];
+      // Errors only exist for chunks, not at the top level
+      // https://github.com/robrichard/defer-stream-wg/discussions/50#discussioncomment-3466739
+      errors?: never;
+      extensions?: never;
+    }
+  ) & {
+  data?: Data<TData>;
   label?: string;
   hasNext?: boolean;
-}
+};
 
 export interface GraphQLRequest {
   query: DocumentNode;
@@ -39,15 +53,22 @@ export interface Operation {
   getContext: () => Record<string, any>;
 }
 
-export interface FetchResult<
+export interface SingleExecutionResult<
   TData = Record<string, any>,
   TContext = Record<string, any>,
   TExtensions = Record<string, any>
-> extends Omit<ExecutionPatchResult, "data" | "extensions"> {
-  data?: TData | null | undefined;
-  extensions?: TExtensions;
+> extends ExecutionResult<TData, TExtensions> {
+  data?: Data<TData>;
   context?: TContext;
 }
+
+export type FetchResult<
+  TData = Record<string, any>,
+  TContext = Record<string, any>,
+  TExtensions = Record<string, any>
+> =
+  | SingleExecutionResult<TData, TContext, TExtensions>
+  | ExecutionPatchResult<TData, TExtensions>;
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 

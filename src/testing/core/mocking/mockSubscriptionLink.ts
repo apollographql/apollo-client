@@ -1,12 +1,12 @@
 import { Observable } from '../../../utilities';
-import { ApolloLink, FetchResult, Operation, ExecutionPatchResult } from '../../../link/core';
+import { ApolloLink, FetchResult, Operation } from '../../../link/core';
 
 export interface MockedSubscription {
   request: Operation;
 }
 
 export interface MockedSubscriptionResult {
-  result?: FetchResult | ExecutionPatchResult;
+  result?: FetchResult;
   error?: Error;
   delay?: number;
 }

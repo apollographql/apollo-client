@@ -368,11 +368,11 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
 
-    if (result.incremental) {
+    if ('incremental' in result && result.incremental) {
       for (const incrementalResult of result.incremental) {
         let { data, path, errors } = incrementalResult;
         for (let i = path.length - 1; i >= 0; --i) {
-          data = { [path[i]]: data };
+          data = { [path[i]]: data } as unknown as T;
         }
         if (errors) {
           for (const incrementalResultError of errors) {

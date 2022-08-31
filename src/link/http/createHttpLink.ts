@@ -136,7 +136,8 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.method = 'GET';
     }
 
-    if (operation.query.loc?.source.body.includes('@defer')) {
+    // does not match custom directives beginning with @defer
+    if (/\@defer\b/i.test(operation.query.loc?.source.body || '')) {
       options.headers.accept = "multipart/mixed; deferSpec=20220822, application/json";
     }
 
@@ -167,7 +168,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
           operation.setContext({ response });
           const ctype = getContentTypeHeaders(response);
 
-          if (ctype !== null && /^multipart\/mixed/.test(ctype)) {
+          if (ctype !== null && /^multipart\/mixed/i.test(ctype)) {
             readMultipartBody(response, observer);
           } else {
             readJsonBody(response, operation, observer);

@@ -43,6 +43,17 @@ const sampleDeferredQuery = gql`
   }
 `;
 
+const sampleQueryCustomDirective = gql`
+  query SampleDeferredQuery {
+    stub {
+      id
+      ... on Stub @deferCustomDirective {
+        name
+      }
+    }
+  }
+`;
+
 function makeCallback<TArgs extends any[]>(
   resolve: () => void,
   reject: (error: Error) => void,
@@ -1419,7 +1430,7 @@ describe('HttpLink', () => {
       );
     });
 
-    itAsync('sets correct headers for deferred requests', (resolve, reject) => {
+    itAsync('sets correct accept header on request with deferred query', (resolve, reject) => {
       const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
       const fetch = jest.fn(async () => ({
         status: 200,
@@ -1439,6 +1450,35 @@ describe('HttpLink', () => {
               headers: {
                 "content-type": "application/json",
                 accept: "multipart/mixed; deferSpec=20220822, application/json"
+              }
+            })
+          )
+        }),
+      );
+    });
+
+    // ensure that custom directives beginning with '@defer..' do not trigger
+    // custom accept header for multipart responses
+    itAsync('sets does not set accept header on query with custom directive begging with @defer', (resolve, reject) => {
+      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+      execute(link, {
+        query: sampleQueryCustomDirective
+      }).subscribe(
+        makeCallback(resolve, reject, () => {
+          expect(fetch).toHaveBeenCalledWith(
+            '/graphql',
+            expect.objectContaining({
+              headers: {
+                accept: "*/*",
+                "content-type": "application/json",
               }
             })
           )

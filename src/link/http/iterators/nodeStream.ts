@@ -30,9 +30,12 @@ export default function nodeStreamIterator<T>(
 
   function onData(chunk: any) {
     if (error) return;
-    if (waiting.length)
-      // @ts-ignore
-      return waiting.shift()[0]({ value: chunk, done: false });
+    if (waiting.length) {
+      const shiftedArr = waiting.shift();
+      if (Array.isArray(shiftedArr) && shiftedArr[0]) {
+        return shiftedArr[0]({ value: chunk, done: false });
+      }
+    }
     data.push(chunk);
   }
   function onError(err: Error) {
@@ -69,8 +72,7 @@ export default function nodeStreamIterator<T>(
   function getNext(): Promise<IteratorResult<T, boolean | undefined>> {
     return new Promise(function (resolve, reject) {
       if (error) return reject(error);
-      // @ts-ignore
-      if (data.length) return resolve({ value: data.shift(), done: false });
+      if (data.length) return resolve({ value: data.shift() as T, done: false });
       if (done) return resolve({ value: undefined, done: true });
       waiting.push([resolve, reject]);
     });

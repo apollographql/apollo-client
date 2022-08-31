@@ -10,7 +10,7 @@ interface PromiseIterator<T> {
   [Symbol.asyncIterator]?(): AsyncIterator<T>;
 }
 
-export default function promiseIterator<T>(
+export default function promiseIterator<T = ArrayBuffer>(
   promise: Promise<ArrayBuffer>
 ): AsyncIterableIterator<T> {
   let resolved = false;
@@ -26,8 +26,7 @@ export default function promiseIterator<T>(
       return new Promise(function (resolve, reject) {
         promise
           .then(function (value) {
-            // @ts-ignore
-            resolve({ value, done: false });
+            resolve({ value: value as unknown as T, done: false });
           })
           .catch(reject);
       });

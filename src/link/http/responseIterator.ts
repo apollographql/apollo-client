@@ -10,7 +10,7 @@ import {
   isNodeResponse,
   isNodeReadableStream,
   isReadableStream,
-  isStreamableBlob
+  isStreamableBlob,
 } from "../../utilities/common/responseIterator";
 
 import asyncIterator from "./iterators/async";
@@ -21,9 +21,6 @@ import readerIterator from "./iterators/reader";
 export function responseIterator<T>(
   response: Response | NodeResponse
 ): AsyncIterableIterator<T> {
-  if (response === undefined)
-    throw new Error("Missing response for responseIterator");
-
   let body: unknown = response;
 
   if (isNodeResponse(response)) body = response.body;
@@ -45,6 +42,6 @@ export function responseIterator<T>(
   if (isNodeReadableStream(body)) return nodeStreamIterator<T>(body);
 
   throw new Error(
-    "Unknown body type for responseIterator. Maybe you are not passing a streamable response"
+    "Unknown body type for responseIterator. You may not be passing a streamable response."
   );
 }

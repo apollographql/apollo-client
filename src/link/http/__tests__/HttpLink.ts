@@ -1377,7 +1377,7 @@ describe('HttpLink', () => {
       const fetch = jest.fn(async () => ({
         status: 200,
         body: stream,
-        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        headers: new Headers({ 'Content-Type': 'multipart/mixed;boundary="-";deferSpec=20220824' }),
       }));
       const link = new HttpLink({
         fetch: fetch as any,

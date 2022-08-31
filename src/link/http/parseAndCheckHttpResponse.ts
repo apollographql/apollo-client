@@ -33,6 +33,8 @@ export async function readMultipartBody<T = Record<string, unknown>>(
           ?.substring(idx_boundary + 9)
           .trim()
           .replace(/['"]/g, "")
+          .replace(/\;(.*)/gm, "") // remove anything after ; char
+          // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
       : "-" // if no boundary is specified, default to -
   }`;
 
@@ -57,13 +59,15 @@ export async function readMultipartBody<T = Record<string, unknown>>(
         const i = message.indexOf("\r\n\r\n");
         const headers = parseHeaders(message.slice(0, i));
         const contentType = headers["content-type"];
-        if (contentType && contentType.indexOf("application/json") === -1) {
+        if (
+          contentType &&
+          contentType.toLowerCase().indexOf("application/json") === -1
+        ) {
           // TODO: handle unsupported chunk content type
           throw new Error("Unsupported patch content type");
         }
         const body = message.slice(i);
 
-        // TODO: where should I be handling \r\n characters, presumably not here
         try {
           const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
           observer.next?.(result);

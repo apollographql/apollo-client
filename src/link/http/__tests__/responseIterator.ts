@@ -320,7 +320,7 @@ describe("multipart responses", () => {
       const fetch = jest.fn(async () => ({
         status: 200,
         body,
-        headers: { "content-type": `multipart/mixed; boundary=${BOUNDARY}` },
+        headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
       }));
       const link = new HttpLink({
         fetch: fetch as any,

@@ -1,3 +1,4 @@
+import { Response as NodeResponse } from "node-fetch";
 import { responseIterator } from "./responseIterator";
 import { Operation } from "../core";
 import { throwServerError } from "../utils";
@@ -11,19 +12,15 @@ export type ServerParseError = Error & {
   bodyText: string;
 };
 
-export function getContentTypeHeaders(response: Response) {
+export function getContentTypeHeaders(response: Response | NodeResponse) {
   if (!response.headers) return null;
-  return typeof response.headers?.get === "function"
-    ? response.headers?.get("content-type")
-    : // @ts-ignore
-      response.headers["content-type"];
+  return response.headers?.get("content-type");
 }
 
 export async function readMultipartBody<T = Record<string, unknown>>(
   response: Response,
   observer: Observer<T>
 ) {
-  // TODO: What if TextDecoder isn’t defined globally?
   const decoder = new TextDecoder("utf-8");
   const ctype = getContentTypeHeaders(response);
   // Adapted from meros https://github.com/maraisr/meros/blob/main/src/node.ts
@@ -56,7 +53,6 @@ export async function readMultipartBody<T = Record<string, unknown>>(
         buffer.slice(0, bi),
         buffer.slice(bi + boundary.length),
       ];
-
       if (message.trim()) {
         const i = message.indexOf("\r\n\r\n");
         const headers = parseHeaders(message.slice(0, i));

@@ -150,7 +150,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
   options?: LazyQueryHookOptions<TData, TVariables>,
 ): [
-  (options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
+  (options?: LazyQueryHookOptions<TData, TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
   LazyQueryResult<TData, TVariables>
 ] {}
 ```

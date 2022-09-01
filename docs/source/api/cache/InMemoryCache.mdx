@@ -272,7 +272,7 @@ By specifying the ID of another cached object, you can modify arbitrary cached d
 </td>
 <td>
 
-If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call. If `false`, silences the broadcast of cache updates and prevents automatic query refresh.
 
 The default value is `true`.
 </td>
@@ -403,7 +403,7 @@ By specifying the ID of another cached object, you can modify arbitrary cached d
 </td>
 <td>
 
-If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.  If `false`, silences the broadcast of cache updates and prevents automatic query refresh.
 
 The default value is `true`.
 </td>
@@ -724,7 +724,7 @@ A map of any GraphQL variable names and values required by `fragment`.
 </td>
 <td>
 
-If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.  If `false`, silences the broadcast of cache updates and prevents automatic query refresh.
 
 The default value is `true`.
 </td>
@@ -862,7 +862,7 @@ A map of any GraphQL variable names and values required by `fragment`.
 </td>
 <td>
 
-If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.  If `false`, silences the broadcast of cache updates and prevents automatic query refresh.
 
 The default value is `true`.
 </td>
@@ -1021,7 +1021,7 @@ The default value is `false`.
 </td>
 <td>
 
-If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.
+If `true`, automatically refresh all active queries that depend on at least one field that's modified by this call.  If `false`, silences the broadcast of cache updates and prevents automatic query refresh.
 
 The default value is `true`.
 </td>
@@ -1243,7 +1243,7 @@ Otherwise, all instances of the field are removed for the cached object.
 </td>
 <td>
 
-If `true`, automatically refresh all active queries that depend on at least one field that's removed by this call.
+If `true`, automatically refresh all active queries that depend on at least one field that's removed by this call.  If `false`, silences the broadcast of cache updates and prevents automatic query refresh.
 
 The default value is `true`.
 </td>

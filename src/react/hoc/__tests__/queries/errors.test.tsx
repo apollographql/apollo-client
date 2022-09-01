@@ -46,7 +46,7 @@ describe('[queries] errors', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    class ErrorBoundary extends React.Component {
+    class ErrorBoundary extends React.Component<React.PropsWithChildren> {
       componentDidCatch(e: Error) {
         expect(e.message).toMatch(/bar is not a function/);
         done = true;

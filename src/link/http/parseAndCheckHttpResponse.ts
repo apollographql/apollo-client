@@ -22,22 +22,22 @@ export async function readMultipartBody<T = Record<string, unknown>>(
   observer: Observer<T>
 ) {
   const decoder = new TextDecoder("utf-8");
-  const ctype = getContentTypeHeaders(response);
-  // Adapted from meros https://github.com/maraisr/meros/blob/main/src/node.ts
-  // L91, 95-98
-  let idx_boundary = ctype?.indexOf("boundary=") || -1;
-  let boundary = `--${
-    !!~idx_boundary
-      ? // +9 for 'boundary='.length
-        ctype
-          ?.substring(idx_boundary + 9)
-          .trim()
-          .replace(/['"]/g, "")
-          .replace(/\;(.*)/gm, "") // remove anything after ; char
-      : // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
-        "-" // if no boundary is specified, default to -
-  }`;
+  const contentType = getContentTypeHeaders(response);
+  const delimiter = "boundary=";
 
+  // parse boundary value and ignore any subsequent name/value pairs after ;
+  // https://www.rfc-editor.org/rfc/rfc9110.html#name-parameters
+  // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
+  // if no boundary is specified, default to -
+  const boundaryVal = contentType?.includes(delimiter)
+    ? contentType
+        ?.substring(contentType?.indexOf(delimiter) + delimiter.length)
+        .replace(/['"]/g, "")
+        .replace(/\;(.*)/gm, "")
+        .trim()
+    : "-";
+
+  let boundary = `--${boundaryVal}`;
   let buffer = "";
   const iterator = responseIterator(response);
   let running = true;

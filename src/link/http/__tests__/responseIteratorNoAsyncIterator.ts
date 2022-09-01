@@ -16,9 +16,9 @@ import { Readable } from "stream";
 // which do not execute when isAsyncIterableIterator is true
 // See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
 
-jest.mock('../../../utilities/common/responseIterator', () => ({
+jest.mock("../../../utilities/common/responseIterator", () => ({
   __esModule: true,
-  ...jest.requireActual('../../../utilities/common/responseIterator'),
+  ...jest.requireActual("../../../utilities/common/responseIterator"),
   isAsyncIterableIterator: jest.fn(() => false),
 }));
 
@@ -72,7 +72,7 @@ describe("multipart responses", () => {
     globalThis.TextDecoder = originalTextDecoder;
   });
 
-  const body1 = [
+  const bodyCustomBoundary = [
     `--${BOUNDARY}`,
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 43",
@@ -86,7 +86,7 @@ describe("multipart responses", () => {
     `--${BOUNDARY}--`,
   ].join("\r\n");
 
-  const body2 = [
+  const bodyDefaultBoundary = [
     `---`,
     "Content-Type: application/json; charset=utf-8",
     "Content-Length: 43",
@@ -100,7 +100,23 @@ describe("multipart responses", () => {
     `-----`,
   ].join("\r\n");
 
-  const results1 = [
+  const bodyBatchedResults = [
+    "--graphql",
+    "content-type: application/json",
+    "",
+    '{"data":{"allProducts":[{"delivery":{"__typename":"DeliveryEstimates"},"sku":"federation","id":"apollo-federation","__typename":"Product"},{"delivery":{"__typename":"DeliveryEstimates"},"sku":"studio","id":"apollo-studio","__typename":"Product"}]},"hasNext":true}',
+    "--graphql",
+    "content-type: application/json",
+    "",
+    '{"hasNext":true,"incremental":[{"data":{"estimatedDelivery":"6/25/2021","fastestDelivery":"6/24/2021","__typename":"DeliveryEstimates"},"path":["allProducts",0,"delivery"]},{"data":{"estimatedDelivery":"6/25/2021","fastestDelivery":"6/24/2021","__typename":"DeliveryEstimates"},"path":["allProducts",1,"delivery"]}]}',
+    "--graphql",
+    "content-type: application/json",
+    "",
+    '{"hasNext":false}',
+    "--graphql--",
+  ].join("\r\n");
+
+  const results = [
     {
       data: {
         stub: {
@@ -110,20 +126,69 @@ describe("multipart responses", () => {
       hasNext: true,
     },
     {
-      incremental: [{
-        data: {
-          name: "stubby",
+      incremental: [
+        {
+          data: {
+            name: "stubby",
+          },
+          path: ["stub"],
         },
-        path: ["stub"],
-      }],
+      ],
       hasNext: false,
+    },
+  ];
+
+  const batchedResults = [
+    {
+      data: {
+        allProducts: [
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+            },
+            id: "apollo-federation",
+            sku: "federation",
+          },
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+            },
+            id: "apollo-studio",
+            sku: "studio",
+          },
+        ],
+      },
+      hasNext: true,
+    },
+    {
+      hasNext: true,
+      incremental: [
+        {
+          data: {
+            __typename: "DeliveryEstimates",
+            estimatedDelivery: "6/25/2021",
+            fastestDelivery: "6/24/2021",
+          },
+          path: ["allProducts", 0, "delivery"],
+        },
+        {
+          data: {
+            __typename: "DeliveryEstimates",
+            estimatedDelivery: "6/25/2021",
+            fastestDelivery: "6/24/2021",
+          },
+          path: ["allProducts", 1, "delivery"],
+        },
+      ],
     },
   ];
 
   itAsync("can handle whatwg stream bodies", (resolve, reject) => {
     const stream = new ReadableStream({
       async start(controller) {
-        const lines = body1.split("\r\n");
+        const lines = bodyCustomBoundary.split("\r\n");
         try {
           for (const line of lines) {
             controller.enqueue(line + "\r\n");
@@ -147,7 +212,7 @@ describe("multipart responses", () => {
     });
 
     const observable = execute(link, { query: sampleDeferredQuery });
-    matchesResults(resolve, reject, observable, results1);
+    matchesResults(resolve, reject, observable, results);
   });
 
   itAsync(
@@ -157,8 +222,8 @@ describe("multipart responses", () => {
         async start(controller) {
           let chunks: Array<string> = [];
           let chunkSize = 15;
-          for (let i = 0; i < body1.length; i += chunkSize) {
-            chunks.push(body1.slice(i, i + chunkSize));
+          for (let i = 0; i < bodyCustomBoundary.length; i += chunkSize) {
+            chunks.push(bodyCustomBoundary.slice(i, i + chunkSize));
           }
 
           try {
@@ -184,7 +249,7 @@ describe("multipart responses", () => {
       });
 
       const observable = execute(link, { query: sampleDeferredQuery });
-      matchesResults(resolve, reject, observable, results1);
+      matchesResults(resolve, reject, observable, results);
     }
   );
 
@@ -192,7 +257,7 @@ describe("multipart responses", () => {
     "can handle node stream bodies (strings) with default boundary",
     (resolve, reject) => {
       const stream = Readable.from(
-        body2.split("\r\n").map((line) => line + "\r\n")
+        bodyDefaultBoundary.split("\r\n").map((line) => line + "\r\n")
       );
 
       const fetch = jest.fn(async () => ({
@@ -208,7 +273,7 @@ describe("multipart responses", () => {
       });
 
       const observable = execute(link, { query: sampleDeferredQuery });
-      matchesResults(resolve, reject, observable, results1);
+      matchesResults(resolve, reject, observable, results);
     }
   );
 
@@ -217,8 +282,8 @@ describe("multipart responses", () => {
     (resolve, reject) => {
       let chunks: Array<string> = [];
       let chunkSize = 15;
-      for (let i = 0; i < body1.length; i += chunkSize) {
-        chunks.push(body1.slice(i, i + chunkSize));
+      for (let i = 0; i < bodyCustomBoundary.length; i += chunkSize) {
+        chunks.push(bodyCustomBoundary.slice(i, i + chunkSize));
       }
       const stream = Readable.from(chunks);
 
@@ -234,7 +299,7 @@ describe("multipart responses", () => {
       });
 
       const observable = execute(link, { query: sampleDeferredQuery });
-      matchesResults(resolve, reject, observable, results1);
+      matchesResults(resolve, reject, observable, results);
     }
   );
 
@@ -242,7 +307,7 @@ describe("multipart responses", () => {
     "can handle node stream bodies (array buffers)",
     (resolve, reject) => {
       const stream = Readable.from(
-        body2
+        bodyDefaultBoundary
           .split("\r\n")
           .map((line) => new TextEncoder().encode(line + "\r\n"))
       );
@@ -260,7 +325,33 @@ describe("multipart responses", () => {
       });
 
       const observable = execute(link, { query: sampleDeferredQuery });
-      matchesResults(resolve, reject, observable, results1);
+      matchesResults(resolve, reject, observable, results);
+    }
+  );
+
+  itAsync(
+    "can handle node stream bodies (array buffers) with batched results",
+    (resolve, reject) => {
+      const stream = Readable.from(
+        bodyBatchedResults
+          .split("\r\n")
+          .map((line) => new TextEncoder().encode(line + "\r\n"))
+      );
+
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        // if no boundary is specified, default to -
+        headers: new Headers({
+          "content-type": `multipart/mixed;boundary="graphql";deferSpec=20220824`,
+        }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      const observable = execute(link, { query: sampleDeferredQuery });
+      matchesResults(resolve, reject, observable, batchedResults);
     }
   );
 });

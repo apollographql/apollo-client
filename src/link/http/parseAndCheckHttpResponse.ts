@@ -34,8 +34,8 @@ export async function readMultipartBody<T = Record<string, unknown>>(
           .trim()
           .replace(/['"]/g, "")
           .replace(/\;(.*)/gm, "") // remove anything after ; char
-          // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
-      : "-" // if no boundary is specified, default to -
+      : // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
+        "-" // if no boundary is specified, default to -
   }`;
 
   let buffer = "";
@@ -70,7 +70,16 @@ export async function readMultipartBody<T = Record<string, unknown>>(
 
         try {
           const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
-          observer.next?.(result);
+          if (
+            Object.keys(result).length > 1 ||
+            "data" in result ||
+            "incremental" in result ||
+            "errors" in result
+          ) {
+            // for the last chunk with only `hasNext: false`,
+            // we don't need to call observer.next as there is no data/errors
+            observer.next?.(result);
+          }
         } catch (err) {
           handleError(err, observer);
         }

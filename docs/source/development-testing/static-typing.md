@@ -14,7 +14,7 @@ Apollo Client's `useQuery`, `useMutation` and `useSubscription` React hooks are 
 
 ### `useQuery`
 
-```jsx
+```tsx
 import React from 'react';
 import { useQuery, gql } from '@apollo/client';
 
@@ -79,7 +79,7 @@ export function RocketInventoryList() {
 
 ### `useMutation`
 
-```jsx
+```tsx
 import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
 
@@ -156,7 +156,7 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-```jsx
+```tsx
 import React from 'react';
 import { useSubscription, gql } from '@apollo/client';
 
@@ -228,13 +228,13 @@ This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subsc
 
 In previous versions of React Apollo, render prop components (`Query`, `Mutation` and `Subscription`) could be extended to add additional type information:
 
-```js
+```ts
 class SomeQuery extends Query<SomeData, SomeVariables> {}
 ```
 
 Since all class based render prop components have been converted to functional components, extending components in this manner is no longer possible. While we recommend switching over to use the new `useQuery`, `useMutation` and `useSubscription` hooks as soon as possible, if you're looking for a stop gap you can consider replacing your class with a wrapped and typed component:
 
-```jsx
+```tsx
 export const SomeQuery = () => (
   <Query<SomeData, SomeVariables> query={SOME_QUERY} /* ... */>
     {({ loading, error, data }) => { ... }}

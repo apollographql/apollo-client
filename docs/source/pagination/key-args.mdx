@@ -9,7 +9,7 @@ The Apollo Client cache can store multiple entries for a single schema field. By
 
 For example, consider this `Query.user` field:
 
-```graphql{3}
+```graphql {3}
 type Query {
   # Returns whichever User object corresponds to `id`
   user(id: ID!): User
@@ -18,7 +18,7 @@ type Query {
 
 If we query for `User`s with `id`s `1` and `2`, the Apollo Client cache stores entries for _both_ like so:
 
-```js{3,6}:title=Cache
+```js {3,6} title="Cache"
 {
   'ROOT_QUERY': {
     'user({"id":"1"})': {
@@ -43,7 +43,7 @@ Certain arguments _shouldn't_ cause the Apollo Client cache to store a separate 
 
 Consider this `Query.feed` field:
 
-```graphql{2}
+```graphql {2}
 type Query {
   feed(offset: Int, limit: Int, category: Category): [FeedItem!]
 }
@@ -65,7 +65,7 @@ query GetFeedItems {
 
 But because their argument values differ, these two lists of ten items are cached _separately_ by default. This means that when the second query completes, the returned items _aren't_ appended to the original list in the feed!
 
-```js{3-4,10-11}:title=Cache
+```js {3-4,10-11} title="Cache"
 {
   'ROOT_QUERY': {
     // First query
@@ -94,7 +94,7 @@ To help handle this case, we can [set key arguments](#setting-keyargs) for the f
 
 A **key argument** is an argument for a GraphQL field that's included in cache storage keys for that field. By default, _all_ GraphQL arguments are key arguments, as shown in our feed example:
 
-```js{3-4,10-11}:title=Cache
+```js {3-4,10-11} title="Cache"
 {
   'ROOT_QUERY': {
     // First query
@@ -117,7 +117,7 @@ A **key argument** is an argument for a GraphQL field that's included in cache s
 
 You can override this default behavior by defining a cache [field policy](../caching/cache-field-behavior) for a particular field:
 
-```js{5-7}
+```js {5-7}
 const cache = new InMemoryCache({
   typePolicies: {
     Query: {
@@ -213,7 +213,7 @@ When deciding which of a field's arguments to include in `keyArgs`, it's helpful
 
 If all arguments are key arguments (this is the default behavior), every distinct combination of argument values for a field results in a distinct cache entry. In other words, changing any argument value results in a different storage key, so the returned value is stored separately. We see this in our pagination example:
 
-```js{3-4,10-11}:title=Cache
+```js {3-4,10-11} title="Cache"
 {
   'ROOT_QUERY': {
     // First query
@@ -236,7 +236,7 @@ If all arguments are key arguments (this is the default behavior), every distinc
 
 With this approach, Apollo Client can't return a cached value for a field unless _all_ of the field's arguments match a previously cached result. This significantly reduces the cache's hit rate, but it also prevents the cache from returning an incorrect value when differences in arguments are relevant (as with our `User` example):
 
-```js{3,6}:title=Cache
+```js {3,6} title="Cache"
 {
   'ROOT_QUERY': {
     'user({"id":"1"})': {
@@ -259,7 +259,7 @@ This default behavior is often undesirable (especially for a paginated list), so
 
 Recall this `Query.feed` field from [Pagination issues](#pagination-issues):
 
-```graphql{2}
+```graphql {2}
 type Query {
   feed(offset: Int, limit: Int, category: Category): [FeedItem!]
 }

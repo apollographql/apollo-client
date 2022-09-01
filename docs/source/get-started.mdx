@@ -88,7 +88,7 @@ You connect Apollo Client to React with the `ApolloProvider` component. Similar 
 In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest putting the `ApolloProvider` somewhere high in your app, above any component that might need to access GraphQL data.
 
 ```jsx title="index.js" {15-17}
-import { React } from 'react';
+import React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import App from './App';
@@ -183,7 +183,7 @@ export default function App() {
 }
 ```
 
-When your app reloads, you should briefly see a loading indicator, followed by a list of locations and details about those locations! If you don't, you can compare your code against the [completed app on CodeSandbox](https://codesandbox.io/s/get-started-apollo-client-demo-bert8s).
+When your app reloads, you should briefly see a loading indicator, followed by a list of locations and details about those locations! If you don't, you can compare your code against the [completed app on CodeSandbox](https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/getting-started).
 
 Congrats, you just made your first component that renders with GraphQL data from Apollo Client! 🎉 Now you can try building more components that use `useQuery` and experiment with the concepts you just learned.
 

@@ -1,6 +1,6 @@
 [build]
   publish = "docs/public"
-  command = "npx typedoc src/index.ts --json docs/public/docs.json"
+  command = "npm run typedoc"
 
 [build.environment]
   NODE_VERSION = "16"

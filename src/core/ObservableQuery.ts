@@ -735,7 +735,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       if (this.pollingInfo) {
         if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
           this.reobserve({
-            fetchPolicy: "network-only",
+            // Most fetchPolicy options don't make sense to use in a polling context, as
+            // users wouldn't want to be polling the cache directly. However, network-only and
+            // no-cache are both useful for when the user wants to control whether or not the
+            // polled results are written to the cache.
+            fetchPolicy: this.options.initialFetchPolicy === 'no-cache' ? 'no-cache' : 'network-only',
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();
@@ -786,7 +790,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // if it did, it would definitely use a disposable Concast.
       newNetworkStatus === NetworkStatus.fetchMore ||
       // Polling uses a disposable Concast so the polling options (which force
-      // fetchPolicy to be "network-only") won't override the original options.
+      // fetchPolicy to be "network-only" or "no-cache") won't override the original options.
       newNetworkStatus === NetworkStatus.poll;
 
     // Save the old variables, since Object.assign may modify them below.

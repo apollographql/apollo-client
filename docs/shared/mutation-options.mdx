@@ -74,14 +74,14 @@ The default value is `none`, meaning that the mutation result includes error det
 
 ###### `onCompleted`
 
-`(data: TData | {}) => void`
+`(data?: TData, clientOptions?: BaseMutationOptions) => void`
 </td>
 
 <td>
 
 A callback function that's called when your mutation successfully completes with zero errors (or if `errorPolicy` is `ignore` and partial data is returned).
 
-This function is passed the mutation's result `data`.
+This function is passed the mutation's result `data` and any options passed to the mutation.
 
 </td>
 </tr>
@@ -91,14 +91,14 @@ This function is passed the mutation's result `data`.
 
 ###### `onError`
 
-`(error: ApolloError) => void`
+`(error: ApolloError, clientOptions?: BaseMutationOptions) => void`
 </td>
 
 <td>
 
 A callback function that's called when the mutation encounters one or more errors (unless `errorPolicy` is `ignore`).
 
-This function is passed an [`ApolloError`](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/errors/index.ts#L36-L39) object that contains either a `networkError` object or a `graphQLErrors` array, depending on the error(s) that occurred.
+This function is passed an [`ApolloError`](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/errors/index.ts#L36-L39) object that contains either a `networkError` object or a `graphQLErrors` array, depending on the error(s) that occurred, as well as any options passed the mutation.
 
 </td>
 </tr>

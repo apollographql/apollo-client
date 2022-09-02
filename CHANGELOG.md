@@ -1,3 +1,9 @@
+## Apollo Client 3.6.10 (unreleased)
+
+### Improvements
+
+- The client options (`variables`, `context`, etc.) used for `mutation` calls are now available as the second argument to the `onCompleted` and `onError` callback functions. <br/> [@MrDoomBringer](https://github.com/MrDoomBringer) in [#10052](https://github.com/apollographql/apollo-client/pull/10052)
+
 ## Apollo Client 3.6.9 (2022-06-21)
 
 ### Bug Fixes

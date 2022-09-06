@@ -135,11 +135,13 @@ export type OperationVariables = Record<string, any>;
 export type ApolloQueryResult<T> = {
   data: T;
   /**
-  * A list of all the GraphQLErrors that may have occured in a response.
+  * A list of any errors that occurred during server-side execution of a GraphQL operation.
+  * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
   */
   errors?: ReadonlyArray<GraphQLError>;
   /**
-  * The single Error object that is passed to onError, useQuery hooks, etc. This will contain both a NetworkError and any GraphQLErrors. 
+  * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls. 
+  * This will contain both a NetworkError field and any GraphQLErrors.
   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
   */
   error?: ApolloError;

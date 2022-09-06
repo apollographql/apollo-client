@@ -50,7 +50,7 @@ export interface UseFragmentResult<TData> {
   lastCompleteResult?: UseFragmentResult<TData>;
 }
 
-export function useFragment<TData, TVars>(
+export function useFragment_experimental<TData, TVars>(
   options: UseFragmentOptions<TData, TVars>,
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient();

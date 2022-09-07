@@ -62,7 +62,7 @@ export async function readMultipartBody<T = Record<string, unknown>>(
           contentType &&
           contentType.toLowerCase().indexOf("application/json") === -1
         ) {
-          throw new Error("Unsupported patch content type: application/json is required");
+          throw new Error("Unsupported patch content type: application/json is required.");
         }
         const body = message.slice(i);
 

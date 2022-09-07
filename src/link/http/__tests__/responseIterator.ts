@@ -10,6 +10,21 @@ import { Readable } from "stream";
 
 var Blob = require('blob-polyfill').Blob;
 
+function makeCallback<TArgs extends any[]>(
+  resolve: () => void,
+  reject: (error: Error) => void,
+  callback: (...args: TArgs) => any,
+) {
+  return function () {
+    try {
+      callback.apply(this, arguments);
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  } as typeof callback;
+}
+
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
     stub {
@@ -88,19 +103,19 @@ describe("multipart responses", () => {
     `-----`,
   ].join("\r\n");
 
-  // const bodyIncorrectChunkType = [
-  //   `---`,
-  //   "Content-Type: foo/bar; charset=utf-8",
-  //   "Content-Length: 43",
-  //   "",
-  //   '{"data":{"stub":{"id":"0"}},"hasNext":true}',
-  //   `---`,
-  //   "Content-Type: foo/bar; charset=utf-8",
-  //   "Content-Length: 58",
-  //   "",
-  //   '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
-  //   `-----`,
-  // ].join("\r\n");
+  const bodyIncorrectChunkType = [
+    `---`,
+    "Content-Type: foo/bar; charset=utf-8",
+    "Content-Length: 43",
+    "",
+    '{"data":{"stub":{"id":"0"}},"hasNext":true}',
+    `---`,
+    "Content-Type: foo/bar; charset=utf-8",
+    "Content-Length: 58",
+    "",
+    '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
+    `-----`,
+  ].join("\r\n");
 
   const bodyBatchedResults = [
     "--graphql",
@@ -410,71 +425,86 @@ describe("multipart responses", () => {
     }
   );
 
-  // itAsync.only(
-  //   "can handle unknown body type (error)",
-  //   (resolve, reject) => {
-  //     const body = 12345;
+  itAsync('throws error on non-streamable body', (resolve, reject) => {
+    // non-streamable body
+    const body = 12345;
+    const fetch = jest.fn(async () => ({
+      status: 200,
+      body,
+      headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
+    }));
+    const link = new HttpLink({
+      fetch: fetch as any,
+    });
+    const observable = execute(link, { query: sampleDeferredQuery });
+    const mockError = { throws: new Error('Unknown body type for responseIterator. Please pass a streamable response.') };
 
-  //     const fetch = jest.fn(async () => ({
-  //       status: 200,
-  //       body,
-  //       headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
-  //     }));
-  //     const link = new HttpLink({
-  //       fetch: fetch as any,
-  //     });
+    observable.subscribe(
+      () => reject('next should not have been called'),
+      makeCallback(resolve, reject, (error) => {
+        expect(error).toEqual(mockError.throws);
+      }),
+      () => reject('complete should not have been called'),
+    );
+  });
 
-  //     const observable = execute(link, { query: sampleDeferredQuery });
-  //     matchesResults(resolve, reject, observable, results);
-  //   }
-  // );
-
-  // itAsync.only(
-  //   "can handle unsupported patch content type (error)",
-  //   (resolve, reject) => {
-  //     const stream = Readable.from(
-  //       bodyIncorrectChunkType.split("\r\n").map((line) => line + "\r\n")
-  //     );
-
-  //     const fetch = jest.fn(async () => ({
-  //       status: 200,
-  //       body: stream,
-  //       headers: new Headers({ "content-type": `multipart/mixed;` }),
-  //     }));
-  //     const link = new HttpLink({
-  //       fetch: fetch as any,
-  //     });
-
-  //     const observable = execute(link, { query: sampleDeferredQuery });
-  //     matchesResults(resolve, reject, observable, results);
-  //   }
-  // );
-
-  // describe('without TextDecoder defined in the environment', () => {
-  //   beforeAll(() => {
-  //     originalTextDecoder = TextDecoder;
-  //     (globalThis as any).TextDecoder = undefined;
+  // test is still failing as observer.complete is called even after error is thrown
+  // itAsync('throws error on unsupported patch content type', (resolve, reject) => {
+  //   const stream = Readable.from(
+  //     bodyIncorrectChunkType.split("\r\n").map((line) => line + "\r\n")
+  //   );
+  //   const fetch = jest.fn(async () => ({
+  //     status: 200,
+  //     body: stream,
+  //     headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
+  //   }));
+  //   const link = new HttpLink({
+  //     fetch: fetch as any,
   //   });
+  //   const observable = execute(link, { query: sampleDeferredQuery });
+  //   const mockError = { throws: new Error('Unsupported patch content type: application/json is required') };
 
-  //   afterAll(() => {
-  //     globalThis.TextDecoder = originalTextDecoder;
-  //   });
+  //   observable.subscribe(
+  //     () => reject('next should not have been called'),
+  //     makeCallback(resolve, reject, (error) => {
+  //       expect(error).toEqual(mockError.throws);
+  //     }),
+  //     () => reject('complete should not have been called'),
+  //   );
+  // });
 
-  //   itAsync('throws an error if TextDecoder is undefined', (resolve, reject) => {
-  //     const body = new Blob(bodyCustomBoundary.split("\r\n").map(i => i + "\r\n"), { type: "application/text" });
-  //     body.stream = undefined;
+  describe('without TextDecoder defined in the environment', () => {
+    beforeAll(() => {
+      originalTextDecoder = TextDecoder;
+      (globalThis as any).TextDecoder = undefined;
+    });
 
-  //     const fetch = jest.fn(async () => ({
-  //       status: 200,
-  //       body,
-  //       headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
-  //     }));
-  //     const link = new HttpLink({
-  //       fetch: fetch as any,
-  //     });
+    afterAll(() => {
+      globalThis.TextDecoder = originalTextDecoder;
+    });
 
-  //     const observable = execute(link, { query: sampleDeferredQuery });
-  //     matchesResults(resolve, reject, observable, results);
-  //   })
-  // })
+    itAsync('throws error if TextDecoder not defined in the environment', (resolve, reject) => {
+      const stream = Readable.from(
+        bodyIncorrectChunkType.split("\r\n").map((line) => line + "\r\n")
+      );
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+      const observable = execute(link, { query: sampleDeferredQuery });
+      const mockError = { throws: new Error('TextDecoder must be defined in the environment: please import a polyfill.') };
+
+      observable.subscribe(
+        () => reject('next should not have been called'),
+        makeCallback(resolve, reject, (error) => {
+          expect(error).toEqual(mockError.throws);
+        }),
+        () => reject('complete should not have been called'),
+      );
+    });
+  })
 });

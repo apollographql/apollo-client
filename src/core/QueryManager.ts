@@ -6,6 +6,7 @@ type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
+import { isExecutionPatchIncrementalResult } from '../utilities/common/incrementalResult';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
 import {
@@ -434,7 +435,7 @@ export class QueryManager<TStore> {
                 returnPartialData: true,
               });
 
-              if (diff.complete) {
+              if (diff.complete && !(isExecutionPatchIncrementalResult(result))) {
                 result = { ...result, data: diff.result };
               }
             }

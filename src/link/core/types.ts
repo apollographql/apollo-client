@@ -6,35 +6,50 @@ import { Observable } from "../../utilities";
 export type Path = ReadonlyArray<string | number>;
 type Data<T> = T | null | undefined;
 
+
+interface ExecutionPatchResultBase {
+  label?: string;
+  hasNext?: boolean;
+}
+
+export interface ExecutionPatchInitialResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>
+> extends ExecutionPatchResultBase {
+  // if data is present, incremental is not
+  data: Data<TData>;
+  incremental?: never;
+  errors?: ReadonlyArray<GraphQLError>;
+  extensions?: TExtensions;
+}
+
+export interface ExecutionPatchIncrementalResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>
+> extends ExecutionPatchResultBase {
+  // the reverse is also true: if incremental is present,
+  // data (and errors and extensions) are not
+  incremental?: {
+    // data and path must both be present
+    // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
+    data: Data<TData>;
+    path: Path;
+    errors?: ReadonlyArray<GraphQLError>;
+    extensions?: TExtensions;
+  }[];
+  data?: never;
+  // Errors only exist for chunks, not at the top level
+  // https://github.com/robrichard/defer-stream-wg/discussions/50#discussioncomment-3466739
+  errors?: never;
+  extensions?: never;
+}
+
 export type ExecutionPatchResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>
-> = (
-  | {
-      errors?: ReadonlyArray<GraphQLError>;
-      extensions?: TExtensions;
-      // if data is present, incremental is not
-      incremental?: never;
-    }
-  | {
-      incremental?: {
-        // data and path must both be present
-        // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
-        data?: Data<TData>;
-        path: Path;
-        errors?: ReadonlyArray<GraphQLError>;
-        extensions?: TExtensions;
-      }[];
-      // Errors only exist for chunks, not at the top level
-      // https://github.com/robrichard/defer-stream-wg/discussions/50#discussioncomment-3466739
-      errors?: never;
-      extensions?: never;
-    }
-  ) & {
-  data?: Data<TData>;
-  label?: string;
-  hasNext?: boolean;
-};
+> =
+  | ExecutionPatchInitialResult<TData, TExtensions>
+  | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
 export interface GraphQLRequest {
   query: DocumentNode;

@@ -42,6 +42,6 @@ export function responseIterator<T>(
   if (isNodeReadableStream(body)) return nodeStreamIterator<T>(body);
 
   throw new Error(
-    "Unknown body type for responseIterator. You may not be passing a streamable response."
+    "Unknown body type for responseIterator. Please pass a streamable response."
   );
 }

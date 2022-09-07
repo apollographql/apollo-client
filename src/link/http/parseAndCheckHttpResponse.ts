@@ -1,4 +1,3 @@
-import { Response as NodeResponse } from "node-fetch";
 import { responseIterator } from "./responseIterator";
 import { Operation } from "../core";
 import { throwServerError } from "../utils";
@@ -12,17 +11,17 @@ export type ServerParseError = Error & {
   bodyText: string;
 };
 
-export function getContentTypeHeaders(response: Response | NodeResponse) {
-  if (!response.headers) return null;
-  return response.headers?.get("content-type");
-}
-
 export async function readMultipartBody<T = Record<string, unknown>>(
   response: Response,
   observer: Observer<T>
 ) {
+  if (TextDecoder === undefined) {
+    throw new Error(
+      "TextDecoder must be defined in the environment: please import a polyfill."
+    );
+  }
   const decoder = new TextDecoder("utf-8");
-  const contentType = getContentTypeHeaders(response);
+  const contentType = response.headers?.get('content-type');
   const delimiter = "boundary=";
 
   // parse boundary value and ignore any subsequent name/value pairs after ;
@@ -63,8 +62,7 @@ export async function readMultipartBody<T = Record<string, unknown>>(
           contentType &&
           contentType.toLowerCase().indexOf("application/json") === -1
         ) {
-          // TODO: handle unsupported chunk content type
-          throw new Error("Unsupported patch content type");
+          throw new Error("Unsupported patch content type: application/json is required");
         }
         const body = message.slice(i);
 
@@ -95,7 +93,8 @@ export function parseHeaders(headerText: string): Record<string, string> {
   headerText.split("\n").forEach((line) => {
     const i = line.indexOf(":");
     if (i > -1) {
-      const name = line.slice(0, i).trim();
+      // normalize headers to lowercase
+      const name = line.slice(0, i).trim().toLowerCase();
       const value = line.slice(i + 1).trim();
       headersInit[name] = value;
     }

@@ -7,7 +7,6 @@ import { Observable } from '../../utilities';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
 import {
-  getContentTypeHeaders,
   handleError,
   readMultipartBody,
   readJsonBody
@@ -166,12 +165,12 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
-          const ctype = getContentTypeHeaders(response);
+          const ctype = response.headers?.get('content-type');
 
           if (ctype !== null && /^multipart\/mixed/i.test(ctype)) {
-            readMultipartBody(response, observer);
+            return readMultipartBody(response, observer);
           } else {
-            readJsonBody(response, operation, observer);
+            return readJsonBody(response, operation, observer);
           }
         })
         .catch(err => handleError(err, observer));

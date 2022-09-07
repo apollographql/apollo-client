@@ -5500,7 +5500,7 @@ describe('useQuery Hook', () => {
       });
     });
 
-    it.only('should handle deferred queries with errors returned on the incremental batched result and errorPolicy "all"', async () => {
+    it('should handle deferred queries with errors returned on the incremental batched result and errorPolicy "all"', async () => {
       const query = gql`
         query {
           hero {

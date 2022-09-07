@@ -10,8 +10,8 @@ import { Readable } from "stream";
 
 // As of Jest 26 there is no way to mock/unmock a module that is used indirectly
 // via a single test file.
-// These tests duplicate __tests__ / responseIterator.ts while mocking
-// isAsyncIterableIterator = false in order to test the integration of the
+// These tests duplicate __tests__/responseIterator.ts while mocking
+// `isAsyncIterableIterator = false` in order to test the integration of the
 // implementations inside /iterators via src/link/http/responseIterator.ts
 // which do not execute when isAsyncIterableIterator is true
 // See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
@@ -343,7 +343,7 @@ describe("multipart responses", () => {
         body: stream,
         // if no boundary is specified, default to -
         headers: new Headers({
-          "content-type": `multipart/mixed;boundary="graphql";deferSpec=20220824`,
+          "Content-Type": `multipart/mixed;boundary="graphql";deferSpec=20220824`,
         }),
       }));
       const link = new HttpLink({

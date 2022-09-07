@@ -4,7 +4,7 @@ import { renderHook } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
-import { useFragment } from "../useFragment";
+import { useFragment_experimental as useFragment } from "../useFragment";
 import { MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {

@@ -3,7 +3,6 @@ import { execute } from "../../core/execute";
 import { HttpLink } from "../HttpLink";
 import { itAsync, subscribeAndCount } from "../../../testing";
 import type { Observable } from "zen-observable-ts";
-import { ObservableQuery } from "../../../core";
 import { TextEncoder, TextDecoder } from "util";
 import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
 import { Readable } from "stream";
@@ -46,7 +45,7 @@ function matchesResults<T>(
   // doesn’t have anything like that.
   subscribeAndCount(
     reject,
-    observable as unknown as ObservableQuery,
+    observable,
     (count, result) => {
       // subscribeAndCount is 1-indexed for some terrible reason.
       if (0 >= count || count > results.length) {

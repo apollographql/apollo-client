@@ -115,7 +115,7 @@
     "acorn": "8.7.1",
     "bundlesize": "0.18.1",
     "cross-fetch": "3.1.5",
-    "dd-trace": "^3.2.0",
+    "dd-trace": "https://github.com/DataDog/dd-trace-js/tarball/juan-fernandez/test-skipping-suites-demo",
     "fetch-mock": "9.11.0",
     "glob": "8.0.3",
     "graphql": "16.6.0",

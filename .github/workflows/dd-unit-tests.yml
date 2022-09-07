@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: run unit tests
-        run: npm run test
+        run: npm run test -- --silent --coverage
         env:
           NODE_OPTIONS: -r dd-trace/ci/init
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
@@ -30,5 +30,5 @@ jobs:
           DD_CIVISIBILITY_GIT_UPLOAD_ENABLED: 1
           DD_ENV: ci
           DD_SERVICE: apollo-client-tests
-          # DD_CIVISIBILITY_ITR_ENABLED: 1
+          DD_CIVISIBILITY_ITR_ENABLED: 1
 

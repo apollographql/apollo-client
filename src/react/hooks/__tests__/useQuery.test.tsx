@@ -5371,5 +5371,276 @@ describe('useQuery Hook', () => {
         },
       });
     });
+
+    it('should handle deferred queries with errors returned on the incremental batched result', async () => {
+      const query = gql`
+        query {
+          hero {
+            name
+            heroFriends {
+              id
+              name
+              ... @defer {
+                homeWorld
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              hero: {
+                name: "R2-D2",
+                heroFriends: [
+                  {
+                    id: "1000",
+                    name: "Luke Skywalker"
+                  },
+                  {
+                    id: "1003",
+                    name: "Leia Organa"
+                  }
+                ]
+              }
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [
+              {
+                path: ["hero", "heroFriends", 0],
+                errors: [
+                  new GraphQLError(
+                    "homeWorld for character with ID 1000 could not be fetched.",
+                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                  )
+                ],
+                data: {
+                  "homeWorld": null,
+                }
+              },
+              {
+                path: ["hero", "heroFriends", 1],
+                data: {
+                  "homeWorld": "Alderaan",
+                }
+              },
+            ],
+            "hasNext": false
+          }
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
+
+      // since default error policy is "none", we do *not* return partial results
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+    });
+
+    it.only('should handle deferred queries with errors returned on the incremental batched result and errorPolicy "all"', async () => {
+      const query = gql`
+        query {
+          hero {
+            name
+            heroFriends {
+              id
+              name
+              ... @defer {
+                homeWorld
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { errorPolicy: "all" }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              hero: {
+                name: "R2-D2",
+                heroFriends: [
+                  {
+                    id: "1000",
+                    name: "Luke Skywalker"
+                  },
+                  {
+                    id: "1003",
+                    name: "Leia Organa"
+                  }
+                ]
+              }
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            label: 'testLabel',
+            extensions: {
+              thing1: 'foo',
+              thing2: 'bar',
+            },
+            incremental: [
+              {
+                path: ["hero", "heroFriends", 0],
+                errors: [
+                  new GraphQLError(
+                    "homeWorld for character with ID 1000 could not be fetched.",
+                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                  )
+                ],
+                data: {
+                  "homeWorld": null,
+                }
+              },
+              {
+                path: ["hero", "heroFriends", 1],
+                data: {
+                  "homeWorld": "Alderaan",
+                }
+              },
+            ],
+            "hasNext": false
+          }
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      // @ts-ignore
+      expect(result.current.label).toBe(undefined);
+      // @ts-ignore
+      expect(result.current.extensions).toBe(undefined);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
+
+      // since default error policy is "all", we *do* return partial results
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              // the only difference with the previous test
+              // is that homeWorld is populated since errorPolicy: all
+              // populates both partial data and error.graphQLErrors
+              homeWorld: null,
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              // homeWorld is populated due to errorPolicy: all
+              homeWorld: "Alderaan",
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+    });
   });
 });

@@ -368,7 +368,7 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
 
-    if ('incremental' in result && result.incremental) {
+    if ('incremental' in result && isNonEmptyArray(result.incremental)) {
       let mergedResult = this.lastDiff?.diff.result;
       for (const incrementalResult of result.incremental) {
         let { data, path, errors } = incrementalResult;
@@ -384,7 +384,9 @@ export class QueryInfo {
       }
       result.data = mergedResult;
       result.incremental = undefined;
-      result.hasNext = undefined;
+      if ('label' in result) result.label = undefined;
+      if ('hasNext' in result) result.hasNext = undefined;
+      if ('extensions' in result) result.extensions = undefined;
     }
 
     this.graphQLErrors = graphQLErrors;

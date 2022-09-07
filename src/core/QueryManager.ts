@@ -1047,7 +1047,20 @@ export class QueryManager<TStore> {
       ),
 
       result => {
-        const hasErrors = isNonEmptyArray(result.errors);
+        const graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+
+        if ('incremental' in result && isNonEmptyArray(result.incremental)) {
+          for (const incrementalResult of result.incremental) {
+            let { errors } = incrementalResult;
+            if (errors) {
+              for (const incrementalResultError of errors) {
+                graphQLErrors.push(incrementalResultError);
+              }
+            }
+          }
+        }
+
+        const hasErrors = isNonEmptyArray(graphQLErrors);
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.
@@ -1055,7 +1068,7 @@ export class QueryManager<TStore> {
           if (hasErrors && options.errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
-              graphQLErrors: result.errors,
+              graphQLErrors,
             }));
           }
           queryInfo.markResult(result, options, cacheWriteBehavior);
@@ -1069,7 +1082,7 @@ export class QueryManager<TStore> {
         };
 
         if (hasErrors && options.errorPolicy !== "ignore") {
-          aqr.errors = result.errors;
+          aqr.errors = graphQLErrors;
           aqr.networkStatus = NetworkStatus.error;
         }
 

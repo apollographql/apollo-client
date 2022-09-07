@@ -12,6 +12,7 @@ import {
   ValueNode,
   ASTNode,
   visit,
+  BREAK,
 } from 'graphql';
 
 export type DirectiveInfo = {
@@ -55,9 +56,21 @@ export function getDirectiveNames(root: ASTNode) {
 }
 
 export function hasDirectives(names: string[], root: ASTNode) {
-  return getDirectiveNames(root).some(
-    (name: string) => names.indexOf(name) > -1,
-  );
+  const nameSet = new Set(names);
+  const nameCount = nameSet.size;
+
+  visit(root, {
+    Directive(node) {
+      if (nameSet.delete(node.name.value)) {
+        // We can abandon the traversal early as soon as we encounter any of the
+        // directives in the names array, since hasDirectives returns true when
+        // any (not necessarily all) of the named directives are found.
+        return BREAK;
+      }
+    },
+  });
+
+  return nameSet.size < nameCount;
 }
 
 export function hasClientExports(document: DocumentNode) {

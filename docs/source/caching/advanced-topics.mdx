@@ -106,6 +106,60 @@ export class Foo extends Component {
 export default withApollo(Foo);
 ```
 
+## TypePolicy inheritence
+
+JavaScript developers will be familiar with the idea of [inheritance](https://en.m.wikipedia.org/wiki/Inheritance_(object-oriented_programming)) from the `extends` clause of `class` declarations, or possibly from dealing with prototype chains created by `Object.create`.
+
+Inheritance is a powerful code-sharing tool, and it works well with Apollo Client for several reasons:
+
+ * `InMemoryCache` already knows about the supertype-subtype relationships (_interfaces and unions_) in your schema, thanks to `possibleTypes`, so no additional configuration is necessary to provide that information.
+
+ * Inheritance allows a supertype to provide default configuration values to all its subtypes, including `keyFields` and individual field policies, which can be selectively overridden by subtypes that want something different.
+
+ * A single subtype can have multiple supertypes in a GraphQL schema, which is difficult to model using the single inheritance model of classes or prototypes. In other words, supporting multiple inheritance in JavaScript requires building a system something like this one, rather than just reusing built-in language features.
+
+ * Developers can add their own client-only supertypes to the `possibleTypes` map, as a way of reusing behavior across types, even if their schema knows nothing about those supertypes.
+
+ * The `possibleTypes` map is currently used only for fragment matching purposes, which is an important but fairly small part of what the client does. Inheritance adds another compelling use for `possibleTypes`, and should drastically reduce repetition of `typePolicies` when used effectively.
+
+Here's how type policy inheritance works for `InMemoryCache`, considering the example below:
+
+```ts
+const cache = new InMemoryCache({
+  possibleTypes: {
+    Reptile: ["Snake", "Turtle"],
+    Snake: ["Python", "Viper", "Cobra"],
+    Viper: ["Cottonmouth", "DeathAdder"],
+  },
+
+  typePolicies: {
+    Reptile: {
+      // Suppose all our reptiles are captive, and have a tag with an ID.
+      keyFields: ["tagId"],
+      fields: {
+        // Scientific name-related logic can be shared among Reptile subtypes.
+        scientificName: {
+          merge(_, incoming) {
+            // Normalize all scientific names to lower case.
+            return incoming.toLowerCase();
+          },
+        },
+      },
+    },
+
+    Snake: {
+      fields: {
+        // Default to a truthy non-boolean value if we don't know
+        // whether this snake is venomous.
+        venomous(status = "unknown") {
+          return status;
+        },
+      },
+    },
+  },
+});
+```
+
 ## Refetching queries after a mutation
 
 In certain cases, writing an `update` function to [update the cache after a mutation](../data/mutations/#updating-local-data) can be complex, or even impossible if the mutation doesn't return modified fields.

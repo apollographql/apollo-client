@@ -702,14 +702,15 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
+      const wrapper: React.FC<React.PropsWithChildren<{ query: DocumentNode }>> = ({ children }) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ query }) => useQuery(query, { pollInterval: 10 }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { query: query1 },
         },
       );
@@ -1921,15 +1922,15 @@ describe('useQuery Hook', () => {
           },
         },
       ];
-
+      const wrapper: React.FC<React.PropsWithChildren<{ id: number }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ id }) => useQuery(query, { variables: { id } }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { id: 1 },
         },
       );
@@ -2190,15 +2191,15 @@ describe('useQuery Hook', () => {
       ];
 
       const onCompleted = jest.fn();
-
+      const wrapper: React.FC<React.PropsWithChildren<{ variables: { first: number } }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ variables }) => useQuery(query, { variables, onCompleted }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: {
             variables: { first: 1 },
           },
@@ -3717,14 +3718,15 @@ describe('useQuery Hook', () => {
           result: { data: { hello: 'world' } },
         },
       ];
+      const wrapper: React.FC<React.PropsWithChildren<{ fetchPolicy: any }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { fetchPolicy: 'standby' as any },
         },
       );
@@ -3799,6 +3801,11 @@ describe('useQuery Hook', () => {
       const correctInitialFetchPolicy: WatchQueryFetchPolicy =
         "cache-and-network";
 
+      const wrapper: React.FC<React.PropsWithChildren<{ skip: boolean }>> = ({ children }) => (
+        <ApolloProvider client={client}>
+          {children}
+        </ApolloProvider>
+      );
       const { result, waitForNextUpdate, rerender } = renderHook<{
         skip: boolean;
       }, QueryResult>(
@@ -3813,11 +3820,7 @@ describe('useQuery Hook', () => {
           initialProps: {
             skip: true,
           },
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>
-              {children}
-            </ApolloProvider>
-          ),
+          wrapper,
         },
       );
 

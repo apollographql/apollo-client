@@ -261,13 +261,13 @@ This function returns _another_ function that you can call to terminate the subs
 
 ###### `updateQuery`
 
-`(previousResult: TData, options: { variables: TVariables }) => TData`
+`(mapFn: (previousResult: TData, options: { variables: TVariables }) => TData) => void`
 </td>
 
 <td>
 
 A function that enables you to update the query's cached result without executing a followup GraphQL operation.
-
+See [using updateQuery and updateFragment](/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
 </td>
 </tr>
 

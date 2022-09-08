@@ -55,6 +55,16 @@ export function getDirectiveNames(root: ASTNode) {
   return names;
 }
 
+export const hasAnyDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, false);
+
+export const hasAllDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, true);
+
 export function hasDirectives(
   names: string[],
   root: ASTNode,

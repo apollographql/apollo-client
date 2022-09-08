@@ -2,6 +2,9 @@
 
 ### New Features
 
+- Implement preliminary support for the [`@defer` directive](https://github.com/graphql/graphql-spec/pull/742). <br/>
+  [@alessbell](https://github.com/alessbell) and [@benjamn](https://github.com/benjamn) in [#10018](https://github.com/apollographql/apollo-client/pull/10018)
+
 - Implement `useFragment` hook, which represents a lightweight live binding into the `ApolloCache`, and never triggers network requests of its own. <br/>
   [@benjamn](https://github.com/benjamn) in [#8782](https://github.com/apollographql/apollo-client/pull/8782)
 

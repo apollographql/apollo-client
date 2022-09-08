@@ -2,7 +2,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
-import { mergeDeep } from "../utilities"
+import { DeepMerger } from "../utilities"
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
@@ -371,7 +371,8 @@ export class QueryInfo {
     this.reset();
 
     if ('incremental' in result && isNonEmptyArray(result.incremental)) {
-      let mergedResult = this.getDiff().result;
+      let mergedData = this.getDiff().result;
+      const merger = new DeepMerger();
       result.incremental.forEach(({ data, path, errors }) => {
         for (let i = path.length - 1; i >= 0; --i) {
           const key = path[i];
@@ -383,9 +384,9 @@ export class QueryInfo {
         if (errors) {
           graphQLErrors.push(...errors);
         }
-        mergedResult = mergeDeep(mergedResult, data);
+        mergedData = merger.merge(mergedData, data);
       });
-      result.data = mergedResult;
+      result.data = mergedData;
     }
 
     this.graphQLErrors = graphQLErrors;

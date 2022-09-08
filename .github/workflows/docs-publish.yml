@@ -8,6 +8,9 @@ on:
     paths:
       - docs/**
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     uses: apollographql/docs/.github/workflows/publish.yml@main

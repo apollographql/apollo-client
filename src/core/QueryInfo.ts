@@ -371,7 +371,7 @@ export class QueryInfo {
     this.reset();
 
     if ('incremental' in result && isNonEmptyArray(result.incremental)) {
-      let mergedResult = this.lastDiff?.diff.result;
+      let mergedResult = this.getDiff().result;
       result.incremental.forEach(({ data, path, errors }) => {
         for (let i = path.length - 1; i >= 0; --i) {
           const key = path[i];

@@ -374,7 +374,11 @@ export class QueryInfo {
       let mergedResult = this.lastDiff?.diff.result;
       result.incremental.forEach(({ data, path, errors }) => {
         for (let i = path.length - 1; i >= 0; --i) {
-          data = { [path[i]]: data } as unknown as T;
+          const key = path[i];
+          const isNumericKey = !isNaN(+key);
+          const parent: Record<string | number, any> = isNumericKey ? [] : {};
+          parent[key] = data;
+          data = parent as typeof data;
         }
         if (errors) {
           graphQLErrors.push(...errors);
@@ -388,7 +392,6 @@ export class QueryInfo {
     }
 
     this.graphQLErrors = graphQLErrors;
-
 
     if (options.fetchPolicy === 'no-cache') {
       this.updateLastDiff(

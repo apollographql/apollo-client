@@ -19,12 +19,14 @@ query PersonQuery($personId: ID!) {
     firstName
     lastName
 
-    # Friends (slow)
+    # highlight-start
+    # Friend fields (slower)
     ... on User @defer {
       friends {
         id
       }
     }
+    # highlight-end
   }
 }
 ```

@@ -4,7 +4,7 @@ import { cloneDeep } from 'lodash';
 import { shouldInclude, hasDirectives } from '../directives';
 import { getQueryDefinition } from '../getFromAST';
 
-describe('hasDirective', () => {
+describe('hasDirectives', () => {
   it('should allow searching the ast for a directive', () => {
     const query = gql`
       query Simple {
@@ -87,6 +87,191 @@ describe('hasDirective', () => {
     `;
     expect(hasDirectives(['live'], query)).toBe(true);
     expect(hasDirectives(['defer'], query)).toBe(false);
+  });
+
+  it('works with both any and all semantics', () => {
+    expect(
+      hasDirectives(['client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            ... on Meeting @defer {
+              room { size }
+            }
+          }
+        }
+      `, false) // This false forces the default behavior (any)
+    ).toBe(true);
+
+    expect(
+      hasDirectives(['client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            room { size }
+          }
+        }
+      `, false) // This false forces the default behavior (any)
+    ).toBe(false);
+
+    expect(
+      hasDirectives(['client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            room {
+              size
+              iAmPresent @client
+            }
+          }
+        }
+      `, false) // This false forces the default behavior (any)
+    ).toBe(true);
+
+    expect(
+      hasDirectives(['client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            ... on Meeting @defer {
+              room { size }
+            }
+          }
+        }
+      `, true) // This true requires all directives to be present
+    ).toBe(false);
+
+    expect(
+      hasDirectives(['client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            room { size }
+          }
+        }
+      `, true) // This true requires all directives to be present
+    ).toBe(false);
+
+    expect(
+      hasDirectives(['client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            room {
+              size
+              iAmPresent @client
+            }
+          }
+        }
+      `, true) // This true requires all directives to be present
+    ).toBe(false);
+
+    expect(
+      hasDirectives(['client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            room {
+              iAmPresent @client
+              ... on Room @defer {
+                size
+              }
+            }
+          }
+        }
+      `, true) // This true requires all directives to be present
+    ).toBe(true);
+
+    expect(
+      hasDirectives(['live', 'client', 'defer'], gql`
+        query {
+          meetings {
+            id
+            room {
+              iAmPresent @client
+              ... @defer {
+                size
+              }
+            }
+          }
+        }
+      `, true) // This true requires all directives to be present
+    ).toBe(false);
+
+    expect(
+      hasDirectives(['live', 'client', 'defer'], gql`
+        query @live {
+          meetings {
+            room {
+              iAmPresent @client
+              ... on Room @defer {
+                size
+              }
+            }
+            id
+          }
+        }
+      `, true) // This true requires all directives to be present
+    ).toBe(true);
+  });
+
+  it('works when names are duplicated', () => {
+    expect(
+      hasDirectives(['client', 'client', 'client'], gql`
+        query {
+          fromClient @client {
+            asdf
+            foo
+          }
+        }
+      `)
+    ).toBe(true);
+
+    expect(
+      hasDirectives(['client', 'client', 'client'], gql`
+        query {
+          fromClient @client {
+            asdf
+            foo
+          }
+        }
+      `, true) // This true requires all directives to be present
+    ).toBe(true);
+
+    expect(
+      hasDirectives(['live', 'live', 'defer'], gql`
+        query {
+          fromClient @client {
+            asdf
+            foo @include(if: true)
+          }
+        }
+      `)
+    ).toBe(false);
+
+    expect(
+      hasDirectives(['live', 'live', 'defer'], gql`
+        query {
+          fromClient @client {
+            asdf
+            foo @include(if: true)
+          }
+        }
+      `, true)
+    ).toBe(false);
+
+    expect(
+      hasDirectives(['live', 'live', 'defer'], gql`
+        query @live {
+          fromClient @client {
+            ... @defer {
+              asdf
+              foo @include(if: true)
+            }
+          }
+        }
+      `, true)
+    ).toBe(true);
   });
 });
 

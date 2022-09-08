@@ -13,9 +13,9 @@ export function isReadableStream(value: any): value is ReadableStream<any> {
 export function isAsyncIterableIterator(
   value: any
 ): value is AsyncIterableIterator<any> {
-  return (
+  return !!(
     canUseAsyncIteratorSymbol &&
-    !!(value as AsyncIterableIterator<any>)[Symbol.asyncIterator]
+    (value as AsyncIterableIterator<any>)[Symbol.asyncIterator]
   );
 }
 

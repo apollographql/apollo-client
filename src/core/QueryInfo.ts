@@ -370,18 +370,15 @@ export class QueryInfo {
 
     if ('incremental' in result && isNonEmptyArray(result.incremental)) {
       let mergedResult = this.lastDiff?.diff.result;
-      for (const incrementalResult of result.incremental) {
-        let { data, path, errors } = incrementalResult;
+      result.incremental.forEach(({ data, path, errors }) => {
         for (let i = path.length - 1; i >= 0; --i) {
           data = { [path[i]]: data } as unknown as T;
         }
         if (errors) {
-          for (const incrementalResultError of errors) {
-            graphQLErrors.push(incrementalResultError);
-          }
+          graphQLErrors.push(...errors);
         }
         mergedResult = mergeDeep(mergedResult, data);
-      }
+      });
       result.data = mergedResult;
       result.incremental = undefined;
       if ('label' in result) result.label = undefined;

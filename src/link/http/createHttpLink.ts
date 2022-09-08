@@ -3,7 +3,7 @@ import '../../utilities/globals';
 import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../core';
-import { Observable } from '../../utilities';
+import { Observable, hasDirectives } from '../../utilities';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
 import {
@@ -136,7 +136,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     // does not match custom directives beginning with @defer
-    if (/\@defer\b/i.test(operation.query.loc?.source.body || '')) {
+    if (hasDirectives(['defer'], operation.query)) {
       options.headers.accept = "multipart/mixed; deferSpec=20220824, application/json";
     }
 

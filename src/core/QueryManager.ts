@@ -1048,17 +1048,16 @@ export class QueryManager<TStore> {
       ),
 
       result => {
-        const graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+        const graphQLErrors = isNonEmptyArray(result.errors)
+          ? result.errors.slice(0)
+          : [];
 
         if ('incremental' in result && isNonEmptyArray(result.incremental)) {
-          for (const incrementalResult of result.incremental) {
-            let { errors } = incrementalResult;
-            if (errors) {
-              for (const incrementalResultError of errors) {
-                graphQLErrors.push(incrementalResultError);
-              }
+          result.incremental.forEach(incrementalResult => {
+            if (incrementalResult.errors) {
+              graphQLErrors.push(...incrementalResult.errors);
             }
-          }
+          });
         }
 
         const hasErrors = isNonEmptyArray(graphQLErrors);

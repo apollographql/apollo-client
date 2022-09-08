@@ -5,7 +5,7 @@ description: The @defer directive and Apollo Client
 
 > ⚠️ **Defer is a [Stage 1 GraphQL specification proposal](https://github.com/graphql/graphql-spec/blob/main/CONTRIBUTING.md#stage-1-proposal).** Before it reaches acceptance, it might still change in backward incompatible ways. If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md)
 
-Apollo Web Client supports [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md), which allows receiving the fields of certain fragments of a query asynchronously.
+Beginning with version REPLACE_ME, Apollo Web Client provides beta support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md), which enables your queries to receive data for specific fields asynchronously. This is helpful whenever some fields in a query take much longer to resolve than the others.
 
 For instance consider a service where retrieving basic information from a user is fast, but retrieving the user's friends may take more time. In that case it would make sense to display the basic information in the UI as soon as they arrive, and display a loading indicator in the UI while waiting for the friends.
 

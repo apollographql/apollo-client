@@ -386,9 +386,6 @@ export class QueryInfo {
         mergedResult = mergeDeep(mergedResult, data);
       });
       result.data = mergedResult;
-      result.incremental = undefined;
-      if ('hasNext' in result) result.hasNext = undefined;
-      if ('extensions' in result) result.extensions = undefined;
     }
 
     this.graphQLErrors = graphQLErrors;

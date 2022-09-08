@@ -896,7 +896,7 @@ describe("nextFetchPolicy", () => {
       }).catch(reject);
 
       // Changing variables resets the fetchPolicy to its initial value.
-      expect(observable.options.fetchPolicy).toBe("network-only");
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
     } else if (count === 3) {
       expect(result.loading).toBe(false);

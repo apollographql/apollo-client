@@ -101,21 +101,17 @@ export class DeepMerger<TContextArgs extends any[]> {
 
   public shallowCopyForMerge<T>(value: T): T {
     if (isNonNullObject(value)) {
-      if (this.pastCopies.has(value)) {
-        // In order to reuse a past copy, it must be mutable, but copied objects
-        // can sometimes be frozen while this DeepMerger is still active.
-        if (!Object.isFrozen(value)) return value;
-        this.pastCopies.delete(value);
+      if (!this.pastCopies.has(value)) {
+        if (Array.isArray(value)) {
+          value = (value as any).slice(0);
+        } else {
+          value = {
+            __proto__: Object.getPrototypeOf(value),
+            ...value,
+          };
+        }
+        this.pastCopies.add(value);
       }
-      if (Array.isArray(value)) {
-        value = (value as any).slice(0);
-      } else {
-        value = {
-          __proto__: Object.getPrototypeOf(value),
-          ...value,
-        };
-      }
-      this.pastCopies.add(value);
     }
     return value;
   }

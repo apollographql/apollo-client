@@ -322,7 +322,7 @@ export class QueryInfo {
     };
 
     if (!this.lastWatch ||
-      !equal(watchOptions, this.lastWatch)) {
+        !equal(watchOptions, this.lastWatch)) {
       this.cancel();
       this.cancel = this.cache.watch(this.lastWatch = watchOptions);
     }
@@ -362,7 +362,9 @@ export class QueryInfo {
       | "errorPolicy">,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
-    const graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+    const graphQLErrors = isNonEmptyArray(result.errors)
+      ? result.errors.slice(0)
+      : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.

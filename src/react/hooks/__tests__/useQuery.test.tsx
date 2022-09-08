@@ -5580,7 +5580,6 @@ describe('useQuery Hook', () => {
       setTimeout(() => {
         link.simulateResult({
           result: {
-            label: 'testLabel',
             extensions: {
               thing1: 'foo',
               thing2: 'bar',

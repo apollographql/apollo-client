@@ -383,7 +383,6 @@ export class QueryInfo {
       });
       result.data = mergedResult;
       result.incremental = undefined;
-      if ('label' in result) result.label = undefined;
       if ('hasNext' in result) result.hasNext = undefined;
       if ('extensions' in result) result.extensions = undefined;
     }

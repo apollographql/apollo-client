@@ -9,7 +9,7 @@ Beginning with version REPLACE_ME, Apollo Web Client provides beta support for [
 
 For example, let's say we're building a social media application that can quickly fetch a user's basic profile information, but retrieving that user's friends takes longer. If we include _all_ of those fields in a single query, we want to be able to display the profile information as soon as it's available, instead of waiting for the friend fields to resolve.
 
-Applying the `@defer` directive to the fragment selecting the friends fields indicates that we are ready to receive them later, asynchronously:
+To achieve this, we can apply the `@defer` directive to an in-line fragment that contains all slow-resolving fields related to friend data:
 
 ```graphql
 query PersonQuery($personId: ID!) {

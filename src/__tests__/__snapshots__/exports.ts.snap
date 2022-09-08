@@ -350,6 +350,7 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseAsyncIteratorSymbol",
   "canUseDOM",
   "canUseLayoutEffect",
   "canUseSymbol",

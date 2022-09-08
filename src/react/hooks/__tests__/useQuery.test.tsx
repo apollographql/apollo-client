@@ -17,7 +17,13 @@ import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
-import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
+import {
+  itAsync,
+  MockLink,
+  MockedProvider,
+  MockSubscriptionLink,
+  mockSingleLink,
+} from '../../../testing';
 import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
@@ -4910,6 +4916,730 @@ describe('useQuery Hook', () => {
       waitFor(() => {
         expect(getByText('world2')).toBeTruthy();
       }).then(resolve, reject);
+    });
+  });
+
+  describe('defer', () => {
+    it('should handle deferred queries', async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: 'Hello world',
+                __typename: 'Greeting',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+        },
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            }],
+            hasNext: false
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: {
+            name: 'Alice',
+            __typename: 'Person',
+          },
+        },
+      });
+    });
+
+    it('should handle deferred queries in lists', async () => {
+      const query = gql`
+        {
+          greetings {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greetings: [
+                { message: 'Hello world', __typename: 'Greeting' },
+                { message: 'Hello again', __typename: 'Greeting' },
+              ],
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          { message: 'Hello world', __typename: 'Greeting' },
+          { message: 'Hello again', __typename: 'Greeting' },
+        ],
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greetings', 0],
+            }],
+            hasNext: true,
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          {
+            message: 'Hello world',
+            __typename: 'Greeting',
+            recipient: { name: 'Alice', __typename: 'Person' },
+          },
+          { message: 'Hello again', __typename: 'Greeting' },
+        ],
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Bob',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greetings', 1],
+            }],
+            hasNext: false
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          {
+            message: 'Hello world',
+            __typename: 'Greeting',
+            recipient: { name: 'Alice', __typename: 'Person' },
+          },
+          {
+            message: 'Hello again',
+            __typename: 'Greeting',
+            recipient: { name: 'Bob', __typename: 'Person' },
+          },
+        ],
+      });
+    });
+
+    it('should handle deferred queries in lists, merging arrays', async () => {
+      const query = gql`
+        query DeferVariation {
+          allProducts {
+            delivery {
+              ...MyFragment @defer
+            }
+            sku,
+            id
+          }
+        }
+        fragment MyFragment on DeliveryEstimates {
+          estimatedDelivery
+          fastestDelivery
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              allProducts: [
+                {
+                  __typename: "Product",
+                  delivery: {
+                    __typename: "DeliveryEstimates"
+                  },
+                  id: "apollo-federation",
+                  sku: "federation"
+                },
+                {
+                  __typename: "Product",
+                  delivery: {
+                    __typename: "DeliveryEstimates"
+                  },
+                  id: "apollo-studio",
+                  sku: "studio"
+                }
+              ]
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        allProducts: [
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates"
+            },
+            id: "apollo-federation",
+            sku: "federation"
+          },
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates"
+            },
+            id: "apollo-studio",
+            sku: "studio"
+          }
+        ]
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            hasNext: true,
+            incremental: [
+              {
+                data: {
+                  __typename: "DeliveryEstimates",
+                  estimatedDelivery: "6/25/2021",
+                  fastestDelivery: "6/24/2021",
+                },
+                path: [
+                  "allProducts",
+                  0,
+                  "delivery"
+                ]
+              },
+              {
+                data: {
+                  __typename: "DeliveryEstimates",
+                  estimatedDelivery: "6/25/2021",
+                  fastestDelivery: "6/24/2021",
+                },
+                path: [
+                  "allProducts",
+                  1,
+                  "delivery"
+                ]
+              },
+            ]
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        allProducts: [
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+              estimatedDelivery: "6/25/2021",
+              fastestDelivery: "6/24/2021"
+            },
+            id: "apollo-federation",
+            sku: "federation"
+          },
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+              estimatedDelivery: "6/25/2021",
+              fastestDelivery: "6/24/2021"
+            },
+            id: "apollo-studio",
+            sku: "studio"
+          }
+        ]
+      });
+    });
+
+    it('should handle deferred queries with fetch policy no-cache', async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {fetchPolicy: 'no-cache'}),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: 'Hello world',
+                __typename: 'Greeting',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+        },
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            }],
+            hasNext: false
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: {
+            name: 'Alice',
+            __typename: 'Person',
+          },
+        },
+      });
+    });
+
+    it('should handle deferred queries with errors returned on the incremental batched result', async () => {
+      const query = gql`
+        query {
+          hero {
+            name
+            heroFriends {
+              id
+              name
+              ... @defer {
+                homeWorld
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              hero: {
+                name: "R2-D2",
+                heroFriends: [
+                  {
+                    id: "1000",
+                    name: "Luke Skywalker"
+                  },
+                  {
+                    id: "1003",
+                    name: "Leia Organa"
+                  }
+                ]
+              }
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [
+              {
+                path: ["hero", "heroFriends", 0],
+                errors: [
+                  new GraphQLError(
+                    "homeWorld for character with ID 1000 could not be fetched.",
+                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                  )
+                ],
+                data: {
+                  "homeWorld": null,
+                }
+              },
+              {
+                path: ["hero", "heroFriends", 1],
+                data: {
+                  "homeWorld": "Alderaan",
+                }
+              },
+            ],
+            "hasNext": false
+          }
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
+
+      // since default error policy is "none", we do *not* return partial results
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+    });
+
+    it('should handle deferred queries with errors returned on the incremental batched result and errorPolicy "all"', async () => {
+      const query = gql`
+        query {
+          hero {
+            name
+            heroFriends {
+              id
+              name
+              ... @defer {
+                homeWorld
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { errorPolicy: "all" }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              hero: {
+                name: "R2-D2",
+                heroFriends: [
+                  {
+                    id: "1000",
+                    name: "Luke Skywalker"
+                  },
+                  {
+                    id: "1003",
+                    name: "Leia Organa"
+                  }
+                ]
+              }
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            extensions: {
+              thing1: 'foo',
+              thing2: 'bar',
+            },
+            incremental: [
+              {
+                path: ["hero", "heroFriends", 0],
+                errors: [
+                  new GraphQLError(
+                    "homeWorld for character with ID 1000 could not be fetched.",
+                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                  )
+                ],
+                data: {
+                  "homeWorld": null,
+                }
+              },
+              {
+                path: ["hero", "heroFriends", 1],
+                data: {
+                  "homeWorld": "Alderaan",
+                }
+              },
+            ],
+            "hasNext": false
+          }
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      // @ts-ignore
+      expect(result.current.label).toBe(undefined);
+      // @ts-ignore
+      expect(result.current.extensions).toBe(undefined);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
+
+      // since default error policy is "all", we *do* return partial results
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              // the only difference with the previous test
+              // is that homeWorld is populated since errorPolicy: all
+              // populates both partial data and error.graphQLErrors
+              homeWorld: null,
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              // homeWorld is populated due to errorPolicy: all
+              homeWorld: "Alderaan",
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
     });
   });
 });

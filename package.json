@@ -16,6 +16,23 @@
   "main": "./dist/main.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/main.cjs"
+    },
+    "./core": {
+      "import": "./core/index.js",
+      "require": "./core/core.cjs"
+    },
+    "./link/error": {
+      "import": "./link/error/index.js",
+      "require": "./link/error/error.cjs"
+    },
+    "./utilities/policies/pagination": {
+      "import": "./utilities/policies/pagination.js"
+    }
+  },
   "sideEffects": false,
   "react-native": {
     "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js"

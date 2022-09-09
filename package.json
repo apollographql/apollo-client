@@ -67,6 +67,7 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0",
     "graphql-ws": "^5.5.5",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0",
     "subscriptions-transport-ws": "^0.9.0 || ^0.11.0"
   },
   "peerDependenciesMeta": {
@@ -74,6 +75,9 @@
       "optional": true
     },
     "react": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     },
     "subscriptions-transport-ws": {

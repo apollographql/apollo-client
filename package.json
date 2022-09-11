@@ -31,7 +31,12 @@
     },
     "./utilities/policies/pagination": {
       "import": "./utilities/policies/pagination.js"
-    }
+    },
+    "./react": {
+      "import": "./react/index.js",
+      "require": "./react/react.cjs"
+    },
+    "./apollo-client.cjs": "./apollo-client.cjs.js"
   },
   "sideEffects": false,
   "react-native": {

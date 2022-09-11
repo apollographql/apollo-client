@@ -21,22 +21,7 @@
       "import": "./dist/index.js",
       "require": "./dist/main.cjs"
     },
-    "./core": {
-      "import": "./core/index.js",
-      "require": "./core/core.cjs"
-    },
-    "./link/error": {
-      "import": "./link/error/index.js",
-      "require": "./link/error/error.cjs"
-    },
-    "./utilities/policies/pagination": {
-      "import": "./utilities/policies/pagination.js"
-    },
-    "./react": {
-      "import": "./react/index.js",
-      "require": "./react/react.cjs"
-    },
-    "./apollo-client.cjs": "./apollo-client.cjs.js"
+    "./*": "./*.js"
   },
   "sideEffects": false,
   "react-native": {

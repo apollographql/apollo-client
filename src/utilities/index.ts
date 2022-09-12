@@ -5,6 +5,8 @@ export {
   InclusionDirectives,
   shouldInclude,
   hasDirectives,
+  hasAnyDirectives,
+  hasAllDirectives,
   hasClientExports,
   getDirectiveNames,
   getInclusionDirectives,

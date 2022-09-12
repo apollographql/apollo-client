@@ -376,6 +376,8 @@ Array [
   "getStoreKeyName",
   "getTypenameFromResult",
   "graphQLResultHasError",
+  "hasAllDirectives",
+  "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
   "isDocumentNode",

@@ -1366,6 +1366,7 @@ describe('useQuery Hook', () => {
   });
 
   describe('polling', () => {
+    const TIME_SCALE = 10;
     it('should support polling', async () => {
       const query = gql`{ hello }`;
       const mocks = [
@@ -1437,7 +1438,7 @@ describe('useQuery Hook', () => {
 
       const cache = new InMemoryCache();
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip }) => useQuery(query, { pollInterval: 10, skip }),
+        ({ skip }) => useQuery(query, { pollInterval: 10*TIME_SCALE, skip }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks} cache={cache}>
@@ -1460,7 +1461,7 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitForNextUpdate({ timeout: 20*TIME_SCALE })).rejects.toThrow('Timed out');
 
       rerender({ skip: false });
       expect(result.current.loading).toBe(false);
@@ -1542,7 +1543,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 10*TIME_SCALE }),
         { wrapper },
       );
 
@@ -1554,7 +1555,7 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       unmount();
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitForNextUpdate({ timeout: 20*TIME_SCALE })).rejects.toThrow('Timed out');
       expect(requestSpy).toHaveBeenCalledTimes(1);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
@@ -1591,7 +1592,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 10*TIME_SCALE }),
         { wrapper },
       );
 
@@ -1604,7 +1605,7 @@ describe('useQuery Hook', () => {
 
       unmount();
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitForNextUpdate({ timeout: 50*TIME_SCALE })).rejects.toThrow('Timed out');
       expect(requestSpy).toHaveBeenCalledTimes(1);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });

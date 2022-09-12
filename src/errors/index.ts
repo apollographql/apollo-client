@@ -1,3 +1,5 @@
+import '../utilities/globals';
+
 import { GraphQLError } from 'graphql';
 
 import { isNonEmptyArray } from '../utilities';
@@ -15,10 +17,12 @@ export function isApolloError(err: Error): err is ApolloError {
 const generateErrorMessage = (err: ApolloError) => {
   let message = '';
   // If we have GraphQL errors present, add that to the error message.
-  if (isNonEmptyArray(err.graphQLErrors)) {
-    err.graphQLErrors.forEach((graphQLError: GraphQLError) => {
-      const errorMessage = graphQLError
-        ? graphQLError.message
+  if (isNonEmptyArray(err.graphQLErrors) || isNonEmptyArray(err.clientErrors)) {
+    const errors = ((err.graphQLErrors || []) as readonly Error[])
+      .concat(err.clientErrors || []);
+    errors.forEach((error: Error) => {
+      const errorMessage = error
+        ? error.message
         : 'Error message not found.';
       message += `${errorMessage}\n`;
     });
@@ -33,9 +37,14 @@ const generateErrorMessage = (err: ApolloError) => {
   return message;
 };
 
+export type GraphQLErrors = ReadonlyArray<GraphQLError>;
+
+export type NetworkError = Error | ServerParseError | ServerError | null;
+
 export class ApolloError extends Error {
   public message: string;
-  public graphQLErrors: ReadonlyArray<GraphQLError>;
+  public graphQLErrors: GraphQLErrors;
+  public clientErrors: ReadonlyArray<Error>;
   public networkError: Error | ServerParseError | ServerError | null;
 
   // An object that can be used to provide some additional information
@@ -48,17 +57,20 @@ export class ApolloError extends Error {
   // value or the constructed error will be meaningless.
   constructor({
     graphQLErrors,
+    clientErrors,
     networkError,
     errorMessage,
     extraInfo,
   }: {
     graphQLErrors?: ReadonlyArray<GraphQLError>;
+    clientErrors?: ReadonlyArray<Error>;
     networkError?: Error | ServerParseError | ServerError | null;
     errorMessage?: string;
     extraInfo?: any;
   }) {
     super(errorMessage);
     this.graphQLErrors = graphQLErrors || [];
+    this.clientErrors = clientErrors || [];
     this.networkError = networkError || null;
     this.message = errorMessage || generateErrorMessage(this);
     this.extraInfo = extraInfo;

@@ -23,6 +23,12 @@ const distRoot = `${__dirname}/../dist`;
 const packageJson = require('../package.json');
 const entryPoints = require('./entryPoints.js');
 
+// Enable default interpretation of .js files as ECMAScript modules. We don't
+// put this in the source ../package.json file because it interferes with tools
+// like ts-node, which we use to run various ../config/*.ts scripts.
+// TODO(benjamn) Fully diagnose that interference.
+packageJson.type = 'module';
+
 // The root package.json is marked as private to prevent publishing
 // from happening in the root of the project. This sets the package back to
 // public so it can be published from the "dist" directory.
@@ -31,6 +37,7 @@ packageJson.private = false;
 // Remove package.json items that we don't need to publish
 delete packageJson.scripts;
 delete packageJson.bundlesize;
+delete packageJson.engines;
 
 // The root package.json points to the CJS/ESM source in "dist", to support
 // on-going package development (e.g. running tests, supporting npm link, etc.).
@@ -62,15 +69,18 @@ fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);
 entryPoints.forEach(function buildPackageJson({
   dirs,
   bundleName = dirs[dirs.length - 1],
+  sideEffects = false,
 }) {
   if (!dirs.length) return;
   fs.writeFileSync(
     path.join(distRoot, ...dirs, 'package.json'),
     JSON.stringify({
       name: path.posix.join('@apollo', 'client', ...dirs),
-      main: `${bundleName}.cjs.js`,
+      type: "module",
+      main: `${bundleName}.cjs`,
       module: 'index.js',
       types: 'index.d.ts',
+      sideEffects,
     }, null, 2) + "\n",
   );
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { getApolloContext } from '../context';
 import { RenderPromises } from './RenderPromises';
 
@@ -52,6 +52,8 @@ export function getMarkupFromTree({
       return renderPromises.hasPromises()
         ? renderPromises.consumeAndAwaitPromises().then(process)
         : html;
+    }).finally(() => {
+      renderPromises.stop();
     });
   }
 

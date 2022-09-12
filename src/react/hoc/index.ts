@@ -1,3 +1,5 @@
+import '../../utilities/globals';
+
 export { graphql } from './graphql';
 
 export { withQuery } from './query-hoc';

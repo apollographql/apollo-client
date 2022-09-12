@@ -1,39 +1,135 @@
 ---
 title: Testing
 description: Apollo Client React testing API
+api_reference: true
 ---
 
-## Installation
-
-Apollo Client >= 3 includes React testing utilities out of the box. You don't need to install any additional packages.
+> For more guidance on running tests with `MockedProvider`, see [Testing React components](../../development-testing/testing/).
 
 ## `MockedProvider`
+
+
 
 ```js
 import { MockedProvider } from "@apollo/client/testing";
 ```
 
-The `MockedProvider` is a test-utility that allows you to create a mocked version of the [`ApolloProvider`](./hooks/#the-apolloprovider-component) that doesn't send out network requests to your API, but rather allows you to specify the exact response payload for a given request.
+The `MockedProvider` component is a mocked version of [`ApolloProvider`](./hooks/#the-apolloprovider-component) that doesn't send network requests to your API. Instead, you to specify the exact response payload for a given GraphQL operation. This enables you to test your application's operations without communicating with a server.
 
-The `<MockedProvider />` component takes the following props:
+#### Props
 
-| Prop | Type | Description |
-| - | - | - |
-| mocks? | ReadonlyArray<MockedResponse> | An array containing a request object and the corresponding response. |
-| addTypename? | boolean | A boolean indicating whether or not `__typename` are injected into the documents sent to graphql. This **defaults to true**. |
-| defaultOptions? | DefaultOptions | An object containing options to pass directly to the `ApolloClient` instance. |
-| cache? | ApolloCache<TSerializedCache> | A custom cache object to be used in your test. Defaults to `InMemoryCache`. Useful when you need to define a custom `dataIdFromObject` function for automatic cache updates. |
-| resolvers? | Resolvers | Apollo Client local resolvers |
-| childProps? | object | Props that should be passed down to the child |
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
 
-Here is an example `mocks` prop shape:
+<tbody>
+<tr>
+<td>
+
+###### `mocks`
+
+`ReadonlyArray<MockedResponse>`
+</td>
+<td>
+
+An array containing GraphQL operation definitions and their corresponding mocked responses. See [Defining mocked responses](../../development-testing/testing/#defining-mocked-responses).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `addTypename`
+
+`Boolean`
+</td>
+<td>
+
+If `true`, the `MockedProvider` automatically adds the `__typename` field to every object type included in every executed query. Set this to `false` if the responses in your `mocks` array do _not_ include `__typename` fields. See [Setting `addTypename`](../../development-testing/testing/#setting-addtypename).
+
+The default value is `true`.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `defaultOptions`
+
+`DefaultOptions`
+</td>
+<td>
+
+An object containing options to pass directly to the `MockedProvider`'s `ApolloClient` instance. See [Example `defaultOptions` object](../core/ApolloClient/#example-defaultoptions-object).
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `cache`
+
+`ApolloCache<TSerializedCache>`
+</td>
+<td>
+
+A custom cache for the `MockedProvider`'s `ApolloClient` instance to use. Useful when you need to define a custom `dataIdFromObject` function for automatic cache updates.
+
+By default, `MockedProvider` creates an `InMemoryCache` with default configuration.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `resolvers`
+
+`Resolvers`
+</td>
+<td>
+
+**Deprecated.** A collection of [local resolvers](../../local-state/local-resolvers/) for the `MockedProvider`'s `ApolloClient` instance to use.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `childProps`
+
+`object`
+</td>
+<td>
+
+Props to pass down to the `MockedProvider`'s child.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+#### Example `mocks` array
 
 ```js
 const mocks = [
   {
     request: {
-      query: SOME_QUERY,
-      variables: { first: 4 }
+      query: GET_DOG,
+      variables: { index: 4 }
     },
     result: {
       data: {
@@ -45,28 +141,19 @@ const mocks = [
   },
   {
     request: {
-      query: SOME_QUERY,
-      variables: { first: 8}
+      query: GET_DOG,
+      variables: { index: 8 }
     },
     error: new Error("Something went wrong")
   }
 ]
 ```
 
-The above shows that if the request `SOME_QUERY` is fired with variables `{ first: 4 }` that it results in the data in the `result` object.
+With the `mocks` array above:
 
-If `SOME_QUERY` is fired with variables `{ first: 8 }` then it results in an `error`.
+* If the `GET_DOG` operation is executed with variables `{ index: 4 }`, it returns a dog named `Douglas`.
+* If `GET_DOG` is executed with variables `{ index: 8 }`, it returns an `error`.
 
-### Example
+#### Usage
 
-```js
-it("runs the mocked query", () => {
-  render(
-    <MockedProvider mocks={mocks}>
-      <MyQueryComponent />
-    </MockedProvider>
-  )
-
-  // Run assertions on <MyQueryComponent/>
-});
-```
+See [Testing React components](../../development-testing/testing/).

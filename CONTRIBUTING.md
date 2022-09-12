@@ -4,16 +4,22 @@ Excited about Apollo and want to make it better? We’re excited too!
 
 Apollo is a community of developers just like you, striving to create the best tools and libraries around GraphQL. We welcome anyone who wants to contribute or provide constructive feedback, no matter the age or level of experience. If you want to help but don't know where to start, let us know, and we'll find something for you.
 
-Oh, and if you haven't already, join the [Apollo Spectrum community](https://spectrum.chat/apollo).
+Oh, and if you haven't already, join our [community forums](https://community.apollographql.com).
 
 Here are some ways to contribute to the project, from easiest to most difficult:
 
-* [Reporting bugs](#reporting-bugs)
-* [Improving the documentation](#improving-the-documentation)
-* [Responding to issues](#responding-to-issues)
-* [Small bug fixes](#small-bug-fixes)
-* [Suggesting features](#suggesting-features)
-* [Big pull requests](#big-prs)
+- [Issues](#issues)
+  - [Reporting bugs](#reporting-bugs)
+  - [Improving the documentation](#improving-the-documentation)
+  - [Responding to issues](#responding-to-issues)
+  - [Small bug fixes](#small-bug-fixes)
+  - [Suggesting features](#suggesting-features)
+- [Big PRs](#big-prs)
+  - [Code review guidelines](#code-review-guidelines)
+- [Development](#development)
+  - [Building](#building)
+  - [Testing](#testing)
+  - [Wiring a checkout into an application](#wiring-a-checkout-into-an-application)
 
 ## Issues
 
@@ -35,7 +41,7 @@ Improving the documentation, examples, and other open source content can be the 
 
 ### Responding to issues
 
-In addition to reporting issues, a great way to contribute to Apollo is to respond to other peoples' issues and try to identify the problem or help them work around it. If you’re interested in taking a more active role in this process, please go ahead and respond to issues. And don't forget to say "Hi" in Apollo Spectrum!
+In addition to reporting issues, a great way to contribute to Apollo is to respond to other peoples' issues and try to identify the problem or help them work around it. If you’re interested in taking a more active role in this process, please go ahead and respond to issues. And don't forget to say "Hi" in our [community forums](https://community.apollographql.com)!
 
 ### Small bug fixes
 
@@ -83,12 +89,6 @@ It’s important that every piece of code in Apollo packages is reviewed by at l
 
 ```
 npm run build
-```
-
-**Build and watch for file changes:**
-
-```
-npm run watch
 ```
 
 ### Testing

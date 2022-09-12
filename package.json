@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.3.1",
+  "version": "3.6.9",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -11,14 +11,12 @@
     "client",
     "cache"
   ],
-  "author": "opensource@apollographql.com",
+  "author": "packages@apollographql.com",
   "license": "MIT",
-  "main": "./dist/main.cjs.js",
+  "main": "./dist/main.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "sideEffects": [
-    "./dist/cache/inmemory/fixPolyfills.native.js"
-  ],
+  "sideEffects": false,
   "react-native": {
     "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js"
   },
@@ -29,41 +27,57 @@
   "bugs": {
     "url": "https://github.com/apollographql/apollo-client/issues"
   },
-  "homepage": "https://www.apollographql.com",
+  "homepage": "https://www.apollographql.com/docs/react/",
   "scripts": {
     "prebuild": "npm run clean",
     "build": "tsc",
-    "postbuild": "npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run resolve",
+    "postbuild": "npm run update-version && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run postprocess-dist && npm run verify-version",
+    "update-version": "node config/version.js update",
+    "verify-version": "node config/version.js verify",
     "invariants": "ts-node-script config/processInvariants.ts",
     "sourcemaps": "ts-node-script config/rewriteSourceMaps.ts",
     "rollup": "rollup -c ./config/rollup.config.js",
     "prepdist": "node ./config/prepareDist.js",
-    "resolve": "ts-node-script config/resolveModuleIds.ts",
-    "watch": "tsc-watch --onSuccess \"npm run postbuild\"",
-    "clean": "rimraf -r dist coverage lib",
+    "postprocess-dist": "ts-node-script config/postprocessDist.ts",
+    "clean": "rimraf -r dist coverage lib temp",
+    "ci:precheck": "node config/precheck.js",
     "test": "jest --config ./config/jest.config.js",
-    "test:debug": "BABEL_ENV=server node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand",
-    "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999",
+    "test:ci": "npm run test:coverage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
+    "test:memory": "cd scripts/memory && npm i && npm test",
+    "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
     "bundlesize": "npm run build && bundlesize",
     "predeploy": "npm run build",
-    "deploy": "cd dist && npm publish --tag next"
+    "deploy": "cd dist && npm publish --tag next",
+    "typedoc": "typedoc src/index.ts --json docs/public/docs.json"
   },
   "bundlesize": [
     {
       "name": "apollo-client",
-      "path": "./dist/apollo-client.cjs.min.js",
-      "maxSize": "25.5 kB"
+      "path": "./dist/apollo-client.min.cjs",
+      "maxSize": "29.63kB"
     }
   ],
+  "engines": {
+    "npm": "^7.20.3 || ^8.0.0"
+  },
   "peerDependencies": {
-    "graphql": "^14.0.0 || ^15.0.0",
-    "react": "^16.8.0 || ^17.0.0",
-    "subscriptions-transport-ws": "^0.9.0"
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0",
+    "graphql-ws": "^5.5.5",
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "subscriptions-transport-ws": "^0.9.0 || ^0.11.0"
   },
   "peerDependenciesMeta": {
+    "graphql-ws": {
+      "optional": true
+    },
     "react": {
+      "optional": true
+    },
+    "react-dom": {
       "optional": true
     },
     "subscriptions-transport-ws": {
@@ -71,61 +85,66 @@
     }
   },
   "dependencies": {
-    "@graphql-typed-document-node/core": "^3.0.0",
-    "@types/zen-observable": "^0.8.0",
-    "@wry/context": "^0.5.2",
-    "@wry/equality": "^0.3.0",
-    "fast-json-stable-stringify": "^2.0.0",
-    "graphql-tag": "^2.11.0",
+    "@graphql-typed-document-node/core": "^3.1.1",
+    "@wry/context": "^0.7.0",
+    "@wry/equality": "^0.5.0",
+    "@wry/trie": "^0.3.0",
+    "graphql-tag": "^2.12.6",
     "hoist-non-react-statics": "^3.3.2",
-    "optimism": "^0.13.1",
+    "optimism": "^0.16.1",
     "prop-types": "^15.7.2",
-    "symbol-observable": "^2.0.0",
-    "ts-invariant": "^0.5.1",
-    "tslib": "^1.10.0",
-    "zen-observable": "^0.8.14"
+    "symbol-observable": "^4.0.0",
+    "ts-invariant": "^0.10.3",
+    "tslib": "^2.3.0",
+    "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@babel/parser": "7.12.7",
-    "@rollup/plugin-node-resolve": "10.0.0",
-    "@testing-library/react": "9.4.1",
+    "@babel/parser": "7.19.0",
+    "@graphql-tools/schema": "8.5.0",
+    "@rollup/plugin-node-resolve": "11.2.1",
+    "@testing-library/react": "13.4.0",
+    "@testing-library/react-12": "npm:@testing-library/react@^12",
+    "@testing-library/react-hooks": "8.0.1",
+    "@testing-library/user-event": "14.4.3",
     "@types/fast-json-stable-stringify": "2.0.0",
-    "@types/fetch-mock": "^7.3.2",
-    "@types/glob": "7.1.3",
-    "@types/hoist-non-react-statics": "^3.3.1",
-    "@types/jest": "26.0.15",
-    "@types/lodash": "4.14.165",
-    "@types/node": "14.14.9",
-    "@types/react": "17.0.0",
-    "@types/react-dom": "17.0.0",
-    "@types/recompose": "^0.30.7",
-    "bundlesize": "0.18.0",
-    "cross-fetch": "3.0.6",
-    "crypto-hash": "^1.3.0",
-    "fetch-mock": "7.7.3",
-    "glob": "7.1.6",
-    "graphql": "15.4.0",
-    "graphql-tools": "^6.0.12",
-    "jest": "26.6.3",
-    "jest-fetch-mock": "^3.0.3",
-    "jest-junit": "12.0.0",
-    "lodash": "4.17.20",
-    "react": "17.0.1",
-    "react-dom": "17.0.1",
-    "recast": "0.20.4",
-    "recompose": "^0.30.0",
-    "resolve": "^1.17.0",
+    "@types/fetch-mock": "7.3.5",
+    "@types/glob": "7.2.0",
+    "@types/hoist-non-react-statics": "3.3.1",
+    "@types/jest": "28.1.8",
+    "@types/lodash": "4.14.185",
+    "@types/node": "16.11.45",
+    "@types/react": "18.0.19",
+    "@types/react-dom": "18.0.6",
+    "@types/use-sync-external-store": "0.0.3",
+    "acorn": "8.7.1",
+    "bundlesize": "0.18.1",
+    "cross-fetch": "3.1.5",
+    "fetch-mock": "9.11.0",
+    "glob": "8.0.3",
+    "graphql": "16.6.0",
+    "graphql-ws": "5.10.1",
+    "jest": "28.1.3",
+    "jest-environment-jsdom": "28.1.3",
+    "jest-junit": "14.0.1",
+    "lodash": "4.17.21",
+    "react": "18.2.0",
+    "react-17": "npm:react@^17",
+    "react-dom": "18.2.0",
+    "react-dom-17": "npm:react-dom@^17",
+    "recast": "0.21.2",
+    "resolve": "1.22.1",
     "rimraf": "3.0.2",
-    "rollup": "1.31.1",
-    "rollup-plugin-terser": "^7.0.0",
-    "rxjs": "6.6.3",
-    "subscriptions-transport-ws": "^0.9.17",
-    "terser": "^5.2.0",
-    "ts-jest": "26.4.4",
-    "ts-node": "8.10.2",
-    "tsc-watch": "3.0.1",
-    "typescript": "3.9.7",
-    "wait-for-observables": "^1.0.3"
+    "rollup": "2.79.0",
+    "rollup-plugin-terser": "7.0.2",
+    "rxjs": "7.5.6",
+    "subscriptions-transport-ws": "0.11.0",
+    "terser": "5.15.0",
+    "ts-jest": "28.0.8",
+    "ts-node": "10.9.1",
+    "typedoc": "0.22.18",
+    "typescript": "4.7.4",
+    "wait-for-observables": "1.0.3",
+    "whatwg-fetch": "3.6.2"
   },
   "publishConfig": {
     "access": "public"

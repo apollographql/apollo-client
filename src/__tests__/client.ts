@@ -8,6 +8,7 @@ import {
   WatchQueryFetchPolicy,
   QueryOptions,
   ObservableQuery,
+  TypedDocumentNode,
 } from '../core';
 
 import { Observable, ObservableSubscription } from '../utilities';
@@ -17,9 +18,9 @@ import { ApolloError } from '../errors';
 
 import {
   itAsync,
-  stripSymbols,
   subscribeAndCount,
   mockSingleLink,
+  withErrorSpy,
 } from '../testing';
 
 describe('client', () => {
@@ -149,7 +150,7 @@ describe('client', () => {
     });
 
     client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
       resolve();
     });
   });
@@ -195,11 +196,11 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     return Promise.all([
@@ -259,17 +260,17 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      return expect(stripSymbols(actualResult.data)).toEqual(result);
+      return expect(actualResult.data).toEqual(result);
     });
 
     const withOverride = client
       .query({ query, variables: override })
       .then(actualResult => {
-        return expect(stripSymbols(actualResult.data)).toEqual(
+        return expect(actualResult.data).toEqual(
           overriddenResult,
         );
       });
@@ -423,7 +424,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(
         (client.cache as InMemoryCache).extract(),
       );
@@ -481,7 +482,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(client.extract());
     }).then(resolve, reject);
   });
@@ -687,7 +688,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then((result: ExecutionResult) => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
     });
   });
 
@@ -830,7 +831,7 @@ describe('client', () => {
 
     handle.subscribe({
       next(result) {
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         resolve();
       },
     });
@@ -883,7 +884,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
+      expect(actualResult.data).toEqual(transformedResult);
     }).then(resolve, reject);
   });
 
@@ -934,7 +935,7 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
+        expect(actualResult.data).toEqual(transformedResult);
       })
       .then(resolve, reject);
   });
@@ -974,7 +975,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1013,7 +1014,7 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(result);
+        expect(actualResult.data).toEqual(result);
       })
       .then(resolve, reject);
   });
@@ -1056,7 +1057,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1092,7 +1093,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1141,7 +1142,7 @@ describe('client', () => {
       }),
     });
     return client.query({ query }).then((actualResult: any) => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1192,7 +1193,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1308,7 +1309,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1333,7 +1334,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1381,8 +1382,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data2);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data2);
     }).then(resolve, reject);
   });
 
@@ -1473,8 +1474,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data);
     });
   });
 
@@ -1521,8 +1522,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data2);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data2);
     });
   });
 
@@ -1638,7 +1639,7 @@ describe('client', () => {
       });
 
       return client.query({ query }).then(result => {
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         expect((client.cache as InMemoryCache).extract()['1']).toEqual({
           id: '1',
           name: 'Luke Skywalker',
@@ -1736,9 +1737,9 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
         } else if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(networkFetch);
+          expect(result.data).toEqual(networkFetch);
           resolve();
         }
       });
@@ -1761,7 +1762,7 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         expect(handleCount).toBe(1);
-        expect(stripSymbols(result.data)).toEqual(networkFetch);
+        expect(result.data).toEqual(networkFetch);
         expect(result.loading).toBe(false);
         resolve();
       });
@@ -1814,7 +1815,7 @@ describe('client', () => {
       let count = 0;
       obs.subscribe({
         next: result => {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
           expect(result.loading).toBe(true);
           count++;
         },
@@ -1852,7 +1853,7 @@ describe('client', () => {
       let handleCalled = false;
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1892,7 +1893,7 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1902,7 +1903,7 @@ describe('client', () => {
           });
         }
         if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(data2);
+          expect(result.data).toEqual(data2);
           resolve();
         }
       });
@@ -1951,7 +1952,7 @@ describe('client', () => {
         // then query for real
         .then(() => client.query({ query, fetchPolicy: 'network-only' }))
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
+          expect(result.data).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
     });
@@ -1971,7 +1972,7 @@ describe('client', () => {
         // then query for real
         .then(() => client.query(options))
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
+          expect(result.data).toEqual({ myNumber: { n: 1 } });
           // Test that options weren't mutated, issue #339
           expect(options).toEqual({
             query,
@@ -1996,12 +1997,12 @@ describe('client', () => {
           return client.query({ query, fetchPolicy: 'network-only' });
         })
         .then(async result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
+          expect(result.data).toEqual({ myNumber: { n: 1 } });
           await new Promise(resolve => setTimeout(resolve, 100));
           return client.query({ query, fetchPolicy: 'network-only' });
         })
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
+          expect(result.data).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
     });
@@ -2081,6 +2082,7 @@ describe('client', () => {
         resolve();
       });
   });
+
   itAsync('should allow errors to be returned from a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
@@ -2102,7 +2104,12 @@ describe('client', () => {
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
-        result: { data, errors },
+        result: {
+          errors,
+          data: {
+            newPerson: data,
+          },
+        },
       }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
@@ -2112,7 +2119,9 @@ describe('client', () => {
         expect(result.errors).toBeDefined();
         expect(result.errors!.length).toBe(1);
         expect(result.errors![0].message).toBe(errors[0].message);
-        expect(result.data).toEqual(data);
+        expect(result.data).toEqual({
+          newPerson: data,
+        });
         resolve();
       })
       .catch((error: ApolloError) => {
@@ -2132,9 +2141,11 @@ describe('client', () => {
       }
     `;
     const data = {
-      person: {
-        firstName: 'John',
-        lastName: 'Smith',
+      newPerson: {
+        person: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
       },
     };
     const errors = [new Error('Some kind of GraphQL error.')];
@@ -2149,7 +2160,7 @@ describe('client', () => {
       .mutate({ mutation, errorPolicy: 'ignore' })
       .then(result => {
         expect(result.errors).toBeUndefined();
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         resolve();
       })
       .catch((error: ApolloError) => {
@@ -2199,7 +2210,8 @@ describe('client', () => {
     {
       const { data, optimisticData } = client.cache as any;
       expect(optimisticData).not.toBe(data);
-      expect(optimisticData.parent).toBe(data);
+      expect(optimisticData.parent).toBe(data.stump);
+      expect(optimisticData.parent.parent).toBe(data);
     }
 
     mutatePromise
@@ -2208,7 +2220,7 @@ describe('client', () => {
       })
       .catch((_: ApolloError) => {
         const { data, optimisticData } = client.cache as any;
-        expect(optimisticData).toBe(data);
+        expect(optimisticData).toBe(data.stump);
         resolve();
       });
   });
@@ -2324,7 +2336,7 @@ describe('client', () => {
     expect(count).toEqual(2);
   });
 
-  it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
+  itAsync('invokes onResetStore callbacks before notifying queries during resetStore call', async (resolve, reject) => {
     const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const query = gql`
@@ -2391,7 +2403,7 @@ describe('client', () => {
       if (called) {
         expect(onResetStoreOne).toHaveBeenCalled();
       } else {
-        expect(stripSymbols(d.data)).toEqual(data);
+        expect(d.data).toEqual(data);
         called = true;
       }
     });
@@ -2403,8 +2415,8 @@ describe('client', () => {
       })
       .subscribe({
         next,
-        error: fail,
-        complete: fail,
+        error: reject,
+        complete: reject,
       });
 
     expect(count).toEqual(0);
@@ -2412,6 +2424,8 @@ describe('client', () => {
     expect(count).toEqual(2);
     //watchQuery should only receive data twice
     expect(next).toHaveBeenCalledTimes(2);
+
+    resolve();
   });
 
   it('has a reFetchObservableQueries method which calls QueryManager', async () => {
@@ -2423,6 +2437,33 @@ describe('client', () => {
     // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'reFetchObservableQueries');
     await client.reFetchObservableQueries();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('has a refetchQueries method which calls QueryManager', async () => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    const spy = jest.spyOn(client['queryManager'], 'refetchQueries');
+    spy.mockImplementation(() => new Map);
+
+    const options = { include: ['Author1'] };
+    await client.refetchQueries(options);
+
+    expect(spy).toHaveBeenCalledWith(options);
+  });
+
+  it('has a getObservableQueries method which calls QueryManager', async () => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    // @ts-ignore
+    const spy = jest.spyOn(client.queryManager, 'getObservableQueries');
+    await client.getObservableQueries();
     expect(spy).toHaveBeenCalled();
   });
 
@@ -2504,7 +2545,7 @@ describe('client', () => {
               // which is an error.
               expect(result.loading).toBeFalsy();
               expect(result.networkStatus).toBe(7);
-              expect(stripSymbols(result.data!.allPeople)).toEqual(
+              expect(result.data!.allPeople).toEqual(
                 data.allPeople,
               );
               setTimeout(() => {
@@ -2533,7 +2574,7 @@ describe('client', () => {
                 reject('Should have data by this point');
                 break;
               }
-              expect(stripSymbols(result.data.allPeople)).toEqual(
+              expect(result.data.allPeople).toEqual(
                 dataTwo.allPeople,
               );
               resolve();
@@ -2552,14 +2593,16 @@ describe('client', () => {
         subscription.unsubscribe();
 
         const lastError = observable.getLastError();
-        const lastResult = observable.getLastResult();
+        expect(lastError).toBeInstanceOf(ApolloError);
+        expect(lastError!.networkError).toEqual(error);
 
-        expect(lastResult.loading).toBeFalsy();
-        expect(lastResult.networkStatus).toBe(8);
+        const lastResult = observable.getLastResult();
+        expect(lastResult).toBeTruthy();
+        expect(lastResult!.loading).toBe(false);
+        expect(lastResult!.networkStatus).toBe(8);
 
         observable.resetLastResults();
         subscription = observable.subscribe(observerOptions);
-        Object.assign(observable, { lastError, lastResult });
 
         // The error arrived, run a refetch to get the third result
         // which should now contain valid data.
@@ -2602,7 +2645,7 @@ describe('client', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should warn if server returns wrong data', (resolve, reject) => {
+  withErrorSpy(itAsync, 'should warn if server returns wrong data', (resolve, reject) => {
     const query = gql`
       query {
         todos {
@@ -2625,6 +2668,7 @@ describe('client', () => {
         ],
       },
     };
+
     const link = mockSingleLink({
       request: { query },
       result,
@@ -2637,14 +2681,9 @@ describe('client', () => {
       }),
     });
 
-    return client.query({ query }).then(
-      result => {
-        fail("should have errored");
-      },
-      error => {
-        expect(error.message).toMatch(/Missing field 'description' /);
-      },
-    ).then(resolve, reject);
+    return client.query({ query }).then(({ data }) => {
+      expect(data).toEqual(result.data);
+    }).then(resolve, reject);
   });
 
   itAsync('runs a query with the connection directive and writes it to the store key defined in the directive', (resolve, reject) => {
@@ -2685,7 +2724,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -2737,7 +2776,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -2779,7 +2818,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 });
@@ -2823,7 +2862,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -2868,7 +2907,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -2922,7 +2961,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -3024,11 +3063,9 @@ describe('@connection', () => {
     client.cache.evict({ fieldName: "a" });
     await wait();
 
-    // The results are structurally the same, but the result objects have
-    // been recomputed for queries that involved the ROOT_QUERY.a field.
-    expect(checkLastResult(aResults, a456)).not.toBe(a456);
+    expect(checkLastResult(aResults, a456)).toBe(a456);
     expect(checkLastResult(bResults, bOyez)).toBe(bOyez);
-    expect(checkLastResult(abResults, a456bOyez)).not.toBe(a456bOyez);
+    expect(checkLastResult(abResults, a456bOyez)).toBe(a456bOyez);
 
     const cQuery = gql`{ c }`;
     // Passing cache-only as the fetchPolicy allows the { c: "see" }
@@ -3077,15 +3114,11 @@ describe('@connection', () => {
       { a: 123 },
       { a: 234 },
       { a: 456 },
-      // Delivered again because we explicitly called resetLastResults.
-      { a: 456 },
     ]);
 
     expect(bResults).toEqual([
       { b: "asdf" },
       { b: "ASDF" },
-      { b: "oyez" },
-      // Delivered again because we explicitly called resetLastResults.
       { b: "oyez" },
     ]);
 
@@ -3093,8 +3126,6 @@ describe('@connection', () => {
       { a: 123, b: "asdf" },
       { a: 234, b: "asdf" },
       { a: 234, b: "ASDF" },
-      { a: 456, b: "oyez" },
-      // Delivered again because we explicitly called resetLastResults.
       { a: 456, b: "oyez" },
     ]);
 
@@ -3254,7 +3285,7 @@ describe('@connection', () => {
       });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
-        const resultData = stripSymbols(result.data);
+        const resultData = result.data;
         if (handleCount === 1) {
           expect(resultData).toEqual(initialData);
         } else if (handleCount === 2) {
@@ -3282,18 +3313,24 @@ describe('@connection', () => {
 
         defaultOptions: {
           watchQuery: {
-            nextFetchPolicy(fetchPolicy) {
+            nextFetchPolicy(fetchPolicy, context) {
               expect(++nextFetchPolicyCallCount).toBe(1);
               expect(this.query).toBe(query);
               expect(fetchPolicy).toBe("cache-first");
+
+              expect(context.reason).toBe("after-fetch");
+              expect(context.observable).toBe(obs);
+              expect(context.options).toBe(obs.options);
+              expect(context.initialFetchPolicy).toBe("cache-first");
+
               // Usually options.nextFetchPolicy applies only once, but a
               // nextFetchPolicy function can set this.nextFetchPolicy
               // again to perform an additional transition.
               this.nextFetchPolicy = fetchPolicy => {
                 ++nextFetchPolicyCallCount;
-                expect(fetchPolicy).toBe("cache-and-network");
                 return "cache-first";
               };
+
               return "cache-and-network";
             },
           },
@@ -3338,18 +3375,114 @@ describe('@connection', () => {
         } else if (handleCount === 4) {
           expect(result.data).toEqual({ count: "secondary" });
           expect(nextFetchPolicyCallCount).toBe(3);
+          client.cache.evict({ fieldName: "count" });
         } else if (handleCount === 5) {
           expect(result.data).toEqual({ count: 1 });
-          expect(nextFetchPolicyCallCount).toBe(3);
-          client.cache.evict({ fieldName: "count" });
-        } else if (handleCount === 6) {
-          expect(result.data).toEqual({ count: 2 });
-          expect(nextFetchPolicyCallCount).toBe(3);
+          expect(nextFetchPolicyCallCount).toBe(4);
           expect(obs.options.fetchPolicy).toBe("cache-first");
-          expect(obs.options.nextFetchPolicy).toBeUndefined();
           setTimeout(resolve, 50);
         } else {
           reject("too many results");
+        }
+      });
+    });
+
+    itAsync('can override global defaultOptions.watchQuery.nextFetchPolicy', (resolve, reject) => {
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          observer.next({
+            data: {
+              linkCount: ++linkCount,
+            },
+          });
+          observer.complete();
+        })),
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy(currentFetchPolicy) {
+              reject(new Error("should not have called global nextFetchPolicy"));
+              return currentFetchPolicy;
+            },
+          }
+        }
+      });
+
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`query CountQuery { linkCount }`;
+
+      let fetchPolicyRecord: WatchQueryFetchPolicy[] = [];
+      const observable = client.watchQuery({
+        query,
+        nextFetchPolicy(currentFetchPolicy) {
+          fetchPolicyRecord.push(currentFetchPolicy);
+          return "cache-first";
+        }
+      });
+
+      subscribeAndCount(reject, observable, (resultCount, result) => {
+        if (resultCount === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 1 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+          ]);
+
+          return client.refetchQueries({
+            include: ["CountQuery"],
+          }).then(results => {
+            expect(results.length).toBe(1);
+            results.forEach(result => {
+              expect(result.loading).toBe(false);
+              expect(result.data).toEqual({ linkCount: 2 });
+            });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+            ]);
+          });
+
+        } else if (resultCount === 2) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 2 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+          ]);
+
+          return observable.reobserve({
+            // Allow delivery of loading:true result.
+            notifyOnNetworkStatusChange: true,
+            // Force a network request in addition to loading:true cache result.
+            fetchPolicy: "cache-and-network",
+          }).then(finalResult => {
+            expect(finalResult.loading).toBe(false);
+            expect(finalResult.data).toEqual({ linkCount: 3 });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+              "cache-and-network",
+            ]);
+          });
+
+        } else if (resultCount === 3) {
+          expect(result.loading).toBe(true);
+          expect(result.data).toEqual({ linkCount: 2 });
+
+        } else if (resultCount === 4) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 3 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+            "cache-and-network",
+          ]);
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(new Error(`Too many results (${resultCount})`));
         }
       });
     });
@@ -3432,6 +3565,6 @@ function clientRoundtrip(
   });
 
   return client.query({ query, variables }).then(result => {
-    expect(stripSymbols(result.data)).toEqual(data.data);
+    expect(result.data).toEqual(data.data);
   }).then(resolve, reject);
 }

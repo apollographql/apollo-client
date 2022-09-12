@@ -1,4 +1,4 @@
-import { FieldNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import {
   Reference,
@@ -18,14 +18,24 @@ import { StorageType } from '../../inmemory/policies';
 // Readonly<any>, somewhat surprisingly.
 export type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
-export class MissingFieldError {
+export type MissingTree = string | {
+  readonly [key: string]: MissingTree;
+};
+
+export class MissingFieldError extends Error {
   constructor(
     public readonly message: string,
-    public readonly path: (string | number)[],
-    public readonly query: import('graphql').DocumentNode,
-    public readonly clientOnly: boolean,
+    public readonly path: MissingTree | Array<string | number>,
+    public readonly query: DocumentNode,
     public readonly variables?: Record<string, any>,
-  ) {}
+  ) {
+     // 'Error' breaks prototype chain here
+     super(message);
+
+     // We're not using `Object.setPrototypeOf` here as it isn't fully
+     // supported on Android (see issue #3236).
+     (this as any).__proto__ = MissingFieldError.prototype;
+  }
 }
 
 export interface FieldSpecifier {

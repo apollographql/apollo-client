@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom/server';
@@ -7,7 +8,7 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { Query } from '../../../components';
 import { getDataFromTree, getMarkupFromTree } from '../../../ssr';
 import { graphql } from '../../graphql';
@@ -277,7 +278,7 @@ describe('SSR', () => {
           variables: { id: data!.currentUser!.id }
         })
       });
-      const Component: React.StatelessComponent<any> = ({
+      const Component: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<any>>> = ({
         data
       }) => (
         <div>
@@ -360,7 +361,7 @@ describe('SSR', () => {
 
       const WrappedBorkedComponent = withLastName(BorkedComponent);
 
-      const ContainerComponent: React.StatelessComponent<WithLastNameProps> = ({
+      const ContainerComponent: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<WithLastNameProps>>> = ({
         data
       }) => (
         <div>
@@ -419,7 +420,7 @@ describe('SSR', () => {
       const WrappedElement = graphql<Props, Data>(
         query
       )(({ data }: ChildProps<Props, Data>) => (
-        <div>{!data || data.loading ? 'loading' : data.error}</div>
+        <div>{!data || data.loading ? 'loading' : data.error?.toString()}</div>
       ));
 
       const Page = () => (
@@ -540,7 +541,7 @@ describe('SSR', () => {
       });
     });
 
-    it('should allow for setting state in a component', done => {
+    itAsync('should allow for setting state in a component', (resolve, reject) => {
       const query = gql`
         query user($id: ID) {
           currentUser(id: $id) {
@@ -613,7 +614,7 @@ describe('SSR', () => {
           expect(
             initialState.ROOT_QUERY!['currentUser({"id":"1"})']
           ).toBeTruthy();
-          done();
+          resolve();
         })
         .catch(console.error);
     });
@@ -645,7 +646,7 @@ describe('SSR', () => {
       return getDataFromTree(<Element />);
     });
 
-    it('should allow prepping state from props', done => {
+    itAsync('should allow prepping state from props', (resolve, reject) => {
       const query = gql`
         query user($id: ID) {
           currentUser(id: $id) {
@@ -731,7 +732,7 @@ describe('SSR', () => {
           expect(
             initialState.ROOT_QUERY!['currentUser({"id":"1"})']
           ).toBeTruthy();
-          done();
+          resolve();
         })
         .catch(console.error);
     });
@@ -923,9 +924,9 @@ describe('SSR', () => {
         }
       });
 
-      const Element: React.StatelessComponent<QueryChildProps & {
+      const Element: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<QueryChildProps & {
         action: (variables: {}) => Promise<any>;
-      }> = ({ data }) => (
+      }>>> = ({ data }) => (
         <div>
           {!data || data.loading || !data.currentUser
             ? 'loading'
@@ -1003,11 +1004,11 @@ describe('SSR', () => {
         }
       });
 
-      const Element: React.StatelessComponent<ChildProps<
+      const Element: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<ChildProps<
         ChildProps<Props, MutationData>,
         QueryData,
         {}
-      >> = ({ data }) => (
+      >>>> = ({ data }) => (
         <div>
           {!data || data.loading || !data.currentUser
             ? 'loading'
@@ -1061,7 +1062,7 @@ describe('SSR', () => {
         </div>
       ));
 
-      class MyRootContainer extends React.Component<{}, { color: string }> {
+      class MyRootContainer extends React.Component<React.PropsWithChildren, { color: string }> {
         constructor(props: {}) {
           super(props);
           this.state = { color: 'purple' };

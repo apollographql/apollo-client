@@ -1,5 +1,7 @@
 /* Core */
 
+import { DEV } from '../utilities/globals';
+
 export {
   ApolloClient,
   ApolloClientOptions,
@@ -21,7 +23,6 @@ export {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  MutationUpdaterFn,
 } from './watchQueryOptions';
 export { NetworkStatus } from './networkStatus';
 export * from './types';
@@ -85,12 +86,11 @@ export {
 
 // The verbosity of invariant.{log,warn,error} can be controlled globally
 // (for anyone using the same ts-invariant package) by passing "log",
-// "warn", "error", or "silent" to setVerbosity. By default, Apollo Client
-// displays warnings and errors, but hides invariant.log statements. Note
-// that all invariant.* logging is hidden in production.
+// "warn", "error", or "silent" to setVerbosity ("log" is the default).
+// Note that all invariant.* logging is hidden in production.
 import { setVerbosity } from "ts-invariant";
 export { setVerbosity as setLogVerbosity }
-setVerbosity("warn");
+setVerbosity(DEV ? "log" : "silent");
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.
@@ -104,11 +104,10 @@ setVerbosity("warn");
 // workaround of pulling the extra properties off the `gql` function,
 // then re-exporting them separately, helps keeps bundlers happy without any
 // additional config changes.
-import gql from 'graphql-tag';
-export const {
+export {
+  gql,
   resetCaches,
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
-  disableExperimentalFragmentVariables
-} = gql;
-export { gql };
+  disableExperimentalFragmentVariables,
+} from 'graphql-tag';

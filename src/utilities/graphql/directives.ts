@@ -90,11 +90,7 @@ export function hasDirectives(
 }
 
 export function hasClientExports(document: DocumentNode) {
-  return (
-    document &&
-    hasDirectives(['client'], document) &&
-    hasDirectives(['export'], document)
-  );
+  return document && hasDirectives(['client', 'export'], document, true);
 }
 
 export type InclusionDirectives = Array<{

@@ -132,11 +132,12 @@ export function getFragmentFromSelection(
       return selection;
     case 'FragmentSpread': {
       const fragmentName = selection.name.value;
-      const fragment = typeof fragmentMap === "function"
-        ? fragmentMap(fragmentName)
-        : fragmentMap && fragmentMap[fragmentName];
-      invariant(fragment, `No fragment named ${fragmentName}.`);
-      return fragment!;
+      if (typeof fragmentMap === "function") {
+        return fragmentMap(fragmentName);
+      }
+      const fragment = fragmentMap && fragmentMap[fragmentName];
+      invariant(fragment, `No fragment named ${fragmentName}`);
+      return fragment || null;
     }
     default:
       return null;

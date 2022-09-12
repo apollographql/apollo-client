@@ -14,7 +14,7 @@ Apollo Client's `useQuery`, `useMutation` and `useSubscription` React hooks are 
 
 ### `useQuery`
 
-```jsx
+```tsx
 import React from 'react';
 import { useQuery, gql } from '@apollo/client';
 
@@ -77,9 +77,74 @@ export function RocketInventoryList() {
 }
 ```
 
+#### `fetchMore` and `subscribeToMore`
+
+`useQuery` returns an instance of `QueryResult`. This includes the `fetchMore` and `subscribeToMore` functions. See the `Result` section of the [Queries](../data/queries#result) documentation page for detailed type information. Because these functions execute GraphQL operations, they accept type parameters.
+
+`fetchMore`'s type parameters are similar to those of `useQuery`. In fact, the type parameters are set to the same values as `useQuery`'s by default. Since both `fetchMore` and `useQuery` encapsulate a `query` operation, it's unlikely that you will need to pass any type arguments to `fetchMore`. Here's a sketch derived from the previous example:
+
+```tsx
+// ...
+export function RocketInventoryList() {
+  const { fetchMore, loading, data } = useQuery<RocketInventoryData, RocketInventoryVars>(
+    GET_ROCKET_INVENTORY,
+    { variables: { year: 2019 } }
+  );
+
+  return (
+    //...
+    <button
+      onClick={() => {
+        // fetchMore's first type parameter defaults to RocketInventoryData
+        // and its second defaults to RocketInventoryVars
+        fetchMore({ variables: { year: 2020 } });
+
+        // if you pass a different query or variables payload to fetchMore:
+        fetchMore<InStockRocketInventoryData, InStockRocketInventoryVars>(
+          { query: GET_IN_STOCK_ROCKET_INVENTORY, variables: { stock: true } }
+        )
+      }}
+    >
+      Add 2020 Inventory
+    </button>
+    //...
+  );
+}
+```
+
+`subscribeToMore`'s type parameters and defaults are identical to `fetchMore`'s. Keep in mind that `subscribeToMore` encapsulates a `subscription` whereas `fetchMore` encapsulates a `query`. Subscriptions and queries are different operations in the GraphQL spec. This means that you'll almost always pass at least one type argument to `subscribeToMore` since its default value will rarely Just Work. Here's another sketch based on the previous example:
+
+```tsx
+// ...
+const ROCKET_STOCK_SUBSCRIPTION = gql`
+  subscription OnRocketStockUpdated {
+    rocketStockAdded {
+      id
+      stock
+    }
+  }
+`;
+
+export function RocketInventoryList() {
+  const { subscribeToMore, loading, data } = useQuery<RocketInventoryData, RocketInventoryVars>(
+    GET_ROCKET_INVENTORY,
+    { variables: { year: 2019 } }
+  );
+
+  React.useEffect(() => {
+    // also accepts a second type parameter for variables
+    subscribeToMore<RocketInventoryStockData>(
+      { document: ROCKET_STOCK_SUBSCRIPTION, variables: { year: 2019 } }
+    );
+  }, [subscribeToMore])
+
+  // ...
+}
+```
+
 ### `useMutation`
 
-```jsx
+```tsx
 import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
 
@@ -156,7 +221,7 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-```jsx
+```tsx
 import React from 'react';
 import { useSubscription, gql } from '@apollo/client';
 
@@ -228,13 +293,13 @@ This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subsc
 
 In previous versions of React Apollo, render prop components (`Query`, `Mutation` and `Subscription`) could be extended to add additional type information:
 
-```js
+```ts
 class SomeQuery extends Query<SomeData, SomeVariables> {}
 ```
 
 Since all class based render prop components have been converted to functional components, extending components in this manner is no longer possible. While we recommend switching over to use the new `useQuery`, `useMutation` and `useSubscription` hooks as soon as possible, if you're looking for a stop gap you can consider replacing your class with a wrapped and typed component:
 
-```jsx
+```tsx
 export const SomeQuery = () => (
   <Query<SomeData, SomeVariables> query={SOME_QUERY} /* ... */>
     {({ loading, error, data }) => { ... }}

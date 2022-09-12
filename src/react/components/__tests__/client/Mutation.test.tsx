@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, PropsWithChildren } from 'react';
 import gql from 'graphql-tag';
 import { ExecutionResult, GraphQLError } from 'graphql';
 import { render, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
@@ -1016,7 +1016,7 @@ describe('General Mutation testing', () => {
 
     let count = 0;
 
-    const Component: React.FC<any> = props => {
+    const Component: React.FC<PropsWithChildren<PropsWithChildren<any>>> = props => {
       const [variables, setVariables] = useState(props.variables);
       return (
         <Mutation mutation={mutation} refetchQueries={refetchQueries}>
@@ -1564,11 +1564,12 @@ describe('General Mutation testing', () => {
     itAsync('calls the onCompleted prop after the mutation is complete', (resolve, reject) => {
       let finished = false;
       let success = false;
+      const context = { "foo": "bar" }
       const onCompletedFn = jest.fn();
       const checker = () => {
         setTimeout(() => {
           success = true;
-          expect(onCompletedFn).toHaveBeenCalledWith(data);
+          expect(onCompletedFn).toHaveBeenCalledWith(data, expect.objectContaining({context}));
         }, 100);
       };
 
@@ -1586,7 +1587,7 @@ describe('General Mutation testing', () => {
               <Mutation mutation={mutation} onCompleted={onCompletedFn}>
                 {(createTodo: any) => {
                   setTimeout(() => {
-                    createTodo().finally(() => {
+                    createTodo({ context }).finally(() => {
                       finished = true;
                     });
                     this.setState({ called: true }, checker);

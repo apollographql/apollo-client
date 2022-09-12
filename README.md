@@ -23,6 +23,7 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 
 - [@benjamn](https://github.com/benjamn)
 - [@alessbell](https://github.com/alessbell)
+- [@bignimbus](https://github.com/bignimbus)
 - [@hwillson](https://github.com/hwillson)
 - [@jpvajda](https://github.com/jpvajda)
 - [@mrdoombringer](https://github.com/mrdoombringer)

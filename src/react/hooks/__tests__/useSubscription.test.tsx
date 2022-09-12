@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 import { renderHook } from '@testing-library/react-hooks';
 import gql from 'graphql-tag';
 
@@ -136,6 +136,12 @@ describe('useSubscription Hook', () => {
     });
 
     const onSubscriptionData = jest.fn();
+    const wrapper: React.FC<PropsWithChildren<{ variables: { foo: string } }>> = ({ children }) => (
+      <ApolloProvider client={client}>
+        {children}
+      </ApolloProvider>
+    );
+
     const { result, unmount, waitForNextUpdate, rerender } = renderHook(
       ({ variables }) => useSubscription(subscription, {
         variables,
@@ -148,11 +154,7 @@ describe('useSubscription Hook', () => {
             foo: 'bar'
           }
         },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
-        ),
+        wrapper
       },
     );
 
@@ -192,15 +194,15 @@ describe('useSubscription Hook', () => {
       link,
       cache: new Cache({ addTypename: false })
     });
-
+    const wrapper: React.FC<PropsWithChildren<{ skip: boolean }>> = ({ children }) => (
+      <ApolloProvider client={client}>
+        {children}
+      </ApolloProvider>
+    );
     const { result, rerender, waitForNextUpdate } = renderHook(
       ({ skip }) => useSubscription(subscription, { skip }),
       {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
-        ),
+        wrapper,
         initialProps: { skip: true },
       },
     );

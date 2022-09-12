@@ -55,30 +55,42 @@ export function getDirectiveNames(root: ASTNode) {
   return names;
 }
 
-export function hasDirectives(names: string[], root: ASTNode) {
+export const hasAnyDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, false);
+
+export const hasAllDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, true);
+
+export function hasDirectives(
+  names: string[],
+  root: ASTNode,
+  all?: boolean,
+) {
   const nameSet = new Set(names);
-  const nameCount = nameSet.size;
+  const uniqueCount = nameSet.size;
 
   visit(root, {
     Directive(node) {
-      if (nameSet.delete(node.name.value)) {
-        // We can abandon the traversal early as soon as we encounter any of the
-        // directives in the names array, since hasDirectives returns true when
-        // any (not necessarily all) of the named directives are found.
+      if (
+        nameSet.delete(node.name.value) &&
+        (!all || !nameSet.size)
+      ) {
         return BREAK;
       }
     },
   });
 
-  return nameSet.size < nameCount;
+  // If we found all the names, nameSet will be empty. If we only care about
+  // finding some of them, the < condition is sufficient.
+  return all ? !nameSet.size : nameSet.size < uniqueCount;
 }
 
 export function hasClientExports(document: DocumentNode) {
-  return (
-    document &&
-    hasDirectives(['client'], document) &&
-    hasDirectives(['export'], document)
-  );
+  return document && hasDirectives(['client', 'export'], document, true);
 }
 
 export type InclusionDirectives = Array<{

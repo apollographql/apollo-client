@@ -75,6 +75,7 @@
     },
     "API - React": {
       "Hooks": "/api/react/hooks",
+      "Hooks (experimental)": "/api/react/hooks-experimental",
       "Testing": "/api/react/testing",
       "SSR": "/api/react/ssr",
       "Components (deprecated)": "/api/react/components",

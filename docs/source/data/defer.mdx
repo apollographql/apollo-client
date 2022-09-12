@@ -3,9 +3,9 @@ title: 'Using the @defer directive in Apollo Client'
 description: Fetch slower schema fields asynchronously
 ---
 
-> ⚠️ **The `@defer` directive is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client, and is available by installing `@apollo/client@beta`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md)
+> ⚠️ **The `@defer` directive is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client, and is available by installing `@apollo/client@beta`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Beginning with version `3.7.0`, Apollo Web Client provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md), which enables your queries to receive data for specific fields asynchronously. This is helpful whenever some fields in a query take much longer to resolve than the others.
+Beginning with version `3.7.0`, Apollo Client Web provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md), which enables your queries to receive data for specific fields asynchronously. This is helpful whenever some fields in a query take much longer to resolve than the others.
 
 For example, let's say we're building a social media application that can quickly fetch a user's basic profile information, but retrieving that user's friends takes longer. If we include _all_ of those fields in a single query, we want to be able to display the profile information as soon as it's available, instead of waiting for the friend fields to resolve.
 

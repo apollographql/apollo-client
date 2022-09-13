@@ -123,15 +123,3 @@ A function that calls the next link down the chain. Calling `return forward(oper
 An error is passed as a `networkError` if a link further down the chain called the `error` callback on the observable. In most cases, `graphQLErrors` is the `errors` field of the result from the last `next` call.
 
 A `networkError` can contain additional fields, such as a GraphQL object in the case of a failing HTTP status code. In this situation, `graphQLErrors` is an alias for `networkError.result.errors` if the property exists.
-
-## Ignoring errors
-
-If you want to conditionally ignore errors, you can set `response.errors = null;` within the error handler:
-
-```js
-onError(({ response, operation }) => {
-  if (operation.operationName === "IgnoreErrorsQuery") {
-    response.errors = null;
-  }
-});
-```

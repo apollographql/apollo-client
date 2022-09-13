@@ -1,10 +1,11 @@
+/** @jest-environment node */
 import React from 'react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { ApolloProvider, getApolloContext } from '../../../context';
+import { ApolloProvider, getApolloContext, ApolloContextValue } from '../../../context';
 import { getDataFromTree } from '../../../ssr';
 import { itAsync, mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
@@ -12,8 +13,10 @@ import { Query } from '../../Query';
 describe('SSR', () => {
   describe('`getDataFromTree`', () => {
     it('should support passing a root context', () => {
+      const apolloContext = getApolloContext() as unknown as React.Context<ApolloContextValue & { text: string }>;
       class Consumer extends React.Component {
-        static contextType = getApolloContext();
+        static contextType = apolloContext;
+        declare context: React.ContextType<typeof apolloContext>
 
         render() {
           return <div>{this.context.text}</div>;

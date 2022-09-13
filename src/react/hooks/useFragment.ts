@@ -18,6 +18,7 @@ extends Omit<
   | "id"
   | "query"
   | "optimistic"
+  | "previousResult"
 >, Omit<
   Cache.ReadFragmentOptions<TData, TVars>,
   | "id"
@@ -37,7 +38,6 @@ extends Omit<
 //   fragmentName?: string;
 //   optimistic?: boolean;
 //   variables?: TVars;
-//   previousResult?: any;
 //   returnPartialData?: boolean;
 //   canonizeResults?: boolean;
 // }
@@ -46,11 +46,9 @@ export interface UseFragmentResult<TData> {
   data: TData | undefined;
   complete: boolean;
   missing?: MissingTree;
-  previousResult?: UseFragmentResult<TData>;
-  lastCompleteResult?: UseFragmentResult<TData>;
 }
 
-export function useFragment<TData, TVars>(
+export function useFragment_experimental<TData, TVars>(
   options: UseFragmentOptions<TData, TVars>,
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient();
@@ -90,8 +88,11 @@ export function useFragment<TData, TVars>(
     },
 
     () => {
-      return resultRef.current ||
-        (resultRef.current = diffToResult(latestDiff));
+      const latestDiffToResult = diffToResult(latestDiff);
+      return resultRef.current &&
+        equal(resultRef.current.data, latestDiffToResult.data)
+        ? resultRef.current
+        : (resultRef.current = latestDiffToResult);
     },
   );
 }

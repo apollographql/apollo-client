@@ -18,6 +18,7 @@ extends Omit<
   | "id"
   | "query"
   | "optimistic"
+  | "previousResult"
 >, Omit<
   Cache.ReadFragmentOptions<TData, TVars>,
   | "id"
@@ -37,7 +38,6 @@ extends Omit<
 //   fragmentName?: string;
 //   optimistic?: boolean;
 //   variables?: TVars;
-//   previousResult?: any;
 //   returnPartialData?: boolean;
 //   canonizeResults?: boolean;
 // }
@@ -46,8 +46,6 @@ export interface UseFragmentResult<TData> {
   data: TData | undefined;
   complete: boolean;
   missing?: MissingTree;
-  previousResult?: UseFragmentResult<TData>;
-  lastCompleteResult?: UseFragmentResult<TData>;
 }
 
 export function useFragment_experimental<TData, TVars>(

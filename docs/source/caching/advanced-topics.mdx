@@ -88,13 +88,13 @@ The `client.onResetStore` method's return value is a function you can call to un
 import { useApolloClient } from '@apollo/client';
 
 function Foo (){
-  const [reset, setReset] = useState(false);
+  const [reset, setReset] = useState(0);
   const client = useApolloClient();
 
   useEffect(() => {
-    const unsubscribe = client.onResetStore(() => {
-      setReset(true)
-    });
+    const unsubscribe = client.onResetStore(() => 
+      new Promise(()=>setReset(reset + 1))
+    );
 
     return () => {
       unsubscribe();

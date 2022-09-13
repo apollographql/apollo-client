@@ -32,6 +32,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     fetch: preferredFetch,
     print = defaultPrinter,
     includeExtensions,
+    preserveHeaderCase,
     useGETForQueries,
     includeUnusedVariables = false,
     ...requestOptions
@@ -44,7 +45,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   }
 
   const linkConfig = {
-    http: { includeExtensions },
+    http: { includeExtensions, preserveHeaderCase },
     options: requestOptions.fetchOptions,
     credentials: requestOptions.credentials,
     headers: requestOptions.headers,

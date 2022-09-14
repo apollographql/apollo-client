@@ -1,0 +1,71 @@
+name: E2E @defer Tests
+
+# on:
+#   pull_request:
+#     branches: [main]
+#   schedule:
+#     - cron: "30 7 * * *"
+#   workflow_dispatch:
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci-docker-local:
+    name: CI Router
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: install rover
+        run: |
+          echo ---------------------------------------------------------------
+          echo rover - installing ...
+          echo ---------------------------------------------------------------
+          curl -sSL https://rover.apollo.dev/nix/latest | sh -s -- --elv2-license accept
+          echo "$HOME/.rover/bin" >> ${GITHUB_PATH}
+      - name: update docker-compose
+        run: |
+          which docker-compose && exit 0 || true
+          echo ---------------------------------------------------------------
+          echo docker-compose - installing ...
+          echo ---------------------------------------------------------------
+          BIN_DIR=$HOME/.docker-compose/bin
+          FILE=$BIN_DIR/docker-compose
+          mkdir -p $BIN_DIR
+          set -x
+          curl -L --fail https://github.com/docker/compose/releases/download/1.29.1/docker-compose-`uname -s`-`uname -m` -o $FILE
+          chmod +x $FILE
+          echo "downloaded $($FILE --version)"
+          echo "$BIN_DIR" >> ${GITHUB_PATH}
+          set +x
+          echo ---------------------------------------------------------------
+      - name: check tools
+        run: |
+          echo ---------------------------------------------------------------
+          ( set -x; which rover )
+          echo "$(rover --version)"
+          echo ---------------------------------------------------------------
+          ( set -x; which docker-compose )
+          echo "$(docker-compose --version)"
+          echo ---------------------------------------------------------------
+      - name: make supergraph
+        run: |
+          cd scripts/router-e2e-defer-tests
+          make supergraph
+          cat ./supergraph.graphql
+          cd ../../
+      - name: docker-compose build
+        run: |
+          ( set -x; docker-compose -f scripts/router-e2e-defer-tests/docker-compose.router.yml build --no-cache --pull --parallel --progress plain )
+      - name: docker-compose up -d
+        run: |
+          ( set -x; docker-compose -f scripts/router-e2e-defer-tests/docker-compose.router.yml  up -d )
+          sleep 8
+          docker-compose -f scripts/router-e2e-defer-tests/docker-compose.router.yml logs
+      - name: smoke test
+        run: scripts/router-e2e-defer-tests/smoke.sh 4000
+      - name: docker-compose down
+        run: docker-compose -f scripts/router-e2e-defer-tests/docker-compose.router.yml down

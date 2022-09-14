@@ -1,0 +1,7 @@
+cors:
+  allow_any_origin: true
+server:
+  listen: 0.0.0.0:4000
+plugins:
+  experimental.include_subgraph_errors:
+    all: true # Propagate errors from all subraphs

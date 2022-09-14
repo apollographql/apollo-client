@@ -1,0 +1,51 @@
+extend schema
+    @link(url: "https://specs.apollo.dev/federation/v2.0",
+       import: ["@key", "@shareable", "@tag", "@inaccessible"])
+
+type Query {
+  allProducts: [ProductItf]
+  product(id: ID!): ProductItf
+}
+
+interface ProductItf implements SkuItf {
+  id: ID!
+  sku: String
+  package: String
+  variation: ProductVariation
+  dimensions: ProductDimension
+  createdBy: User
+  hidden: String @inaccessible
+  oldField: String @deprecated(reason: "refactored out")
+}
+
+interface SkuItf {
+  sku: String
+}
+
+type Product implements ProductItf & SkuItf @key(fields: "id") @key(fields: "sku package") @key(fields: "sku variation { id }"){
+  id: ID! @tag(name: "hi-from-products")
+  sku: String
+  package: String
+  variation: ProductVariation
+  dimensions: ProductDimension
+  createdBy: User
+  hidden: String
+  reviewsScore: Float!
+  oldField: String
+}
+enum ShippingClass {
+  STANDARD
+  EXPRESS
+}
+type ProductVariation {
+  id: ID!
+  name: String
+}
+type ProductDimension @shareable {
+  size: String
+  weight: Float
+}
+type User @key(fields: "email") {
+  email: ID!
+  totalProductsCreated: Int @shareable
+}

@@ -1,0 +1,39 @@
+[project]
+authors = [
+  {name = "Patrick Arminio", email = "patrick.arminio@gmail.com"},
+]
+dependencies = [
+    "strawberry-graphql>=0.130.3",
+    "uvicorn>=0.18.2",
+    "starlette>=0.20.4",
+    "opentelemetry-api>=1.11.1",
+    "opentelemetry-sdk>=1.11.1",
+    "opentelemetry-exporter-zipkin>=1.11.1",
+    "opentelemetry-instrumentation-starlette>=0.30b1",
+    "opentelemetry-exporter-otlp>=1.11.1",
+    "protobuf==3.20.1",
+    "grpcio==1.44.0",
+]
+description = ""
+license = {text = "MIT"}
+name = ""
+requires-python = ">=3.10"
+version = ""
+[project.optional-dependencies]
+
+[build-system]
+build-backend = "pdm.pep517.api"
+requires = ["pdm-pep517>=1.0.0"]
+
+[tool]
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+  "black>=22.6.0",
+  "flake8>=5.0.4",
+  "mypy>=0.971",
+]
+
+[tool.pdm.scripts]
+export-schema = {shell = "strawberry export-schema schema > reviews.graphql"}
+server = "uvicorn app:app --host 0.0.0.0 --port 4000"

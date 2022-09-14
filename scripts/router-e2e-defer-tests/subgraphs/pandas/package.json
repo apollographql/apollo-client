@@ -1,0 +1,16 @@
+{
+  "name": "subgraph-pandas",
+  "version": "1.1.27",
+  "description": "",
+  "main": "pandas.js",
+  "scripts": {
+    "start": "node pandas.js"
+  },
+  "dependencies": {
+    "apollo-server": "3.10.2",
+    "graphql": "16.6.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

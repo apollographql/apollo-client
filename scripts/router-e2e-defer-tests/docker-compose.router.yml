@@ -1,0 +1,26 @@
+version: '3'
+services:
+  apollo-router:
+    container_name: apollo-router
+    image: ghcr.io/apollographql/router:v1.0.0-alpha.3
+    volumes:
+      - ./supergraph.graphql:/dist/schema/supergraph.graphql
+      - ./router.yaml:/dist/config/router.yaml
+    command: [ "-c", "config/router.yaml", "-s", "schema/supergraph.graphql", "--log", "info" ]
+    ports:
+      - "4000:4000"
+  products:
+    container_name: products
+    build: ./subgraphs/products
+  inventory:
+    container_name: inventory
+    build: ./subgraphs/inventory
+  users:
+    container_name: users
+    build: ./subgraphs/users
+  pandas:
+    container_name: pandas
+    build: ./subgraphs/pandas
+  reviews:
+    container_name: reviews
+    build: ./subgraphs/reviews

@@ -1,0 +1,22 @@
+federation_version: 2
+subgraphs:
+  inventory:
+    routing_url: http://inventory:4000/graphql
+    schema:
+      file: subgraphs/inventory/app/src/main/resources/graphql/inventory.graphqls
+  products:
+    routing_url: http://products:4000/graphql
+    schema:
+      file: subgraphs/products/products.graphql
+  users:
+    routing_url: http://users:4000/graphql
+    schema:
+      file: subgraphs/users/users.graphql
+  pandas:
+    routing_url: http://pandas:4000/graphql
+    schema:
+      file: subgraphs/pandas/pandas.graphql
+  reviews:
+    routing_url: http://reviews:4000/graphql
+    schema:
+      file: subgraphs/reviews/reviews.graphql

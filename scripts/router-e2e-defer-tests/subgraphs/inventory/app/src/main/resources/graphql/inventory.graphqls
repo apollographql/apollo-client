@@ -1,0 +1,29 @@
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external", "@requires", "@shareable"])
+
+type Product implements ProductItf @key(fields: "id") {
+  id: ID!
+  dimensions: ProductDimension @external
+  delivery(zip: String): DeliveryEstimates @requires(fields: "dimensions { size weight }")
+}
+
+type ProductDimension @shareable {
+  size: String
+  weight: Float
+}
+
+type DeliveryEstimates {
+  estimatedDelivery: String
+  fastestDelivery: String
+}
+
+interface ProductItf {
+  id: ID!
+  dimensions: ProductDimension
+  delivery(zip: String): DeliveryEstimates
+}
+
+enum ShippingClass {
+  STANDARD
+  EXPRESS
+  OVERNIGHT
+}

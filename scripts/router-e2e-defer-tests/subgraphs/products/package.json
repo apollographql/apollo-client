@@ -1,0 +1,18 @@
+{
+  "name": "subgraph-products",
+  "version": "1.1.18",
+  "description": "",
+  "main": "products.js",
+  "scripts": {
+    "start": "node products.js"
+  },
+  "dependencies": {
+    "@apollo/subgraph": "2.1.1",
+    "apollo-server": "3.10.2",
+    "supergraph-demo-opentelemetry": "0.2.4",
+    "graphql": "16.6.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

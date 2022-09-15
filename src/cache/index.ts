@@ -5,6 +5,8 @@ export { Cache } from './core/types/Cache';
 export { DataProxy } from './core/types/DataProxy';
 export {
   MissingTree,
+  Modifier,
+  Modifiers,
   MissingFieldError,
   ReadFieldOptions
 } from './core/types/common';

@@ -40,6 +40,7 @@ export class BatchHttpLink extends ApolloLink {
       fetch: fetcher,
       print = defaultPrinter,
       includeExtensions,
+      preserveHeaderCase,
       batchInterval,
       batchDebounce,
       batchMax,
@@ -58,7 +59,7 @@ export class BatchHttpLink extends ApolloLink {
     }
 
     const linkConfig = {
-      http: { includeExtensions },
+      http: { includeExtensions, preserveHeaderCase },
       options: requestOptions.fetchOptions,
       credentials: requestOptions.credentials,
       headers: requestOptions.headers,

@@ -144,18 +144,24 @@ The example below passes the `ApolloClient` constructor a link chain with two li
 <ExpansionPanel title="Click to expand example">
 
 ```tsx
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { RetryLink } from "@apollo/client/link/retry";
+import { ApolloClient, HttpLink, InMemoryCache, from } from "@apollo/client";
+import { onError } from "@apollo/client/link/error";
 
-const directionalLink = new RetryLink().split(
-  (operation) => operation.getContext().version === 1,
-  new HttpLink({ uri: "http://localhost:4000/v1/graphql" }),
-  new HttpLink({ uri: "http://localhost:4000/v2/graphql" })
-);
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors)
+    graphQLErrors.forEach(({ message, locations, path }) =>
+      console.log(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+      )
+    );
+  if (networkError) console.log(`[Network error]: ${networkError}`);
+});
 
+const httpLink = new HttpLink({ uri: 'http://localhost:4000/graphql' })
+  
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: directionalLink,
+  link: from([errorLink, httpLink]),
 });
 ```
 

@@ -6,6 +6,7 @@ type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
+import { isExecutionPatchIncrementalResult } from '../utilities/common/incrementalResult';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
 import {
@@ -25,6 +26,7 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
+  cloneDeep,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -433,7 +435,7 @@ export class QueryManager<TStore> {
                 returnPartialData: true,
               });
 
-              if (diff.complete) {
+              if (diff.complete && !(isExecutionPatchIncrementalResult(result))) {
                 result = { ...result, data: diff.result };
               }
             }
@@ -988,7 +990,7 @@ export class QueryManager<TStore> {
 
           byVariables.set(varJson, observable = concast);
 
-          concast.cleanup(() => {
+          concast.beforeNext(() => {
             if (byVariables.delete(varJson) &&
                 byVariables.size < 1) {
               inFlightLinkObservables.delete(serverQuery);
@@ -1034,6 +1036,10 @@ export class QueryManager<TStore> {
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = queryInfo.lastRequestId = this.generateRequestId();
 
+    // Make sure we write the result below using the same options we were given,
+    // even though the input object may have been modified in the meantime.
+    options = cloneDeep(options);
+
     return asyncMap(
       this.getObservableFromLink(
         queryInfo.document!,
@@ -1042,7 +1048,19 @@ export class QueryManager<TStore> {
       ),
 
       result => {
-        const hasErrors = isNonEmptyArray(result.errors);
+        const graphQLErrors = isNonEmptyArray(result.errors)
+          ? result.errors.slice(0)
+          : [];
+
+        if ('incremental' in result && isNonEmptyArray(result.incremental)) {
+          result.incremental.forEach(incrementalResult => {
+            if (incrementalResult.errors) {
+              graphQLErrors.push(...incrementalResult.errors);
+            }
+          });
+        }
+
+        const hasErrors = isNonEmptyArray(graphQLErrors);
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.
@@ -1050,7 +1068,7 @@ export class QueryManager<TStore> {
           if (hasErrors && options.errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
-              graphQLErrors: result.errors,
+              graphQLErrors,
             }));
           }
           queryInfo.markResult(result, options, cacheWriteBehavior);
@@ -1064,7 +1082,7 @@ export class QueryManager<TStore> {
         };
 
         if (hasErrors && options.errorPolicy !== "ignore") {
-          aqr.errors = result.errors;
+          aqr.errors = graphQLErrors;
           aqr.networkStatus = NetworkStatus.error;
         }
 

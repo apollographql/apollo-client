@@ -17,13 +17,8 @@ import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
-import {
-  itAsync,
-  MockLink,
-  MockedProvider,
-  MockSubscriptionLink,
-  mockSingleLink,
-} from '../../../testing';
+import { itAsync, MockLink, mockSingleLink, MockSubscriptionLink } from '../../../testing';
+import { MockedProvider } from '../../../testing/react';
 import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';

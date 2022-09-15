@@ -12,7 +12,7 @@ import {
   MockedProvider,
   MockLink,
   mockSingleLink,
-} from '../../../../testing';
+} from '../../../../testing/react';
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 

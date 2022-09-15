@@ -7,8 +7,8 @@ import { ApolloClient } from '../../../../core';
 import {
   createMockClient,
   itAsync,
-  MockedProvider,
-} from '../../../../testing';
+  MockedProvider
+} from '../../../../testing/react';
 import { NormalizedCacheObject } from '../../../../cache';
 import { ApolloProvider } from '../../../context';
 import { graphql } from '../../graphql';

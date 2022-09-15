@@ -1,0 +1,20 @@
+---
+title: Migrating to Apollo Client 4.0
+---
+
+This article walks you through migrating your application from Apollo Client 3.0 to 4.0.
+
+## Updating imports
+
+
+
+### @apollo/client to @apollo/client/react
+
+React Apollo HOC and component functionality is no longer included in the `@apollo/client` package, and now only available through `@apollo/client/react`:
+
+```js
+// Importing react hooks in Apollo Client v3:
+import { useQuery, useMutation, ApolloClient } from '@apollo/client';
+// What that same import will look like in v4:
+import { useQuery, useMutation, ApolloClient } from '@apollo/client/react';
+```

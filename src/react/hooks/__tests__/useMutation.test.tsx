@@ -9,7 +9,7 @@ import fetchMock from "fetch-mock";
 
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
+import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing/react';
 import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';

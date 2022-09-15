@@ -26,7 +26,7 @@ The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the
 To execute a mutation, you first call `useMutation` within a React component and pass it the mutation you want to execute, like so:
 
 ```jsx {13} title="my-component.jsx"
-import { gql, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client/react';
 
 // Define mutation
 const INCREMENT_COUNTER = gql`
@@ -56,7 +56,7 @@ When your component renders, `useMutation` returns a tuple that includes:
 Let's say we're creating a to-do list application and we want the user to be able to add items to their list. First, we'll create a corresponding GraphQL mutation named `ADD_TODO`. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
 ```jsx title="add-todo.jsx"
-import { gql, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client/react';
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {

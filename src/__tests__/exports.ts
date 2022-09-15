@@ -23,6 +23,7 @@ import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
 import * as testingCore from "../testing/core";
+import * as testingReact from "../testing/react";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
 
@@ -65,6 +66,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
   check("@apollo/client/testing/core", testingCore);
+  check("@apollo/client/testing/react", testingReact);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
 

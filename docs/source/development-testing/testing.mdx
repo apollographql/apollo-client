@@ -20,8 +20,8 @@ Let's say we want to test the following `Dog` component, which executes a basic 
 <ExpansionPanel title="Click to expand 🐶">
 
 ```jsx title="dog.jsx"
-import React from "react";
-import { gql, useQuery } from "@apollo/client";
+import React from 'react';
+import { gql, useQuery } from "@apollo/client/react";
 
 // Make sure that both the query and the component are exported
 export const GET_DOG_QUERY = gql`
@@ -55,7 +55,7 @@ A basic rendering test for the component looks like this (minus mocked responses
 ```jsx title="dog.test.js"
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { GET_DOG_QUERY, Dog } from "./dog";
 
 const mocks = []; // We'll fill this in next
@@ -119,7 +119,7 @@ Combining our code above, we get the following complete test:
 ```jsx title="dog.test.js"
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { GET_DOG_QUERY, Dog } from "./dog";
 
 const mocks = [
@@ -276,7 +276,7 @@ We can test the initial rendering of this component just like we [tested our `Do
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { DeleteButton, DELETE_DOG_MUTATION } from "./delete-dog";
 
 it("should render without error", () => {
@@ -301,8 +301,48 @@ it("should render loading and success states on delete", async () => {
         query: DELETE_DOG_MUTATION,
         variables: { name: "Buck" }
       },
-      result: { data: deleteDog }
-    }
+      result: { data: deleteDog },
+    },
+  ];
+
+  const component = TestRenderer.create(
+    <MockedProvider mocks={mocks} addTypename={false}>
+      <DeleteButton />
+    </MockedProvider>,
+  );
+
+  // find the button and simulate a click
+  const button = component.root.findByType('button');
+  button.props.onClick(); // fires the mutation
+
+  const tree = component.toJSON();
+  expect(tree.children).toContain('Loading...');
+});
+```
+
+Again, this example is similar to [the `useQuery`-based component above](#example), but it differs after the rendering is completed. Because this component relies on a button click to fire a mutation, we use the renderer's API to find the button and simulate a click with its `onClick` handler. This fires off the mutation, and the rest of the test runs as expected.
+
+> Other test utilities like [Enzyme](https://github.com/airbnb/enzyme) and [react-testing-library](https://github.com/kentcdodds/react-testing-library) have built-in tools for finding elements and simulating events, but the concept is the same: find the button and simulate a click on it.
+
+To test for a successful mutation after simulating the click, use a zero-millisecond timeout, as shown in [Testing the "success" state](#testing-the-success-state):
+
+<ExpansionPanel title="Click to expand 🐶">
+
+```jsx
+import TestRenderer from 'react-test-renderer';
+import { MockedProvider } from '@apollo/client/testing/react';
+import DeleteButton, { DELETE_DOG_MUTATION } from './delete-dog';
+
+it('should delete and give visual feedback', async () => {
+  const deleteDog = { name: 'Buck', breed: 'Poodle', id: 1 };
+  const mocks = [
+    {
+      request: {
+        query: DELETE_DOG_MUTATION,
+        variables: { name: 'Buck' },
+      },
+      result: { data: deleteDog },
+    },
   ];
 
   render(

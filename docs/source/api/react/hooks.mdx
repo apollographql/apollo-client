@@ -16,10 +16,10 @@ Apollo Client >= 3 includes React hooks functionality out of the box. You don't 
 
 ## The `ApolloProvider` component
 
-The `ApolloProvider` component leverages [React's Context API](https://reactjs.org/docs/context.html) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client` package.
+The `ApolloProvider` component leverages [React's Context API](https://reactjs.org/docs/context.html) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client/react` package.
 
 ```js
-import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 ```
 
 ### Props
@@ -51,7 +51,8 @@ One way to access the configured Apollo Client instance directly is to create an
 ### Example
 
 ```jsx
-import { ApolloConsumer } from '@apollo/client';
+import React from 'react';
+import { ApolloConsumer } from '@apollo/client/react';
 
 function WithApolloClient() {
   return (
@@ -67,7 +68,7 @@ function WithApolloClient() {
 ### Example
 
 ```jsx
-import { gql, useQuery } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client/react';
 
 const GET_GREETING = gql`
   query GetGreeting($language: String!) {
@@ -118,7 +119,7 @@ function useQuery<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
-import { gql, useLazyQuery } from "@apollo/client";
+import { gql, useLazyQuery } from "@apollo/client/react";
 
 const GET_GREETING = gql`
   query GetGreeting($language: String!) {
@@ -184,7 +185,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
-import { gql, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client/react';
 
 const ADD_TODO = gql`
   mutation AddTodo($type: String!) {
@@ -307,7 +308,7 @@ function useSubscription<TData = any, TVariables = OperationVariables>(
 ### Example
 
 ```jsx
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 
 function SomeComponent() {
   const client = useApolloClient();

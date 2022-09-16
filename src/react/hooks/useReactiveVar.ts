@@ -12,7 +12,13 @@ export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
     // Catch any potential state changes that might have happened
     // between when this useReactiveVar was called and this useEffect
     // cb was scheduled for async execution.
-    setValue(rv());
+    const probablySameValue = rv();
+    if (value !== probablySameValue) {
+      // If the value of rv has already changed, we don't need to listen for the
+      // next change, because we can report this change immediately.
+      setValue(probablySameValue);
+      return;
+    }
 
     // We need a stable handle to function passed into rv.onNextChange.
     // Se that we can clean it up properly. RV clears the CB by reference,

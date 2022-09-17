@@ -3,7 +3,7 @@ version: 2
 jobs:
   Filesize:
     docker:
-      - image: circleci/node:16.13.1
+      - image: circleci/node:17.2.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -27,7 +27,7 @@ jobs:
 
   Tests:
     docker:
-      - image: circleci/node:16.13.1
+      - image: circleci/node:17.2.0
     steps:
       - checkout
       - run: npm run ci:precheck

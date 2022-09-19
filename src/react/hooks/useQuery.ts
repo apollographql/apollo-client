@@ -378,7 +378,6 @@ class InternalState<TData, TVariables> {
     ssr,
     onCompleted,
     onError,
-    displayName,
     defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the

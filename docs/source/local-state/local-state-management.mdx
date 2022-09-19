@@ -33,7 +33,7 @@ sequenceDiagram
 
 To support this flow, Apollo Client 3 introduces two complementary mechanisms for managing local state: [field policies](#field-policies-and-local-only-fields) and [reactive variables](#reactive-variables).
 
-> \* The [local resolver API](./local-resolvers/) from previous versions of Apollo Client is also available but is [deprecated](./local-resolvers/#deprecation-notice). Some additional steps may occur when using this, e.g. the `always:true` client directive would recalculate local field resolvers after remote fields are cached.
+> \* The [local resolver API](./local-resolvers/) from previous versions of Apollo Client is also available but is [deprecated](./local-resolvers/#deprecation-notice). Some additional steps may occur when using this, e.g. the `@client(always:true)` directive would recalculate local field resolvers after remote fields are cached.
 
 ## Field policies and local-only fields
 

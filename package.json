@@ -112,7 +112,7 @@
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "28.1.8",
     "@types/lodash": "4.14.185",
-    "@types/node": "16.11.45",
+    "@types/node": "16.11.59",
     "@types/react": "18.0.20",
     "@types/react-dom": "18.0.6",
     "@types/use-sync-external-store": "0.0.3",

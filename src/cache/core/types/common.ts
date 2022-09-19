@@ -65,7 +65,7 @@ export type ToReferenceFunction = (
 
 export type CanReadFunction = (value: StoreValue) => boolean;
 
-export type ModifierUtility = {
+export type ModifierDetails = {
   DELETE: any;
   INVALIDATE: any;
   fieldName: string;
@@ -77,7 +77,7 @@ export type ModifierUtility = {
   storage: StorageType;
 }
 
-export type Modifier<T> = (value: T, details: ModifierUtility) => T;
+export type Modifier<T> = (value: T, details: ModifierDetails) => T;
 
 export type Modifiers = {
   [fieldName: string]: Modifier<any>;

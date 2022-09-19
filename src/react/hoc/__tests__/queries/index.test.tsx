@@ -70,6 +70,7 @@ describe('queries', () => {
   });
 
   itAsync('includes the variables in the props', (resolve, reject) => {
+    const TIME_SCALE = 5000;
     let renderCount = 0;
     const query: DocumentNode = gql`
       query people($first: Int) {
@@ -122,7 +123,7 @@ describe('queries', () => {
 
     waitFor(() => {
       expect(renderCount).toBe(2);
-    }).then(resolve, reject);
+    }, {timeout: TIME_SCALE}).then(resolve, reject);
   });
 
   itAsync('should update query variables when props change', (resolve, reject) => {

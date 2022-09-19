@@ -806,7 +806,8 @@ describe('BatchLink', () => {
   });
 
   itAsync('correctly follows batch interval', (resolve, reject) => {
-    const intervals = [10, 20, 30];
+    const TIME_SCALE = 100;
+    const intervals = [1*TIME_SCALE, 2*TIME_SCALE, 3*TIME_SCALE];
 
     const runBatchInterval = () => {
       const mock = jest.fn();
@@ -867,9 +868,9 @@ describe('BatchLink', () => {
         }
 
         runBatchInterval();
-      }, batchInterval + 5);
+      }, batchInterval + (.5*TIME_SCALE));
 
-      setTimeout(() => mock(batchHandler.mock.calls.length), batchInterval - 5);
+      setTimeout(() => mock(batchHandler.mock.calls.length), batchInterval - (.5*TIME_SCALE));
       setTimeout(() => mock(batchHandler.mock.calls.length), batchInterval / 2);
     };
     runBatchInterval();

@@ -99,6 +99,20 @@ An object representing headers to include in every HTTP request, such as `{Autho
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `preserveHeaderCase`
+
+`Boolean`
+</td>
+<td>
+
+If set to true, header names won't be automatically normalized to lowercase. This allows for non-http-spec-compliant servers that might expect capitalized header names.
+
+The default value is `false`.
+</td>
+</tr>
 
 <tr>
 <td>

@@ -46,13 +46,18 @@ For advanced usage and additional configuration options, see the [README of `apo
 Sometimes, you might want to reset the cache entirely, such as [when a user logs out](../networking/authentication/#reset-store-on-logout). To accomplish this, call `client.resetStore`. This method is asynchronous, because it also refetches any of your active queries.
 
 ```js
-export default withApollo(graphql(PROFILE_QUERY, {
-  props: ({ data: { loading, currentUser }, ownProps: { client }}) => ({
-    loading,
-    currentUser,
-    resetOnLogout: async () => client.resetStore(),
-  }),
-})(Profile));
+import { useQuery } from '@apollo/client';
+function Profile() {
+    const { data, client } = useQuery(PROFILE_QUERY);
+    return (
+      <Fragment>
+        <p>Current user: {data?.currentUser}</p>
+        <button onClick={async ()=>client.resetStore()}>
+            Log out
+        </button>
+      </Fragment>
+    );
+}
 ```
 
 > To reset the cache _without_ refetching active queries, use `client.clearStore()` instead of `client.resetStore()`.

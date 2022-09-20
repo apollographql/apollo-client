@@ -1,5 +1,3 @@
-const { compilerOptions } = require("../tsconfig.json");
-
 const defaults = {
   rootDir: "src",
   preset: "ts-jest",

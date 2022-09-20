@@ -482,7 +482,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         },
       });
 
-      return fetchMoreResult as ApolloQueryResult<TFetchData>;
+      return fetchMoreResult;
 
     }).finally(() => {
       // In case the cache writes above did not generate a broadcast
@@ -735,7 +735,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       if (this.pollingInfo) {
         if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
           this.reobserve({
-            fetchPolicy: "network-only",
+            // Most fetchPolicy options don't make sense to use in a polling context, as
+            // users wouldn't want to be polling the cache directly. However, network-only and
+            // no-cache are both useful for when the user wants to control whether or not the
+            // polled results are written to the cache.
+            fetchPolicy: this.options.initialFetchPolicy === 'no-cache' ? 'no-cache' : 'network-only',
           }, NetworkStatus.poll).then(poll, poll);
         } else {
           poll();
@@ -786,7 +790,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // if it did, it would definitely use a disposable Concast.
       newNetworkStatus === NetworkStatus.fetchMore ||
       // Polling uses a disposable Concast so the polling options (which force
-      // fetchPolicy to be "network-only") won't override the original options.
+      // fetchPolicy to be "network-only" or "no-cache") won't override the original options.
       newNetworkStatus === NetworkStatus.poll;
 
     // Save the old variables, since Object.assign may modify them below.
@@ -836,10 +840,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     if (!useDisposableConcast) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
-      // observer with an unnecessary SubscriptionObserver object, in part so
-      // that we can remove it here without triggering any unsubscriptions,
-      // because we just want to ignore the old observable, not prematurely shut
-      // it down, since other consumers may be awaiting this.concast.promise.
+      // observer with an unnecessary SubscriptionObserver object.
       if (this.concast && this.observer) {
         this.concast.removeObserver(this.observer);
       }

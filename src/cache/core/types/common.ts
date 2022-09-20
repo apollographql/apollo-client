@@ -29,13 +29,24 @@ export class MissingFieldError extends Error {
     public readonly query: DocumentNode,
     public readonly variables?: Record<string, any>,
   ) {
-     // 'Error' breaks prototype chain here
-     super(message);
+    // 'Error' breaks prototype chain here
+    super(message);
 
-     // We're not using `Object.setPrototypeOf` here as it isn't fully
-     // supported on Android (see issue #3236).
-     (this as any).__proto__ = MissingFieldError.prototype;
+    if (Array.isArray(this.path)) {
+      this.missing = this.message;
+      for (let i = this.path.length - 1; i >= 0; --i) {
+        this.missing = { [this.path[i]]: this.missing };
+      }
+    } else {
+      this.missing = this.path;
+    }
+
+    // We're not using `Object.setPrototypeOf` here as it isn't fully supported
+    // on Android (see issue #3236).
+    (this as any).__proto__ = MissingFieldError.prototype;
   }
+
+  public readonly missing: MissingTree;
 }
 
 export interface FieldSpecifier {

@@ -42,7 +42,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       second: 0,
     };
 
-    concast.cleanup(() => {
+    concast.beforeNext(() => {
       ++cleanupCounts.first;
     });
 
@@ -58,7 +58,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       },
     });
 
-    concast.cleanup(() => {
+    concast.beforeNext(() => {
       ++cleanupCounts.second;
     });
 
@@ -74,5 +74,72 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       });
       resolve();
     }).catch(reject);
+  });
+
+  it("concast.beforeNext listeners run before next result/error", () => {
+    const log: Array<number | [string, any?]> = [];
+    let resolve7Promise: undefined | (() => void);
+
+    const concast = new Concast([
+      Observable.of(1, 2),
+
+      new Promise(resolve => setTimeout(resolve, 10)).then(() => {
+        enqueueListener();
+        return Observable.of(3, 4);
+      }),
+
+      Observable.of(5, 6),
+
+      new Promise<void>(resolve => {
+        resolve7Promise = resolve;
+      }).then(() => {
+        enqueueListener();
+        return Observable.of(7);
+      }),
+
+      Observable.of(8, 9),
+    ]);
+
+    function enqueueListener() {
+      concast.beforeNext((method, arg) => {
+        log.push([method, arg]);
+      });
+    }
+
+    const sub = concast.subscribe({
+      next(num) {
+        log.push(num);
+        if (num === 6) {
+          resolve7Promise!();
+        } else if (num === 8) {
+          enqueueListener();
+          // Prevent delivery of final 9 result.
+          sub.unsubscribe();
+        }
+      },
+    });
+
+    enqueueListener();
+
+    return concast.promise.then(lastResult => {
+      expect(lastResult).toBe(8);
+
+      expect(log).toEqual([
+        ["next", 1],
+        1,
+        2,
+        ["next", 3],
+        3,
+        4,
+        5,
+        6,
+        ["next", 7],
+        7,
+        8,
+        ["complete", void 0],
+      ]);
+
+      sub.unsubscribe();
+    });
   });
 });

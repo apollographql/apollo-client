@@ -12,7 +12,7 @@ import {
 import { OperationVariables } from '../../core';
 import { useApolloClient } from './useApolloClient';
 
-export function useSubscription<TData = any, TVariables = OperationVariables>(
+export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SubscriptionHookOptions<TData, TVariables>,
 ) {

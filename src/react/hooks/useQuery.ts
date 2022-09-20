@@ -40,7 +40,7 @@ const {
 
 export function useQuery<
   TData = any,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<TData, TVariables> = Object.create(null),
@@ -51,7 +51,7 @@ export function useQuery<
   ).useQuery(options);
 }
 
-export function useInternalState<TData, TVariables>(
+export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ): InternalState<TData, TVariables> {
@@ -79,7 +79,7 @@ export function useInternalState<TData, TVariables>(
   return state;
 }
 
-class InternalState<TData, TVariables> {
+class InternalState<TData, TVariables extends OperationVariables> {
   constructor(
     public readonly client: ReturnType<typeof useApolloClient>,
     public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,

@@ -1,8 +1,7 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
-// @ts-ignore
-import { withState } from './recomposeWithState.js';
+import { withState } from './recomposeWithState';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';

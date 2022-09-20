@@ -4,7 +4,7 @@ import { OperationVariables } from '../../core';
 import { QueryComponentOptions } from './types';
 import { useQuery } from '../hooks';
 
-export function Query<TData = any, TVariables = OperationVariables>(
+export function Query<TData = any, TVariables extends OperationVariables = OperationVariables>(
   props: QueryComponentOptions<TData, TVariables>
 ) {
   const { children, query, ...options } = props;
@@ -12,7 +12,7 @@ export function Query<TData = any, TVariables = OperationVariables>(
   return result ? children(result as any) : null;
 }
 
-export interface Query<TData, TVariables> {
+export interface Query<TData, TVariables extends OperationVariables> {
   propTypes: PropTypes.InferProps<QueryComponentOptions<TData, TVariables>>;
 }
 

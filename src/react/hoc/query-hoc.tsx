@@ -16,9 +16,9 @@ import { OperationOption, OptionProps, DataProps } from './types';
 
 export function withQuery<
   TProps extends TGraphQLVariables | {} = {},
-  TData = {},
-  TGraphQLVariables = {},
-  TChildProps = DataProps<TData, TGraphQLVariables>
+  TData extends {} = {},
+  TGraphQLVariables extends {} = {},
+  TChildProps extends Partial<DataProps<TData, TGraphQLVariables>> = DataProps<TData, TGraphQLVariables>
 >(
   document: DocumentNode,
   operationOptions: OperationOption<

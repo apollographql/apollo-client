@@ -24,6 +24,7 @@ import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
+import { OperationVariables } from '../../core';
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -229,7 +230,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public diff<TData, TVariables = any>(
+  public diff<TData, TVariables extends OperationVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>,
   ): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({

@@ -89,7 +89,7 @@ export interface OptionProps<
 export interface OperationOption<
   TProps,
   TData,
-  TGraphQLVariables = OperationVariables,
+  TGraphQLVariables extends OperationVariables = OperationVariables,
   TChildProps = ChildProps<TProps, TData, TGraphQLVariables>,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,

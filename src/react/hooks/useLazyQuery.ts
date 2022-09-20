@@ -23,7 +23,7 @@ const EAGER_METHODS = [
   'subscribeToMore',
 ] as const;
 
-export function useLazyQuery<TData = any, TVariables = OperationVariables>(
+export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
 ): LazyQueryResultTuple<TData, TVariables> {

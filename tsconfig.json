@@ -19,5 +19,8 @@
     "lib": ["es2015", "esnext.asynciterable", "dom"],
     "jsx": "react"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "src/**/__tests__/**/*"
+  ]
 }

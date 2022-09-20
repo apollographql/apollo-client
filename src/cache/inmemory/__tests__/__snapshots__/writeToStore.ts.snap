@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 1`] = `
-Object {
-  "ROOT_QUERY": Object {
+{
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
+    "currentTime({"tz":"UTC-5"})": {
       "localeString": "9/25/2020, 1:08:33 PM",
     },
-    "someJSON": Object {
-      "foos": Array [
+    "someJSON": {
+      "foos": [
         "bar",
         "baz",
       ],
@@ -19,13 +19,13 @@ Object {
 `;
 
 exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 2`] = `
-Object {
-  "ROOT_QUERY": Object {
+{
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
+    "currentTime({"tz":"UTC-5"})": {
       "msSinceEpoch": 1601053713081,
     },
-    "someJSON": Object {
+    "someJSON": {
       "asdf": "middle",
       "qwer": "upper",
       "zxcv": "lower",
@@ -37,34 +37,34 @@ Object {
 exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 3`] = `[MockFunction]`;
 
 exports[`writing to the store correctly merges fragment fields along multiple paths 1`] = `
-Object {
-  "Item:0f47f85d-8081-466e-9121-c94069a77c3e": Object {
+{
+  "Item:0f47f85d-8081-466e-9121-c94069a77c3e": {
     "__typename": "Item",
     "id": "0f47f85d-8081-466e-9121-c94069a77c3e",
-    "value": Object {
+    "value": {
       "__typename": "Container",
-      "value": Object {
+      "value": {
         "__typename": "Value",
-        "item": Object {
+        "item": {
           "__ref": "Item:6dc3530b-6731-435e-b12a-0089d0ae05ac",
         },
       },
     },
   },
-  "Item:6dc3530b-6731-435e-b12a-0089d0ae05ac": Object {
+  "Item:6dc3530b-6731-435e-b12a-0089d0ae05ac": {
     "__typename": "Item",
     "id": "6dc3530b-6731-435e-b12a-0089d0ae05ac",
-    "value": Object {
+    "value": {
       "__typename": "Container",
       "text": "Hello World",
-      "value": Object {
+      "value": {
         "__typename": "Value",
       },
     },
   },
-  "ROOT_QUERY": Object {
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "item({\\"id\\":\\"123\\"})": Object {
+    "item({"id":"123"})": {
       "__ref": "Item:0f47f85d-8081-466e-9121-c94069a77c3e",
     },
   },
@@ -73,16 +73,16 @@ Object {
 
 exports[`writing to the store should not keep reference when type of mixed inlined field changes to non-inlined field 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'id' while writing result {
-  \\"__typename\\": \\"Cat\\",
-  \\"name\\": \\"cat\\"
+  "__typename": "Cat",
+  "name": "cat"
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },
@@ -91,28 +91,28 @@ exports[`writing to the store should not keep reference when type of mixed inlin
 `;
 
 exports[`writing to the store should respect id fields added by fragments 1`] = `
-Object {
-  "AType:a-id": Object {
+{
+  "AType:a-id": {
     "__typename": "AType",
-    "b": Array [
-      Object {
+    "b": [
+      {
         "__ref": "BType:b-id",
       },
     ],
     "id": "a-id",
   },
-  "BType:b-id": Object {
+  "BType:b-id": {
     "__typename": "BType",
-    "c": Object {
+    "c": {
       "__typename": "CType",
       "title": "Your experience",
       "titleSize": null,
     },
     "id": "b-id",
   },
-  "ROOT_QUERY": Object {
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "a": Object {
+    "a": {
       "__ref": "AType:a-id",
     },
   },
@@ -120,39 +120,39 @@ Object {
 `;
 
 exports[`writing to the store user objects should be able to have { __typename: "Mutation" } 1`] = `
-Object {
-  "Gene:{\\"id\\":\\"SLC45A2\\"}": Object {
+{
+  "Gene:{"id":"SLC45A2"}": {
     "__typename": "Gene",
     "id": "SLC45A2",
   },
-  "Gene:{\\"id\\":\\"SNAI2\\"}": Object {
+  "Gene:{"id":"SNAI2"}": {
     "__typename": "Gene",
     "id": "SNAI2",
   },
-  "Mutation:{\\"gene\\":{\\"id\\":\\"SLC45A2\\"},\\"name\\":\\"albinism\\"}": Object {
+  "Mutation:{"gene":{"id":"SLC45A2"},"name":"albinism"}": {
     "__typename": "Mutation",
-    "gene": Object {
-      "__ref": "Gene:{\\"id\\":\\"SLC45A2\\"}",
+    "gene": {
+      "__ref": "Gene:{"id":"SLC45A2"}",
       "id": "SLC45A2",
     },
     "name": "albinism",
   },
-  "Mutation:{\\"gene\\":{\\"id\\":\\"SNAI2\\"},\\"name\\":\\"piebaldism\\"}": Object {
+  "Mutation:{"gene":{"id":"SNAI2"},"name":"piebaldism"}": {
     "__typename": "Mutation",
-    "gene": Object {
-      "__ref": "Gene:{\\"id\\":\\"SNAI2\\"}",
+    "gene": {
+      "__ref": "Gene:{"id":"SNAI2"}",
       "id": "SNAI2",
     },
     "name": "piebaldism",
   },
-  "ROOT_QUERY": Object {
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "mutations": Array [
-      Object {
-        "__ref": "Mutation:{\\"gene\\":{\\"id\\":\\"SLC45A2\\"},\\"name\\":\\"albinism\\"}",
+    "mutations": [
+      {
+        "__ref": "Mutation:{"gene":{"id":"SLC45A2"},"name":"albinism"}",
       },
-      Object {
-        "__ref": "Mutation:{\\"gene\\":{\\"id\\":\\"SNAI2\\"},\\"name\\":\\"piebaldism\\"}",
+      {
+        "__ref": "Mutation:{"gene":{"id":"SNAI2"},"name":"piebaldism"}",
       },
     ],
   },
@@ -160,39 +160,39 @@ Object {
 `;
 
 exports[`writing to the store user objects should be able to have { __typename: "Subscription" } 1`] = `
-Object {
-  "ROOT_QUERY": Object {
+{
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "subscriptions": Array [
-      Object {
-        "__ref": "Subscription:{\\"subId\\":1}",
+    "subscriptions": [
+      {
+        "__ref": "Subscription:{"subId":1}",
       },
-      Object {
-        "__ref": "Subscription:{\\"subId\\":2}",
+      {
+        "__ref": "Subscription:{"subId":2}",
       },
-      Object {
-        "__ref": "Subscription:{\\"subId\\":3}",
+      {
+        "__ref": "Subscription:{"subId":3}",
       },
     ],
   },
-  "Subscription:{\\"subId\\":1}": Object {
+  "Subscription:{"subId":1}": {
     "__typename": "Subscription",
     "subId": 1,
-    "subscriber": Object {
+    "subscriber": {
       "name": "Alice",
     },
   },
-  "Subscription:{\\"subId\\":2}": Object {
+  "Subscription:{"subId":2}": {
     "__typename": "Subscription",
     "subId": 2,
-    "subscriber": Object {
+    "subscriber": {
       "name": "Bob",
     },
   },
-  "Subscription:{\\"subId\\":3}": Object {
+  "Subscription:{"subId":3}": {
     "__typename": "Subscription",
     "subId": 3,
-    "subscriber": Object {
+    "subscriber": {
       "name": "Clytemnestra",
     },
   },
@@ -203,18 +203,18 @@ exports[`writing to the store writeResultToStore shape checking should not warn 
 
 exports[`writing to the store writeResultToStore shape checking should warn when it receives the wrong data inside a fragment 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'price' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\",
-  \\"description\\": \\"Description 1\\",
-  \\"__typename\\": \\"ShoppingCartItem\\"
+  "id": "1",
+  "name": "Todo 1",
+  "description": "Description 1",
+  "__typename": "ShoppingCartItem"
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },
@@ -224,16 +224,16 @@ exports[`writing to the store writeResultToStore shape checking should warn when
 
 exports[`writing to the store writeResultToStore shape checking should warn when it receives the wrong data with non-union fragments 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'description' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\"
+  "id": "1",
+  "name": "Todo 1"
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },
@@ -243,16 +243,16 @@ exports[`writing to the store writeResultToStore shape checking should warn when
 
 exports[`writing to the store writeResultToStore shape checking should write the result data without validating its shape when a fragment matcher is not provided 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'description' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\"
+  "id": "1",
+  "name": "Todo 1"
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },

@@ -1,11 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@connection should run a query with the @connection directive and write the result to the store key defined in the directive 1`] = `
-Object {
-  "ROOT_QUERY": Object {
+{
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "books:abc": Array [
-      Object {
+    "books:abc": [
+      {
         "__typename": "Book",
         "name": "abcd",
       },
@@ -15,11 +15,11 @@ Object {
 `;
 
 exports[`@connection should run a query with the connection directive and filter arguments and write the result to the correct store key 1`] = `
-Object {
-  "ROOT_QUERY": Object {
+{
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "books:abc({\\"order\\":\\"popularity\\"})": Array [
-      Object {
+    "books:abc({"order":"popularity"})": [
+      {
         "__typename": "Book",
         "name": "abcd",
       },
@@ -29,11 +29,11 @@ Object {
 `;
 
 exports[`@connection should support cache field policies that filter key arguments 1`] = `
-Object {
-  "ROOT_QUERY": Object {
+{
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "books:{\\"order\\":\\"popularity\\"}": Array [
-      Object {
+    "books:{"order":"popularity"}": [
+      {
         "__typename": "Book",
         "name": "abcd",
       },
@@ -44,18 +44,18 @@ Object {
 
 exports[`client should warn if server returns wrong data 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'description' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\",
-  \\"price\\": 100,
-  \\"__typename\\": \\"Todo\\"
+  "id": "1",
+  "name": "Todo 1",
+  "price": 100,
+  "__typename": "Todo"
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },

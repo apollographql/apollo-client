@@ -2,24 +2,24 @@
 
 exports[`@client @export tests should NOT refetch if an @export variable has not changed, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'postCount' while writing result {
-  \\"currentAuthorId\\": 101
+  "currentAuthorId": 101
 }",
     ],
-    Array [
+    [
       "Missing field 'postCount' while writing result {
-  \\"currentAuthorId\\": 100
+  "currentAuthorId": 100
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },
@@ -29,19 +29,19 @@ exports[`@client @export tests should NOT refetch if an @export variable has not
 
 exports[`@client @export tests should allow @client @export variables to be used with remote queries 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'postCount' while writing result {
-  \\"currentAuthor\\": {
-    \\"name\\": \\"John Smith\\",
-    \\"authorId\\": 100,
-    \\"__typename\\": \\"Author\\"
+  "currentAuthor": {
+    "name": "John Smith",
+    "authorId": 100,
+    "__typename": "Author"
   }
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },
@@ -51,97 +51,97 @@ exports[`@client @export tests should allow @client @export variables to be used
 
 exports[`@client @export tests should refetch if an @export variable changes, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'postCount' while writing result {
-  \\"appContainer\\": {
-    \\"systemDetails\\": {
-      \\"currentAuthor\\": {
-        \\"name\\": \\"John Smith\\",
-        \\"authorId\\": 100,
-        \\"__typename\\": \\"Author\\"
+  "appContainer": {
+    "systemDetails": {
+      "currentAuthor": {
+        "name": "John Smith",
+        "authorId": 100,
+        "__typename": "Author"
       },
-      \\"__typename\\": \\"SystemDetails\\"
+      "__typename": "SystemDetails"
     },
-    \\"__typename\\": \\"AppContainer\\"
+    "__typename": "AppContainer"
   }
 }",
     ],
-    Array [
+    [
       "Missing field 'title' while writing result {
-  \\"loggedInReviewerId\\": 100,
-  \\"__typename\\": \\"Post\\",
-  \\"id\\": 10
+  "loggedInReviewerId": 100,
+  "__typename": "Post",
+  "id": 10
 }",
     ],
-    Array [
+    [
       "Missing field 'reviewerDetails' while writing result {
-  \\"postRequiringReview\\": {
-    \\"loggedInReviewerId\\": 100,
-    \\"__typename\\": \\"Post\\",
-    \\"id\\": 10
+  "postRequiringReview": {
+    "loggedInReviewerId": 100,
+    "__typename": "Post",
+    "id": 10
   }
 }",
     ],
-    Array [
+    [
       "Missing field 'id' while writing result {
-  \\"__typename\\": \\"Post\\"
+  "__typename": "Post"
 }",
     ],
-    Array [
+    [
       "Missing field 'title' while writing result {
-  \\"__typename\\": \\"Post\\"
+  "__typename": "Post"
 }",
     ],
-    Array [
+    [
       "Missing field 'reviewerDetails' while writing result {
-  \\"postRequiringReview\\": {
-    \\"__typename\\": \\"Post\\"
+  "postRequiringReview": {
+    "__typename": "Post"
   }
 }",
     ],
-    Array [
+    [
       "Missing field 'post' while writing result {
-  \\"primaryReviewerId\\": 100,
-  \\"secondaryReviewerId\\": 200
+  "primaryReviewerId": 100,
+  "secondaryReviewerId": 200
 }",
     ],
-    Array [
+    [
       "Missing field 'postCount' while writing result {
-  \\"currentAuthorId\\": 100
+  "currentAuthorId": 100
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },
-    Object {
+    {
       "type": "return",
       "value": undefined,
     },

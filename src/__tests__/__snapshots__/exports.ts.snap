@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`exports of public entry points @apollo/client 1`] = `
-Array [
+[
   "ApolloCache",
   "ApolloClient",
   "ApolloConsumer",
@@ -62,7 +62,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/cache 1`] = `
-Array [
+[
   "ApolloCache",
   "Cache",
   "EntityStore",
@@ -80,7 +80,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/core 1`] = `
-Array [
+[
   "ApolloCache",
   "ApolloClient",
   "ApolloError",
@@ -128,33 +128,33 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/errors 1`] = `
-Array [
+[
   "ApolloError",
   "isApolloError",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/batch 1`] = `
-Array [
+[
   "BatchLink",
   "OperationBatcher",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/batch-http 1`] = `
-Array [
+[
   "BatchHttpLink",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/context 1`] = `
-Array [
+[
   "setContext",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/core 1`] = `
-Array [
+[
   "ApolloLink",
   "concat",
   "empty",
@@ -165,14 +165,14 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/link/error 1`] = `
-Array [
+[
   "ErrorLink",
   "onError",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/http 1`] = `
-Array [
+[
   "HttpLink",
   "checkFetcher",
   "createHttpLink",
@@ -189,7 +189,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
-Array [
+[
   "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
@@ -197,25 +197,25 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/link/retry 1`] = `
-Array [
+[
   "RetryLink",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/schema 1`] = `
-Array [
+[
   "SchemaLink",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/subscriptions 1`] = `
-Array [
+[
   "GraphQLWsLink",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/utils 1`] = `
-Array [
+[
   "createOperation",
   "fromError",
   "fromPromise",
@@ -227,13 +227,13 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/link/ws 1`] = `
-Array [
+[
   "WebSocketLink",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/react 1`] = `
-Array [
+[
   "ApolloConsumer",
   "ApolloProvider",
   "DocumentType",
@@ -251,7 +251,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/react/components 1`] = `
-Array [
+[
   "Mutation",
   "Query",
   "Subscription",
@@ -259,7 +259,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/react/context 1`] = `
-Array [
+[
   "ApolloConsumer",
   "ApolloProvider",
   "getApolloContext",
@@ -268,7 +268,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
-Array [
+[
   "graphql",
   "withApollo",
   "withMutation",
@@ -278,7 +278,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
-Array [
+[
   "useApolloClient",
   "useLazyQuery",
   "useMutation",
@@ -289,7 +289,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/react/parser 1`] = `
-Array [
+[
   "DocumentType",
   "operationName",
   "parser",
@@ -298,7 +298,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
-Array [
+[
   "RenderPromises",
   "getDataFromTree",
   "getMarkupFromTree",
@@ -307,7 +307,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/testing 1`] = `
-Array [
+[
   "MockLink",
   "MockSubscriptionLink",
   "MockedProvider",
@@ -323,7 +323,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/testing/core 1`] = `
-Array [
+[
   "MockLink",
   "MockSubscriptionLink",
   "createMockClient",
@@ -338,7 +338,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
-Array [
+[
   "Concast",
   "DEV",
   "DeepMerger",
@@ -404,7 +404,7 @@ Array [
 `;
 
 exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
-Array [
+[
   "DEV",
   "InvariantError",
   "checkDEV",

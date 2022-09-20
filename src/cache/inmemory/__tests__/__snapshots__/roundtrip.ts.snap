@@ -2,17 +2,17 @@
 
 exports[`roundtrip fragments should throw an error on two of the same inline fragment types 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'rank' while writing result {
-  \\"__typename\\": \\"Jedi\\",
-  \\"name\\": \\"Luke Skywalker\\",
-  \\"side\\": \\"bright\\"
+  "__typename": "Jedi",
+  "name": "Luke Skywalker",
+  "side": "bright"
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },
@@ -22,17 +22,17 @@ exports[`roundtrip fragments should throw an error on two of the same inline fra
 
 exports[`roundtrip fragments should throw on error on two of the same spread fragment types 1`] = `
 [MockFunction] {
-  "calls": Array [
-    Array [
+  "calls": [
+    [
       "Missing field 'rank' while writing result {
-  \\"__typename\\": \\"Jedi\\",
-  \\"name\\": \\"Luke Skywalker\\",
-  \\"side\\": \\"bright\\"
+  "__typename": "Jedi",
+  "name": "Luke Skywalker",
+  "side": "bright"
 }",
     ],
   ],
-  "results": Array [
-    Object {
+  "results": [
+    {
       "type": "return",
       "value": undefined,
     },

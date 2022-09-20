@@ -1,26 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`EntityStore ignores retainment count for ROOT_QUERY 1`] = `
-Object {
-  "Author:Allie Brosh": Object {
+{
+  "Author:Allie Brosh": {
     "__typename": "Author",
     "name": "Allie Brosh",
   },
-  "Book:1982156945": Object {
+  "Book:1982156945": {
     "__typename": "Book",
-    "author": Object {
+    "author": {
       "__ref": "Author:Allie Brosh",
     },
     "title": "Solutions and Other Problems",
   },
-  "ROOT_QUERY": Object {
+  "ROOT_QUERY": {
     "__typename": "Query",
-    "book": Object {
+    "book": {
       "__ref": "Book:1982156945",
     },
   },
-  "__META": Object {
-    "extraRootIds": Array [
+  "__META": {
+    "extraRootIds": [
       "Author:Allie Brosh",
     ],
   },
@@ -28,13 +28,13 @@ Object {
 `;
 
 exports[`EntityStore ignores retainment count for ROOT_QUERY 2`] = `
-Object {
-  "Author:Allie Brosh": Object {
+{
+  "Author:Allie Brosh": {
     "__typename": "Author",
     "name": "Allie Brosh",
   },
-  "__META": Object {
-    "extraRootIds": Array [
+  "__META": {
+    "extraRootIds": [
       "Author:Allie Brosh",
     ],
   },

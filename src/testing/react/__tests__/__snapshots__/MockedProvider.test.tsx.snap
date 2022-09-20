@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`General use should allow querying with the typename 1`] = `
-{
+Object {
   "__typename": "User",
   "id": "user_id",
 }
@@ -47,15 +47,15 @@ Failed to match 1 mock for this query. The mocked response had the following var
 `;
 
 exports[`General use should mock the data 1`] = `
-{
+Object {
   "__typename": "User",
   "id": "user_id",
 }
 `;
 
 exports[`General use should not error if the variables match but have different order 1`] = `
-{
-  "user": {
+Object {
+  "user": Object {
     "__typename": "User",
     "id": "user_id",
   },

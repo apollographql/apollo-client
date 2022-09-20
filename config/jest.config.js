@@ -5,7 +5,11 @@ const defaults = {
   setupFiles: ["<rootDir>/config/jest/setup.ts"],
   testEnvironmentOptions: {
     url: "http://localhost",
-  }
+  },
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true
+  },
 };
 
 const ignoreTSFiles = '.ts$';

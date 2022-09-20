@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Cache cache.restore replaces cache.{store{Reader,Writer},maybeBroadcastWatch} 1`] = `
-{
-  "ROOT_QUERY": {
+Object {
+  "ROOT_QUERY": Object {
     "__typename": "Query",
     "a": "ay",
     "b": "bee",
@@ -12,19 +12,19 @@ exports[`Cache cache.restore replaces cache.{store{Reader,Writer},maybeBroadcast
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 1`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "i": 7,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -32,23 +32,23 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 2`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "i": 7,
     "j": 8,
     "k": 9,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -56,25 +56,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 3`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 10,
     "j": 8,
     "k": 9,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -82,25 +82,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 4`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 10,
     "j": 11,
     "k": 12,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -108,25 +108,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 5`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 7,
     "j": 8,
     "k": 9,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -134,25 +134,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (1/2) 6`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 10,
     "j": 11,
     "k": 12,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -160,19 +160,19 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 1`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "i": 7,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -180,23 +180,23 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 2`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "i": 7,
     "j": 8,
     "k": 9,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -204,25 +204,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 3`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 10,
     "j": 8,
     "k": 9,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -230,25 +230,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 4`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 10,
     "j": 11,
     "k": 12,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -256,25 +256,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 5`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 7,
     "j": 8,
     "k": 9,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -282,25 +282,25 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`Cache writeFragment will write some deeply nested data into the store at any id (2/2) 6`] = `
-{
-  "__META": {
-    "extraRootIds": [
+Object {
+  "__META": Object {
+    "extraRootIds": Array [
       "bar",
       "foo",
     ],
   },
-  "bar": {
+  "bar": Object {
     "__typename": "Bar",
     "i": 10,
     "j": 11,
     "k": 12,
   },
-  "foo": {
+  "foo": Object {
     "__typename": "Foo",
     "e": 4,
     "f": 5,
     "g": 6,
-    "h": {
+    "h": Object {
       "__ref": "bar",
     },
   },
@@ -308,86 +308,86 @@ exports[`Cache writeFragment will write some deeply nested data into the store a
 `;
 
 exports[`InMemoryCache#modify should allow invalidation using details.INVALIDATE 1`] = `
-{
-  "Author:{"name":"Maria Dahvana Headley"}": {
+Object {
+  "Author:{\\"name\\":\\"Maria Dahvana Headley\\"}": Object {
     "__typename": "Author",
     "name": "Maria Dahvana Headley",
   },
-  "Book:{"isbn":"0374110034"}": {
+  "Book:{\\"isbn\\":\\"0374110034\\"}": Object {
     "__typename": "Book",
-    "author": {
-      "__ref": "Author:{"name":"Maria Dahvana Headley"}",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Maria Dahvana Headley\\"}",
     },
     "isbn": "0374110034",
     "title": "Beowulf: A New Translation",
   },
-  "ROOT_QUERY": {
+  "ROOT_QUERY": Object {
     "__typename": "Query",
-    "currentlyReading": {
-      "__ref": "Book:{"isbn":"0374110034"}",
+    "currentlyReading": Object {
+      "__ref": "Book:{\\"isbn\\":\\"0374110034\\"}",
     },
   },
 }
 `;
 
 exports[`TypedDocumentNode<Data, Variables> should determine Data and Variables types of {write,read}{Query,Fragment} 1`] = `
-{
-  "Author:{"name":"John C. Mitchell"}": {
+Object {
+  "Author:{\\"name\\":\\"John C. Mitchell\\"}": Object {
     "__typename": "Author",
     "name": "John C. Mitchell",
   },
-  "Book:{"isbn":"0262133210"}": {
+  "Book:{\\"isbn\\":\\"0262133210\\"}": Object {
     "__typename": "Book",
-    "author": {
-      "__ref": "Author:{"name":"John C. Mitchell"}",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"John C. Mitchell\\"}",
     },
     "isbn": "0262133210",
     "title": "Foundations for Programming Languages",
   },
-  "ROOT_QUERY": {
+  "ROOT_QUERY": Object {
     "__typename": "Query",
-    "book({"isbn":"0262133210"})": {
-      "__ref": "Book:{"isbn":"0262133210"}",
+    "book({\\"isbn\\":\\"0262133210\\"})": Object {
+      "__ref": "Book:{\\"isbn\\":\\"0262133210\\"}",
     },
   },
 }
 `;
 
 exports[`TypedDocumentNode<Data, Variables> should determine Data and Variables types of {write,read}{Query,Fragment} 2`] = `
-{
-  "Author:{"name":"Harold Abelson"}": {
+Object {
+  "Author:{\\"name\\":\\"Harold Abelson\\"}": Object {
     "__typename": "Author",
     "name": "Harold Abelson",
   },
-  "Author:{"name":"John C. Mitchell"}": {
+  "Author:{\\"name\\":\\"John C. Mitchell\\"}": Object {
     "__typename": "Author",
     "name": "John C. Mitchell",
   },
-  "Book:{"isbn":"0262133210"}": {
+  "Book:{\\"isbn\\":\\"0262133210\\"}": Object {
     "__typename": "Book",
-    "author": {
-      "__ref": "Author:{"name":"John C. Mitchell"}",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"John C. Mitchell\\"}",
     },
     "isbn": "0262133210",
     "title": "Foundations for Programming Languages",
   },
-  "Book:{"isbn":"0262510871"}": {
+  "Book:{\\"isbn\\":\\"0262510871\\"}": Object {
     "__typename": "Book",
-    "author": {
-      "__ref": "Author:{"name":"Harold Abelson"}",
+    "author": Object {
+      "__ref": "Author:{\\"name\\":\\"Harold Abelson\\"}",
     },
     "isbn": "0262510871",
     "title": "Structure and Interpretation of Computer Programs",
   },
-  "ROOT_QUERY": {
+  "ROOT_QUERY": Object {
     "__typename": "Query",
-    "book({"isbn":"0262133210"})": {
-      "__ref": "Book:{"isbn":"0262133210"}",
+    "book({\\"isbn\\":\\"0262133210\\"})": Object {
+      "__ref": "Book:{\\"isbn\\":\\"0262133210\\"}",
     },
   },
-  "__META": {
-    "extraRootIds": [
-      "Book:{"isbn":"0262510871"}",
+  "__META": Object {
+    "extraRootIds": Array [
+      "Book:{\\"isbn\\":\\"0262510871\\"}",
     ],
   },
 }

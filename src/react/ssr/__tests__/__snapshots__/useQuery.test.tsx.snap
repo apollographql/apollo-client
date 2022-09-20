@@ -1,46 +1,46 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`useQuery Hook SSR should return data written previously to cache during SSR pass if using cache-only fetchPolicy 1`] = `
-{
-  "Order:{"selection":"RELEVANCE"}": {
+Object {
+  "Order:{\\"selection\\":\\"RELEVANCE\\"}": Object {
     "__typename": "Order",
     "selection": "RELEVANCE",
   },
-  "ROOT_QUERY": {
+  "ROOT_QUERY": Object {
     "__typename": "Query",
-    "getSearchResults": {
+    "getSearchResults": Object {
       "__typename": "SearchResults",
       "locale": "en-US",
-      "order": {
-        "__ref": "Order:{"selection":"RELEVANCE"}",
+      "order": Object {
+        "__ref": "Order:{\\"selection\\":\\"RELEVANCE\\"}",
       },
-      "pagination": {
+      "pagination": Object {
         "pageLimit": 3,
       },
-      "results": [
-        {
+      "results": Array [
+        Object {
           "__ref": "SearchResult:1",
         },
-        {
+        Object {
           "__ref": "SearchResult:2",
         },
-        {
+        Object {
           "__ref": "SearchResult:3",
         },
       ],
     },
   },
-  "SearchResult:1": {
+  "SearchResult:1": Object {
     "__typename": "SearchResult",
     "id": 1,
     "text": "hi",
   },
-  "SearchResult:2": {
+  "SearchResult:2": Object {
     "__typename": "SearchResult",
     "id": 2,
     "text": "hello",
   },
-  "SearchResult:3": {
+  "SearchResult:3": Object {
     "__typename": "SearchResult",
     "id": 3,
     "text": "hey",

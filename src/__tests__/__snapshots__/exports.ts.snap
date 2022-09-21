@@ -72,6 +72,7 @@ Array [
   "Policies",
   "cacheSlot",
   "canonicalStringify",
+  "createFragmentRegistry",
   "defaultDataIdFromObject",
   "fieldNameFromStoreName",
   "isReference",

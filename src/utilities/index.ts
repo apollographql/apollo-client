@@ -14,6 +14,7 @@ export {
 
 export {
   FragmentMap,
+  FragmentMapFunction,
   createFragmentMap,
   getFragmentQueryDocument,
   getFragmentFromSelection,

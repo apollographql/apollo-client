@@ -356,6 +356,7 @@ export class QueryInfo {
 
   public markResult<T>(
     result: FetchResult<T>,
+    document: DocumentNode,
     options: Pick<WatchQueryOptions,
       | "variables"
       | "fetchPolicy"
@@ -406,7 +407,7 @@ export class QueryInfo {
         this.cache.performTransaction(cache => {
           if (this.shouldWrite(result, options.variables)) {
             cache.writeQuery({
-              query: this.document!,
+              query: document,
               data: result.data as T,
               variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,

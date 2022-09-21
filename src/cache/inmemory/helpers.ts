@@ -24,6 +24,10 @@ export const {
   hasOwnProperty: hasOwn,
 } = Object.prototype;
 
+export function isNullish(value: any): value is null | undefined {
+  return value === null || value === void 0;
+}
+
 export function defaultDataIdFromObject(
   { __typename, id, _id }: Readonly<StoreObject>,
   context?: KeyFieldsContext,
@@ -31,13 +35,17 @@ export function defaultDataIdFromObject(
   if (typeof __typename === "string") {
     if (context) {
       context.keyObject =
-         id !== void 0 ? {  id } :
-        _id !== void 0 ? { _id } :
+        !isNullish(id) ? { id } :
+        !isNullish(_id) ? { _id } :
         void 0;
     }
+
     // If there is no object.id, fall back to object._id.
-    if (id === void 0) id = _id;
-    if (id !== void 0) {
+    if (isNullish(id) && !isNullish(_id)) {
+      id = _id;
+    }
+
+    if (!isNullish(id)) {
       return `${__typename}:${(
         typeof id === "number" ||
         typeof id === "string"

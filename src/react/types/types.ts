@@ -220,6 +220,7 @@ export interface BaseSubscriptionOptions<
   skip?: boolean;
   context?: DefaultContext;
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
+  onError?: (error: ApolloError) => void;
   onSubscriptionComplete?: () => void;
 }
 

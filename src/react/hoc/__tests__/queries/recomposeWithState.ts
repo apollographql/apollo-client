@@ -33,7 +33,7 @@ const wrapDisplayName = (
 
 export const withState =
   (stateName: string, stateUpdaterName: string, initialState: unknown) =>
-  (BaseComponent: React.ComponentClass) => {
+  (BaseComponent: React.ComponentClass): any => {
     const factory = createFactory(BaseComponent);
     class WithState extends Component<Record<string, unknown>, { stateValue: unknown }> {
       state = {

@@ -10,6 +10,14 @@ const defaults = {
     escapeString: true,
     printBasicPrototype: true
   },
+  transform: {
+    '[-\w\/]*.\/__tests__\/[-\w\/]*.(ts|tsx)$/gm': [
+      'ts-jest',
+      {
+        isolatedModules: true,
+      },
+    ],
+  }
 };
 
 const ignoreTSFiles = '.ts$';

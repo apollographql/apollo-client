@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor, screen } from '@testing-library/react';
+import { render, waitFor, screen, cleanup } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import fetchMock from "fetch-mock";
@@ -10,12 +10,19 @@ import fetchMock from "fetch-mock";
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
 
 describe('useMutation Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    cleanup();
+    resetApolloContext();
+  });
   interface Todo {
     id: number;
     description: string;

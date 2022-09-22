@@ -1,14 +1,22 @@
 import React, { PropsWithChildren } from 'react';
+import { cleanup } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import gql from 'graphql-tag';
 
 import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
 import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
 import { useSubscription } from '../useSubscription';
 
 describe('useSubscription Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    cleanup();
+    resetApolloContext();
+  });
   it('should handle a simple subscription properly', async () => {
     const subscription = gql`
       subscription {

@@ -1,17 +1,25 @@
 import React from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
+import { cleanup } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { act } from 'react-dom/test-utils';
 
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
-import { ApolloProvider } from '../../../react';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { MockedProvider, mockSingleLink } from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
 
 describe('useLazyQuery Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    cleanup();
+    resetApolloContext();
+  });
   const helloQuery: TypedDocumentNode<{
     hello: string;
   }> = gql`query { hello }`;

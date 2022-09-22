@@ -1229,7 +1229,7 @@ describe('HttpLink', () => {
 
     const body = '{';
     const unparsableJson = jest.fn(() => Promise.resolve(body));
-    itAsync('throws an error if response is unparsable', (resolve, reject) => {
+    itAsync('throws a Server error if response is > 300 with unparsable json', (resolve, reject) => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: unparsableJson }),
       );
@@ -1240,8 +1240,27 @@ describe('HttpLink', () => {
           reject('next should have been thrown from the network');
         },
         makeCallback(resolve, reject, (e: ServerParseError) => {
-          expect(e.message).toMatch(/JSON/);
+          expect(e.message).toMatch("Response not successful: Received status code 400");
           expect(e.statusCode).toBe(400);
+          expect(e.response).toBeDefined();
+          expect(e.bodyText).toBe(undefined);
+        }),
+      );
+    });
+
+    itAsync('throws a ServerParse error if response is 200 with unparsable json', (resolve, reject) => {
+      fetch.mockReturnValueOnce(
+        Promise.resolve({ status: 200, text: unparsableJson }),
+      );
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+      execute(link, { query: sampleQuery }).subscribe(
+        result => {
+          reject('next should have been thrown from the network');
+        },
+        makeCallback(resolve, reject, (e: ServerParseError) => {
+          expect(e.message).toMatch(/JSON/);
+          expect(e.statusCode).toBe(200);
           expect(e.response).toBeDefined();
           expect(e.bodyText).toBe(body);
         }),

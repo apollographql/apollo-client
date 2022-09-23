@@ -1,12 +1,16 @@
 import { toPromise } from '../toPromise';
 import { fromError, } from '../fromError';
+import { itAsync } from '../../../testing';
 
 describe('fromError', () => {
-  it('acts as error call', () => {
+  itAsync('acts as error call', async (resolve, reject) => {
     const error = new Error('I always error');
     const observable = fromError(error);
-    return toPromise(observable)
-      .then(() => { throw "should not have thrown" })
-      .catch(actualError => expect(error).toEqual(actualError));
+    toPromise(observable)
+      .then(() => { reject("should not have thrown") })
+      .catch((actualError) => {
+        expect(error).toEqual(actualError);
+        resolve();
+      });
   });
 });

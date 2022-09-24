@@ -114,7 +114,7 @@
     "@types/jest": "29.0.3",
     "@types/lodash": "4.14.185",
     "@types/node": "16.11.60",
-    "@types/react": "18.0.20",
+    "@types/react": "18.0.21",
     "@types/react-dom": "18.0.6",
     "@types/use-sync-external-store": "0.0.3",
     "acorn": "8.8.0",

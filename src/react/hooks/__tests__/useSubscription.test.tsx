@@ -8,7 +8,6 @@ import { ApolloProvider } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
 import { useSubscription } from '../useSubscription';
 
-
 describe('useSubscription Hook', () => {
   afterEach(() => {
     jest.restoreAllMocks();
@@ -135,7 +134,6 @@ describe('useSubscription Hook', () => {
       link,
       cache: new Cache({ addTypename: false })
     });
-
 
     const onComplete = jest.fn();
     const { waitForNextUpdate } = renderHook(
@@ -659,8 +657,8 @@ describe('useSubscription Hook', () => {
       cache: new Cache({ addTypename: false }),
     });
 
-    const onData = jest.fn()
-    const onSubscriptionData = jest.fn()
+    const onData = jest.fn();
+    const onSubscriptionData = jest.fn();
 
     const { waitForNextUpdate } = renderHook(
       () => useSubscription(subscription, {
@@ -707,7 +705,7 @@ describe('useSubscription Hook', () => {
       cache: new Cache({ addTypename: false }),
     });
 
-    const onSubscriptionData = jest.fn()
+    const onSubscriptionData = jest.fn();
 
     const { waitForNextUpdate } = renderHook(
       () => useSubscription(subscription, {

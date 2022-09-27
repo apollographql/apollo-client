@@ -17,6 +17,7 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SubscriptionHookOptions<TData, TVariables>,
 ) {
+  const hasIssuedDeprecationWarningRef = useRef(false);
   const client = useApolloClient(options?.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
   const [result, setResult] = useState<SubscriptionResult<TData>>({
@@ -26,20 +27,24 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     variables: options?.variables,
   });
 
-  if (options?.onSubscriptionData) {
-    invariant.warn(
-      options.onData
-        ? "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
-        : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
-    );
-  }
+  if (!hasIssuedDeprecationWarningRef.current) {
+    hasIssuedDeprecationWarningRef.current = true;
 
-  if (options?.onSubscriptionComplete) {
-    invariant.warn(
-      options.onComplete
-        ? "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
-        : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
-    );
+    if (options?.onSubscriptionData) {
+      invariant.warn(
+        options.onData
+          ? "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
+          : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
+      );
+    }
+
+    if (options?.onSubscriptionComplete) {
+      invariant.warn(
+        options.onComplete
+          ? "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
+          : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
+      );
+    }
   }
 
   const [observable, setObservable] = useState(() => {

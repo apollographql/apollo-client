@@ -728,6 +728,40 @@ describe('useSubscription Hook', () => {
     });
   });
 
+  test("only warns once using `onSubscriptionData`", () => {
+    const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const { rerender } = renderHook(
+      () => useSubscription(subscription, {
+        onSubscriptionData: jest.fn(),
+      }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    rerender();
+
+    expect(warningSpy).toHaveBeenCalledTimes(1);
+  });
+
   test("should warn when using 'onComplete' and 'onSubscriptionComplete' together", () => {
     const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const subscription = gql`
@@ -849,5 +883,39 @@ describe('useSubscription Hook', () => {
     await waitForNextUpdate();
 
     expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
+  });
+
+  test("only warns once using `onSubscriptionComplete`", () => {
+    const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const { rerender } = renderHook(
+      () => useSubscription(subscription, {
+        onSubscriptionComplete: jest.fn(),
+      }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    rerender();
+
+    expect(warningSpy).toHaveBeenCalledTimes(1);
   });
 });

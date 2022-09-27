@@ -34,6 +34,14 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     );
   }
 
+  if (options?.onSubscriptionComplete) {
+    invariant.warn(
+      options.onComplete
+        ? "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
+        : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
+    );
+  }
+
   const [observable, setObservable] = useState(() => {
     if (options?.skip) {
       return null;
@@ -138,7 +146,11 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
         ref.current.options?.onError?.(error);
       },
       complete() {
-        ref.current.options?.onSubscriptionComplete?.();
+        if (ref.current.options?.onComplete) {
+          ref.current.options.onComplete();
+        } else if (ref.current.options?.onSubscriptionComplete) {
+          ref.current.options.onSubscriptionComplete();
+        }
       },
     });
 

@@ -202,6 +202,11 @@ export type MutationTuple<
 
 /* Subscription types */
 
+export interface OnDataOptions<TData = any> {
+  client: ApolloClient<object>;
+  data: SubscriptionResult<TData>;
+}
+
 export interface OnSubscriptionDataOptions<TData = any> {
   client: ApolloClient<object>;
   subscriptionData: SubscriptionResult<TData>;
@@ -219,12 +224,16 @@ export interface BaseSubscriptionOptions<
   client?: ApolloClient<object>;
   skip?: boolean;
   context?: DefaultContext;
+  onComplete?: () => void;
   onData?: (options: OnDataOptions<TData>) => any;
   /**
   * @deprecated Use onData instead
   */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   onError?: (error: ApolloError) => void;
+  /**
+  * @deprecated Use onComplete instead
+  */
   onSubscriptionComplete?: () => void;
 }
 

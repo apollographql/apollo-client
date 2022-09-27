@@ -729,4 +729,127 @@ describe('useSubscription Hook', () => {
       expect(onSubscriptionData).toHaveBeenCalledTimes(1);
     });
   });
+
+  test("should warn when using 'onComplete' and 'onSubscriptionComplete' together", () => {
+    const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    renderHook(
+      () => useSubscription(subscription, {
+        onComplete: jest.fn(),
+        onSubscriptionComplete: jest.fn(),
+      }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    expect(warningSpy).toHaveBeenCalledTimes(1);
+    expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining("supports only the 'onSubscriptionComplete' or 'onComplete' option"));
+  });
+
+  test("prefers 'onComplete' when using 'onComplete' and 'onSubscriptionComplete' together", async () => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = [{
+      result: { data: { car: { make: 'Audi' } } }
+    }];
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onComplete = jest.fn();
+    const onSubscriptionComplete = jest.fn();
+
+    const { waitForNextUpdate } = renderHook(
+      () => useSubscription(subscription, {
+        onComplete,
+        onSubscriptionComplete,
+      }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    link.simulateResult(results[0]);
+
+    setTimeout(() => link.simulateComplete());
+    await waitForNextUpdate();
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
+  });
+
+  test("uses 'onSubscriptionComplete' when 'onComplete' is absent", async () => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = [{
+      result: { data: { car: { make: 'Audi' } } }
+    }];
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onSubscriptionComplete = jest.fn();
+
+    const { waitForNextUpdate } = renderHook(
+      () => useSubscription(subscription, {
+        onSubscriptionComplete,
+      }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    link.simulateResult(results[0]);
+
+    setTimeout(() => link.simulateComplete());
+    await waitForNextUpdate();
+
+    expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
+  });
 });

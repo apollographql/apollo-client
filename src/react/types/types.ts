@@ -219,6 +219,10 @@ export interface BaseSubscriptionOptions<
   client?: ApolloClient<object>;
   skip?: boolean;
   context?: DefaultContext;
+  onData?: (options: OnDataOptions<TData>) => any;
+  /**
+  * @deprecated Use onData instead
+  */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   onError?: (error: ApolloError) => void;
   onSubscriptionComplete?: () => void;

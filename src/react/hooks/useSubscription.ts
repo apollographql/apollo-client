@@ -2,6 +2,7 @@ import '../../utilities/globals';
 import { useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { invariant } from '../../utilities/globals'
 import { equal } from '@wry/equality';
 
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -24,6 +25,14 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
     data: void 0,
     variables: options?.variables,
   });
+
+  if (options?.onSubscriptionData) {
+    invariant.warn(
+      options.onData
+        ? "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
+        : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
+    );
+  }
 
   const [observable, setObservable] = useState(() => {
     if (options?.skip) {
@@ -107,10 +116,17 @@ export function useSubscription<TData = any, TVariables = OperationVariables>(
         };
         setResult(result);
 
-        ref.current.options?.onSubscriptionData?.({
-          client,
-          subscriptionData: result
-        });
+        if (ref.current.options?.onData) {
+          ref.current.options.onData({
+            client,
+            data: result
+          });
+        } else if (ref.current.options?.onSubscriptionData) {
+          ref.current.options.onSubscriptionData({
+            client,
+            subscriptionData: result
+          });
+        }
       },
       error(error) {
         setResult({

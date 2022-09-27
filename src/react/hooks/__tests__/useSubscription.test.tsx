@@ -117,6 +117,46 @@ describe('useSubscription Hook', () => {
     });
   });
 
+  it('should call onComplete after subscription is complete', async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = [{
+      result: { data: { car: { make: 'Audi' } } }
+    }];
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false })
+    });
+
+
+    const onComplete = jest.fn();
+    const { waitForNextUpdate } = renderHook(
+      () => useSubscription(subscription, { onComplete }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      },
+    );
+
+    link.simulateResult(results[0]);
+
+    setTimeout(() => link.simulateComplete());
+    await waitForNextUpdate();
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
   it('should cleanup after the subscription component has been unmounted', async () => {
     const subscription = gql`
       subscription {

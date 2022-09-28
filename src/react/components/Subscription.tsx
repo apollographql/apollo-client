@@ -20,6 +20,8 @@ Subscription.propTypes = {
   variables: PropTypes.object,
   children: PropTypes.func,
   onSubscriptionData: PropTypes.func,
+  onData: PropTypes.func,
   onSubscriptionComplete: PropTypes.func,
+  onComplete: PropTypes.func,
   shouldResubscribe: PropTypes.oneOfType([PropTypes.func, PropTypes.bool])
 } as Subscription<any, any>["propTypes"];

@@ -23,7 +23,7 @@ With `apollo-link-rest`, you can call your endpoints inside your GraphQL queries
 To get started, first install Apollo Client and any `peerDependencies` we need:
 
 ```bash
-npm install --save @apollo/client apollo-link-rest graphql qs
+npm install --save @apollo/client apollo-link-rest graphql graphql-anywhere qs
 ```
 
 After this, you're ready to setup the Apollo Client instance:

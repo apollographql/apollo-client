@@ -27,7 +27,7 @@ jobs:
 
   Tests:
     docker:
-      - image: circleci/node:16.13.1
+      - image: circleci/node:16.10.0
     steps:
       - checkout
       - run: npm run ci:precheck

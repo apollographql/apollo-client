@@ -103,6 +103,22 @@ export function parseHeaders(headerText: string): Record<string, string> {
 }
 
 export function parseJsonBody<T>(response: Response, bodyText: string): T {
+  if (response.status >= 300) {
+    // Network error
+    const getResult = () => {
+      try {
+        return JSON.parse(bodyText);
+      } catch (err) {
+        return bodyText
+      }
+    }
+    throwServerError(
+      response,
+      getResult(),
+      `Response not successful: Received status code ${response.status}`,
+    );
+  }
+
   try {
     return JSON.parse(bodyText) as T;
   } catch (err) {

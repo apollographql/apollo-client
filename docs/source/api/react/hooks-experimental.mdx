@@ -44,7 +44,7 @@ function List() {
   const { loading, data } = useQuery(listQuery);
   return (
     <ol>
-      {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+      {data?.list.map(item => <Item key={item.id} id={item.id}/>)}
     </ol>
   );
 }

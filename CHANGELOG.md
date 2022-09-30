@@ -28,6 +28,12 @@
 - Make queries with a `pollInterval` respect the `no-cache` fetch policy, instead of writing polled results into the cache. <br/>
   [@MrDoomBringer](https://github.com/MrDoomBringer) in [#10020](https://github.com/apollographql/apollo-client/pull/10020)
 
+- Deprecate the `onSubscriptionData` callback in favor of a new `onData` callback for the `useSubscription` hook. <br/>
+  [@jerelmiller](https://github.com/jerelmiller) in [#10134](https://github.com/apollographql/apollo-client/pull/10134)
+
+- Deprecate the `onSubscriptionComplete` callback in favor of a new `onComplete` callback for the `useSubscription` hook. <br/>
+  [@jerelmiller](https://github.com/jerelmiller) in [#10134](https://github.com/apollographql/apollo-client/pull/10134)
+
 ### Potentially disruptive
 
 - The optional `subscribeAndCount` testing utility exported from `@apollo/client/testing/core` now takes a single generic `TResult` type parameter, instead of `TData`. This type will typically be inferred from the `observable` argument type, but if you have any explicit calls to `subscribeAndCount<TData>(...)` in your own codebase, you may need to adjust those calls accordingly. <br/>

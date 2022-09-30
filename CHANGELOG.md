@@ -39,7 +39,7 @@
 - The optional `subscribeAndCount` testing utility exported from `@apollo/client/testing/core` now takes a single generic `TResult` type parameter, instead of `TData`. This type will typically be inferred from the `observable` argument type, but if you have any explicit calls to `subscribeAndCount<TData>(...)` in your own codebase, you may need to adjust those calls accordingly. <br/>
   [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
 
-## Apollo Client 3.6.10 (unreleased)
+## Apollo Client 3.6.10 (2022-09-29)
 
 ### Improvements
 

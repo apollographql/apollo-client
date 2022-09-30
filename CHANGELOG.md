@@ -1,4 +1,4 @@
-## Apollo Client 3.7.0 (in development)
+## Apollo Client 3.7.0 (2022-09-30)
 
 ### New Features
 
@@ -28,10 +28,7 @@
 - Make queries with a `pollInterval` respect the `no-cache` fetch policy, instead of writing polled results into the cache. <br/>
   [@MrDoomBringer](https://github.com/MrDoomBringer) in [#10020](https://github.com/apollographql/apollo-client/pull/10020)
 
-- Deprecate the `onSubscriptionData` callback in favor of a new `onData` callback for the `useSubscription` hook. <br/>
-  [@jerelmiller](https://github.com/jerelmiller) in [#10134](https://github.com/apollographql/apollo-client/pull/10134)
-
-- Deprecate the `onSubscriptionComplete` callback in favor of a new `onComplete` callback for the `useSubscription` hook. <br/>
+- Deprecate the `onSubscriptionData` callback in favor of a new `onData` callback for the `useSubscription` hook. Deprecate the `onSubscriptionComplete` callback in favor of a new `onComplete` callback for the `useSubscription` hook.<br/>
   [@jerelmiller](https://github.com/jerelmiller) in [#10134](https://github.com/apollographql/apollo-client/pull/10134)
 
 ### Potentially disruptive

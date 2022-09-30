@@ -503,11 +503,16 @@ class InternalState<TData, TVariables> {
 
   private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
     if (!result.loading) {
-      if (result.error) {
-        this.onError(result.error);
-      } else if (result.data) {
-        this.onCompleted(result.data);
-      }
+      // wait a tick in case we are in the middle of rendering a component
+      Promise.resolve().then(() => {
+        if (result.error) {
+          this.onError(result.error);
+        } else if (result.data) {
+          this.onCompleted(result.data);
+        }
+      }).catch(error => {
+        invariant.warn(error);
+      });
     }
   }
 

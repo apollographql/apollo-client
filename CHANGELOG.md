@@ -1,3 +1,41 @@
+## Apollo Client 3.7.0 (2022-09-30)
+
+### New Features
+
+- Implement preview support for the [`@defer` directive](https://github.com/graphql/graphql-spec/pull/742). <br/>
+  [@alessbell](https://github.com/alessbell) and [@benjamn](https://github.com/benjamn) in [#10018](https://github.com/apollographql/apollo-client/pull/10018)
+
+- Implement `useFragment_experimental` hook, which represents a lightweight live binding into the `ApolloCache`, and never triggers network requests of its own. <br/>
+  [@benjamn](https://github.com/benjamn) in [#8782](https://github.com/apollographql/apollo-client/pull/8782)
+
+- Allow registering named fragments with `InMemoryCache` to support using `...NamedFragment` in queries without redeclaring `NamedFragment` repeatedly in every query that uses it. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9764](https://github.com/apollographql/apollo-client/pull/9764)
+
+- Support `onError` callback for `useSubscription` hook. <br/>
+  [@jeroenvisser101](https://github.com/jeroenvisser101) in [#9495](https://github.com/apollographql/apollo-client/pull/9495)
+
+### Improvements
+
+- Delay calling `onCompleted` and `onError` callbacks passed to `useQuery` using `Promise.resolve().then(() => ...)` to fix issue [#9794](https://github.com/apollographql/apollo-client/pull/9794). <br/>
+  [@dylanwulf](https://github.com/dylanwulf) in [#9823](https://github.com/apollographql/apollo-client/pull/9823)
+
+- Replace `concast.cleanup` method with simpler `concast.beforeNext` API, which promises to call the given callback function just before the next result/error is delivered. In addition, `concast.removeObserver` no longer takes a `quietly?: boolean` parameter, since that parameter was partly responsible for cleanup callbacks sometimes not getting called. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
+
+- Allow preserving header name capitalization when creating an `HttpLink` with `createHttpLink({ uri, preserveHeaderCase: true })`. Otherwise, header names are converted to lowercase to prevent case-sensitivity bugs. <br/>
+  [@MrDoomBringer](https://github.com/MrDoomBringer) in [#9891](https://github.com/apollographql/apollo-client/pull/9891)
+
+- Make queries with a `pollInterval` respect the `no-cache` fetch policy, instead of writing polled results into the cache. <br/>
+  [@MrDoomBringer](https://github.com/MrDoomBringer) in [#10020](https://github.com/apollographql/apollo-client/pull/10020)
+
+- Deprecate the `onSubscriptionData` callback in favor of a new `onData` callback for the `useSubscription` hook. Deprecate the `onSubscriptionComplete` callback in favor of a new `onComplete` callback for the `useSubscription` hook.<br/>
+  [@jerelmiller](https://github.com/jerelmiller) in [#10134](https://github.com/apollographql/apollo-client/pull/10134)
+
+### Potentially disruptive
+
+- The optional `subscribeAndCount` testing utility exported from `@apollo/client/testing/core` now takes a single generic `TResult` type parameter, instead of `TData`. This type will typically be inferred from the `observable` argument type, but if you have any explicit calls to `subscribeAndCount<TData>(...)` in your own codebase, you may need to adjust those calls accordingly. <br/>
+  [@benjamn](https://github.com/benjamn) in [#9718](https://github.com/apollographql/apollo-client/pull/9718)
+
 ## Apollo Client 3.6.10 (2022-09-29)
 
 ### Improvements

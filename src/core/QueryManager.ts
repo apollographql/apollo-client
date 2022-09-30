@@ -6,6 +6,7 @@ type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
+import { isExecutionPatchIncrementalResult } from '../utilities/common/incrementalResult';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
 import {
@@ -25,6 +26,7 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
+  cloneDeep,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -188,11 +190,15 @@ export class QueryManager<TStore> {
     );
 
     const mutationId = this.generateMutationId();
-    mutation = this.transform(mutation).document;
+
+    const {
+      document,
+      hasClientExports,
+    } = this.transform(mutation);
+    mutation = this.cache.transformForLink(document);
 
     variables = this.getVariables(mutation, variables) as TVariables;
-
-    if (this.transform(mutation).hasClientExports) {
+    if (hasClientExports) {
       variables = await this.localState.addExportedVariables(mutation, variables, context) as TVariables;
     }
 
@@ -433,7 +439,7 @@ export class QueryManager<TStore> {
                 returnPartialData: true,
               });
 
-              if (diff.complete) {
+              if (diff.complete && !(isExecutionPatchIncrementalResult(result))) {
                 result = { ...result, data: diff.result };
               }
             }
@@ -556,11 +562,9 @@ export class QueryManager<TStore> {
 
     if (!transformCache.has(document)) {
       const transformed = this.cache.transformDocument(document);
-      const forLink = removeConnectionDirectiveFromDocument(
-        this.cache.transformForLink(transformed));
-
+      const noConnection = removeConnectionDirectiveFromDocument(transformed);
       const clientQuery = this.localState.clientQuery(transformed);
-      const serverQuery = forLink && this.localState.serverQuery(forLink);
+      const serverQuery = noConnection && this.localState.serverQuery(noConnection);
 
       const cacheEntry: TransformCacheEntry = {
         document: transformed,
@@ -988,7 +992,7 @@ export class QueryManager<TStore> {
 
           byVariables.set(varJson, observable = concast);
 
-          concast.cleanup(() => {
+          concast.beforeNext(() => {
             if (byVariables.delete(varJson) &&
                 byVariables.size < 1) {
               inFlightLinkObservables.delete(serverQuery);
@@ -1034,15 +1038,39 @@ export class QueryManager<TStore> {
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = queryInfo.lastRequestId = this.generateRequestId();
 
+    // Make sure we write the result below using the same options we were given,
+    // even though the input object may have been modified in the meantime.
+    options = cloneDeep(options);
+
+    // Performing transformForLink here gives this.cache a chance to fill in
+    // missing fragment definitions (for example) before sending this document
+    // through the link chain.
+    const linkDocument = this.cache.transformForLink(
+      // Use same document originally produced by this.cache.transformDocument.
+      this.transform(queryInfo.document!).document
+    );
+
     return asyncMap(
       this.getObservableFromLink(
-        queryInfo.document!,
+        linkDocument,
         options.context,
         options.variables,
       ),
 
       result => {
-        const hasErrors = isNonEmptyArray(result.errors);
+        const graphQLErrors = isNonEmptyArray(result.errors)
+          ? result.errors.slice(0)
+          : [];
+
+        if ('incremental' in result && isNonEmptyArray(result.incremental)) {
+          result.incremental.forEach(incrementalResult => {
+            if (incrementalResult.errors) {
+              graphQLErrors.push(...incrementalResult.errors);
+            }
+          });
+        }
+
+        const hasErrors = isNonEmptyArray(graphQLErrors);
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.
@@ -1050,10 +1078,13 @@ export class QueryManager<TStore> {
           if (hasErrors && options.errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(new ApolloError({
-              graphQLErrors: result.errors,
+              graphQLErrors,
             }));
           }
-          queryInfo.markResult(result, options, cacheWriteBehavior);
+          // Use linkDocument rather than queryInfo.document so the
+          // operation/fragments used to write the result are the same as the
+          // ones used to obtain it from the link.
+          queryInfo.markResult(result, linkDocument, options, cacheWriteBehavior);
           queryInfo.markReady();
         }
 
@@ -1064,7 +1095,7 @@ export class QueryManager<TStore> {
         };
 
         if (hasErrors && options.errorPolicy !== "ignore") {
-          aqr.errors = result.errors;
+          aqr.errors = graphQLErrors;
           aqr.networkStatus = NetworkStatus.error;
         }
 

@@ -43,6 +43,13 @@ export interface HttpOptions {
   headers?: any;
 
   /**
+   * If set to true, header names won't be automatically normalized to 
+   * lowercase. This allows for non-http-spec-compliant servers that might 
+   * expect capitalized header names.
+   */
+  preserveHeaderCase?: boolean;
+
+  /**
    * The credentials policy you want to use for the fetch call.
    */
   credentials?: string;
@@ -79,6 +86,7 @@ export interface HttpOptions {
 export interface HttpQueryOptions {
   includeQuery?: boolean;
   includeExtensions?: boolean;
+  preserveHeaderCase?: boolean;
 }
 
 export interface HttpConfig {
@@ -91,6 +99,7 @@ export interface HttpConfig {
 const defaultHttpOptions: HttpQueryOptions = {
   includeQuery: true,
   includeExtensions: false,
+  preserveHeaderCase: false,
 };
 
 const defaultHeaders = {
@@ -150,8 +159,8 @@ export function selectHttpOptionsAndBodyInternal(
       ...config.options,
       headers: {
         ...options.headers,
-        ...headersToLowerCase(config.headers),
-      },
+        ...config.headers,
+      }
     };
 
     if (config.credentials) {
@@ -163,6 +172,8 @@ export function selectHttpOptionsAndBodyInternal(
       ...config.http,
     };
   });
+
+  options.headers = removeDuplicateHeaders(options.headers, http.preserveHeaderCase);
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
@@ -179,15 +190,35 @@ export function selectHttpOptionsAndBodyInternal(
   };
 };
 
-function headersToLowerCase(
-  headers: Record<string, string> | undefined
+// Remove potential duplicate header names, preserving last (by insertion order).
+// This is done to prevent unintentionally duplicating a header instead of 
+// overwriting it (See #8447 and #8449).
+function removeDuplicateHeaders(
+  headers: Record<string, string>,
+  preserveHeaderCase: boolean | undefined
 ): typeof headers {
-  if (headers) {
-    const normalized = Object.create(null);
+
+  // If we're not preserving the case, just remove duplicates w/ normalization.
+  if (!preserveHeaderCase) {
+    const normalizedHeaders = Object.create(null);
     Object.keys(Object(headers)).forEach(name => {
-      normalized[name.toLowerCase()] = headers[name];
+      normalizedHeaders[name.toLowerCase()] = headers[name];
     });
-    return normalized;
+    return normalizedHeaders; 
   }
-  return headers;
+
+  // If we are preserving the case, remove duplicates w/ normalization,
+  // preserving the original name.
+  // This allows for non-http-spec-compliant servers that expect intentionally 
+  // capitalized header names (See #6741).
+  const headerData = Object.create(null);
+  Object.keys(Object(headers)).forEach(name => {
+    headerData[name.toLowerCase()] = { originalName: name, value: headers[name] }
+  });
+
+  const normalizedHeaders = Object.create(null);
+  Object.keys(headerData).forEach(name => {
+    normalizedHeaders[headerData[name].originalName] = headerData[name].value;
+  });
+  return normalizedHeaders;
 }

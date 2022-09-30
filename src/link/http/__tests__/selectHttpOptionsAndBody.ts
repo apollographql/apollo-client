@@ -91,31 +91,6 @@ describe('selectHttpOptionsAndBody', () => {
     expect(options.method).toEqual('POST'); //from default
   });
 
-  it('normalizes HTTP header names to lower case', () => {
-    const headers = {
-      accept: 'application/json',
-      Accept: 'application/octet-stream',
-      'content-type': 'application/graphql',
-      'Content-Type': 'application/javascript',
-      'CONTENT-type': 'application/json',
-    };
-
-    const config = { headers };
-    const { options, body } = selectHttpOptionsAndBody(
-      createOperation({}, { query }),
-      fallbackHttpConfig,
-      config,
-    );
-
-    expect(body).toHaveProperty('query');
-    expect(body).not.toHaveProperty('extensions');
-
-    expect(options.headers).toEqual({
-      accept: 'application/octet-stream',
-      'content-type': 'application/json',
-    });
-  });
-
   it('applies custom printer function when provided', () => {
     const customPrinter = (ast: ASTNode, originalPrint: typeof print) => {
       return stripIgnoredCharacters(originalPrint(ast));

@@ -39,7 +39,7 @@ describe('useQuery Hook', () => {
         },
       ];
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       );
 
@@ -61,7 +61,7 @@ describe('useQuery Hook', () => {
           request: { query },
           result: { data: { hello: "world" } },
       } ];
-      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
       const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
       await waitFor(() => result.current.loading === false);
       const oldResult = result.current;
@@ -95,7 +95,7 @@ describe('useQuery Hook', () => {
         request: { query },
         result: { data: { hello: "world" } },
       } ];
-      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
       const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
       await waitFor(() => result.current.loading === false);
       rerender({ children: null });
@@ -120,7 +120,7 @@ describe('useQuery Hook', () => {
         request: { query, variables: { id: 2 } },
         result: { data: { hello: "world 2" } },
       } ];
-      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const wrapper: React.FC<React.PropsWithChildren<{ variables: { id: number } }>> = ({ children }) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
       const { result, rerender, waitFor } = renderHook(
         (options) => useQuery(query, options),
         { wrapper, initialProps: { variables: { id: 1 } } },
@@ -146,7 +146,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -176,7 +176,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -211,7 +211,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -234,7 +234,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
           <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -266,7 +266,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren<{ id: number }>> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -560,7 +560,7 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <ApolloProvider client={client}>
           {children}
         </ApolloProvider>
@@ -1391,7 +1391,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -1498,7 +1498,7 @@ describe('useQuery Hook', () => {
         data: { hello: "world 2" },
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider
           mocks={mocks}
           cache={cache}
@@ -1544,7 +1544,7 @@ describe('useQuery Hook', () => {
       const requestSpy = jest.spyOn(link, 'request');
       const onErrorFn = jest.fn();
       link.setOnError(onErrorFn);
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider link={link} cache={cache}>{children}</MockedProvider>
       );
 
@@ -1591,7 +1591,7 @@ describe('useQuery Hook', () => {
       const requestSpy = jest.spyOn(link, 'request');
       const onErrorFn = jest.fn();
       link.setOnError(onErrorFn);
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <React.StrictMode>
           <MockedProvider link={link} cache={cache}>{children}</MockedProvider>
         </React.StrictMode>
@@ -1639,7 +1639,7 @@ describe('useQuery Hook', () => {
       const requestSpy = jest.spyOn(link, 'request');
       const onErrorFn = jest.fn();
       link.setOnError(onErrorFn);
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <React.StrictMode>
           <MockedProvider link={link} cache={cache}>{children}</MockedProvider>
         </React.StrictMode>
@@ -1684,7 +1684,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -1726,7 +1726,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -1762,7 +1762,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -1811,7 +1811,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -1856,7 +1856,7 @@ describe('useQuery Hook', () => {
       const link = new MockLink(mocks);
       const onErrorFn = jest.fn();
       link.setOnError(onErrorFn);
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} link={link} cache={cache}>
           {children}
         </MockedProvider>
@@ -1989,7 +1989,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -2049,7 +2049,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -2114,7 +2114,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -2276,7 +2276,7 @@ describe('useQuery Hook', () => {
       // TODO: Calling fetchMore with an updateQuery callback is deprecated
       const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       );
 
@@ -2312,7 +2312,7 @@ describe('useQuery Hook', () => {
       // TODO: Calling fetchMore with an updateQuery callback is deprecated
       const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       );
 
@@ -2364,7 +2364,7 @@ describe('useQuery Hook', () => {
         },
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -2400,7 +2400,7 @@ describe('useQuery Hook', () => {
         },
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -2506,7 +2506,7 @@ describe('useQuery Hook', () => {
         },
       ];
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={[
           {
             request: { query: GET_COUNTRIES },
@@ -2550,7 +2550,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
@@ -2695,7 +2695,7 @@ describe('useQuery Hook', () => {
           },
         });
 
-        const wrapper = ({ children }: any) => (
+        const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
           <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
         );
 
@@ -2776,7 +2776,7 @@ describe('useQuery Hook', () => {
           },
         });
 
-        const wrapper = ({ children }: any) => (
+        const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
           <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
         );
 
@@ -2862,7 +2862,7 @@ describe('useQuery Hook', () => {
           },
         });
 
-        const wrapper = ({ children }: any) => (
+        const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
           <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
         );
 
@@ -2936,7 +2936,7 @@ describe('useQuery Hook', () => {
         data: { hello: 'world' },
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={[]} cache={cache}>
           {children}
         </MockedProvider>
@@ -2969,7 +2969,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -3011,7 +3011,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -3043,7 +3043,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -3227,7 +3227,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -3456,7 +3456,7 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache({ addTypename: false }),
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <ApolloProvider client={client}>
           {children}
         </ApolloProvider>
@@ -3559,7 +3559,7 @@ describe('useQuery Hook', () => {
         },
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <ApolloProvider client={client}>
           {children}
         </ApolloProvider>
@@ -3632,7 +3632,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren<{ skip: boolean }>> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -3667,14 +3667,14 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren<{ skip: boolean, variables?: { someVar: boolean } }>> = ({ children }) => (
         <ApolloProvider client={client}>
           {children}
         </ApolloProvider>
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip, variables }) => useQuery(query, { skip, variables }),
+        ({ skip }) => useQuery(query, { skip }),
         { wrapper, initialProps: { skip: false, variables: undefined as any } },
       );
 
@@ -3697,7 +3697,7 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <ApolloProvider client={client}>
           {children}
         </ApolloProvider>
@@ -3934,7 +3934,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -4239,7 +4239,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -4325,7 +4325,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
         <MockedProvider mocks={mocks} cache={cache}>
           {children}
         </MockedProvider>
@@ -4553,7 +4553,7 @@ describe('useQuery Hook', () => {
       `;
 
       const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren<{ gender: string }>> = ({ children }) => (
         <MockedProvider link={link} cache={cache}>
           {children}
         </MockedProvider>
@@ -4698,7 +4698,7 @@ describe('useQuery Hook', () => {
         data: { results },
       })
 
-      const wrapper = ({ children }: any) => (
+      const wrapper: React.FC<React.PropsWithChildren<{ canonizeResults: boolean }>> = ({ children }) => (
         <MockedProvider cache={cache}>
           {children}
         </MockedProvider>

@@ -5854,7 +5854,7 @@ describe('QueryManager', () => {
 
       queryManager.query({ query, context: { queryDeduplication: true } })
 
-      expect(queryManager['inFlightLinkObservables'].size).toBe(1)
+      expect(queryManager['inFlightLinkObservables'].length).toBe(1)
     });
 
     it('should allow overriding global queryDeduplication: true to false', () => {
@@ -5880,7 +5880,7 @@ describe('QueryManager', () => {
 
       queryManager.query({ query, context: { queryDeduplication: false } })
 
-      expect(queryManager['inFlightLinkObservables'].size).toBe(0)
+      expect(queryManager['inFlightLinkObservables'].length).toBe(0)
     });
   });
 

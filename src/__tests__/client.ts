@@ -1430,6 +1430,64 @@ describe('client', () => {
     }).then(resolve, reject);
   });
 
+  itAsync('deduplicates queries that are strict subsets', (resolve, reject) => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+          language
+        }
+      }
+    `;
+    const queryDoc2 = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+    const data = {
+      author: {
+        name: 'Jonas',
+        language: 'en',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+        language: 'hi',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const link = mockSingleLink(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc2 },
+        result: { data: data2 },
+      },
+    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    // Both queries need to be deduplicated, otherwise only one gets tracked
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc2 });
+
+    // if deduplication happened, result2.data will have name from first result
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      expect(result1.data).toEqual(data);
+      expect(result2.data.author).toEqual({ name: data.author.name });
+    }).then(resolve, reject);
+  });
+
   it('deduplicates queries if query context.queryDeduplication is set to true', () => {
     const queryDoc = gql`
       query {

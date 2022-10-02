@@ -26,6 +26,7 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
+  mergeDeep,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -945,10 +946,11 @@ export class QueryManager<TStore> {
     return this.localState;
   }
 
-  private inFlightLinkObservables = new Map<
-    DocumentNode,
-    Map<string, Observable<FetchResult>>
-  >();
+  private inFlightLinkObservables =
+    new Array<{
+      serverQuery: DocumentNode,
+      byVariables: Map<string, Observable<FetchResult>>
+    }>();
 
   private getObservableFromLink<T = any>(
     query: DocumentNode,
@@ -978,8 +980,22 @@ export class QueryManager<TStore> {
       context = operation.context;
 
       if (deduplication) {
-        const byVariables = inFlightLinkObservables.get(serverQuery) || new Map();
-        inFlightLinkObservables.set(serverQuery, byVariables);
+
+        const inFlightObservable = inFlightLinkObservables
+        .find(({ serverQuery: storedQuery }) =>
+          serverQuery.definitions.every(
+            (serverDefinition, index) => {
+              const storedDefinition = storedQuery.definitions[index]
+              const mergedDefinition =
+                mergeDeep(storedDefinition, serverDefinition);
+              return equal(mergedDefinition, storedDefinition);
+          })
+        );
+
+        const byVariables = inFlightObservable?.byVariables || new Map();
+        if (!inFlightObservable) {
+          inFlightLinkObservables.push({ serverQuery, byVariables });
+        }
 
         const varJson = canonicalStringify(variables);
         observable = byVariables.get(varJson);
@@ -994,7 +1010,8 @@ export class QueryManager<TStore> {
           concast.beforeNext(() => {
             if (byVariables.delete(varJson) &&
                 byVariables.size < 1) {
-              inFlightLinkObservables.delete(serverQuery);
+              this.inFlightLinkObservables = inFlightLinkObservables
+                .filter(observable => observable.serverQuery !== serverQuery);
             }
           });
         }

@@ -3674,7 +3674,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip }) => useQuery(query, { skip }),
+        ({ skip, variables }) => useQuery(query, { skip, variables }),
         { wrapper, initialProps: { skip: false, variables: undefined as any } },
       );
 

@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: Aug 2022**
+**Last updated: Oct 2022**
 
 For up to date release notes, refer to the project's [Change Log](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -12,10 +12,6 @@ For up to date release notes, refer to the project's [Change Log](https://github
 - If you already see an issue that interests you please add a 👍 or a comment so we can measure community interest.
 
 ---
-
-## 3.7
-
-- Release 3.7 will focus on adding support for the `@defer` directive & adding a new hook `useFragment`. See Github [3.7 Milestone](https://github.com/apollographql/apollo-client/milestone/28) for more details.
 
 ## 3.8
 

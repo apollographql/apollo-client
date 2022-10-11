@@ -8,7 +8,9 @@ You can customize how a particular field in your Apollo Client cache is read and
 * A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
 * An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
-You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whichever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the field's parent type. The following example defines a field policy for the `name` field of a `Person` type:
+You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whichever [`TypePolicy` object](./cache-configuration/#typepolicy-fields)  corresponds to the field's parent type.
+
+The following example defines a field policy for the `name` field of a `Person` type:
 
 ```ts {5-10}
 const cache = new InMemoryCache({
@@ -48,9 +50,11 @@ const cache = new InMemoryCache({
     Person: {
       fields: {
         name: {
+          // highlight-start
           read(name = "UNKNOWN NAME") {
             return name;
           }
+          // highlight-end
         },
       },
     },

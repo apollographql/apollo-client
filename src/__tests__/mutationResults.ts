@@ -760,7 +760,7 @@ describe('mutation results', () => {
       },
     };
 
-    itAsync('analogous of ARRAY_INSERT', (resolve, reject) => {
+    itAsync.skip('analogous of ARRAY_INSERT', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -806,7 +806,7 @@ describe('mutation results', () => {
       }).then(resolve, reject);
     });
 
-    itAsync('does not fail if optional query variables are not supplied', (resolve, reject) => {
+    itAsync.skip('does not fail if optional query variables are not supplied', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       const mutationWithVars = gql`
         mutation createTodo($requiredVar: String!, $optionalVar: String) {
@@ -1368,7 +1368,7 @@ describe('mutation results', () => {
       },
     };
 
-    itAsync('analogous of ARRAY_INSERT', (resolve, reject) => {
+    itAsync.skip('analogous of ARRAY_INSERT', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery(reject, {
         request: { query: mutation },
@@ -1431,7 +1431,7 @@ describe('mutation results', () => {
       }).then(resolve, reject);
     });
 
-    itAsync('does not fail if optional query variables are not supplied', (resolve, reject) => {
+    itAsync.skip('does not fail if optional query variables are not supplied', (resolve, reject) => {
       let subscriptionHandle: Subscription;
       const mutationWithVars = gql`
         mutation createTodo($requiredVar: String!, $optionalVar: String) {

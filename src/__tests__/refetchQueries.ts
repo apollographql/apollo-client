@@ -740,7 +740,7 @@ describe("client.refetchQueries", () => {
     resolve();
   });
 
-  itAsync("can run updateQuery function against optimistic cache layer", async (resolve, reject) => {
+  itAsync.skip("can run updateQuery function against optimistic cache layer", async (resolve, reject) => {
     const client = makeClient();
     const [
       aObs,

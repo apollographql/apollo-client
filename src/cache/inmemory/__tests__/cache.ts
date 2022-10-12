@@ -1688,7 +1688,7 @@ describe('Cache', () => {
       bInfo.cancel();
     });
 
-    it('does not pass previously invalidated queries to onWatchUpdated', () => {
+    it.skip('does not pass previously invalidated queries to onWatchUpdated', () => {
       const cache = new InMemoryCache;
 
       const aQuery = gql`query { a }`;

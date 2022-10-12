@@ -24,7 +24,7 @@ describe('queries', () => {
   });
 
   // general api
-  it('binds a query to props', () => {
+  it('binds a query to props', async () => {
     let done = false;
     const query: DocumentNode = gql`
       query people {
@@ -64,7 +64,7 @@ describe('queries', () => {
       </ApolloProvider>
     );
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(done).toBe(true);
     }).finally(unmount)
   });

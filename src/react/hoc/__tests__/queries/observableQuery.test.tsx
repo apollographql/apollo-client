@@ -150,7 +150,7 @@ describe('[queries] observableQuery', () => {
     });
   });
 
-  itAsync("will recycle `ObservableQuery`s when re-rendering a portion of the tree but not return stale data if variables don't match", (resolve, reject) => {
+  itAsync("will recycle `ObservableQuery`s when re-rendering a portion of the tree but not return stale data if variables don't match", async (resolve, reject) => {
     const query: DocumentNode = gql`
       query people($first: Int!) {
         allPeople(first: $first) {
@@ -269,7 +269,7 @@ describe('[queries] observableQuery', () => {
       }, 20);
     }, 5);
 
-    return waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
+    await waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   it('not overly rerender', async () => {
@@ -385,7 +385,7 @@ describe('[queries] observableQuery', () => {
     });
   });
 
-  itAsync('does rerender if query returns differnt result', (resolve, reject) => {
+  itAsync('does rerender if query returns differnt result', async (resolve, reject) => {
     const query: DocumentNode = gql`
       query people($first: Int!) {
         allPeople(first: $first) {
@@ -472,6 +472,6 @@ describe('[queries] observableQuery', () => {
       </ApolloProvider>
     );
 
-    return waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+    await waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 });

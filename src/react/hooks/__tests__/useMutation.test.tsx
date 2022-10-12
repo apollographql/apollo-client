@@ -10,12 +10,18 @@ import fetchMock from "fetch-mock";
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
 
 describe('useMutation Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   interface Todo {
     id: number;
     description: string;
@@ -1194,7 +1200,7 @@ describe('useMutation Hook', () => {
       await waitFor(() => expect(variablesMatched).toBe(true));
     });
 
-    itAsync('should be called with the provided context', (resolve, reject) => {
+    itAsync('should be called with the provided context', async (resolve, reject) => {
       const context = { id: 3 };
 
       const variables = {
@@ -1237,13 +1243,13 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(foundContext).toBe(true);
       }).then(resolve, reject);
     });
 
     describe('If context is not provided', () => {
-      itAsync('should be undefined', (resolve, reject) => {
+      itAsync('should be undefined', async (resolve, reject) => {
         const variables = {
           description: 'Get milk!'
         };
@@ -1283,7 +1289,7 @@ describe('useMutation Hook', () => {
           </MockedProvider>
         );
 
-        return waitFor(() => {
+        await waitFor(() => {
           expect(checkedContext).toBe(true);
         }).then(resolve, reject);
       });
@@ -1362,7 +1368,7 @@ describe('useMutation Hook', () => {
         </ApolloProvider>
       );
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(renderCount).toBe(3);
       }).then(resolve, reject);
     });
@@ -1421,7 +1427,7 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(contextFn).toHaveBeenCalledTimes(2);
         expect(contextFn).toHaveBeenCalledWith(context);
       }).then(resolve, reject);
@@ -1838,7 +1844,7 @@ describe('useMutation Hook', () => {
 
       await mutatePromise;
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(
           client.readQuery({ query: GET_TODOS_QUERY })
         ).toEqual(mocks[2].result.data);

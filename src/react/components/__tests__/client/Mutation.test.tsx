@@ -1342,7 +1342,7 @@ describe('General Mutation testing', () => {
     });
   });
 
-  it('uses client from props instead of one provided by context', () => {
+  it('uses client from props instead of one provided by context', async () => {
     const link1 = mockSingleLink({
       request: { query: mutation },
       result: { data }
@@ -1386,7 +1386,7 @@ describe('General Mutation testing', () => {
       </ApolloProvider>
     );
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(count).toBe(3);
     });
   });

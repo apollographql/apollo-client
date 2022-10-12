@@ -9,7 +9,7 @@ import { ApolloProvider } from '../../../react/context';
 import { useSubscription } from '../../../react/hooks';
 
 describe('mockSubscriptionLink', () => {
-  it('should work with multiple subscribers to the same mock websocket', () => {
+  it('should work with multiple subscribers to the same mock websocket', async () => {
     const subscription = gql`
       subscription {
         car {
@@ -62,7 +62,7 @@ describe('mockSubscriptionLink', () => {
       </ApolloProvider>
     );
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(renderCountA).toBe(results.length + 1);
       expect(renderCountB).toBe(results.length + 1);
     }, { timeout: 1000 });

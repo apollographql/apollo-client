@@ -119,7 +119,7 @@ describe("useReactiveVar Hook", () => {
     resolve();
   });
 
-  itAsync("does not update if component has been unmounted", (resolve, reject) => {
+  itAsync("does not update if component has been unmounted", async (resolve, reject) => {
     const counterVar = makeVar(0);
     let renderCount = 0;
     let attemptedUpdateAfterUnmount = false;
@@ -159,7 +159,7 @@ describe("useReactiveVar Hook", () => {
 
     const { unmount } = render(<Component/>);
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(attemptedUpdateAfterUnmount).toBe(true);
     }).then(() => {
       expect(renderCount).toBe(3);

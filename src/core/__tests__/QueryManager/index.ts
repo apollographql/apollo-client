@@ -470,7 +470,7 @@ describe('QueryManager', () => {
   });
 
   // Query should be aborted on last .unsubscribe()
-  itAsync('causes link unsubscription if unsubscribed', (resolve, reject) => {
+  itAsync('causes link unsubscription if unsubscribed', async (resolve, reject) => {
     const expResult = {
       data: {
         allPeople: {
@@ -545,13 +545,13 @@ describe('QueryManager', () => {
 
     subscription.unsubscribe();
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
       expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
     }).then(resolve, reject);
   });
 
-  itAsync('causes link unsubscription after reobserve', (resolve, reject) => {
+  itAsync('causes link unsubscription after reobserve', async (resolve, reject) => {
     const expResult = {
       data: {
         allPeople: {
@@ -644,7 +644,7 @@ describe('QueryManager', () => {
     // Check that reobserve cancels the previous connection while watchQuery remains active
     observableQuery.reobserve({ variables: { offset: 20 } });
 
-    return waitFor(() => {
+    await waitFor(() => {
       // Verify that previous connection was aborted by reobserve
       expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
     }).then(async () => {

@@ -20,6 +20,9 @@ import { useQuery } from "../useQuery";
 import { FragmentSpreadNode, OperationDefinitionNode, Kind } from "graphql";
 
 describe("useFragment", () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
   it("is importable and callable", () => {
     expect(typeof useFragment).toBe("function");
   });

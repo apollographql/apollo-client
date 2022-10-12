@@ -14,7 +14,7 @@ import {
   WatchQueryFetchPolicy,
 } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import {
@@ -29,6 +29,12 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
@@ -471,7 +477,7 @@ describe('useQuery Hook', () => {
 
       // TODO(investigate) Without waitFor, loading is sometimes still true
       // here, after awaiting waitForNextUpdate().
-      return waitFor(() => {
+      await waitFor(() => {
         expect(result.current[0].loading).toBe(false);
         expect(result.current[0].data).toEqual({ hello: "world 2" });
         expect(result.current[0].variables).toEqual({ name: "world 2" });
@@ -1564,6 +1570,7 @@ describe('useQuery Hook', () => {
       await expect(waitForNextUpdate({ timeout: 20*TIME_SCALE })).rejects.toThrow('Timed out');
       expect(requestSpy).toHaveBeenCalledTimes(1);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+      requestSpy.mockRestore();
     });
 
     it('should stop polling when component is unmounted in Strict Mode', async () => {
@@ -1615,10 +1622,11 @@ describe('useQuery Hook', () => {
         timeout: 50 * TIME_SCALE
       })).rejects.toThrow('Timed out');
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
         expect(onErrorFn).toHaveBeenCalledTimes(0);
       });
+      requestSpy.mockRestore();
     });
 
     it('should start and stop polling in Strict Mode', async () => {
@@ -1670,6 +1678,7 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: "world 2" });
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+      requestSpy.mockRestore();
     });
 
     it('should not throw an error if stopPolling is called manually', async () => {

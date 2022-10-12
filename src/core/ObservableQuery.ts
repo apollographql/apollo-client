@@ -307,10 +307,11 @@ export class ObservableQuery<
     newResult: ApolloQueryResult<TData>,
     variables?: TVariables
   ) {
+    console.log({variables})
     return (
       !this.last ||
       !equal(this.last.result, newResult) ||
-      !equal(this.last.variables, variables)
+      (variables && !equal(this.last.variables, variables))
     );
   }
 

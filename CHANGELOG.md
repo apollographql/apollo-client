@@ -1,3 +1,10 @@
+## Apollo Client 3.7.1
+
+### Bug fixes
+
+- Fix issue where `loading` remains `true` after `observer.refetch` is called repeatedly with different variables when the same data are returned. <br/>
+  [@alessbell](https://github.com/alessbell) in [#10143](https://github.com/apollographql/apollo-client/pull/10143)
+
 ## Apollo Client 3.7.0 (2022-09-30)
 
 ### New Features

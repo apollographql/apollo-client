@@ -2,8 +2,8 @@
   "title": "Client (React)",
   "version": "v3",
   "algoliaFilters": [
-    "docset:react",
-    "docset:server"
+    "docset:apollo-client",
+    "docset:apollo-server"
   ],
   "sidebar": {
     "Introduction": "/",

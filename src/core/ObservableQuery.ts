@@ -303,8 +303,15 @@ export class ObservableQuery<
 
   // Compares newResult to the snapshot we took of this.lastResult when it was
   // first received.
-  public isDifferentFromLastResult(newResult: ApolloQueryResult<TData>) {
-    return !this.last || !equal(this.last.result, newResult);
+  public isDifferentFromLastResult(
+    newResult: ApolloQueryResult<TData>,
+    variables?: TVariables
+  ) {
+    return (
+      !this.last ||
+      !equal(this.last.result, newResult) ||
+      (variables && !equal(this.last.variables, variables))
+    );
   }
 
   private getLast<K extends keyof Last<TData, TVariables>>(
@@ -872,7 +879,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     variables: TVariables | undefined,
   ) {
     const lastError = this.getLastError();
-    if (lastError || this.isDifferentFromLastResult(result)) {
+    if (lastError || this.isDifferentFromLastResult(result, variables)) {
       if (lastError || !result.partial || this.options.returnPartialData) {
         this.updateLastResult(result, variables);
       }

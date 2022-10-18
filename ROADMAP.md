@@ -15,7 +15,7 @@ For up to date release notes, refer to the project's [Change Log](https://github
 
 ## 3.8
 
-- Release 3.8: will focus on cache & performance improvements and adding a new hook: `useBackgroundQuery`,  See Github [3.8 Milestone](https://github.com/apollographql/apollo-client/milestone/30) for more details.
+- Release 3.8: will focus on adding a new hook: `useBackgroundQuery`,  See Github [3.8 Milestone](https://github.com/apollographql/apollo-client/milestone/30) for more details.
 
 ## 3.9
 

@@ -135,7 +135,7 @@ export function handleError(err: any, observer: Observer<any>) {
   if (err.name === "AbortError") return;
   // if it is a network error, BUT there is graphql result info fire
   // the next observer before calling error this gives apollo-client
-  // (and react-apollo) the `graphqlErrors` and `networErrors` to
+  // (and react-apollo) the `graphqlErrors` and `networkErrors` to
   // pass to UI this should only happen if we *also* have data as
   // part of the response key per the spec
   if (err.result && err.result.errors && err.result.data) {

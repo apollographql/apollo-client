@@ -49,18 +49,11 @@
     "test:memory": "cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
     "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
-    "bundlesize": "npm run build && bundlesize",
+    "bundlesize": "npm run build && ts-node-script ./config/bundlesize.ts",
     "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json"
   },
-  "bundlesize": [
-    {
-      "name": "apollo-client",
-      "path": "./dist/apollo-client.min.cjs",
-      "maxSize": "31.71kB"
-    }
-  ],
   "engines": {
     "npm": "^7.20.3 || ^8.0.0"
   },
@@ -108,6 +101,7 @@
     "@testing-library/react-12": "npm:@testing-library/react@^12",
     "@testing-library/react-hooks": "8.0.1",
     "@testing-library/user-event": "14.4.3",
+    "@types/bytes": "3.1.1",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/fetch-mock": "7.3.5",
     "@types/glob": "8.0.0",
@@ -121,7 +115,7 @@
     "@types/use-sync-external-store": "0.0.3",
     "acorn": "8.8.0",
     "blob-polyfill": "7.0.20220408",
-    "bundlesize": "0.18.1",
+    "bytes": "3.1.2",
     "cross-fetch": "3.1.5",
     "fetch-mock": "9.11.0",
     "glob": "8.0.3",

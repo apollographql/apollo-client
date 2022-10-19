@@ -17,7 +17,6 @@ import {
   ApolloLink,
 } from "../../../core";
 import { useQuery } from "../useQuery";
-import { FragmentSpreadNode, OperationDefinitionNode, Kind } from "graphql";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -224,45 +223,16 @@ describe("useFragment", () => {
       "item 5",
     ]);
 
-    let resolveAfterItem4Updated: () => void;
-    const item4UpdatePromise = new Promise<void>((resolve, reject) => {
-      resolveAfterItem4Updated = resolve;
-      setTimeout(() => {
-        reject(new Error("timed out"));
-      }, 100);
-    });
-
     act(() => {
-      cache.batch({
-        update(cache) {
-          cache.writeFragment({
-            fragment: ItemFragment,
-            data: {
-              __typename: "Item",
-              id: 4,
-              text: "Item #4 updated",
-            },
-          });
-        },
-
-        onWatchUpdated(watch, diff) {
-          const [def] = watch.query.definitions as OperationDefinitionNode[];
-          const fragmentSpread = def.selectionSet.selections[0] as FragmentSpreadNode;
-          expect(fragmentSpread.kind).toBe(Kind.FRAGMENT_SPREAD);
-          expect(fragmentSpread.name.value).toBe("ItemFragment");
-
-          expect(diff.complete).toBe(true);
-          expect(diff.result).toEqual({
-            __typename: 'Item',
-            text: 'Item #4 updated',
-          });
-
-          resolveAfterItem4Updated();
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 4,
+          text: "Item #4 updated",
         },
       });
     });
-
-    await item4UpdatePromise;
 
     await waitFor(() => {
       expect(getItemTexts()).toEqual([

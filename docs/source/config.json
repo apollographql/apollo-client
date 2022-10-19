@@ -40,7 +40,7 @@
       "Local-only fields": "/local-state/managing-state-with-field-policies",
       "Reactive variables": "/local-state/reactive-variables",
       "Client-side schema": "/local-state/client-side-schema",
-      "Local resolvers (deprecated)": "/local-state/local-resolvers"
+      "Local resolvers": "/local-state/local-resolvers"
     },
     "Development & Testing": {
       "Developer tools": "/development-testing/developer-tooling",

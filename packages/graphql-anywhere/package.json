@@ -41,9 +41,9 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "file:../apollo-utilities",
+    "apollo-utilities": "^1.3.4",
     "ts-invariant": "^0.3.2",
-    "tslib": "^1.10.0"
+    "tslib": "^2.4.0"
   },
   "peerDependencies": {
     "graphql": ">= 0.11.0"

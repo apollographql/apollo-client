@@ -1,9 +1,12 @@
-## Apollo Client 3.7.1
+## Apollo Client 3.7.1 (unreleased)
 
 ### Bug fixes
 
 - Fix issue where `loading` remains `true` after `observer.refetch` is called repeatedly with different variables when the same data are returned. <br/>
   [@alessbell](https://github.com/alessbell) in [#10143](https://github.com/apollographql/apollo-client/pull/10143)
+
+- Fix race condition where `useFragment_experimental` could receive cache updates before initially calling `cache.watch` in `useEffect`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#10212](https://github.com/apollographql/apollo-client/pull/10212)
 
 ## Apollo Client 3.7.0 (2022-09-30)
 

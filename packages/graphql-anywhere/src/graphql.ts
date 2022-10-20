@@ -105,7 +105,7 @@ export function graphql(
   };
 
   return executeSelectionSet(
-    mainDefinition.selectionSet,
+    mainDefinition.selectionSet as SelectionSetNode,
     rootValue,
     execContext,
   );
@@ -145,7 +145,7 @@ function executeSelectionSet(
         fragment = selection;
       } else {
         // This is a named fragment
-        fragment = fragmentMap[selection.name.value];
+        fragment = fragmentMap[selection.name.value] as FragmentDefinitionNode;
 
         if (!fragment) {
           throw new Error(`No fragment named ${selection.name.value}`);

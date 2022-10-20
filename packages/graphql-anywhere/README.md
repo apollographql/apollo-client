@@ -3,6 +3,8 @@
 [![npm version](https://badge.fury.io/js/graphql-anywhere.svg)](https://badge.fury.io/js/graphql-anywhere)
 [![Build Status](https://travis-ci.org/apollographql/graphql-anywhere.svg?branch=master)](https://travis-ci.org/apollostack/graphql-anywhere)
 
+> ⚠️ This package is no longer used by Apollo Client as of version 3.0, has been deprecated, and will no longer be maintained. ⚠️
+
 Run a GraphQL query anywhere, without a GraphQL server or a schema. Just pass in one resolver. Use it together with [graphql-tag](https://github.com/apollographql/graphql-tag).
 
 ```

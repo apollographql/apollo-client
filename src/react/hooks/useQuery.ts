@@ -105,8 +105,7 @@ class InternalState<TData, TVariables> {
     return new Promise<QueryResult<TData, TVariables>>(resolve => {
       this.asyncResolveFns.add(resolve);
       this.optionsToIgnoreOnce.add(this.watchQueryOptions);
-      this.forceUpdate();
-    });
+    }).then(this.forceUpdate.bind(this));
   }
 
   private asyncResolveFns = new Set<

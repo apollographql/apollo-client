@@ -3070,7 +3070,7 @@ describe('useQuery Hook', () => {
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
 
-    it('onCompleted should work with polling', async () => {
+    it('onCompleted should not fire for polling queries without notifyOnNetworkStatusChange: true', async () => {
       const query = gql`{ hello }`;
       const mocks = [
         {
@@ -3112,6 +3112,68 @@ describe('useQuery Hook', () => {
 
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 2' });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 3' });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+    });
+
+    it('onCompleted should fire when polling with notifyOnNetworkStatusChange: true', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: 'world 1' } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: 'world 2' } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: 'world 3' } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const onCompleted = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {
+          onCompleted,
+          notifyOnNetworkStatusChange: true,
+          pollInterval: 10,
+        }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toEqual({ hello: 'world 1' });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world 2' });
+      expect(onCompleted).toHaveBeenCalledTimes(2);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(true);
       expect(result.current.data).toEqual({ hello: 'world 2' });
       expect(onCompleted).toHaveBeenCalledTimes(2);
 
@@ -3167,7 +3229,7 @@ describe('useQuery Hook', () => {
       errorSpy.mockRestore();
     });
 
-    it("onCompleted should not execute after cache writes", async () => {
+    it("onCompleted should not execute on cache writes after initial query execution", async () => {
       const query = gql`
         {
           hello
@@ -3224,6 +3286,74 @@ describe('useQuery Hook', () => {
       expect(onCompleted).toBeCalledTimes(1);
       await screen.findByText("Data: baz");
       expect(onCompleted).toBeCalledTimes(1);
+    });
+
+    it("onCompleted should execute on cache writes after initial query execution with notifyOnNetworkStatusChange: true", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "foo" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "bar" } },
+        },
+      ];
+      const link = new MockLink(mocks);
+      const cache = new InMemoryCache();
+      const onCompleted = jest.fn();
+
+      const ChildComponent: React.FC = () => {
+        const { data, client } = useQuery(
+          query,
+          {
+            onCompleted,
+            notifyOnNetworkStatusChange: true
+          }
+        );
+        function refetchQueries() {
+          client.refetchQueries({ include: 'active' })
+        }
+        function writeQuery() {
+          client.writeQuery({ query, data: { hello: 'baz'}})
+        }
+        return (
+          <div>
+            <span>Data: {data?.hello}</span>
+            <button onClick={() => refetchQueries()}>Refetch queries</button>
+            <button onClick={() => writeQuery()}>Update word</button>
+          </div>
+        );
+      };
+
+      const ParentComponent: React.FC = () => {
+        return (
+          <MockedProvider link={link} cache={cache}>
+            <div>
+              <ChildComponent />
+            </div>
+          </MockedProvider>
+        );
+      };
+
+      render(<ParentComponent />);
+
+      await screen.findByText("Data: foo");
+      expect(onCompleted).toBeCalledTimes(1);
+      await userEvent.click(screen.getByRole('button', { name: /refetch queries/i }));
+      // onCompleted increments when refetch occurs since we're hitting the network...
+      expect(onCompleted).toBeCalledTimes(2);
+      await screen.findByText("Data: bar");
+      await userEvent.click(screen.getByRole('button', { name: /update word/i }));
+      // but not on direct cache write, since there's no network request to complete
+      expect(onCompleted).toBeCalledTimes(2);
+      await screen.findByText("Data: baz");
+      expect(onCompleted).toBeCalledTimes(2);
     });
   });
 

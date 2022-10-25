@@ -512,10 +512,7 @@ class InternalState<TData, TVariables> {
           this.onError(result.error);
         } else if (
           result.data &&
-          // always call onCompleted when polling,
-          // otherwise only if network status changes
-          this.observable.options.pollInterval ||
-          previousResult?.loading !== result.loading
+          previousResult?.networkStatus !== result.networkStatus
         ) {
           this.onCompleted(result.data);
         }

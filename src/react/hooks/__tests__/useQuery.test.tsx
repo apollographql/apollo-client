@@ -3,7 +3,8 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderHook } from '@testing-library/react-hooks';
 import {
   ApolloClient,
@@ -3164,6 +3165,65 @@ describe('useQuery Hook', () => {
       await findByText("onCompletedCalled: true");
       expect(errorSpy).not.toHaveBeenCalled();
       errorSpy.mockRestore();
+    });
+
+    it("onCompleted should not execute after cache writes", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "foo" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "bar" } },
+        },
+      ];
+      const link = new MockLink(mocks);
+      const cache = new InMemoryCache();
+      const onCompleted = jest.fn();
+
+      const ChildComponent: React.FC = () => {
+        const { data, client } = useQuery(query, { onCompleted });
+        function refetchQueries() {
+          client.refetchQueries({ include: 'active' })
+        }
+        function writeQuery() {
+          client.writeQuery({ query, data: { hello: 'baz'}})
+        }
+        return (
+          <div>
+            <span>Data: {data?.hello}</span>
+            <button onClick={() => refetchQueries()}>Refetch queries</button>
+            <button onClick={() => writeQuery()}>Update word</button>
+          </div>
+        );
+      };
+
+      const ParentComponent: React.FC = () => {
+        return (
+          <MockedProvider link={link} cache={cache}>
+            <div>
+              <ChildComponent />
+            </div>
+          </MockedProvider>
+        );
+      };
+
+      render(<ParentComponent />);
+
+      await screen.findByText("Data: foo");
+      await userEvent.click(screen.getByRole('button', { name: /refetch queries/i }));
+      expect(onCompleted).toBeCalledTimes(1);
+      await screen.findByText("Data: bar");
+      await userEvent.click(screen.getByRole('button', { name: /update word/i }));
+      expect(onCompleted).toBeCalledTimes(1);
+      await screen.findByText("Data: baz");
+      expect(onCompleted).toBeCalledTimes(1);
     });
   });
 

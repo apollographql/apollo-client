@@ -1,3 +1,10 @@
+## Apollo Client 3.8.0
+
+### Bug fixes
+
+- Avoid calling `useQuery` `onCompleted` callback after cache writes, only after the originating query's network request(s) complete. <br/>
+  [@alessbell](https://github.com/alessbell) in [#10229](https://github.com/apollographql/apollo-client/pull/10229)
+
 ## Apollo Client 3.7.1 (2022-10-20)
 
 ### Bug fixes

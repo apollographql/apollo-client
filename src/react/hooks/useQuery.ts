@@ -498,16 +498,23 @@ class InternalState<TData, TVariables> {
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
     this.forceUpdate();
-    this.handleErrorOrCompleted(nextResult);
+    this.handleErrorOrCompleted(nextResult, previousResult);
   }
 
-  private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
+  private handleErrorOrCompleted(
+    result: ApolloQueryResult<TData>,
+    previousResult?: ApolloQueryResult<TData>
+  ) {
     if (!result.loading) {
       // wait a tick in case we are in the middle of rendering a component
       Promise.resolve().then(() => {
         if (result.error) {
           this.onError(result.error);
-        } else if (result.data) {
+        } else if (
+          result.data &&
+          previousResult?.networkStatus !== result.networkStatus &&
+          result.networkStatus === NetworkStatus.ready
+        ) {
           this.onCompleted(result.data);
         }
       }).catch(error => {

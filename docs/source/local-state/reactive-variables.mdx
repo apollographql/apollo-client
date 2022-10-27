@@ -75,6 +75,60 @@ export function Cart() {
   // ...
 ```
 
+## Troubleshooting
+
+### Updating Arrays
+
+Currently `useReactiveVar` only triggers component updates when new values are passed to the reactive var, since it uses strict equality checks (the `===` operator). Make sure you are alway passing cloned values when performing an update.
+
+Will __not__ trigger an update:
+
+```ts
+const listVar = makeVar([1, 2]);
+const list = listVar();
+
+list.push(3);
+listVar(list);
+```
+
+Will trigger an update:
+
+```ts
+const listVar = makeVar([1, 2]);
+const list = listVar();
+
+const nextList = [...list, 3];
+listVar(nextList);
+```
+
+### Updates Outside of Components
+
+If you are making updates to a reactive variable outside of a React component and your components that use `useReactiveVar` are not updating, try deferring the update to the next tick of the event loop.
+
+Here's an example that tracks GraphQL errors using the [onError Link](../api/link/apollo-link-error.md).
+
+```ts
+const errorsVar = makeVar<Error[]>([]);
+
+const errorLink = onError((error: ErrorResponse) => {
+  const errors = errorsVar();
+  
+  // making a copy of the current array value will trigger an update
+  const nextErrors = [...errors]; 
+
+  if (error.graphQLErrors) {
+    error.graphQLErrors.forEach((e) => nextErrors.push(e));
+  }
+
+  if (error.networkError) {
+    nextErrors.push(error.networkError);
+  }
+
+  // deferring the update to next tick will allow the update to reliably trigger a new component render
+  setTimeout(() => errorsVar(nextErrors)); 
+});
+```
+
 ## Example application
 
 [This example to-do list application](https://github.com/apollographql/ac3-state-management-examples/tree/master/apollo-local-state) uses reactive variables to track both the current list of to-do items and the filter that determines which items to display. See [`cache.tsx`](https://github.com/apollographql/ac3-state-management-examples/blob/master/apollo-local-state/src/cache.tsx) in particular.

@@ -267,4 +267,82 @@ describe("compareResultsUsingQuery", () => {
       { a: 10, b: 20, c: 30 },
     )).toBe(false);
   });
+
+  it("iterates over array-valued result fields", () => {
+    const query = gql`
+      query {
+        things {
+          __typename
+          id
+          ...ThingDetails
+        }
+      }
+
+      fragment ThingDetails on Thing {
+        stable
+        volatile @nonreactive
+      }
+    `;
+
+    const makeThing = (id: string, stable = 1234) => ({
+      __typename: "Thing",
+      id,
+      stable,
+      volatile: Math.random(),
+    });
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: "abc".split("").map(id => makeThing(id)) },
+      { things: [makeThing("a"), makeThing("b"), makeThing("c")] },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: "abc".split("").map(id => makeThing(id)) },
+      { things: "not an array" },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: {} },
+      { things: [] },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: [] },
+      { things: {} },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: "ab".split("").map(id => makeThing(id)) },
+      { things: [makeThing("a"), makeThing("b")] },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: "ab".split("").map(id => makeThing(id)) },
+      { things: [makeThing("b"), makeThing("a")] },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: "ab".split("").map(id => makeThing(id)) },
+      { things: [makeThing("a"), makeThing("b", 2345)] },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: "ab".split("").map(id => makeThing(id)) },
+      { things: [makeThing("a", 3456), makeThing("b")] },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: "ab".split("").map(id => makeThing(id)) },
+      { things: [makeThing("b"), makeThing("a")] },
+    )).toBe(false);
+  });
 });

@@ -5638,6 +5638,7 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       setTimeout(() => {
         link.simulateResult({
           result: {
@@ -5717,6 +5718,7 @@ describe('useQuery Hook', () => {
       expect(result.current.label).toBe(undefined);
       // @ts-ignore
       expect(result.current.extensions).toBe(undefined);
+      expect(result.current.networkStatus).toBe(NetworkStatus.error);
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
 

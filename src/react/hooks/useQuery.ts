@@ -27,6 +27,8 @@ import {
   QueryResult,
   ObservableQueryFields,
 } from '../types/types';
+import { isNetworkRequestInFlight } from '../../core/networkStatus';
+import { logMissingFieldErrors } from '../../core/ObservableQuery';
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
@@ -140,13 +142,77 @@ class InternalState<TData, TVariables> {
           return () => {};
         }
 
-        const onNext = () => {
+        const onNext = (result: ApolloQueryResult<TData>) => {
           const previousResult = this.result;
-          // We use `getCurrentResult()` instead of the onNext argument because
-          // the values differ slightly. Specifically, loading results will have
-          // an empty object for data instead of `undefined` for some reason.
-          const result = obsQuery.getCurrentResult();
-          // Make sure we're not attempting to re-render similar results
+          const diff = obsQuery['queryInfo'].getDiff();
+
+          // Unfortunately the result passed into `onNext` doesn't seem to have
+          // canonization applied, whereas the `diff.result` does. Theoretically
+          // it should as result.data when read from the cache also uses the
+          // diff (https://github.com/apollographql/apollo-client/blob/6875d3ced43162557cbd507558dfbdbc37512a69/src/core/QueryManager.ts#L1392)
+          // but I can't seem to figure out why it isn't applied. This patches
+          // the behavior to ensure we retain it.
+          if (obsQuery.options.canonizeResults) {
+            result.data = diff.result;
+          }
+
+          // Previously, this code called `obsQuery.getCurrentResult()` to get
+          // the result returned in `useQuery` rather than relying on the
+          // argument passed to `onNext`. Unfortunately the `result` passed as
+          // the argument doesn't always resemble the result returned from
+          // `obsQuery.getCurrentResult()`. Because of this, we have to patch
+          // some of that behavior here to ensure the result maintains the same
+          // information.
+          //
+          // Why can't we use `obsQuery.getCurrentResult()`? #9823 fixed an
+          // issue with `skip` and the fetch policy. In that fix, the
+          // `nextFetchPolicy` was changed to be synchronously set as soon as we
+          // kick off the query. Unfortunately this has the side effect that
+          // `obsQuery.getCurrentResult()` uses the new fetch policy too early.
+          // In some cases, this meant we'd return cached data when we didn't
+          // mean to, such as when a component is unmounted, then mounted again
+          // (see #10222).
+          //
+          // We should really look to refactor this code out of here for AC v4.
+          // This behavior should really be patched in QueryManager, but I was
+          // afraid that developers might rely on the existing behavior
+          // (such as returning empty objects instead of setting those as
+          // undefined). As such, I decided to patch it only in useQuery.
+          if (!diff.complete) {
+            if (!hasOwnProperty.call(result, 'partial')) {
+              result.partial = true;
+            }
+
+            if (
+              // Deferred queries by nature return partial results, so we want
+              // to ensure we return that data, even if `returnPartialData` is
+              // set to false. Therefore we only reset `data` to `undefined`
+              // when the request is in flight.
+              isNetworkRequestInFlight(result.networkStatus) &&
+                hasOwnProperty.call(result, 'data') &&
+                !this.getObsQueryOptions().returnPartialData
+            ) {
+              result.data = void 0 as any;
+            }
+
+            // Retain logging used in `obsQuery.getCurrentResult()` when this
+            // was switched over to read the result from the argument.
+            if (
+              __DEV__ &&
+              !obsQuery.options.partialRefetch &&
+              !result.loading &&
+              !result.data &&
+              !result.error
+            ) {
+              logMissingFieldErrors(diff.missing);
+            }
+          }
+
+          if (equal(result.data, {})) {
+            result.data = void 0 as any;
+          }
+
+          // make sure we're not attempting to re-render similar results
           if (
             previousResult &&
             previousResult.loading === result.loading &&

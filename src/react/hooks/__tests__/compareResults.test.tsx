@@ -317,6 +317,18 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
+      { things: [] },
+      { things: [] },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { things: {} },
+      { things: {} },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
       { things: "ab".split("").map(id => makeThing(id)) },
       { things: [makeThing("a"), makeThing("b")] },
     )).toBe(true);

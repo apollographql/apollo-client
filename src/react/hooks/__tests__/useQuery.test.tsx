@@ -5018,6 +5018,104 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: 'hello 2' });
       expect(cache.readQuery({ query })).toEqual({ hello: 'hello 2' })
     });
+
+    it('can handle nextFetchPolicy as a function', async () => {
+      let helloCount = 1;
+      const query = gql`{ hello }`;
+      const link = new ApolloLink(() => {
+        return new Observable(observer => {
+          const timer = setTimeout(() => {
+            console.log('test observer.next', helloCount)
+            observer.next({ data: { hello: `hello ${helloCount++}` } });
+            observer.complete();
+          }, 50);
+
+          return () => {
+            clearTimeout(timer);
+          }
+        })
+      })
+
+      const cache = new InMemoryCache();
+
+      const client = new ApolloClient({
+        link,
+        cache
+      });
+
+      let setShow: Function
+      const Toggler = ({ children }: { children: ReactNode }) => {
+        const [show, _setShow] = useState(true);
+        setShow = _setShow;
+
+        return show ? <>{children}</> : null;
+      }
+
+      const counts = { mount: 0, unmount: 0 };
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          useEffect(() => {
+            counts.mount++;
+
+            return () => {
+              counts.unmount++;
+            }
+          }, []);
+
+          const result = useQuery(query, {
+            fetchPolicy: 'network-only',
+            nextFetchPolicy: (currentFetchPolicy, { reason }) => {
+              if (reason === 'after-fetch') {
+                return 'cache-first'
+              }
+
+              return currentFetchPolicy;
+            }
+          });
+
+          return result
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              <Toggler>{children}</Toggler>
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(counts).toEqual({ mount: 1, unmount: 0 });
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'hello 1' });
+      expect(cache.readQuery({ query })).toEqual({ hello: 'hello 1' })
+
+      act(() => {
+        setShow(false);
+      });
+
+      expect(counts).toEqual({ mount: 1, unmount: 1 });
+
+      act(() => {
+        setShow(true);
+      });
+
+      expect(counts).toEqual({ mount: 2, unmount: 1 });
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'hello 2' });
+      expect(cache.readQuery({ query })).toEqual({ hello: 'hello 2' })
+    });
   });
 
 

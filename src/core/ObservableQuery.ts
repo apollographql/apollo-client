@@ -270,7 +270,6 @@ export class ObservableQuery<
         // terminates after a complete cache read, we can assume the next result
         // we receive will have NetworkStatus.ready and !loading.
         if (
-          diff.complete &&
           result.networkStatus === NetworkStatus.loading &&
           (fetchPolicy === 'cache-first' ||
           fetchPolicy === 'cache-only')

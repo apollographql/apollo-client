@@ -419,7 +419,7 @@ describe('[queries] loading', () => {
         "network-only",
         "cache-first",
       ]);
-      expect(count).toBe(6);
+      expect(count).toBe(5);
     }).then(resolve, reject);
   });
 

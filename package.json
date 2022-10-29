@@ -110,7 +110,7 @@
     "@types/lodash": "4.14.186",
     "@types/node": "16.18.2",
     "@types/node-fetch": "2.6.2",
-    "@types/react": "18.0.21",
+    "@types/react": "18.0.24",
     "@types/react-dom": "18.0.6",
     "@types/use-sync-external-store": "0.0.3",
     "acorn": "8.8.0",

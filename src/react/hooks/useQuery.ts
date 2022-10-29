@@ -156,6 +156,14 @@ class InternalState<TData, TVariables> {
             result.data = diff.result;
           }
 
+          // For some reason, we can't always trust the result passed to onNext
+          // when the result is part of an optimistic transaction, so we need
+          // to rely on the diff result which has the correct data. This is
+          // difficult to track down why onNext is called with the wrong value.
+          if (diff.fromOptimisticTransaction) {
+            result.data = diff.result;
+          }
+
           // Previously, this code called `obsQuery.getCurrentResult()` to get
           // the result returned in `useQuery` rather than relying on the
           // argument passed to `onNext`. Unfortunately the `result` passed as

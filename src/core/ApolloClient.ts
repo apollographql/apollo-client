@@ -192,7 +192,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && __DEV__) {
+    if (!hasSuggestedDevtools && connectToDevTools) {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&
@@ -206,7 +206,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         if (typeof ua === "string") {
           if (ua.indexOf("Chrome/") > -1) {
             url = "https://chrome.google.com/webstore/detail/" +
-              "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
+            "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
           } else if (ua.indexOf("Firefox/") > -1) {
             url = "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
           }

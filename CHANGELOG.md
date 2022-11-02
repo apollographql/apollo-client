@@ -1,3 +1,10 @@
+## Apollo Client 3.7.2 (unreleased)
+
+### Improvements
+
+- Only show dev tools suggestion in the console when `connectToDevTools` is `true`. <br/>
+  [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
+
 ## Apollo Client 3.7.1 (2022-10-20)
 
 ### Bug fixes

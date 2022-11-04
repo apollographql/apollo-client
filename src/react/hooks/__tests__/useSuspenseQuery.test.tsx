@@ -1,11 +1,7 @@
 import React, { Suspense } from 'react';
 import { render, screen } from "@testing-library/react";
 
-import {
-  gql,
-  NetworkStatus,
-  TypedDocumentNode,
-} from "../../../core";
+import { gql, TypedDocumentNode } from "../../../core";
 import { MockedProvider } from '../../../testing';
 import {
   useSuspenseQuery_experimental as useSuspenseQuery,
@@ -64,8 +60,6 @@ describe('useSuspenseQuery', () => {
     expect(results).toEqual([
       {
         data: { greeting: 'Hello' },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
         variables: {}
       },
     ]);
@@ -109,7 +103,7 @@ describe('useSuspenseQuery', () => {
         mocks={[
           {
             request: { query, variables: { id: '1' } },
-            result: { data: { user: { id: '1', name: 'Spider-Man' } } }
+            result: { data: { character: { id: '1', name: 'Spider-Man' } } }
           },
         ]}
       >
@@ -127,11 +121,16 @@ describe('useSuspenseQuery', () => {
     expect(renders).toBe(2);
     expect(results).toEqual([
       {
-        data: { user: { id: '1', name: 'Spider-Man' }},
+        data: { character: { id: '1', name: 'Spider-Man' }},
         variables: { id: '1' },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
       },
     ]);
   });
+
+  it('validates the query', () => {});
+  it('ensures a valid fetch policy is used', () => {});
+  it('result is referentially stable', () => {});
+  it('handles changing variables', () => {});
+  it('handles changing queries', () => {});
+  it('tears down the query on unmount', () => {});
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   DocumentNode,
   OperationVariables,
@@ -7,8 +7,12 @@ import {
 import { useApolloClient } from './useApolloClient';
 import { SuspenseQueryHookOptions } from "../types/types";
 
-export interface UseSuspenseQueryResult<TData> {
+export interface UseSuspenseQueryResult<
+  TData = any,
+  TVariables = OperationVariables
+> {
   data: TData;
+  variables: TVariables;
 }
 
 export function useSuspenseQuery_experimental<
@@ -17,7 +21,7 @@ export function useSuspenseQuery_experimental<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
-): UseSuspenseQueryResult<TData> {
+): UseSuspenseQueryResult<TData, TVariables> {
   const client = useApolloClient(options?.client);
   const [observable] = useState(() => {
     return client.watchQuery<TData>({ ...options, query })
@@ -31,5 +35,10 @@ export function useSuspenseQuery_experimental<
     throw promise;
   }
 
-  return result;
+  return useMemo(() => {
+    return {
+      data: result.data,
+      variables: observable.variables as TVariables
+    };
+  }, [result, observable]);
 }

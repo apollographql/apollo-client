@@ -91,6 +91,11 @@ export interface LazyQueryHookOptions<
   TVariables = OperationVariables
 > extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {}
 
+export interface SuspenseQueryHookOptions<
+  TData = any,
+  TVariables = OperationVariables
+> extends Omit<QueryHookOptions<TData, TVariables>, 'ssr'> {}
+
 /**
  * @deprecated TODO Delete this unused interface.
  */

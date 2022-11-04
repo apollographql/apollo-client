@@ -6,7 +6,10 @@ import {
   TypedDocumentNode,
 } from "../../../core";
 import { MockedProvider } from '../../../testing';
-import { useSuspenseQuery, UseSuspenseQueryResult } from '../useSuspenseQuery';
+import {
+  useSuspenseQuery_experimental as useSuspenseQuery,
+  UseSuspenseQueryResult
+} from '../useSuspenseQuery';
 
 describe('useSuspenseQuery', () => {
   it('is importable and callable', () => {

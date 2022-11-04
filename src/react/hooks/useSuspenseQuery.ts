@@ -11,7 +11,10 @@ export interface UseSuspenseQueryResult<TData> {
   data: TData;
 }
 
-export function useSuspenseQuery<TData = any, TVariables = OperationVariables>(
+export function useSuspenseQuery_experimental<
+  TData = any,
+  TVariables = OperationVariables
+>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData> {

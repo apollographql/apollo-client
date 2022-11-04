@@ -127,10 +127,10 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('validates the query', () => {});
-  it('ensures a valid fetch policy is used', () => {});
-  it('result is referentially stable', () => {});
-  it('handles changing variables', () => {});
-  it('handles changing queries', () => {});
-  it('tears down the query on unmount', () => {});
+  it.skip('validates the query', () => {});
+  it.skip('ensures a valid fetch policy is used', () => {});
+  it.skip('result is referentially stable', () => {});
+  it.skip('handles changing variables', () => {});
+  it.skip('handles changing queries', () => {});
+  it.skip('tears down the query on unmount', () => {});
 });

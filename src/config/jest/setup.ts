@@ -1,4 +1,5 @@
 import gql from 'graphql-tag';
+import '@testing-library/jest-dom';
 
 // Turn off warnings for repeated fragment names
 gql.disableFragmentWarnings();

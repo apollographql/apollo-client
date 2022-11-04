@@ -1,41 +1,19 @@
-import React, { ReactElement, Suspense } from 'react';
-import { render, screen, waitFor, RenderResult } from "@testing-library/react";
+import React, { Suspense } from 'react';
+import { render, screen, waitFor } from "@testing-library/react";
 
-import { ApolloProvider } from "../../context";
 import {
-  InMemoryCache,
   gql,
   TypedDocumentNode,
-  ApolloClient,
-  Observable,
-  ApolloLink,
 } from "../../../core";
+import { MockedProvider } from '../../../testing';
 import { useSuspenseQuery, UseSuspenseQueryResult } from '../useSuspenseQuery';
-
-function renderWithClient(
-  client: ApolloClient<any>,
-  element: ReactElement
-): RenderResult {
-  const { rerender, ...result } = render(
-    <ApolloProvider client={client}>{element}</ApolloProvider>
-  );
-
-  return {
-    ...result,
-    rerender: (element: ReactElement) => {
-      return rerender(
-        <ApolloProvider client={client}>{element}</ApolloProvider>
-      );
-    }
-  }
-}
 
 describe('useSuspenseQuery', () => {
   it('is importable and callable', () => {
     expect(typeof useSuspenseQuery).toBe('function');
   })
 
-  it('suspends the component until resolved', async () => {
+  it('can suspend a basic query and return results', async () => {
     interface QueryData {
       greeting: string;
     };
@@ -45,20 +23,6 @@ describe('useSuspenseQuery', () => {
         greeting
       }
     `;
-
-    const link = new ApolloLink(() => {
-      return new Observable(observer => {
-        setTimeout(() => {
-          observer.next({ data: { greeting: 'Hello' } });
-          observer.complete();
-        }, 10);
-      });
-    })
-
-    const client = new ApolloClient({
-      link,
-      cache: new InMemoryCache()
-    });
 
     const results: UseSuspenseQueryResult<QueryData>[] = [];
     let renders = 0;
@@ -72,11 +36,20 @@ describe('useSuspenseQuery', () => {
       return <div>{result.data.greeting} suspense</div>;
     }
 
-    renderWithClient(client, (
-      <Suspense fallback="loading">
-        <Test />
-      </Suspense>
-    ));
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query },
+            result: { data: { greeting: 'Hello' } }
+          },
+        ]}
+      >
+        <Suspense fallback="loading">
+          <Test />
+        </Suspense>
+      </MockedProvider>
+    );
 
     await waitFor(() => screen.getByText('loading'));
     await waitFor(() => screen.getByText('Hello suspense'));

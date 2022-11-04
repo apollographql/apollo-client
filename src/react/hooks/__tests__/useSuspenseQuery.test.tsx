@@ -13,7 +13,7 @@ describe('useSuspenseQuery', () => {
     expect(typeof useSuspenseQuery).toBe('function');
   })
 
-  it('can suspend a query and return results', async () => {
+  it('suspends a query and return results', async () => {
     interface QueryData {
       greeting: string;
     };

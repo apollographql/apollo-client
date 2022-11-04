@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 
 import {
   gql,
@@ -13,7 +13,7 @@ describe('useSuspenseQuery', () => {
     expect(typeof useSuspenseQuery).toBe('function');
   })
 
-  it('can suspend a basic query and return results', async () => {
+  it('can suspend a query and return results', async () => {
     interface QueryData {
       greeting: string;
     };
@@ -51,9 +51,11 @@ describe('useSuspenseQuery', () => {
       </MockedProvider>
     );
 
-    await waitFor(() => screen.getByText('loading'));
-    await waitFor(() => screen.getByText('Hello suspense'));
+    expect(screen.getByText('loading')).toBeInTheDocument();
 
+    const greeting = await screen.findByText('Hello suspense')
+
+    expect(greeting).toBeInTheDocument();
     expect(renders).toBe(2);
     expect(results).toEqual([
       expect.objectContaining({ data: { greeting: 'Hello' } }),

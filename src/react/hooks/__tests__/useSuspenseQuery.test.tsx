@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import {
   gql,
+  NetworkStatus,
   TypedDocumentNode,
 } from "../../../core";
 import { MockedProvider } from '../../../testing';
@@ -61,7 +62,76 @@ describe('useSuspenseQuery', () => {
     expect(greeting).toBeInTheDocument();
     expect(renders).toBe(2);
     expect(results).toEqual([
-      expect.objectContaining({ data: { greeting: 'Hello' } }),
+      {
+        data: { greeting: 'Hello' },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        variables: {}
+      },
+    ]);
+  });
+
+  it('suspends a query with variables and return results', async () => {
+    interface QueryData {
+      character: {
+        id: string
+        name: string
+      };
+    };
+
+    interface QueryVariables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
+    let renders = 0;
+
+    function Test() {
+      renders++;
+      const result = useSuspenseQuery(query, { variables: { id: '1' } });
+
+      results.push(result);
+
+      return <div>{result.data.character.name}</div>;
+    }
+
+    render(
+      <MockedProvider
+        mocks={[
+          {
+            request: { query, variables: { id: '1' } },
+            result: { data: { user: { id: '1', name: 'Spider-Man' } } }
+          },
+        ]}
+      >
+        <Suspense fallback="loading">
+          <Test />
+        </Suspense>
+      </MockedProvider>
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+
+    const character = await screen.findByText('Spider-Man')
+
+    expect(character).toBeInTheDocument();
+    expect(renders).toBe(2);
+    expect(results).toEqual([
+      {
+        data: { user: { id: '1', name: 'Spider-Man' }},
+        variables: { id: '1' },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      },
     ]);
   });
 });

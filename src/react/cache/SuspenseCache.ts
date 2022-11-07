@@ -13,12 +13,7 @@ export class SuspenseCache {
     Map<string, ObservableQuery<ApolloQueryResult<any>>>
   >();
 
-  private suspendedQueries = new Map<
-    ObservableQuery,
-    Promise<ApolloQueryResult<any>>
-  >();
-
-  getObservable<TData = any>(
+  get<TData = any>(
     query: DocumentNode | TypedDocumentNode<TData>,
     variables?: OperationVariables
   ): ObservableQuery | undefined {
@@ -28,28 +23,29 @@ export class SuspenseCache {
       ?.get(canonicalStringify(variables));
   }
 
-  getPromise<TData = any>(observable: ObservableQuery<TData>) {
-    return this.suspendedQueries.get(observable);
-  }
-
-  setObservable<TData = any, TVariables = OperationVariables>(
+  set<TData = any, TVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     variables: TVariables,
     observable: ObservableQuery<TData, TVariables>
   ) {
     const byVariables = this.inFlightObservables.get(query) || new Map();
     byVariables.set(canonicalStringify(variables), observable);
+    this.inFlightObservables.set(query, byVariables);
 
     return this;
   }
 
-  setPromise(observableQuery: ObservableQuery, promise: Promise<any>) {
-    this.suspendedQueries.set(observableQuery, promise);
+  remove(query: DocumentNode | TypedDocumentNode, variables?: OperationVariables) {
+    const byVariables = this.inFlightObservables.get(query);
 
-    return this;
-  }
+    if (!byVariables) {
+      return
+    }
 
-  removePromise(observable: ObservableQuery) {
-    this.suspendedQueries.delete(observable);
+    byVariables.delete(canonicalStringify(variables));
+
+    if (byVariables.size === 0) {
+      this.inFlightObservables.delete(query)
+    }
   }
 }

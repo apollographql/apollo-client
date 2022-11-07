@@ -91,10 +91,21 @@ export interface LazyQueryHookOptions<
   TVariables = OperationVariables
 > extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {}
 
+/**
+* suspensePolicy determines when to suspend a component. The options are:
+* - always (default): Always suspend, including refetches
+* - initial: Only suspend on the first execution. Subsequent refetches will not suspend.
+*/
+export type SuspensePolicy =
+  | 'always'
+  | 'initial';
+
 export interface SuspenseQueryHookOptions<
   TData = any,
   TVariables = OperationVariables
-> extends Omit<QueryHookOptions<TData, TVariables>, 'ssr'> {}
+> extends QueryHookOptions<TData, TVariables> {
+  suspensePolicy?: SuspensePolicy;
+}
 
 /**
  * @deprecated TODO Delete this unused interface.

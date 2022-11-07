@@ -11,6 +11,7 @@ import {
 } from "../../../core";
 import { MockedProvider } from '../../../testing';
 import { ApolloProvider } from '../../context';
+import { SuspenseCache } from '../../cache';
 import {
   useSuspenseQuery_experimental as useSuspenseQuery,
   UseSuspenseQueryResult
@@ -184,9 +185,92 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
+  it('re-suspends the component when changing variables and suspensePolicy is set to "always"', async () => {
+    interface QueryData {
+      character: {
+        id: string
+        name: string
+      };
+    };
+
+    interface QueryVariables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const suspenseCache = new SuspenseCache();
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Spider-Man' } } }
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { character: { id: '2', name: 'Iron Man' } } }
+      },
+    ];
+
+    const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
+    let renders = 0;
+
+    function Test({ id }: { id: string }) {
+      renders++;
+      const result = useSuspenseQuery(query, {
+        suspensePolicy: 'always',
+        variables: { id }
+      });
+
+      results.push(result);
+
+      return <div>{result.data.character.name}</div>;
+    }
+
+    const { rerender } = render(
+      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
+        <Suspense fallback="loading">
+          <Test id="1" />
+        </Suspense>
+      </MockedProvider>
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(await screen.findByText('Spider-Man')).toBeInTheDocument();
+
+    rerender(
+      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
+        <Suspense fallback="loading">
+          <Test id="2" />
+        </Suspense>
+      </MockedProvider>
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(await screen.findByText('Iron Man')).toBeInTheDocument();
+
+    expect(renders).toBe(4);
+    expect(results).toEqual([
+      {
+        ...mocks[0].result,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[1].result,
+        variables: { id: '2' },
+      },
+    ]);
+  });
+
   it.skip('ensures a valid fetch policy is used', () => {});
   it.skip('result is referentially stable', () => {});
-  it.skip('handles changing variables', () => {});
   it.skip('handles changing queries', () => {});
   it.skip('tears down the query on unmount', () => {});
 });

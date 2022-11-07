@@ -4,14 +4,17 @@ import * as React from 'react';
 
 import { ApolloClient } from '../../core';
 import { getApolloContext } from './ApolloContext';
+import { SuspenseCache } from '../cache';
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;
+  suspenseCache?: SuspenseCache;
   children: React.ReactNode | React.ReactNode[] | null;
 }
 
 export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   client,
+  suspenseCache,
   children
 }) => {
   const ApolloContext = getApolloContext();
@@ -20,6 +23,10 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
       {(context: any = {}) => {
         if (client && context.client !== client) {
           context = Object.assign({}, context, { client });
+        }
+
+        if (suspenseCache && !context.suspenseCache) {
+          context = Object.assign({}, context, { suspenseCache });
         }
 
         invariant(

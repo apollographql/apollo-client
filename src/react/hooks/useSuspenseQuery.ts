@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode
 } from "../../core";
 import { useApolloClient } from './useApolloClient';
+import { DocumentType, verifyDocumentType } from '../parser';
 import { SuspenseQueryHookOptions } from "../types/types";
 
 export interface UseSuspenseQueryResult<
@@ -22,6 +23,13 @@ export function useSuspenseQuery_experimental<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
+  const hasVerifiedDocument = useRef(false);
+
+  if (!hasVerifiedDocument.current) {
+    verifyDocumentType(query, DocumentType.Query);
+    hasVerifiedDocument.current = true;
+  }
+
   const client = useApolloClient(options?.client);
   const [observable] = useState(() => {
     return client.watchQuery<TData>({ ...options, query })

@@ -1,5 +1,7 @@
 import React, { Suspense } from 'react';
 import { render, screen } from "@testing-library/react";
+import { renderHook } from '@testing-library/react-hooks';
+import { InvariantError } from 'ts-invariant';
 
 import { gql, TypedDocumentNode } from "../../../core";
 import { MockedProvider } from '../../../testing';
@@ -127,7 +129,29 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('validates the query', () => {});
+  it('validates the GraphQL query as a query', () => {
+    // supress console.error calls for this test since they are expected
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      mutation ShouldThrow {
+        createException
+      }
+    `;
+
+    const { result } = renderHook(() => useSuspenseQuery(query), {
+      wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>
+    });
+
+    expect(result.error).toEqual(
+      new InvariantError(
+        'Running a Query requires a graphql Query, but a Mutation was used instead.'
+      )
+    );
+
+    consoleSpy.mockRestore();
+  });
+
   it.skip('ensures a valid fetch policy is used', () => {});
   it.skip('result is referentially stable', () => {});
   it.skip('handles changing variables', () => {});

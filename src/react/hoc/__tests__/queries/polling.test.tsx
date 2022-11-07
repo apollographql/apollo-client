@@ -43,22 +43,73 @@ describe('[queries] polling', () => {
       { request: { query }, result: { data: data2 } },
       { request: { query }, result: { data } }
     );
+    const cache = new Cache({ addTypename: false })
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache,
     });
 
     let count = 0;
     const Container = graphql(query, {
       options: () => ({
         pollInterval: POLL_INTERVAL,
-        notifyOnNetworkStatusChange: false
+        notifyOnNetworkStatusChange: false,
       })
     })(({ data }) => {
       count++;
-      expect(true).toBe(true);
       if (count === 4) {
         data!.stopPolling();
+        expect(cache.readQuery({query})).toBeTruthy();
+        resolve();
+      }
+      return null;
+    });
+
+    render(
+      <ApolloProvider client={client}>
+        <Container />
+      </ApolloProvider>
+    );
+
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+  });
+
+  itAsync('ensures polling respects no-cache fetchPolicy', (resolve, reject) => {
+    const POLL_INTERVAL = 5;
+    const query: DocumentNode = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+    const link = mockSingleLink(
+      { request: { query }, result: { data } },
+      { request: { query }, result: { data: data2 } },
+      { request: { query }, result: { data } }
+    );
+    const cache = new Cache({ addTypename: false })
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    let count = 0;
+    const Container = graphql(query, {
+      options: () => ({
+        pollInterval: POLL_INTERVAL,
+        notifyOnNetworkStatusChange: false,
+        fetchPolicy: 'no-cache'
+      })
+    })(({ data }) => {
+      count++;
+      if (count === 4) {
+        data!.stopPolling();
+        expect(cache.readQuery({query})).toBeNull();
         resolve();
       }
       return null;

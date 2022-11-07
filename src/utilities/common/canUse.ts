@@ -10,6 +10,8 @@ export const canUseSymbol =
   typeof Symbol === 'function' &&
   typeof Symbol.for === 'function';
 
+export const canUseAsyncIteratorSymbol = canUseSymbol && Symbol.asyncIterator;
+
 export const canUseDOM =
   typeof maybe(() => window.document.createElement) === "function";
 

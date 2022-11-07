@@ -1,8 +1,7 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
-// @ts-ignore
-import { withState } from './recomposeWithState.js';
+import { withState } from './recomposeWithState';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
@@ -46,7 +45,7 @@ describe('[queries] errors', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    class ErrorBoundary extends React.Component {
+    class ErrorBoundary extends React.Component<React.PropsWithChildren> {
       componentDidCatch(e: Error) {
         expect(e.message).toMatch(/bar is not a function/);
         done = true;

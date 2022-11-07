@@ -179,7 +179,6 @@ describe('[queries] api', () => {
     });
 
     let count = 0;
-    let done = false;
     const Container = graphql<{}, Data, Variables>(query, {
       options: () => ({ variables })
     })(
@@ -189,8 +188,8 @@ describe('[queries] api', () => {
           if (count === 0) {
             expect(props.data!.fetchMore).toBeTruthy();
             expect(props.data!.fetchMore instanceof Function).toBeTruthy();
-            props
-              .data!.fetchMore({
+            props.data!
+              .fetchMore({
                 variables: { skip: 2 },
                 updateQuery: (prev: any, { fetchMoreResult }) => ({
                   allPeople: {
@@ -201,21 +200,19 @@ describe('[queries] api', () => {
                 })
               })
               .then((result: any) => {
-                try {
-                  expect(result.data.allPeople.people).toEqual(
-                    data1.allPeople.people
-                  );
-                } catch (error) {
-                  reject(error);
-                }
-              });
+                expect(result.data.allPeople.people).toEqual(
+                  data1.allPeople.people
+                );
+              })
+              .catch(reject);
           } else if (count === 1) {
             expect(props.data!.variables).toEqual(variables);
             expect(props.data!.loading).toBeFalsy();
             expect(props.data!.allPeople!.people).toEqual(
               data.allPeople.people.concat(data1.allPeople.people)
             );
-            done = true;
+            // This ends the test (passing).
+            setTimeout(() => resolve(), 20);
           } else {
             throw new Error('should not reach this point');
           }
@@ -235,8 +232,6 @@ describe('[queries] api', () => {
         <Container />
       </ApolloProvider>
     );
-
-    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('reruns props function after query results change via fetchMore', (resolve, reject) => {

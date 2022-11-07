@@ -39,7 +39,6 @@ export interface QueryFunctionOptions<
   TData = any,
   TVariables = OperationVariables
 > extends BaseQueryOptions<TVariables> {
-  displayName?: string;
   skip?: boolean;
   onCompleted?: (data: TData) => void;
   onError?: (error: ApolloError) => void;
@@ -137,8 +136,8 @@ export interface BaseMutationOptions<
 > {
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
-  onCompleted?: (data: TData) => void;
-  onError?: (error: ApolloError) => void;
+  onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
+  onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
   ignoreResults?: boolean;
 }
 
@@ -203,6 +202,11 @@ export type MutationTuple<
 
 /* Subscription types */
 
+export interface OnDataOptions<TData = any> {
+  client: ApolloClient<object>;
+  data: SubscriptionResult<TData>;
+}
+
 export interface OnSubscriptionDataOptions<TData = any> {
   client: ApolloClient<object>;
   subscriptionData: SubscriptionResult<TData>;
@@ -220,7 +224,16 @@ export interface BaseSubscriptionOptions<
   client?: ApolloClient<object>;
   skip?: boolean;
   context?: DefaultContext;
+  onComplete?: () => void;
+  onData?: (options: OnDataOptions<TData>) => any;
+  /**
+  * @deprecated Use onData instead
+  */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
+  onError?: (error: ApolloError) => void;
+  /**
+  * @deprecated Use onComplete instead
+  */
   onSubscriptionComplete?: () => void;
 }
 

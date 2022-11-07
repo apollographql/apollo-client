@@ -40,6 +40,7 @@ export class BatchHttpLink extends ApolloLink {
       fetch: fetcher,
       print = defaultPrinter,
       includeExtensions,
+      preserveHeaderCase,
       batchInterval,
       batchDebounce,
       batchMax,
@@ -58,7 +59,7 @@ export class BatchHttpLink extends ApolloLink {
     }
 
     const linkConfig = {
-      http: { includeExtensions },
+      http: { includeExtensions, preserveHeaderCase },
       options: requestOptions.fetchOptions,
       credentials: requestOptions.credentials,
       headers: requestOptions.headers,
@@ -147,7 +148,7 @@ export class BatchHttpLink extends ApolloLink {
             if (err.name === 'AbortError') return;
             // if it is a network error, BUT there is graphql result info
             // fire the next observer before calling error
-            // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networErrors`
+            // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networkErrors`
             // to pass to UI
             // this should only happen if we *also* have data as part of the response key per
             // the spec

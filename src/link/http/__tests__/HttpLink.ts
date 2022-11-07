@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import fetchMock from 'fetch-mock';
 import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
+import { TextDecoder } from 'util';
+import { ReadableStream } from 'web-streams-polyfill/ponyfill/es2018';
+import { Readable } from 'stream';
 
 import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
@@ -25,6 +28,28 @@ const sampleMutation = gql`
   mutation SampleMutation {
     stub {
       id
+    }
+  }
+`;
+
+const sampleDeferredQuery = gql`
+  query SampleDeferredQuery {
+    stub {
+      id
+      ... on Stub @defer {
+        name
+      }
+    }
+  }
+`;
+
+const sampleQueryCustomDirective = gql`
+  query SampleDeferredQuery {
+    stub {
+      id
+      ... on Stub @deferCustomDirective {
+        name
+      }
     }
   }
 `;
@@ -1229,7 +1254,7 @@ describe('HttpLink', () => {
 
     const body = '{';
     const unparsableJson = jest.fn(() => Promise.resolve(body));
-    itAsync('throws an error if response is unparsable', (resolve, reject) => {
+    itAsync('throws a Server error if response is > 300 with unparsable json', (resolve, reject) => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: unparsableJson }),
       );
@@ -1240,10 +1265,242 @@ describe('HttpLink', () => {
           reject('next should have been thrown from the network');
         },
         makeCallback(resolve, reject, (e: ServerParseError) => {
-          expect(e.message).toMatch(/JSON/);
+          expect(e.message).toMatch("Response not successful: Received status code 400");
           expect(e.statusCode).toBe(400);
           expect(e.response).toBeDefined();
+          expect(e.bodyText).toBe(undefined);
+        }),
+      );
+    });
+
+    itAsync('throws a ServerParse error if response is 200 with unparsable json', (resolve, reject) => {
+      fetch.mockReturnValueOnce(
+        Promise.resolve({ status: 200, text: unparsableJson }),
+      );
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+      execute(link, { query: sampleQuery }).subscribe(
+        result => {
+          reject('next should have been thrown from the network');
+        },
+        makeCallback(resolve, reject, (e: ServerParseError) => {
+          expect(e.message).toMatch(/JSON/);
+          expect(e.statusCode).toBe(200);
+          expect(e.response).toBeDefined();
           expect(e.bodyText).toBe(body);
+        }),
+      );
+    });
+  });
+
+  describe('Multipart responses', () => {
+    let originalTextDecoder: any;
+    beforeAll(() => {
+      originalTextDecoder = TextDecoder;
+      (globalThis as any).TextDecoder = TextDecoder;
+    });
+
+    afterAll(() => {
+      globalThis.TextDecoder = originalTextDecoder;
+    });
+
+    const body = [
+      '---',
+      'Content-Type: application/json; charset=utf-8',
+      'Content-Length: 43',
+      '',
+      '{"data":{"stub":{"id":"0"}},"hasNext":true}',
+      '---',
+      'Content-Type: application/json; charset=utf-8',
+      'Content-Length: 58',
+      '',
+      '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"],"extensions":{"timestamp":1633038919}}]}',
+      '-----',
+    ].join("\r\n");
+
+    it('can handle whatwg stream bodies', (done) => {
+      const stream = new ReadableStream({
+        async start(controller) {
+          const lines = body.split("\r\n");
+          try {
+            for (const line of lines) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              controller.enqueue(line + "\r\n");
+            }
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'content-type': 'multipart/mixed' }),
+      }));
+
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      let i = 0;
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          try {
+            if (i === 0) {
+              expect(result).toEqual({
+                data: {
+                  stub: {
+                    id: "0",
+                  },
+                },
+                hasNext: true,
+              });
+            } else if (i === 1) {
+              expect(result).toEqual({
+                incremental: [{
+                  data: {
+                    name: 'stubby',
+                  },
+                  extensions: {
+                    timestamp: 1633038919,
+                  },
+                  path: ['stub'],
+                }],
+                hasNext: false,
+              });
+            }
+
+          } catch (err) {
+            done(err);
+          } finally {
+            i++;
+          }
+        },
+        err => {
+          done(err);
+        },
+        () => {
+          if (i !== 2) {
+            done(new Error("Unexpected end to observable"));
+          }
+
+          done();
+        },
+      );
+    });
+
+    it('can handle node stream bodies', (done) => {
+      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'Content-Type': 'multipart/mixed;boundary="-";deferSpec=20220824' }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+
+      let i = 0;
+      execute(link, { query: sampleDeferredQuery }).subscribe(
+        result => {
+          try {
+            if (i === 0) {
+              expect(result).toEqual({
+                data: {
+                  stub: {
+                    id: "0",
+                  },
+                },
+                hasNext: true,
+              });
+            } else if (i === 1) {
+              expect(result).toEqual({
+                incremental: [{
+                  data: {
+                    name: 'stubby',
+                  },
+                  extensions: {
+                    timestamp: 1633038919,
+                  },
+                  path: ['stub'],
+                }],
+                hasNext: false,
+              });
+            }
+
+          } catch (err) {
+            done(err);
+          } finally {
+            i++;
+          }
+        },
+        err => {
+          done(err);
+        },
+        () => {
+          if (i !== 2) {
+            done(new Error("Unexpected end to observable"));
+          }
+
+          done();
+        },
+      );
+    });
+
+    itAsync('sets correct accept header on request with deferred query', (resolve, reject) => {
+      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+      execute(link, {
+        query: sampleDeferredQuery
+      }).subscribe(
+        makeCallback(resolve, reject, () => {
+          expect(fetch).toHaveBeenCalledWith(
+            '/graphql',
+            expect.objectContaining({
+              headers: {
+                "content-type": "application/json",
+                accept: "multipart/mixed; deferSpec=20220824, application/json"
+              }
+            })
+          )
+        }),
+      );
+    });
+
+    // ensure that custom directives beginning with '@defer..' do not trigger
+    // custom accept header for multipart responses
+    itAsync('sets does not set accept header on query with custom directive begging with @defer', (resolve, reject) => {
+      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+      const fetch = jest.fn(async () => ({
+        status: 200,
+        body: stream,
+        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+      }));
+      const link = new HttpLink({
+        fetch: fetch as any,
+      });
+      execute(link, {
+        query: sampleQueryCustomDirective
+      }).subscribe(
+        makeCallback(resolve, reject, () => {
+          expect(fetch).toHaveBeenCalledWith(
+            '/graphql',
+            expect.objectContaining({
+              headers: {
+                accept: "*/*",
+                "content-type": "application/json",
+              }
+            })
+          )
         }),
       );
     });

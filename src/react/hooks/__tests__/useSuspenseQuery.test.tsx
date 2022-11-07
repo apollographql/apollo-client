@@ -3,8 +3,14 @@ import { render, screen } from "@testing-library/react";
 import { renderHook } from '@testing-library/react-hooks';
 import { InvariantError } from 'ts-invariant';
 
-import { gql, TypedDocumentNode } from "../../../core";
+import {
+  gql,
+  ApolloClient,
+  InMemoryCache,
+  TypedDocumentNode
+} from "../../../core";
 import { MockedProvider } from '../../../testing';
+import { ApolloProvider } from '../../context';
 import {
   useSuspenseQuery_experimental as useSuspenseQuery,
   UseSuspenseQueryResult
@@ -146,6 +152,32 @@ describe('useSuspenseQuery', () => {
     expect(result.error).toEqual(
       new InvariantError(
         'Running a Query requires a graphql Query, but a Mutation was used instead.'
+      )
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('ensures a suspense cache is provided', () => {
+    // supress console.error calls for this test since they are expected
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query { hello }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const { result } = renderHook(() => useSuspenseQuery(query), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      )
+    });
+
+    expect(result.error).toEqual(
+      new InvariantError(
+        'Could not find a "suspenseCache" in the context. Wrap the root component ' +
+        'in an <ApolloProvider> and provide a suspenseCache.'
       )
     );
 

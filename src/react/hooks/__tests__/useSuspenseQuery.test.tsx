@@ -269,6 +269,81 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('returns the same results for the same variables', async () => {
+    interface QueryData {
+      character: {
+        id: string
+        name: string
+      };
+    };
+
+    interface QueryVariables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const suspenseCache = new SuspenseCache();
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Spider-Man' } } }
+      }
+    ];
+
+    const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
+    let renders = 0;
+
+    function Test({ id }: { id: string }) {
+      renders++;
+      const result = useSuspenseQuery(query, {
+        variables: { id }
+      });
+
+      results.push(result);
+
+      return <div>{result.data.character.name}</div>;
+    }
+
+    const { rerender } = render(
+      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
+        <Suspense fallback="loading">
+          <Test id="1" />
+        </Suspense>
+      </MockedProvider>
+    );
+
+    expect(await screen.findByText('Spider-Man')).toBeInTheDocument();
+
+    rerender(
+      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
+        <Suspense fallback="loading">
+          <Test id="1" />
+        </Suspense>
+      </MockedProvider>
+    );
+
+    expect(renders).toBe(3);
+    expect(results).toEqual([
+      {
+        ...mocks[0].result,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[0].result,
+        variables: { id: '1' },
+      },
+    ]);
+  });
+
   it.skip('ensures a valid fetch policy is used', () => {});
   it.skip('result is referentially stable', () => {});
   it.skip('handles changing queries', () => {});

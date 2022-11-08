@@ -15,7 +15,7 @@ const defaults = {
       'ts-jest',
       {
         diagnostics: {
-          warnOnly: process.env.TEST_ENV === 'ci' ? false : true
+          warnOnly: process.env.TEST_ENV !== 'ci'
         },
       },
     ],

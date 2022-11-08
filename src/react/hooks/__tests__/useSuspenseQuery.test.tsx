@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
-import { render, screen } from "@testing-library/react";
-import { renderHook } from '@testing-library/react-hooks';
+import { render, screen, renderHook } from "@testing-library/react";
 import { InvariantError } from 'ts-invariant';
 
 import {
@@ -31,11 +30,11 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    const { result } = renderHook(() => useSuspenseQuery(query), {
-      wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>
-    });
-
-    expect(result.error).toEqual(
+    expect(() => {
+      renderHook(() => useSuspenseQuery(query), {
+        wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>
+      })
+    }).toThrowError(
       new InvariantError(
         'Running a Query requires a graphql Query, but a Mutation was used instead.'
       )
@@ -53,13 +52,13 @@ describe('useSuspenseQuery', () => {
 
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
-    const { result } = renderHook(() => useSuspenseQuery(query), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      )
-    });
-
-    expect(result.error).toEqual(
+    expect(() => {
+      renderHook(() => useSuspenseQuery(query), {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        )
+      });
+    }).toThrowError(
       new InvariantError(
         'Could not find a "suspenseCache" in the context. Wrap the root component ' +
         'in an <ApolloProvider> and provide a suspenseCache.'

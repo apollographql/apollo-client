@@ -10,6 +10,16 @@ const defaults = {
     escapeString: true,
     printBasicPrototype: true
   },
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        diagnostics: {
+          warnOnly: process.env.TEST_ENV === 'ci' ? false : true
+        },
+      },
+    ],
+  },
 };
 
 const ignoreTSFiles = '.ts$';

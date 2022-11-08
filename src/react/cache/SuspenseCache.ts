@@ -9,44 +9,57 @@ import { canonicalStringify } from '../../cache';
 
 interface CacheEntry<TData = unknown> {
   resolved: boolean;
-  observable: ObservableQuery<TData>,
   promise: Promise<ApolloQueryResult<TData>>
 }
 
 export class SuspenseCache {
+  private queries = new Map<DocumentNode, ObservableQuery>();
   private cache = new Map<
-    DocumentNode,
+    ObservableQuery,
     Map<string, CacheEntry<any>>
   >();
 
-  get<TData = any>(
+  registerQuery<TData = any>(
     query: DocumentNode | TypedDocumentNode<TData>,
-    variables?: OperationVariables
+    observable: ObservableQuery<TData>
+  ) {
+    this.queries.set(query, observable);
+
+    return observable;
+  }
+
+  getQuery<TData = any>(
+    query: DocumentNode | TypedDocumentNode<TData>
+  ): ObservableQuery<TData> | undefined {
+    return this.queries.get(query);
+  }
+
+  getVariables<TData = any, TVariables = OperationVariables>(
+    observable: ObservableQuery<TData, TVariables>,
+    variables?: TVariables,
   ): CacheEntry<TData> | undefined {
     return this
       .cache
-      .get(query)
+      .get(observable)
       ?.get(canonicalStringify(variables))
   }
 
-  set<TData = any, TVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  setVariables<TData = any, TVariables = OperationVariables>(
+    observable: ObservableQuery,
     variables: TVariables,
-    observable: ObservableQuery<TData, TVariables>,
     promise: Promise<ApolloQueryResult<TData>>
   ) {
     const entry: CacheEntry<TData> = {
       resolved: false,
-      observable,
       promise: promise.finally(() => {
-        entry.resolved = true
-      })
+        entry.resolved = true;
+      }),
     }
 
-    const entries = this.cache.get(query) || new Map();
+    const entries = this.cache.get(observable) || new Map();
     entries.set(canonicalStringify(variables), entry);
 
-    this.cache.set(query, entries);
+    this.cache.set(observable, entries);
 
     return this;
   }

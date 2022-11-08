@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { render, screen, renderHook } from "@testing-library/react";
+import { render, screen, renderHook, waitFor } from "@testing-library/react";
 import { InvariantError } from 'ts-invariant';
 
 import {
@@ -68,7 +68,6 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-
   it('suspends a query and return results', async () => {
     interface QueryData {
       greeting: string;
@@ -80,45 +79,40 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    const results: UseSuspenseQueryResult<QueryData>[] = [];
     let renders = 0;
 
-    function Test() {
+    const { result } = renderHook(() => {
       renders++;
       const result = useSuspenseQuery(query);
 
-      results.push(result);
-
-      return <div>{result.data.greeting} suspense</div>;
-    }
-
-    render(
-      <MockedProvider
-        mocks={[
-          {
-            request: { query },
-            result: { data: { greeting: 'Hello' } }
-          },
-        ]}
-      >
-        <Suspense fallback="loading">
-          <Test />
-        </Suspense>
-      </MockedProvider>
-    );
+      return result
+    }, {
+      wrapper: ({ children }) => (
+        <MockedProvider
+          mocks={[
+            {
+              request: { query },
+              result: { data: { greeting: 'Hello' } }
+            },
+          ]}
+        >
+          <Suspense fallback="loading">
+            {children}
+          </Suspense>
+        </MockedProvider>
+      )
+    });
 
     expect(screen.getByText('loading')).toBeInTheDocument();
 
-    const greeting = await screen.findByText('Hello suspense')
-
-    expect(greeting).toBeInTheDocument();
-    expect(renders).toBe(2);
-    expect(results).toEqual([
-      {
+    await waitFor(() => {
+      expect(result.current).toEqual({
         data: { greeting: 'Hello' },
         variables: {}
-      },
-    ]);
+      });
+    })
+
+    expect(renders).toBe(2);
   });
 
   it('suspends a query with variables and return results', async () => {
@@ -142,45 +136,38 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
     let renders = 0;
 
-    function Test() {
+    const { result } = renderHook(() => {
       renders++;
-      const result = useSuspenseQuery(query, { variables: { id: '1' } });
-
-      results.push(result);
-
-      return <div>{result.data.character.name}</div>;
-    }
-
-    render(
-      <MockedProvider
-        mocks={[
-          {
-            request: { query, variables: { id: '1' } },
-            result: { data: { character: { id: '1', name: 'Spider-Man' } } }
-          },
-        ]}
-      >
-        <Suspense fallback="loading">
-          <Test />
-        </Suspense>
-      </MockedProvider>
-    );
+      return useSuspenseQuery(query, { variables: { id: '1' } })
+    }, {
+      wrapper: ({ children }) => (
+        <MockedProvider
+          mocks={[
+            {
+              request: { query, variables: { id: '1' } },
+              result: { data: { character: { id: '1', name: 'Spider-Man' } } }
+            },
+          ]}
+        >
+          <Suspense fallback="loading">
+            {children}
+          </Suspense>
+        </MockedProvider>
+      )
+    });
 
     expect(screen.getByText('loading')).toBeInTheDocument();
 
-    const character = await screen.findByText('Spider-Man')
-
-    expect(character).toBeInTheDocument();
-    expect(renders).toBe(2);
-    expect(results).toEqual([
-      {
+    await waitFor(() => {
+      expect(result.current).toEqual({
         data: { character: { id: '1', name: 'Spider-Man' }},
         variables: { id: '1' },
-      },
-    ]);
+      });
+    });
+
+    expect(renders).toBe(2);
   });
 
   it('returns the same results for the same variables', async () => {
@@ -216,34 +203,36 @@ describe('useSuspenseQuery', () => {
     const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
     let renders = 0;
 
-    function Test({ id }: { id: string }) {
+    const { result, rerender } = renderHook(({ id }) => {
       renders++;
       const result = useSuspenseQuery(query, {
         variables: { id }
-      });
+      })
 
       results.push(result);
 
-      return <div>{result.data.character.name}</div>;
-    }
+      return result;
+    }, {
+      initialProps: { id: '1' },
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
+          <Suspense fallback="loading">
+            {children}
+          </Suspense>
+        </MockedProvider>
+      )
+    });
 
-    const { rerender } = render(
-      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">
-          <Test id="1" />
-        </Suspense>
-      </MockedProvider>
-    );
+    expect(screen.getByText('loading')).toBeInTheDocument();
 
-    expect(await screen.findByText('Spider-Man')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' }
+      })
+    });
 
-    rerender(
-      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">
-          <Test id="1" />
-        </Suspense>
-      </MockedProvider>
-    );
+    rerender({ id: '1' });
 
     expect(renders).toBe(3);
     expect(results).toEqual([

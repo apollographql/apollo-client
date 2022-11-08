@@ -1,4 +1,4 @@
-import { useRef, useMemo, DependencyList } from 'react';
+import { useRef, useMemo, useState, DependencyList } from 'react';
 import { equal } from '@wry/equality';
 import {
   DocumentNode,
@@ -33,20 +33,24 @@ export function useSuspenseQuery_experimental<
   const hasVerifiedDocument = useRef(false);
   const opts = useDeepMemo(() => ({ ...DEFAULT_OPTIONS, ...options }), [options]);
   const client = useApolloClient(opts.client);
+  const cacheEntry = suspenseCache.get(query, opts.variables);
 
-  let observable = suspenseCache.get(query, opts.variables);
+  const [observable] = useState(() => {
+    return cacheEntry?.observable || client.watchQuery({ ...opts, query });
+  });
 
   if (!hasVerifiedDocument.current) {
     verifyDocumentType(query, DocumentType.Query);
     hasVerifiedDocument.current = true;
   }
 
-  if (!observable) {
-    const variables = opts.variables;
-    observable = client.watchQuery({ ...opts, query });
-    suspenseCache.set(query, variables, observable);
+  // We have never run this query before so kick it off and suspend
+  if (!cacheEntry) {
+    const promise = observable.reobserve(opts);
 
-    throw observable.reobserve();
+    suspenseCache.set(query, opts.variables, observable, promise);
+
+    throw promise;
   }
 
   const result = observable.getCurrentResult();

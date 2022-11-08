@@ -7,45 +7,47 @@ import {
 } from '../../core';
 import { canonicalStringify } from '../../cache';
 
+interface CacheEntry<TData = unknown> {
+  resolved: boolean;
+  observable: ObservableQuery<TData>,
+  promise: Promise<ApolloQueryResult<TData>>
+}
+
 export class SuspenseCache {
-  private inFlightObservables = new Map<
+  private cache = new Map<
     DocumentNode,
-    Map<string, ObservableQuery<ApolloQueryResult<any>>>
+    Map<string, CacheEntry<any>>
   >();
 
   get<TData = any>(
     query: DocumentNode | TypedDocumentNode<TData>,
     variables?: OperationVariables
-  ): ObservableQuery | undefined {
+  ): CacheEntry<TData> | undefined {
     return this
-      .inFlightObservables
+      .cache
       .get(query)
-      ?.get(canonicalStringify(variables));
+      ?.get(canonicalStringify(variables))
   }
 
   set<TData = any, TVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     variables: TVariables,
-    observable: ObservableQuery<TData, TVariables>
+    observable: ObservableQuery<TData, TVariables>,
+    promise: Promise<ApolloQueryResult<TData>>
   ) {
-    const byVariables = this.inFlightObservables.get(query) || new Map();
-    byVariables.set(canonicalStringify(variables), observable);
-    this.inFlightObservables.set(query, byVariables);
+    const entry: CacheEntry<TData> = {
+      resolved: false,
+      observable,
+      promise: promise.finally(() => {
+        entry.resolved = true
+      })
+    }
+
+    const entries = this.cache.get(query) || new Map();
+    entries.set(canonicalStringify(variables), entry);
+
+    this.cache.set(query, entries);
 
     return this;
-  }
-
-  remove(query: DocumentNode | TypedDocumentNode, variables?: OperationVariables) {
-    const byVariables = this.inFlightObservables.get(query);
-
-    if (!byVariables) {
-      return
-    }
-
-    byVariables.delete(canonicalStringify(variables));
-
-    if (byVariables.size === 0) {
-      this.inFlightObservables.delete(query)
-    }
   }
 }

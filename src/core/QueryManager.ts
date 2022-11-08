@@ -56,6 +56,7 @@ import {
   shouldWriteResult,
   CacheWriteBehavior,
 } from './QueryInfo';
+//import { ExtendedObservable } from '../link/utils';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -83,6 +84,7 @@ type DefaultOptions = import("./ApolloClient").DefaultOptions;
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
+  public preprocessorLink: ApolloLink;
   public defaultOptions: DefaultOptions;
 
   public readonly assumeImmutableResults: boolean;
@@ -108,6 +110,7 @@ export class QueryManager<TStore> {
   constructor({
     cache,
     link,
+    preprocessorLink,
     defaultOptions,
     queryDeduplication = false,
     onBroadcast,
@@ -118,6 +121,7 @@ export class QueryManager<TStore> {
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
+    preprocessorLink?: ApolloLink;
     defaultOptions?: DefaultOptions;
     queryDeduplication?: boolean;
     onBroadcast?: () => void;
@@ -128,6 +132,7 @@ export class QueryManager<TStore> {
   }) {
     this.cache = cache;
     this.link = link;
+    this.preprocessorLink = preprocessorLink || ApolloLink.preprocessorEndLink();
     this.defaultOptions = defaultOptions || Object.create(null);
     this.queryDeduplication = queryDeduplication;
     this.clientAwareness = clientAwareness;
@@ -189,6 +194,14 @@ export class QueryManager<TStore> {
     );
 
     const mutationId = this.generateMutationId();
+
+    // Determine if there are any client side only changes to the query
+    // as defined by the preprocessLink consumption. If so, use the modified
+    // value instead of that which was passed in to this function
+    const modifiedMutation = await this.preprocess(mutation).promise;
+    if (modifiedMutation) {
+      mutation = modifiedMutation;
+    }
 
     const {
       document,
@@ -676,10 +689,34 @@ export class QueryManager<TStore> {
       'pollInterval option only supported on watchQuery.',
     );
 
-    return this.fetchQuery<TData, TVars>(
-      queryId,
-      options,
-    ).finally(() => this.stopQuery(queryId));
+    const self = this;
+
+    return new Promise(async function (resolve, reject) {
+      const doc = await self.preprocess(options.query).promise;
+
+      if (doc && !require('util').isDeepStrictEqual(doc, options.query)) {
+        console.log('Swapping query')
+        options.query = doc;
+      }
+
+      self.fetchQuery<TData, TVars>(queryId, options)
+        .then(result => resolve(result))
+        .catch(reason => {console.log('REJECTED: ', reason, reason?.name, reason?.cause, reason?.message); reject(reason);})
+        .finally(() => self.stopQuery(queryId));
+    })
+  }
+
+  public preprocess(document: DocumentNode): Concast<DocumentNode> {
+    const { preprocessorLink } = this;
+    const preprocessedData = ApolloLink.preprocess(
+      preprocessorLink,
+      ApolloLink.easyRequest(document)
+    ) as FetchResult;
+
+    let newDocument: DocumentNode =
+      preprocessedData?.data as DocumentNode || document;
+
+    return new Concast([Observable.of(newDocument)]);
   }
 
   private queryIdCounter = 1;

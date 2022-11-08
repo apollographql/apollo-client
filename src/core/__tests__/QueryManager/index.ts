@@ -5854,7 +5854,9 @@ describe('QueryManager', () => {
 
       queryManager.query({ query, context: { queryDeduplication: true } })
 
-      expect(queryManager['inFlightLinkObservables'].size).toBe(1)
+      // Query promises are now resolved slightly later than before and as such
+      // there should be zero inFlightLinkObservables when this is run.
+      expect(queryManager['inFlightLinkObservables'].size).toBe(0)
     });
 
     it('should allow overriding global queryDeduplication: true to false', () => {

@@ -6,13 +6,15 @@ import {
   Operation,
   RequestHandler,
   FetchResult,
-  GraphQLRequest
+  GraphQLRequest,
+  GraphQLRequestParts
 } from './types';
 import {
   validateOperation,
   createOperation,
   transformOperation,
 } from '../utils';
+import { DocumentNode, parse, ExecutionResult } from 'graphql';
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
@@ -37,6 +39,10 @@ class LinkError extends Error {
 export class ApolloLink {
   public static empty(): ApolloLink {
     return new ApolloLink(() => Observable.of());
+  }
+
+  public static preprocessorEndLink(): ApolloLink {
+    return new ApolloLink(op => Observable.of({ data: op.query }));
   }
 
   public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
@@ -67,11 +73,44 @@ export class ApolloLink {
     }
   }
 
+  public static easyRequestString(
+    sdl: string,
+    extras?: GraphQLRequestParts
+  ): GraphQLRequest {
+    return this.easyRequest(parse(sdl), extras);
+  }
+
+  public static easyRequest(
+    document: DocumentNode,
+    extras?: GraphQLRequestParts
+  ): GraphQLRequest {
+    let request: GraphQLRequest = {
+      query: document
+    };
+
+    let result = createOperation(
+      {}, transformOperation(validateOperation(request))
+    );
+
+    return Object.assign(result, extras || {})
+  }
+
+  public static preprocess(
+    link: ApolloLink,
+    operation: GraphQLRequest,
+  ): ExecutionResult {
+    let result = (
+      link.request(operation as Operation) || { data: null }
+    ) as FetchResult;
+
+    return result
+  }
+
   public static execute(
     link: ApolloLink,
     operation: GraphQLRequest,
   ): Observable<FetchResult> {
-    return (
+    let result = (
       link.request(
         createOperation(
           operation.context,
@@ -79,6 +118,8 @@ export class ApolloLink {
         ),
       ) || Observable.of()
     );
+
+    return result;
   }
 
   public static concat(

@@ -64,6 +64,14 @@ export interface GraphQLRequest {
   extensions?: Record<string, any>;
 }
 
+export interface GraphQLRequestParts {
+  query?: DocumentNode;
+  variables?: Record<string, any>;
+  operationName?: string;
+  context?: Record<string, any>;
+  extensions?: Record<string, any>;
+}
+
 export interface Operation {
   query: DocumentNode;
   variables: Record<string, any>;

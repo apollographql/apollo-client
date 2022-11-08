@@ -616,7 +616,7 @@ describe("client.refetchQueries", () => {
     }).catch(reject);
 
     const queries = client["queryManager"]["queries"];
-    expect(queries.size).toBe(4);
+    expect(queries.size).toBe(3);
 
     queries.forEach((queryInfo, queryId) => {
       if (

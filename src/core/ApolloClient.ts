@@ -47,6 +47,7 @@ export type ApolloClientOptions<TCacheShape> = {
   uri?: string | UriFunction;
   credentials?: string;
   headers?: Record<string, string>;
+  preprocessorLink?: ApolloLink;
   link?: ApolloLink;
   cache: ApolloCache<TCacheShape>;
   ssrForceFetchDelay?: number;
@@ -77,6 +78,7 @@ export { mergeOptions }
  */
 export class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
+  public preprocessorLink: ApolloLink;
   public cache: ApolloCache<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
@@ -149,7 +151,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       version: clientAwarenessVersion,
     } = options;
 
+    let { preprocessorLink } = options;
     let { link } = options;
+
+    if (!preprocessorLink) {
+      preprocessorLink = ApolloLink.preprocessorEndLink();
+    }
 
     if (!link) {
       link = uri
@@ -166,6 +173,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     this.link = link;
+    this.preprocessorLink = preprocessorLink;
     this.cache = cache;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
@@ -232,6 +240,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.queryManager = new QueryManager({
       cache: this.cache,
       link: this.link,
+      preprocessorLink: this.preprocessorLink,
       defaultOptions: this.defaultOptions,
       queryDeduplication,
       ssrMode,

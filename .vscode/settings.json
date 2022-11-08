@@ -7,5 +7,10 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.enableFiletypes": [
     "mdx"
-  ]
+  ],
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#452614",
+    "titleBar.activeBackground": "#61351B",
+    "titleBar.activeForeground": "#FDFBF9"
+  }
 }

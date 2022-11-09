@@ -16,6 +16,7 @@ import {
   OperationVariables,
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
+  WatchQueryFetchPolicy,
 } from '../../core';
 
 /* Common types */
@@ -91,13 +92,22 @@ export interface LazyQueryHookOptions<
   TVariables = OperationVariables
 > extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {}
 
-export type SuspenseQueryHookOptions<
+export interface SuspenseQueryHookOptions<
   TData = any,
   TVariables = OperationVariables
-> = Pick<
+> extends Pick<
   QueryHookOptions<TData, TVariables>,
   'client' | 'variables' | 'errorPolicy' | 'context' | 'fetchPolicy'
->
+> {
+  fetchPolicy?: Extract<
+    WatchQueryFetchPolicy,
+    | 'cache-first'
+    | 'network-only'
+    | 'no-cache'
+    | 'standby'
+    | 'cache-and-network'
+  >;
+}
 
 /**
  * @deprecated TODO Delete this unused interface.

@@ -1,10 +1,11 @@
 import React, { Suspense } from 'react';
-import { render, screen, renderHook, waitFor } from "@testing-library/react";
+import { screen, renderHook, waitFor } from "@testing-library/react";
 import { InvariantError } from 'ts-invariant';
 
 import {
   gql,
   ApolloClient,
+  DocumentNode,
   InMemoryCache,
   TypedDocumentNode
 } from "../../../core";
@@ -15,6 +16,15 @@ import {
   useSuspenseQuery_experimental as useSuspenseQuery,
   UseSuspenseQueryResult
 } from '../useSuspenseQuery';
+import { SuspenseQueryHookOptions } from '../../types/types'
+
+const SUPPORTED_FETCH_POLICIES: SuspenseQueryHookOptions['fetchPolicy'][] = [
+  'cache-first',
+  'network-only',
+  'no-cache',
+  'standby',
+  'cache-and-network'
+]
 
 describe('useSuspenseQuery', () => {
   it('is importable and callable', () => {
@@ -68,7 +78,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it('suspends a query and return results', async () => {
+  it('suspends a query and returns results', async () => {
     interface QueryData {
       greeting: string;
     };
@@ -115,7 +125,7 @@ describe('useSuspenseQuery', () => {
     expect(renders).toBe(2);
   });
 
-  it('suspends a query with variables and return results', async () => {
+  it('suspends a query with variables and returns results', async () => {
     interface QueryData {
       character: {
         id: string
@@ -247,180 +257,173 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('re-suspends the component when changing variables and suspensePolicy is set to "always"', async () => {
-    interface QueryData {
-      character: {
-        id: string
-        name: string
+  SUPPORTED_FETCH_POLICIES.forEach((fetchPolicy) => {
+    it(`re-suspends the component when changing variables and using a "${fetchPolicy}" fetch policy`, async () => {
+      interface QueryData {
+        character: {
+          id: string
+          name: string
+        };
       };
-    };
 
-    interface QueryVariables {
-      id: string
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
+      interface QueryVariables {
+        id: string
       }
-    `;
 
-    const suspenseCache = new SuspenseCache();
+      const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+        query CharacterQuery($id: String!) {
+          character(id: $id) {
+            id
+            name
+          }
+        }
+      `;
 
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Spider-Man' } } }
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { character: { id: '2', name: 'Iron Man' } } }
-      },
-    ];
+      const mocks = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: { data: { character: { id: '1', name: 'Spider-Man' } } }
+        },
+        {
+          request: { query, variables: { id: '2' } },
+          result: { data: { character: { id: '2', name: 'Iron Man' } } }
+        },
+      ];
 
-    const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
-    let renders = 0;
+      const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
+      let renders = 0;
 
-    function Test({ id }: { id: string }) {
-      renders++;
-      const result = useSuspenseQuery(query, {
-        suspensePolicy: 'always',
-        variables: { id }
+      const { result, rerender } = renderHook(({ id }) => {
+        renders++;
+
+        const result = useSuspenseQuery(query, {
+          fetchPolicy,
+          variables: { id }
+        });
+
+        results.push(result);
+
+        return result;
+      }, {
+        initialProps: { id: '1' },
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            <Suspense fallback="loading">
+              {children}
+            </Suspense>
+          </MockedProvider>
+        )
       });
 
-      results.push(result);
-
-      return <div>{result.data.character.name}</div>;
-    }
-
-    const { rerender } = render(
-      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">
-          <Test id="1" />
-        </Suspense>
-      </MockedProvider>
-    );
-
-    expect(screen.getByText('loading')).toBeInTheDocument();
-    expect(await screen.findByText('Spider-Man')).toBeInTheDocument();
-
-    rerender(
-      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">
-          <Test id="2" />
-        </Suspense>
-      </MockedProvider>
-    );
-
-    expect(screen.getByText('loading')).toBeInTheDocument();
-    expect(await screen.findByText('Iron Man')).toBeInTheDocument();
-
-    expect(renders).toBe(4);
-    expect(results).toEqual([
-      {
-        ...mocks[0].result,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[1].result,
-        variables: { id: '2' },
-      },
-    ]);
-  });
-
-  it('returns previous results when changing variables and suspensePolicy is set to "initial"', async () => {
-    interface QueryData {
-      character: {
-        id: string
-        name: string
-      };
-    };
-
-    interface QueryVariables {
-      id: string
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const suspenseCache = new SuspenseCache();
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Spider-Man' } } }
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { character: { id: '2', name: 'Iron Man' } } }
-      },
-    ];
-
-    const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
-    let renders = 0;
-
-    function Test({ id }: { id: string }) {
-      renders++;
-      const result = useSuspenseQuery(query, {
-        suspensePolicy: 'initial',
-        variables: { id }
+      expect(screen.getByText('loading')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[0].result,
+          variables: { id: '1' }
+        })
       });
 
-      results.push(result);
+      rerender({ id: '2' })
 
-      return <div>{result.data.character.name}</div>;
-    }
+      expect(screen.getByText('loading')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[1].result,
+          variables: { id: '2' }
+        });
+      });
 
-    const { rerender } = render(
-      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">
-          <Test id="1" />
-        </Suspense>
-      </MockedProvider>
-    );
+      expect(renders).toBe(4);
+      expect(results).toEqual([
+        {
+          ...mocks[0].result,
+          variables: { id: '1' },
+        },
+        {
+          ...mocks[1].result,
+          variables: { id: '2' },
+        },
+      ]);
+    });
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
-    expect(await screen.findByText('Spider-Man')).toBeInTheDocument();
+    it(`re-suspends the component when changing queries and using a "${fetchPolicy}" fetch policy`, async () => {
+      const query1: TypedDocumentNode<{ hello: string }> = gql`
+        query Query1 {
+          hello
+        }
+      `;
 
-    rerender(
-      <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">
-          <Test id="2" />
-        </Suspense>
-      </MockedProvider>
-    );
+      const query2: TypedDocumentNode<{ world: string }> = gql`
+        query Query2 {
+          world
+        }
+      `;
 
-    expect(screen.queryByText('loading')).not.toBeInTheDocument();
-    expect(await screen.findByText('Iron Man')).toBeInTheDocument();
+      const mocks = [
+        {
+          request: { query: query1 },
+          result: { data: { hello: "hello" } }
+        },
+        {
+          request: { query: query2 },
+          result: { data: { world: "world" } }
+        },
+      ];
 
-    expect(renders).toBe(4);
-    expect(results).toEqual([
-      {
-        ...mocks[0].result,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[0].result,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[1].result,
-        variables: { id: '2' },
-      },
-    ]);
+      const results: UseSuspenseQueryResult[] = [];
+      let renders = 0;
+
+      const { result, rerender } = renderHook(({ query }) => {
+        renders++;
+        const result = useSuspenseQuery(query, { fetchPolicy });
+
+        results.push(result);
+
+        return result;
+      }, {
+        initialProps: { query: query1 } as { query: DocumentNode },
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            <Suspense fallback="loading">
+              {children}
+            </Suspense>
+          </MockedProvider>
+        )
+      });
+
+      expect(screen.getByText('loading')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[0].result,
+          variables: {}
+        })
+      });
+
+      rerender({ query: query2 });
+
+      expect(screen.getByText('loading')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[1].result,
+          variables: {},
+        })
+      })
+
+      expect(renders).toBe(4);
+      expect(results).toEqual([
+        {
+          ...mocks[0].result,
+          variables: {},
+        },
+        {
+          ...mocks[1].result,
+          variables: {},
+        },
+      ]);
+    });
   });
 
   it.skip('ensures a valid fetch policy is used', () => {});
   it.skip('result is referentially stable', () => {});
-  it.skip('handles changing queries', () => {});
   it.skip('tears down the query on unmount', () => {});
 });

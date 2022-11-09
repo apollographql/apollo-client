@@ -5857,6 +5857,31 @@ describe('QueryManager', () => {
       expect(queryManager['inFlightLinkObservables'].size).toBe(1)
     });
 
+    it('should take headers into account when deduplicating', () => {
+      const query = gql`
+        query {
+          author {
+            lastName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({
+        link: mockSingleLink({
+          request: { query },
+          result: {
+            data: {
+              author: { lastName: 'Doe' },
+            },
+          },
+        }),
+      });
+
+      queryManager.query({ query, context: { queryDeduplication: true } })
+      queryManager.query({ query, context: { headers: {"Foo": "Bar"}, queryDeduplication: true } })
+
+      expect(queryManager['inFlightLinkObservables'].size).toBe(1)
+    });
+  
     it('should allow overriding global queryDeduplication: true to false', () => {
       const query = gql`
         query {

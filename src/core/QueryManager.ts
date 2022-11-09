@@ -981,8 +981,9 @@ export class QueryManager<TStore> {
         const byVariables = inFlightLinkObservables.get(serverQuery) || new Map();
         inFlightLinkObservables.set(serverQuery, byVariables);
 
-        const varJson = canonicalStringify(variables);
+        const varJson = canonicalStringify({...variables, ...context.headers});
         observable = byVariables.get(varJson);
+        console.warn(varJson)
 
         if (!observable) {
           const concast = new Concast([

@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-import { screen, renderHook, waitFor } from "@testing-library/react";
+import React, { ReactNode, Suspense } from 'react';
+import { screen, renderHook, waitFor, RenderHookOptions } from "@testing-library/react";
 import { InvariantError } from 'ts-invariant';
 
 import {
@@ -11,7 +11,6 @@ import {
 } from "../../../core";
 import { MockedProvider } from '../../../testing';
 import { ApolloProvider } from '../../context';
-import { SuspenseCache } from '../../cache';
 import {
   useSuspenseQuery_experimental as useSuspenseQuery,
   UseSuspenseQueryResult
@@ -25,6 +24,51 @@ const SUPPORTED_FETCH_POLICIES: SuspenseQueryHookOptions['fetchPolicy'][] = [
   'standby',
   'cache-and-network'
 ]
+
+type RenderSuspenseHookOptions<Props> = RenderHookOptions<Props> & {
+  suspenseFallback?: ReactNode;
+  mocks?: any[];
+}
+
+interface Renders<Result> {
+  count: number;
+  frames: Result[];
+}
+
+function renderSuspenseHook<Result, Props>(
+  render: (initialProps: Props) => Result,
+  options: RenderSuspenseHookOptions<Props> = Object.create(null)
+) {
+  const {
+    mocks = [],
+    suspenseFallback = 'loading',
+    wrapper = ({ children }) => (
+      <MockedProvider mocks={mocks}>
+        <Suspense fallback={suspenseFallback}>
+          {children}
+        </Suspense>
+      </MockedProvider>
+    ),
+    ...renderHookOptions
+  } = options;
+
+  const renders: Renders<Result> = {
+    count: 0,
+    frames: []
+  };
+
+  const result = renderHook((props) => {
+    renders.count++;
+
+    const result = render(props);
+
+    renders.frames.push(result);
+
+    return result;
+  }, { ...renderHookOptions, wrapper });
+
+  return { ...result, renders };
+}
 
 describe('useSuspenseQuery', () => {
   it('is importable and callable', () => {
@@ -89,29 +133,17 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    let renders = 0;
-
-    const { result } = renderHook(() => {
-      renders++;
-      const result = useSuspenseQuery(query);
-
-      return result
-    }, {
-      wrapper: ({ children }) => (
-        <MockedProvider
-          mocks={[
-            {
-              request: { query },
-              result: { data: { greeting: 'Hello' } }
-            },
-          ]}
-        >
-          <Suspense fallback="loading">
-            {children}
-          </Suspense>
-        </MockedProvider>
-      )
-    });
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      {
+        mocks: [
+          {
+            request: { query },
+            result: { data: { greeting: 'Hello' } }
+          },
+        ]
+      }
+    );
 
     expect(screen.getByText('loading')).toBeInTheDocument();
 
@@ -122,7 +154,7 @@ describe('useSuspenseQuery', () => {
       });
     })
 
-    expect(renders).toBe(2);
+    expect(renders.count).toBe(2);
   });
 
   it('suspends a query with variables and returns results', async () => {
@@ -146,27 +178,17 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    let renders = 0;
-
-    const { result } = renderHook(() => {
-      renders++;
-      return useSuspenseQuery(query, { variables: { id: '1' } })
-    }, {
-      wrapper: ({ children }) => (
-        <MockedProvider
-          mocks={[
-            {
-              request: { query, variables: { id: '1' } },
-              result: { data: { character: { id: '1', name: 'Spider-Man' } } }
-            },
-          ]}
-        >
-          <Suspense fallback="loading">
-            {children}
-          </Suspense>
-        </MockedProvider>
-      )
-    });
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { id: '1' } }),
+      {
+        mocks: [
+          {
+            request: { query, variables: { id: '1' } },
+            result: { data: { character: { id: '1', name: 'Spider-Man' } } }
+          },
+        ]
+      }
+    );
 
     expect(screen.getByText('loading')).toBeInTheDocument();
 
@@ -177,7 +199,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders).toBe(2);
+    expect(renders.count).toBe(2);
   });
 
   it('returns the same results for the same variables', async () => {
@@ -201,8 +223,6 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    const suspenseCache = new SuspenseCache();
-
     const mocks = [
       {
         request: { query, variables: { id: '1' } },
@@ -210,27 +230,11 @@ describe('useSuspenseQuery', () => {
       }
     ];
 
-    const results: UseSuspenseQueryResult<QueryData, QueryVariables>[] = [];
-    let renders = 0;
-
-    const { result, rerender } = renderHook(({ id }) => {
-      renders++;
-      const result = useSuspenseQuery(query, {
-        variables: { id }
-      })
-
-      results.push(result);
-
-      return result;
+    const { result, rerender, renders } = renderSuspenseHook(({ id }) => {
+      return useSuspenseQuery(query, { variables: { id } });
     }, {
       initialProps: { id: '1' },
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
-          <Suspense fallback="loading">
-            {children}
-          </Suspense>
-        </MockedProvider>
-      )
+      mocks,
     });
 
     expect(screen.getByText('loading')).toBeInTheDocument();
@@ -244,8 +248,8 @@ describe('useSuspenseQuery', () => {
 
     rerender({ id: '1' });
 
-    expect(renders).toBe(3);
-    expect(results).toEqual([
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toEqual([
       {
         ...mocks[0].result,
         variables: { id: '1' },
@@ -253,6 +257,83 @@ describe('useSuspenseQuery', () => {
       {
         ...mocks[0].result,
         variables: { id: '1' },
+      },
+    ]);
+  });
+
+  it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
+    interface QueryData {
+      character: {
+        id: string
+        name: string
+      };
+    };
+
+    interface QueryVariables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Spider-Man' } } }
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { character: { id: '2', name: 'Iron Man' } } }
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(({ id }) => {
+      return useSuspenseQuery(query, {
+        fetchPolicy: 'network-only',
+        variables: { id }
+      });
+    }, {
+      mocks,
+      initialProps: { id: '1' },
+    });
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' }
+      })
+    });
+
+    rerender({ id: '2' })
+
+    expect(await screen.findByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' }
+      });
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.frames).toEqual([
+      {
+        ...mocks[0].result,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[0].result,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[1].result,
+        variables: { id: '2' },
       },
     ]);
   });
@@ -298,6 +379,7 @@ describe('useSuspenseQuery', () => {
 
         const result = useSuspenseQuery(query, {
           fetchPolicy,
+          notifyOnNetworkStatusChange: true,
           variables: { id }
         });
 
@@ -315,7 +397,7 @@ describe('useSuspenseQuery', () => {
         )
       });
 
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(await screen.findByText('loading')).toBeInTheDocument();
       await waitFor(() => {
         expect(result.current).toEqual({
           ...mocks[0].result,
@@ -325,7 +407,7 @@ describe('useSuspenseQuery', () => {
 
       rerender({ id: '2' })
 
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(await screen.findByText('loading')).toBeInTheDocument();
       await waitFor(() => {
         expect(result.current).toEqual({
           ...mocks[1].result,
@@ -333,8 +415,12 @@ describe('useSuspenseQuery', () => {
         });
       });
 
-      expect(renders).toBe(4);
+      expect(renders).toBe(5);
       expect(results).toEqual([
+        {
+          ...mocks[0].result,
+          variables: { id: '1' },
+        },
         {
           ...mocks[0].result,
           variables: { id: '1' },

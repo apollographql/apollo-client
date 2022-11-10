@@ -19,6 +19,7 @@ import {
 } from '../../../core';
 import { MockedProvider, MockedResponse } from '../../../testing';
 import { ApolloProvider } from '../../context';
+import { SuspenseCache } from '../../cache';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
 
 type RenderSuspenseHookOptions<Props> = RenderHookOptions<Props> & {
@@ -326,6 +327,42 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toBe(previousResult);
   });
 
+  it('tears down the query on unmount', async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
+      cache: new InMemoryCache(),
+    });
+
+    const { result, unmount } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client} suspenseCache={new SuspenseCache()}>
+            <Suspense fallback="loading">{children}</Suspense>
+          </ApolloProvider>
+        ),
+      }
+    );
+
+    // We don't subscribe to the observable until after the component has been
+    // unsuspended, so we need to wait for the result
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ hello: 'world' })
+    );
+
+    expect(client.getObservableQueries().size).toBe(1);
+
+    unmount();
+
+    expect(client.getObservableQueries().size).toBe(0);
+  });
+
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
     interface QueryData {
       character: {
@@ -528,6 +565,4 @@ describe('useSuspenseQuery', () => {
 
     expect(fetchCount).toBe(2);
   });
-
-  it.skip('tears down the query on unmount', () => {});
 });

@@ -128,6 +128,7 @@
     "jest-junit": "14.0.1",
     "lodash": "4.17.21",
     "patch-package": "^6.5.0",
+    "prettier": "^2.7.1",
     "react": "18.2.0",
     "react-17": "npm:react@^17",
     "react-dom": "18.2.0",
@@ -150,5 +151,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "prettier": {
+    "bracketSpacing": true,
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5"
   }
 }

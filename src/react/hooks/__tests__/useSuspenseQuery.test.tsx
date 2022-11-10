@@ -277,81 +277,6 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('ensures data is fetched is the correct amount of times when using a "cache-first" fetch policy', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    let fetchCount = 0;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Black Widow' } } },
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { character: { id: '2', name: 'Hulk' } } },
-      },
-    ];
-
-    const link = new ApolloLink((operation) => {
-      return new Observable((observer) => {
-        fetchCount++;
-
-        const mock = mocks.find(({ request }) =>
-          equal(request.variables, operation.variables)
-        );
-
-        if (!mock) {
-          throw new Error('Could not find mock for operation');
-        }
-
-        observer.next(mock.result);
-        observer.complete();
-      });
-    });
-
-    const { result, rerender } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-first',
-          variables: { id },
-        }),
-      { link, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    expect(fetchCount).toBe(1);
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[1].result.data);
-    });
-
-    expect(fetchCount).toBe(2);
-  });
-
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
     interface QueryData {
       character: {
@@ -478,6 +403,81 @@ describe('useSuspenseQuery', () => {
       { ...mocks[0].result, variables: {} },
       { ...mocks[1].result, variables: {} },
     ]);
+  });
+
+  it('ensures data is fetched is the correct amount of times when using a "cache-first" fetch policy', async () => {
+    interface QueryData {
+      character: {
+        id: string;
+        name: string;
+      };
+    }
+
+    interface QueryVariables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Black Widow' } } },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { character: { id: '2', name: 'Hulk' } } },
+      },
+    ];
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-first',
+          variables: { id },
+        }),
+      { link, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    expect(fetchCount).toBe(1);
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[1].result.data);
+    });
+
+    expect(fetchCount).toBe(2);
   });
 
   it.skip('result is referentially stable', () => {});

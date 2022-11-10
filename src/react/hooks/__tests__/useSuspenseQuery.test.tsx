@@ -119,6 +119,33 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
+  it('ensures a valid fetch policy is used', () => {
+    const INVALID_FETCH_POLICIES = ['cache-only'];
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    INVALID_FETCH_POLICIES.forEach((fetchPolicy: any) => {
+      expect(() => {
+        renderHook(() => useSuspenseQuery(query, { fetchPolicy }), {
+          wrapper: ({ children }) => (
+            <MockedProvider>{children}</MockedProvider>
+          ),
+        });
+      }).toThrowError(
+        new InvariantError(
+          `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
+        )
+      );
+    });
+
+    consoleSpy.mockRestore();
+  });
+
   it('suspends a query and returns results', async () => {
     interface QueryData {
       greeting: string;
@@ -459,7 +486,6 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('ensures a valid fetch policy is used', () => {});
   it.skip('result is referentially stable', () => {});
   it.skip('tears down the query on unmount', () => {});
 });

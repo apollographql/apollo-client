@@ -47,14 +47,19 @@ export function useSuspenseQuery_experimental<
   const suspenseCache = useSuspenseCache();
   const hasRunValidations = useRef(false);
   const opts = useDeepMemo(
-    () => ({ ...options, query, notifyOnNetworkStatusChange: true }),
+    () => ({
+      ...options,
+      query,
+      fetchPolicy: options.fetchPolicy || DEFAULT_FETCH_POLICY,
+      notifyOnNetworkStatusChange: true,
+    }),
     [options, query]
   );
   const client = useApolloClient(opts.client);
   const { variables } = opts;
 
   if (!hasRunValidations.current) {
-    validateOptions(query, options);
+    validateOptions(opts);
     hasRunValidations.current = true;
   }
 
@@ -137,12 +142,15 @@ export function useSuspenseQuery_experimental<
   }, [result, observable]);
 }
 
-function validateOptions(
-  query: DocumentNode | TypedDocumentNode,
-  options: SuspenseQueryHookOptions
-) {
+type ValidateFunctionOptions = SuspenseQueryHookOptions & {
+  query: DocumentNode | TypedDocumentNode;
+};
+
+function validateOptions(options: ValidateFunctionOptions) {
+  const { query, fetchPolicy = DEFAULT_FETCH_POLICY } = options;
+
   verifyDocumentType(query, DocumentType.Query);
-  validateFetchPolicy(options.fetchPolicy);
+  validateFetchPolicy(fetchPolicy);
 }
 
 function validateFetchPolicy(

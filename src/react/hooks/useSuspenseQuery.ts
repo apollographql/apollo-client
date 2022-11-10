@@ -51,7 +51,7 @@ export function useSuspenseQuery_experimental<
   const [observable] = useState(() => {
     return (
       suspenseCache.getQuery(query) ||
-      suspenseCache.registerQuery(query, client.watchQuery({ ...opts, query }))
+      suspenseCache.registerQuery(query, client.watchQuery(opts))
     );
   });
 
@@ -108,13 +108,16 @@ export function useSuspenseQuery_experimental<
   }
 
   useEffect(() => {
-    if (opts.variables !== previousOptsRef.current?.variables) {
+    if (
+      opts.variables !== previousOptsRef.current?.variables ||
+      opts.query !== previousOptsRef.current.query
+    ) {
       const promise = observable.reobserve(opts);
 
       suspenseCache.setVariables(observable, opts.variables, promise);
       previousOptsRef.current = opts;
     }
-  }, [opts.variables]);
+  }, [opts.variables, opts.query]);
 
   return useMemo(() => {
     return {

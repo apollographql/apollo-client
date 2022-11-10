@@ -24,7 +24,7 @@ import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspens
 type RenderSuspenseHookOptions<Props> = RenderHookOptions<Props> & {
   link?: ApolloLink;
   suspenseFallback?: ReactNode;
-  mocks?: any[];
+  mocks?: MockedResponse[];
 };
 
 interface Renders<Result> {
@@ -373,7 +373,7 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    const mocks: MockedResponse<QueryData>[] = [
+    const mocks = [
       {
         request: { query, variables: { id: '1' } },
         result: { data: { character: { id: '1', name: 'Spider-Man' } } },

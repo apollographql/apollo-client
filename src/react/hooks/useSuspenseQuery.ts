@@ -73,8 +73,7 @@ export function useSuspenseQuery_experimental<
   });
 
   const resultRef = useRef<ApolloQueryResult<TData>>();
-  const previousOptsRef =
-    useRef<SuspenseQueryHookOptions<TData, TVariables>>(opts);
+  const previousOptsRef = useRef<typeof opts>(opts);
 
   if (!resultRef.current) {
     resultRef.current = observable.getCurrentResult();

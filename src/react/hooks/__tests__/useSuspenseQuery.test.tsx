@@ -338,10 +338,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        variables: { id: '1' },
-      });
+      expect(result.current).toEqual(mocks[0].result.data);
     });
 
     expect(fetchCount).toBe(1);
@@ -349,10 +346,7 @@ describe('useSuspenseQuery', () => {
     rerender({ id: '2' });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        variables: { id: '2' },
-      });
+      expect(result.current.data).toEqual(mocks[1].result.data);
     });
 
     expect(fetchCount).toBe(2);

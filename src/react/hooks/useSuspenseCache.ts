@@ -8,7 +8,7 @@ export function useSuspenseCache() {
   invariant(
     suspenseCache,
     'Could not find a "suspenseCache" in the context. Wrap the root component ' +
-    'in an <ApolloProvider> and provide a suspenseCache.'
+      'in an <ApolloProvider> and provide a suspenseCache.'
   );
 
   return suspenseCache;

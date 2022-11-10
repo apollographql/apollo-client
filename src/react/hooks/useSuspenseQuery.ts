@@ -1,13 +1,21 @@
-import { useRef, useCallback, useMemo, useEffect, useState, DependencyList } from 'react';
+import {
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useState,
+  DependencyList,
+} from 'react';
 import { equal } from '@wry/equality';
 import {
+  ApolloQueryResult,
   DocumentNode,
   OperationVariables,
-  TypedDocumentNode
-} from "../../core";
+  TypedDocumentNode,
+} from '../../core';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
-import { SuspenseQueryHookOptions } from "../types/types";
+import { SuspenseQueryHookOptions } from '../types/types';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 
@@ -17,10 +25,6 @@ export interface UseSuspenseQueryResult<
 > {
   data: TData;
   variables: TVariables;
-}
-
-const DEFAULT_OPTIONS: Partial<SuspenseQueryHookOptions> = {
-  suspensePolicy: 'always'
 }
 
 export function useSuspenseQuery_experimental<

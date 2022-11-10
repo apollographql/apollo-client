@@ -19,6 +19,8 @@ import { SuspenseQueryHookOptions } from '../types/types';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 
+type FetchPolicy = SuspenseQueryHookOptions['fetchPolicy'];
+
 export interface UseSuspenseQueryResult<
   TData = any,
   TVariables = OperationVariables
@@ -26,6 +28,14 @@ export interface UseSuspenseQueryResult<
   data: TData;
   variables: TVariables;
 }
+
+const SUPPORTED_FETCH_POLICIES: FetchPolicy[] = [
+  'cache-first',
+  'network-only',
+  'no-cache',
+  'standby',
+  'cache-and-network',
+];
 
 export function useSuspenseQuery_experimental<
   TData = any,
@@ -35,7 +45,7 @@ export function useSuspenseQuery_experimental<
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
   const suspenseCache = useSuspenseCache();
-  const hasVerifiedDocument = useRef(false);
+  const hasRunValidations = useRef(false);
   const opts = useDeepMemo(
     () => ({ ...options, query, notifyOnNetworkStatusChange: true }),
     [options, query]
@@ -43,9 +53,9 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(opts.client);
   const { variables } = opts;
 
-  if (!hasVerifiedDocument.current) {
-    verifyDocumentType(query, DocumentType.Query);
-    hasVerifiedDocument.current = true;
+  if (!hasRunValidations.current) {
+    validateOptions(query, options);
+    hasRunValidations.current = true;
   }
 
   const [observable] = useState(() => {
@@ -125,6 +135,23 @@ export function useSuspenseQuery_experimental<
       variables: observable.variables as TVariables,
     };
   }, [result, observable]);
+}
+
+function validateOptions(
+  query: DocumentNode | TypedDocumentNode,
+  options: SuspenseQueryHookOptions
+) {
+  verifyDocumentType(query, DocumentType.Query);
+  validateFetchPolicy(options.fetchPolicy);
+}
+
+function validateFetchPolicy(
+  fetchPolicy: SuspenseQueryHookOptions['fetchPolicy']
+) {
+  invariant(
+    SUPPORTED_FETCH_POLICIES.includes(fetchPolicy),
+    `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
+  );
 }
 
 function useDeepMemo<TValue>(memoFn: () => TValue, deps: DependencyList) {

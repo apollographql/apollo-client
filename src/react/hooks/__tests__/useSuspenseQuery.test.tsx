@@ -338,7 +338,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual(mocks[0].result.data);
+      expect(result.current.data).toEqual(mocks[0].result.data);
     });
 
     expect(fetchCount).toBe(1);

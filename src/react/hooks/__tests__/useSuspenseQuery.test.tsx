@@ -361,6 +361,54 @@ describe('useSuspenseQuery', () => {
     unmount();
 
     expect(client.getObservableQueries().size).toBe(0);
+    expect(suspenseCache.getQuery(query)).toBeUndefined();
+  });
+
+  it('does not remove query from suspense cache if other queries are using it', async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <Suspense fallback="loading">{children}</Suspense>
+      </ApolloProvider>
+    );
+
+    const { result: result1, unmount } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { wrapper }
+    );
+
+    const { result: result2 } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { wrapper }
+    );
+
+    // We don't subscribe to the observable until after the component has been
+    // unsuspended, so we need to wait for the results of all queries
+    await waitFor(() => {
+      expect(result1.current.data).toEqual({ hello: 'world' });
+      expect(result2.current.data).toEqual({ hello: 'world' });
+    });
+
+    // Because they are the same query, the 2 components use the same observable
+    // in the suspense cache
+    expect(client.getObservableQueries().size).toBe(1);
+
+    unmount();
+
+    expect(client.getObservableQueries().size).toBe(1);
+    expect(suspenseCache.getQuery(query)).not.toBeUndefined();
   });
 
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {

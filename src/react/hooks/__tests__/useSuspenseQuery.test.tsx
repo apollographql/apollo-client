@@ -277,6 +277,55 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('ensures result is referentially stable', async () => {
+    interface QueryData {
+      character: {
+        id: string;
+        name: string;
+      };
+    }
+
+    interface QueryVariables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
+      },
+    ];
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    const previousResult = result.current;
+
+    rerender({ id: '1' });
+
+    expect(result.current).toBe(previousResult);
+  });
+
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
     interface QueryData {
       character: {
@@ -480,6 +529,5 @@ describe('useSuspenseQuery', () => {
     expect(fetchCount).toBe(2);
   });
 
-  it.skip('result is referentially stable', () => {});
   it.skip('tears down the query on unmount', () => {});
 });

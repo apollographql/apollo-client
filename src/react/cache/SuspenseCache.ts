@@ -16,31 +16,43 @@ export class SuspenseCache {
   private queries = new Map<DocumentNode, ObservableQuery>();
   private cache = new Map<ObservableQuery, Map<string, CacheEntry<any>>>();
 
-  registerQuery<TData = any>(
+  registerQuery<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(
     query: DocumentNode | TypedDocumentNode<TData>,
-    observable: ObservableQuery<TData>
+    observable: ObservableQuery<TData, TVariables>
   ) {
     this.queries.set(query, observable);
 
     return observable;
   }
 
-  getQuery<TData = any>(
+  getQuery<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(
     query: DocumentNode | TypedDocumentNode<TData>
-  ): ObservableQuery<TData> | undefined {
-    return this.queries.get(query);
+  ): ObservableQuery<TData, TVariables> | undefined {
+    return this.queries.get(query) as ObservableQuery<TData, TVariables>;
   }
 
-  getVariables<TData = any, TVariables = OperationVariables>(
+  getVariables<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(
     observable: ObservableQuery<TData, TVariables>,
-    variables?: TVariables
+    variables: TVariables | undefined
   ): CacheEntry<TData> | undefined {
     return this.cache.get(observable)?.get(canonicalStringify(variables));
   }
 
-  setVariables<TData = any, TVariables = OperationVariables>(
+  setVariables<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(
     observable: ObservableQuery,
-    variables: TVariables,
+    variables: TVariables | undefined,
     promise: Promise<ApolloQueryResult<TData>>
   ) {
     const entry: CacheEntry<TData> = {

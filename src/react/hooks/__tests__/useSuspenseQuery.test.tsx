@@ -412,6 +412,61 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('re-suspends the component when changing queries and using a "cache-first" fetch policy', async () => {
+    const query1: TypedDocumentNode<{ hello: string }> = gql`
+      query Query1 {
+        hello
+      }
+    `;
+
+    const query2: TypedDocumentNode<{ world: string }> = gql`
+      query Query2 {
+        world
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: query1 },
+        result: { data: { hello: 'hello' } },
+      },
+      {
+        request: { query: query2 },
+        result: { data: { world: 'world' } },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ query }) => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
+      { mocks, initialProps: { query: query1 as DocumentNode } }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
+    });
+
+    rerender({ query: query2 });
+
+    expect(await screen.findByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change queries
+    // 4. Initiate refetch and suspend
+    // 5. Unsuspend and return results from refetch
+    expect(renders.count).toBe(5);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: {} },
+      { ...mocks[0].result, variables: {} },
+      { ...mocks[1].result, variables: {} },
+    ]);
+  });
+
   SUPPORTED_FETCH_POLICIES.forEach((fetchPolicy) => {
     it.skip(`re-suspends the component when changing variables and using a "${fetchPolicy}" fetch policy`, async () => {
       interface QueryData {

@@ -82,10 +82,6 @@ function renderSuspenseHook<Result, Props>(
 }
 
 describe('useSuspenseQuery', () => {
-  it('is importable and callable', () => {
-    expect(typeof useSuspenseQuery).toBe('function');
-  });
-
   it('validates the GraphQL query as a query', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 

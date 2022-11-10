@@ -6,15 +6,18 @@ import {
   RenderHookOptions,
 } from '@testing-library/react';
 import { InvariantError } from 'ts-invariant';
+import { equal } from '@wry/equality';
 
 import {
   gql,
   ApolloClient,
+  ApolloLink,
   DocumentNode,
   InMemoryCache,
+  Observable,
   TypedDocumentNode,
 } from '../../../core';
-import { MockedProvider } from '../../../testing';
+import { MockedProvider, MockedResponse } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import {
   useSuspenseQuery_experimental as useSuspenseQuery,
@@ -31,6 +34,7 @@ const SUPPORTED_FETCH_POLICIES: SuspenseQueryHookOptions['fetchPolicy'][] = [
 ];
 
 type RenderSuspenseHookOptions<Props> = RenderHookOptions<Props> & {
+  link?: ApolloLink;
   suspenseFallback?: ReactNode;
   mocks?: any[];
 };
@@ -45,10 +49,11 @@ function renderSuspenseHook<Result, Props>(
   options: RenderSuspenseHookOptions<Props> = Object.create(null)
 ) {
   const {
+    link,
     mocks = [],
     suspenseFallback = 'loading',
     wrapper = ({ children }) => (
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mocks={mocks} link={link}>
         <Suspense fallback={suspenseFallback}>{children}</Suspense>
       </MockedProvider>
     ),
@@ -272,6 +277,86 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('ensures data is fetched is the correct amount of times', async () => {
+    interface QueryData {
+      character: {
+        id: string;
+        name: string;
+      };
+    }
+
+    interface QueryVariables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Black Widow' } } },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { character: { id: '2', name: 'Hulk' } } },
+      },
+    ];
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      {
+        link,
+        initialProps: { id: '1' },
+      }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    expect(fetchCount).toBe(1);
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    expect(fetchCount).toBe(2);
+  });
+
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
     interface QueryData {
       character: {
@@ -293,7 +378,7 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
-    const mocks = [
+    const mocks: MockedResponse<QueryData>[] = [
       {
         request: { query, variables: { id: '1' } },
         result: { data: { character: { id: '1', name: 'Spider-Man' } } },

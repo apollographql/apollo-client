@@ -392,7 +392,7 @@ describe('useSuspenseQuery', () => {
     const { result, rerender, renders } = renderSuspenseHook(
       ({ id }) => {
         return useSuspenseQuery(query, {
-          fetchPolicy: 'network-only',
+          fetchPolicy: 'cache-first',
           variables: { id },
         });
       },

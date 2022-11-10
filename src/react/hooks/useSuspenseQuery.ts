@@ -29,17 +29,19 @@ export interface UseSuspenseQueryResult<
 
 export function useSuspenseQuery_experimental<
   TData = any,
-  TVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
   const suspenseCache = useSuspenseCache();
   const hasVerifiedDocument = useRef(false);
-  const opts = useDeepMemo(() => ({ ...DEFAULT_OPTIONS, ...options }), [options]);
+  const opts = useDeepMemo(
+    () => ({ ...options, query, notifyOnNetworkStatusChange: true }),
+    [options, query]
+  );
   const client = useApolloClient(opts.client);
-  const firstRun = !suspenseCache.getQuery(query);
-  const { variables, suspensePolicy } = opts;
+  const { variables } = opts;
 
   if (!hasVerifiedDocument.current) {
     verifyDocumentType(query, DocumentType.Query);
@@ -47,74 +49,83 @@ export function useSuspenseQuery_experimental<
   }
 
   const [observable] = useState(() => {
-    return suspenseCache.getQuery(query) ||
-      suspenseCache.registerQuery(query, client.watchQuery({ ...opts, query }));
+    return (
+      suspenseCache.getQuery(query) ||
+      suspenseCache.registerQuery(query, client.watchQuery({ ...opts, query }))
+    );
   });
 
-  const lastResult = useRef(observable.getCurrentResult());
-  const lastOpts = useRef(opts);
-  const cacheEntry = suspenseCache.getVariables(observable, variables);
+  const resultRef = useRef<ApolloQueryResult<TData>>();
+  const previousOptsRef =
+    useRef<SuspenseQueryHookOptions<TData, TVariables>>(opts);
 
-  // Always suspend on the first run
-  if (firstRun) {
-    const promise = observable.reobserve(opts);
-
-    suspenseCache.setVariables(observable, variables, promise);
-
-    throw promise;
-  } else if (!cacheEntry && suspensePolicy === 'always') {
-    const promise = observable.reobserve(opts);
-
-    suspenseCache.setVariables(observable, variables, promise);
-
-    throw promise;
+  if (!resultRef.current) {
+    resultRef.current = observable.getCurrentResult();
   }
 
   const result = useSyncExternalStore(
-    useCallback((forceUpdate) => {
-      const subscription = observable.subscribe(() => {
-        const previousResult = lastResult.current;
-        const result = observable.getCurrentResult();
+    useCallback(
+      (forceUpdate) => {
+        const subscription = observable.subscribe(() => {
+          const previousResult = resultRef.current!;
+          const result = observable.getCurrentResult();
 
-        if (
-          previousResult &&
-          previousResult.loading === result.loading &&
-          previousResult.networkStatus === result.networkStatus &&
-          equal(previousResult.data, result.data)
-        ) {
-          return
-        }
+          if (
+            previousResult.loading === result.loading &&
+            previousResult.networkStatus === result.networkStatus &&
+            equal(previousResult.data, result.data)
+          ) {
+            return;
+          }
 
-        lastResult.current = result;
-        forceUpdate();
-      })
+          resultRef.current = result;
+          forceUpdate();
+        });
 
-      return () => subscription.unsubscribe();
-    }, [observable]),
-    () => lastResult.current,
-    () => lastResult.current,
-  )
+        return () => subscription.unsubscribe();
+      },
+      [observable]
+    ),
+    () => resultRef.current!,
+    () => resultRef.current!
+  );
 
-  useEffect(() => {
-    if (opts !== lastOpts.current) {
-      observable.reobserve(opts);
+  if (result.loading) {
+    let cacheEntry = suspenseCache.getVariables(observable, variables);
+
+    if (!cacheEntry) {
+      const promise = observable.reobserve(opts);
+      cacheEntry = suspenseCache.setVariables(
+        observable,
+        opts.variables,
+        promise
+      );
     }
-  }, [opts, lastOpts.current]);
+
+    if (!cacheEntry.resolved) {
+      throw cacheEntry.promise;
+    }
+  }
 
   useEffect(() => {
-    lastOpts.current = opts;
-  }, [opts])
+    if (opts.variables !== previousOptsRef.current?.variables) {
+      const promise = observable.reobserve(opts);
+
+      suspenseCache.setVariables(observable, opts.variables, promise);
+      previousOptsRef.current = opts;
+    }
+  }, [opts.variables]);
 
   return useMemo(() => {
     return {
       data: result.data,
-      variables: observable.variables as TVariables
+      variables: observable.variables as TVariables,
     };
   }, [result, observable]);
 }
 
 function useDeepMemo<TValue>(memoFn: () => TValue, deps: DependencyList) {
-  const ref = useRef<{ deps: DependencyList, value: TValue }>();
+  const ref = useRef<{ deps: DependencyList; value: TValue }>();
 
   if (!ref.current || !equal(ref.current.deps, deps)) {
     ref.current = { value: memoFn(), deps };

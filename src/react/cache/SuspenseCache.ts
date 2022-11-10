@@ -37,6 +37,17 @@ export class SuspenseCache {
     return this.queries.get(query) as ObservableQuery<TData, TVariables>;
   }
 
+  deregisterQuery(query: DocumentNode | TypedDocumentNode) {
+    const observable = this.queries.get(query);
+
+    if (!observable || observable.hasObservers()) {
+      return;
+    }
+
+    this.queries.delete(query);
+    this.cache.delete(observable);
+  }
+
   getVariables<
     TData = any,
     TVariables extends OperationVariables = OperationVariables

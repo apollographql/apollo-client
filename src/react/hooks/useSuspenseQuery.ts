@@ -98,7 +98,10 @@ export function useSuspenseQuery_experimental<
           forceUpdate();
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+          subscription.unsubscribe();
+          suspenseCache.deregisterQuery(query);
+        };
       },
       [observable]
     ),

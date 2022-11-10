@@ -262,7 +262,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('ensures data is fetched is the correct amount of times', async () => {
+  it('ensures data is fetched is the correct amount of times when using a "cache-first" fetch policy', async () => {
     interface QueryData {
       character: {
         id: string;
@@ -314,7 +314,11 @@ describe('useSuspenseQuery', () => {
     });
 
     const { result, rerender } = renderSuspenseHook(
-      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-first',
+          variables: { id },
+        }),
       { link, initialProps: { id: '1' } }
     );
 

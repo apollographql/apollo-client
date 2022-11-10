@@ -37,6 +37,8 @@ const SUPPORTED_FETCH_POLICIES: FetchPolicy[] = [
   'cache-and-network',
 ];
 
+const DEFAULT_FETCH_POLICY: FetchPolicy = 'cache-first';
+
 export function useSuspenseQuery_experimental<
   TData = any,
   TVariables extends OperationVariables = OperationVariables

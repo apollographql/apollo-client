@@ -142,23 +142,23 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query),
-      {
-        mocks: [
-          {
-            request: { query },
-            result: { data: { greeting: 'Hello' } },
-          },
-        ],
-      }
+      { mocks }
     );
 
     expect(screen.getByText('loading')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(result.current).toEqual({
-        data: { greeting: 'Hello' },
+        ...mocks[0].result,
         variables: {},
       });
     });
@@ -187,23 +187,23 @@ describe('useSuspenseQuery', () => {
       }
     `;
 
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
+      },
+    ];
+
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { variables: { id: '1' } }),
-      {
-        mocks: [
-          {
-            request: { query, variables: { id: '1' } },
-            result: { data: { character: { id: '1', name: 'Spider-Man' } } },
-          },
-        ],
-      }
+      { mocks }
     );
 
     expect(screen.getByText('loading')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(result.current).toEqual({
-        data: { character: { id: '1', name: 'Spider-Man' } },
+        ...mocks[0].result,
         variables: { id: '1' },
       });
     });
@@ -240,13 +240,8 @@ describe('useSuspenseQuery', () => {
     ];
 
     const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) => {
-        return useSuspenseQuery(query, { variables: { id } });
-      },
-      {
-        initialProps: { id: '1' },
-        mocks,
-      }
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { mocks, initialProps: { id: '1' } }
     );
 
     expect(screen.getByText('loading')).toBeInTheDocument();
@@ -262,14 +257,8 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(3);
     expect(renders.frames).toEqual([
-      {
-        ...mocks[0].result,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[0].result,
-        variables: { id: '1' },
-      },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
     ]);
   });
 
@@ -326,10 +315,7 @@ describe('useSuspenseQuery', () => {
 
     const { result, rerender } = renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      {
-        link,
-        initialProps: { id: '1' },
-      }
+      { link, initialProps: { id: '1' } }
     );
 
     await waitFor(() => {
@@ -386,16 +372,12 @@ describe('useSuspenseQuery', () => {
     ];
 
     const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) => {
-        return useSuspenseQuery(query, {
+      ({ id }) =>
+        useSuspenseQuery(query, {
           fetchPolicy: 'cache-first',
           variables: { id },
-        });
-      },
-      {
-        mocks,
-        initialProps: { id: '1' },
-      }
+        }),
+      { mocks, initialProps: { id: '1' } }
     );
 
     expect(screen.getByText('loading')).toBeInTheDocument();
@@ -416,25 +398,22 @@ describe('useSuspenseQuery', () => {
       });
     });
 
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change variables
+    // 4. Initiate refetch and suspend
+    // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
     expect(renders.frames).toEqual([
-      {
-        ...mocks[0].result,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[0].result,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[1].result,
-        variables: { id: '2' },
-      },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[1].result, variables: { id: '2' } },
     ]);
   });
 
   SUPPORTED_FETCH_POLICIES.forEach((fetchPolicy) => {
-    it(`re-suspends the component when changing variables and using a "${fetchPolicy}" fetch policy`, async () => {
+    it.skip(`re-suspends the component when changing variables and using a "${fetchPolicy}" fetch policy`, async () => {
       interface QueryData {
         character: {
           id: string;
@@ -475,7 +454,6 @@ describe('useSuspenseQuery', () => {
 
           const result = useSuspenseQuery(query, {
             fetchPolicy,
-            notifyOnNetworkStatusChange: true,
             variables: { id },
           });
 
@@ -513,22 +491,13 @@ describe('useSuspenseQuery', () => {
 
       expect(renders).toBe(5);
       expect(results).toEqual([
-        {
-          ...mocks[0].result,
-          variables: { id: '1' },
-        },
-        {
-          ...mocks[0].result,
-          variables: { id: '1' },
-        },
-        {
-          ...mocks[1].result,
-          variables: { id: '2' },
-        },
+        { ...mocks[0].result, variables: { id: '1' } },
+        { ...mocks[0].result, variables: { id: '1' } },
+        { ...mocks[1].result, variables: { id: '2' } },
       ]);
     });
 
-    it(`re-suspends the component when changing queries and using a "${fetchPolicy}" fetch policy`, async () => {
+    it.skip(`re-suspends the component when changing queries and using a "${fetchPolicy}" fetch policy`, async () => {
       const query1: TypedDocumentNode<{ hello: string }> = gql`
         query Query1 {
           hello
@@ -576,32 +545,20 @@ describe('useSuspenseQuery', () => {
 
       expect(screen.getByText('loading')).toBeInTheDocument();
       await waitFor(() => {
-        expect(result.current).toEqual({
-          ...mocks[0].result,
-          variables: {},
-        });
+        expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
       });
 
       rerender({ query: query2 });
 
       expect(screen.getByText('loading')).toBeInTheDocument();
       await waitFor(() => {
-        expect(result.current).toEqual({
-          ...mocks[1].result,
-          variables: {},
-        });
+        expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
       });
 
       expect(renders).toBe(4);
       expect(results).toEqual([
-        {
-          ...mocks[0].result,
-          variables: {},
-        },
-        {
-          ...mocks[1].result,
-          variables: {},
-        },
+        { ...mocks[0].result, variables: {} },
+        { ...mocks[1].result, variables: {} },
       ]);
     });
   });

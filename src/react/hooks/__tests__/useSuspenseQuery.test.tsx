@@ -18,7 +18,7 @@ import {
   Observable,
   TypedDocumentNode,
 } from '../../../core';
-import { MockedProvider, MockedResponse } from '../../../testing';
+import { MockedProvider, MockedResponse, MockLink } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
@@ -27,6 +27,7 @@ type RenderSuspenseHookOptions<
   Props,
   TSerializedCache = {}
 > = RenderHookOptions<Props> & {
+  client?: ApolloClient<TSerializedCache>;
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
   mocks?: MockedResponse[];
@@ -50,13 +51,20 @@ function renderSuspenseHook<Result, Props>(
 
   const {
     cache,
+    client,
     link,
     mocks = [],
-    wrapper = ({ children }) => (
-      <MockedProvider cache={cache} mocks={mocks} link={link}>
-        <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-      </MockedProvider>
-    ),
+    wrapper = ({ children }) => {
+      return client ? (
+        <ApolloProvider client={client} suspenseCache={new SuspenseCache()}>
+          <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+        </ApolloProvider>
+      ) : (
+        <MockedProvider cache={cache} mocks={mocks} link={link}>
+          <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+        </MockedProvider>
+      );
+    },
     ...renderHookOptions
   } = options;
 
@@ -1408,5 +1416,36 @@ describe('useSuspenseQuery', () => {
     const cachedData = cache.readQuery({ query, variables: { id: '1' } });
 
     expect(cachedData).toEqual(mocks[0].result.data);
+  });
+
+  it('uses the default fetch policy from the client when none provided in options', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const client = new ApolloClient({
+      cache,
+      link: new MockLink(mocks),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: 'network-only',
+        },
+      },
+    });
+
+    cache.writeQuery({ query, data: { greeting: 'hello from cache' } });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([{ ...mocks[0].result, variables: {} }]);
   });
 });

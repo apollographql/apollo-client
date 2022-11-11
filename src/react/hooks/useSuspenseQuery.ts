@@ -49,6 +49,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<TData, TVariables> {
   const suspenseCache = useSuspenseCache();
   const hasRunValidations = useRef(false);
+  const client = useApolloClient(options.client);
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
     useDeepMemo(() => {
       const { suspensePolicy = DEFAULT_SUSPENSE_POLICY, ...watchQueryOptions } =
@@ -57,11 +58,13 @@ export function useSuspenseQuery_experimental<
       return {
         ...watchQueryOptions,
         query,
-        fetchPolicy: options.fetchPolicy || DEFAULT_FETCH_POLICY,
+        fetchPolicy:
+          options.fetchPolicy ||
+          client.defaultOptions.watchQuery?.fetchPolicy ||
+          DEFAULT_FETCH_POLICY,
         notifyOnNetworkStatusChange: suspensePolicy === 'always',
       };
-    }, [options, query]);
-  const client = useApolloClient(options.client);
+    }, [options, query, client]);
   const { variables } = watchQueryOptions;
 
   if (!hasRunValidations.current) {

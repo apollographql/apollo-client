@@ -82,6 +82,16 @@ export function useSuspenseQuery_experimental<
   const result = useSyncExternalStore(
     useCallback(
       (forceUpdate) => {
+        // ObservableQuery will call `reobserve` as soon as the first
+        // subscription is created. Because we don't subscribe to the
+        // observable until after we've suspended via the initial fetch, we
+        // don't want to initiate another network request for fetch policies
+        // that always fetch (e.g. 'network-only'). Instead, we set the cache
+        // policy to `cache-only` to prevent the network request until the
+        // subscription is created, then reset it back to its original.
+        const originalFetchPolicy = opts.fetchPolicy;
+        observable.options.fetchPolicy = 'cache-only';
+
         const subscription = observable.subscribe(() => {
           const previousResult = resultRef.current!;
           const result = observable.getCurrentResult();
@@ -97,6 +107,8 @@ export function useSuspenseQuery_experimental<
           resultRef.current = result;
           forceUpdate();
         });
+
+        observable.options.fetchPolicy = originalFetchPolicy;
 
         return () => {
           subscription.unsubscribe();

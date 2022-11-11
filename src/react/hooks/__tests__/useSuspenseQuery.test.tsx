@@ -1448,4 +1448,34 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([{ ...mocks[0].result, variables: {} }]);
   });
+
+  it('uses default variables from the client when none provided in options', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+      defaultOptions: {
+        watchQuery: {
+          variables: { id: '2' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    expect(renders.frames).toEqual([
+      { ...mocks[1].result, variables: { id: '2' } },
+    ]);
+  });
 });

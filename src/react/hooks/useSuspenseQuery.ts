@@ -79,6 +79,8 @@ export function useSuspenseQuery_experimental<
     resultRef.current = observable.getCurrentResult();
   }
 
+  let cacheEntry = suspenseCache.getVariables(observable, variables);
+
   const result = useSyncExternalStore(
     useCallback(
       (forceUpdate) => {
@@ -90,7 +92,10 @@ export function useSuspenseQuery_experimental<
         // policy to `cache-only` to prevent the network request until the
         // subscription is created, then reset it back to its original.
         const originalFetchPolicy = opts.fetchPolicy;
-        observable.options.fetchPolicy = 'cache-only';
+
+        if (cacheEntry?.resolved) {
+          observable.options.fetchPolicy = 'cache-only';
+        }
 
         const subscription = observable.subscribe(() => {
           const previousResult = resultRef.current!;
@@ -121,20 +126,30 @@ export function useSuspenseQuery_experimental<
     () => resultRef.current!
   );
 
+
   if (result.loading) {
-    let cacheEntry = suspenseCache.getVariables(observable, variables);
+    switch (opts.fetchPolicy) {
+      case 'cache-and-network': {
+        if (!result.partial) {
+          break;
+        }
 
-    if (!cacheEntry) {
-      const promise = observable.reobserve(opts);
-      cacheEntry = suspenseCache.setVariables(
-        observable,
-        opts.variables,
-        promise
-      );
-    }
-
-    if (!cacheEntry.resolved) {
-      throw cacheEntry.promise;
+        // fallthrough when data is not in the cache
+      }
+      default: {
+        if (!cacheEntry) {
+          const promise = observable.reobserve(opts);
+          promise.then((data) => console.log('resolve', data));
+          cacheEntry = suspenseCache.setVariables(
+            observable,
+            opts.variables,
+            promise
+          );
+        }
+        if (!cacheEntry.resolved) {
+          throw cacheEntry.promise;
+        }
+      }
     }
   }
 

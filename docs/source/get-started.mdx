@@ -149,7 +149,7 @@ function DisplayLocations() {
   const { loading, error, data } = useQuery(GET_LOCATIONS);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error :(</p>;
+  if (error) return <p>Error : {error.message}</p>;
 
   return data.locations.map(({ id, name, description, photo }) => (
     <div key={id}>

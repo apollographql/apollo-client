@@ -359,6 +359,43 @@ describe('useSuspenseQuery', () => {
     expect(suspenseCache.getQuery(query)).not.toBeUndefined();
   });
 
+  it('allows the client to be overridden', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const globalClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'global hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const localClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'local hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { result } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { client: localClient }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={globalClient} suspenseCache={suspenseCache}>
+            <Suspense fallback="loading">{children}</Suspense>
+          </ApolloProvider>
+        ),
+      }
+    );
+
+    // We don't subscribe to the observable until after the component has been
+    // unsuspended, so we need to wait for the result
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ greeting: 'local hello' })
+    );
+  });
+
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 

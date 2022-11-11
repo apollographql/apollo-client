@@ -12,6 +12,8 @@ import {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
+  WatchQueryOptions,
+  WatchQueryFetchPolicy,
 } from '../../core';
 import { invariant } from '../../utilities/globals';
 import { useApolloClient } from './useApolloClient';
@@ -19,8 +21,6 @@ import { DocumentType, verifyDocumentType } from '../parser';
 import { SuspenseQueryHookOptions } from '../types/types';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
-
-type FetchPolicy = SuspenseQueryHookOptions['fetchPolicy'];
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -30,14 +30,15 @@ export interface UseSuspenseQueryResult<
   variables: TVariables;
 }
 
-const SUPPORTED_FETCH_POLICIES: FetchPolicy[] = [
+const SUPPORTED_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
   'cache-first',
   'network-only',
   'no-cache',
   'cache-and-network',
 ];
 
-const DEFAULT_FETCH_POLICY: FetchPolicy = 'cache-first';
+const DEFAULT_FETCH_POLICY = 'cache-first';
+const DEFAULT_SUSPENSE_POLICY = 'always';
 
 export function useSuspenseQuery_experimental<
   TData = any,
@@ -94,7 +95,7 @@ export function useSuspenseQuery_experimental<
         // that always fetch (e.g. 'network-only'). Instead, we set the cache
         // policy to `cache-only` to prevent the network request until the
         // subscription is created, then reset it back to its original.
-        const originalFetchPolicy = opts.fetchPolicy;
+        const originalFetchPolicy = watchQueryOptions.fetchPolicy;
 
         if (cacheEntry?.resolved) {
           observable.options.fetchPolicy = 'cache-only';

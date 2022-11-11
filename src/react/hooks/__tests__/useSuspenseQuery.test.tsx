@@ -648,4 +648,149 @@ describe('useSuspenseQuery', () => {
 
     expect(fetchCount).toBe(2);
   });
+
+  it('re-suspends the component when changing variables and using a "no-cache" fetch policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'no-cache',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    expect(await screen.findByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change variables
+    // 4. Initiate refetch and suspend
+    // 5. Unsuspend and return results from refetch
+    expect(renders.count).toBe(5);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[1].result, variables: { id: '2' } },
+    ]);
+  });
+
+  it('re-suspends the component when changing queries and using a "no-cache" fetch policy', async () => {
+    const query1: TypedDocumentNode<{ hello: string }> = gql`
+      query Query1 {
+        hello
+      }
+    `;
+
+    const query2: TypedDocumentNode<{ world: string }> = gql`
+      query Query2 {
+        world
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: query1 },
+        result: { data: { hello: 'query1' } },
+      },
+      {
+        request: { query: query2 },
+        result: { data: { world: 'query2' } },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ query }) => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
+      { mocks, initialProps: { query: query1 as DocumentNode } }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
+    });
+
+    rerender({ query: query2 });
+
+    expect(await screen.findByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change queries
+    // 4. Initiate refetch and suspend
+    // 5. Unsuspend and return results from refetch
+    expect(renders.count).toBe(5);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: {} },
+      { ...mocks[0].result, variables: {} },
+      { ...mocks[1].result, variables: {} },
+    ]);
+  });
+
+  it('ensures data is fetched is the correct amount of times when using a "no-cache" fetch policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'no-cache',
+          variables: { id },
+        }),
+      { link, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    expect(fetchCount).toBe(1);
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[1].result.data);
+    });
+
+    expect(fetchCount).toBe(2);
+  });
 });

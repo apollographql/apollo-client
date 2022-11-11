@@ -451,6 +451,50 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('returns previous data on refetch when changing variables and using a "cache-first" and an "initial" suspense policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-first',
+          suspensePolicy: 'initial',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change variables
+    // 4. Unsuspend and return results from refetch
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[1].result, variables: { id: '2' } },
+    ]);
+  });
+
   it('re-suspends the component when changing queries and using a "cache-first" fetch policy', async () => {
     const query1: TypedDocumentNode<{ hello: string }> = gql`
       query Query1 {
@@ -639,6 +683,50 @@ describe('useSuspenseQuery', () => {
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[1].result, variables: { id: '2' } },
+    ]);
+  });
+
+  it('returns previous data on refetch when changing variables and using a "network-only" and an "initial" suspense policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'network-only',
+          suspensePolicy: 'initial',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change variables
+    // 4. Unsuspend and return results from refetch
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: { id: '1' } },
       { ...mocks[0].result, variables: { id: '1' } },
@@ -843,6 +931,50 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('returns previous data on refetch when changing variables and using a "no-cache" and an "initial" suspense policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'no-cache',
+          suspensePolicy: 'initial',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change variables
+    // 4. Unsuspend and return results from refetch
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[1].result, variables: { id: '2' } },
+    ]);
+  });
+
   it('re-suspends the component when changing queries and using a "no-cache" fetch policy', async () => {
     const query1: TypedDocumentNode<{ hello: string }> = gql`
       query Query1 {
@@ -1036,6 +1168,50 @@ describe('useSuspenseQuery', () => {
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[1].result, variables: { id: '2' } },
+    ]);
+  });
+
+  it('returns previous data on refetch when changing variables and using a "cache-and-network" and an "initial" suspense policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-and-network',
+          suspensePolicy: 'initial',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change variables
+    // 4. Unsuspend and return results from refetch
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: { id: '1' } },
       { ...mocks[0].result, variables: { id: '1' } },

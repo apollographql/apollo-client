@@ -339,11 +339,13 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
+    const suspenseCache = new SuspenseCache();
+
     const { result, unmount } = renderSuspenseHook(
       () => useSuspenseQuery(query),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client} suspenseCache={new SuspenseCache()}>
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
             <Suspense fallback="loading">{children}</Suspense>
           </ApolloProvider>
         ),
@@ -594,6 +596,209 @@ describe('useSuspenseQuery', () => {
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: 'cache-first',
+          variables: { id },
+        }),
+      { link, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    expect(fetchCount).toBe(1);
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[1].result.data);
+    });
+
+    expect(fetchCount).toBe(2);
+  });
+
+  it('re-suspends the component when changing variables and using a "network-only" fetch policy', async () => {
+    interface QueryData {
+      character: {
+        id: string;
+        name: string;
+      };
+    }
+
+    interface QueryVariables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { character: { id: '2', name: 'Iron Man' } } },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'network-only',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    expect(await screen.findByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        variables: { id: '2' },
+      });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change variables
+    // 4. Initiate refetch and suspend
+    // 5. Unsuspend and return results from refetch
+    expect(renders.count).toBe(5);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[0].result, variables: { id: '1' } },
+      { ...mocks[1].result, variables: { id: '2' } },
+    ]);
+  });
+
+  it('re-suspends the component when changing queries and using a "network-only" fetch policy', async () => {
+    const query1: TypedDocumentNode<{ hello: string }> = gql`
+      query Query1 {
+        hello
+      }
+    `;
+
+    const query2: TypedDocumentNode<{ world: string }> = gql`
+      query Query2 {
+        world
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: query1 },
+        result: { data: { hello: 'hello' } },
+      },
+      {
+        request: { query: query2 },
+        result: { data: { world: 'world' } },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ query }) => useSuspenseQuery(query, { fetchPolicy: 'network-only' }),
+      { mocks, initialProps: { query: query1 as DocumentNode } }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
+    });
+
+    rerender({ query: query2 });
+
+    expect(await screen.findByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
+    });
+
+    // Renders:
+    // 1. Initate fetch and suspend
+    // 2. Unsuspend and return results from initial fetch
+    // 3. Change queries
+    // 4. Initiate refetch and suspend
+    // 5. Unsuspend and return results from refetch
+    expect(renders.count).toBe(5);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: {} },
+      { ...mocks[0].result, variables: {} },
+      { ...mocks[1].result, variables: {} },
+    ]);
+  });
+
+  it('ensures data is fetched is the correct amount of times when using a "network-only" fetch policy', async () => {
+    interface QueryData {
+      character: {
+        id: string;
+        name: string;
+      };
+    }
+
+    interface QueryVariables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: String!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { character: { id: '1', name: 'Black Widow' } } },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { character: { id: '2', name: 'Hulk' } } },
+      },
+    ];
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'network-only',
           variables: { id },
         }),
       { link, initialProps: { id: '1' } }

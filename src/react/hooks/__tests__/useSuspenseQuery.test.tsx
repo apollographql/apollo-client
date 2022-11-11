@@ -501,6 +501,33 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'hello from cache' },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
+      { cache, mocks }
+    );
+
+    expect(screen.queryByText('loading')).not.toBeInTheDocument();
+    expect(result.current).toEqual({
+      data: { greeting: 'hello from cache' },
+      variables: {},
+    });
+
+    expect(renders.count).toBe(1);
+    expect(renders.frames).toEqual([
+      { data: { greeting: 'hello from cache' }, variables: {} },
+    ]);
+  });
+
   it('ensures data is fetched is the correct amount of times when using a "cache-first" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -666,6 +693,36 @@ describe('useSuspenseQuery', () => {
       { ...mocks[0].result, variables: {} },
       { ...mocks[0].result, variables: {} },
       { ...mocks[1].result, variables: {} },
+    ]);
+  });
+
+  it('suspends when data is in the cache and using a "network-only" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'hello from cache' },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'network-only' }),
+      { cache, mocks }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: {},
+      });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.frames).toEqual([
+      { data: { greeting: 'Hello' }, variables: {} },
     ]);
   });
 
@@ -837,6 +894,39 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('suspends and does not overwrite cache when data is in the cache and using a "no-cache" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'hello from cache' },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
+      { cache, mocks }
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: {},
+      });
+    });
+
+    const cachedData = cache.readQuery({ query });
+
+    expect(renders.count).toBe(2);
+    expect(renders.frames).toEqual([
+      { data: { greeting: 'Hello' }, variables: {} },
+    ]);
+    expect(cachedData).toEqual({ greeting: 'hello from cache' });
+  });
+
   it('ensures data is fetched is the correct amount of times when using a "no-cache" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -1003,6 +1093,38 @@ describe('useSuspenseQuery', () => {
       { ...mocks[0].result, variables: {} },
       { ...mocks[0].result, variables: {} },
       { ...mocks[1].result, variables: {} },
+    ]);
+  });
+
+  it('does not suspend when data is in the cache and using a "cache-and-network" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'hello from cache' },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-and-network' }),
+      { cache, mocks }
+    );
+
+    expect(screen.queryByText('loading')).not.toBeInTheDocument();
+    expect(result.current).toEqual({
+      data: { greeting: 'hello from cache' },
+      variables: {},
+    });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.frames).toEqual([
+      { data: { greeting: 'hello from cache' }, variables: {} },
+      { data: { greeting: 'Hello' }, variables: {} },
     ]);
   });
 

@@ -393,17 +393,9 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { client: localClient }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={globalClient} suspenseCache={suspenseCache}>
-            <Suspense fallback="loading">{children}</Suspense>
-          </ApolloProvider>
-        ),
-      }
+      { client: globalClient }
     );
 
     await waitFor(() =>

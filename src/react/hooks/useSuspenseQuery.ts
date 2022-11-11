@@ -155,7 +155,6 @@ export function useSuspenseQuery_experimental<
       default: {
         if (!cacheEntry) {
           const promise = observable.reobserve(watchQueryOptions);
-          promise.then((data) => console.log('resolve', data));
           cacheEntry = suspenseCache.setVariables(
             observable,
             watchQueryOptions.variables,

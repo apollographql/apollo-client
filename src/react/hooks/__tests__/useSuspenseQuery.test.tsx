@@ -10,6 +10,7 @@ import { equal } from '@wry/equality';
 
 import {
   gql,
+  ApolloCache,
   ApolloClient,
   ApolloLink,
   DocumentNode,
@@ -22,8 +23,12 @@ import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
 
-type RenderSuspenseHookOptions<Props> = RenderHookOptions<Props> & {
+type RenderSuspenseHookOptions<
+  Props,
+  TSerializedCache = {}
+> = RenderHookOptions<Props> & {
   link?: ApolloLink;
+  cache?: ApolloCache<TSerializedCache>;
   suspenseFallback?: ReactNode;
   mocks?: MockedResponse[];
 };
@@ -38,11 +43,12 @@ function renderSuspenseHook<Result, Props>(
   options: RenderSuspenseHookOptions<Props> = Object.create(null)
 ) {
   const {
+    cache,
     link,
     mocks = [],
     suspenseFallback = 'loading',
     wrapper = ({ children }) => (
-      <MockedProvider mocks={mocks} link={link}>
+      <MockedProvider cache={cache} mocks={mocks} link={link}>
         <Suspense fallback={suspenseFallback}>{children}</Suspense>
       </MockedProvider>
     ),
@@ -541,6 +547,29 @@ describe('useSuspenseQuery', () => {
     expect(fetchCount).toBe(2);
   });
 
+  it('writes to the cache when using a "cache-first" fetch policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-first',
+          variables: { id },
+        }),
+      { cache, mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    const cachedData = cache.readQuery({ query, variables: { id: '1' } });
+
+    expect(cachedData).toEqual(mocks[0].result.data);
+  });
+
   it('re-suspends the component when changing variables and using a "network-only" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -684,6 +713,29 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(fetchCount).toBe(2);
+  });
+
+  it('writes to the cache when using a "network-only" fetch policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'network-only',
+          variables: { id },
+        }),
+      { cache, mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    const cachedData = cache.readQuery({ query, variables: { id: '1' } });
+
+    expect(cachedData).toEqual(mocks[0].result.data);
   });
 
   it('re-suspends the component when changing variables and using a "no-cache" fetch policy', async () => {
@@ -831,6 +883,29 @@ describe('useSuspenseQuery', () => {
     expect(fetchCount).toBe(2);
   });
 
+  it('does not write to the cache when using a "no-cache" fetch policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'no-cache',
+          variables: { id },
+        }),
+      { cache, mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    const cachedData = cache.readQuery({ query, variables: { id: '1' } });
+
+    expect(cachedData).toBeNull();
+  });
+
   it('re-suspends the component when changing variables and using a "cache-and-network" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -975,5 +1050,28 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(fetchCount).toBe(2);
+  });
+
+  it('writes to the cache when using a "cache-and-network" fetch policy', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-and-network',
+          variables: { id },
+        }),
+      { cache, mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    const cachedData = cache.readQuery({ query, variables: { id: '1' } });
+
+    expect(cachedData).toEqual(mocks[0].result.data);
   });
 });

@@ -71,9 +71,9 @@ export function useSuspenseQuery_experimental<
         fetchPolicy:
           fetchPolicy || defaultOptions.fetchPolicy || DEFAULT_FETCH_POLICY,
         notifyOnNetworkStatusChange: suspensePolicy === 'always',
-        variables: variables || defaultOptions.variables,
+        variables: { ...defaultOptions.variables, ...variables },
       };
-    }, [options, query, client]);
+    }, [options, query, client.defaultOptions.watchQuery]);
   const { variables } = watchQueryOptions;
 
   if (!hasRunValidations.current) {

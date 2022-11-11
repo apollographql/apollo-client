@@ -1470,4 +1470,85 @@ describe('useSuspenseQuery', () => {
       { ...mocks[1].result, variables: { id: '2' } },
     ]);
   });
+
+  it('merges global default variables with local variables', async () => {
+    const query = gql`
+      query MergedVariablesQuery {
+        vars
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          observer.next({ data: { vars: operation.variables } });
+          observer.complete();
+        });
+      }),
+      defaultOptions: {
+        watchQuery: {
+          variables: { source: 'global', globalOnlyVar: true },
+        },
+      },
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ source }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'network-only',
+          variables: { source, localOnlyVar: true },
+        }),
+      { client, initialProps: { source: 'local' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: {
+          vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
+        },
+        variables: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
+      });
+    });
+
+    rerender({ source: 'rerender' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: {
+          vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
+        },
+        variables: {
+          source: 'rerender',
+          globalOnlyVar: true,
+          localOnlyVar: true,
+        },
+      });
+    });
+
+    expect(renders.frames).toEqual([
+      {
+        data: {
+          vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
+        },
+        variables: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
+      },
+      {
+        data: {
+          vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
+        },
+        variables: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
+      },
+      {
+        data: {
+          vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
+        },
+        variables: {
+          source: 'rerender',
+          globalOnlyVar: true,
+          localOnlyVar: true,
+        },
+      },
+    ]);
+  });
 });

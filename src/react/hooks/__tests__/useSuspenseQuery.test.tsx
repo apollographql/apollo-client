@@ -70,6 +70,58 @@ function renderSuspenseHook<Result, Props>(
   return { ...result, renders };
 }
 
+function useSimpleQueryCase() {
+  interface QueryData {
+    greeting: string;
+  }
+
+  const query: TypedDocumentNode<QueryData> = gql`
+    query UserQuery {
+      greeting
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: { data: { greeting: 'Hello' } },
+    },
+  ];
+
+  return { query, mocks };
+}
+
+function useVariablesQueryCase() {
+  const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
+
+  interface QueryData {
+    character: {
+      id: string;
+      name: string;
+    };
+  }
+
+  interface QueryVariables {
+    id: string;
+  }
+
+  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const mocks = CHARACTERS.map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: { data: { character: { id: String(index + 1), name } } },
+  }));
+
+  return { query, mocks };
+}
+
 describe('useSuspenseQuery', () => {
   it('validates the GraphQL query as a query', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -95,19 +147,16 @@ describe('useSuspenseQuery', () => {
 
   it('ensures a suspense cache is provided', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-    const query = gql`
-      query {
-        hello
-      }
-    `;
+    const { query } = useSimpleQueryCase();
 
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
     expect(() => {
       renderHook(() => useSuspenseQuery(query), {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
+          <ApolloProvider client={client} suspenseCache={undefined}>
+            {children}
+          </ApolloProvider>
         ),
       });
     }).toThrowError(
@@ -123,12 +172,7 @@ describe('useSuspenseQuery', () => {
   it('ensures a valid fetch policy is used', () => {
     const INVALID_FETCH_POLICIES = ['cache-only'];
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-    const query = gql`
-      query {
-        hello
-      }
-    `;
+    const { query } = useSimpleQueryCase();
 
     INVALID_FETCH_POLICIES.forEach((fetchPolicy: any) => {
       expect(() => {
@@ -148,22 +192,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('suspends a query and returns results', async () => {
-    interface QueryData {
-      greeting: string;
-    }
-
-    const query: TypedDocumentNode<QueryData> = gql`
-      query UserQuery {
-        greeting
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query },
-        result: { data: { greeting: 'Hello' } },
-      },
-    ];
+    const { query, mocks } = useSimpleQueryCase();
 
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query),
@@ -183,32 +212,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('suspends a query with variables and returns results', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
-      },
-    ];
+    const { query, mocks } = useVariablesQueryCase();
 
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { variables: { id: '1' } }),
@@ -228,32 +232,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('returns the same results for the same variables', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
-      },
-    ];
+    const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
@@ -279,32 +258,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('ensures result is referentially stable', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
-      },
-    ];
+    const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender } = renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
@@ -328,14 +282,10 @@ describe('useSuspenseQuery', () => {
   });
 
   it('tears down the query on unmount', async () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
+    const { query, mocks } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
+      link: new ApolloLink(() => Observable.of(mocks[0].result)),
       cache: new InMemoryCache(),
     });
 
@@ -355,7 +305,7 @@ describe('useSuspenseQuery', () => {
     // We don't subscribe to the observable until after the component has been
     // unsuspended, so we need to wait for the result
     await waitFor(() =>
-      expect(result.current.data).toEqual({ hello: 'world' })
+      expect(result.current.data).toEqual(mocks[0].result.data)
     );
 
     expect(client.getObservableQueries().size).toBe(1);
@@ -367,14 +317,10 @@ describe('useSuspenseQuery', () => {
   });
 
   it('does not remove query from suspense cache if other queries are using it', async () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
+    const { query, mocks } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),
+      link: new ApolloLink(() => Observable.of(mocks[0].result)),
       cache: new InMemoryCache(),
     });
 
@@ -399,8 +345,8 @@ describe('useSuspenseQuery', () => {
     // We don't subscribe to the observable until after the component has been
     // unsuspended, so we need to wait for the results of all queries
     await waitFor(() => {
-      expect(result1.current.data).toEqual({ hello: 'world' });
-      expect(result2.current.data).toEqual({ hello: 'world' });
+      expect(result1.current.data).toEqual(mocks[0].result.data);
+      expect(result2.current.data).toEqual(mocks[0].result.data);
     });
 
     // Because they are the same query, the 2 components use the same observable
@@ -414,36 +360,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { character: { id: '2', name: 'Iron Man' } } },
-      },
-    ];
+    const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(
       ({ id }) =>
@@ -502,11 +419,11 @@ describe('useSuspenseQuery', () => {
     const mocks = [
       {
         request: { query: query1 },
-        result: { data: { hello: 'hello' } },
+        result: { data: { hello: 'query1' } },
       },
       {
         request: { query: query2 },
-        result: { data: { world: 'world' } },
+        result: { data: { world: 'query2' } },
       },
     ];
 
@@ -542,38 +459,9 @@ describe('useSuspenseQuery', () => {
   });
 
   it('ensures data is fetched is the correct amount of times when using a "cache-first" fetch policy', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
+    const { query, mocks } = useVariablesQueryCase();
 
     let fetchCount = 0;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Black Widow' } } },
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { character: { id: '2', name: 'Hulk' } } },
-      },
-    ];
 
     const link = new ApolloLink((operation) => {
       return new Observable((observer) => {
@@ -587,7 +475,7 @@ describe('useSuspenseQuery', () => {
           throw new Error('Could not find mock for operation');
         }
 
-        observer.next(mock.result);
+        observer.next(mock.result!);
         observer.complete();
       });
     });
@@ -617,36 +505,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('re-suspends the component when changing variables and using a "network-only" fetch policy', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Spider-Man' } } },
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { character: { id: '2', name: 'Iron Man' } } },
-      },
-    ];
+    const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(
       ({ id }) =>
@@ -705,11 +564,11 @@ describe('useSuspenseQuery', () => {
     const mocks = [
       {
         request: { query: query1 },
-        result: { data: { hello: 'hello' } },
+        result: { data: { hello: 'query1' } },
       },
       {
         request: { query: query2 },
-        result: { data: { world: 'world' } },
+        result: { data: { world: 'query2' } },
       },
     ];
 
@@ -745,38 +604,9 @@ describe('useSuspenseQuery', () => {
   });
 
   it('ensures data is fetched is the correct amount of times when using a "network-only" fetch policy', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: String!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
+    const { query, mocks } = useVariablesQueryCase();
 
     let fetchCount = 0;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { character: { id: '1', name: 'Black Widow' } } },
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { character: { id: '2', name: 'Hulk' } } },
-      },
-    ];
 
     const link = new ApolloLink((operation) => {
       return new Observable((observer) => {

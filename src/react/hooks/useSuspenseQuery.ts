@@ -13,6 +13,7 @@ import {
   OperationVariables,
   TypedDocumentNode,
 } from '../../core';
+import { invariant } from '../../utilities/globals';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import { SuspenseQueryHookOptions } from '../types/types';
@@ -33,7 +34,6 @@ const SUPPORTED_FETCH_POLICIES: FetchPolicy[] = [
   'cache-first',
   'network-only',
   'no-cache',
-  'standby',
   'cache-and-network',
 ];
 

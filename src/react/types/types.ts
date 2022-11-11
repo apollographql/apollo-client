@@ -104,7 +104,6 @@ export interface SuspenseQueryHookOptions<
     | 'cache-first'
     | 'network-only'
     | 'no-cache'
-    | 'standby'
     | 'cache-and-network'
   >;
 }

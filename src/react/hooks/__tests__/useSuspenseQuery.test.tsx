@@ -384,7 +384,7 @@ describe('useSuspenseQuery', () => {
 
     const suspenseCache = new SuspenseCache();
 
-    const { result } = renderSuspenseHook(
+    const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { client: localClient }),
       {
         wrapper: ({ children }) => (
@@ -395,11 +395,13 @@ describe('useSuspenseQuery', () => {
       }
     );
 
-    // We don't subscribe to the observable until after the component has been
-    // unsuspended, so we need to wait for the result
     await waitFor(() =>
       expect(result.current.data).toEqual({ greeting: 'local hello' })
     );
+
+    expect(renders.frames).toEqual([
+      { data: { greeting: 'local hello' }, variables: {} },
+    ]);
   });
 
   it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {

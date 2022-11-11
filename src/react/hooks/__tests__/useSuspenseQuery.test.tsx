@@ -1,4 +1,4 @@
-import React, { ReactNode, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import {
   screen,
   renderHook,
@@ -29,11 +29,11 @@ type RenderSuspenseHookOptions<
 > = RenderHookOptions<Props> & {
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
-  suspenseFallback?: ReactNode;
   mocks?: MockedResponse[];
 };
 
 interface Renders<Result> {
+  suspenseCount: number;
   count: number;
   frames: Result[];
 }
@@ -42,20 +42,26 @@ function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = Object.create(null)
 ) {
+  function SuspenseFallback() {
+    renders.suspenseCount++;
+
+    return <div>loading</div>;
+  }
+
   const {
     cache,
     link,
     mocks = [],
-    suspenseFallback = 'loading',
     wrapper = ({ children }) => (
       <MockedProvider cache={cache} mocks={mocks} link={link}>
-        <Suspense fallback={suspenseFallback}>{children}</Suspense>
+        <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
       </MockedProvider>
     ),
     ...renderHookOptions
   } = options;
 
   const renders: Renders<Result> = {
+    suspenseCount: 0,
     count: 0,
     frames: [],
   };
@@ -205,8 +211,6 @@ describe('useSuspenseQuery', () => {
       { mocks }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
-
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -214,6 +218,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
   });
 
@@ -225,8 +230,6 @@ describe('useSuspenseQuery', () => {
       { mocks }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
-
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -234,6 +237,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
   });
 
@@ -245,8 +249,6 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { id: '1' } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
-
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -257,6 +259,7 @@ describe('useSuspenseQuery', () => {
     rerender({ id: '1' });
 
     expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: { id: '1' } },
       { ...mocks[0].result, variables: { id: '1' } },
@@ -416,7 +419,7 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { id: '1' } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -426,7 +429,6 @@ describe('useSuspenseQuery', () => {
 
     rerender({ id: '2' });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[1].result,
@@ -441,6 +443,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: { id: '1' } },
       { ...mocks[0].result, variables: { id: '1' } },
@@ -477,14 +480,13 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { query: query1 as DocumentNode } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
     });
 
     rerender({ query: query2 });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
     });
@@ -496,6 +498,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: {} },
       { ...mocks[0].result, variables: {} },
@@ -518,13 +521,13 @@ describe('useSuspenseQuery', () => {
       { cache, mocks }
     );
 
-    expect(screen.queryByText('loading')).not.toBeInTheDocument();
     expect(result.current).toEqual({
       data: { greeting: 'hello from cache' },
       variables: {},
     });
 
     expect(renders.count).toBe(1);
+    expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toEqual([
       { data: { greeting: 'hello from cache' }, variables: {} },
     ]);
@@ -611,7 +614,7 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { id: '1' } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -621,7 +624,6 @@ describe('useSuspenseQuery', () => {
 
     rerender({ id: '2' });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[1].result,
@@ -636,6 +638,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: { id: '1' } },
       { ...mocks[0].result, variables: { id: '1' } },
@@ -672,14 +675,13 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { query: query1 as DocumentNode } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
     });
 
     rerender({ query: query2 });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
     });
@@ -691,6 +693,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: {} },
       { ...mocks[0].result, variables: {} },
@@ -713,8 +716,6 @@ describe('useSuspenseQuery', () => {
       { cache, mocks }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
-
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -723,6 +724,7 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { data: { greeting: 'Hello' }, variables: {} },
     ]);
@@ -809,7 +811,7 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { id: '1' } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -819,7 +821,6 @@ describe('useSuspenseQuery', () => {
 
     rerender({ id: '2' });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[1].result,
@@ -834,6 +835,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: { id: '1' } },
       { ...mocks[0].result, variables: { id: '1' } },
@@ -870,14 +872,13 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { query: query1 as DocumentNode } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
     });
 
     rerender({ query: query2 });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
     });
@@ -889,6 +890,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: {} },
       { ...mocks[0].result, variables: {} },
@@ -911,8 +913,6 @@ describe('useSuspenseQuery', () => {
       { cache, mocks }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
-
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -923,6 +923,7 @@ describe('useSuspenseQuery', () => {
     const cachedData = cache.readQuery({ query });
 
     expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { data: { greeting: 'Hello' }, variables: {} },
     ]);
@@ -1010,7 +1011,7 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { id: '1' } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,
@@ -1020,7 +1021,6 @@ describe('useSuspenseQuery', () => {
 
     rerender({ id: '2' });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[1].result,
@@ -1035,6 +1035,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: { id: '1' } },
       { ...mocks[0].result, variables: { id: '1' } },
@@ -1072,14 +1073,13 @@ describe('useSuspenseQuery', () => {
       { mocks, initialProps: { query: query1 as DocumentNode } }
     );
 
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
     });
 
     rerender({ query: query2 });
 
-    expect(await screen.findByText('loading')).toBeInTheDocument();
     await waitFor(() => {
       expect(result.current).toEqual({ ...mocks[1].result, variables: {} });
     });
@@ -1091,6 +1091,7 @@ describe('useSuspenseQuery', () => {
     // 4. Initiate refetch and suspend
     // 5. Unsuspend and return results from refetch
     expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, variables: {} },
       { ...mocks[0].result, variables: {} },
@@ -1113,7 +1114,6 @@ describe('useSuspenseQuery', () => {
       { cache, mocks }
     );
 
-    expect(screen.queryByText('loading')).not.toBeInTheDocument();
     expect(result.current).toEqual({
       data: { greeting: 'hello from cache' },
       variables: {},
@@ -1124,6 +1124,7 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toEqual([
       { data: { greeting: 'hello from cache' }, variables: {} },
       { data: { greeting: 'Hello' }, variables: {} },

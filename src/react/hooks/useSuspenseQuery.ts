@@ -48,7 +48,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<TData, TVariables> {
   const suspenseCache = useSuspenseCache();
   const hasRunValidations = useRef(false);
-  const opts = useDeepMemo(
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = useDeepMemo(
     () => ({
       ...options,
       query,
@@ -57,23 +57,23 @@ export function useSuspenseQuery_experimental<
     }),
     [options, query]
   );
-  const client = useApolloClient(opts.client);
-  const { variables } = opts;
+  const client = useApolloClient(options.client);
+  const { variables } = watchQueryOptions;
 
   if (!hasRunValidations.current) {
-    validateOptions(opts);
+    validateOptions(watchQueryOptions);
     hasRunValidations.current = true;
   }
 
   const [observable] = useState(() => {
     return (
       suspenseCache.getQuery(query) ||
-      suspenseCache.registerQuery(query, client.watchQuery(opts))
+      suspenseCache.registerQuery(query, client.watchQuery(watchQueryOptions))
     );
   });
 
   const resultRef = useRef<ApolloQueryResult<TData>>();
-  const previousOptsRef = useRef<typeof opts>(opts);
+  const previousOptsRef = useRef(watchQueryOptions);
 
   if (!resultRef.current) {
     resultRef.current = observable.getCurrentResult();
@@ -128,7 +128,7 @@ export function useSuspenseQuery_experimental<
 
 
   if (result.loading) {
-    switch (opts.fetchPolicy) {
+    switch (watchQueryOptions.fetchPolicy) {
       case 'cache-and-network': {
         if (!result.partial) {
           break;
@@ -138,11 +138,11 @@ export function useSuspenseQuery_experimental<
       }
       default: {
         if (!cacheEntry) {
-          const promise = observable.reobserve(opts);
+          const promise = observable.reobserve(watchQueryOptions);
           promise.then((data) => console.log('resolve', data));
           cacheEntry = suspenseCache.setVariables(
             observable,
-            opts.variables,
+            watchQueryOptions.variables,
             promise
           );
         }
@@ -155,15 +155,19 @@ export function useSuspenseQuery_experimental<
 
   useEffect(() => {
     if (
-      opts.variables !== previousOptsRef.current?.variables ||
-      opts.query !== previousOptsRef.current.query
+      watchQueryOptions.variables !== previousOptsRef.current?.variables ||
+      watchQueryOptions.query !== previousOptsRef.current.query
     ) {
-      const promise = observable.reobserve(opts);
+      const promise = observable.reobserve(watchQueryOptions);
 
-      suspenseCache.setVariables(observable, opts.variables, promise);
-      previousOptsRef.current = opts;
+      suspenseCache.setVariables(
+        observable,
+        watchQueryOptions.variables,
+        promise
+      );
+      previousOptsRef.current = watchQueryOptions;
     }
-  }, [opts.variables, opts.query]);
+  }, [watchQueryOptions.variables, watchQueryOptions.query]);
 
   return useMemo(() => {
     return {
@@ -173,20 +177,14 @@ export function useSuspenseQuery_experimental<
   }, [result, observable]);
 }
 
-type ValidateFunctionOptions = SuspenseQueryHookOptions & {
-  query: DocumentNode | TypedDocumentNode;
-};
-
-function validateOptions(options: ValidateFunctionOptions) {
+function validateOptions(options: WatchQueryOptions) {
   const { query, fetchPolicy = DEFAULT_FETCH_POLICY } = options;
 
   verifyDocumentType(query, DocumentType.Query);
   validateFetchPolicy(fetchPolicy);
 }
 
-function validateFetchPolicy(
-  fetchPolicy: SuspenseQueryHookOptions['fetchPolicy']
-) {
+function validateFetchPolicy(fetchPolicy: WatchQueryFetchPolicy) {
   invariant(
     SUPPORTED_FETCH_POLICIES.includes(fetchPolicy),
     `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`

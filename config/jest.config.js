@@ -10,10 +10,25 @@ const defaults = {
     escapeString: true,
     printBasicPrototype: true
   },
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        diagnostics: {
+          warnOnly: process.env.TEST_ENV !== 'ci'
+        },
+      },
+    ],
+  },
 };
 
 const ignoreTSFiles = '.ts$';
 const ignoreTSXFiles = '.tsx$';
+
+const react17TestFileIgnoreList = [
+  ignoreTSFiles,
+  // 'src/react/hooks/__tests__/useBackgroundQuery.test.tsx'
+];
 
 const react18TestFileIgnoreList = [
   // ignore core tests (.ts files) as they are run separately
@@ -58,7 +73,7 @@ const standardReact18Config = {
 const standardReact17Config = {
   ...defaults,
   displayName: "ReactDOM 17",
-  testPathIgnorePatterns: [ignoreTSFiles],
+  testPathIgnorePatterns: react17TestFileIgnoreList,
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",

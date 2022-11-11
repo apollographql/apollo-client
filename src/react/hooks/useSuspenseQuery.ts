@@ -100,6 +100,7 @@ export function useSuspenseQuery_experimental<
         const subscription = observable.subscribe(() => {
           const previousResult = resultRef.current!;
           const result = observable.getCurrentResult();
+          console.log(JSON.stringify(result, null, 2));
 
           if (
             previousResult.loading === result.loading &&
@@ -139,7 +140,7 @@ export function useSuspenseQuery_experimental<
       default: {
         if (!cacheEntry) {
           const promise = observable.reobserve(opts);
-          promise.then((data) => console.log('resolve', data));
+          promise.then((data) => console.log('reobserve', JSON.stringify(data, null, 2)));
           cacheEntry = suspenseCache.setVariables(
             observable,
             opts.variables,

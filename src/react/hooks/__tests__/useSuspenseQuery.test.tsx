@@ -170,7 +170,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('ensures a valid fetch policy is used', () => {
-    const INVALID_FETCH_POLICIES = ['cache-only'];
+    const INVALID_FETCH_POLICIES = ['cache-only', 'standby'];
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     const { query } = useSimpleQueryCase();
 

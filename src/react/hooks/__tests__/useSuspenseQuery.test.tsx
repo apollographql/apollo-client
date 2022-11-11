@@ -1062,6 +1062,40 @@ describe('useSuspenseQuery', () => {
     expect(cachedData).toEqual({ greeting: 'hello from cache' });
   });
 
+  it('maintains results when rerendering a query using a "no-cache" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        variables: {},
+      });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { data: { greeting: 'Hello' }, variables: {} },
+    ]);
+
+    rerender();
+
+    expect(result.current).toEqual({ ...mocks[0].result, variables: {} });
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { data: { greeting: 'Hello' }, variables: {} },
+      { data: { greeting: 'Hello' }, variables: {} },
+    ]);
+  });
+
   it('ensures data is fetched is the correct amount of times when using a "no-cache" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 

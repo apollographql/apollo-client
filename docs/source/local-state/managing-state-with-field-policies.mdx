@@ -60,6 +60,40 @@ You can use `read` functions to perform any sort of logic you want, including:
 
 > If you query a local-only field that _doesn't_ define a `read` function, Apollo Client performs a default cache lookup for the field. See [Storing local state in the cache](#storing-local-state-in-the-cache) for details.
 
+### Reads are synchronous by design
+
+Many UI frameworks like React (without `Suspense`) have synchronous rendering pipelines so it's important for UI components to have immediate access to any existing data.  So all `read` functions are synchronous, as are the cache's `readQuery` and `readFragment` methods.  It is possible, however, to leverage reactive variables and `options.storage` to roll your own asynchronous `read` function:
+
+<ExpansionPanel title="See example">
+
+```js
+new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        isInCart: {
+          read(_, { variables, storage }) {
+            if (!storage.var) {
+              storage.var = makeVar(false);
+              setTimeout(() => {
+                storage.var(
+                  localStorage.getItem('CART').includes(
+                    variables.productId
+                  )
+                );
+              }, 100);
+            }
+            return storage.var();
+          }
+        }
+      }
+    }
+  }
+})
+```
+
+</ExpansionPanel>
+
 ## Querying
 
 Now that we've defined a field policy for `isInCart`, we can include the field in a query that _also_ queries our back-end server, like so:

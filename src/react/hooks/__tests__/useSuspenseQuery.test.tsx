@@ -1551,4 +1551,55 @@ describe('useSuspenseQuery', () => {
       },
     ]);
   });
+
+  it('can unset a globally defined variable', async () => {
+    const query = gql`
+      query MergedVariablesQuery {
+        vars
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          observer.next({ data: { vars: operation.variables } });
+          observer.complete();
+        });
+      }),
+      defaultOptions: {
+        watchQuery: {
+          variables: { source: 'global', globalOnlyVar: true },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          variables: { source: 'local', globalOnlyVar: undefined },
+        }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: { vars: { source: 'local' } },
+        variables: { source: 'local' },
+      });
+    });
+
+    // Check to make sure the property itself is not defined, not just set to
+    // undefined. Unfortunately this is not caught by toEqual as toEqual only
+    // checks if the values are equal, not if they have the same keys
+    expect(result.current.variables).not.toHaveProperty('globalOnlyVar');
+    expect(result.current.data.vars).not.toHaveProperty('globalOnlyVar');
+
+    expect(renders.frames).toEqual([
+      {
+        data: { vars: { source: 'local' } },
+        variables: { source: 'local' },
+      },
+    ]);
+  });
 });

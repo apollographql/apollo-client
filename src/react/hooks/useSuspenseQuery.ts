@@ -16,6 +16,7 @@ import {
   WatchQueryFetchPolicy,
 } from '../../core';
 import { invariant } from '../../utilities/globals';
+import { compact } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import { SuspenseQueryHookOptions } from '../types/types';
@@ -71,7 +72,7 @@ export function useSuspenseQuery_experimental<
         fetchPolicy:
           fetchPolicy || defaultOptions.fetchPolicy || DEFAULT_FETCH_POLICY,
         notifyOnNetworkStatusChange: suspensePolicy === 'always',
-        variables: { ...defaultOptions.variables, ...variables },
+        variables: compact({ ...defaultOptions.variables, ...variables }),
       };
     }, [options, query, client.defaultOptions.watchQuery]);
   const { variables } = watchQueryOptions;

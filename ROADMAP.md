@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: Oct 2022**
+**Last updated: Nov 2022**
 
 For up to date release notes, refer to the project's [Change Log](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -15,15 +15,17 @@ For up to date release notes, refer to the project's [Change Log](https://github
 
 ## 3.8
 
-- Release 3.8: will focus on adding a new hook: `useBackgroundQuery`,  See Github [3.8 Milestone](https://github.com/apollographql/apollo-client/milestone/30) for more details.
+- `Release 3.8` will focus on adding a new experimental hook: `useBackgroundQuery` as well as adding experimental support for React 18 `Suspense` and will also offer better support for React 18's `SSR` architecture.
+- These different features will be introduced in a series of Alpha releases so they can be tested and adopted incrementally.  Eventually these features be will be moving to Beta and then to RC and GA status.
+- As we release each new feature we'll be looking for feedback from the community on performance, usage and developer experience of adopting and implementing these new concepts in your applications.
 
 ## 3.9
 
-- Release 3.9 will focus on adding support for React 18 `Suspense`. See Github [3.9 Milestone](https://github.com/apollographql/apollo-client/milestone/32) for more details.
+- TBD
 
 ## 3.10
 
-- Release 3.10 will focus on adding better support for React 18 `SSR` architecture. See Github [3.10 Milestone](https://github.com/apollographql/apollo-client/milestone/33) for more details.
+- TBD
 
 ## 4.0
 

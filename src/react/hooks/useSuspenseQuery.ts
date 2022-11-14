@@ -8,8 +8,10 @@ import {
 } from 'react';
 import { equal } from '@wry/equality';
 import {
+  ApolloError,
   ApolloQueryResult,
   DocumentNode,
+  NetworkStatus,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
@@ -28,6 +30,7 @@ export interface UseSuspenseQueryResult<
   TVariables = OperationVariables
 > {
   data: TData;
+  error: ApolloError | undefined;
   variables: TVariables;
 }
 
@@ -40,6 +43,7 @@ const SUPPORTED_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
 
 const DEFAULT_FETCH_POLICY = 'cache-first';
 const DEFAULT_SUSPENSE_POLICY = 'always';
+const DEFAULT_ERROR_POLICY = 'none';
 
 export function useSuspenseQuery_experimental<
   TData = any,
@@ -54,6 +58,7 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
     useDeepMemo(() => {
       const {
+        errorPolicy,
         fetchPolicy,
         suspensePolicy = DEFAULT_SUSPENSE_POLICY,
         variables,
@@ -69,6 +74,8 @@ export function useSuspenseQuery_experimental<
       return {
         ...watchQueryOptions,
         query,
+        errorPolicy:
+          errorPolicy || defaultOptions.errorPolicy || DEFAULT_ERROR_POLICY,
         fetchPolicy:
           fetchPolicy || defaultOptions.fetchPolicy || DEFAULT_FETCH_POLICY,
         notifyOnNetworkStatusChange: suspensePolicy === 'always',
@@ -143,6 +150,16 @@ export function useSuspenseQuery_experimental<
     () => resultRef.current!
   );
 
+  // Sometimes the observable reports a network status of error even
+  // when our error policy is set to ignore. This patches the network status
+  // to avoid a rerender when the observable first subscribes and gets back a
+  // ready network status.
+  if (
+    result.networkStatus === NetworkStatus.error &&
+    watchQueryOptions.errorPolicy === 'ignore'
+  ) {
+    result.networkStatus = NetworkStatus.ready;
+  }
 
   if (result.loading) {
     switch (watchQueryOptions.fetchPolicy) {
@@ -169,7 +186,7 @@ export function useSuspenseQuery_experimental<
     }
   }
 
-  if (result.error) {
+  if (result.error && watchQueryOptions.errorPolicy === 'none') {
     throw result.error;
   }
 
@@ -192,6 +209,7 @@ export function useSuspenseQuery_experimental<
   return useMemo(() => {
     return {
       data: result.data,
+      error: observable.options.errorPolicy === 'all' ? result.error : void 0,
       variables: observable.variables as TVariables,
     };
   }, [result, observable]);

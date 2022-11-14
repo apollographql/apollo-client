@@ -53,11 +53,8 @@ function renderSuspenseHook<Result, Props>(
   }
 
   const errorBoundaryProps: ErrorBoundaryProps = {
-    fallbackRender: () => {
-      renders.errorCount++;
-
-      return <div>Error</div>;
-    },
+    fallback: <div>Error</div>,
+    onError: () => renders.errorCount++,
   };
 
   const {
@@ -1837,5 +1834,49 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toEqual([]);
 
     consoleSpy.mockRestore();
+  });
+
+  it('throws when errorPolicy is set to "none"', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { query, mocks } = useErrorCase({
+      error: new GraphQLError('test error'),
+    });
+
+    const { renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'none' }),
+      { mocks }
+    );
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('does not throw when errorPolicy is set to "ignore"', async () => {
+    const { query, mocks } = useErrorCase({
+      error: new GraphQLError('test error'),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: undefined,
+        error: undefined,
+        variables: {},
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([{ data: undefined, variables: {} }]);
   });
 });

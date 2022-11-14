@@ -219,6 +219,8 @@ describe('useSuspenseQuery', () => {
       { mocks }
     );
 
+    // ensure the hook suspends immediately
+    expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
       expect(result.current).toEqual({
         ...mocks[0].result,

@@ -4,6 +4,8 @@
 
 - Only show dev tools suggestion in the console when `connectToDevTools` is `true`. <br/>
   [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
+- docs: displays the error correctly<br/>
+  [@ctesniere](https://github.com/ctesniere) in [#10275](https://github.com/apollographql/apollo-client/pull/10275)
 
 ## Apollo Client 3.7.1 (2022-10-20)
 

@@ -1739,4 +1739,39 @@ describe('useSuspenseQuery', () => {
       },
     ]);
   });
+
+  it('passes context to the link', async () => {
+    const query = gql`
+      query ContextQuery {
+        context
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          const { valueA, valueB } = operation.getContext();
+
+          observer.next({ data: { context: { valueA, valueB } } });
+          observer.complete();
+        });
+      }),
+    });
+
+    const { result } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          context: { valueA: 'A', valueB: 'B' },
+        }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: { context: { valueA: 'A', valueB: 'B' } },
+        variables: {},
+      });
+    });
+  });
 });

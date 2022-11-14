@@ -455,7 +455,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('returns previous data on refetch when changing variables and using a "cache-first" and an "initial" suspense policy', async () => {
+  it('returns previous data on refetch when changing variables and using a "cache-first" with an "initial" suspense policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(
@@ -694,7 +694,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('returns previous data on refetch when changing variables and using a "network-only" and an "initial" suspense policy', async () => {
+  it('returns previous data on refetch when changing variables and using a "network-only" with an "initial" suspense policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(
@@ -935,7 +935,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('returns previous data on refetch when changing variables and using a "no-cache" and an "initial" suspense policy', async () => {
+  it('returns previous data on refetch when changing variables and using a "no-cache" with an "initial" suspense policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(
@@ -1213,7 +1213,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('returns previous data on refetch when changing variables and using a "cache-and-network" and an "initial" suspense policy', async () => {
+  it('returns previous data on refetch when changing variables and using a "cache-and-network" with an "initial" suspense policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(

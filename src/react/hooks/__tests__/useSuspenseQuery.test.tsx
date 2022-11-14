@@ -142,6 +142,10 @@ function useVariablesQueryCase() {
   return { query, mocks };
 }
 
+function wait(delay: number) {
+  return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
 describe('useSuspenseQuery', () => {
   it('validates the GraphQL query as a query', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -650,6 +654,39 @@ describe('useSuspenseQuery', () => {
     expect(cachedData).toEqual(mocks[0].result.data);
   });
 
+  it('responds to cache updates when using a "cache-first" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'Updated hello' },
+    });
+
+    await wait(10);
+
+    expect(result.current).toEqual({
+      data: { greeting: 'Updated hello' },
+      variables: {},
+    });
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: {} },
+      { data: { greeting: 'Updated hello' }, variables: {} },
+    ]);
+  });
+
   it('re-suspends the component when changing variables and using a "network-only" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -889,6 +926,39 @@ describe('useSuspenseQuery', () => {
     const cachedData = cache.readQuery({ query, variables: { id: '1' } });
 
     expect(cachedData).toEqual(mocks[0].result.data);
+  });
+
+  it('responds to cache updates when using a "network-only" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'network-only' }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'Updated hello' },
+    });
+
+    await wait(10);
+
+    expect(result.current).toEqual({
+      data: { greeting: 'Updated hello' },
+      variables: {},
+    });
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: {} },
+      { data: { greeting: 'Updated hello' }, variables: {} },
+    ]);
   });
 
   it('re-suspends the component when changing variables and using a "no-cache" fetch policy', async () => {
@@ -1169,6 +1239,36 @@ describe('useSuspenseQuery', () => {
     expect(cachedData).toBeNull();
   });
 
+  it('does not respond to cache updates when using a "no-cache" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'Updated hello' },
+    });
+
+    await wait(10);
+
+    expect(result.current).toEqual({
+      ...mocks[0].result,
+      variables: {},
+    });
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.count).toBe(2);
+    expect(renders.frames).toEqual([{ ...mocks[0].result, variables: {} }]);
+  });
+
   it('re-suspends the component when changing variables and using a "cache-and-network" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -1412,6 +1512,39 @@ describe('useSuspenseQuery', () => {
     const cachedData = cache.readQuery({ query, variables: { id: '1' } });
 
     expect(cachedData).toEqual(mocks[0].result.data);
+  });
+
+  it('responds to cache updates when using a "cache-and-network" fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-and-network' }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'Updated hello' },
+    });
+
+    await wait(10);
+
+    expect(result.current).toEqual({
+      data: { greeting: 'Updated hello' },
+      variables: {},
+    });
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, variables: {} },
+      { data: { greeting: 'Updated hello' }, variables: {} },
+    ]);
   });
 
   it('uses the default fetch policy from the client when none provided in options', async () => {

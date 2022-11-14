@@ -169,6 +169,10 @@ export function useSuspenseQuery_experimental<
     }
   }
 
+  if (result.error) {
+    throw result.error;
+  }
+
   useEffect(() => {
     if (
       watchQueryOptions.variables !== previousOptsRef.current?.variables ||

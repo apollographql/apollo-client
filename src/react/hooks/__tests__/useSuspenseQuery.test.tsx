@@ -5,6 +5,7 @@ import {
   waitFor,
   RenderHookOptions,
 } from '@testing-library/react';
+import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
 import { InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
@@ -22,6 +23,7 @@ import { MockedProvider, MockedResponse, MockLink } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
+import { GraphQLError } from 'graphql';
 
 type RenderSuspenseHookOptions<
   Props,
@@ -34,6 +36,7 @@ type RenderSuspenseHookOptions<
 };
 
 interface Renders<Result> {
+  errorCount: number;
   suspenseCount: number;
   count: number;
   frames: Result[];
@@ -49,6 +52,14 @@ function renderSuspenseHook<Result, Props>(
     return <div>loading</div>;
   }
 
+  const errorBoundaryProps: ErrorBoundaryProps = {
+    fallbackRender: () => {
+      renders.errorCount++;
+
+      return <div>Error</div>;
+    },
+  };
+
   const {
     cache,
     client,
@@ -57,11 +68,15 @@ function renderSuspenseHook<Result, Props>(
     wrapper = ({ children }) => {
       return client ? (
         <ApolloProvider client={client} suspenseCache={new SuspenseCache()}>
-          <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          <ErrorBoundary {...errorBoundaryProps}>
+            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          </ErrorBoundary>
         </ApolloProvider>
       ) : (
         <MockedProvider cache={cache} mocks={mocks} link={link}>
-          <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          <ErrorBoundary {...errorBoundaryProps}>
+            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          </ErrorBoundary>
         </MockedProvider>
       );
     },
@@ -69,6 +84,7 @@ function renderSuspenseHook<Result, Props>(
   } = options;
 
   const renders: Renders<Result> = {
+    errorCount: 0,
     suspenseCount: 0,
     count: 0,
     frames: [],
@@ -105,6 +121,35 @@ function useSimpleQueryCase() {
     {
       request: { query },
       result: { data: { greeting: 'Hello' } },
+    },
+  ];
+
+  return { query, mocks };
+}
+
+function useErrorCase(
+  {
+    error = new GraphQLError('error'),
+    errors,
+  }: {
+    error?: Error;
+    errors?: GraphQLError[];
+  } = Object.create(null)
+) {
+  const query = gql`
+    query WillThrow {
+      notUsed
+    }
+  `;
+
+  const errorResult = Array.isArray(errors)
+    ? { result: { errors } }
+    : { error };
+
+  const mocks = [
+    {
+      request: { query },
+      ...errorResult,
     },
   ];
 
@@ -1773,5 +1818,24 @@ describe('useSuspenseQuery', () => {
         variables: {},
       });
     });
+  });
+
+  it('throws errors by default', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { query, mocks } = useErrorCase({
+      error: new GraphQLError('test error'),
+    });
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      mocks,
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    consoleSpy.mockRestore();
   });
 });

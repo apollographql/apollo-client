@@ -82,7 +82,7 @@ export function useSuspenseQuery_experimental<
         variables: compact({ ...defaultOptions.variables, ...variables }),
       };
     }, [options, query, client.defaultOptions.watchQuery]);
-  const { variables } = watchQueryOptions;
+  const { errorPolicy, variables } = watchQueryOptions;
 
   if (!hasRunValidations.current) {
     validateOptions(watchQueryOptions);
@@ -151,12 +151,12 @@ export function useSuspenseQuery_experimental<
   );
 
   // Sometimes the observable reports a network status of error even
-  // when our error policy is set to ignore. This patches the network status
-  // to avoid a rerender when the observable first subscribes and gets back a
-  // ready network status.
+  // when our error policy is set to ignore or all.
+  // This patches the network status to avoid a rerender when the observable
+  // first subscribes and gets back a ready network status.
   if (
     result.networkStatus === NetworkStatus.error &&
-    watchQueryOptions.errorPolicy === 'ignore'
+    (errorPolicy === 'ignore' || errorPolicy === 'all')
   ) {
     result.networkStatus = NetworkStatus.ready;
   }

@@ -1905,4 +1905,41 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([{ data: undefined, variables: {} }]);
   });
+
+  it('does not throw but returns network errors when errorPolicy is set to "all"', async () => {
+    const networkError = new Error('Could not fetch');
+
+    const { query, mocks } = useErrorCase({ networkError });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: undefined,
+        error: new ApolloError({ networkError }),
+        variables: {},
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      {
+        data: undefined,
+        error: new ApolloError({ networkError }),
+        variables: {},
+      },
+    ]);
+
+    const { error } = result.current;
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error!.networkError).toEqual(networkError);
+    expect(error!.graphQLErrors).toEqual([]);
+  });
 });

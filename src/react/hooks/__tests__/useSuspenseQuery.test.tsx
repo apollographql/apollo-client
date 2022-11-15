@@ -6,6 +6,7 @@ import {
   RenderHookOptions,
 } from '@testing-library/react';
 import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
+import { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
 
@@ -13,17 +14,18 @@ import {
   gql,
   ApolloCache,
   ApolloClient,
+  ApolloError,
   ApolloLink,
   DocumentNode,
   InMemoryCache,
   Observable,
   TypedDocumentNode,
 } from '../../../core';
+import { compact } from '../../../utilities';
 import { MockedProvider, MockedResponse, MockLink } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
-import { GraphQLError } from 'graphql';
 
 type RenderSuspenseHookOptions<
   Props,
@@ -36,6 +38,7 @@ type RenderSuspenseHookOptions<
 };
 
 interface Renders<Result> {
+  errors: Error[];
   errorCount: number;
   suspenseCount: number;
   count: number;
@@ -54,7 +57,10 @@ function renderSuspenseHook<Result, Props>(
 
   const errorBoundaryProps: ErrorBoundaryProps = {
     fallback: <div>Error</div>,
-    onError: () => renders.errorCount++,
+    onError: (error) => {
+      renders.errorCount++;
+      renders.errors.push(error);
+    },
   };
 
   const {
@@ -81,6 +87,7 @@ function renderSuspenseHook<Result, Props>(
   } = options;
 
   const renders: Renders<Result> = {
+    errors: [],
     errorCount: 0,
     suspenseCount: 0,
     count: 0,
@@ -124,33 +131,37 @@ function useSimpleQueryCase() {
   return { query, mocks };
 }
 
-function useErrorCase(
+interface ErrorCaseData {
+  currentUser: {
+    id: string;
+    name: string | null;
+  };
+}
+
+function useErrorCase<TData extends ErrorCaseData>(
   {
-    error = new GraphQLError('error'),
-    errors,
+    data,
+    networkError,
+    graphQLErrors,
   }: {
-    error?: Error;
-    errors?: GraphQLError[];
+    data?: TData;
+    networkError?: Error;
+    graphQLErrors?: GraphQLError[];
   } = Object.create(null)
 ) {
-  const query = gql`
-    query WillThrow {
-      notUsed
+  const query: TypedDocumentNode<TData, never> = gql`
+    query MyQuery {
+      greeting
     }
   `;
 
-  const errorResult = Array.isArray(errors)
-    ? { result: { errors } }
-    : { error };
+  const mock: MockedResponse<TData> = compact({
+    request: { query },
+    result: (data || graphQLErrors) && compact({ data, errors: graphQLErrors }),
+    error: networkError,
+  });
 
-  const mocks = [
-    {
-      request: { query },
-      ...errorResult,
-    },
-  ];
-
-  return { query, mocks };
+  return { query, mocks: [mock] };
 }
 
 function useVariablesQueryCase() {
@@ -1817,11 +1828,11 @@ describe('useSuspenseQuery', () => {
     });
   });
 
-  it('throws errors by default', async () => {
+  it('throws network errors by default', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const { query, mocks } = useErrorCase({
-      error: new GraphQLError('test error'),
+      networkError: new Error('Could not fetch'),
     });
 
     const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
@@ -1830,17 +1841,24 @@ describe('useSuspenseQuery', () => {
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
+    expect(renders.errors.length).toBe(1);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toEqual(new Error('Could not fetch'));
+    expect(error.graphQLErrors).toEqual([]);
 
     consoleSpy.mockRestore();
   });
 
-  it('throws when errorPolicy is set to "none"', async () => {
+  it('throws network errors when errorPolicy is set to "none"', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const { query, mocks } = useErrorCase({
-      error: new GraphQLError('test error'),
+      networkError: new Error('Could not fetch'),
     });
 
     const { renders } = renderSuspenseHook(
@@ -1850,15 +1868,22 @@ describe('useSuspenseQuery', () => {
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
+    expect(renders.errors.length).toBe(1);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toEqual(new Error('Could not fetch'));
+    expect(error.graphQLErrors).toEqual([]);
 
     consoleSpy.mockRestore();
   });
 
-  it('does not throw when errorPolicy is set to "ignore"', async () => {
+  it('does not throw or return network errors when errorPolicy is set to "ignore"', async () => {
     const { query, mocks } = useErrorCase({
-      error: new GraphQLError('test error'),
+      networkError: new Error('Could not fetch'),
     });
 
     const { result, renders } = renderSuspenseHook(
@@ -1875,6 +1900,7 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([{ data: undefined, variables: {} }]);

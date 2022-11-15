@@ -62,7 +62,7 @@ You can use `read` functions to perform any sort of logic you want, including:
 
 ### Reads are synchronous by design
 
-Many UI frameworks like React (when not using `Suspense`) have synchronous rendering pipelines so it's important for UI components to have immediate access to any existing data.  So all `read` functions are synchronous, as are the cache's `readQuery` and `readFragment` methods.  It is possible, however, to leverage reactive variables and `options.storage` to roll your own asynchronous `read` function:
+Many UI frameworks like React (when not using `Suspense`) have synchronous rendering pipelines, therefore it's important for UI components to have immediate access to any existing data.  This is why all `read` functions are synchronous, as are the cache's `readQuery` and `readFragment` methods.  It is possible, however, to leverage reactive variables and `options.storage` to compose a `read` function that behaves in a manner that resembles an asynchronous action:
 
 <ExpansionPanel title="See example">
 

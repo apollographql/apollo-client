@@ -1854,6 +1854,34 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
+  it('throws graphql errors by default', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { query, mocks } = useErrorCase({
+      graphQLErrors: [new GraphQLError('`id` should not be null')],
+    });
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      mocks,
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toBeNull();
+    expect(error.graphQLErrors).toEqual([
+      new GraphQLError('`id` should not be null'),
+    ]);
+
+    consoleSpy.mockRestore();
+  });
+
   it('throws network errors when errorPolicy is set to "none"', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -1881,6 +1909,35 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
+  it('throws graphql errors when errorPolicy is set to "none"', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { query, mocks } = useErrorCase({
+      graphQLErrors: [new GraphQLError('`id` should not be null')],
+    });
+
+    const { renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'none' }),
+      { mocks }
+    );
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toBeNull();
+    expect(error.graphQLErrors).toEqual([
+      new GraphQLError('`id` should not be null'),
+    ]);
+
+    consoleSpy.mockRestore();
+  });
+
   it('does not throw or return network errors when errorPolicy is set to "ignore"', async () => {
     const { query, mocks } = useErrorCase({
       networkError: new Error('Could not fetch'),
@@ -1903,10 +1960,39 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([{ data: undefined, variables: {} }]);
+    expect(renders.frames).toEqual([
+      { data: undefined, error: undefined, variables: {} },
+    ]);
   });
 
-  it('does not throw but returns network errors when errorPolicy is set to "all"', async () => {
+  it('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
+    const { query, mocks } = useErrorCase({
+      graphQLErrors: [new GraphQLError('`id` should not be null')],
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: undefined,
+        error: undefined,
+        variables: {},
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { data: undefined, error: undefined, variables: {} },
+    ]);
+  });
+
+  it('does not throw and returns network errors when errorPolicy is set to "all"', async () => {
     const networkError = new Error('Could not fetch');
 
     const { query, mocks } = useErrorCase({ networkError });
@@ -1941,5 +2027,42 @@ describe('useSuspenseQuery', () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toEqual(networkError);
     expect(error!.graphQLErrors).toEqual([]);
+  });
+
+  it('does not throw and returns graphql errors when errorPolicy is set to "all"', async () => {
+    const graphQLError = new GraphQLError('`id` should not be null');
+
+    const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        variables: {},
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      {
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        variables: {},
+      },
+    ]);
+
+    const { error } = result.current;
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error!.networkError).toBeNull();
+    expect(error!.graphQLErrors).toEqual([graphQLError]);
   });
 });

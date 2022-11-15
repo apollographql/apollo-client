@@ -18,7 +18,7 @@ import {
   WatchQueryFetchPolicy,
 } from '../../core';
 import { invariant } from '../../utilities/globals';
-import { compact } from '../../utilities';
+import { compact, isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import { SuspenseQueryHookOptions } from '../types/types';
@@ -209,10 +209,10 @@ export function useSuspenseQuery_experimental<
   return useMemo(() => {
     return {
       data: result.data,
-      error: observable.options.errorPolicy === 'all' ? result.error : void 0,
+      error: errorPolicy === 'all' ? toApolloError(result) : void 0,
       variables: observable.variables as TVariables,
     };
-  }, [result, observable]);
+  }, [result, observable, errorPolicy]);
 }
 
 function validateOptions(options: WatchQueryOptions) {
@@ -227,6 +227,12 @@ function validateFetchPolicy(fetchPolicy: WatchQueryFetchPolicy) {
     SUPPORTED_FETCH_POLICIES.includes(fetchPolicy),
     `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
   );
+}
+
+function toApolloError(result: ApolloQueryResult<any>) {
+  return isNonEmptyArray(result.errors)
+    ? new ApolloError({ graphQLErrors: result.errors })
+    : result.error;
 }
 
 function useDeepMemo<TValue>(memoFn: () => TValue, deps: DependencyList) {

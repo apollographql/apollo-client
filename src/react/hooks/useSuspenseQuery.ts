@@ -82,7 +82,7 @@ export function useSuspenseQuery_experimental<
         variables: compact({ ...defaultOptions.variables, ...variables }),
       };
     }, [options, query, client.defaultOptions.watchQuery]);
-  const { errorPolicy, variables } = watchQueryOptions;
+  const { errorPolicy, returnPartialData, variables } = watchQueryOptions;
 
   if (!hasRunValidations.current) {
     validateOptions(watchQueryOptions);
@@ -161,7 +161,10 @@ export function useSuspenseQuery_experimental<
     result.networkStatus = NetworkStatus.ready;
   }
 
-  if (result.loading) {
+  const returnPartialResults =
+    returnPartialData && result.partial && result.data;
+
+  if (result.loading && !returnPartialResults) {
     switch (watchQueryOptions.fetchPolicy) {
       case 'cache-and-network': {
         if (!result.partial) {

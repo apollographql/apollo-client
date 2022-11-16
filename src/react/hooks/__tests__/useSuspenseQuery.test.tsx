@@ -771,6 +771,146 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('does not suspend when partial data is in the cache and using a "cache-first" fetch policy with returnPartialData', async () => {
+    const fullQuery = gql`
+      query {
+        character {
+          id
+          name
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        character {
+          id
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: fullQuery },
+        result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { id: '1' } },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(fullQuery, {
+          fetchPolicy: 'cache-first',
+          returnPartialData: true,
+        }),
+      { cache, mocks }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toEqual({
+      data: { character: { id: '1' } },
+      error: undefined,
+      variables: {},
+    });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        error: undefined,
+        variables: {},
+      });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toEqual([
+      { data: { character: { id: '1' } }, error: undefined, variables: {} },
+      { ...mocks[0].result, error: undefined, variables: {} },
+    ]);
+  });
+
+  it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
+    const { query: fullQuery, mocks } = useVariablesQueryCase();
+
+    const partialQuery = gql`
+      query ($id: ID!) {
+        character(id: $id) {
+          id
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { id: '1' } },
+      variables: { id: '1' },
+    });
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(fullQuery, {
+          fetchPolicy: 'cache-first',
+          returnPartialData: true,
+          variables: { id },
+        }),
+      { cache, mocks, initialProps: { id: '1' } }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toEqual({
+      data: { character: { id: '1' } },
+      error: undefined,
+      variables: { id: '1' },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { id: '2' },
+      });
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      {
+        data: { character: { id: '1' } },
+        error: undefined,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      },
+      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+    ]);
+  });
+
   it('ensures data is fetched is the correct amount of times when using a "cache-first" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -1056,6 +1196,64 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { data: { greeting: 'Hello' }, error: undefined, variables: {} },
+    ]);
+  });
+
+  it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
+    const fullQuery = gql`
+      query {
+        character {
+          id
+          name
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        character {
+          id
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: fullQuery },
+        result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { id: '1' } },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(fullQuery, {
+          fetchPolicy: 'network-only',
+          returnPartialData: true,
+        }),
+      { cache, mocks }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        error: undefined,
+        variables: {},
+      });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, error: undefined, variables: {} },
     ]);
   });
 
@@ -1389,6 +1587,64 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
+    const fullQuery = gql`
+      query {
+        character {
+          id
+          name
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        character {
+          id
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: fullQuery },
+        result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { id: '1' } },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(fullQuery, {
+          fetchPolicy: 'no-cache',
+          returnPartialData: true,
+        }),
+      { cache, mocks }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        error: undefined,
+        variables: {},
+      });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { ...mocks[0].result, error: undefined, variables: {} },
+    ]);
+  });
+
   it('ensures data is fetched is the correct amount of times when using a "no-cache" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
@@ -1685,6 +1941,146 @@ describe('useSuspenseQuery', () => {
         variables: {},
       },
       { data: { greeting: 'Hello' }, error: undefined, variables: {} },
+    ]);
+  });
+
+  it('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+    const fullQuery = gql`
+      query {
+        character {
+          id
+          name
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        character {
+          id
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: fullQuery },
+        result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { id: '1' } },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(fullQuery, {
+          fetchPolicy: 'cache-and-network',
+          returnPartialData: true,
+        }),
+      { cache, mocks }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toEqual({
+      data: { character: { id: '1' } },
+      error: undefined,
+      variables: {},
+    });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        error: undefined,
+        variables: {},
+      });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toEqual([
+      { data: { character: { id: '1' } }, error: undefined, variables: {} },
+      { ...mocks[0].result, error: undefined, variables: {} },
+    ]);
+  });
+
+  it('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+    const { query: fullQuery, mocks } = useVariablesQueryCase();
+
+    const partialQuery = gql`
+      query ($id: ID!) {
+        character(id: $id) {
+          id
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { id: '1' } },
+      variables: { id: '1' },
+    });
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(fullQuery, {
+          fetchPolicy: 'cache-and-network',
+          returnPartialData: true,
+          variables: { id },
+        }),
+      { cache, mocks, initialProps: { id: '1' } }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toEqual({
+      data: { character: { id: '1' } },
+      error: undefined,
+      variables: { id: '1' },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { id: '2' },
+      });
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      {
+        data: { character: { id: '1' } },
+        error: undefined,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      },
+      {
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      },
+      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
     ]);
   });
 

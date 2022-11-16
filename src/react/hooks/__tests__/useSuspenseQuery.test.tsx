@@ -151,7 +151,10 @@ function useErrorCase<TData extends ErrorCaseData>(
 ) {
   const query: TypedDocumentNode<TData, never> = gql`
     query MyQuery {
-      greeting
+      currentUser {
+        id
+        name
+      }
     }
   `;
 
@@ -2088,6 +2091,34 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('returns partial data results and throws away errors when errorPolicy is set to "ignore"', async () => {
+    const { query, mocks } = useErrorCase({
+      data: { currentUser: { id: '1', name: null } },
+      graphQLErrors: [new GraphQLError('`name` could not be found')],
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: { currentUser: { id: '1', name: null } },
+        error: undefined,
+        variables: {},
+      });
+    });
+
+    expect(renders.frames).toEqual([
+      {
+        data: { currentUser: { id: '1', name: null } },
+        error: undefined,
+        variables: {},
+      },
+    ]);
+  });
+
   it('does not throw and returns network errors when errorPolicy is set to "all"', async () => {
     const networkError = new Error('Could not fetch');
 
@@ -2160,5 +2191,37 @@ describe('useSuspenseQuery', () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toBeNull();
     expect(error!.graphQLErrors).toEqual([graphQLError]);
+  });
+
+  it('returns partial data and keeps errors when errorPolicy is set to "all"', async () => {
+    const graphQLError = new GraphQLError('`name` could not be found');
+
+    const { query, mocks } = useErrorCase({
+      data: { currentUser: { id: '1', name: null } },
+      graphQLErrors: [graphQLError],
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
+      { mocks }
+    );
+
+    const expectedError = new ApolloError({ graphQLErrors: [graphQLError] });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: { currentUser: { id: '1', name: null } },
+        error: expectedError,
+        variables: {},
+      });
+    });
+
+    expect(renders.frames).toEqual([
+      {
+        data: { currentUser: { id: '1', name: null } },
+        error: expectedError,
+        variables: {},
+      },
+    ]);
   });
 });

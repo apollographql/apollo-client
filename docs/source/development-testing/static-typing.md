@@ -7,28 +7,28 @@ As your application grows, you may find it helpful to include a type system to a
 These docs assume you already have TypeScript configured in your project, if not start [here](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide).
 
 The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can generate TypeScript definitions automatically using a tool like [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen).
-This docs will guide you in installing and configuring it to type hooks, render prop components and high order components.
+Below, we'll guide you through installing and configuring GraphQL Code Generator to generate types for your hooks and components.
 
-## Prerequesites
+## Setting up your project
 
-Before looking into specific typing (hooks, render props, HoC), install the following packages:
+To get started using GraphQL Code Generator to generate TypeScript types, we'll begin by installing the following packages (using Yarn or NPM):
 
 ```bash
-yarn add -D typescript
+yarn add -D typescript @graphql-codegen/cli @graphql-codegen/client-preset
 yarn add -D @graphql-codegen/cli
 yarn add -D @graphql-codegen/client-preset
 ```
 
-Then, create a `codegen.ts` configuration file at the root of your project:
+Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project:
 
-```ts
+```ts title="codegen.ts"
 import { CodegenConfig } from '@graphql-codegen/cli'
 
 const config: CodegenConfig = {
-  schema: '<URL_OF_GRAPHQL_API>',
+  schema: '<URL_OF_YOUR_GRAPHQL_API>',
   documents: ['src/**/*.tsx'],
   generates: {
-    './src/gql/': {
+    './src/__generated__/': {
       preset: 'client',
       plugins: [],
       presetConfig: {
@@ -42,21 +42,24 @@ const config: CodegenConfig = {
 export default config
 ```
 
-Finally, add the following npm script to your `package.json`:
+There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick the way that works best for your project setup.
 
-```json
+Finally, we'll add the following scripts to our `package.json` file:
+
+```json title="package.json"
 {
   "scripts": {
-    "codegen": "graphql-codegen -w"
+    "compile": "graphql-codegen", 
+    "watch": "graphql-codegen -w",
   }
 }
 ```
 
-and run `npm run codegen`.
+GraphQL Code Generator generates types based on our GraphQL schema if we run either code-generation scripts above:
 
 ## Typing hooks
 
-Typing hooks only requires to use the generated `gql()` function exported from `./src/gql` to write your GraphQL Queries:
+GraphQL Code Generator automatically generates a `gql` function (from the `src/__genterated__/gql.ts` file), which we can use to type our hooks.
 
 ### `useQuery`
 
@@ -64,7 +67,7 @@ Typing hooks only requires to use the generated `gql()` function exported from `
 import React from 'react';
 import { useQuery } from '@apollo/client';
 
-import { gql } from '../src/gql';
+import { gql } from '../src/__generated__/gql';
 
 const GET_ROCKET_INVENTORY = gql(/* GraphQL */ `
   query GetRocketInventory($year: Int!) {
@@ -78,7 +81,7 @@ const GET_ROCKET_INVENTORY = gql(/* GraphQL */ `
 `);
 
 export function RocketInventoryList() {
-  // `data` is typed!
+  // data is typed!
   const { loading, data } = useQuery(
     GET_ROCKET_INVENTORY,
     // variables are also typed!
@@ -171,15 +174,15 @@ export function RocketInventoryList() {
 
 ### `useMutation`
 
-Typing `useMutation()` works in a similar way as `useQuery()`.
+We can type our `useMutation()` hooks the same way we type our `useQuery()` hooks.
 
-By defining your GraphQL document with the generated `gql()` function, your mutation variables and data will get automatically typed.
+We can use the generated `gql()` function to define our GraphQL mutations, ensuring our mutation's variables and data are typed:
 
 ```tsx
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 
-import { gql } from '../src/gql';
+import { gql } from '../src/__generated__/gql';
 
 const SAVE_ROCKET = gql(/* GraphQL */ `
   mutation saveRocket($rocket: RocketInput!) {
@@ -195,9 +198,9 @@ export function NewRocketForm() {
   const [year, setYear] = useState(0);
   const [stock, setStock] = useState(0);
 
-  // `data` is typed!
+  // data is typed!
   const [saveRocket, { error, data }] = useMutation(SAVE_ROCKET, {
-    // variables are also typed
+    // our variables are also typed!
     variables: { rocket: { model, year: +year, stock: +stock } }
   });
 
@@ -241,7 +244,7 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-By defining your GraphQL document with the generated `gql()` function, your subscriptions variables and data will get automatically typed.
+We can use the generated `gql()` function to define our GraphQL subscriptions, ensuring our subscription's variables and data are typed:
 
 
 ```tsx
@@ -274,12 +277,11 @@ export function LatestNews() {
 
 ## Typing Render Prop Components
 
-Your first need to write your GraphQL documents with the generated `gql()` function, exported from `./src/gql`.
+To type your render prop components, you'll first define a GraphQL query using the generated `gql()` function (from `src/__generated__/gql`). This creates a type for that query and its variables, which you can then pass to your `Query` component: 
 
-This will generate the associated Query and Query variables types that will be passed to the `<Query>` component:
 
 ```tsx
-import { graphql, AllPeopleQuery, AllPeopleQueryVariables } from '../src/gql';
+import { gql, AllPeopleQuery, AllPeopleQueryVariables } from '../src/__generated__/gql';
 
 const ALL_PEOPLE_QUERY = gql(/* GraphQL */ `
   query All_People {
@@ -322,11 +324,13 @@ export const SomeQuery = () => (
 
 ## Typing Higher Order Components
 
-Your first need to write your GraphQL documents with the generated `gql()` function exported from `./src/gql`.
+To type high-order components, begin by defining your GraphQL documents with the generated `gql()` function (from `./src/__generated__/gql`).
 
-This will generate the associated Query and Query variables types: `GetCharacterQuery` and `GetCharacterQueryVariables`.
+In the below example, this generates the query and variable types (`GetCharacterQuery` and `GetCharacterQueryVariables`).
 
-Since the result of a query will be sent to the wrapped component as props, we want to be able to tell our type system the shape of those props. Here is an example setting types for an operation using the `graphql` higher order component (**note**: the follow sections also work for the query, mutation, and subscription hocs).
+Our wrapped component receives the query's result as props. So, we need to tell our type system the _shape_ of these props. Below is an example of setting types for an operation using the `graphql` higher-order component. 
+
+> The following logic also works for the query, mutation, and subscription higher-order components!
 
 ```tsx
 import React from "react";

@@ -2,6 +2,8 @@
 
 ### Improvements
 
+- Additional documentation for managing local state
+  [@bignimbus](https://github.com/bignimbus) in [#10282](https://github.com/apollographql/apollo-client/pull/10282)
 - Only show dev tools suggestion in the console when `connectToDevTools` is `true`. <br/>
   [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
 - docs: displays the error correctly<br/>

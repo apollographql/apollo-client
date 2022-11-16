@@ -26,7 +26,6 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
-  cloneDeep,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -1037,10 +1036,6 @@ export class QueryManager<TStore> {
       | "errorPolicy">,
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = queryInfo.lastRequestId = this.generateRequestId();
-
-    // Make sure we write the result below using the same options we were given,
-    // even though the input object may have been modified in the meantime.
-    options = cloneDeep(options);
 
     // Performing transformForLink here gives this.cache a chance to fill in
     // missing fragment definitions (for example) before sending this document

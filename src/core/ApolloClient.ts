@@ -192,7 +192,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && __DEV__) {
+    if (!hasSuggestedDevtools && connectToDevTools && __DEV__) {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&

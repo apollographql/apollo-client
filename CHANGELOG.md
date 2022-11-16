@@ -1,3 +1,24 @@
+## Apollo Client 3.7.2 (unreleased)
+
+### Improvements
+
+- Additional documentation for managing local state
+  [@bignimbus](https://github.com/bignimbus) in [#10282](https://github.com/apollographql/apollo-client/pull/10282)
+- Only show dev tools suggestion in the console when `connectToDevTools` is `true`. <br/>
+  [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
+- docs: displays the error correctly<br/>
+  [@ctesniere](https://github.com/ctesniere) in [#10275](https://github.com/apollographql/apollo-client/pull/10275)
+
+## Apollo Client 3.7.1 (2022-10-20)
+
+### Bug fixes
+
+- Fix issue where `loading` remains `true` after `observer.refetch` is called repeatedly with different variables when the same data are returned. <br/>
+  [@alessbell](https://github.com/alessbell) in [#10143](https://github.com/apollographql/apollo-client/pull/10143)
+
+- Fix race condition where `useFragment_experimental` could receive cache updates before initially calling `cache.watch` in `useEffect`. <br/>
+  [@benjamn](https://github.com/benjamn) in [#10212](https://github.com/apollographql/apollo-client/pull/10212)
+
 ## Apollo Client 3.7.0 (2022-09-30)
 
 ### New Features

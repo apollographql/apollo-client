@@ -73,16 +73,14 @@ export function useFragment_experimental<TData, TVars>(
 
   return useSyncExternalStore(
     forceUpdate => {
-      let immediate = true;
       return cache.watch({
         ...diffOptions,
-        immediate,
+        immediate: true,
         callback(diff) {
-          if (!immediate && !equal(diff, latestDiff)) {
+          if (!equal(diff, latestDiff)) {
             resultRef.current = diffToResult(latestDiff = diff);
             forceUpdate();
           }
-          immediate = false;
         },
       });
     },

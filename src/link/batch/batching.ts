@@ -101,10 +101,7 @@ export class OperationBatcher {
         }
 
         // The first enqueued request triggers the queue consumption after `batchInterval` milliseconds.
-        if (isFirstEnqueuedRequest) {
-          this.scheduleQueueConsumption(key);
-        } else if (this.batchDebounce) {
-          clearTimeout(this.scheduledBatchTimer);
+        if (isFirstEnqueuedRequest || this.batchDebounce) {
           this.scheduleQueueConsumption(key);
         }
 
@@ -214,6 +211,7 @@ export class OperationBatcher {
   }
 
   private scheduleQueueConsumption(key: string): void {
+    clearTimeout(this.scheduledBatchTimer);
     this.scheduledBatchTimer = setTimeout(() => {
       this.consumeQueue(key);
     }, this.batchInterval);

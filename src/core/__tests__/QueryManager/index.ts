@@ -647,10 +647,12 @@ describe('QueryManager', () => {
     return waitFor(() => {
       // Verify that previous connection was aborted by reobserve
       expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
-    }).then(() => {
+    }).then(async () => {
       subscription.unsubscribe();
-      return waitFor(() => {
+      await waitFor(() => {
         expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
+      })
+      await waitFor(() => {
         expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
       });
     }).then(resolve, reject);

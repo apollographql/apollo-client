@@ -88,7 +88,37 @@ itAsync('executes the subscription', (resolve, reject) => {
   waitFor(() => expect(renderCount).toBe(5)).then(resolve, reject);
 });
 
-itAsync('calls onSubscriptionData if given', (resolve, reject) => {
+it('calls onData if given', async () => {
+  let count = 0;
+
+  const Component = () => (
+    <Subscription
+      subscription={subscription}
+      onData={(opts: any) => {
+        expect(opts.client).toBeInstanceOf(ApolloClient);
+        const { data } = opts.data;
+        expect(data).toEqual(results[count].result.data);
+        count++;
+      }}
+    />
+  );
+
+  render(
+    <ApolloProvider client={client}>
+      <Component />
+    </ApolloProvider>
+  );
+
+  const interval = setInterval(() => {
+    link.simulateResult(results[count]);
+    if (count >= 3) clearInterval(interval);
+  }, 10);
+
+  await waitFor(() => expect(count).toBe(4));
+});
+
+it('calls onSubscriptionData with deprecation warning if given', async () => {
+  const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
   let count = 0;
 
   const Component = () => (
@@ -109,25 +139,32 @@ itAsync('calls onSubscriptionData if given', (resolve, reject) => {
     </ApolloProvider>
   );
 
+  expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+  expect(consoleWarnSpy).toHaveBeenCalledWith(
+    expect.stringContaining("'onSubscriptionData' is deprecated")
+  );
+
   const interval = setInterval(() => {
     link.simulateResult(results[count]);
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+  await waitFor(() => expect(count).toBe(4))
+
+  consoleWarnSpy.mockRestore();
 });
 
-itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => {
+it('should call onComplete if specified', async () => {
   let count = 0;
 
   let done = false;
   const Component = () => (
     <Subscription
       subscription={subscription}
-      onSubscriptionData={() => {
+      onData={() => {
         count++;
       }}
-      onSubscriptionComplete={() => {
+      onComplete={() => {
         done = true;
       }}
     />
@@ -144,7 +181,45 @@ itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => 
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
+  await waitFor(() => expect(done).toBeTruthy());
+});
+
+it('should call onSubscriptionComplete with deprecation warning if specified', async () => {
+  const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  let count = 0;
+
+  let done = false;
+  const Component = () => (
+    <Subscription
+      subscription={subscription}
+      onData={() => {
+        count++;
+      }}
+      onSubscriptionComplete={() => {
+        done = true;
+      }}
+    />
+  );
+
+  render(
+    <ApolloProvider client={client}>
+      <Component />
+    </ApolloProvider>
+  );
+
+  expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+  expect(consoleWarnSpy).toHaveBeenCalledWith(
+    expect.stringContaining("'onSubscriptionComplete' is deprecated")
+  );
+
+  const interval = setInterval(() => {
+    link.simulateResult(results[count], count === 3);
+    if (count >= 3) clearInterval(interval);
+  }, 10);
+
+  await waitFor(() => expect(done).toBeTruthy());
+
+  consoleWarnSpy.mockRestore();
 });
 
 itAsync('executes subscription for the variables passed in the props', (resolve, reject) => {

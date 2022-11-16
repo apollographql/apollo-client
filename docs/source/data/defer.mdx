@@ -1,0 +1,44 @@
+---
+title: "Using the @defer directive in Apollo Client"
+description: Receive query response data incrementally
+---
+
+> ⚠️ **The `@defer` directive is currently at the [preview stage](/resources/product-launch-stages/#preview) in Apollo Client, and is available by installing `@apollo/client@latest`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+
+Beginning with version `3.7.0`, Apollo Client Web provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
+
+> For a query to defer fields successfully, the queried endpoint must _also_ support the `@defer` directive.
+
+## Example
+
+Let's say we're building a social media application that can quickly fetch a user's basic profile information, but retrieving that user's friends takes longer. If we include _all_ of those fields in a single query, we want to be able to display the profile information as soon as it's available, instead of waiting for the friend fields to resolve.
+
+To achieve this, we apply the `@defer` directive to an in-line fragment that contains all slow-resolving fields related to friend data:
+
+```graphql
+query PersonQuery($personId: ID!) {
+  person(id: $personId) {
+    # Basic fields (fast)
+    id
+    firstName
+    lastName
+
+    # highlight-start
+    # Friend fields (slower)
+    ... @defer {
+      friends {
+        id
+      }
+    }
+    # highlight-end
+  }
+}
+```
+
+Using this syntax, _if the queried server supports `@defer`,_ our client can receive the "Basic fields" in an initial response payload, followed by a supplementary payload containing the "Friend fields".
+
+## Using with code generation
+
+If you currently use [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) for your codegen needs, note that it doesn't yet support the use of the `@defer` directive in the code output.
+
+The status of this support is tracked in [this GitHub issue](https://github.com/dotansimha/graphql-code-generator/issues/7885).

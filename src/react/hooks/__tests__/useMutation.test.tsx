@@ -600,14 +600,16 @@ describe('useMutation Hook', () => {
         },
       };
 
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
+
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            }
+            variables,
           },
           result: {
             data: CREATE_TODO_DATA,
@@ -633,7 +635,7 @@ describe('useMutation Hook', () => {
       const onError = jest.fn();
       await act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
           onCompleted,
           onError,
         });
@@ -642,20 +644,21 @@ describe('useMutation Hook', () => {
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith(CREATE_TODO_DATA);
+      expect(onCompleted).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
       expect(onError).toHaveBeenCalledTimes(0);
     });
 
     it('should allow passing an onError handler to the execution function', async () => {
       const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            },
+            variables,
           },
           result: {
             errors,
@@ -681,7 +684,7 @@ describe('useMutation Hook', () => {
       const onError = jest.fn();
       await act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
           onCompleted,
           onError,
         });
@@ -695,19 +698,20 @@ describe('useMutation Hook', () => {
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(errors[0]);
+      expect(onError).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
     });
 
     it('should allow updating onError while mutation is executing', async () => {
       const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            },
+            variables,
           },
           result: {
             errors,
@@ -742,7 +746,7 @@ describe('useMutation Hook', () => {
       let fetchResult: any;
       const mutationPromise = act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
         });
       });
 
@@ -759,7 +763,7 @@ describe('useMutation Hook', () => {
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onError1).toHaveBeenCalledTimes(1);
-      expect(onError1).toHaveBeenCalledWith(errors[0]);
+      expect(onError1).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
     });
 
     it('should never allow onCompleted handler to be stale', async () => {
@@ -772,14 +776,16 @@ describe('useMutation Hook', () => {
         },
       };
 
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk2.',
+      }
+
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            }
+            variables
           },
           result: {
             data: CREATE_TODO_DATA,
@@ -812,7 +818,7 @@ describe('useMutation Hook', () => {
       let fetchResult: any;
       await act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
         });
       });
 
@@ -820,7 +826,7 @@ describe('useMutation Hook', () => {
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onCompleted1).toHaveBeenCalledTimes(1);
-      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA);
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
     });
 
     it('should allow updating onCompleted while mutation is executing', async () => {
@@ -833,14 +839,16 @@ describe('useMutation Hook', () => {
         },
       };
 
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk2.',
+      }
+
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            }
+            variables
           },
           result: {
             data: CREATE_TODO_DATA,
@@ -871,7 +879,7 @@ describe('useMutation Hook', () => {
       let fetchResult: any;
       const mutationPromise = act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
         });
       });
 
@@ -883,7 +891,7 @@ describe('useMutation Hook', () => {
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onCompleted1).toHaveBeenCalledTimes(1);
-      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA);
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
     });
   });
 

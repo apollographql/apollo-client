@@ -20,8 +20,24 @@ describe('parseAndCheckResponse', () => {
 
   const operations = [createOperation({}, { query })];
 
-  itAsync('throws a parse error with a status code on unparsable response', (resolve, reject) => {
+  itAsync('throws a Server error when response is > 300 with unparsable json', (resolve, reject) => {
     const status = 400;
+    fetchMock.mock('begin:/error', status);
+    fetch('error')
+      .then(parseAndCheckHttpResponse(operations))
+      .then(reject)
+      .catch(e => {
+        expect(e.statusCode).toBe(status);
+        expect(e.name).toBe('ServerError');
+        expect(e).toHaveProperty('response');
+        expect(e.bodyText).toBe(undefined);
+        resolve();
+      })
+      .catch(reject);
+  });
+
+  itAsync('throws a ServerParse error when response is 200 with unparsable json', (resolve, reject) => {
+    const status = 200;
     fetchMock.mock('begin:/error', status);
     fetch('error')
       .then(parseAndCheckHttpResponse(operations))

@@ -1,21 +1,24 @@
-const { compilerOptions } = require("../tsconfig.json");
-
 const defaults = {
   rootDir: "src",
-  preset: "ts-jest/presets/js-with-ts",
+  preset: "ts-jest",
   testEnvironment: "jsdom",
   setupFiles: ["<rootDir>/config/jest/setup.ts"],
   testEnvironmentOptions: {
     url: "http://localhost",
   },
-  globals: {
-    "ts-jest": {
-      diagnostics: true,
-      tsconfig: {
-        ...compilerOptions,
-        allowJs: true,
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true
+  },
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        diagnostics: {
+          warnOnly: process.env.TEST_ENV !== 'ci'
+        },
       },
-    },
+    ],
   },
 };
 

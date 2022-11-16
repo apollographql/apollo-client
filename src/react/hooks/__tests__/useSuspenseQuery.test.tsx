@@ -2224,4 +2224,27 @@ describe('useSuspenseQuery', () => {
       },
     ]);
   });
+
+  it('persists errors between rerenders when errorPolicy is set to "all"', async () => {
+    const graphQLError = new GraphQLError('`name` could not be found');
+
+    const { query, mocks } = useErrorCase({
+      graphQLErrors: [graphQLError],
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
+      { mocks }
+    );
+
+    const expectedError = new ApolloError({ graphQLErrors: [graphQLError] });
+
+    await waitFor(() => {
+      expect(result.current.error).toEqual(expectedError);
+    });
+
+    rerender();
+
+    expect(result.current.error).toEqual(expectedError);
+  });
 });

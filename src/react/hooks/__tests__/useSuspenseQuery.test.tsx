@@ -859,7 +859,7 @@ describe('useSuspenseQuery', () => {
       data: { greeting: 'Updated hello' },
     });
 
-    await wait(10);
+    await wait(20);
 
     expect(result.current).toEqual({
       data: { greeting: 'Updated hello' },

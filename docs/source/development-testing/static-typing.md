@@ -49,13 +49,19 @@ Finally, we'll add the following scripts to our `package.json` file:
 ```json title="package.json"
 {
   "scripts": {
-    "compile": "graphql-codegen", 
+    "compile": "graphql-codegen",
     "watch": "graphql-codegen -w",
   }
 }
 ```
 
 GraphQL Code Generator generates types based on our GraphQL schema if we run either code-generation scripts above:
+
+```bash
+$ yarn run compile
+✔ Parse Configuration
+✔ Generate outputs
+```
 
 ## Typing hooks
 
@@ -277,7 +283,7 @@ export function LatestNews() {
 
 ## Typing Render Prop Components
 
-To type your render prop components, you'll first define a GraphQL query using the generated `gql()` function (from `src/__generated__/gql`). This creates a type for that query and its variables, which you can then pass to your `Query` component: 
+To type your render prop components, you'll first define a GraphQL query using the generated `gql()` function (from `src/__generated__/gql`). This creates a type for that query and its variables, which you can then pass to your `Query` component:
 
 
 ```tsx
@@ -328,7 +334,7 @@ To type high-order components, begin by defining your GraphQL documents with the
 
 In the below example, this generates the query and variable types (`GetCharacterQuery` and `GetCharacterQueryVariables`).
 
-Our wrapped component receives the query's result as props. So, we need to tell our type system the _shape_ of these props. Below is an example of setting types for an operation using the `graphql` higher-order component. 
+Our wrapped component receives the query's result as props. So, we need to tell our type system the _shape_ of these props. Below is an example of setting types for an operation using the `graphql` higher-order component.
 
 > The following logic also works for the query, mutation, and subscription higher-order components!
 

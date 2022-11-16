@@ -370,6 +370,109 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toBe(previousResult);
   });
 
+  it('enables canonical results when canonizeResults is "true"', async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const { result } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { canonizeResults: true }),
+      { cache }
+    );
+
+    const { data } = result.current;
+    const resultSet = new Set(data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(data).toEqual({ results });
+    expect(data.results.length).toBe(6);
+    expect(resultSet.size).toBe(5);
+    expect(values).toEqual([0, 1, 2, 3, 5]);
+  });
+
+  it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    const cache = new InMemoryCache({
+      canonizeResults: true,
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const { result } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { canonizeResults: false }),
+      { cache }
+    );
+
+    const { data } = result.current;
+    const resultSet = new Set(data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(data).toEqual({ results });
+    expect(data.results.length).toBe(6);
+    expect(resultSet.size).toBe(6);
+    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+  });
+
   it('tears down the query on unmount', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

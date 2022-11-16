@@ -18,6 +18,7 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from '../../core';
+import { NextFetchPolicyContext } from '../../core/watchQueryOptions';
 
 /* Common types */
 
@@ -101,20 +102,34 @@ export type SuspensePolicy =
   | 'always'
   | 'initial'
 
+export type SuspenseQueryHookFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  | 'cache-first'
+  | 'network-only'
+  | 'no-cache'
+  | 'cache-and-network'
+>;
+
 export interface SuspenseQueryHookOptions<
   TData = any,
   TVariables = OperationVariables
 > extends Pick<
   QueryHookOptions<TData, TVariables>,
-  'client' | 'variables' | 'errorPolicy' | 'context' | 'fetchPolicy'
+  | 'client'
+  | 'variables'
+  | 'errorPolicy'
+  | 'context'
+  | 'canonizeResults'
+  | 'returnPartialData'
+  | 'refetchWritePolicy'
 > {
-  fetchPolicy?: Extract<
-    WatchQueryFetchPolicy,
-    | 'cache-first'
-    | 'network-only'
-    | 'no-cache'
-    | 'cache-and-network'
-  >;
+  fetchPolicy?: SuspenseQueryHookFetchPolicy;
+  nextFetchPolicy?:
+    | SuspenseQueryHookFetchPolicy
+    | ((
+        currentFetchPolicy: SuspenseQueryHookFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVariables>
+      ) => SuspenseQueryHookFetchPolicy);
   suspensePolicy?: SuspensePolicy;
 }
 

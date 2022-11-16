@@ -2349,4 +2349,136 @@ describe('useSuspenseQuery', () => {
 
     expect(result.current.error).toEqual(expectedError);
   });
+
+  it('clears errors when changing variables and errorPolicy is set to "all"', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const graphQLErrors = [new GraphQLError('Could not fetch user 1')];
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: graphQLErrors,
+        },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: { user: { id: '2', name: 'Captain Marvel' } },
+        },
+      },
+    ];
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, { errorPolicy: 'all', variables: { id } }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    const expectedError = new ApolloError({ graphQLErrors });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: undefined,
+        error: expectedError,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { id: '2' },
+      });
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toEqual([
+      { data: undefined, error: expectedError, variables: { id: '1' } },
+      { data: undefined, error: expectedError, variables: { id: '1' } },
+      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+    ]);
+  });
+
+  it('clears errors when changing variables and errorPolicy is set to "all" with an "initial" suspensePolicy', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const graphQLErrors = [new GraphQLError('Could not fetch user 1')];
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: graphQLErrors,
+        },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: { user: { id: '2', name: 'Captain Marvel' } },
+        },
+      },
+    ];
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          errorPolicy: 'all',
+          suspensePolicy: 'initial',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    const expectedError = new ApolloError({ graphQLErrors });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        data: undefined,
+        error: expectedError,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toEqual({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { id: '2' },
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([
+      { data: undefined, error: expectedError, variables: { id: '1' } },
+      { data: undefined, error: expectedError, variables: { id: '1' } },
+      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+    ]);
+  });
 });

@@ -25,6 +25,7 @@ import { compact } from '../../../utilities';
 import { MockedProvider, MockedResponse, MockLink } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
+import { SuspenseQueryHookFetchPolicy } from '../../../react';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
 
 type RenderSuspenseHookOptions<
@@ -584,161 +585,6 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('re-suspends the component when changing variables and using a "cache-first" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-first',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('returns previous data on refetch when changing variables and using a "cache-first" with an "initial" suspense policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-first',
-          suspensePolicy: 'initial',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Unsuspend and return results from refetch
-    expect(renders.count).toBe(4);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('re-suspends the component when changing queries and using a "cache-first" fetch policy', async () => {
-    const query1: TypedDocumentNode<{ hello: string }> = gql`
-      query Query1 {
-        hello
-      }
-    `;
-
-    const query2: TypedDocumentNode<{ world: string }> = gql`
-      query Query2 {
-        world
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query: query1 },
-        result: { data: { hello: 'query1' } },
-      },
-      {
-        request: { query: query2 },
-        result: { data: { world: 'query2' } },
-      },
-    ];
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ query }) => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
-      { mocks, initialProps: { query: query1 as DocumentNode } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    rerender({ query: query2 });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change queries
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[1].result, error: undefined, variables: {} },
-    ]);
-  });
-
   it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
@@ -911,264 +757,6 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('ensures data is fetched is the correct amount of times when using a "cache-first" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    let fetchCount = 0;
-
-    const link = new ApolloLink((operation) => {
-      return new Observable((observer) => {
-        fetchCount++;
-
-        const mock = mocks.find(({ request }) =>
-          equal(request.variables, operation.variables)
-        );
-
-        if (!mock) {
-          throw new Error('Could not find mock for operation');
-        }
-
-        observer.next(mock.result!);
-        observer.complete();
-      });
-    });
-
-    const { result, rerender } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-first',
-          variables: { id },
-        }),
-      { link, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    expect(fetchCount).toBe(1);
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[1].result.data);
-    });
-
-    expect(fetchCount).toBe(2);
-  });
-
-  it('writes to the cache when using a "cache-first" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const cache = new InMemoryCache();
-
-    const { result } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-first',
-          variables: { id },
-        }),
-      { cache, mocks, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    const cachedData = cache.readQuery({ query, variables: { id: '1' } });
-
-    expect(cachedData).toEqual(mocks[0].result.data);
-  });
-
-  it('responds to cache updates when using a "cache-first" fetch policy', async () => {
-    const { query, mocks } = useSimpleQueryCase();
-
-    const cache = new InMemoryCache();
-
-    const { result, renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
-      { cache, mocks }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    cache.writeQuery({
-      query,
-      data: { greeting: 'Updated hello' },
-    });
-
-    await wait(20);
-
-    expect(result.current).toEqual({
-      data: { greeting: 'Updated hello' },
-      error: undefined,
-      variables: {},
-    });
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(3);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { data: { greeting: 'Updated hello' }, error: undefined, variables: {} },
-    ]);
-  });
-
-  it('re-suspends the component when changing variables and using a "network-only" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'network-only',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('returns previous data on refetch when changing variables and using a "network-only" with an "initial" suspense policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'network-only',
-          suspensePolicy: 'initial',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Unsuspend and return results from refetch
-    expect(renders.count).toBe(4);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('re-suspends the component when changing queries and using a "network-only" fetch policy', async () => {
-    const query1: TypedDocumentNode<{ hello: string }> = gql`
-      query Query1 {
-        hello
-      }
-    `;
-
-    const query2: TypedDocumentNode<{ world: string }> = gql`
-      query Query2 {
-        world
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query: query1 },
-        result: { data: { hello: 'query1' } },
-      },
-      {
-        request: { query: query2 },
-        result: { data: { world: 'query2' } },
-      },
-    ];
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ query }) => useSuspenseQuery(query, { fetchPolicy: 'network-only' }),
-      { mocks, initialProps: { query: query1 as DocumentNode } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    rerender({ query: query2 });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change queries
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[1].result, error: undefined, variables: {} },
-    ]);
-  });
-
   it('suspends when data is in the cache and using a "network-only" fetch policy', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
@@ -1254,264 +842,6 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, error: undefined, variables: {} },
-    ]);
-  });
-
-  it('ensures data is fetched is the correct amount of times when using a "network-only" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    let fetchCount = 0;
-
-    const link = new ApolloLink((operation) => {
-      return new Observable((observer) => {
-        fetchCount++;
-
-        const mock = mocks.find(({ request }) =>
-          equal(request.variables, operation.variables)
-        );
-
-        if (!mock) {
-          throw new Error('Could not find mock for operation');
-        }
-
-        observer.next(mock.result);
-        observer.complete();
-      });
-    });
-
-    const { result, rerender } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'network-only',
-          variables: { id },
-        }),
-      { link, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    expect(fetchCount).toBe(1);
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[1].result.data);
-    });
-
-    expect(fetchCount).toBe(2);
-  });
-
-  it('writes to the cache when using a "network-only" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const cache = new InMemoryCache();
-
-    const { result } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'network-only',
-          variables: { id },
-        }),
-      { cache, mocks, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    const cachedData = cache.readQuery({ query, variables: { id: '1' } });
-
-    expect(cachedData).toEqual(mocks[0].result.data);
-  });
-
-  it('responds to cache updates when using a "network-only" fetch policy', async () => {
-    const { query, mocks } = useSimpleQueryCase();
-
-    const cache = new InMemoryCache();
-
-    const { result, renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query, { fetchPolicy: 'network-only' }),
-      { cache, mocks }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    cache.writeQuery({
-      query,
-      data: { greeting: 'Updated hello' },
-    });
-
-    await wait(10);
-
-    expect(result.current).toEqual({
-      data: { greeting: 'Updated hello' },
-      error: undefined,
-      variables: {},
-    });
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(3);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { data: { greeting: 'Updated hello' }, error: undefined, variables: {} },
-    ]);
-  });
-
-  it('re-suspends the component when changing variables and using a "no-cache" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'no-cache',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('returns previous data on refetch when changing variables and using a "no-cache" with an "initial" suspense policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'no-cache',
-          suspensePolicy: 'initial',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Unsuspend and return results from refetch
-    expect(renders.count).toBe(4);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('re-suspends the component when changing queries and using a "no-cache" fetch policy', async () => {
-    const query1: TypedDocumentNode<{ hello: string }> = gql`
-      query Query1 {
-        hello
-      }
-    `;
-
-    const query2: TypedDocumentNode<{ world: string }> = gql`
-      query Query2 {
-        world
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query: query1 },
-        result: { data: { hello: 'query1' } },
-      },
-      {
-        request: { query: query2 },
-        result: { data: { world: 'query2' } },
-      },
-    ];
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ query }) => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
-      { mocks, initialProps: { query: query1 as DocumentNode } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    rerender({ query: query2 });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change queries
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[1].result, error: undefined, variables: {} },
     ]);
   });
 
@@ -1642,264 +972,6 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, error: undefined, variables: {} },
-    ]);
-  });
-
-  it('ensures data is fetched is the correct amount of times when using a "no-cache" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    let fetchCount = 0;
-
-    const link = new ApolloLink((operation) => {
-      return new Observable((observer) => {
-        fetchCount++;
-
-        const mock = mocks.find(({ request }) =>
-          equal(request.variables, operation.variables)
-        );
-
-        if (!mock) {
-          throw new Error('Could not find mock for operation');
-        }
-
-        observer.next(mock.result);
-        observer.complete();
-      });
-    });
-
-    const { result, rerender } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'no-cache',
-          variables: { id },
-        }),
-      { link, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    expect(fetchCount).toBe(1);
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[1].result.data);
-    });
-
-    expect(fetchCount).toBe(2);
-  });
-
-  it('does not write to the cache when using a "no-cache" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const cache = new InMemoryCache();
-
-    const { result } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'no-cache',
-          variables: { id },
-        }),
-      { cache, mocks, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    const cachedData = cache.readQuery({ query, variables: { id: '1' } });
-
-    expect(cachedData).toBeNull();
-  });
-
-  it('does not respond to cache updates when using a "no-cache" fetch policy', async () => {
-    const { query, mocks } = useSimpleQueryCase();
-
-    const cache = new InMemoryCache();
-
-    const { result, renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
-      { cache, mocks }
-    );
-
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
-
-    cache.writeQuery({
-      query,
-      data: { greeting: 'Updated hello' },
-    });
-
-    await wait(10);
-
-    expect(result.current).toEqual({
-      ...mocks[0].result,
-      error: undefined,
-      variables: {},
-    });
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: {} },
-    ]);
-  });
-
-  it('re-suspends the component when changing variables and using a "cache-and-network" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-and-network',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('returns previous data on refetch when changing variables and using a "cache-and-network" with an "initial" suspense policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-and-network',
-          suspensePolicy: 'initial',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: { id: '2' },
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change variables
-    // 4. Unsuspend and return results from refetch
-    expect(renders.count).toBe(4);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
-    ]);
-  });
-
-  it('re-suspends the component when changing queries and using a "cache-and-network" fetch policy', async () => {
-    const query1: TypedDocumentNode<{ hello: string }> = gql`
-      query Query1 {
-        hello
-      }
-    `;
-
-    const query2: TypedDocumentNode<{ world: string }> = gql`
-      query Query2 {
-        world
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query: query1 },
-        result: { data: { hello: 'query1' } },
-      },
-      {
-        request: { query: query2 },
-        result: { data: { world: 'query2' } },
-      },
-    ];
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ query }) =>
-        useSuspenseQuery(query, { fetchPolicy: 'cache-and-network' }),
-      { mocks, initialProps: { query: query1 as DocumentNode } }
-    );
-
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[0].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    rerender({ query: query2 });
-
-    await waitFor(() => {
-      expect(result.current).toEqual({
-        ...mocks[1].result,
-        error: undefined,
-        variables: {},
-      });
-    });
-
-    // Renders:
-    // 1. Initate fetch and suspend
-    // 2. Unsuspend and return results from initial fetch
-    // 3. Change queries
-    // 4. Initiate refetch and suspend
-    // 5. Unsuspend and return results from refetch
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[0].result, error: undefined, variables: {} },
-      { ...mocks[1].result, error: undefined, variables: {} },
     ]);
   });
 
@@ -2084,63 +1156,94 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('ensures data is fetched is the correct amount of times when using a "cache-and-network" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    'returns previous data on refetch when changing variables and using a "%s" with an "initial" suspense policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useVariablesQueryCase();
 
-    let fetchCount = 0;
+      const { result, rerender, renders } = renderSuspenseHook(
+        ({ id }) =>
+          useSuspenseQuery(query, {
+            fetchPolicy,
+            suspensePolicy: 'initial',
+            variables: { id },
+          }),
+        { mocks, initialProps: { id: '1' } }
+      );
 
-    const link = new ApolloLink((operation) => {
-      return new Observable((observer) => {
-        fetchCount++;
-
-        const mock = mocks.find(({ request }) =>
-          equal(request.variables, operation.variables)
-        );
-
-        if (!mock) {
-          throw new Error('Could not find mock for operation');
-        }
-
-        observer.next(mock.result);
-        observer.complete();
+      expect(renders.suspenseCount).toBe(1);
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[0].result,
+          error: undefined,
+          variables: { id: '1' },
+        });
       });
-    });
 
-    const { result, rerender } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-and-network',
-          variables: { id },
-        }),
-      { link, initialProps: { id: '1' } }
-    );
+      rerender({ id: '2' });
 
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[0].result.data);
-    });
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[1].result,
+          error: undefined,
+          variables: { id: '2' },
+        });
+      });
 
-    expect(fetchCount).toBe(1);
+      // Renders:
+      // 1. Initate fetch and suspend
+      // 2. Unsuspend and return results from initial fetch
+      // 3. Change variables
+      // 4. Unsuspend and return results from refetch
+      expect(renders.count).toBe(4);
+      expect(renders.suspenseCount).toBe(1);
+      expect(renders.frames).toEqual([
+        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+        { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      ]);
+    }
+  );
 
-    rerender({ id: '2' });
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'cache-and-network',
+  ])(
+    'writes to the cache when using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useVariablesQueryCase();
 
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[1].result.data);
-    });
+      const cache = new InMemoryCache();
 
-    expect(fetchCount).toBe(2);
-  });
+      const { result } = renderSuspenseHook(
+        ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
+        { cache, mocks, initialProps: { id: '1' } }
+      );
 
-  it('writes to the cache when using a "cache-and-network" fetch policy', async () => {
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[0].result.data);
+      });
+
+      const cachedData = cache.readQuery({ query, variables: { id: '1' } });
+
+      expect(cachedData).toEqual(mocks[0].result.data);
+    }
+  );
+
+  it('does not write to the cache when using a "no-cache" fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const cache = new InMemoryCache();
 
     const { result } = renderSuspenseHook(
       ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'cache-and-network',
-          variables: { id },
-        }),
+        useSuspenseQuery(query, { fetchPolicy: 'no-cache', variables: { id } }),
       { cache, mocks, initialProps: { id: '1' } }
     );
 
@@ -2150,16 +1253,61 @@ describe('useSuspenseQuery', () => {
 
     const cachedData = cache.readQuery({ query, variables: { id: '1' } });
 
-    expect(cachedData).toEqual(mocks[0].result.data);
+    expect(cachedData).toBeNull();
   });
 
-  it('responds to cache updates when using a "cache-and-network" fetch policy', async () => {
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'cache-and-network',
+  ])(
+    'responds to cache updates when using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useSimpleQueryCase();
+
+      const cache = new InMemoryCache();
+
+      const { result, renders } = renderSuspenseHook(
+        () => useSuspenseQuery(query, { fetchPolicy }),
+        { cache, mocks }
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[0].result.data);
+      });
+
+      cache.writeQuery({
+        query,
+        data: { greeting: 'Updated hello' },
+      });
+
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          data: { greeting: 'Updated hello' },
+          error: undefined,
+          variables: {},
+        });
+      });
+      expect(renders.suspenseCount).toBe(1);
+      expect(renders.count).toBe(3);
+      expect(renders.frames).toEqual([
+        { ...mocks[0].result, error: undefined, variables: {} },
+        {
+          data: { greeting: 'Updated hello' },
+          error: undefined,
+          variables: {},
+        },
+      ]);
+    }
+  );
+
+  it('does not respond to cache updates when using a "no-cache" fetch policy', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const cache = new InMemoryCache();
 
     const { result, renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query, { fetchPolicy: 'cache-and-network' }),
+      () => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
       { cache, mocks }
     );
 
@@ -2172,20 +1320,195 @@ describe('useSuspenseQuery', () => {
       data: { greeting: 'Updated hello' },
     });
 
-    await wait(10);
+    await wait(100);
 
     expect(result.current).toEqual({
-      data: { greeting: 'Updated hello' },
+      ...mocks[0].result,
       error: undefined,
       variables: {},
     });
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(2);
     expect(renders.frames).toEqual([
       { ...mocks[0].result, error: undefined, variables: {} },
-      { data: { greeting: 'Updated hello' }, error: undefined, variables: {} },
     ]);
   });
+
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    're-suspends the component when changing variables and using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useVariablesQueryCase();
+
+      const { result, rerender, renders } = renderSuspenseHook(
+        ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
+        { mocks, initialProps: { id: '1' } }
+      );
+
+      expect(renders.suspenseCount).toBe(1);
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[0].result,
+          error: undefined,
+          variables: { id: '1' },
+        });
+      });
+
+      rerender({ id: '2' });
+
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[1].result,
+          error: undefined,
+          variables: { id: '2' },
+        });
+      });
+
+      // Renders:
+      // 1. Initate fetch and suspend
+      // 2. Unsuspend and return results from initial fetch
+      // 3. Change variables
+      // 4. Initiate refetch and suspend
+      // 5. Unsuspend and return results from refetch
+      expect(renders.count).toBe(5);
+      expect(renders.suspenseCount).toBe(2);
+      expect(renders.frames).toEqual([
+        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+        { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      ]);
+    }
+  );
+
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    're-suspends the component when changing queries and using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const query1: TypedDocumentNode<{ hello: string }> = gql`
+        query Query1 {
+          hello
+        }
+      `;
+
+      const query2: TypedDocumentNode<{ world: string }> = gql`
+        query Query2 {
+          world
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query: query1 },
+          result: { data: { hello: 'query1' } },
+        },
+        {
+          request: { query: query2 },
+          result: { data: { world: 'query2' } },
+        },
+      ];
+
+      const { result, rerender, renders } = renderSuspenseHook(
+        ({ query }) => useSuspenseQuery(query, { fetchPolicy }),
+        { mocks, initialProps: { query: query1 as DocumentNode } }
+      );
+
+      expect(renders.suspenseCount).toBe(1);
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[0].result,
+          error: undefined,
+          variables: {},
+        });
+      });
+
+      rerender({ query: query2 });
+
+      await waitFor(() => {
+        expect(result.current).toEqual({
+          ...mocks[1].result,
+          error: undefined,
+          variables: {},
+        });
+      });
+
+      // Renders:
+      // 1. Initate fetch and suspend
+      // 2. Unsuspend and return results from initial fetch
+      // 3. Change queries
+      // 4. Initiate refetch and suspend
+      // 5. Unsuspend and return results from refetch
+      expect(renders.count).toBe(5);
+      expect(renders.suspenseCount).toBe(2);
+      expect(renders.frames).toEqual([
+        { ...mocks[0].result, error: undefined, variables: {} },
+        { ...mocks[0].result, error: undefined, variables: {} },
+        { ...mocks[1].result, error: undefined, variables: {} },
+      ]);
+    }
+  );
+
+  // Due to the way the suspense hook works, we don't subscribe to the observable
+  // until after we have suspended. Once an observable is subscribed, it calls
+  // `reobserve` which has the potential to kick off a network request. We want
+  // to ensure we don't accidentally kick off the network request more than
+  // necessary after a component has been suspended.
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    'ensures data is fetched the correct amount of times when changing variables and using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useVariablesQueryCase();
+
+      let fetchCount = 0;
+
+      const link = new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          fetchCount++;
+
+          const mock = mocks.find(({ request }) =>
+            equal(request.variables, operation.variables)
+          );
+
+          if (!mock) {
+            throw new Error('Could not find mock for operation');
+          }
+
+          observer.next(mock.result);
+          observer.complete();
+        });
+      });
+
+      const { result, rerender } = renderSuspenseHook(
+        ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
+        { link, initialProps: { id: '1' } }
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[0].result.data);
+      });
+
+      expect(fetchCount).toBe(1);
+
+      rerender({ id: '2' });
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[1].result.data);
+      });
+
+      expect(fetchCount).toBe(2);
+    }
+  );
 
   it('uses the default fetch policy from the client when none provided in options', async () => {
     const { query, mocks } = useSimpleQueryCase();

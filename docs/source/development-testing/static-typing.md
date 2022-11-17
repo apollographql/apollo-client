@@ -7,22 +7,21 @@ As your application grows, you may find it helpful to include a type system to a
 These docs assume you already have TypeScript configured in your project, if not start [here](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide).
 
 The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can generate TypeScript definitions automatically using a tool like [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen).
+
 Below, we'll guide you through installing and configuring GraphQL Code Generator to generate types for your hooks and components.
 
 ## Setting up your project
 
-To get started using GraphQL Code Generator to generate TypeScript types, we'll begin by installing the following packages (using Yarn or NPM):
+To get started using GraphQL Code Generator, we'll begin by installing the following packages (using Yarn or NPM):
 
 ```bash
 yarn add -D typescript @graphql-codegen/cli @graphql-codegen/client-preset
-yarn add -D @graphql-codegen/cli
-yarn add -D @graphql-codegen/client-preset
 ```
 
 Next, we'll create a configuration file for GraphQL Code Generator, named [`codegen.ts`](https://www.the-guild.dev/graphql/codegen/docs/config-reference/codegen-config), at the root of our project:
 
 ```ts title="codegen.ts"
-import { CodegenConfig } from '@graphql-codegen/cli'
+import { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
   schema: '<URL_OF_YOUR_GRAPHQL_API>',
@@ -37,12 +36,12 @@ const config: CodegenConfig = {
     }
   },
   ignoreNoDocuments: true,
-}
+};
 
-export default config
+export default config;
 ```
 
-There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick the way that works best for your project setup.
+> There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick the way that works best for your project setup.
 
 Finally, we'll add the following scripts to our `package.json` file:
 
@@ -55,7 +54,7 @@ Finally, we'll add the following scripts to our `package.json` file:
 }
 ```
 
-GraphQL Code Generator generates types based on our GraphQL schema if we run either code-generation scripts above:
+GraphQL Code Generator generates types based on our GraphQL schema if we run either code-generation script above:
 
 ```bash
 $ yarn run compile

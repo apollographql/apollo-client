@@ -5,13 +5,13 @@ descriptions: How to generate and use TypeScript types in your application
 
 As your application grows, a type system can become an essential tool for catching bugs early and improving your overall developer experience. 
 
-GraphQL uses a type system to clearly define the available data for each type and field in a GraphQL schema. Given that a GraphQL server's schema is strongly typed, we can generate TypeScript definitions automatically using a tool like [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen). We'll use our generated types to ensure type safety for the the _inputs_ and _results_ of our GraphQL operations.
+GraphQL uses a type system to clearly define the available data for each type and field in a GraphQL schema. Given that a GraphQL server's schema is strongly typed, we can generate TypeScript definitions automatically using a tool like [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen). We'll use our generated types to ensure type safety for the _inputs_ and _results_ of our GraphQL operations.
 
 Below, we'll guide you through installing and configuring GraphQL Code Generator to generate types for your hooks and components.
 
 ## Setting up your project
 
-> This article assumes your project already uses TypeScript, if not [begin by configuring your project to use TypeScript](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide) or [start a new project](https://create-react-app.dev/docs/adding-typescript/).
+> This article assumes your project already uses TypeScript. If not, [configure your project to use TypeScript](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide) or [start a new project](https://create-react-app.dev/docs/adding-typescript/).
 
 To get started using GraphQL Code Generator, begin by installing the following packages (using Yarn or NPM):
 
@@ -42,7 +42,7 @@ const config: CodegenConfig = {
 export default config;
 ```
 
-> There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick the way that works best for your project setup.
+> There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick the best way for your project setup.
 
 Finally, we'll add the following scripts to our `package.json` file:
 
@@ -65,9 +65,11 @@ $ yarn run compile
 
 ## Typing hooks
 
-GraphQL Code Generator automatically creates a `gql` function (from the `src/__genterated__/gql.ts` file), which we can use to type the variables going into, and results coming out of, of our React hooks.
+GraphQL Code Generator automatically creates a `gql` function (from the `src/__genterated__/gql.ts` file), which we can use to type the variables going into, and the results from, our React hooks.
 
 ### `useQuery`
+
+Below we use the `gql` function to define our query, which automatically generates types for our `useQuery` hook:
 
 ```tsx
 import React from 'react';
@@ -125,7 +127,7 @@ export function RocketInventoryList() {
 
 The `useQuery` hook returns an instance of `QueryResult`, which includes the `fetchMore` and `subscribeToMore` functions. See [Queries for detailed type information](../data/queries#result). Because these functions execute GraphQL operations, they accept type parameters.
 
-By default, `fetchMore`'s type parameters are set to the same value of `useQuery`'s type parameters. Since both `fetchMore` and `useQuery` encapsulate a `query` operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`. 
+By default, the `fetchMore`'s type parameters are the same as `useQuery`'s. Since both `fetchMore` and `useQuery` encapsulate a `query` operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`. 
 
 Expanding our previous example, notice that we don't explicitly type `fetchMore`, because it defaults to using the same type parameters as `useQuery`:
 ```tsx
@@ -152,7 +154,9 @@ export function RocketInventoryList() {
 }
 ```
 
-The `subscribeToMore` function's type parameters and defaults are identical to `fetchMore`'s. Keep in mind that `subscribeToMore` executes a _subscription_, whereas `fetchMore` executes follow-up queries. Using `subscribeToMore`, you'll usually pass at least one typed argument, like so:
+The `subscribeToMore` function's type parameters and defaults are identical to `fetchMore`'s. Keep in mind that `subscribeToMore` executes a _subscription_, whereas `fetchMore` executes follow-up queries.
+
+Using `subscribeToMore`, you'll usually pass at least one typed argument, like so:
 
 ```tsx
 // ...
@@ -184,7 +188,7 @@ export function RocketInventoryList() {
 
 ### `useMutation`
 
-We can type our `useMutation` hooks the same way we type our `useQuery` hooks. Using the generated `gql` function to define our GraphQL mutations, we ensure that our mutation's variables and return data are typed:
+We can type `useMutation` hooks the same way we type `useQuery` hooks. Using the generated `gql` function to define our GraphQL mutations, we ensure that we type our mutation's variables and return data:
 
 ```tsx
 import React, { useState } from 'react';
@@ -252,7 +256,7 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-We can type our `useSubscription` hooks the same way we typed our `useQuery` and ` useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that our subscriptions's variables and return data are typed:
+We can type our `useSubscription` hooks the same way we typed our `useQuery` and ` useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscriptions' variables and return data:
 
 ```tsx
 import React from 'react';

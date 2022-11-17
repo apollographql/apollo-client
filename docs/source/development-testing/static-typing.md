@@ -42,7 +42,7 @@ const config: CodegenConfig = {
 export default config;
 ```
 
-> There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick the best way for your project setup.
+> There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick whichever way works best for your project setup.
 
 Finally, we'll add the following scripts to our `package.json` file:
 
@@ -65,7 +65,7 @@ $ yarn run compile
 
 ## Typing hooks
 
-GraphQL Code Generator automatically creates a `gql` function (from the `src/__genterated__/gql.ts` file), which we can use to type the variables going into, and the results from, our React hooks.
+GraphQL Code Generator automatically creates a `gql` function (from the `src/__genterated__/gql.ts` file). This function enables us to type the variables that go into our React hooks, along with the results from those hooks.
 
 ### `useQuery`
 
@@ -127,7 +127,7 @@ export function RocketInventoryList() {
 
 The `useQuery` hook returns an instance of `QueryResult`, which includes the `fetchMore` and `subscribeToMore` functions. See [Queries for detailed type information](../data/queries#result). Because these functions execute GraphQL operations, they accept type parameters.
 
-By default, the `fetchMore`'s type parameters are the same as `useQuery`'s. Since both `fetchMore` and `useQuery` encapsulate a `query` operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`. 
+By default, the type parameters for `fetchMore` are the same as those for `useQuery`. Because both `fetchMore` and `useQuery` encapsulate a query operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`. 
 
 Expanding our previous example, notice that we don't explicitly type `fetchMore`, because it defaults to using the same type parameters as `useQuery`:
 ```tsx
@@ -154,9 +154,9 @@ export function RocketInventoryList() {
 }
 ```
 
-The `subscribeToMore` function's type parameters and defaults are identical to `fetchMore`'s. Keep in mind that `subscribeToMore` executes a _subscription_, whereas `fetchMore` executes follow-up queries.
+The type parameters and defaults for `subscribeToMore` are identical to those for `fetchMore`. Keep in mind that `subscribeToMore` executes a _subscription_, whereas `fetchMore` executes follow-up queries.
 
-Using `subscribeToMore`, you'll usually pass at least one typed argument, like so:
+Using `subscribeToMore`, you usually pass at least one typed argument, like so:
 
 ```tsx
 // ...
@@ -256,7 +256,7 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-We can type our `useSubscription` hooks the same way we typed our `useQuery` and ` useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscriptions' variables and return data:
+We can type our `useSubscription` hooks the same way we typed our `useQuery` and ` useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscription variables and return data:
 
 ```tsx
 import React from 'react';

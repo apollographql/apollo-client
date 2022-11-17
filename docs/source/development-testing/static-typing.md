@@ -288,7 +288,9 @@ export function LatestNews() {
 
 ## Typing Render Prop components
 
-To type render prop components, you'll first define a GraphQL query using the generated `gql` function (from `src/__generated__/gql`). This creates a type for that query and its variables, which you can then pass to your `Query` component:
+To type render prop components, you'll first define a GraphQL query using the generated `gql` function (from `src/__generated__/gql`). 
+
+This creates a type for that query and its variables, which you can then pass to your `Query` component:
 
 ```tsx
 import { gql, AllPeopleQuery, AllPeopleQueryVariables } from '../src/__generated__/gql';
@@ -310,9 +312,9 @@ const AllPeopleComponent = <Query<AllPeopleQuery, AllPeopleQueryVariables> query
 </Query>
 ```
 
-The above `<Query />` component's function arguments are typed. Since we aren't mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for our typing to work! 
+Our `<Query />` component's function arguments are now typed. Since we aren't mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for our typing to work! 
 
-This approach works for both `<Mutation />` and `<Subscription />` components as well.
+This approach works also works for `<Mutation />` and `<Subscription />` components.
 
 ### Extending components
 
@@ -322,7 +324,9 @@ In previous versions of Apollo Client, render prop components (`Query`, `Mutatio
 class SomeQuery extends Query<SomeData, SomeVariables> {}
 ```
 
-Now that class based render prop components have been converted to functional components, you can no longer extend components in this manner. While we recommend switching over to use the new `useQuery`, `useMutation` and `useSubscription` hooks as soon as possible, in the meantime you can replace your class with a wrapped and typed component:
+Now that class-based render prop components have been converted into functional components, you can no longer extend components in this manner.
+
+While we recommend switching over to using the new `useQuery`, `useMutation`, and `useSubscription` hooks as soon as possible, you can replace your class with a wrapped and typed component in the meantime:
 
 ```tsx
 export const SomeQuery = () => (
@@ -334,13 +338,11 @@ export const SomeQuery = () => (
 
 ## Typing Higher-order components
 
-To type higher-order components, begin by defining your GraphQL queries with the generated `gql` function (from `./src/__generated__/gql`). 
+To type higher-order components, begin by defining your GraphQL queries with the `gql` function (from `./src/__generated__/gql`). In the below example, this generates the query and variable types (`GetCharacterQuery` and `GetCharacterQueryVariables`).
 
-In the below example, this generates the query and variable types (`GetCharacterQuery` and `GetCharacterQueryVariables`).
+Our wrapped component receives our query's result as props, and we'll need to tell our type system the _shape_ these props take. 
 
-Our wrapped component receives the query's result as props. So, we need to tell our type system the _shape_ of these props. Below is an example of setting types for an operation using the `graphql` higher-order component.
-
-> The following logic also works for query, mutation, and subscription higher-order components!
+Below is an example of setting types for an operation using the `graphql` higher-order component:
 
 ```tsx
 import React from "react";
@@ -382,11 +384,12 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
+> The following logic also works for query, mutation, and subscription higher-order components!
 ### Options
 
-Typically, our query's variables are computed from the props of it's wrapper component. Wherever our application uses our wrapper component we want to ensure that those passed-in arguments are correctly typed. 
+Typically, our wrapper component's props pass in a query's variables. Wherever our application uses our wrapper component, we want to ensure that we correctly type those passed-in arguments. 
 
-Below is an example setting a type for a component's props:
+Below is an example of setting a type for a component's props:
 
 ```tsx
 import React from "react";
@@ -430,7 +433,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
-This is especially helpful when accessing deeply nested objects passed to our component via props. For example, when adding prop types, a project using TypeScript begins to surface errors when invalid props are passed in:
+This is especially helpful when accessing deeply nested objects passed to our component via props. For example, when adding prop types, a project using TypeScript begins to surface errors with invalid props:
 
 ```tsx
 import React from "react";
@@ -461,7 +464,7 @@ export default () =>
 
 ### Props
 
-The `props` function enables you to manually reshape an operation result's data into the shape your wrapped component's requires:
+The `props` function enables you to manually reshape an operation result's data into the shape your wrapped component requires:
 
 ```tsx
 import React from "react";
@@ -505,7 +508,7 @@ export default withCharacter(({ loading, hero, error }) => {
 });
 ```
 
-Above we type the shape of our response, props, and our client's variables. Our options and props function (within the `graphql` wrapper) are now type safe, our rendered component is protected, and our tree of components have their required props enforced:
+Above, we type the shape of our response, props, and our client's variables. Our options and props function (within the `graphql` wrapper) are now type-safe, our rendered component is protected, and our tree of components has their required props enforced:
 
 ```ts
 export const withCharacter = graphql<
@@ -529,7 +532,7 @@ export const withCharacter = graphql<
 
 ### Classes vs functions
 
-If you are using React classes instead of using the `graphql` wrapper, you can still type the incoming props for your class, like so:
+If you are using React classes (instead of using the `graphql` wrapper), you can still type the incoming props for your class like so:
 
 ```tsx
 import { ChildProps } from "@apollo/react-hoc";
@@ -573,7 +576,7 @@ export const withCharacter = graphql<GetCharacterQueryVariables, GetCharacterQue
 
 ## Using `TypeDocumentNode`
 
-In TypeScript, all APIs that intake `DocumentNode` can alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation, but enables APIs to infer the data and variable types (instead of requiring you to explicitly specify types upon invocation).
+In TypeScript, all APIs that intake `DocumentNode` can alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation but enables APIs to infer the data and variable types (instead of making you specify types upon invocation).
 
 This technique enables us to modify the [`useQuery` example](#usequery) above to use a type inference:
 

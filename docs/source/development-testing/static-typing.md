@@ -1,6 +1,6 @@
 ---
 title: TypeScript with Apollo Client
-descriptions: How to generate and use TS types in your application 
+descriptions: How to generate and use TypeScript types in your application 
 ---
 
 As your application grows, a type system can become an essential tool for catching bugs early and improving your overall developer experience. 

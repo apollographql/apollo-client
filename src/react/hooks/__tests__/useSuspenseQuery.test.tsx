@@ -283,7 +283,7 @@ describe('useSuspenseQuery', () => {
     // ensure the hook suspends immediately
     expect(renders.suspenseCount).toBe(1);
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -292,7 +292,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: {} },
     ]);
   });
@@ -306,7 +306,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: { id: '1' },
@@ -315,7 +315,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: { id: '1' } },
     ]);
   });
@@ -329,7 +329,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: { id: '1' },
@@ -340,7 +340,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: { id: '1' } },
       { ...mocks[0].result, error: undefined, variables: { id: '1' } },
     ]);
@@ -357,7 +357,7 @@ describe('useSuspenseQuery', () => {
     expect(screen.getByText('loading')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: { id: '1' },
@@ -580,7 +580,7 @@ describe('useSuspenseQuery', () => {
       expect(result.current.data).toEqual({ greeting: 'local hello' })
     );
 
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: { greeting: 'local hello' }, error: undefined, variables: {} },
     ]);
   });
@@ -600,7 +600,7 @@ describe('useSuspenseQuery', () => {
       { cache, mocks }
     );
 
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       data: { greeting: 'hello from cache' },
       error: undefined,
       variables: {},
@@ -608,7 +608,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(1);
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: { greeting: 'hello from cache' },
         error: undefined,
@@ -659,14 +659,14 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
       variables: {},
     });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -675,7 +675,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: { character: { id: '1' } }, error: undefined, variables: {} },
       { ...mocks[0].result, error: undefined, variables: {} },
     ]);
@@ -711,14 +711,14 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
       variables: { id: '1' },
     });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: { id: '1' },
@@ -728,7 +728,7 @@ describe('useSuspenseQuery', () => {
     rerender({ id: '2' });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
         variables: { id: '2' },
@@ -737,7 +737,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: { character: { id: '1' } },
         error: undefined,
@@ -773,7 +773,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -782,7 +782,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: { greeting: 'Hello' }, error: undefined, variables: {} },
     ]);
   });
@@ -831,7 +831,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -840,7 +840,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: {} },
     ]);
   });
@@ -861,7 +861,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -872,7 +872,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: { greeting: 'Hello' }, error: undefined, variables: {} },
     ]);
     expect(cachedData).toEqual({ greeting: 'hello from cache' });
@@ -889,7 +889,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -898,20 +898,20 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: { greeting: 'Hello' }, error: undefined, variables: {} },
     ]);
 
     rerender();
 
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       ...mocks[0].result,
       error: undefined,
       variables: {},
     });
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: { greeting: 'Hello' }, error: undefined, variables: {} },
       { data: { greeting: 'Hello' }, error: undefined, variables: {} },
     ]);
@@ -961,7 +961,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -970,7 +970,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: {} },
     ]);
   });
@@ -990,14 +990,14 @@ describe('useSuspenseQuery', () => {
       { cache, mocks }
     );
 
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       data: { greeting: 'hello from cache' },
       error: undefined,
       variables: {},
     });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -1006,7 +1006,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: { greeting: 'hello from cache' },
         error: undefined,
@@ -1058,14 +1058,14 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
       variables: {},
     });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: {},
@@ -1074,7 +1074,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: { character: { id: '1' } }, error: undefined, variables: {} },
       { ...mocks[0].result, error: undefined, variables: {} },
     ]);
@@ -1110,14 +1110,14 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
       variables: { id: '1' },
     });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
         variables: { id: '1' },
@@ -1127,7 +1127,7 @@ describe('useSuspenseQuery', () => {
     rerender({ id: '2' });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
         variables: { id: '2' },
@@ -1136,7 +1136,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: { character: { id: '1' } },
         error: undefined,
@@ -1178,7 +1178,7 @@ describe('useSuspenseQuery', () => {
 
       expect(renders.suspenseCount).toBe(1);
       await waitFor(() => {
-        expect(result.current).toEqual({
+        expect(result.current).toMatchObject({
           ...mocks[0].result,
           error: undefined,
           variables: { id: '1' },
@@ -1188,7 +1188,7 @@ describe('useSuspenseQuery', () => {
       rerender({ id: '2' });
 
       await waitFor(() => {
-        expect(result.current).toEqual({
+        expect(result.current).toMatchObject({
           ...mocks[1].result,
           error: undefined,
           variables: { id: '2' },
@@ -1202,7 +1202,7 @@ describe('useSuspenseQuery', () => {
       // 4. Unsuspend and return results from refetch
       expect(renders.count).toBe(4);
       expect(renders.suspenseCount).toBe(1);
-      expect(renders.frames).toEqual([
+      expect(renders.frames).toMatchObject([
         { ...mocks[0].result, error: undefined, variables: { id: '1' } },
         { ...mocks[0].result, error: undefined, variables: { id: '1' } },
         { ...mocks[1].result, error: undefined, variables: { id: '2' } },
@@ -1285,7 +1285,7 @@ describe('useSuspenseQuery', () => {
       });
 
       await waitFor(() => {
-        expect(result.current).toEqual({
+        expect(result.current).toMatchObject({
           data: { greeting: 'Updated hello' },
           error: undefined,
           variables: {},
@@ -1293,7 +1293,7 @@ describe('useSuspenseQuery', () => {
       });
       expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(3);
-      expect(renders.frames).toEqual([
+      expect(renders.frames).toMatchObject([
         { ...mocks[0].result, error: undefined, variables: {} },
         {
           data: { greeting: 'Updated hello' },
@@ -1329,14 +1329,14 @@ describe('useSuspenseQuery', () => {
     // Wait for a while to ensure no updates happen asynchronously
     await wait(100);
 
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       ...mocks[0].result,
       error: undefined,
       variables: {},
     });
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: {} },
     ]);
   });
@@ -1358,7 +1358,7 @@ describe('useSuspenseQuery', () => {
 
       expect(renders.suspenseCount).toBe(1);
       await waitFor(() => {
-        expect(result.current).toEqual({
+        expect(result.current).toMatchObject({
           ...mocks[0].result,
           error: undefined,
           variables: { id: '1' },
@@ -1368,7 +1368,7 @@ describe('useSuspenseQuery', () => {
       rerender({ id: '2' });
 
       await waitFor(() => {
-        expect(result.current).toEqual({
+        expect(result.current).toMatchObject({
           ...mocks[1].result,
           error: undefined,
           variables: { id: '2' },
@@ -1383,7 +1383,7 @@ describe('useSuspenseQuery', () => {
       // 5. Unsuspend and return results from refetch
       expect(renders.count).toBe(5);
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toEqual([
+      expect(renders.frames).toMatchObject([
         { ...mocks[0].result, error: undefined, variables: { id: '1' } },
         { ...mocks[0].result, error: undefined, variables: { id: '1' } },
         { ...mocks[1].result, error: undefined, variables: { id: '2' } },
@@ -1429,7 +1429,7 @@ describe('useSuspenseQuery', () => {
 
       expect(renders.suspenseCount).toBe(1);
       await waitFor(() => {
-        expect(result.current).toEqual({
+        expect(result.current).toMatchObject({
           ...mocks[0].result,
           error: undefined,
           variables: {},
@@ -1439,7 +1439,7 @@ describe('useSuspenseQuery', () => {
       rerender({ query: query2 });
 
       await waitFor(() => {
-        expect(result.current).toEqual({
+        expect(result.current).toMatchObject({
           ...mocks[1].result,
           error: undefined,
           variables: {},
@@ -1454,7 +1454,7 @@ describe('useSuspenseQuery', () => {
       // 5. Unsuspend and return results from refetch
       expect(renders.count).toBe(5);
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toEqual([
+      expect(renders.frames).toMatchObject([
         { ...mocks[0].result, error: undefined, variables: {} },
         { ...mocks[0].result, error: undefined, variables: {} },
         { ...mocks[1].result, error: undefined, variables: {} },
@@ -1545,7 +1545,7 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: {} },
     ]);
   });
@@ -1569,14 +1569,14 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
         variables: { id: '2' },
       });
     });
 
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { ...mocks[1].result, error: undefined, variables: { id: '2' } },
     ]);
   });
@@ -1613,7 +1613,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
         },
@@ -1625,7 +1625,7 @@ describe('useSuspenseQuery', () => {
     rerender({ source: 'rerender' });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: {
           vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
         },
@@ -1638,7 +1638,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
@@ -1698,7 +1698,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: { vars: { source: 'local' } },
         error: undefined,
         variables: { source: 'local' },
@@ -1706,12 +1706,13 @@ describe('useSuspenseQuery', () => {
     });
 
     // Check to make sure the property itself is not defined, not just set to
-    // undefined. Unfortunately this is not caught by toEqual as toEqual only
-    // checks if the values are equal, not if they have the same keys
+    // undefined. Unfortunately this is not caught by toMatchObject as
+    // toMatchObject only checks a if the subset of options are equal, not if
+    // they have strictly the same keys and values.
     expect(result.current.variables).not.toHaveProperty('globalOnlyVar');
     expect(result.current.data.vars).not.toHaveProperty('globalOnlyVar');
 
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: { vars: { source: 'local' } },
         error: undefined,
@@ -1748,7 +1749,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: { context: { valueA: 'A', valueB: 'B' } },
         error: undefined,
         variables: {},
@@ -1907,7 +1908,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: undefined,
         variables: {},
@@ -1918,7 +1919,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: undefined, error: undefined, variables: {} },
     ]);
   });
@@ -1934,7 +1935,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: undefined,
         variables: {},
@@ -1945,7 +1946,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: undefined, error: undefined, variables: {} },
     ]);
   });
@@ -1962,14 +1963,14 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
         error: undefined,
         variables: {},
       });
     });
 
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: { currentUser: { id: '1', name: null } },
         error: undefined,
@@ -1992,14 +1993,14 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: undefined,
         variables: {},
       });
     });
 
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: undefined,
         error: undefined,
@@ -2019,7 +2020,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: new ApolloError({ networkError }),
         variables: {},
@@ -2030,7 +2031,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: undefined,
         error: new ApolloError({ networkError }),
@@ -2056,7 +2057,7 @@ describe('useSuspenseQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: new ApolloError({ graphQLErrors: [graphQLError] }),
         variables: {},
@@ -2067,7 +2068,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: undefined,
         error: new ApolloError({ graphQLErrors: [graphQLError] }),
@@ -2098,7 +2099,7 @@ describe('useSuspenseQuery', () => {
     const expectedError = new ApolloError({ graphQLErrors });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: expectedError,
         variables: {},
@@ -2109,7 +2110,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: undefined,
         error: expectedError,
@@ -2140,14 +2141,14 @@ describe('useSuspenseQuery', () => {
     const expectedError = new ApolloError({ graphQLErrors: [graphQLError] });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
         error: expectedError,
         variables: {},
       });
     });
 
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       {
         data: { currentUser: { id: '1', name: null } },
         error: expectedError,
@@ -2215,7 +2216,7 @@ describe('useSuspenseQuery', () => {
     const expectedError = new ApolloError({ graphQLErrors });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: expectedError,
         variables: { id: '1' },
@@ -2225,7 +2226,7 @@ describe('useSuspenseQuery', () => {
     rerender({ id: '2' });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
         variables: { id: '2' },
@@ -2236,7 +2237,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: undefined, error: expectedError, variables: { id: '1' } },
       { data: undefined, error: expectedError, variables: { id: '1' } },
       { ...mocks[1].result, error: undefined, variables: { id: '2' } },
@@ -2283,7 +2284,7 @@ describe('useSuspenseQuery', () => {
     const expectedError = new ApolloError({ graphQLErrors });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         data: undefined,
         error: expectedError,
         variables: { id: '1' },
@@ -2293,7 +2294,7 @@ describe('useSuspenseQuery', () => {
     rerender({ id: '2' });
 
     await waitFor(() => {
-      expect(result.current).toEqual({
+      expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
         variables: { id: '2' },
@@ -2304,7 +2305,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([
+    expect(renders.frames).toMatchObject([
       { data: undefined, error: expectedError, variables: { id: '1' } },
       { data: undefined, error: expectedError, variables: { id: '1' } },
       { ...mocks[1].result, error: undefined, variables: { id: '2' } },

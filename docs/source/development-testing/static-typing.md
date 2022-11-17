@@ -1,18 +1,19 @@
 ---
-title: Using Apollo with TypeScript
+title: TypeScript with Apollo Client
+descriptions: How to generate and use TS types in your application 
 ---
 
-As your application grows, you may find it helpful to include a type system to assist in development. Apollo supports type definitions for TypeScript out of the box. Apollo Client ships with definitions in its associated npm package, so installation should be done for you after the libraries are included in your project.
+As your application grows, a type system can become an essential tool for catching bugs early and improving your overall developer experience. 
 
-These docs assume you already have TypeScript configured in your project, if not start [here](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide).
-
-The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can generate TypeScript definitions automatically using a tool like [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen).
+GraphQL uses a type system to clearly define the available data for each type and field in a GraphQL schema. Given that a GraphQL server's schema is strongly typed, we can generate TypeScript definitions automatically using a tool like [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen). We'll use our generated types to ensure type safety for the the _inputs_ and _results_ of our GraphQL operations.
 
 Below, we'll guide you through installing and configuring GraphQL Code Generator to generate types for your hooks and components.
 
 ## Setting up your project
 
-To get started using GraphQL Code Generator, we'll begin by installing the following packages (using Yarn or NPM):
+> This article assumes your project already uses TypeScript, if not [begin by configuring your project to use TypeScript](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide) or [start a new project](https://create-react-app.dev/docs/adding-typescript/).
+
+To get started using GraphQL Code Generator, begin by installing the following packages (using Yarn or NPM):
 
 ```bash
 yarn add -D typescript @graphql-codegen/cli @graphql-codegen/client-preset
@@ -54,7 +55,7 @@ Finally, we'll add the following scripts to our `package.json` file:
 }
 ```
 
-GraphQL Code Generator generates types based on our GraphQL schema if we run either code-generation script above:
+Running either of the scripts above generates types based on the schema file or GraphQL API you provided in `codegen.ts`:
 
 ```bash
 $ yarn run compile
@@ -64,7 +65,7 @@ $ yarn run compile
 
 ## Typing hooks
 
-GraphQL Code Generator automatically generates a `gql` function (from the `src/__genterated__/gql.ts` file), which we can use to type our hooks.
+GraphQL Code Generator automatically creates a `gql` function (from the `src/__genterated__/gql.ts` file), which we can use to type the variables going into, and results coming out of, of our React hooks.
 
 ### `useQuery`
 
@@ -86,7 +87,7 @@ const GET_ROCKET_INVENTORY = gql(/* GraphQL */ `
 `);
 
 export function RocketInventoryList() {
-  // data is typed!
+  // our query's result, data, is typed!
   const { loading, data } = useQuery(
     GET_ROCKET_INVENTORY,
     // variables are also typed!
@@ -122,15 +123,17 @@ export function RocketInventoryList() {
 
 #### `fetchMore` and `subscribeToMore`
 
-`useQuery` returns an instance of `QueryResult`. This includes the `fetchMore` and `subscribeToMore` functions. See the `Result` section of the [Queries](../data/queries#result) documentation page for detailed type information. Because these functions execute GraphQL operations, they accept type parameters.
+The `useQuery` hook returns an instance of `QueryResult`, which includes the `fetchMore` and `subscribeToMore` functions. See [Queries for detailed type information](../data/queries#result). Because these functions execute GraphQL operations, they accept type parameters.
 
-`fetchMore`'s type parameters are similar to those of `useQuery`. In fact, the type parameters are set to the same values as `useQuery`'s by default. Since both `fetchMore` and `useQuery` encapsulate a `query` operation, it's unlikely that you will need to pass any type arguments to `fetchMore`. Here's a sketch derived from the previous example:
+By default, `fetchMore`'s type parameters are set to the same value of `useQuery`'s type parameters. Since both `fetchMore` and `useQuery` encapsulate a `query` operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`. 
 
+Expanding our previous example, notice that we don't explicitly type `fetchMore`, because it defaults to using the same type parameters as `useQuery`:
 ```tsx
 // ...
 export function RocketInventoryList() {
   const { fetchMore, loading, data } = useQuery(
     GET_ROCKET_INVENTORY,
+    // variables are typed!
     { variables: { year: 2019 } }
   );
 
@@ -138,6 +141,7 @@ export function RocketInventoryList() {
     //...
     <button
       onClick={() => {
+        // variables are typed!
         fetchMore({ variables: { year: 2020 } });
       }}
     >
@@ -148,7 +152,7 @@ export function RocketInventoryList() {
 }
 ```
 
-`subscribeToMore`'s type parameters and defaults are identical to `fetchMore`'s. Keep in mind that `subscribeToMore` encapsulates a `subscription` whereas `fetchMore` encapsulates a `query`. Subscriptions and queries are different operations in the GraphQL spec. This means that you'll almost always pass at least one type argument to `subscribeToMore` since its default value will rarely Just Work. Here's another sketch based on the previous example:
+The `subscribeToMore` function's type parameters and defaults are identical to `fetchMore`'s. Keep in mind that `subscribeToMore` executes a _subscription_, whereas `fetchMore` executes follow-up queries. Using `subscribeToMore`, you'll usually pass at least one typed argument, like so:
 
 ```tsx
 // ...
@@ -169,6 +173,7 @@ export function RocketInventoryList() {
 
   React.useEffect(() => {
     subscribeToMore(
+      // variables are typed! 
       { document: ROCKET_STOCK_SUBSCRIPTION, variables: { year: 2019 } }
     );
   }, [subscribeToMore])
@@ -179,9 +184,7 @@ export function RocketInventoryList() {
 
 ### `useMutation`
 
-We can type our `useMutation()` hooks the same way we type our `useQuery()` hooks.
-
-We can use the generated `gql()` function to define our GraphQL mutations, ensuring our mutation's variables and data are typed:
+We can type our `useMutation` hooks the same way we type our `useQuery` hooks. Using the generated `gql` function to define our GraphQL mutations, we ensure that our mutation's variables and return data are typed:
 
 ```tsx
 import React, { useState } from 'react';
@@ -203,9 +206,9 @@ export function NewRocketForm() {
   const [year, setYear] = useState(0);
   const [stock, setStock] = useState(0);
 
-  // data is typed!
+  // our mutation's result, data, is typed!
   const [saveRocket, { error, data }] = useMutation(SAVE_ROCKET, {
-    // our variables are also typed!
+    // variables are also typed!
     variables: { rocket: { model, year: +year, stock: +stock } }
   });
 
@@ -249,8 +252,7 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-We can use the generated `gql()` function to define our GraphQL subscriptions, ensuring our subscription's variables and data are typed:
-
+We can type our `useSubscription` hooks the same way we typed our `useQuery` and ` useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that our subscriptions's variables and return data are typed:
 
 ```tsx
 import React from 'react';
@@ -267,7 +269,7 @@ const LATEST_NEWS = gql(/* GraphQL */ `
 `);
 
 export function LatestNews() {
-  // `data` is typed!
+  // our returned data is typed!
   const { loading, data } = useSubscription(LATEST_NEWS);
   return (
     <div>
@@ -280,10 +282,9 @@ export function LatestNews() {
 }
 ```
 
-## Typing Render Prop Components
+## Typing Render Prop components
 
-To type your render prop components, you'll first define a GraphQL query using the generated `gql()` function (from `src/__generated__/gql`). This creates a type for that query and its variables, which you can then pass to your `Query` component:
-
+To type render prop components, you'll first define a GraphQL query using the generated `gql` function (from `src/__generated__/gql`). This creates a type for that query and its variables, which you can then pass to your `Query` component:
 
 ```tsx
 import { gql, AllPeopleQuery, AllPeopleQueryVariables } from '../src/__generated__/gql';
@@ -305,19 +306,19 @@ const AllPeopleComponent = <Query<AllPeopleQuery, AllPeopleQueryVariables> query
 </Query>
 ```
 
-Now the `<Query />` component render prop function arguments are typed. Since we are not mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for full typing to work! Everything else is handled by React Apollo's robust type definitions.
+The above `<Query />` component's function arguments are typed. Since we aren't mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for our typing to work! 
 
-This approach is the exact same for the `<Query />`, `<Mutation />`, and `<Subscription />` components! Learn it once, and get the best types ever with Apollo.
+This approach works for both `<Mutation />` and `<Subscription />` components as well.
 
 ### Extending components
 
-In previous versions of React Apollo, render prop components (`Query`, `Mutation` and `Subscription`) could be extended to add additional type information:
+In previous versions of Apollo Client, render prop components (`Query`, `Mutation` and `Subscription`) could be extended to add additional type information:
 
 ```ts
 class SomeQuery extends Query<SomeData, SomeVariables> {}
 ```
 
-Since all class based render prop components have been converted to functional components, extending components in this manner is no longer possible. While we recommend switching over to use the new `useQuery`, `useMutation` and `useSubscription` hooks as soon as possible, if you're looking for a stop gap you can consider replacing your class with a wrapped and typed component:
+Now that class based render prop components have been converted to functional components, you can no longer extend components in this manner. While we recommend switching over to use the new `useQuery`, `useMutation` and `useSubscription` hooks as soon as possible, in the meantime you can replace your class with a wrapped and typed component:
 
 ```tsx
 export const SomeQuery = () => (
@@ -327,15 +328,15 @@ export const SomeQuery = () => (
 );
 ```
 
-## Typing Higher Order Components
+## Typing Higher-order components
 
-To type high-order components, begin by defining your GraphQL documents with the generated `gql()` function (from `./src/__generated__/gql`).
+To type higher-order components, begin by defining your GraphQL queries with the generated `gql` function (from `./src/__generated__/gql`). 
 
 In the below example, this generates the query and variable types (`GetCharacterQuery` and `GetCharacterQueryVariables`).
 
 Our wrapped component receives the query's result as props. So, we need to tell our type system the _shape_ of these props. Below is an example of setting types for an operation using the `graphql` higher-order component.
 
-> The following logic also works for the query, mutation, and subscription higher-order components!
+> The following logic also works for query, mutation, and subscription higher-order components!
 
 ```tsx
 import React from "react";
@@ -379,7 +380,9 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 
 ### Options
 
-Typically, variables to the query will be computed from the props of the wrapper component. Wherever the component is used in your application, the caller would pass arguments that we want our type system to validate what the shape of these props could look like. Here is an example setting the type of props:
+Typically, our query's variables are computed from the props of it's wrapper component. Wherever our application uses our wrapper component we want to ensure that those passed-in arguments are correctly typed. 
+
+Below is an example setting a type for a component's props:
 
 ```tsx
 import React from "react";
@@ -409,9 +412,11 @@ const withCharacter = graphql<
   GetCharacterQueryVariables,
   ChildProps
 >(HERO_QUERY, {
+  // highlight-start
   options: ({ episode }) => ({
     variables: { episode }
   }),
+  // highlight-end
 });
 
 export default withCharacter(({ data: { loading, hero, error } }) => {
@@ -421,7 +426,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 });
 ```
 
-This is especially helpful when accessing deeply nested objects that are passed down to the component through props. For example, when adding prop types, a project using TypeScript will begin to surface errors where props being passed are invalid:
+This is especially helpful when accessing deeply nested objects passed to our component via props. For example, when adding prop types, a project using TypeScript begins to surface errors when invalid props are passed in:
 
 ```tsx
 import React from "react";
@@ -452,9 +457,7 @@ export default () =>
 
 ### Props
 
-One of the most powerful feature of the React integration is the `props` function which allows you to reshape the result data from an operation into a new shape of props for the wrapped component. GraphQL is awesome at allowing you to only request the data you want from the server. The client still often needs to reshape or do client side calculations based on these results. The return value can even differ depending on the state of the operation (i.e loading, error, received data), so informing our type system of choice of these possible values is really important to make sure our components won't have runtime errors.
-
-The `graphql` wrapper from `@apollo/react-hoc` supports manually declaring the shape of your result props.
+The `props` function enables you to manually reshape an operation result's data into the shape your wrapped component's requires:
 
 ```tsx
 import React from "react";
@@ -488,7 +491,7 @@ const withCharacter = graphql<
   options: ({ episode }) => ({
     variables: { episode }
   }),
-  props: ({ data }) => ({ ...data })
+  props: ({ data }) => ({ ...data }) // highlight-line
 });
 
 export default withCharacter(({ loading, hero, error }) => {
@@ -498,7 +501,7 @@ export default withCharacter(({ loading, hero, error }) => {
 });
 ```
 
-Since we have typed the response shape, the props shape, and the shape of what will be passed to the client, we can prevent errors in multiple places. Our options and props function within the `graphql` wrapper are now type safe, our rendered component is protected, and our tree of components have their required props enforced.
+Above we type the shape of our response, props, and our client's variables. Our options and props function (within the `graphql` wrapper) are now type safe, our rendered component is protected, and our tree of components have their required props enforced:
 
 ```ts
 export const withCharacter = graphql<
@@ -520,11 +523,9 @@ export const withCharacter = graphql<
 });
 ```
 
-With this addition, the entirety of the integration between Apollo and React can be statically typed. When combined with the strong tooling each system provides, it can make for a much improved application and developer experience.
+### Classes vs functions
 
-### Classes vs Functions
-
-All of the above examples show wrapping a component which is just a function using the result of a `graphql` wrapper. Sometimes, components that depend on GraphQL data require state and are formed using the `class MyComponent extends React.Component` practice. In these use cases, TypeScript requires adding prop shape to the class instance. In order to support this, `@apollo/react-hoc` exports types to support creating result types easily.
+If you are using React classes instead of using the `graphql` wrapper, you can still type the incoming props for your class, like so:
 
 ```tsx
 import { ChildProps } from "@apollo/react-hoc";
@@ -549,13 +550,13 @@ export default withCharacter(Character);
 
 ### Using the `name` property
 
-If you are using the `name` property in the configuration of the `graphql` wrapper, you will need to manually attach the type of the response to the `props` function. An example using TypeScript would be like this:
+If you are using the `name` property in the configuration of the `graphql` wrapper, you need to manually attach the type of the response to the `props` function, like so:
 
 ```ts
 import { NamedProps, QueryProps } from '@apollo/react-hoc';
 
 export const withCharacter = graphql<GetCharacterQueryVariables, GetCharacterQuery, {}, Prop>(HERO_QUERY, {
-  name: 'character',
+  name: 'character', // highlight-line
   props: ({ character, ownProps }: NamedProps<{ character: QueryProps & GetCharacterQuery }, Props) => ({
     ...character,
     // $ExpectError [string] This type cannot be compared to number
@@ -568,7 +569,9 @@ export const withCharacter = graphql<GetCharacterQueryVariables, GetCharacterQue
 
 ## Using `TypeDocumentNode`
 
-In TypeScript, all APIs that take `DocumentNode` parameters may alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation but allows the APIs to infer the data and variable types instead of requiring you to specify types explicitly at the call site. This technique could allow us to modify the [`useQuery` example](#usequery) above to use type inference:
+In TypeScript, all APIs that intake `DocumentNode` can alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation, but enables APIs to infer the data and variable types (instead of requiring you to explicitly specify types upon invocation).
+
+This technique enables us to modify the [`useQuery` example](#usequery) above to use a type inference:
 
 ```tsx
 import React from 'react';
@@ -624,5 +627,4 @@ export function RocketInventoryList() {
     </div>
   );
 }
-
 ```

@@ -1265,18 +1265,21 @@ describe('useSuspenseQuery', () => {
     async (fetchPolicy) => {
       const { query, mocks } = useSimpleQueryCase();
 
-      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
 
       const { result, renders } = renderSuspenseHook(
         () => useSuspenseQuery(query, { fetchPolicy }),
-        { cache, mocks }
+        { client }
       );
 
       await waitFor(() => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      cache.writeQuery({
+      client.writeQuery({
         query,
         data: { greeting: 'Updated hello' },
       });
@@ -1304,22 +1307,26 @@ describe('useSuspenseQuery', () => {
   it('does not respond to cache updates when using a "no-cache" fetch policy', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
 
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { fetchPolicy: 'no-cache' }),
-      { cache, mocks }
+      { client }
     );
 
     await waitFor(() => {
       expect(result.current.data).toEqual(mocks[0].result.data);
     });
 
-    cache.writeQuery({
+    client.writeQuery({
       query,
       data: { greeting: 'Updated hello' },
     });
 
+    // Wait for a while to ensure no updates happen asynchronously
     await wait(100);
 
     expect(result.current).toEqual({
@@ -1525,7 +1532,7 @@ describe('useSuspenseQuery', () => {
       },
     });
 
-    cache.writeQuery({ query, data: { greeting: 'hello from cache' } });
+    client.writeQuery({ query, data: { greeting: 'hello from cache' } });
 
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query),

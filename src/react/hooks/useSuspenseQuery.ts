@@ -21,7 +21,10 @@ import { invariant } from '../../utilities/globals';
 import { compact, isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
-import { SuspenseQueryHookOptions } from '../types/types';
+import {
+  SuspenseQueryHookOptions,
+  ObservableQueryFields,
+} from '../types/types';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 
@@ -32,6 +35,7 @@ export interface UseSuspenseQueryResult<
   data: TData;
   error: ApolloError | undefined;
   variables: TVariables;
+  refetch: ObservableQueryFields<TData, TVariables>['refetch'];
 }
 
 const SUPPORTED_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
@@ -82,7 +86,7 @@ export function useSuspenseQuery_experimental<
         variables: compact({ ...defaultOptions.variables, ...variables }),
       };
     }, [options, query, client.defaultOptions.watchQuery]);
-  const { errorPolicy, returnPartialData, variables } = watchQueryOptions;
+  const { errorPolicy, returnPartialData } = watchQueryOptions;
 
   if (!hasRunValidations.current) {
     validateOptions(watchQueryOptions);
@@ -103,7 +107,7 @@ export function useSuspenseQuery_experimental<
     resultRef.current = observable.getCurrentResult();
   }
 
-  let cacheEntry = suspenseCache.getVariables(observable, variables);
+  let cacheEntry = suspenseCache.getVariables(observable, observable.variables);
 
   const result = useSyncExternalStore(
     useCallback(
@@ -178,7 +182,7 @@ export function useSuspenseQuery_experimental<
           const promise = observable.reobserve(watchQueryOptions);
           cacheEntry = suspenseCache.setVariables(
             observable,
-            watchQueryOptions.variables,
+            observable.variables,
             promise
           );
         }
@@ -214,6 +218,13 @@ export function useSuspenseQuery_experimental<
       data: result.data,
       error: errorPolicy === 'all' ? toApolloError(result) : void 0,
       variables: observable.variables as TVariables,
+      refetch: (variables?: Partial<TVariables>) => {
+        const promise = observable.refetch(variables);
+
+        suspenseCache.setVariables(observable, observable.variables, promise);
+
+        return promise;
+      },
     };
   }, [result, observable, errorPolicy]);
 }

@@ -2311,4 +2311,175 @@ describe('useSuspenseQuery', () => {
       { ...mocks[1].result, error: undefined, variables: { id: '2' } },
     ]);
   });
+
+  it('re-suspends when calling `refetch`', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel (updated)' } },
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { id: '1' } }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[1].result, error: undefined, variables: { id: '1' } },
+    ]);
+  });
+
+  it('re-suspends when calling `refetch` with new variables', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: { user: { id: '2', name: 'Captain America' } },
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { id: '1' } }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { id: '2' },
+      });
+    });
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+    ]);
+  });
+
+  it('does not suspend and returns previous data when calling `refetch` and using an "initial" suspensePolicy', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel (updated)' } },
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          suspensePolicy: 'initial',
+          variables: { id: '1' },
+        }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[1].result, error: undefined, variables: { id: '1' } },
+    ]);
+  });
 });

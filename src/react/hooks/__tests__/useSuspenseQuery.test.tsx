@@ -2658,4 +2658,73 @@ describe('useSuspenseQuery', () => {
       { ...mocks[0].result, error: expectedError, variables: { id: '1' } },
     ]);
   });
+
+  it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: null } },
+          errors: [new GraphQLError('Something went wrong')],
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          errorPolicy: 'all',
+          variables: { id: '1' },
+        }),
+      { mocks }
+    );
+
+    const expectedError = new ApolloError({
+      graphQLErrors: [new GraphQLError('Something went wrong')],
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: mocks[1].result.data,
+        error: expectedError,
+        variables: { id: '1' },
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      {
+        data: mocks[1].result.data,
+        error: expectedError,
+        variables: { id: '1' },
+      },
+    ]);
+  });
 });

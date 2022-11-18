@@ -2540,4 +2540,122 @@ describe('useSuspenseQuery', () => {
 
     consoleSpy.mockRestore();
   });
+
+  it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('Something went wrong')],
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          errorPolicy: 'ignore',
+          variables: { id: '1' },
+        }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await wait(100);
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+    ]);
+  });
+
+  it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('Something went wrong')],
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          errorPolicy: 'all',
+          variables: { id: '1' },
+        }),
+      { mocks }
+    );
+
+    const expectedError = new ApolloError({
+      graphQLErrors: [new GraphQLError('Something went wrong')],
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: expectedError,
+        variables: { id: '1' },
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: expectedError, variables: { id: '1' } },
+    ]);
+  });
 });

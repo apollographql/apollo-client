@@ -56,12 +56,12 @@ function renderSuspenseHook<Result, Props>(
     return <div>loading</div>;
   }
 
-  const errorBoundaryProps: ErrorBoundaryProps = {
-    fallback: <div>Error</div>,
-    onError: (error) => {
-      renders.errorCount++;
-      renders.errors.push(error);
-    },
+  const renders: Renders<Result> = {
+    errors: [],
+    errorCount: 0,
+    suspenseCount: 0,
+    count: 0,
+    frames: [],
   };
 
   const {
@@ -70,6 +70,14 @@ function renderSuspenseHook<Result, Props>(
     link,
     mocks = [],
     wrapper = ({ children }) => {
+      const errorBoundaryProps: ErrorBoundaryProps = {
+        fallback: <div>Error</div>,
+        onError: (error) => {
+          renders.errorCount++;
+          renders.errors.push(error);
+        },
+      };
+
       return client ? (
         <ApolloProvider client={client} suspenseCache={new SuspenseCache()}>
           <ErrorBoundary {...errorBoundaryProps}>
@@ -86,14 +94,6 @@ function renderSuspenseHook<Result, Props>(
     },
     ...renderHookOptions
   } = options;
-
-  const renders: Renders<Result> = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
 
   const result = renderHook(
     (props) => {

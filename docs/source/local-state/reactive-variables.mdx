@@ -40,38 +40,20 @@ To modify the value of your reactive variable, call the function returned by `ma
 
 ```js
 const cartItemsVar = makeVar([]);
+const cartItemIds = [100, 101, 102];
 
-cartItemsVar([100, 101, 102]);
+cartItemsVar(cartItemIds);
 
 // Output: [100, 101, 102]
 console.log(cartItemsVar());
 
-cartItemsVar([456]);
+// Don't mutate an existing object or array.
+// cartItemIds.push(456) will not trigger an update.
+// Instead, pass a new copy:
+cartItemsVar([...cartItemIds, 456]);
 
-// Output: [456]
+// Output: [100, 101, 102, 456]
 console.log(cartItemsVar());
-```
-
-In the above example note that a new array is passed in every time to the reactive variable. Currently `useReactiveVar` only triggers component updates when new values are passed to the reactive variable. It uses strict equality checks (the `===` operator) to determine if the value has changed. Make sure you are always passing new values when performing an update.
-
-This will *not* trigger an update:
-
-```ts
-const cartItemsVar = makeVar([1, 2]);
-const cartItems = cartItemsVar();
-
-cartItems.push(3);
-cartItemsVarVar(cartItems);
-```
-
-This will trigger an update:
-
-```ts
-const cartItemsVar = makeVar([1, 2]);
-const cartItems = cartItemsVar();
-
-cartItemsVar([...cartItems, 3]); // spread operator to use existing values
-cartItemsVar(cartItems.concat(4)); // Array.concat creates a new array
 ```
 
 ## Reacting
@@ -95,36 +77,6 @@ export const cartItemsVar = makeVar([]);
 export function Cart() {
   const cartItems = useReactiveVar(cartItemsVar);
   // ...
-```
-
-## Troubleshooting
-
-### Updates Outside of Components
-
-If you are making updates to a reactive variable outside of a React component and your components that use `useReactiveVar` are not updating, try deferring the update to the next tick of the event loop.
-
-Here's an example that tracks GraphQL errors using the [onError Link](../api/link/apollo-link-error.md).
-
-```ts
-const errorsVar = makeVar<Error[]>([]);
-
-const errorLink = onError((error: ErrorResponse) => {
-  const errors = errorsVar();
-
-  // making a copy of the current array value will trigger an update
-  const nextErrors = [...errors];
-
-  if (error.graphQLErrors) {
-    error.graphQLErrors.forEach((e) => nextErrors.push(e));
-  }
-
-  if (error.networkError) {
-    nextErrors.push(error.networkError);
-  }
-
-  // deferring the update to next tick will allow the update to reliably trigger a new component render
-  setTimeout(() => errorsVar(nextErrors));
-});
 ```
 
 ## Example application

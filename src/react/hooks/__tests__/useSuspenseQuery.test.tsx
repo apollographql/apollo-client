@@ -2482,4 +2482,62 @@ describe('useSuspenseQuery', () => {
       { ...mocks[1].result, error: undefined, variables: { id: '1' } },
     ]);
   });
+
+  it('throws errors when errors are returned after calling `refetch`', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('Something went wrong')],
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { id: '1' } }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => {
+      expect(renders.errorCount).toBe(1);
+    });
+
+    expect(renders.errors).toEqual([
+      new ApolloError({
+        graphQLErrors: [new GraphQLError('Something went wrong')],
+      }),
+    ]);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+    ]);
+
+    consoleSpy.mockRestore();
+  });
 });

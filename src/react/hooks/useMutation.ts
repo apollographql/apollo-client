@@ -26,7 +26,7 @@ export function useMutation<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<TData, TVariables, TContext>,
+  options?: MutationHookOptions<TData, TVariables, TContext, TCache>,
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);

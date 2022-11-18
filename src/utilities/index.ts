@@ -5,6 +5,8 @@ export {
   InclusionDirectives,
   shouldInclude,
   hasDirectives,
+  hasAnyDirectives,
+  hasAllDirectives,
   hasClientExports,
   getDirectiveNames,
   getInclusionDirectives,
@@ -12,6 +14,7 @@ export {
 
 export {
   FragmentMap,
+  FragmentMapFunction,
   createFragmentMap,
   getFragmentQueryDocument,
   getFragmentFromSelection,
@@ -92,5 +95,6 @@ export * from './common/canUse';
 export * from './common/compact';
 export * from './common/makeUniqueId';
 export * from './common/stringifyForDisplay';
+export * from './common/mergeOptions';
 
 export * from './types/IsStrictlyAny';

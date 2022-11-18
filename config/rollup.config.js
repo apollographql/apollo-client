@@ -1,36 +1,38 @@
+import path from 'path';
+import { promises as fs } from "fs";
+
 import nodeResolve from '@rollup/plugin-node-resolve';
 import { terser as minify } from 'rollup-plugin-terser';
-import path from 'path';
 
 const entryPoints = require('./entryPoints');
 const distDir = './dist';
 
 function isExternal(id, parentId, entryPointsAreExternal = true) {
+  let posixId = toPosixPath(id)
+  const posixParentId = toPosixPath(parentId);
   // Rollup v2.26.8 started passing absolute id strings to this function, thanks
   // apparently to https://github.com/rollup/rollup/pull/3753, so we relativize
   // the id again in those cases.
   if (path.isAbsolute(id)) {
-    const posixId = toPosixPath(id);
-    const posixParentId = toPosixPath(parentId);
-    id = path.posix.relative(
+    posixId = path.posix.relative(
       path.posix.dirname(posixParentId),
       posixId,
     );
-    if (!id.startsWith(".")) {
-      id = "./" + id;
+    if (!posixId.startsWith(".")) {
+      posixId = "./" + posixId;
     }
   }
 
   const isRelative =
-    id.startsWith("./") ||
-    id.startsWith("../");
+    posixId.startsWith("./") ||
+    posixId.startsWith("../");
 
   if (!isRelative) {
     return true;
   }
 
   if (entryPointsAreExternal &&
-      entryPoints.check(id, parentId)) {
+      entryPoints.check(posixId, posixParentId)) {
     return true;
   }
 
@@ -102,13 +104,16 @@ function prepareBundle({
   extensions,
 }) {
   const dir = path.join(distDir, ...dirs);
+  const inputFile = `${dir}/index.js`;
+  const outputFile = `${dir}/${bundleName}.cjs`;
+
   return {
-    input: `${dir}/index.js`,
+    input: inputFile,
     external(id, parentId) {
       return isExternal(id, parentId, true);
     },
     output: {
-      file: `${dir}/${bundleName}.cjs`,
+      file: outputFile,
       format: 'cjs',
       sourcemap: true,
       exports: 'named',
@@ -116,6 +121,16 @@ function prepareBundle({
     },
     plugins: [
       extensions ? nodeResolve({ extensions }) : nodeResolve(),
+      {
+        name: "copy *.cjs to *.cjs.native.js",
+        async writeBundle({ file }) {
+          const buffer = await fs.readFile(file);
+          await fs.writeFile(
+            file + ".native.js",
+            buffer,
+          );
+        },
+      },
     ],
   };
 }

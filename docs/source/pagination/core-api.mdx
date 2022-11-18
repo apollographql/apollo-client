@@ -1,6 +1,5 @@
 ---
 title: Core pagination API
-sidebar_title: Core API
 description: Fetching and caching paginated results
 ---
 
@@ -15,7 +14,7 @@ This article describes these core requirements for paginated fields.
 
 Pagination always involves sending followup queries to your GraphQL server to obtain additional pages of results. In Apollo Client, the recommended way to send these followup queries is with the [`fetchMore`](../caching/advanced-topics/#incremental-loading-fetchmore) function. This function is a member of the `ObservableQuery` object returned by `client.watchQuery`, and it's also provided by the `useQuery` hook:
 
-```jsx{11}:title=FeedWithData.jsx
+```jsx {11} title="FeedWithData.jsx"
 const FEED_QUERY = gql`
   query Feed($offset: Int, $limit: Int) {
     feed(offset: $offset, limit: $limit) {
@@ -40,7 +39,7 @@ You usually call `fetchMore` in response to a user action, such as clicking a bu
 
 By default, `fetchMore` executes a query with the exact same shape and variables as your original query. You can pass new values for the query's `variables` (such as providing a new `offset`) like so:
 
-```jsx{12-16}:title=FeedWithData.jsx
+```jsx {12-16} title="FeedWithData.jsx"
 const FeedWithData() {
 // ...continuing from above...
 
@@ -80,7 +79,7 @@ As mentioned above, a [`fetchMore`](#the-fetchmore-function) followup query does
 
 Let's say we have a field in our GraphQL schema that takes an argument:
 
-```graphql{2}
+```graphql {2}
 type Query {
   user(id: ID!): User
 }
@@ -122,7 +121,7 @@ A field policy specifies how a particular field in your `InMemoryCache` is read 
 
 Here's the server-side schema for our message feed application that uses offset-based pagination:
 
-```graphql{2}
+```graphql {2}
 type Query {
   feed(offset: Int, limit: Int): [FeedItem!]
 }
@@ -137,7 +136,7 @@ In our client, we want to define a field policy for `Query.feed` so that all ret
 
 We define our field policy within the `typePolicies` option we provide the `InMemoryCache` constructor:
 
-```js{5-15}
+```js {5-15}
 const cache = new InMemoryCache({
   typePolicies: {
     Query: {

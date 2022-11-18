@@ -1,4 +1,5 @@
-import React, { Fragment } from 'react';
+import { RenderResult } from "@testing-library/react-hooks/src/types";
+import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
@@ -8,6 +9,7 @@ import {
   ApolloClient,
   ApolloError,
   NetworkStatus,
+  OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from '../../../core';
@@ -15,7 +17,14 @@ import { InMemoryCache } from '../../../cache';
 import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
-import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
+import {
+  itAsync,
+  MockLink,
+  MockedProvider,
+  MockSubscriptionLink,
+  mockSingleLink,
+} from '../../../testing';
+import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
@@ -44,6 +53,87 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: "world" });
+    });
+
+    it("useQuery result is referentially stable", async () => {
+      const query = gql`{ hello }`;
+      const mocks = [ {
+          request: { query },
+          result: { data: { hello: "world" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
+      await waitFor(() => result.current.loading === false);
+      const oldResult = result.current;
+      rerender({ children: null });
+      expect(oldResult === result.current).toBe(true);
+    });
+
+    const expectFrames = <TData, TVariables>(result: RenderResult<QueryResult<TData, TVariables>>, expectedPartialFrames: Partial<QueryResult<TData, TVariables>>[]) => {
+      const actualPartialFrames = result.all.map((actualFrame, i) => {
+      const expectedPartialFrame = expectedPartialFrames[i];
+        if (actualFrame instanceof Error) {
+          return {
+            error: actualFrame,
+          };
+        }
+        if (expectedPartialFrame) {
+          const actualPartialFrame: Partial<Record<keyof QueryResult<TData, TVariables>, any>> = {};
+          (Object.keys(expectedPartialFrame) as (keyof typeof expectedPartialFrame)[]).forEach((key) => {
+            actualPartialFrame[key] = actualFrame[key];
+          });
+          return actualPartialFrame;
+        }
+        return {};
+      });
+      expect(actualPartialFrames).toEqual(expectedPartialFrames);
+    };
+
+    it("useQuery produces the expected frames initially", async () => {
+      const query = gql`{ hello }`;
+      const mocks = [ {
+        request: { query },
+        result: { data: { hello: "world" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
+      await waitFor(() => result.current.loading === false);
+      rerender({ children: null });
+      expectFrames(result, [
+        { loading: true, data: void 0 },
+        { loading: false, data: { hello: "world" } },
+        // Repeat frame because rerender forces useQuery to be called again
+        { loading: false, data: { hello: "world" } },
+      ]);
+    });
+
+    it("useQuery produces the expected frames when variables change", async () => {
+      const query = gql`
+        query ($id: Int) {
+        hello(id: $id)
+      }
+      `;
+      const mocks = [ {
+        request: { query, variables: { id: 1 } },
+        result: { data: { hello: "world 1" } },
+      }, {
+        request: { query, variables: { id: 2 } },
+        result: { data: { hello: "world 2" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, rerender, waitFor } = renderHook(
+        (options) => useQuery(query, options),
+        { wrapper, initialProps: { variables: { id: 1 } } },
+      );
+      await waitFor(() => result.current.loading === false);
+      rerender({ variables: { id: 2 } });
+      await waitFor(() => result.current.loading === false);
+      expectFrames(result, [
+        { loading: true, data: void 0, networkStatus: NetworkStatus.loading },
+        { loading: false, data: { hello: "world 1" }, networkStatus: NetworkStatus.ready },
+        { loading: true, data: void 0, networkStatus: NetworkStatus.setVariables },
+        { loading: false, data: { hello: "world 2" }, networkStatus: NetworkStatus.ready },
+      ]);
     });
 
     it('should read and write results from the cache', async () => {
@@ -131,6 +221,29 @@ describe('useQuery Hook', () => {
       );
 
       expect(result.current.called).toBe(true);
+      unmount();
+    });
+
+    it('should set called to false when skip option is true', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+          <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const { result, unmount } = renderHook(
+          () => useQuery(query, { skip: true }),
+          { wrapper },
+      );
+
+      expect(result.current.called).toBe(false);
       unmount();
     });
 
@@ -353,11 +466,16 @@ describe('useQuery Hook', () => {
       expect(result.current[0].loading).toBe(true);
       expect(result.current[0].data).toBe(undefined);
       expect(result.current[0].variables).toEqual({ name: "world 2" });
+
       await waitForNextUpdate();
 
-      expect(result.current[0].loading).toBe(false);
-      expect(result.current[0].data).toEqual({ hello: "world 2" });
-      expect(result.current[0].variables).toEqual({ name: "world 2" });
+      // TODO(investigate) Without waitFor, loading is sometimes still true
+      // here, after awaiting waitForNextUpdate().
+      return waitFor(() => {
+        expect(result.current[0].loading).toBe(false);
+        expect(result.current[0].data).toEqual({ hello: "world 2" });
+        expect(result.current[0].variables).toEqual({ name: "world 2" });
+      });
     });
 
     // TODO: Rewrite this test
@@ -584,14 +702,15 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
+      const wrapper: React.FC<React.PropsWithChildren<{ query: DocumentNode }>> = ({ children }) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ query }) => useQuery(query, { pollInterval: 10 }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { query: query1 },
         },
       );
@@ -747,7 +866,513 @@ describe('useQuery Hook', () => {
     });
   });
 
+  describe("options.defaultOptions", () => {
+    it("can provide a default fetchPolicy", async () => {
+      const query = gql`query { hello }`;
+      const link = mockSingleLink(
+        {
+          request: { query },
+          result: { data: { hello: 'from link' } },
+        },
+      );
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const fetchPolicyLog: (string | undefined)[] = [];
+
+      let defaultFetchPolicy: WatchQueryFetchPolicy = "cache-and-network";
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const result = useQuery(query, {
+            defaultOptions: {
+              fetchPolicy: defaultFetchPolicy,
+            },
+          });
+          fetchPolicyLog.push(result.observable.options.fetchPolicy);
+          return result;
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        }
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+      ]);
+
+      // Change the default fetchPolicy to verify that it is not used the second
+      // time useQuery is called.
+      defaultFetchPolicy = "network-only";
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'from link' });
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+      ]);
+    });
+
+    it("can provide individual default variables", async () => {
+      const query: TypedDocumentNode<{
+        vars: OperationVariables,
+      }, OperationVariables> = gql`
+        query VarsQuery {
+          vars
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: new ApolloLink(request => new Observable(observer => {
+          observer.next({
+            data: {
+              vars: request.variables,
+            },
+          });
+          observer.complete();
+        })),
+
+        cache: new InMemoryCache(),
+
+        defaultOptions: {
+          watchQuery: {
+            variables: {
+              sourceOfVar: "global",
+              isGlobal: true,
+            },
+          },
+        },
+      });
+
+      const fetchPolicyLog: (string | undefined)[] = [];
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const result = useQuery(query, {
+            defaultOptions: {
+              fetchPolicy: "cache-and-network",
+              variables: {
+                sourceOfVar: "local",
+                isGlobal: false,
+              } as OperationVariables,
+            },
+            variables: {
+              mandatory: true,
+            },
+          });
+          fetchPolicyLog.push(result.observable.options.fetchPolicy);
+          return result;
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        }
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.observable.variables).toEqual({
+        sourceOfVar: "local",
+        isGlobal: false,
+        mandatory: true,
+      });
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-and-network");
+
+      expect(
+        // The defaultOptions field is for useQuery options (QueryHookOptions),
+        // not the more general WatchQueryOptions that ObservableQuery sees.
+        "defaultOptions" in result.current.observable.options
+      ).toBe(false);
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+      ]);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        vars: {
+          sourceOfVar: "local",
+          isGlobal: false,
+          mandatory: true,
+        },
+      });
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+      ]);
+
+      const reobservePromise = act(() => result.current.observable.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          // Since reobserve replaces the variables object rather than merging
+          // the individual variables together, we need to include the current
+          // variables manually if we want them to show up in the output below.
+          ...result.current.observable.variables,
+          sourceOfVar: "reobserve",
+        },
+      }).then(finalResult => {
+        expect(finalResult.loading).toBe(false);
+        expect(finalResult.data).toEqual({
+          vars: {
+            sourceOfVar: "reobserve",
+            isGlobal: false,
+            mandatory: true,
+          },
+        });
+      }));
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
+
+      expect(result.current.observable.variables).toEqual({
+        sourceOfVar: "reobserve",
+        isGlobal: false,
+        mandatory: true,
+      });
+
+      await reobservePromise;
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        vars: {
+          sourceOfVar: "reobserve",
+          isGlobal: false,
+          mandatory: true,
+        },
+      });
+      expect(
+        result.current.observable.variables
+      ).toEqual(
+        result.current.data!.vars
+      );
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+        "cache-first",
+      ]);
+
+      const reobserveNoVarMergePromise = act(() => result.current.observable.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          // This reobservation is like the one above, with no variable merging.
+          // ...result.current.observable.variables,
+          sourceOfVar: "reobserve without variable merge",
+        },
+      }).then(finalResult => {
+        expect(finalResult.loading).toBe(false);
+        expect(finalResult.data).toEqual({
+          vars: {
+            sourceOfVar: "reobserve without variable merge",
+            // Since we didn't merge in result.current.observable.variables, we
+            // don't see these variables anymore:
+            // isGlobal: false,
+            // mandatory: true,
+          },
+        });
+      }));
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
+
+      expect(result.current.observable.variables).toEqual({
+        sourceOfVar: "reobserve without variable merge",
+      });
+
+      await reobserveNoVarMergePromise;
+
+      expect(
+        result.current.observable.options.fetchPolicy
+      ).toBe("cache-first");
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        vars: {
+          sourceOfVar: "reobserve without variable merge",
+        },
+      });
+      expect(
+        result.current.observable.variables
+      ).toEqual(
+        result.current.data!.vars
+      );
+
+      expect(fetchPolicyLog).toEqual([
+        "cache-and-network",
+        "cache-and-network",
+        "cache-first",
+        "cache-first",
+      ]);
+    });
+
+    it("defaultOptions do not confuse useQuery when unskipping a query (issue #9635)", async () => {
+      const query: TypedDocumentNode<{
+        counter: number;
+      }> = gql`
+        query GetCounter {
+          counter
+        }
+      `;
+
+      let count = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          if (request.operationName === "GetCounter") {
+            observer.next({
+              data: {
+                counter: ++count,
+              },
+            });
+            setTimeout(() => {
+              observer.complete();
+            }, 10);
+          } else {
+            observer.error(new Error(`Unknown query: ${
+              request.operationName || request.query
+            }`));
+          }
+        })),
+      });
+
+      const defaultFetchPolicy = "network-only";
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [skip, setSkip] = useState(true);
+          return {
+            setSkip,
+            query: useQuery(query, {
+              skip,
+              defaultOptions: {
+                fetchPolicy: defaultFetchPolicy,
+              },
+            }),
+          };
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toBeUndefined();
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setSkip(false);
+      });
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.query.data).toBeUndefined();
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toEqual({ counter: 1 });
+
+      const { options } = result.current.query.observable;
+      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setSkip(true);
+      });
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toBeUndefined();
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setSkip(false);
+      });
+      expect(result.current.query.loading).toBe(true);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.query.data).toEqual({ counter: 1 });
+      await waitForNextUpdate();
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.query.data).toEqual({ counter: 2 });
+
+      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+    });
+  });
+
+  it("can provide options.client without ApolloProvider", async () => {
+    const query = gql`query { hello }`;
+    const link = mockSingleLink(
+      {
+        request: { query },
+        result: { data: { hello: 'from link' } },
+      },
+    );
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      ssrMode: true,
+    });
+
+    const { result, waitForNextUpdate } = renderHook(
+      () => useQuery(query, { client }),
+      // We deliberately do not provide the usual ApolloProvider wrapper for
+      // this test, since we are providing the client directly to useQuery.
+      // {
+      //   wrapper: ({ children }) => (
+      //     <ApolloProvider client={client}>
+      //       {children}
+      //     </ApolloProvider>
+      //   ),
+      // }
+    );
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.data).toBeUndefined();
+
+    await waitForNextUpdate();
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data).toEqual({ hello: 'from link' });
+  });
+
+  describe('<React.StrictMode>', () => {
+    it("double-rendering should not trigger duplicate network requests", async () => {
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`query Counter { linkCount }`;
+
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          if (request.operationName === "Counter") {
+            observer.next({
+              data: {
+                linkCount: ++linkCount,
+              },
+            });
+            observer.complete();
+          }
+        })),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {
+          fetchPolicy: "cache-and-network",
+        }),
+        {
+          wrapper: ({ children }) => (
+            <React.StrictMode>
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            </React.StrictMode>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        linkCount: 1,
+      });
+
+      function checkObservableQueries(expectedLinkCount: number) {
+        const obsQueries = client.getObservableQueries("all");
+        expect(obsQueries.size).toBe(2);
+
+        const activeSet = new Set<typeof result.current.observable>();
+        const inactiveSet = new Set<typeof result.current.observable>();
+        obsQueries.forEach(obsQuery => {
+          if (obsQuery.hasObservers()) {
+            expect(inactiveSet.has(obsQuery)).toBe(false);
+            activeSet.add(obsQuery);
+            expect(obsQuery.getCurrentResult()).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                linkCount: expectedLinkCount,
+              },
+            });
+          } else {
+            expect(activeSet.has(obsQuery)).toBe(false);
+            inactiveSet.add(obsQuery);
+          }
+        });
+        expect(activeSet.size).toBe(1);
+        expect(inactiveSet.size).toBe(1);
+      }
+
+      checkObservableQueries(1);
+
+      const reobservePromise = result.current.reobserve().then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual({
+          linkCount: 2,
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        linkCount: 2,
+      });
+
+      checkObservableQueries(2);
+
+      await reobservePromise;
+    });
+  });
+
   describe('polling', () => {
+    const TIME_SCALE = 10;
     it('should support polling', async () => {
       const query = gql`{ hello }`;
       const mocks = [
@@ -819,7 +1444,7 @@ describe('useQuery Hook', () => {
 
       const cache = new InMemoryCache();
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip }) => useQuery(query, { pollInterval: 10, skip }),
+        ({ skip }) => useQuery(query, { pollInterval: 10*TIME_SCALE, skip }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks} cache={cache}>
@@ -842,7 +1467,7 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitForNextUpdate({ timeout: 20*TIME_SCALE })).rejects.toThrow('Timed out');
 
       rerender({ skip: false });
       expect(result.current.loading).toBe(false);
@@ -855,6 +1480,45 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: "world 3" });
+    });
+
+    it("should return data from network when clients default fetch policy set to network-only", async () => {
+      const query = gql`{ hello }`;
+      const data = { hello: "world" };
+      const mocks = [
+        {
+          request: { query },
+          result: { data },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      cache.writeQuery({
+        query,
+        data: { hello: "world 2" },
+      });
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider
+          mocks={mocks}
+          cache={cache}
+          defaultOptions={{ watchQuery: { fetchPolicy: "network-only" } }}
+        >
+          {children}
+        </MockedProvider>
+      );
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual(data);
     });
 
     it('should stop polling when component unmounts', async () => {
@@ -885,7 +1549,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 10*TIME_SCALE }),
         { wrapper },
       );
 
@@ -897,7 +1561,7 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       unmount();
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitForNextUpdate({ timeout: 20*TIME_SCALE })).rejects.toThrow('Timed out');
       expect(requestSpy).toHaveBeenCalledTimes(1);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
@@ -934,7 +1598,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, waitForNextUpdate, unmount } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 10*TIME_SCALE }),
         { wrapper },
       );
 
@@ -947,9 +1611,14 @@ describe('useQuery Hook', () => {
 
       unmount();
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
-      expect(requestSpy).toHaveBeenCalledTimes(1);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
+      await expect(waitForNextUpdate({
+        timeout: 50 * TIME_SCALE
+      })).rejects.toThrow('Timed out');
+
+      return waitFor(() => {
+        expect(requestSpy).toHaveBeenCalledTimes(1);
+        expect(onErrorFn).toHaveBeenCalledTimes(0);
+      });
     });
 
     it('should start and stop polling in Strict Mode', async () => {
@@ -1256,15 +1925,15 @@ describe('useQuery Hook', () => {
           },
         },
       ];
-
+      const wrapper: React.FC<React.PropsWithChildren<{ id: number }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ id }) => useQuery(query, { variables: { id } }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { id: 1 },
         },
       );
@@ -1525,15 +2194,15 @@ describe('useQuery Hook', () => {
       ];
 
       const onCompleted = jest.fn();
-
+      const wrapper: React.FC<React.PropsWithChildren<{ variables: { first: number } }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ variables }) => useQuery(query, { variables, onCompleted }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: {
             variables: { first: 1 },
           },
@@ -1545,6 +2214,7 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
+      expect(onCompleted).toHaveBeenLastCalledWith(data1);
 
       rerender({ variables: { first: 2 } });
       expect(result.current.loading).toBe(true);
@@ -1552,12 +2222,13 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data2);
+      expect(onCompleted).toHaveBeenLastCalledWith(data2);
 
       rerender({ variables: { first: 1 } });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
-
-      expect(onCompleted).toHaveBeenCalledTimes(3);
+      await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(3));
+      expect(onCompleted).toHaveBeenLastCalledWith(data1);
     });
   });
 
@@ -2282,7 +2953,7 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
       expect(onCompleted).toHaveBeenCalledWith({ hello: 'world' });
       await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
       expect(onCompleted).toHaveBeenCalledTimes(1);
@@ -2447,6 +3118,52 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world 3' });
       expect(onCompleted).toHaveBeenCalledTimes(3);
+    });
+
+    // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794
+    it("onCompleted can set state without causing react errors", async () => {
+      const errorSpy = jest.spyOn(console, "error");
+      const query = gql`
+        {
+          hello
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      cache.writeQuery({
+        query,
+        data: { hello: "world" },
+      });
+
+      const ChildComponent: React.FC<{
+        setOnCompletedCalled: React.Dispatch<React.SetStateAction<boolean>>;
+      }> = ({ setOnCompletedCalled }) => {
+        useQuery(query, {
+          fetchPolicy: "cache-only",
+          onCompleted: () => {
+            setOnCompletedCalled(true);
+          },
+        });
+
+        return null;
+      };
+
+      const ParentComponent: React.FC = () => {
+        const [onCompletedCalled, setOnCompletedCalled] = useState(false);
+        return (
+          <MockedProvider mocks={[]} cache={cache}>
+            <div>
+              <ChildComponent setOnCompletedCalled={setOnCompletedCalled} />
+              onCompletedCalled: {String(onCompletedCalled)}
+            </div>
+          </MockedProvider>
+        );
+      };
+
+      const { findByText } = render(<ParentComponent />);
+      await findByText("onCompletedCalled: true");
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
   });
 
@@ -3004,14 +3721,15 @@ describe('useQuery Hook', () => {
           result: { data: { hello: 'world' } },
         },
       ];
+      const wrapper: React.FC<React.PropsWithChildren<{ fetchPolicy: any }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { fetchPolicy: 'standby' as any },
         },
       );
@@ -3029,7 +3747,8 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: 'world' });
     });
 
-    it('should not refetch when skip is true', async () => {
+    // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
+    it('should refetch when skip is true', async () => {
       const query = gql`{ hello }`;
       const link = new ApolloLink(() => Observable.of({
         data: { hello: 'world' },
@@ -3056,13 +3775,126 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       await expect(waitForNextUpdate({ timeout: 20 }))
         .rejects.toThrow('Timed out');
-      result.current.refetch();
-      await expect(waitForNextUpdate({ timeout: 20 }))
-        .rejects.toThrow('Timed out');
+      const promise = result.current.refetch();
+      // TODO: Not really sure about who is causing this render.
+      await waitForNextUpdate();
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      expect(requestSpy).toHaveBeenCalledTimes(0);
+      expect(requestSpy).toHaveBeenCalledTimes(1);
       requestSpy.mockRestore();
+      expect(promise).resolves.toEqual({
+        data: {hello: "world"},
+        loading: false,
+        networkStatus: 7,
+      });
+    });
+
+    it('should set correct initialFetchPolicy even if skip:true', async () => {
+      const query = gql`{ hello }`;
+      let linkCount = 0;
+      const link = new ApolloLink(() => Observable.of({
+        data: { hello: ++linkCount },
+      }));
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const correctInitialFetchPolicy: WatchQueryFetchPolicy =
+        "cache-and-network";
+
+      const wrapper: React.FC<React.PropsWithChildren<{ skip: boolean }>> = ({ children }) => (
+        <ApolloProvider client={client}>
+          {children}
+        </ApolloProvider>
+      );
+      const { result, waitForNextUpdate, rerender } = renderHook<{
+        skip: boolean;
+      }, QueryResult>(
+        ({ skip = true }) => useQuery(query, {
+          // Skipping equates to using a fetchPolicy of "standby", but that
+          // should not mean we revert to standby whenever we want to go back to
+          // the initial fetchPolicy (e.g. when variables change).
+          skip,
+          fetchPolicy: correctInitialFetchPolicy,
+        }),
+        {
+          initialProps: {
+            skip: true,
+          },
+          wrapper,
+        },
+      );
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
+
+      function check(
+        expectedFetchPolicy: WatchQueryFetchPolicy,
+        expectedInitialFetchPolicy: WatchQueryFetchPolicy,
+      ) {
+        const { observable } = result.current;
+        const {
+          fetchPolicy,
+          initialFetchPolicy,
+        } = observable.options;
+
+        expect(fetchPolicy).toBe(expectedFetchPolicy);
+        expect(initialFetchPolicy).toBe(expectedInitialFetchPolicy);
+      }
+
+      check(
+        "standby",
+        correctInitialFetchPolicy,
+      );
+
+      rerender({
+        skip: false,
+      });
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hello: 1,
+      });
+
+      check(
+        correctInitialFetchPolicy,
+        correctInitialFetchPolicy,
+      );
+
+      const reasons: string[] = [];
+
+      const reobservePromise = result.current.observable.reobserve({
+        variables: {
+          newVar: true,
+        },
+        nextFetchPolicy(currentFetchPolicy, context) {
+          expect(currentFetchPolicy).toBe("cache-and-network");
+          expect(context.initialFetchPolicy).toBe("cache-and-network");
+          reasons.push(context.reason);
+          return currentFetchPolicy;
+        },
+      }).then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: 2 });
+      });
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hello: 2,
+      });
+
+      await reobservePromise;
+
+      expect(reasons).toEqual([
+        "variables-changed",
+        "after-fetch",
+      ]);
     });
   });
 
@@ -3279,6 +4111,99 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
     });
+
+    it('should not return partial cache data when `returnPartialData` is false and new variables are passed in', async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      const query = gql`
+        query MyCar($id: ID) {
+          car (id: $id) {
+            id
+            make
+          }
+        }
+      `;
+
+      const partialQuery = gql`
+        query MyCar($id: ID) {
+          car (id: $id) {
+            id
+            make
+            model
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        variables: { id: 1 },
+        data: {
+          car: {
+            __typename: 'Car',
+            id: 1,
+            make: 'Ford',
+            model: 'Pinto',
+          },
+        },
+      });
+
+      cache.writeQuery({
+        query: partialQuery,
+        variables: { id: 2 },
+        data: {
+          car: {
+            __typename: 'Car',
+            id: 2,
+            make: 'Ford',
+            model: 'Pinto',
+          },
+        },
+      });
+
+
+      let setId: any;
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [id, setId1] = React.useState(2);
+          setId = setId1;
+          return useQuery(partialQuery, {
+            variables: { id },
+            returnPartialData: false,
+            notifyOnNetworkStatusChange: true,
+          });
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        car: {
+          __typename: 'Car',
+          id: 2,
+          make: 'Ford',
+          model: 'Pinto',
+        },
+      });
+
+      setTimeout(() => {
+        setId(1);
+      });
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+    });
   });
 
   describe('Previous data', () => {
@@ -3435,6 +4360,153 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data3);
       expect(result.current.previousData).toEqual(data1);
+    });
+
+    it('should persist result.previousData even if query changes', async () => {
+      const aQuery: TypedDocumentNode<{
+        a: string;
+      }> = gql`query A { a }`;
+
+      const abQuery: TypedDocumentNode<{
+        a: string;
+        b: number;
+      }> = gql`query AB { a b }`;
+
+      const bQuery: TypedDocumentNode<{
+        b: number;
+      }> = gql`query B { b }`;
+
+      let stringOfAs = "";
+      let countOfBs = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          switch (request.operationName) {
+            case "A": {
+              observer.next({
+                data: {
+                  a: stringOfAs += 'a',
+                },
+              });
+              break;
+            }
+            case "AB": {
+              observer.next({
+                data: {
+                  a: stringOfAs += 'a',
+                  b: countOfBs += 1,
+                },
+              });
+              break;
+            }
+            case "B": {
+              observer.next({
+                data: {
+                  b: countOfBs += 1,
+                },
+              });
+              break;
+            }
+          }
+          setTimeout(() => {
+            observer.complete();
+          }, 10);
+        })),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const [query, setQuery] = useState<DocumentNode>(aQuery);
+          return {
+            query,
+            setQuery,
+            useQueryResult: useQuery(query, {
+              fetchPolicy: "cache-and-network",
+              notifyOnNetworkStatusChange: true,
+            }),
+          };
+        },
+        {
+          wrapper: ({ children }: any) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toBeUndefined();
+        expect(previousData).toBeUndefined();
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "a" });
+        expect(previousData).toBe(undefined);
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setQuery(abQuery);
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toBeUndefined();
+        expect(previousData).toEqual({ a: "a" });
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "aa", b: 1 });
+        expect(previousData).toEqual({ a: "a" });
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      await act(() => {
+        return result.current.useQueryResult.reobserve().then(result => {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ a: "aaa", b: 2 });
+        });
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ a: "aaa", b: 2 });
+        expect(previousData).toEqual({ a: "aa", b: 1 });
+      }
+
+      await expect(waitForNextUpdate({
+        timeout: 20,
+      })).rejects.toThrow('Timed out');
+
+      act(() => {
+        result.current.setQuery(bQuery);
+      });
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+        expect(data).toEqual({ b: 2 });
+        expect(previousData).toEqual({ a: "aaa", b: 2 });
+      }
+      await waitForNextUpdate();
+      {
+        const { loading, data, previousData } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+        expect(data).toEqual({ b: 3 });
+        expect(previousData).toEqual({ b: 2 });
+      }
     });
 
     it("should be cleared when variables change causes cache miss", async () => {
@@ -3805,5 +4877,775 @@ describe('useQuery Hook', () => {
       "network-only",
       "cache-and-network",
     ));
+  });
+
+  describe('regression test issue #9204', () => {
+    itAsync('should handle a simple query', (resolve, reject) => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      const Component = ({ query }: any) => {
+        const [counter, setCounter] = useState(0)
+        const result = useQuery(query)
+
+        useEffect(() => {
+          /**
+           * IF the return value from useQuery changes on each render,
+           * this component will re-render in an infinite loop.
+           */
+          if (counter > 10) {
+            reject(new Error(`Too many results (${counter})`));
+          } else {
+            setCounter(c => c + 1);
+          }
+        }, [
+          result,
+          result.data,
+        ]);
+
+        if (result.loading) return null;
+
+        return <div>{result.data.hello}{counter}</div>;
+      }
+
+      const { getByText } = render(
+        <MockedProvider mocks={mocks}>
+          <Component query={query} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(getByText('world2')).toBeTruthy();
+      }).then(resolve, reject);
+    });
+  });
+
+  describe('defer', () => {
+    it('should handle deferred queries', async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: 'Hello world',
+                __typename: 'Greeting',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+        },
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            }],
+            hasNext: false
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: {
+            name: 'Alice',
+            __typename: 'Person',
+          },
+        },
+      });
+    });
+
+    it('should handle deferred queries in lists', async () => {
+      const query = gql`
+        {
+          greetings {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greetings: [
+                { message: 'Hello world', __typename: 'Greeting' },
+                { message: 'Hello again', __typename: 'Greeting' },
+              ],
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          { message: 'Hello world', __typename: 'Greeting' },
+          { message: 'Hello again', __typename: 'Greeting' },
+        ],
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greetings', 0],
+            }],
+            hasNext: true,
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          {
+            message: 'Hello world',
+            __typename: 'Greeting',
+            recipient: { name: 'Alice', __typename: 'Person' },
+          },
+          { message: 'Hello again', __typename: 'Greeting' },
+        ],
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Bob',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greetings', 1],
+            }],
+            hasNext: false
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greetings: [
+          {
+            message: 'Hello world',
+            __typename: 'Greeting',
+            recipient: { name: 'Alice', __typename: 'Person' },
+          },
+          {
+            message: 'Hello again',
+            __typename: 'Greeting',
+            recipient: { name: 'Bob', __typename: 'Person' },
+          },
+        ],
+      });
+    });
+
+    it('should handle deferred queries in lists, merging arrays', async () => {
+      const query = gql`
+        query DeferVariation {
+          allProducts {
+            delivery {
+              ...MyFragment @defer
+            }
+            sku,
+            id
+          }
+        }
+        fragment MyFragment on DeliveryEstimates {
+          estimatedDelivery
+          fastestDelivery
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              allProducts: [
+                {
+                  __typename: "Product",
+                  delivery: {
+                    __typename: "DeliveryEstimates"
+                  },
+                  id: "apollo-federation",
+                  sku: "federation"
+                },
+                {
+                  __typename: "Product",
+                  delivery: {
+                    __typename: "DeliveryEstimates"
+                  },
+                  id: "apollo-studio",
+                  sku: "studio"
+                }
+              ]
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        allProducts: [
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates"
+            },
+            id: "apollo-federation",
+            sku: "federation"
+          },
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates"
+            },
+            id: "apollo-studio",
+            sku: "studio"
+          }
+        ]
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            hasNext: true,
+            incremental: [
+              {
+                data: {
+                  __typename: "DeliveryEstimates",
+                  estimatedDelivery: "6/25/2021",
+                  fastestDelivery: "6/24/2021",
+                },
+                path: [
+                  "allProducts",
+                  0,
+                  "delivery"
+                ]
+              },
+              {
+                data: {
+                  __typename: "DeliveryEstimates",
+                  estimatedDelivery: "6/25/2021",
+                  fastestDelivery: "6/24/2021",
+                },
+                path: [
+                  "allProducts",
+                  1,
+                  "delivery"
+                ]
+              },
+            ]
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        allProducts: [
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+              estimatedDelivery: "6/25/2021",
+              fastestDelivery: "6/24/2021"
+            },
+            id: "apollo-federation",
+            sku: "federation"
+          },
+          {
+            __typename: "Product",
+            delivery: {
+              __typename: "DeliveryEstimates",
+              estimatedDelivery: "6/25/2021",
+              fastestDelivery: "6/24/2021"
+            },
+            id: "apollo-studio",
+            sku: "studio"
+          }
+        ]
+      });
+    });
+
+    it('should handle deferred queries with fetch policy no-cache', async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, {fetchPolicy: 'no-cache'}),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: 'Hello world',
+                __typename: 'Greeting',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+        },
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                recipient: {
+                  name: 'Alice',
+                  __typename: 'Person',
+                },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            }],
+            hasNext: false
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: {
+            name: 'Alice',
+            __typename: 'Person',
+          },
+        },
+      });
+    });
+
+    it('should handle deferred queries with errors returned on the incremental batched result', async () => {
+      const query = gql`
+        query {
+          hero {
+            name
+            heroFriends {
+              id
+              name
+              ... @defer {
+                homeWorld
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              hero: {
+                name: "R2-D2",
+                heroFriends: [
+                  {
+                    id: "1000",
+                    name: "Luke Skywalker"
+                  },
+                  {
+                    id: "1003",
+                    name: "Leia Organa"
+                  }
+                ]
+              }
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [
+              {
+                path: ["hero", "heroFriends", 0],
+                errors: [
+                  new GraphQLError(
+                    "homeWorld for character with ID 1000 could not be fetched.",
+                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                  )
+                ],
+                data: {
+                  "homeWorld": null,
+                }
+              },
+              {
+                path: ["hero", "heroFriends", 1],
+                data: {
+                  "homeWorld": "Alderaan",
+                }
+              },
+            ],
+            "hasNext": false
+          }
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
+
+      // since default error policy is "none", we do *not* return partial results
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+    });
+
+    it('should handle deferred queries with errors returned on the incremental batched result and errorPolicy "all"', async () => {
+      const query = gql`
+        query {
+          hero {
+            name
+            heroFriends {
+              id
+              name
+              ... @defer {
+                homeWorld
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { errorPolicy: "all" }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              hero: {
+                name: "R2-D2",
+                heroFriends: [
+                  {
+                    id: "1000",
+                    name: "Luke Skywalker"
+                  },
+                  {
+                    id: "1003",
+                    name: "Leia Organa"
+                  }
+                ]
+              }
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            extensions: {
+              thing1: 'foo',
+              thing2: 'bar',
+            },
+            incremental: [
+              {
+                path: ["hero", "heroFriends", 0],
+                errors: [
+                  new GraphQLError(
+                    "homeWorld for character with ID 1000 could not be fetched.",
+                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                  )
+                ],
+                data: {
+                  "homeWorld": null,
+                }
+              },
+              {
+                path: ["hero", "heroFriends", 1],
+                data: {
+                  "homeWorld": "Alderaan",
+                }
+              },
+            ],
+            "hasNext": false
+          }
+        });
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      // @ts-ignore
+      expect(result.current.label).toBe(undefined);
+      // @ts-ignore
+      expect(result.current.extensions).toBe(undefined);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
+
+      // since default error policy is "all", we *do* return partial results
+      expect(result.current.data).toEqual({
+        hero: {
+          heroFriends: [
+            {
+              // the only difference with the previous test
+              // is that homeWorld is populated since errorPolicy: all
+              // populates both partial data and error.graphQLErrors
+              homeWorld: null,
+              id: '1000',
+              name: 'Luke Skywalker'
+            },
+            {
+              // homeWorld is populated due to errorPolicy: all
+              homeWorld: "Alderaan",
+              id: '1003',
+              name: 'Leia Organa'
+            },
+          ],
+          name: "R2-D2"
+        }
+      });
+    });
   });
 });

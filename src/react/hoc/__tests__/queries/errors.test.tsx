@@ -1,8 +1,7 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
-// @ts-ignore
-import { withState } from './recomposeWithState.js';
+import { withState } from './recomposeWithState';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
@@ -46,7 +45,7 @@ describe('[queries] errors', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    class ErrorBoundary extends React.Component {
+    class ErrorBoundary extends React.Component<React.PropsWithChildren> {
       componentDidCatch(e: Error) {
         expect(e.message).toMatch(/bar is not a function/);
         done = true;
@@ -224,18 +223,15 @@ describe('[queries] errors', () => {
               try {
                 if (iteration === 1) {
                   // initial loading state is done, we have data
-                  expect(props.data!.allPeople).toEqual(
-                    data.allPeople
-                  );
+                  expect(props.data!.loading).toBe(false);
+                  expect(props.data!.allPeople).toEqual(data.allPeople);
                   props.setVar(2);
                 } else if (iteration === 2) {
-                  expect(props.data!.allPeople).toEqual(
-                    data.allPeople
-                  );
+                  expect(props.data!.loading).toBe(true);
+                  expect(props.data!.allPeople).toBeUndefined();
                 } else if (iteration === 3) {
-                  // variables have changed, wee are loading again but also have data
-                  expect(props.data!.loading).toBeTruthy();
-                } else if (iteration === 4) {
+                  expect(props.data!.loading).toBe(false);
+                  expect(props.data!.allPeople).toBeUndefined();
                   // the second request had an error!
                   expect(props.data!.error).toBeTruthy();
                   expect(props.data!.error!.networkError).toBeTruthy();
@@ -248,6 +244,8 @@ describe('[queries] errors', () => {
                     }
                     done = true;
                   });
+                } else {
+                  reject(`Too many iterations (${iteration})`);
                 }
               } catch (err) {
                 reject(err);
@@ -266,7 +264,10 @@ describe('[queries] errors', () => {
         </ApolloProvider>
       );
 
-      waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
+      waitFor(() => {
+        expect(done).toBeTruthy();
+        expect(iteration).toBe(3);
+      }).then(resolve, reject);
     });
   });
 

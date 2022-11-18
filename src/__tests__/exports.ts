@@ -1,3 +1,8 @@
+/** @jest-environment node */
+// We run this in a node environment because:
+// A) JSDOM doesn't yet support the TextEncoder/TextDecoder globals added in node 11, meaning certain imports (e.g. reactSSR) will fail (See https://github.com/jsdom/jsdom/issues/2524) 
+// B) We're just testing imports/exports, so no reason not to use Node for slightly better performance.
+
 import * as cache from "../cache";
 import * as client from "..";
 import * as core from "../core";
@@ -11,6 +16,7 @@ import * as linkHTTP from "../link/http";
 import * as linkPersistedQueries from "../link/persisted-queries";
 import * as linkRetry from "../link/retry";
 import * as linkSchema from "../link/schema";
+import * as linkSubscriptions from "../link/subscriptions";
 import * as linkUtils from "../link/utils";
 import * as linkWS from "../link/ws";
 import * as react from "../react";
@@ -52,6 +58,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client/link/persisted-queries", linkPersistedQueries);
   check("@apollo/client/link/retry", linkRetry);
   check("@apollo/client/link/schema", linkSchema);
+  check("@apollo/client/link/subscriptions", linkSubscriptions);
   check("@apollo/client/link/utils", linkUtils);
   check("@apollo/client/link/ws", linkWS);
   check("@apollo/client/react", react);

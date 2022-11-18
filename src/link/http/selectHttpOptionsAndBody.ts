@@ -43,6 +43,13 @@ export interface HttpOptions {
   headers?: Record<string, string>;
 
   /**
+   * If set to true, header names won't be automatically normalized to 
+   * lowercase. This allows for non-http-spec-compliant servers that might 
+   * expect capitalized header names.
+   */
+  preserveHeaderCase?: boolean;
+
+  /**
    * The credentials policy you want to use for the fetch call.
    */
   credentials?: string;
@@ -79,6 +86,7 @@ export interface HttpOptions {
 export interface HttpQueryOptions {
   includeQuery?: boolean;
   includeExtensions?: boolean;
+  preserveHeaderCase?: boolean;
 }
 
 export interface HttpConfig {
@@ -91,11 +99,24 @@ export interface HttpConfig {
 const defaultHttpOptions: HttpQueryOptions = {
   includeQuery: true,
   includeExtensions: false,
+  preserveHeaderCase: false,
 };
 
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
   accept: '*/*',
+  // The content-type header describes the type of the body of the request, and
+  // so it typically only is sent with requests that actually have bodies. One
+  // could imagine that Apollo Client would remove this header when constructing
+  // a GET request (which has no body), but we historically have not done that.
+  // This means that browsers will preflight all Apollo Client requests (even
+  // GET requests). Apollo Server's CSRF prevention feature (introduced in
+  // AS3.7) takes advantage of this fact and does not block requests with this
+  // header. If you want to drop this header from GET requests, then you should
+  // probably replace it with a `apollo-require-preflight` header, or servers
+  // with CSRF prevention enabled might block your GET request. See
+  // https://www.apollographql.com/docs/apollo-server/security/cors/#preventing-cross-site-request-forgery-csrf
+  // for more details.
   'content-type': 'application/json',
 };
 
@@ -138,8 +159,8 @@ export function selectHttpOptionsAndBodyInternal(
       ...config.options,
       headers: {
         ...options.headers,
-        ...headersToLowerCase(config.headers),
-      },
+        ...config.headers,
+      }
     };
 
     if (config.credentials) {
@@ -151,6 +172,8 @@ export function selectHttpOptionsAndBodyInternal(
       ...config.http,
     };
   });
+
+  options.headers = removeDuplicateHeaders(options.headers, http.preserveHeaderCase);
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
@@ -167,15 +190,35 @@ export function selectHttpOptionsAndBodyInternal(
   };
 };
 
-function headersToLowerCase(
-  headers: Record<string, string> | undefined
+// Remove potential duplicate header names, preserving last (by insertion order).
+// This is done to prevent unintentionally duplicating a header instead of 
+// overwriting it (See #8447 and #8449).
+function removeDuplicateHeaders(
+  headers: Record<string, string>,
+  preserveHeaderCase: boolean | undefined
 ): typeof headers {
-  if (headers) {
-    const normalized = Object.create(null);
+
+  // If we're not preserving the case, just remove duplicates w/ normalization.
+  if (!preserveHeaderCase) {
+    const normalizedHeaders = Object.create(null);
     Object.keys(Object(headers)).forEach(name => {
-      normalized[name.toLowerCase()] = headers[name];
+      normalizedHeaders[name.toLowerCase()] = headers[name];
     });
-    return normalized;
+    return normalizedHeaders; 
   }
-  return headers;
+
+  // If we are preserving the case, remove duplicates w/ normalization,
+  // preserving the original name.
+  // This allows for non-http-spec-compliant servers that expect intentionally 
+  // capitalized header names (See #6741).
+  const headerData = Object.create(null);
+  Object.keys(Object(headers)).forEach(name => {
+    headerData[name.toLowerCase()] = { originalName: name, value: headers[name] }
+  });
+
+  const normalizedHeaders = Object.create(null);
+  Object.keys(headerData).forEach(name => {
+    normalizedHeaders[headerData[name].originalName] = headerData[name].value;
+  });
+  return normalizedHeaders;
 }

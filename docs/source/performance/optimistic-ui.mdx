@@ -10,7 +10,7 @@ For example, let's say we have a blog application that supports the following mu
 ```graphql
 type Mutation {
   updateComment(commentId: ID!, content: String!): Comment!
-  
+
   # ...other mutations...
 }
 ```
@@ -25,7 +25,7 @@ To enable this optimistic UI behavior, we provide an `optimisticResponse` option
 
 Let's look at some code:
 
-```jsx{20-26}:title=CommentPageWithData.jsx
+```jsx {20-26} title="CommentPageWithData.jsx"
 // Mutation definition
 const UPDATE_COMMENT = gql`
   mutation UpdateComment($commentId: ID!, $commentContent: String!) {

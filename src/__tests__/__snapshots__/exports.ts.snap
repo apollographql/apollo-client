@@ -16,7 +16,6 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
-  "applyNextFetchPolicy",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -54,6 +53,7 @@ Array [
   "throwServerError",
   "toPromise",
   "useApolloClient",
+  "useFragment_experimental",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -72,6 +72,7 @@ Array [
   "Policies",
   "cacheSlot",
   "canonicalStringify",
+  "createFragmentRegistry",
   "defaultDataIdFromObject",
   "fieldNameFromStoreName",
   "isReference",
@@ -93,7 +94,6 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
-  "applyNextFetchPolicy",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -210,6 +210,12 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/link/subscriptions 1`] = `
+Array [
+  "GraphQLWsLink",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
@@ -238,6 +244,7 @@ Array [
   "parser",
   "resetApolloContext",
   "useApolloClient",
+  "useFragment_experimental",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -276,6 +283,7 @@ Array [
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
   "useApolloClient",
+  "useFragment_experimental",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -343,6 +351,9 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseAsyncIteratorSymbol",
+  "canUseDOM",
+  "canUseLayoutEffect",
   "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",
@@ -366,6 +377,8 @@ Array [
   "getStoreKeyName",
   "getTypenameFromResult",
   "graphQLResultHasError",
+  "hasAllDirectives",
+  "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
   "isDocumentNode",
@@ -381,6 +394,7 @@ Array [
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
+  "mergeOptions",
   "offsetLimitPagination",
   "relayStylePagination",
   "removeArgumentsFromDocument",

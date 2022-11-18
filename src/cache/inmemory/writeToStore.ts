@@ -4,14 +4,14 @@ import { Trie } from '@wry/trie';
 import {
   SelectionSetNode,
   FieldNode,
+  Kind,
 } from 'graphql';
 
 import {
-  createFragmentMap,
   FragmentMap,
+  FragmentMapFunction,
   getFragmentFromSelection,
   getDefaultValues,
-  getFragmentDefinitions,
   getOperationDefinition,
   getTypenameFromResult,
   makeReference,
@@ -28,8 +28,8 @@ import {
   argumentsObjectFromField,
 } from '../../utilities';
 
-import { NormalizedCache, ReadMergeModifyContext, MergeTree } from './types';
-import { makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject } from './helpers';
+import { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types';
+import { isArray, makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, extractFragmentContext } from './helpers';
 import { StoreReader } from './readFromStore';
 import { InMemoryCache } from './inMemoryCache';
 import { EntityStore } from './entityStore';
@@ -42,7 +42,8 @@ export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
     [dataId: string]: SelectionSetNode[];
   };
-  readonly fragmentMap?: FragmentMap;
+  readonly fragmentMap: FragmentMap;
+  lookupFragment: FragmentMapFunction;
   // General-purpose deep-merge function for use during writes.
   merge<T>(existing: T, incoming: T): T;
   // If true, merge functions will be called with undefined existing data.
@@ -104,6 +105,7 @@ export class StoreWriter {
   constructor(
     public readonly cache: InMemoryCache,
     private reader?: StoreReader,
+    private fragments?: InMemoryCacheConfig["fragments"],
   ) {}
 
   public writeToStore(store: NormalizedCache, {
@@ -129,7 +131,7 @@ export class StoreWriter {
       },
       variables,
       varString: canonicalStringify(variables),
-      fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+      ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
       incomingById: new Map,
       clientOnly: false,
@@ -450,7 +452,7 @@ export class StoreWriter {
       return __DEV__ ? cloneDeep(value) : value;
     }
 
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
       return value.map((item, i) => {
         const value = this.processFieldValue(
           item, field, context, getChildMergeTree(mergeTree, i));
@@ -475,6 +477,7 @@ export class StoreWriter {
     | "deferred"
     | "flavors"
     | "fragmentMap"
+    | "lookupFragment"
     | "variables"
   >>(
     selectionSet: SelectionSetNode,
@@ -559,8 +562,14 @@ export class StoreWriter {
           );
 
         } else {
-          const fragment =
-            getFragmentFromSelection(selection, context.fragmentMap);
+          const fragment = getFragmentFromSelection(
+            selection,
+            context.lookupFragment,
+          );
+
+          if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
+            throw new InvariantError(`No fragment named ${selection.name.value}`);
+          }
 
           if (fragment &&
               policies.fragmentMatches(
@@ -590,7 +599,7 @@ export class StoreWriter {
         // Items in the same position in different arrays are not
         // necessarily related to each other, so when incoming is an array
         // we process its elements as if there was no existing data.
-        !Array.isArray(incoming) &&
+        !isArray(incoming) &&
         // Likewise, existing must be either a Reference or a StoreObject
         // in order for its fields to be safe to merge with the fields of
         // the incoming object.
@@ -621,7 +630,7 @@ export class StoreWriter {
         from: typeof e | typeof i,
         name: string | number,
       ): StoreValue => {
-        return Array.isArray(from)
+        return isArray(from)
           ? (typeof name === "number" ? from[name] : void 0)
           : context.store.getFieldValue(from, String(name))
       };
@@ -652,7 +661,7 @@ export class StoreWriter {
 
       if (changedFields) {
         // Shallow clone i so we can add changed fields to it.
-        incoming = (Array.isArray(i) ? i.slice(0) : { ...i }) as T;
+        incoming = (isArray(i) ? i.slice(0) : { ...i }) as T;
         changedFields.forEach((value, name) => {
           (incoming as any)[name] = value;
         });
@@ -792,8 +801,8 @@ function warnAboutDataLoss(
   const childTypenames: string[] = [];
   // Arrays do not have __typename fields, and always need a custom merge
   // function, even if their elements are normalized entities.
-  if (!Array.isArray(existing) &&
-      !Array.isArray(incoming)) {
+  if (!isArray(existing) &&
+      !isArray(incoming)) {
     [existing, incoming].forEach(child => {
       const typename = store.getFieldValue(child, "__typename");
       if (typeof typename === "string" &&

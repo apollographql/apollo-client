@@ -99,7 +99,7 @@ Expected variables: ${stringifyForDisplay(operation.variables)}
 ${unmatchedVars.length > 0 ? `
 Failed to match ${unmatchedVars.length} mock${
   unmatchedVars.length === 1 ? "" : "s"
-} for this query, which had the following variables:
+} for this query. The mocked response had the following variables:
 ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
 ` : ""}`);
     } else {

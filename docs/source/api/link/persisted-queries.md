@@ -1,6 +1,5 @@
 ---
 title: Persisted Queries Link
-sidebar_title: Persisted Queries
 description: Replace full queries with generated ID's to reduce bandwidth.
 ---
 
@@ -47,7 +46,7 @@ const httpLink = new HttpLink({ uri: "/graphql" });
 const persistedQueriesLink = createPersistedQueryLink({ sha256 });
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: persistedQueriesLink.concat(httpLink);
+  link: persistedQueriesLink.concat(httpLink),
 });
 ```
 

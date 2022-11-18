@@ -12,6 +12,7 @@ const entryPoints = [
   { dirs: ['link', 'persisted-queries'] },
   { dirs: ['link', 'retry'] },
   { dirs: ['link', 'schema'] },
+  { dirs: ['link', 'subscriptions'] },
   { dirs: ['link', 'utils'] },
   { dirs: ['link', 'ws'] },
   { dirs: ['react'] },

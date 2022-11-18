@@ -17,8 +17,6 @@ import {
   StoreObject,
   addTypenameToDocument,
   cloneDeep,
-  createFragmentMap,
-  getFragmentDefinitions,
   getMainDefinition,
 } from '../../../utilities';
 import { itAsync } from '../../../testing/core';
@@ -27,6 +25,7 @@ import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
 import { InMemoryCache } from '../inMemoryCache';
 import { withErrorSpy, withWarningSpy } from '../../../testing';
 import { TypedDocumentNode } from '../../../core'
+import { extractFragmentContext } from '../helpers';
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -670,6 +669,186 @@ describe('writing to the store', () => {
         __typename: 'Query',
         ...result,
       },
+    });
+  });
+
+  it('refuses to normalize objects with nullish id fields', () => {
+    const query: TypedDocumentNode<{
+      objects: Array<{
+        __typename: string;
+        id?: any;
+        text?: string;
+      }>;
+    }> = gql`
+      query {
+        objects {
+          id
+          text
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      // No keyFields type policy or dataIdFromObject, so we're using/testing
+      // the default implementation, defaultDataIdFromObject.
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        objects: [
+          { __typename: "Object", text: "a", id: 123 },
+          { __typename: "Object", text: "b", id: null },
+          { __typename: "Object", text: "c", id: void 0 },
+          { __typename: "Object", text: "d", id: 0 },
+          { __typename: "Object", text: "e", id: "" },
+          { __typename: "Object", text: "f", id: false },
+          { __typename: "Object", text: "g" },
+        ]
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+     "Object:123": {
+       __typename: "Object",
+       id: 123,
+       text: "a",
+     },
+     "Object:0": {
+      __typename: "Object",
+      id: 0,
+      text: "d",
+    },
+    "Object:": {
+      __typename: "Object",
+      id: "",
+      text: "e",
+    },
+    "Object:false": {
+      __typename: "Object",
+      id: false,
+      text: "f",
+    },
+     "ROOT_QUERY": {
+       __typename: "Query",
+       objects: [
+         { __ref: "Object:123" },
+         {
+           __typename: "Object",
+           id: null,
+           text: "b",
+         },
+         { __typename: "Object", text: "c" },
+         { __ref: "Object:0" },
+         { __ref: "Object:" },
+         { __ref: "Object:false" },
+         { __typename: "Object", text: "g" },
+       ],
+     },
+    });
+
+    expect(cache.readQuery({
+      query: gql`query { objects { text }}`,
+    })).toEqual({
+      objects: [
+        { __typename: "Object", text: "a" },
+        { __typename: "Object", text: "b" },
+        { __typename: "Object", text: "c" },
+        { __typename: "Object", text: "d" },
+        { __typename: "Object", text: "e" },
+        { __typename: "Object", text: "f" },
+        { __typename: "Object", text: "g" },
+      ],
+    });
+  });
+
+  it('refuses to normalize objects with nullish id fields', () => {
+    const query: TypedDocumentNode<{
+      objects: Array<{
+        __typename: string;
+        _id?: any;
+        text?: string;
+      }>;
+    }> = gql`
+      query {
+        objects {
+          _id
+          text
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      // No keyFields type policy or dataIdFromObject, so we're using/testing
+      // the default implementation, defaultDataIdFromObject.
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        objects: [
+          { __typename: "Object", text: "a", _id: 123 },
+          { __typename: "Object", text: "b", _id: null },
+          { __typename: "Object", text: "c", _id: void 0 },
+          { __typename: "Object", text: "d", _id: 0 },
+          { __typename: "Object", text: "e", _id: "" },
+          { __typename: "Object", text: "f", _id: false },
+          { __typename: "Object", text: "g" },
+        ]
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+     "Object:123": {
+       __typename: "Object",
+       _id: 123,
+       text: "a",
+     },
+     "Object:0": {
+      __typename: "Object",
+      _id: 0,
+      text: "d",
+    },
+    "Object:": {
+      __typename: "Object",
+      _id: "",
+      text: "e",
+    },
+    "Object:false": {
+      __typename: "Object",
+      _id: false,
+      text: "f",
+    },
+     "ROOT_QUERY": {
+       __typename: "Query",
+       objects: [
+         { __ref: "Object:123" },
+         {
+           __typename: "Object",
+           _id: null,
+           text: "b",
+         },
+         { __typename: "Object", text: "c" },
+         { __ref: "Object:0" },
+         { __ref: "Object:" },
+         { __ref: "Object:false" },
+         { __typename: "Object", text: "g" },
+       ],
+     },
+    });
+
+    expect(cache.readQuery({
+      query: gql`query { objects { text }}`,
+    })).toEqual({
+      objects: [
+        { __typename: "Object", text: "a" },
+        { __typename: "Object", text: "b" },
+        { __typename: "Object", text: "c" },
+        { __typename: "Object", text: "d" },
+        { __typename: "Object", text: "e" },
+        { __typename: "Object", text: "f" },
+        { __typename: "Object", text: "g" },
+      ],
     });
   });
 
@@ -2938,7 +3117,6 @@ describe('writing to the store', () => {
       },
     ) {
       const { selectionSet } = getMainDefinition(query);
-      const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
 
       const flat = writer["flattenFields"](selectionSet, {
         __typename: "Query",
@@ -2946,7 +3124,7 @@ describe('writing to the store', () => {
         bField: "b",
         rootField: "root",
       }, {
-        fragmentMap,
+        ...extractFragmentContext(query),
         clientOnly: false,
         deferred: false,
         flavors: new Map,

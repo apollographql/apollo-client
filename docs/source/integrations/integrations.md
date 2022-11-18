@@ -1,6 +1,5 @@
 ---
 title: View integrations
-subtitle: Using Apollo Client with your view layer
 description: How to use Apollo Client with the view layer your application is developed in!
 ---
 
@@ -22,6 +21,10 @@ A [Svelte](https://svelte.dev) integration is maintained by Tim Hall ([@timhall]
 ## Angular
 
 An [Angular](https://angular.io) integration is maintained by Kamil Kisiela ([@kamilkisiela](https://github.com/kamilkisiela)). See the [website](https://apollo-angular.com) for more details.
+
+## Solidjs
+
+A [Solid.js](https://www.solidjs.com/) integration is maintained by ([@Torsten85](https://github.com/Torsten85)). See the Github [repository](https://github.com/merged-js/solid-apollo) for more details.
 
 ## Ember
 

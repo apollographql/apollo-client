@@ -2,14 +2,18 @@ import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
+import userEvent from '@testing-library/user-event';
+import fetchMock from "fetch-mock";
+
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
+import { BatchHttpLink } from '../../../link/batch-http';
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -162,15 +166,15 @@ describe('useMutation Hook', () => {
           result: { data: data2 },
         },
       ];
-
+      const wrapper: React.FC<React.PropsWithChildren<{variables: typeof variables1 }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: {
             variables: variables1,
           },
@@ -198,6 +202,49 @@ describe('useMutation Hook', () => {
       expect(result.current[0]).toBe(createTodo);
       expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(data2);
+    });
+
+    it('should not call setResult on an unmounted component', async () => {
+      const errorSpy = jest.spyOn(console, "error");
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: { data: CREATE_TODO_RESULT }
+        }
+      ];
+
+      const useCreateTodo = () => {
+        const [createTodo, { reset }] = useMutation(
+          CREATE_TODO_MUTATION
+        );
+        return { reset, createTodo };
+      };
+
+      const { result, unmount } = renderHook(
+        () => useCreateTodo(),
+        { wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+        )},
+      );
+
+      unmount();
+
+      await act(async () => {
+        await result.current.createTodo({ variables });
+        await result.current.reset();
+      })
+
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
 
     it('should resolve mutate function promise with mutation results', async () => {
@@ -272,6 +319,49 @@ describe('useMutation Hook', () => {
         expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
       });
 
+      it('should reject when there’s only an error and no error policy is set', async () => {
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables,
+            },
+            result: {
+              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            },
+          }
+        ];
+
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
+        );
+
+        const createTodo = result.current[0];
+        let fetchError: any;
+        await act(async () => {
+          // need to call createTodo this way to get “act” warnings to go away.
+          try {
+            await createTodo({ variables });
+          } catch (err) {
+            fetchError = err;
+            return;
+          }
+
+          throw new Error("function did not error");
+        });
+
+        expect(fetchError).toEqual(new GraphQLError(CREATE_TODO_ERROR));
+      });
+
       it(`should reject when errorPolicy is 'none'`, async () => {
         const variables = {
           description: 'Get milk!'
@@ -341,7 +431,47 @@ describe('useMutation Hook', () => {
 
         expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
         expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
-      })
+      });
+
+      it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
+        const errorMock = jest.spyOn(console, "error")
+          .mockImplementation(() => {});
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables,
+            },
+            result: {
+              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            },
+          }
+        ];
+
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "ignore" }),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
+        );
+
+        const createTodo = result.current[0];
+        let fetchResult: any;
+        await act(async () => {
+          fetchResult = await createTodo({ variables });
+        });
+
+        expect(fetchResult).toEqual({});
+        expect(errorMock).toHaveBeenCalledTimes(1);
+        expect(errorMock.mock.calls[0][0]).toMatch("Missing field");
+        errorMock.mockRestore();
+      });
     });
 
     it('should return the current client instance in the result object', async () => {
@@ -470,14 +600,16 @@ describe('useMutation Hook', () => {
         },
       };
 
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
+
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            }
+            variables,
           },
           result: {
             data: CREATE_TODO_DATA,
@@ -503,7 +635,7 @@ describe('useMutation Hook', () => {
       const onError = jest.fn();
       await act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
           onCompleted,
           onError,
         });
@@ -512,20 +644,21 @@ describe('useMutation Hook', () => {
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith(CREATE_TODO_DATA);
+      expect(onCompleted).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
       expect(onError).toHaveBeenCalledTimes(0);
     });
 
     it('should allow passing an onError handler to the execution function', async () => {
       const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            },
+            variables,
           },
           result: {
             errors,
@@ -551,7 +684,7 @@ describe('useMutation Hook', () => {
       const onError = jest.fn();
       await act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
           onCompleted,
           onError,
         });
@@ -565,7 +698,72 @@ describe('useMutation Hook', () => {
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(errors[0]);
+      expect(onError).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
+    });
+
+    it('should allow updating onError while mutation is executing', async () => {
+      const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            errors,
+          },
+        }
+      ];
+
+      const onCompleted = jest.fn();
+      const onError = jest.fn();
+      const wrapper: React.FC<React.PropsWithChildren<{
+        onCompleted: typeof onCompleted;
+        onError: typeof onError
+      }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
+      const { result, rerender } = renderHook(
+        ({ onCompleted, onError }) => {
+          return useMutation<
+            { createTodo: Todo },
+            { priority: string, description: string }
+          >(CREATE_TODO_MUTATION, { onCompleted, onError });
+        },
+        {
+          wrapper,
+          initialProps: { onCompleted, onError },
+        },
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const mutationPromise = act(async () => {
+        fetchResult = await createTodo({
+          variables,
+        });
+      });
+
+      const onError1 = jest.fn();
+      rerender({ onCompleted, onError: onError1 });
+      await mutationPromise;
+
+      expect(fetchResult).toEqual({
+        data: undefined,
+        // Not sure why we unwrap errors here.
+        errors: errors[0],
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onError1).toHaveBeenCalledTimes(1);
+      expect(onError1).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
     });
 
     it('should never allow onCompleted handler to be stale', async () => {
@@ -578,14 +776,16 @@ describe('useMutation Hook', () => {
         },
       };
 
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk2.',
+      }
+
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: 'Low',
-              description: 'Get milk.',
-            }
+            variables
           },
           result: {
             data: CREATE_TODO_DATA,
@@ -594,6 +794,11 @@ describe('useMutation Hook', () => {
       ];
 
       const onCompleted = jest.fn();
+      const wrapper: React.FC<React.PropsWithChildren<{ onCompleted: typeof onCompleted }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
       const { result, rerender } = renderHook(
         ({ onCompleted }) => {
           return useMutation<
@@ -602,11 +807,7 @@ describe('useMutation Hook', () => {
           >(CREATE_TODO_MUTATION, { onCompleted });
         },
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>
-              {children}
-            </MockedProvider>
-          ),
+          wrapper,
           initialProps: { onCompleted },
         },
       );
@@ -617,7 +818,7 @@ describe('useMutation Hook', () => {
       let fetchResult: any;
       await act(async () => {
         fetchResult = await createTodo({
-          variables: { priority: 'Low', description: 'Get milk.' },
+          variables,
         });
       });
 
@@ -625,7 +826,72 @@ describe('useMutation Hook', () => {
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onCompleted1).toHaveBeenCalledTimes(1);
-      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA);
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
+    });
+
+    it('should allow updating onCompleted while mutation is executing', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk2.',
+      }
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          },
+        }
+      ];
+
+      const onCompleted = jest.fn();
+      const wrapper: React.FC<React.PropsWithChildren<{ onCompleted: typeof onCompleted }>> = ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
+      const { result, rerender } = renderHook(
+        ({ onCompleted }) => {
+          return useMutation<
+            { createTodo: Todo },
+            { priority: string, description: string }
+          >(CREATE_TODO_MUTATION, { onCompleted });
+        },
+        {
+          wrapper,
+          initialProps: { onCompleted },
+        },
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      const mutationPromise = act(async () => {
+        fetchResult = await createTodo({
+          variables,
+        });
+      });
+
+      const onCompleted1 = jest.fn();
+      rerender({ onCompleted: onCompleted1 });
+      await mutationPromise;
+
+      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+      expect(onCompleted1).toHaveBeenCalledTimes(1);
+      expect(onCompleted1).toHaveBeenCalledWith(CREATE_TODO_DATA, expect.objectContaining({variables}));
     });
   });
 
@@ -1549,8 +1815,8 @@ describe('useMutation Hook', () => {
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
-      let updateResolve: Function;
-      const updatePromise = new Promise((resolve) => (updateResolve = resolve));
+      let onMutationDone: Function;
+      const mutatePromise = new Promise((resolve) => (onMutationDone = resolve));
       setTimeout(() => {
         act(() => {
           mutate({
@@ -1558,8 +1824,10 @@ describe('useMutation Hook', () => {
             refetchQueries: ['getTodos'],
             update() {
               unmount();
-              updateResolve();
             },
+          }).then(result => {
+            expect(result.data).toEqual(CREATE_TODO_RESULT);
+            onMutationDone();
           });
         });
       });
@@ -1567,10 +1835,14 @@ describe('useMutation Hook', () => {
       await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
-      await updatePromise;
-      await new Promise((resolve) => setTimeout(resolve));
-      expect(client.readQuery({ query: GET_TODOS_QUERY }))
-        .toEqual(mocks[2].result.data);
+
+      await mutatePromise;
+
+      return waitFor(() => {
+        expect(
+          client.readQuery({ query: GET_TODOS_QUERY })
+        ).toEqual(mocks[2].result.data);
+      });
     });
 
     itAsync("using onQueryUpdated callback should not prevent cache broadcast", async (resolve, reject) => {
@@ -1863,6 +2135,75 @@ describe('useMutation Hook', () => {
       expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].called).toBe(true);
+    });
+
+    it("refetchQueries should work with BatchHttpLink", async () => {
+      const MUTATION_1 = gql`
+        mutation DoSomething {
+          doSomething {
+            message
+          }
+        }
+      `;
+
+      const QUERY_1 = gql`
+        query Items {
+          items {
+            id
+          }
+        }
+      `;
+
+      fetchMock.restore();
+
+      const responseBodies = [
+        { data: { items: [{ id: 1 }, { id: 2 }] }},
+        { data: { doSomething: { message: 'success' }}},
+        { data: { items: [{ id: 1 }, { id: 2 }, { id: 3 }] }},
+      ];
+
+      fetchMock.post("/graphql", (url, opts) => new Promise(resolve => {
+        resolve({
+          body: responseBodies.shift(),
+        });
+      }));
+
+      const Test = () => {
+        const { data } = useQuery(QUERY_1);
+        const [mutate] = useMutation(MUTATION_1, {
+          awaitRefetchQueries: true,
+          refetchQueries: [QUERY_1],
+        });
+
+        const { items = [] } = data || {};
+
+        return <>
+          <button onClick={() => {
+            return mutate();
+          }} type="button">
+            mutate
+          </button>
+          {items.map((c: any) => (
+            <div key={c.id}>item {c.id}</div>
+          ))}
+        </>;
+      };
+
+      const client = new ApolloClient({
+        link: new BatchHttpLink({
+          uri: '/graphql',
+          batchMax: 10,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      render(<ApolloProvider client={client}><Test /></ApolloProvider>);
+
+      await screen.findByText('item 1');
+
+      userEvent.click(screen.getByRole('button', { name: /mutate/i }));
+
+      await screen.findByText('item 3');
     });
   });
 });

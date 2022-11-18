@@ -2,8 +2,9 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
+import { DeepMerger } from "../utilities"
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
-import { ObservableQuery } from './ObservableQuery';
+import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
 import { FetchResult } from '../link/core';
 import {
@@ -153,7 +154,6 @@ export class QueryInfo {
 
   reset() {
     cancelNotifyTimeout(this);
-    this.lastDiff = void 0;
     this.dirty = false;
   }
 
@@ -229,15 +229,24 @@ export class QueryInfo {
     if (oq) {
       oq["queryInfo"] = this;
       this.listeners.add(this.oqListener = () => {
-        // If this.diff came from an optimistic transaction, deliver the
-        // current cache data to the ObservableQuery, but don't perform a
-        // full reobservation, since oq.reobserve might make a network
-        // request, and we don't want to trigger network requests for
-        // optimistic updates.
-        if (this.getDiff().fromOptimisticTransaction) {
+        const diff = this.getDiff();
+        if (diff.fromOptimisticTransaction) {
+          // If this diff came from an optimistic transaction, deliver the
+          // current cache data to the ObservableQuery, but don't perform a
+          // reobservation, since oq.reobserveCacheFirst might make a network
+          // request, and we never want to trigger network requests in the
+          // middle of optimistic updates.
           oq["observe"]();
         } else {
-          oq.reobserve();
+          // Otherwise, make the ObservableQuery "reobserve" the latest data
+          // using a temporary fetch policy of "cache-first", so complete cache
+          // results have a chance to be delivered without triggering additional
+          // network requests, even when options.fetchPolicy is "network-only"
+          // or "cache-and-network". All other fetch policies are preserved by
+          // this method, and are handled by calling oq.reobserve(). If this
+          // reobservation is spurious, isDifferentFromLastResult still has a
+          // chance to catch it before delivery to ObservableQuery subscribers.
+          reobserveCacheFirst(oq);
         }
       });
     } else {
@@ -347,17 +356,41 @@ export class QueryInfo {
 
   public markResult<T>(
     result: FetchResult<T>,
+    document: DocumentNode,
     options: Pick<WatchQueryOptions,
       | "variables"
       | "fetchPolicy"
       | "errorPolicy">,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
-    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+    const graphQLErrors = isNonEmptyArray(result.errors)
+      ? result.errors.slice(0)
+      : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
+
+    if ('incremental' in result && isNonEmptyArray(result.incremental)) {
+      let mergedData = this.getDiff().result;
+      const merger = new DeepMerger();
+      result.incremental.forEach(({ data, path, errors }) => {
+        for (let i = path.length - 1; i >= 0; --i) {
+          const key = path[i];
+          const isNumericKey = !isNaN(+key);
+          const parent: Record<string | number, any> = isNumericKey ? [] : {};
+          parent[key] = data;
+          data = parent as typeof data;
+        }
+        if (errors) {
+          graphQLErrors.push(...errors);
+        }
+        mergedData = merger.merge(mergedData, data);
+      });
+      result.data = mergedData;
+    }
+
+    this.graphQLErrors = graphQLErrors;
 
     if (options.fetchPolicy === 'no-cache') {
       this.updateLastDiff(
@@ -374,7 +407,7 @@ export class QueryInfo {
         this.cache.performTransaction(cache => {
           if (this.shouldWrite(result, options.variables)) {
             cache.writeQuery({
-              query: this.document!,
+              query: document,
               data: result.data as T,
               variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,

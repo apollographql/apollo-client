@@ -8,6 +8,8 @@
   [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
 - Pass `TCache` generic to `MutationHookOptions` for better type support in `useMutation`. <br />
   [@igrlk](https://github.com/igrlk) in [#10223](https://github.com/apollographql/apollo-client/pull/10223)
+- Add `name` property to `ApolloError` to ensure better type safety and help error reporting tools better identify the error.
+  [@aaronadamsCA](https://github.com/aaronadamsCA) in [#9323](https://github.com/apollographql/apollo-client/pull/9323)
 - docs: displays the error correctly<br/>
   [@ctesniere](https://github.com/ctesniere) in [#10275](https://github.com/apollographql/apollo-client/pull/10275)
 

@@ -42,6 +42,7 @@ export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 export type NetworkError = Error | ServerParseError | ServerError | null;
 
 export class ApolloError extends Error {
+  public name: string;
   public message: string;
   public graphQLErrors: GraphQLErrors;
   public clientErrors: ReadonlyArray<Error>;
@@ -69,6 +70,7 @@ export class ApolloError extends Error {
     extraInfo?: any;
   }) {
     super(errorMessage);
+    this.name = 'ApolloError';
     this.graphQLErrors = graphQLErrors || [];
     this.clientErrors = clientErrors || [];
     this.networkError = networkError || null;

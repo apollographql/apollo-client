@@ -21,7 +21,7 @@ import {
   Observable,
   TypedDocumentNode,
 } from '../../../core';
-import { compact } from '../../../utilities';
+import { compact, concatPagination } from '../../../utilities';
 import { MockedProvider, MockedResponse, MockLink } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
@@ -130,6 +130,42 @@ function useSimpleQueryCase() {
   ];
 
   return { query, mocks };
+}
+
+function usePaginatedCase() {
+  interface QueryData {
+    letters: {
+      name: string;
+      position: string;
+    }[];
+  }
+
+  interface Variables {
+    limit?: number;
+    offset?: number;
+  }
+
+  const query: TypedDocumentNode<QueryData, Variables> = gql`
+    query letters($limit: Int, $offset: Int) {
+      letters(limit: $limit) {
+        letter
+        position
+      }
+    }
+  `;
+
+  const data = 'ABCDEFG'
+    .split('')
+    .map((letter, index) => ({ letter, position: index + 1 }));
+
+  const link = new ApolloLink((operation) => {
+    const { offset = 0, limit = 2 } = operation.variables;
+    const letters = data.slice(offset, offset + limit);
+
+    return Observable.of({ data: { letters } });
+  });
+
+  return { query, link, data };
 }
 
 interface ErrorCaseData {
@@ -2727,4 +2763,195 @@ describe('useSuspenseQuery', () => {
       },
     ]);
   });
+
+  it('re-suspends when calling `fetchMore` with different variables', async () => {
+    const { data, query, link } = usePaginatedCase();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { limit: 2 } }),
+      { link }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    result.current.fetchMore({ variables: { offset: 2 } });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(2, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+      {
+        data: { letters: data.slice(2, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+    ]);
+  });
+
+  it('does not re-suspend when calling `fetchMore` with different variables while using an "initial" suspense policy', async () => {
+    const { data, query, link } = usePaginatedCase();
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          suspensePolicy: 'initial',
+          variables: { limit: 2 },
+        }),
+      { link }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    result.current.fetchMore({ variables: { offset: 2 } });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(2, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+      {
+        data: { letters: data.slice(2, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+    ]);
+  });
+
+  it('properly uses `updateQuery` when calling `fetchMore`', async () => {
+    const { data, query, link } = usePaginatedCase();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { limit: 2 } }),
+      { link }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    result.current.fetchMore({
+      variables: { offset: 2 },
+      updateQuery: (prev, { fetchMoreResult }) => ({
+        letters: prev.letters.concat(fetchMoreResult.letters),
+      }),
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(0, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    expect(renders.frames).toMatchObject([
+      {
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+      {
+        data: { letters: data.slice(0, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+    ]);
+  });
+
+  it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
+    const { data, query, link } = usePaginatedCase();
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: concatPagination(),
+          },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { limit: 2 } }),
+      { cache, link }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    result.current.fetchMore({ variables: { offset: 2 } });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { letters: data.slice(0, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      });
+    });
+
+    expect(renders.frames).toMatchObject([
+      {
+        data: { letters: data.slice(0, 2) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+      {
+        data: { letters: data.slice(0, 4) },
+        error: undefined,
+        variables: { limit: 2 },
+      },
+    ]);
+  });
+
+  it.todo('tears down subscription when throwing an error');
+  it.todo('removes the query from the suspense cache when throwing an error');
+  it.todo('does not oversubscribe when suspending multiple times');
+  it.todo('applies nextFetchPolicy after initial suspense');
+  it.todo('handles nextFetchPolicy as a function after initial suspense');
+  it.todo('honors refetchWritePolicy set to "overwrite"');
+  it.todo('honors refetchWritePolicy set to "merge"');
 });

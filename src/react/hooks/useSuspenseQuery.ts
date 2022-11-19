@@ -35,6 +35,7 @@ export interface UseSuspenseQueryResult<
   data: TData;
   error: ApolloError | undefined;
   variables: TVariables;
+  fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
   refetch: ObservableQueryFields<TData, TVariables>['refetch'];
 }
 
@@ -236,6 +237,13 @@ export function useSuspenseQuery_experimental<
       data: result.data,
       error: errorPolicy === 'all' ? toApolloError(result) : void 0,
       variables: observable.variables as TVariables,
+      fetchMore: (options) => {
+        const promise = observable.fetchMore(options);
+
+        suspenseCache.setVariables(observable, observable.variables, promise);
+
+        return promise;
+      },
       refetch: (variables?: Partial<TVariables>) => {
         const promise = observable.refetch(variables);
 

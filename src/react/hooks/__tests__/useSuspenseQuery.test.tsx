@@ -3005,9 +3005,228 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
   });
 
+  it('honors refetchWritePolicy set to "overwrite"', async () => {
+    const query: TypedDocumentNode<
+      { primes: number[] },
+      { min: number; max: number }
+    > = gql`
+      query GetPrimes($min: number, $max: number) {
+        primes(min: $min, max: $max)
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { min: 0, max: 12 } },
+        result: { data: { primes: [2, 3, 5, 7, 11] } },
+      },
+      {
+        request: { query, variables: { min: 12, max: 30 } },
+        result: { data: { primes: [13, 17, 19, 23, 29] } },
+        delay: 10,
+      },
+    ];
+
+    const mergeParams: [number[] | undefined, number[]][] = [];
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            primes: {
+              keyArgs: false,
+              merge(existing: number[] | undefined, incoming: number[]) {
+                mergeParams.push([existing, incoming]);
+                return existing ? existing.concat(incoming) : incoming;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { result } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          variables: { min: 0, max: 12 },
+          refetchWritePolicy: 'overwrite',
+        }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { min: 0, max: 12 },
+      });
+    });
+
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+    result.current.refetch({ min: 12, max: 30 });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { min: 12, max: 30 },
+      });
+    });
+
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [undefined, [13, 17, 19, 23, 29]],
+    ]);
+  });
+
+  it('honors refetchWritePolicy set to "merge"', async () => {
+    const query: TypedDocumentNode<
+      { primes: number[] },
+      { min: number; max: number }
+    > = gql`
+      query GetPrimes($min: number, $max: number) {
+        primes(min: $min, max: $max)
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { min: 0, max: 12 } },
+        result: { data: { primes: [2, 3, 5, 7, 11] } },
+      },
+      {
+        request: { query, variables: { min: 12, max: 30 } },
+        result: { data: { primes: [13, 17, 19, 23, 29] } },
+        delay: 10,
+      },
+    ];
+
+    const mergeParams: [number[] | undefined, number[]][] = [];
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            primes: {
+              keyArgs: false,
+              merge(existing: number[] | undefined, incoming: number[]) {
+                mergeParams.push([existing, incoming]);
+                return existing ? existing.concat(incoming) : incoming;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { result } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          variables: { min: 0, max: 12 },
+          refetchWritePolicy: 'merge',
+        }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { min: 0, max: 12 },
+      });
+    });
+
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+    result.current.refetch({ min: 12, max: 30 });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+        error: undefined,
+        variables: { min: 12, max: 30 },
+      });
+    });
+
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+    ]);
+  });
+
+  it('defaults refetchWritePolicy to "overwrite"', async () => {
+    const query: TypedDocumentNode<
+      { primes: number[] },
+      { min: number; max: number }
+    > = gql`
+      query GetPrimes($min: number, $max: number) {
+        primes(min: $min, max: $max)
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { min: 0, max: 12 } },
+        result: { data: { primes: [2, 3, 5, 7, 11] } },
+      },
+      {
+        request: { query, variables: { min: 12, max: 30 } },
+        result: { data: { primes: [13, 17, 19, 23, 29] } },
+        delay: 10,
+      },
+    ];
+
+    const mergeParams: [number[] | undefined, number[]][] = [];
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            primes: {
+              keyArgs: false,
+              merge(existing: number[] | undefined, incoming: number[]) {
+                mergeParams.push([existing, incoming]);
+                return existing ? existing.concat(incoming) : incoming;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { result } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { min: 0, max: 12 } }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { min: 0, max: 12 },
+      });
+    });
+
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+    result.current.refetch({ min: 12, max: 30 });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+        variables: { min: 12, max: 30 },
+      });
+    });
+
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [undefined, [13, 17, 19, 23, 29]],
+    ]);
+  });
+
   it.todo('tears down subscription when throwing an error');
   it.todo('removes the query from the suspense cache when throwing an error');
   it.todo('does not oversubscribe when suspending multiple times');
-  it.todo('honors refetchWritePolicy set to "overwrite"');
-  it.todo('honors refetchWritePolicy set to "merge"');
 });

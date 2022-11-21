@@ -2947,11 +2947,67 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('applies nextFetchPolicy after initial suspense', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const cache = new InMemoryCache();
+
+    // network-only should bypass this cached result and suspend the component
+    cache.writeQuery({
+      query,
+      data: { character: { id: '1', name: 'Cached Hulk' } },
+      variables: { id: '1' },
+    });
+
+    // cache-first should read from this result on the rerender
+    cache.writeQuery({
+      query,
+      data: { character: { id: '2', name: 'Cached Black Widow' } },
+      variables: { id: '2' },
+    });
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'network-only',
+          // There is no way to trigger a followup query using nextFetchPolicy
+          // when this is a string vs a function. When changing variables,
+          // the `fetchPolicy` is reset back to `initialFetchPolicy` before the
+          // request is sent, negating the `nextFetchPolicy`. Using `refetch` or
+          // `fetchMore` sets the `fetchPolicy` to `network-only`, which negates
+          // the value. Using a function seems to be the only way to force a
+          // `nextFetchPolicy` without resorting to lower-level methods
+          // (i.e. `observable.reobserve`)
+          nextFetchPolicy: () => 'cache-first',
+          variables: { id },
+        }),
+      { cache, mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { character: { id: '2', name: 'Cached Black Widow' } },
+        error: undefined,
+        variables: { id: '2' },
+      });
+    });
+
+    expect(renders.suspenseCount).toBe(1);
+  });
+
   it.todo('tears down subscription when throwing an error');
   it.todo('removes the query from the suspense cache when throwing an error');
   it.todo('does not oversubscribe when suspending multiple times');
-  it.todo('applies nextFetchPolicy after initial suspense');
-  it.todo('handles nextFetchPolicy as a function after initial suspense');
   it.todo('honors refetchWritePolicy set to "overwrite"');
   it.todo('honors refetchWritePolicy set to "merge"');
 });

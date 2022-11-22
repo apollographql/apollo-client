@@ -1847,6 +1847,144 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
+  it('tears down subscription when throwing an error', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { query, mocks } = useErrorCase({
+      networkError: new Error('Could not fetch'),
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      client,
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(client.getObservableQueries().size).toBe(0);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('tears down subscription when throwing an error on refetch', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('Something went wrong')],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { id: '1' } }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(client.getObservableQueries().size).toBe(0);
+
+    consoleSpy.mockRestore();
+  });
+
+  // This test seems to rethrow the error somewhere which causes jest to crash.
+  // Ideally we are able to test this functionality, but I can't seem to get it
+  // to behave properly.
+  it.skip('tears down subscription when throwing an error on refetch when suspensePolicy is "initial"', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('Something went wrong')],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          suspensePolicy: 'initial',
+          variables: { id: '1' },
+        }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+        variables: { id: '1' },
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(client.getObservableQueries().size).toBe(0);
+
+    consoleSpy.mockRestore();
+  });
+
   it('throws network errors when errorPolicy is set to "none"', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -3226,7 +3364,6 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.todo('tears down subscription when throwing an error');
   it.todo('removes the query from the suspense cache when throwing an error');
   it.todo('does not oversubscribe when suspending multiple times');
 });

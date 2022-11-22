@@ -294,11 +294,10 @@ In the example above, we pass three options to `subscribeToMore`:
 
 Finally, in our definition of `CommentsPage`, we tell the component to `subscribeToNewComments` when it mounts:
 
-```js
-export class CommentsPage extends Component {
-  componentDidMount() {
-    this.props.subscribeToNewComments();
-  }
+```jsx
+export function CommentsPage({subscribeToNewComments}) {
+  useEffect(() => subscribeToNewComments(), []);
+  return <>...</>
 }
 ```
 

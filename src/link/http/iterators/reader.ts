@@ -6,7 +6,7 @@
 import { canUseAsyncIteratorSymbol } from "../../../utilities";
 
 interface ReaderIterator<T> {
-  next(): Promise<ReadableStreamDefaultReadResult<T>>;
+  next(): Promise<ReadableStreamReadResult<T>>;
   [Symbol.asyncIterator]?(): AsyncIterator<T>;
 }
 

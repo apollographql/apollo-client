@@ -108,6 +108,9 @@ export interface FragmentMap {
   [fragmentName: string]: FragmentDefinitionNode;
 }
 
+export type FragmentMapFunction =
+  (fragmentName: string) => FragmentDefinitionNode | null;
+
 // Utility function that takes a list of fragment definitions and makes a hash out of them
 // that maps the name of the fragment to the fragment definition.
 export function createFragmentMap(
@@ -122,15 +125,19 @@ export function createFragmentMap(
 
 export function getFragmentFromSelection(
   selection: SelectionNode,
-  fragmentMap?: FragmentMap,
+  fragmentMap?: FragmentMap | FragmentMapFunction,
 ): InlineFragmentNode | FragmentDefinitionNode | null {
   switch (selection.kind) {
     case 'InlineFragment':
       return selection;
     case 'FragmentSpread': {
-      const fragment = fragmentMap && fragmentMap[selection.name.value];
-      invariant(fragment, `No fragment named ${selection.name.value}.`);
-      return fragment!;
+      const fragmentName = selection.name.value;
+      if (typeof fragmentMap === "function") {
+        return fragmentMap(fragmentName);
+      }
+      const fragment = fragmentMap && fragmentMap[fragmentName];
+      invariant(fragment, `No fragment named ${fragmentName}`);
+      return fragment || null;
     }
     default:
       return null;

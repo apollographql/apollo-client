@@ -2,6 +2,7 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
+import { DeepMerger } from "../utilities"
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
@@ -153,7 +154,6 @@ export class QueryInfo {
 
   reset() {
     cancelNotifyTimeout(this);
-    this.lastDiff = void 0;
     this.dirty = false;
   }
 
@@ -356,17 +356,41 @@ export class QueryInfo {
 
   public markResult<T>(
     result: FetchResult<T>,
+    document: DocumentNode,
     options: Pick<WatchQueryOptions,
       | "variables"
       | "fetchPolicy"
       | "errorPolicy">,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
-    this.graphQLErrors = isNonEmptyArray(result.errors) ? result.errors : [];
+    const graphQLErrors = isNonEmptyArray(result.errors)
+      ? result.errors.slice(0)
+      : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
+
+    if ('incremental' in result && isNonEmptyArray(result.incremental)) {
+      let mergedData = this.getDiff().result;
+      const merger = new DeepMerger();
+      result.incremental.forEach(({ data, path, errors }) => {
+        for (let i = path.length - 1; i >= 0; --i) {
+          const key = path[i];
+          const isNumericKey = !isNaN(+key);
+          const parent: Record<string | number, any> = isNumericKey ? [] : {};
+          parent[key] = data;
+          data = parent as typeof data;
+        }
+        if (errors) {
+          graphQLErrors.push(...errors);
+        }
+        mergedData = merger.merge(mergedData, data);
+      });
+      result.data = mergedData;
+    }
+
+    this.graphQLErrors = graphQLErrors;
 
     if (options.fetchPolicy === 'no-cache') {
       this.updateLastDiff(
@@ -383,7 +407,7 @@ export class QueryInfo {
         this.cache.performTransaction(cache => {
           if (this.shouldWrite(result, options.variables)) {
             cache.writeQuery({
-              query: this.document!,
+              query: document,
               data: result.data as T,
               variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,

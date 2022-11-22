@@ -7,46 +7,18 @@ jobs:
     steps:
       - checkout
       - run: npm run ci:precheck
-      - restore_cache:
-          keys:
-            # When lock file changes, use increasingly general patterns to
-            # restore cache
-            - npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
-            - npm-v3-{{ .Branch }}-
-            - npm-v3-
       - run: npm version
       - run: npm ci
-      - save_cache:
-          key: npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          paths:
-            # This should cache the npm cache instead of node_modules, which is
-            # needed because npm ci actually removes node_modules before
-            # installing to guarantee a clean slate.
-            - ~/.npm
       - run: npm run bundlesize
 
   Tests:
     docker:
-      - image: circleci/node:16.13.1
+      - image: circleci/node:16.10.0
     steps:
       - checkout
       - run: npm run ci:precheck
-      - restore_cache:
-          keys:
-            # When lock file changes, use increasingly general patterns to
-            # restore cache
-            - npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
-            - npm-v3-{{ .Branch }}-
-            - npm-v3-
       - run: npm version
       - run: npm ci
-      - save_cache:
-          key: npm-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          paths:
-            # This should cache the npm cache instead of node_modules, which is
-            # needed because npm ci actually removes node_modules before
-            # installing to guarantee a clean slate.
-            - ~/.npm
       - run:
           name: Jest suite with coverage
           command: npm run test:ci

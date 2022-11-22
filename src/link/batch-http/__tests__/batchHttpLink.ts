@@ -578,6 +578,73 @@ describe('SharedHttpTest', () => {
     );
   });
 
+  itAsync('adds headers w/ preserved case to the request from the setup', (resolve, reject) => {
+    const variables = { params: 'stub' };
+    const link = createHttpLink({
+      uri: '/data',
+      headers: { 
+        authorization: '1234',
+        AUTHORIZATION: '1234',
+        'CONTENT-TYPE': 'application/json',
+      },
+      preserveHeaderCase: true,
+    });
+
+    execute(link, { query: sampleQuery, variables }).subscribe(
+      makeCallback(resolve, reject, (result: any) => {
+        const headers: any = fetchMock.lastCall()![1]!.headers;
+        expect(headers.AUTHORIZATION).toBe('1234');
+        expect(headers['CONTENT-TYPE']).toBe('application/json');
+        expect(headers.accept).toBe('*/*');
+      }),
+    );
+  });
+
+  itAsync('prioritizes context headers w/ preserved case over setup headers', (resolve, reject) => {
+    const variables = { params: 'stub' };
+    const middleware = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        headers: { AUTHORIZATION: '1234' },
+        http: { preserveHeaderCase: true },
+      });
+      return forward(operation);
+    });
+    const link = middleware.concat(
+      createHttpLink({ uri: '/data', headers: { authorization: 'no user' }, preserveHeaderCase: false }),
+    );
+
+    execute(link, { query: sampleQuery, variables }).subscribe(
+      makeCallback(resolve, reject, (result: any) => {
+        const headers: any = fetchMock.lastCall()![1]!.headers;
+        expect(headers.AUTHORIZATION).toBe('1234');
+        expect(headers['content-type']).toBe('application/json');
+        expect(headers.accept).toBe('*/*');
+      }),
+    );
+  });
+
+  itAsync('adds headers w/ preserved case to the request from the context on an operation', (resolve, reject) => {
+    const variables = { params: 'stub' };
+    const link = createHttpLink({ uri: '/data' });
+
+    const context = {
+      headers: { AUTHORIZATION: '1234' },
+      http: { preserveHeaderCase: true },
+    };
+    execute(link, {
+      query: sampleQuery,
+      variables,
+      context,
+    }).subscribe(
+      makeCallback(resolve, reject, (result: any) => {
+        const headers: any = fetchMock.lastCall()![1]!.headers;
+        expect(headers.AUTHORIZATION).toBe('1234');
+        expect(headers['content-type']).toBe('application/json');
+        expect(headers.accept).toBe('*/*');
+      }),
+    );
+  });
+
   itAsync('adds creds to the request from the context', (resolve, reject) => {
     const variables = { params: 'stub' };
     const middleware = new ApolloLink((operation, forward) => {

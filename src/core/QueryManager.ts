@@ -436,7 +436,7 @@ export class QueryManager<TStore> {
               });
 
               if (diff.complete && !(isExecutionPatchIncrementalResult(result))) {
-                result = { ...result, data: diff.result };
+                result = { ...result, data: diff.result } as typeof result;
               }
             }
 

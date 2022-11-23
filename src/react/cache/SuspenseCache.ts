@@ -32,7 +32,7 @@ export class SuspenseCache {
     TData = any,
     TVariables extends OperationVariables = OperationVariables
   >(
-    query: DocumentNode | TypedDocumentNode<TData>
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>
   ): ObservableQuery<TData, TVariables> | undefined {
     return this.queries.get(query) as ObservableQuery<TData, TVariables>;
   }

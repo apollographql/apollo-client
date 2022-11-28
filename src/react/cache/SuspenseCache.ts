@@ -8,7 +8,7 @@ import {
 import { canonicalStringify } from '../../cache';
 
 interface CacheEntry<TData = unknown> {
-  resolved: boolean;
+  fulfilled: boolean;
   promise: Promise<ApolloQueryResult<TData>>;
 }
 
@@ -67,9 +67,9 @@ export class SuspenseCache {
     promise: Promise<ApolloQueryResult<TData>>
   ) {
     const entry: CacheEntry<TData> = {
-      resolved: false,
+      fulfilled: false,
       promise: promise.finally(() => {
-        entry.resolved = true;
+        entry.fulfilled = true;
       }),
     };
 

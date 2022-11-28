@@ -122,7 +122,7 @@ export function useSuspenseQuery_experimental<
         // subscription is created, then reset it back to its original.
         const originalFetchPolicy = watchQueryOptions.fetchPolicy;
 
-        if (cacheEntry?.resolved) {
+        if (cacheEntry?.fulfilled) {
           observable.options.fetchPolicy = 'cache-only';
         }
 
@@ -205,7 +205,7 @@ export function useSuspenseQuery_experimental<
             promise
           );
         }
-        if (!cacheEntry.resolved) {
+        if (!cacheEntry.fulfilled) {
           throw cacheEntry.promise;
         }
       }

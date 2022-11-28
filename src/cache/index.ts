@@ -7,6 +7,7 @@ export {
   MissingTree,
   Modifier,
   Modifiers,
+  ModifierDetails,
   MissingFieldError,
   ReadFieldOptions
 } from './core/types/common';

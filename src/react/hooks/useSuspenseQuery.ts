@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
   DependencyList,
+  useLayoutEffect,
 } from 'react';
 import { equal } from '@wry/equality';
 import {
@@ -164,7 +165,7 @@ export function useSuspenseQuery_experimental<
           }
         }
 
-        let subscription = observable.subscribe(onNext, onError);
+        const subscription = observable.subscribe(onNext, onError);
 
         observable.options.fetchPolicy = originalFetchPolicy;
 

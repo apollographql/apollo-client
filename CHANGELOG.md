@@ -43,6 +43,8 @@
 - Support `onError` callback for `useSubscription` hook. <br/>
   [@jeroenvisser101](https://github.com/jeroenvisser101) in [#9495](https://github.com/apollographql/apollo-client/pull/9495)
 
+- Implement `preserveHeaderCase` option for `http` context object, enabling preserved header capitalization for non-http-spec-compliant servers. <br/>
+  [@mrdoombringer](https://github.com/mrdoombringer) in [#9891](https://github.com/apollographql/apollo-client/pull/9891)
 ### Improvements
 
 - Delay calling `onCompleted` and `onError` callbacks passed to `useQuery` using `Promise.resolve().then(() => ...)` to fix issue [#9794](https://github.com/apollographql/apollo-client/pull/9794). <br/>

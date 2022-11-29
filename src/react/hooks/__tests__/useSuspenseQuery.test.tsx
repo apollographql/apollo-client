@@ -329,14 +329,13 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: {} },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -352,14 +351,13 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -375,7 +373,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -387,8 +384,8 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -406,7 +403,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -621,7 +617,7 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'local hello' }, error: undefined, variables: {} },
+      { data: { greeting: 'local hello' }, error: undefined },
     ]);
   });
 
@@ -643,17 +639,12 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       data: { greeting: 'hello from cache' },
       error: undefined,
-      variables: {},
     });
 
     expect(renders.count).toBe(1);
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
-      {
-        data: { greeting: 'hello from cache' },
-        error: undefined,
-        variables: {},
-      },
+      { data: { greeting: 'hello from cache' }, error: undefined },
     ]);
   });
 
@@ -702,22 +693,20 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
-      variables: {},
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
-      { data: { character: { id: '1' } }, error: undefined, variables: {} },
-      { ...mocks[0].result, error: undefined, variables: {} },
+      { data: { character: { id: '1' } }, error: undefined },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -754,14 +743,12 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
-      variables: { id: '1' },
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -771,29 +758,16 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '2' },
       });
     });
 
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      {
-        data: { character: { id: '1' } },
-        error: undefined,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      { data: { character: { id: '1' } }, error: undefined },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -816,14 +790,13 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined, variables: {} },
+      { data: { greeting: 'Hello' }, error: undefined },
     ]);
   });
 
@@ -874,14 +847,13 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: {} },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -904,7 +876,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
@@ -913,7 +884,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined, variables: {} },
+      { data: { greeting: 'Hello' }, error: undefined },
     ]);
     expect(cachedData).toEqual({ greeting: 'hello from cache' });
   });
@@ -932,14 +903,13 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined, variables: {} },
+      { data: { greeting: 'Hello' }, error: undefined },
     ]);
 
     rerender();
@@ -947,13 +917,12 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       ...mocks[0].result,
       error: undefined,
-      variables: {},
     });
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined, variables: {} },
-      { data: { greeting: 'Hello' }, error: undefined, variables: {} },
+      { data: { greeting: 'Hello' }, error: undefined },
+      { data: { greeting: 'Hello' }, error: undefined },
     ]);
   });
 
@@ -1004,14 +973,13 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: {} },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -1033,14 +1001,12 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       data: { greeting: 'hello from cache' },
       error: undefined,
-      variables: {},
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
@@ -1050,9 +1016,8 @@ describe('useSuspenseQuery', () => {
       {
         data: { greeting: 'hello from cache' },
         error: undefined,
-        variables: {},
       },
-      { data: { greeting: 'Hello' }, error: undefined, variables: {} },
+      { data: { greeting: 'Hello' }, error: undefined },
     ]);
   });
 
@@ -1101,22 +1066,20 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
-      variables: {},
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
-      { data: { character: { id: '1' } }, error: undefined, variables: {} },
-      { ...mocks[0].result, error: undefined, variables: {} },
+      { data: { character: { id: '1' } }, error: undefined },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -1153,14 +1116,12 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
       error: undefined,
-      variables: { id: '1' },
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -1170,29 +1131,16 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '2' },
       });
     });
 
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      {
-        data: { character: { id: '1' } },
-        error: undefined,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      },
-      {
-        ...mocks[0].result,
-        error: undefined,
-        variables: { id: '1' },
-      },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      { data: { character: { id: '1' } }, error: undefined },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -1221,7 +1169,6 @@ describe('useSuspenseQuery', () => {
         expect(result.current).toMatchObject({
           ...mocks[0].result,
           error: undefined,
-          variables: { id: '1' },
         });
       });
 
@@ -1231,7 +1178,6 @@ describe('useSuspenseQuery', () => {
         expect(result.current).toMatchObject({
           ...mocks[1].result,
           error: undefined,
-          variables: { id: '2' },
         });
       });
 
@@ -1243,9 +1189,9 @@ describe('useSuspenseQuery', () => {
       expect(renders.count).toBe(4);
       expect(renders.suspenseCount).toBe(1);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-        { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+        { ...mocks[0].result, error: undefined },
+        { ...mocks[0].result, error: undefined },
+        { ...mocks[1].result, error: undefined },
       ]);
     }
   );
@@ -1328,18 +1274,13 @@ describe('useSuspenseQuery', () => {
         expect(result.current).toMatchObject({
           data: { greeting: 'Updated hello' },
           error: undefined,
-          variables: {},
         });
       });
       expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(3);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined, variables: {} },
-        {
-          data: { greeting: 'Updated hello' },
-          error: undefined,
-          variables: {},
-        },
+        { ...mocks[0].result, error: undefined },
+        { data: { greeting: 'Updated hello' }, error: undefined },
       ]);
     }
   );
@@ -1372,12 +1313,11 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toMatchObject({
       ...mocks[0].result,
       error: undefined,
-      variables: {},
     });
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: {} },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -1401,7 +1341,6 @@ describe('useSuspenseQuery', () => {
         expect(result.current).toMatchObject({
           ...mocks[0].result,
           error: undefined,
-          variables: { id: '1' },
         });
       });
 
@@ -1411,7 +1350,6 @@ describe('useSuspenseQuery', () => {
         expect(result.current).toMatchObject({
           ...mocks[1].result,
           error: undefined,
-          variables: { id: '2' },
         });
       });
 
@@ -1424,9 +1362,9 @@ describe('useSuspenseQuery', () => {
       expect(renders.count).toBe(5);
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-        { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-        { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+        { ...mocks[0].result, error: undefined },
+        { ...mocks[0].result, error: undefined },
+        { ...mocks[1].result, error: undefined },
       ]);
     }
   );
@@ -1472,7 +1410,6 @@ describe('useSuspenseQuery', () => {
         expect(result.current).toMatchObject({
           ...mocks[0].result,
           error: undefined,
-          variables: {},
         });
       });
 
@@ -1482,7 +1419,6 @@ describe('useSuspenseQuery', () => {
         expect(result.current).toMatchObject({
           ...mocks[1].result,
           error: undefined,
-          variables: {},
         });
       });
 
@@ -1495,9 +1431,9 @@ describe('useSuspenseQuery', () => {
       expect(renders.count).toBe(5);
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined, variables: {} },
-        { ...mocks[0].result, error: undefined, variables: {} },
-        { ...mocks[1].result, error: undefined, variables: {} },
+        { ...mocks[0].result, error: undefined },
+        { ...mocks[0].result, error: undefined },
+        { ...mocks[1].result, error: undefined },
       ]);
     }
   );
@@ -1586,7 +1522,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: {} },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -1612,12 +1548,11 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '2' },
       });
     });
 
     expect(renders.frames).toMatchObject([
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -1658,7 +1593,6 @@ describe('useSuspenseQuery', () => {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
         },
         error: undefined,
-        variables: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
       });
     });
 
@@ -1670,11 +1604,6 @@ describe('useSuspenseQuery', () => {
           vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
         },
         error: undefined,
-        variables: {
-          source: 'rerender',
-          globalOnlyVar: true,
-          localOnlyVar: true,
-        },
       });
     });
 
@@ -1684,25 +1613,18 @@ describe('useSuspenseQuery', () => {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
         },
         error: undefined,
-        variables: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
       },
       {
         data: {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
         },
         error: undefined,
-        variables: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
       },
       {
         data: {
           vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
         },
         error: undefined,
-        variables: {
-          source: 'rerender',
-          globalOnlyVar: true,
-          localOnlyVar: true,
-        },
       },
     ]);
   });
@@ -1741,7 +1663,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { vars: { source: 'local' } },
         error: undefined,
-        variables: { source: 'local' },
       });
     });
 
@@ -1749,15 +1670,10 @@ describe('useSuspenseQuery', () => {
     // undefined. Unfortunately this is not caught by toMatchObject as
     // toMatchObject only checks a if the subset of options are equal, not if
     // they have strictly the same keys and values.
-    expect(result.current.variables).not.toHaveProperty('globalOnlyVar');
     expect(result.current.data.vars).not.toHaveProperty('globalOnlyVar');
 
     expect(renders.frames).toMatchObject([
-      {
-        data: { vars: { source: 'local' } },
-        error: undefined,
-        variables: { source: 'local' },
-      },
+      { data: { vars: { source: 'local' } }, error: undefined },
     ]);
   });
 
@@ -1792,7 +1708,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { context: { valueA: 'A', valueB: 'B' } },
         error: undefined,
-        variables: {},
       });
     });
   });
@@ -1915,7 +1830,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -1976,7 +1890,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2089,7 +2002,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: undefined,
-        variables: {},
       });
     });
 
@@ -2098,7 +2010,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: undefined, variables: {} },
+      { data: undefined, error: undefined },
     ]);
   });
 
@@ -2116,7 +2028,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: undefined,
-        variables: {},
       });
     });
 
@@ -2125,7 +2036,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: undefined, variables: {} },
+      { data: undefined, error: undefined },
     ]);
   });
 
@@ -2144,7 +2055,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
         error: undefined,
-        variables: {},
       });
     });
 
@@ -2152,7 +2062,6 @@ describe('useSuspenseQuery', () => {
       {
         data: { currentUser: { id: '1', name: null } },
         error: undefined,
-        variables: {},
       },
     ]);
   });
@@ -2174,16 +2083,11 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: undefined,
-        variables: {},
       });
     });
 
     expect(renders.frames).toMatchObject([
-      {
-        data: undefined,
-        error: undefined,
-        variables: {},
-      },
+      { data: undefined, error: undefined },
     ]);
   });
 
@@ -2201,7 +2105,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: new ApolloError({ networkError }),
-        variables: {},
       });
     });
 
@@ -2210,11 +2113,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      {
-        data: undefined,
-        error: new ApolloError({ networkError }),
-        variables: {},
-      },
+      { data: undefined, error: new ApolloError({ networkError }) },
     ]);
 
     const { error } = result.current;
@@ -2238,7 +2137,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: new ApolloError({ graphQLErrors: [graphQLError] }),
-        variables: {},
       });
     });
 
@@ -2250,7 +2148,6 @@ describe('useSuspenseQuery', () => {
       {
         data: undefined,
         error: new ApolloError({ graphQLErrors: [graphQLError] }),
-        variables: {},
       },
     ]);
 
@@ -2280,7 +2177,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: expectedError,
-        variables: {},
       });
     });
 
@@ -2289,11 +2185,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      {
-        data: undefined,
-        error: expectedError,
-        variables: {},
-      },
+      { data: undefined, error: expectedError },
     ]);
 
     const { error } = result.current;
@@ -2322,7 +2214,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
         error: expectedError,
-        variables: {},
       });
     });
 
@@ -2330,7 +2221,6 @@ describe('useSuspenseQuery', () => {
       {
         data: { currentUser: { id: '1', name: null } },
         error: expectedError,
-        variables: {},
       },
     ]);
   });
@@ -2397,7 +2287,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: expectedError,
-        variables: { id: '1' },
       });
     });
 
@@ -2407,7 +2296,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '2' },
       });
     });
 
@@ -2416,9 +2304,9 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: expectedError, variables: { id: '1' } },
-      { data: undefined, error: expectedError, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      { data: undefined, error: expectedError },
+      { data: undefined, error: expectedError },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -2465,7 +2353,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: undefined,
         error: expectedError,
-        variables: { id: '1' },
       });
     });
 
@@ -2475,7 +2362,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '2' },
       });
     });
 
@@ -2484,9 +2370,9 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: expectedError, variables: { id: '1' } },
-      { data: undefined, error: expectedError, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      { data: undefined, error: expectedError },
+      { data: undefined, error: expectedError },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -2524,7 +2410,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2534,15 +2419,14 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
     expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -2580,7 +2464,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2590,14 +2473,13 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '2' },
       });
     });
     expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '2' } },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -2641,7 +2523,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2651,7 +2532,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2661,16 +2541,15 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[2].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
     expect(renders.count).toBe(6);
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[2].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[1].result, error: undefined },
+      { ...mocks[2].result, error: undefined },
     ]);
   });
 
@@ -2712,7 +2591,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2722,15 +2600,14 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[1].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[1].result, error: undefined },
     ]);
   });
 
@@ -2770,7 +2647,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2786,7 +2662,7 @@ describe('useSuspenseQuery', () => {
       }),
     ]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
     ]);
 
     consoleSpy.mockRestore();
@@ -2830,7 +2706,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2841,8 +2716,8 @@ describe('useSuspenseQuery', () => {
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[0].result, error: undefined },
     ]);
   });
 
@@ -2888,7 +2763,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2898,15 +2772,14 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: expectedError,
-        variables: { id: '1' },
       });
     });
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      { ...mocks[0].result, error: expectedError, variables: { id: '1' } },
+      { ...mocks[0].result, error: undefined },
+      { ...mocks[0].result, error: expectedError },
     ]);
   });
 
@@ -2953,7 +2826,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -2963,19 +2835,14 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: mocks[1].result.data,
         error: expectedError,
-        variables: { id: '1' },
       });
     });
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined, variables: { id: '1' } },
-      {
-        data: mocks[1].result.data,
-        error: expectedError,
-        variables: { id: '1' },
-      },
+      { ...mocks[0].result, error: undefined },
+      { data: mocks[1].result.data, error: expectedError },
     ]);
   });
 
@@ -2991,7 +2858,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 2) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
@@ -3001,23 +2867,14 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(2, 4) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
     expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      {
-        data: { letters: data.slice(0, 2) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
-      {
-        data: { letters: data.slice(2, 4) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
+      { data: { letters: data.slice(0, 2) }, error: undefined },
+      { data: { letters: data.slice(2, 4) }, error: undefined },
     ]);
   });
 
@@ -3037,7 +2894,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 2) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
@@ -3047,23 +2903,14 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(2, 4) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      {
-        data: { letters: data.slice(0, 2) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
-      {
-        data: { letters: data.slice(2, 4) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
+      { data: { letters: data.slice(0, 2) }, error: undefined },
+      { data: { letters: data.slice(2, 4) }, error: undefined },
     ]);
   });
 
@@ -3079,7 +2926,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 2) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
@@ -3094,21 +2940,12 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 4) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
     expect(renders.frames).toMatchObject([
-      {
-        data: { letters: data.slice(0, 2) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
-      {
-        data: { letters: data.slice(0, 4) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
+      { data: { letters: data.slice(0, 2) }, error: undefined },
+      { data: { letters: data.slice(0, 4) }, error: undefined },
     ]);
   });
 
@@ -3134,7 +2971,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 2) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
@@ -3144,21 +2980,12 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 4) },
         error: undefined,
-        variables: { limit: 2 },
       });
     });
 
     expect(renders.frames).toMatchObject([
-      {
-        data: { letters: data.slice(0, 2) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
-      {
-        data: { letters: data.slice(0, 4) },
-        error: undefined,
-        variables: { limit: 2 },
-      },
+      { data: { letters: data.slice(0, 2) }, error: undefined },
+      { data: { letters: data.slice(0, 4) }, error: undefined },
     ]);
   });
 
@@ -3203,7 +3030,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { id: '1' },
       });
     });
 
@@ -3213,7 +3039,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { character: { id: '2', name: 'Cached Black Widow' } },
         error: undefined,
-        variables: { id: '2' },
       });
     });
 
@@ -3272,7 +3097,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { min: 0, max: 12 },
       });
     });
 
@@ -3284,7 +3108,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { min: 12, max: 30 },
       });
     });
 
@@ -3346,7 +3169,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { min: 0, max: 12 },
       });
     });
 
@@ -3358,7 +3180,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
         error: undefined,
-        variables: { min: 12, max: 30 },
       });
     });
 
@@ -3419,7 +3240,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
         error: undefined,
-        variables: { min: 0, max: 12 },
       });
     });
 
@@ -3431,7 +3251,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
         error: undefined,
-        variables: { min: 12, max: 30 },
       });
     });
 

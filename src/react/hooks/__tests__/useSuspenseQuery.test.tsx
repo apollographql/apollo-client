@@ -2665,6 +2665,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
+    expect(renders.count).toBe(6);
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toMatchObject([
       { ...mocks[0].result, error: undefined, variables: { id: '1' } },

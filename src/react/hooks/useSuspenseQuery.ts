@@ -58,7 +58,6 @@ export function useSuspenseQuery_experimental<
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
   const suspenseCache = useSuspenseCache();
-  const hasRunValidations = useRef(false);
   const client = useApolloClient(options.client);
   const isSuspendedRef = useRef(false);
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
@@ -90,9 +89,8 @@ export function useSuspenseQuery_experimental<
     }, [options, query, client.defaultOptions.watchQuery]);
   const { errorPolicy, returnPartialData } = watchQueryOptions;
 
-  if (!hasRunValidations.current) {
+  if (__DEV__) {
     validateOptions(watchQueryOptions);
-    hasRunValidations.current = true;
   }
 
   const [observable] = useState(() => {

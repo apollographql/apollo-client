@@ -60,6 +60,7 @@ export function useSuspenseQuery_experimental<
   const suspenseCache = useSuspenseCache();
   const hasRunValidations = useRef(false);
   const client = useApolloClient(options.client);
+  const isSuspendedRef = useRef(false);
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
     useDeepMemo(() => {
       const {
@@ -139,7 +140,10 @@ export function useSuspenseQuery_experimental<
           }
 
           resultRef.current = result;
-          forceUpdate();
+
+          if (!isSuspendedRef.current) {
+            forceUpdate();
+          }
         }
 
         function onError() {
@@ -155,7 +159,10 @@ export function useSuspenseQuery_experimental<
           }
 
           resultRef.current = result;
-          forceUpdate();
+
+          if (!isSuspendedRef.current) {
+            forceUpdate();
+          }
         }
 
         let subscription = observable.subscribe(onNext, onError);
@@ -206,6 +213,7 @@ export function useSuspenseQuery_experimental<
           );
         }
         if (!cacheEntry.fulfilled) {
+          isSuspendedRef.current = true;
           throw cacheEntry.promise;
         }
       }
@@ -215,6 +223,13 @@ export function useSuspenseQuery_experimental<
   if (result.error && errorPolicy === 'none') {
     throw result.error;
   }
+
+  // Unlike useEffect, useLayoutEffect will run its effects again when
+  // resuspending a component. This ensures we can detect when we've resumed
+  // rendering after suspending the component.
+  useLayoutEffect(() => {
+    isSuspendedRef.current = false;
+  }, []);
 
   useEffect(() => {
     if (

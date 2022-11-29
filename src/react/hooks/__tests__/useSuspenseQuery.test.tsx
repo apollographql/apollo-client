@@ -372,8 +372,11 @@ describe('useSuspenseQuery', () => {
       });
     });
 
+    const previousResult = result.current;
+
     rerender({ id: '1' });
 
+    expect(result.current).toBe(previousResult);
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([

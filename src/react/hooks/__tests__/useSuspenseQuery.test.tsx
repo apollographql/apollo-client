@@ -36,6 +36,7 @@ type RenderSuspenseHookOptions<
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
   mocks?: MockedResponse[];
+  suspenseCache?: SuspenseCache;
 };
 
 interface Renders<Result> {
@@ -69,6 +70,7 @@ function renderSuspenseHook<Result, Props>(
     client,
     link,
     mocks = [],
+    suspenseCache = new SuspenseCache(),
     wrapper = ({ children }) => {
       const errorBoundaryProps: ErrorBoundaryProps = {
         fallback: <div>Error</div>,
@@ -79,13 +81,18 @@ function renderSuspenseHook<Result, Props>(
       };
 
       return client ? (
-        <ApolloProvider client={client} suspenseCache={new SuspenseCache()}>
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
           <ErrorBoundary {...errorBoundaryProps}>
             <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
           </ErrorBoundary>
         </ApolloProvider>
       ) : (
-        <MockedProvider cache={cache} mocks={mocks} link={link}>
+        <MockedProvider
+          cache={cache}
+          mocks={mocks}
+          link={link}
+          suspenseCache={suspenseCache}
+        >
           <ErrorBoundary {...errorBoundaryProps}>
             <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
           </ErrorBoundary>
@@ -525,13 +532,7 @@ describe('useSuspenseQuery', () => {
 
     const { result, unmount } = renderSuspenseHook(
       () => useSuspenseQuery(query),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
-            <Suspense fallback="loading">{children}</Suspense>
-          </ApolloProvider>
-        ),
-      }
+      { client, suspenseCache }
     );
 
     // We don't subscribe to the observable until after the component has been

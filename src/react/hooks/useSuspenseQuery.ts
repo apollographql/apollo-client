@@ -13,6 +13,7 @@ import {
   ApolloQueryResult,
   DocumentNode,
   NetworkStatus,
+  ObservableQuery,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
@@ -62,8 +63,6 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
-  const isSuspendedRef = useIsSuspendedRef();
-  const resultRef = useRef<ApolloQueryResult<TData>>();
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
@@ -74,62 +73,7 @@ export function useSuspenseQuery_experimental<
     return cacheEntry?.observable || client.watchQuery(watchQueryOptions);
   });
 
-  if (!resultRef.current) {
-    resultRef.current = observable.getCurrentResult();
-  }
-
-  const result = useSyncExternalStore(
-    useCallback(
-      (forceUpdate) => {
-        // ObservableQuery will call `reobserve` as soon as the first
-        // subscription is created. Because we don't subscribe to the
-        // observable until after we've suspended via the initial fetch, we
-        // don't want to initiate another network request for fetch policies
-        // that always fetch (e.g. 'network-only'). Instead, we set the cache
-        // policy to `cache-only` to prevent the network request until the
-        // subscription is created, then reset it back to its original.
-        const originalFetchPolicy = observable.options.fetchPolicy;
-
-        if (cacheEntry?.fulfilled) {
-          observable.options.fetchPolicy = 'cache-only';
-        }
-
-        function handleUpdate() {
-          const previousResult = resultRef.current!;
-          const result = observable.getCurrentResult();
-
-          if (
-            previousResult.loading === result.loading &&
-            previousResult.networkStatus === result.networkStatus &&
-            equal(previousResult.data, result.data)
-          ) {
-            return;
-          }
-
-          resultRef.current = result;
-
-          if (!isSuspendedRef.current) {
-            forceUpdate();
-          }
-        }
-
-        const subscription = observable.subscribe({
-          next: handleUpdate,
-          error: handleUpdate,
-        });
-
-        observable.options.fetchPolicy = originalFetchPolicy;
-
-        return () => {
-          subscription.unsubscribe();
-          suspenseCache.remove(query, observable.variables);
-        };
-      },
-      [observable]
-    ),
-    () => resultRef.current!,
-    () => resultRef.current!
-  );
+  const result = useObservableQueryResult(observable);
 
   // Sometimes the observable reports a network status of error even
   // when our error policy is set to 'ignore' or 'all'.
@@ -183,6 +127,12 @@ export function useSuspenseQuery_experimental<
       previousWatchQueryOptionsRef.current = watchQueryOptions;
     }
   }, [watchQueryOptions]);
+
+  useEffect(() => {
+    return () => {
+      suspenseCache.remove(query, variables);
+    };
+  }, []);
 
   return useMemo(() => {
     return {
@@ -277,19 +227,85 @@ function useWatchQueryOptions<TData, TVariables>({
   return watchQueryOptions;
 }
 
-function useIsSuspendedRef() {
-  const ref = useRef(false);
+function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
+  const suspenseCache = useSuspenseCache();
+  const resultRef = useRef<ApolloQueryResult<TData>>();
+  const isSuspendedRef = useRef(false);
 
+  if (!resultRef.current) {
+    resultRef.current = observable.getCurrentResult();
+  }
+
+  // React keeps refs and effects from useSyncExternalStore around after the
+  // component initially mounts even if the component re-suspends. We need to
+  // track when the component suspends/unsuspends to ensure we don't try and
+  // update the component while its suspended since the observable's
+  // `next` function is called before the promise resolved.
+  //
   // Unlike useEffect, useLayoutEffect will run its cleanup and initialization
-  // functions each time a component is resuspended. Using this ensures we can
-  // detect when a component has resumed after having been suspended.
+  // functions each time a component is resuspended. This ensures we can
+  // properly detect when a component has resumed after having been re-suspended.
   useLayoutEffect(() => {
-    ref.current = false;
+    isSuspendedRef.current = false;
 
     return () => {
-      ref.current = true;
+      isSuspendedRef.current = true;
     };
   }, []);
 
-  return ref;
+  return useSyncExternalStore(
+    useCallback(
+      (forceUpdate) => {
+        function handleUpdate() {
+          const previousResult = resultRef.current!;
+          const result = observable.getCurrentResult();
+
+          if (
+            previousResult.loading === result.loading &&
+            previousResult.networkStatus === result.networkStatus &&
+            equal(previousResult.data, result.data)
+          ) {
+            return;
+          }
+
+          resultRef.current = result;
+
+          if (!isSuspendedRef.current) {
+            forceUpdate();
+          }
+        }
+
+        // ObservableQuery will call `reobserve` as soon as the first
+        // subscription is created. Because we don't subscribe to the
+        // observable until after we've suspended via the initial fetch, we
+        // don't want to initiate another network request for fetch policies
+        // that always fetch (e.g. 'network-only'). Instead, we set the cache
+        // policy to `cache-only` to prevent the network request until the
+        // subscription is created, then reset it back to its original.
+        const originalFetchPolicy = observable.options.fetchPolicy;
+        const cacheEntry = suspenseCache.lookup(
+          observable.options.query,
+          observable.options.variables
+        );
+
+        if (cacheEntry?.fulfilled) {
+          observable.options.fetchPolicy = 'cache-only';
+        }
+
+        const subscription = observable.subscribe({
+          next: handleUpdate,
+          error: handleUpdate,
+        });
+
+        observable.options.fetchPolicy = originalFetchPolicy;
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      },
+      [observable]
+    ),
+    () => resultRef.current!,
+    () => resultRef.current!
+  );
 }

@@ -230,7 +230,7 @@ function useWatchQueryOptions<TData, TVariables>({
 function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
   const suspenseCache = useSuspenseCache();
   const resultRef = useRef<ApolloQueryResult<TData>>();
-  const isSuspendedRef = useRef(false);
+  const isMountedRef = useRef(false);
 
   if (!resultRef.current) {
     resultRef.current = observable.getCurrentResult();
@@ -243,13 +243,12 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
   // `next` function is called before the promise resolved.
   //
   // Unlike useEffect, useLayoutEffect will run its cleanup and initialization
-  // functions each time a component is resuspended. This ensures we can
-  // properly detect when a component has resumed after having been re-suspended.
+  // functions each time a component is suspended.
   useLayoutEffect(() => {
-    isSuspendedRef.current = false;
+    isMountedRef.current = true;
 
     return () => {
-      isSuspendedRef.current = true;
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -270,7 +269,7 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
 
           resultRef.current = result;
 
-          if (!isSuspendedRef.current) {
+          if (isMountedRef.current) {
             forceUpdate();
           }
         }

@@ -73,7 +73,7 @@ export class SuspenseCache {
     const entry = map.get(key);
 
     if (entry && !entry.observable.hasObservers()) {
-      map.delete(this.getVariablesKey(variables));
+      map.delete(key);
     }
 
     if (map.size === 0) {

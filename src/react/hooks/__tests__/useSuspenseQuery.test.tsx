@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import {
+  act,
   screen,
   renderHook,
   waitFor,
@@ -1833,7 +1834,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
@@ -1890,7 +1893,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
@@ -2410,7 +2415,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2464,7 +2471,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch({ id: '2' });
+    act(() => {
+      result.current.refetch({ id: '2' });
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2523,7 +2532,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2532,7 +2543,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2591,7 +2604,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2647,7 +2662,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(renders.errorCount).toBe(1);
@@ -2706,9 +2723,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
-
-    await wait(100);
+    await act(async () => {
+      await result.current.refetch();
+    });
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
@@ -2763,7 +2780,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2826,7 +2845,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2858,7 +2879,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.fetchMore({ variables: { offset: 2 } });
+    act(() => {
+      result.current.fetchMore({ variables: { offset: 2 } });
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2894,7 +2917,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.fetchMore({ variables: { offset: 2 } });
+    act(() => {
+      result.current.fetchMore({ variables: { offset: 2 } });
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -2926,11 +2951,13 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.fetchMore({
-      variables: { offset: 2 },
-      updateQuery: (prev, { fetchMoreResult }) => ({
-        letters: prev.letters.concat(fetchMoreResult.letters),
-      }),
+    act(() => {
+      result.current.fetchMore({
+        variables: { offset: 2 },
+        updateQuery: (prev, { fetchMoreResult }) => ({
+          letters: prev.letters.concat(fetchMoreResult.letters),
+        }),
+      });
     });
 
     await waitFor(() => {
@@ -2971,7 +2998,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.fetchMore({ variables: { offset: 2 } });
+    act(() => {
+      result.current.fetchMore({ variables: { offset: 2 } });
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -3099,7 +3128,9 @@ describe('useSuspenseQuery', () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    result.current.refetch({ min: 12, max: 30 });
+    act(() => {
+      result.current.refetch({ min: 12, max: 30 });
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -3171,7 +3202,9 @@ describe('useSuspenseQuery', () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    result.current.refetch({ min: 12, max: 30 });
+    act(() => {
+      result.current.refetch({ min: 12, max: 30 });
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -3242,7 +3275,9 @@ describe('useSuspenseQuery', () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    result.current.refetch({ min: 12, max: 30 });
+    act(() => {
+      result.current.refetch({ min: 12, max: 30 });
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -3305,7 +3340,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -3314,7 +3351,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    result.current.refetch();
+    act(() => {
+      result.current.refetch();
+    });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({

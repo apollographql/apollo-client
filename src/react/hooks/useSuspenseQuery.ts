@@ -101,7 +101,7 @@ export function useSuspenseQuery_experimental<
   });
 
   const resultRef = useRef<ApolloQueryResult<TData>>();
-  const previousOptsRef = useRef(watchQueryOptions);
+  const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
 
   if (!resultRef.current) {
     resultRef.current = observable.getCurrentResult();
@@ -230,13 +230,13 @@ export function useSuspenseQuery_experimental<
     const { variables, query } = watchQueryOptions;
 
     if (
-      variables !== previousOptsRef.current?.variables ||
-      query !== previousOptsRef.current.query
+      variables !== previousWatchQueryOptionsRef.current?.variables ||
+      query !== previousWatchQueryOptionsRef.current.query
     ) {
       const promise = observable.reobserve(watchQueryOptions);
 
       suspenseCache.setVariables(observable, variables, promise);
-      previousOptsRef.current = watchQueryOptions;
+      previousWatchQueryOptionsRef.current = watchQueryOptions;
     }
   }, [watchQueryOptions]);
 

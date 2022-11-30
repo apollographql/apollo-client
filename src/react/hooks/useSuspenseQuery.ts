@@ -88,7 +88,7 @@ export function useSuspenseQuery_experimental<
         // that always fetch (e.g. 'network-only'). Instead, we set the cache
         // policy to `cache-only` to prevent the network request until the
         // subscription is created, then reset it back to its original.
-        const originalFetchPolicy = watchQueryOptions.fetchPolicy;
+        const originalFetchPolicy = observable.options.fetchPolicy;
 
         if (cacheEntry?.fulfilled) {
           observable.options.fetchPolicy = 'cache-only';
@@ -177,7 +177,7 @@ export function useSuspenseQuery_experimental<
       variables !== previousWatchQueryOptionsRef.current?.variables ||
       query !== previousWatchQueryOptionsRef.current.query
     ) {
-      const promise = observable.reobserve(watchQueryOptions);
+      const promise = observable.reobserve({ query, variables });
 
       suspenseCache.add(query, variables, { promise, observable });
       previousWatchQueryOptionsRef.current = watchQueryOptions;

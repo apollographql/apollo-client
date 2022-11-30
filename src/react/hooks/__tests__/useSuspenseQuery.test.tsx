@@ -3260,6 +3260,72 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.todo('removes the query from the suspense cache when throwing an error');
-  it.todo('does not oversubscribe when suspending multiple times');
+  it('does not oversubscribe when suspending multiple times', async () => {
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel (updated)' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel (updated again)' } },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { result } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { id: '1' } }),
+      { client, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+      });
+    });
+
+    result.current.refetch();
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[2].result,
+        error: undefined,
+      });
+    });
+
+    expect(client.getObservableQueries().size).toBe(1);
+  });
 });

@@ -1842,10 +1842,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  // This test seems to rethrow the error somewhere which causes jest to crash.
-  // Ideally we are able to test this functionality, but I can't seem to get it
-  // to behave properly.
-  it.skip('tears down subscription when throwing an error on refetch when suspensePolicy is "initial"', async () => {
+  it('tears down subscription when throwing an error on refetch when suspensePolicy is "initial"', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`

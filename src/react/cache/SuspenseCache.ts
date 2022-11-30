@@ -68,9 +68,26 @@ export class SuspenseCache {
   ) {
     const entry: CacheEntry<TData> = {
       fulfilled: false,
-      promise: promise.finally(() => {
-        entry.fulfilled = true;
-      }),
+      promise: promise
+        .then(
+          (result) => {
+            entry.result = result;
+            return result;
+          },
+          (error) => {
+            entry.result = {
+              data: undefined as any,
+              error,
+              loading: false,
+              networkStatus: NetworkStatus.error,
+            };
+
+            return entry.result;
+          }
+        )
+        .finally(() => {
+          entry.fulfilled = true;
+        }),
     };
 
     const entries = this.cache.get(observable) || new Map();

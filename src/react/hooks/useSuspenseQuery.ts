@@ -87,7 +87,7 @@ export function useSuspenseQuery_experimental<
         variables: compact({ ...defaultOptions.variables, ...variables }),
       };
     }, [options, query, client.defaultOptions.watchQuery]);
-  const { errorPolicy, returnPartialData } = watchQueryOptions;
+  const { errorPolicy, returnPartialData, variables } = watchQueryOptions;
 
   if (__DEV__) {
     validateOptions(watchQueryOptions);
@@ -231,25 +231,22 @@ export function useSuspenseQuery_experimental<
 
   useEffect(() => {
     if (
-      watchQueryOptions.variables !== previousOptsRef.current?.variables ||
-      watchQueryOptions.query !== previousOptsRef.current.query
+      variables !== previousOptsRef.current?.variables ||
+      query !== previousOptsRef.current.query
     ) {
       const promise = observable.reobserve(watchQueryOptions);
 
-      suspenseCache.setVariables(
-        observable,
-        watchQueryOptions.variables,
-        promise
-      );
+      suspenseCache.setVariables(observable, variables, promise);
       previousOptsRef.current = watchQueryOptions;
     }
-  }, [watchQueryOptions.variables, watchQueryOptions.query]);
+  }, [variables, query]);
 
   return useMemo(() => {
     return {
       data: result.data,
       error: errorPolicy === 'all' ? toApolloError(result) : void 0,
       fetchMore: (options) => {
+        // console.log('fetchMore', options);
         const promise = observable.fetchMore(options);
 
         suspenseCache.setVariables(observable, observable.variables, promise);

@@ -183,7 +183,6 @@ export function useSuspenseQuery_experimental<
           );
         }
         if (!cacheEntry.fulfilled) {
-          isSuspendedRef.current = true;
           throw cacheEntry.promise;
         }
       }
@@ -193,13 +192,6 @@ export function useSuspenseQuery_experimental<
   if (result.error && errorPolicy === 'none') {
     throw result.error;
   }
-
-  // Unlike useEffect, useLayoutEffect will run its effects again when
-  // resuspending a component. This ensures we can detect when we've resumed
-  // rendering after suspending the component.
-  useLayoutEffect(() => {
-    isSuspendedRef.current = false;
-  }, []);
 
   useEffect(() => {
     const { variables, query } = watchQueryOptions;

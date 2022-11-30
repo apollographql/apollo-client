@@ -64,10 +64,6 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const { fetchPolicy, errorPolicy, returnPartialData } = watchQueryOptions;
 
-  if (__DEV__) {
-    validateOptions(watchQueryOptions);
-  }
-
   const [observable] = useState(() => {
     return (
       suspenseCache.getQuery(query) ||
@@ -266,7 +262,7 @@ function useWatchQueryOptions<TData, TVariables>({
 > {
   const { watchQuery: defaultOptions } = client.defaultOptions;
 
-  return useDeepMemo(() => {
+  const watchQueryOptions = useDeepMemo(() => {
     const {
       errorPolicy,
       fetchPolicy,
@@ -286,6 +282,12 @@ function useWatchQueryOptions<TData, TVariables>({
       variables: compact({ ...defaultOptions?.variables, ...variables }),
     };
   }, [options, query, defaultOptions]);
+
+  if (__DEV__) {
+    validateOptions(watchQueryOptions);
+  }
+
+  return watchQueryOptions;
 }
 
 function useIsSuspendedRef() {

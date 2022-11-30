@@ -4,7 +4,6 @@ import {
   useCallback,
   useMemo,
   useState,
-  DependencyList,
   useLayoutEffect,
 } from 'react';
 import { equal } from '@wry/equality';

@@ -161,7 +161,7 @@ export function useSuspenseQuery_experimental<
     returnPartialData && result.partial && result.data;
 
   if (result.loading && !returnPartialResults) {
-    switch (watchQueryOptions.fetchPolicy) {
+    switch (fetchPolicy) {
       case 'cache-and-network': {
         if (!result.partial) {
           break;

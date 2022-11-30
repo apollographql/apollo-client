@@ -2400,7 +2400,7 @@ describe('useQuery Hook', () => {
       }, { interval: 1, timeout: 20 })).rejects.toThrow()
     });
 
-    it('should not return partial data from cache on refetch with default errorPolicy (none)', async () => {
+    it('should not return partial data from cache on refetch with errorPolicy: none (default)', async () => {
       const query = gql`
         {
           dogs {
@@ -2436,12 +2436,12 @@ describe('useQuery Hook', () => {
         },
       ];
 
-      const detailsMock = {
-        request: { query: GET_DOG_DETAILS, variables: { breed: "airedale" } },
+      const detailsMock = (breed: string) => ({
+        request: { query: GET_DOG_DETAILS, variables: { breed } },
         result: {
           errors: [new GraphQLError(`Cannot query field "unexisting" on type "Dog".`)],
         },
-      }
+      });
 
       const mocks = [
         {
@@ -2449,11 +2449,12 @@ describe('useQuery Hook', () => {
           result: { data: { dogs: dogData } },
         },
         // use the same mock for the initial query on select change
-        // and the subsequent refetch() call
-        detailsMock,
-        detailsMock
+        // and subsequent refetch() call * 2 breeds
+        detailsMock('airedale'),
+        detailsMock('airedale'),
+        detailsMock('affenpinscher'),
+        detailsMock('affenpinscher'),
       ];
-
       const Dogs: React.FC<{
         onDogSelected: (event: React.ChangeEvent<HTMLSelectElement>) => void;
       }> = ({ onDogSelected }) => {
@@ -2492,7 +2493,7 @@ describe('useQuery Hook', () => {
             {JSON.stringify(data)}
             {!error ? (
               <div>
-                This never renders
+                Rendering!
               </div>
             ) : (
               `Error!: ${error}`
@@ -2535,12 +2536,19 @@ describe('useQuery Hook', () => {
       // in the <Dogs /> component
       await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
 
-      // But when we call refetch
+      // When we call refetch
       await user.click(screen.getByRole('button', { name: /Refetch!/i }))
 
-      await screen.findByText("Refetching!");
+      // The partial data should also not be rendered
+      await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
 
-      // this fails because the element now contains the partial data from the cache
+      await user.selectOptions(
+        screen.getByRole('combobox'),
+        screen.getByRole('option', { name: 'affenpinscher' })
+      );
+
+      await user.click(screen.getByRole('button', { name: /Refetch!/i }))
+
       await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
     });
 

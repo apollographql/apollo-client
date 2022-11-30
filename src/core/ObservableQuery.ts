@@ -155,12 +155,16 @@ export class ObservableQuery<
     this.isTornDown = false;
 
     const {
+      query: {
+        errorPolicy: defaultErrorPolicy = "none",
+      } = {},
       watchQuery: {
         fetchPolicy: defaultFetchPolicy = "cache-first",
       } = {},
     } = queryManager.defaultOptions;
 
     const {
+      errorPolicy = defaultErrorPolicy,
       fetchPolicy = defaultFetchPolicy,
       initialFetchPolicy = (
         // Make sure we don't store "standby" as the initialFetchPolicy.
@@ -179,6 +183,10 @@ export class ObservableQuery<
       // This ensures this.options.fetchPolicy always has a string value, in
       // case options.fetchPolicy was not provided.
       fetchPolicy,
+
+      // This ensures this.options.errorPolicy always has a string value, in
+      // case options.errorPolicy was not provided.
+      errorPolicy,
     };
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
@@ -236,7 +244,12 @@ export class ObservableQuery<
       networkStatus,
     } as ApolloQueryResult<TData>;
 
-    const { fetchPolicy = "cache-first" } = this.options;
+    const { fetchPolicy = "cache-first", errorPolicy = "none" } = this.options;
+
+    if ((errorPolicy === 'none' && networkStatus === 4)) {
+      result.data = void 0 as any;
+    }
+
     if (
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.

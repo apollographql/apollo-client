@@ -26,6 +26,7 @@ import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
+import { useDeepMemo } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 
@@ -282,14 +283,4 @@ function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
-}
-
-function useDeepMemo<TValue>(memoFn: () => TValue, deps: DependencyList) {
-  const ref = useRef<{ deps: DependencyList; value: TValue }>();
-
-  if (!ref.current || !equal(ref.current.deps, deps)) {
-    ref.current = { value: memoFn(), deps };
-  }
-
-  return ref.current.value;
 }

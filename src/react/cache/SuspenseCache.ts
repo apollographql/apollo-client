@@ -64,27 +64,15 @@ export class SuspenseCache {
   >(
     observable: ObservableQuery,
     variables: TVariables | undefined,
-    promise: Promise<ApolloQueryResult<TData>>
+    promise: Promise<any>
   ) {
     const entry: CacheEntry<TData> = {
       fulfilled: false,
       promise: promise
-        .then(
-          (result) => {
-            entry.result = result;
-            return result;
-          },
-          (error) => {
-            entry.result = {
-              data: undefined as any,
-              error,
-              loading: false,
-              networkStatus: NetworkStatus.error,
-            };
-
-            return entry.result;
-          }
-        )
+        .catch(() => {
+          // Throw away the error as we only care to track when the promise has
+          // been fulfilled
+        })
         .finally(() => {
           entry.fulfilled = true;
         }),

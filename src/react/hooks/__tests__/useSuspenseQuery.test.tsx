@@ -539,12 +539,12 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.getQuery(query)).toBeDefined();
+    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
 
     unmount();
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache.getQuery(query)).toBeUndefined();
+    expect(suspenseCache.lookup(query, undefined)).toBeUndefined();
   });
 
   it('does not remove query from suspense cache if other queries are using it', async () => {
@@ -583,12 +583,12 @@ describe('useSuspenseQuery', () => {
     // Because they are the same query, the 2 components use the same observable
     // in the suspense cache
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.getQuery(query)).toBeDefined();
+    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
 
     unmount();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.getQuery(query)).toBeDefined();
+    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
   });
 
   it('allows the client to be overridden', async () => {

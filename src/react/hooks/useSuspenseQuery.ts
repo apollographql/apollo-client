@@ -60,25 +60,23 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<TData, TVariables> {
   const suspenseCache = useSuspenseCache();
   const client = useApolloClient(options.client);
-  const isSuspendedRef = useIsSuspendedRef();
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
-  const { fetchPolicy, errorPolicy, returnPartialData } = watchQueryOptions;
+  const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
+  const isSuspendedRef = useIsSuspendedRef();
+  const resultRef = useRef<ApolloQueryResult<TData>>();
+
+  const { fetchPolicy, errorPolicy, returnPartialData, variables } =
+    watchQueryOptions;
+
+  let cacheEntry = suspenseCache.lookup(query, variables);
 
   const [observable] = useState(() => {
-    return (
-      suspenseCache.getQuery(query) ||
-      suspenseCache.registerQuery(query, client.watchQuery(watchQueryOptions))
-    );
+    return cacheEntry?.observable || client.watchQuery(watchQueryOptions);
   });
-
-  const resultRef = useRef<ApolloQueryResult<TData>>();
-  const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
 
   if (!resultRef.current) {
     resultRef.current = observable.getCurrentResult();
   }
-
-  let cacheEntry = suspenseCache.getVariables(observable, observable.variables);
 
   const result = useSyncExternalStore(
     useCallback(
@@ -140,7 +138,7 @@ export function useSuspenseQuery_experimental<
 
         return () => {
           subscription.unsubscribe();
-          suspenseCache.deregisterQuery(query);
+          suspenseCache.remove(query, observable.variables);
         };
       },
       [observable]
@@ -172,11 +170,10 @@ export function useSuspenseQuery_experimental<
       default: {
         if (!cacheEntry) {
           const promise = observable.reobserve(watchQueryOptions);
-          cacheEntry = suspenseCache.setVariables(
+          cacheEntry = suspenseCache.add(query, variables, {
+            promise,
             observable,
-            observable.variables,
-            promise
-          );
+          });
         }
         if (!cacheEntry.fulfilled) {
           throw cacheEntry.promise;
@@ -198,7 +195,7 @@ export function useSuspenseQuery_experimental<
     ) {
       const promise = observable.reobserve(watchQueryOptions);
 
-      suspenseCache.setVariables(observable, variables, promise);
+      suspenseCache.add(query, variables, { promise, observable });
       previousWatchQueryOptionsRef.current = watchQueryOptions;
     }
   }, [watchQueryOptions]);
@@ -211,14 +208,20 @@ export function useSuspenseQuery_experimental<
         // console.log('fetchMore', options);
         const promise = observable.fetchMore(options);
 
-        suspenseCache.setVariables(observable, observable.variables, promise);
+        suspenseCache.add(query, watchQueryOptions.variables, {
+          promise,
+          observable,
+        });
 
         return promise;
       },
       refetch: (variables?: Partial<TVariables>) => {
         const promise = observable.refetch(variables);
 
-        suspenseCache.setVariables(observable, observable.variables, promise);
+        suspenseCache.add(query, watchQueryOptions.variables, {
+          promise,
+          observable,
+        });
 
         return promise;
       },

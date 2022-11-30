@@ -59,7 +59,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<TData, TVariables> {
   const suspenseCache = useSuspenseCache();
   const client = useApolloClient(options.client);
-  const isSuspendedRef = useRef(false);
+  const isSuspendedRef = useIsSuspendedRef();
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
     useDeepMemo(() => {
       const {
@@ -281,4 +281,21 @@ function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
+}
+
+function useIsSuspendedRef() {
+  const ref = useRef(false);
+
+  // Unlike useEffect, useLayoutEffect will run its cleanup and initialization
+  // functions each time a component is resuspended. Using this ensures we can
+  // detect when a component has resumed after having been suspended.
+  useLayoutEffect(() => {
+    ref.current = false;
+
+    return () => {
+      ref.current = true;
+    };
+  }, []);
+
+  return ref;
 }

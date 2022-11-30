@@ -87,7 +87,7 @@ export function useSuspenseQuery_experimental<
         variables: compact({ ...defaultOptions.variables, ...variables }),
       };
     }, [options, query, client.defaultOptions.watchQuery]);
-  const { errorPolicy, returnPartialData, variables } = watchQueryOptions;
+  const { fetchPolicy, errorPolicy, returnPartialData } = watchQueryOptions;
 
   if (__DEV__) {
     validateOptions(watchQueryOptions);
@@ -227,6 +227,8 @@ export function useSuspenseQuery_experimental<
   }, []);
 
   useEffect(() => {
+    const { variables, query } = watchQueryOptions;
+
     if (
       variables !== previousOptsRef.current?.variables ||
       query !== previousOptsRef.current.query
@@ -236,7 +238,7 @@ export function useSuspenseQuery_experimental<
       suspenseCache.setVariables(observable, variables, promise);
       previousOptsRef.current = watchQueryOptions;
     }
-  }, [variables, query]);
+  }, [watchQueryOptions]);
 
   return useMemo(() => {
     return {

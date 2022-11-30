@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { equal } from '@wry/equality';
 import {
+  ApolloClient,
   ApolloError,
   ApolloQueryResult,
   DocumentNode,
@@ -60,33 +61,7 @@ export function useSuspenseQuery_experimental<
   const suspenseCache = useSuspenseCache();
   const client = useApolloClient(options.client);
   const isSuspendedRef = useIsSuspendedRef();
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-    useDeepMemo(() => {
-      const {
-        errorPolicy,
-        fetchPolicy,
-        suspensePolicy = DEFAULT_SUSPENSE_POLICY,
-        variables,
-        ...watchQueryOptions
-      } = options;
-
-      const {
-        watchQuery: defaultOptions = Object.create(
-          null
-        ) as Partial<WatchQueryOptions>,
-      } = client.defaultOptions;
-
-      return {
-        ...watchQueryOptions,
-        query,
-        errorPolicy:
-          errorPolicy || defaultOptions.errorPolicy || DEFAULT_ERROR_POLICY,
-        fetchPolicy:
-          fetchPolicy || defaultOptions.fetchPolicy || DEFAULT_FETCH_POLICY,
-        notifyOnNetworkStatusChange: suspensePolicy === 'always',
-        variables: compact({ ...defaultOptions.variables, ...variables }),
-      };
-    }, [options, query, client.defaultOptions.watchQuery]);
+  const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const { fetchPolicy, errorPolicy, returnPartialData } = watchQueryOptions;
 
   if (__DEV__) {
@@ -281,6 +256,44 @@ function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
+}
+
+interface UseWatchQueryOptionsHookOptions<TData, TVariables> {
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  options: SuspenseQueryHookOptions<TData, TVariables>;
+  client: ApolloClient<any>;
+}
+
+function useWatchQueryOptions<TData, TVariables>({
+  query,
+  options,
+  client,
+}: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
+  TVariables,
+  TData
+> {
+  const { watchQuery: defaultOptions } = client.defaultOptions;
+
+  return useDeepMemo(() => {
+    const {
+      errorPolicy,
+      fetchPolicy,
+      suspensePolicy = DEFAULT_SUSPENSE_POLICY,
+      variables,
+      ...watchQueryOptions
+    } = options;
+
+    return {
+      ...watchQueryOptions,
+      query,
+      errorPolicy:
+        errorPolicy || defaultOptions?.errorPolicy || DEFAULT_ERROR_POLICY,
+      fetchPolicy:
+        fetchPolicy || defaultOptions?.fetchPolicy || DEFAULT_FETCH_POLICY,
+      notifyOnNetworkStatusChange: suspensePolicy === 'always',
+      variables: compact({ ...defaultOptions?.variables, ...variables }),
+    };
+  }, [options, query, defaultOptions]);
 }
 
 function useIsSuspendedRef() {

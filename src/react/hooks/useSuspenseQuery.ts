@@ -94,7 +94,7 @@ export function useSuspenseQuery_experimental<
           observable.options.fetchPolicy = 'cache-only';
         }
 
-        function onNext() {
+        function handleUpdate() {
           const previousResult = resultRef.current!;
           const result = observable.getCurrentResult();
 
@@ -113,26 +113,10 @@ export function useSuspenseQuery_experimental<
           }
         }
 
-        function onError() {
-          const previousResult = resultRef.current!;
-          const result = observable.getCurrentResult();
-
-          if (
-            previousResult.loading === result.loading &&
-            previousResult.networkStatus === result.networkStatus &&
-            equal(previousResult.data, result.data)
-          ) {
-            return;
-          }
-
-          resultRef.current = result;
-
-          if (!isSuspendedRef.current) {
-            forceUpdate();
-          }
-        }
-
-        const subscription = observable.subscribe(onNext, onError);
+        const subscription = observable.subscribe({
+          next: handleUpdate,
+          error: handleUpdate,
+        });
 
         observable.options.fetchPolicy = originalFetchPolicy;
 

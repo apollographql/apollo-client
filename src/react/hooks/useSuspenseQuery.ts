@@ -179,13 +179,10 @@ export function useSuspenseQuery_experimental<
   );
 
   // Sometimes the observable reports a network status of error even
-  // when our error policy is set to ignore or all.
+  // when our error policy is set to 'ignore' or 'all'.
   // This patches the network status to avoid a rerender when the observable
   // first subscribes and gets back a ready network status.
-  if (
-    result.networkStatus === NetworkStatus.error &&
-    (errorPolicy === 'ignore' || errorPolicy === 'all')
-  ) {
+  if (result.networkStatus === NetworkStatus.error && errorPolicy !== 'none') {
     result.networkStatus = NetworkStatus.ready;
   }
 

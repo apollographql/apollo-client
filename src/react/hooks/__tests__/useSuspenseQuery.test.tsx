@@ -649,6 +649,36 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('does not initiate a network request when data is in the cache and using a "cache-first" fetch policy', async () => {
+    let fetchCount = 0;
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks[0];
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'hello from cache' },
+    });
+
+    renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
+      { cache, link, initialProps: { id: '1' } }
+    );
+
+    expect(fetchCount).toBe(0);
+  });
+
   it('does not suspend when partial data is in the cache and using a "cache-first" fetch policy with returnPartialData', async () => {
     const fullQuery = gql`
       query {

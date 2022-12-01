@@ -25,7 +25,7 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
           context = Object.assign({}, context, { client });
         }
 
-        if (suspenseCache && !context.suspenseCache) {
+        if (suspenseCache) {
           context = Object.assign({}, context, { suspenseCache });
         }
 

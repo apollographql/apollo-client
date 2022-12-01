@@ -165,10 +165,15 @@ export function useSuspenseQuery_experimental<
 }
 
 function validateOptions(options: WatchQueryOptions) {
-  const { query, fetchPolicy = DEFAULT_FETCH_POLICY } = options;
+  const {
+    query,
+    fetchPolicy = DEFAULT_FETCH_POLICY,
+    returnPartialData,
+  } = options;
 
   verifyDocumentType(query, DocumentType.Query);
   validateFetchPolicy(fetchPolicy);
+  validatePartialDataReturn(fetchPolicy, returnPartialData);
 }
 
 function validateFetchPolicy(fetchPolicy: WatchQueryFetchPolicy) {
@@ -176,6 +181,17 @@ function validateFetchPolicy(fetchPolicy: WatchQueryFetchPolicy) {
     SUPPORTED_FETCH_POLICIES.includes(fetchPolicy),
     `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
   );
+}
+
+function validatePartialDataReturn(
+  fetchPolicy: WatchQueryFetchPolicy,
+  returnPartialData: boolean | undefined
+) {
+  if (fetchPolicy === 'no-cache' && returnPartialData) {
+    invariant.warn(
+      'Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy.'
+    );
+  }
 }
 
 function toApolloError(result: ApolloQueryResult<any>) {

@@ -31,6 +31,7 @@ src/react/*
 ## Allowed React Hooks
 !src/react/hooks/
 src/react/hooks/*
+!src/react/hooks/internal
 !src/react/hooks/useSuspenseCache.ts
 !src/react/hooks/useSuspenseQuery.ts
 

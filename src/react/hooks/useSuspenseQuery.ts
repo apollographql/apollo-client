@@ -116,11 +116,9 @@ export function useSuspenseQuery_experimental<
 
   useEffect(() => {
     const { variables, query } = watchQueryOptions;
+    const previousOpts = previousWatchQueryOptionsRef.current;
 
-    if (
-      variables !== previousWatchQueryOptionsRef.current?.variables ||
-      query !== previousWatchQueryOptionsRef.current.query
-    ) {
+    if (variables !== previousOpts.variables || query !== previousOpts.query) {
       const promise = observable.reobserve({ query, variables });
 
       suspenseCache.add(query, variables, { promise, observable });

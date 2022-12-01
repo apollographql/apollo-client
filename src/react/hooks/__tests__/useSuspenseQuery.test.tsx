@@ -679,6 +679,57 @@ describe('useSuspenseQuery', () => {
     expect(fetchCount).toBe(0);
   });
 
+  it('suspends when partial data is in the cache and using a "cache-first" fetch policy', async () => {
+    const fullQuery = gql`
+      query {
+        character {
+          id
+          name
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        character {
+          id
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: fullQuery },
+        result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { id: '1' } },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(fullQuery, { fetchPolicy: 'cache-first' }),
+      { cache, mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(2);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      { ...mocks[0].result, error: undefined },
+    ]);
+  });
+
   it('does not suspend when partial data is in the cache and using a "cache-first" fetch policy with returnPartialData', async () => {
     const fullQuery = gql`
       query {

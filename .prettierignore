@@ -6,7 +6,7 @@
 # history. For this reason, we have disabled prettier project-wide except for
 # a handful of files.
 #
-# ONLY ADD NEWLY CREATED FILES/POTHS TO THE LIST BELOW. DO NOT ADD EXISTING
+# ONLY ADD NEWLY CREATED FILES/PATHS TO THE LIST BELOW. DO NOT ADD EXISTING
 # PROJECT FILES.
 
 # ignores all files in /docs directory
@@ -19,7 +19,7 @@
 # Do not format anything automatically except files listed below
 /*
 
-#####  PATHS TO BE FORMATTEDi #####
+#####  PATHS TO BE FORMATTED #####
 !src/
 src/*
 !src/react/

@@ -126,11 +126,13 @@ export function useSuspenseQuery_experimental<
       suspenseCache.add(query, variables, { promise, observable });
       previousWatchQueryOptionsRef.current = watchQueryOptions;
     }
+  }, [watchQueryOptions]);
 
+  useEffect(() => {
     return () => {
       suspenseCache.remove(query, variables);
     };
-  }, [watchQueryOptions]);
+  }, []);
 
   return useMemo(() => {
     return {

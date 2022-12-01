@@ -130,7 +130,7 @@ export function useSuspenseQuery_experimental<
     return () => {
       suspenseCache.remove(query, variables);
     };
-  }, []);
+  }, [query, variables]);
 
   return useMemo(() => {
     return {

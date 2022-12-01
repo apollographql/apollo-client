@@ -64,8 +64,7 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
 
-  const { fetchPolicy, errorPolicy, returnPartialData, variables } =
-    watchQueryOptions;
+  const { fetchPolicy, errorPolicy, variables } = watchQueryOptions;
 
   let cacheEntry = suspenseCache.lookup(query, variables);
 
@@ -75,6 +74,10 @@ export function useSuspenseQuery_experimental<
 
   const result = useObservableQueryResult(observable);
 
+  if (result.error && errorPolicy === 'none') {
+    throw result.error;
+  }
+
   // Sometimes the observable reports a network status of error even
   // when our error policy is set to 'ignore' or 'all'.
   // This patches the network status to avoid a rerender when the observable
@@ -83,35 +86,34 @@ export function useSuspenseQuery_experimental<
     result.networkStatus = NetworkStatus.ready;
   }
 
-  const returnPartialResults =
-    returnPartialData && result.partial && result.data;
+  const hasFullResult = result.data && !result.partial;
+  const hasPartialResult =
+    watchQueryOptions.returnPartialData && result.partial && result.data;
 
-  if (result.loading && !returnPartialResults) {
-    switch (fetchPolicy) {
-      case 'cache-and-network': {
-        if (!result.partial) {
-          break;
-        }
+  const hasUsableResult =
+    // When we have partial data in the cache, a network request will be kicked
+    // off to load the full set of data but we want to avoid suspending when the
+    // request is in flight.
+    hasPartialResult ||
+    // `cache-and-network` kicks off a network request even with a full set of
+    // data in the cache, which means the loading state will be set to `true`.
+    // Ensure we don't suspend when this is the case.
+    (fetchPolicy === 'cache-and-network' && hasFullResult);
 
-        // fallthrough when data is not in the cache
-      }
-      default: {
-        if (!cacheEntry) {
-          const promise = observable.reobserve(watchQueryOptions);
-          cacheEntry = suspenseCache.add(query, variables, {
-            promise,
-            observable,
-          });
-        }
-        if (!cacheEntry.fulfilled) {
-          throw cacheEntry.promise;
-        }
-      }
+  if (result.loading && !hasUsableResult) {
+    // If we don't have a cache entry, yet we are in a loading state, we are on
+    // the first run of the hook. Kick off a network request so we can suspend
+    // immediately
+    if (!cacheEntry) {
+      cacheEntry = suspenseCache.add(query, variables, {
+        promise: observable.reobserve(watchQueryOptions),
+        observable,
+      });
     }
-  }
 
-  if (result.error && errorPolicy === 'none') {
-    throw result.error;
+    if (!cacheEntry.fulfilled) {
+      throw cacheEntry.promise;
+    }
   }
 
   useEffect(() => {
@@ -139,7 +141,6 @@ export function useSuspenseQuery_experimental<
       data: result.data,
       error: errorPolicy === 'all' ? toApolloError(result) : void 0,
       fetchMore: (options) => {
-        // console.log('fetchMore', options);
         const promise = observable.fetchMore(options);
 
         suspenseCache.add(query, watchQueryOptions.variables, {

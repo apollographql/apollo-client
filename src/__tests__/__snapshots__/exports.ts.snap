@@ -16,6 +16,7 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "SuspenseCache",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -59,6 +60,7 @@ Array [
   "useQuery",
   "useReactiveVar",
   "useSubscription",
+  "useSuspenseQuery_experimental",
 ]
 `;
 
@@ -239,6 +241,7 @@ Array [
   "ApolloConsumer",
   "ApolloProvider",
   "DocumentType",
+  "SuspenseCache",
   "getApolloContext",
   "operationName",
   "parser",
@@ -250,6 +253,7 @@ Array [
   "useQuery",
   "useReactiveVar",
   "useSubscription",
+  "useSuspenseQuery_experimental",
 ]
 `;
 
@@ -289,6 +293,7 @@ Array [
   "useQuery",
   "useReactiveVar",
   "useSubscription",
+  "useSuspenseQuery_experimental",
 ]
 `;
 

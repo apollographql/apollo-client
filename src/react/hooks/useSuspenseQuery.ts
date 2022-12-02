@@ -64,7 +64,8 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
 
-  const { fetchPolicy, errorPolicy, variables } = watchQueryOptions;
+  const { fetchPolicy, errorPolicy, returnPartialData, variables } =
+    watchQueryOptions;
 
   let cacheEntry = suspenseCache.lookup(query, variables);
 
@@ -87,14 +88,14 @@ export function useSuspenseQuery_experimental<
   }
 
   const hasFullResult = result.data && !result.partial;
-  const hasPartialResult =
-    watchQueryOptions.returnPartialData && result.partial && result.data;
+  const hasPartialResult = result.partial && result.data;
+  const usePartialResult = returnPartialData && hasPartialResult;
 
   const hasUsableResult =
     // When we have partial data in the cache, a network request will be kicked
     // off to load the full set of data but we want to avoid suspending when the
     // request is in flight.
-    hasPartialResult ||
+    usePartialResult ||
     // `cache-and-network` kicks off a network request even with a full set of
     // data in the cache, which means the loading state will be set to `true`.
     // Ensure we don't suspend when this is the case.

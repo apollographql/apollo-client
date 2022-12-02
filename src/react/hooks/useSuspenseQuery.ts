@@ -19,7 +19,12 @@ import {
   WatchQueryFetchPolicy,
 } from '../../core';
 import { invariant } from '../../utilities/globals';
-import { compact, isNonEmptyArray } from '../../utilities';
+import {
+  compact,
+  Concast,
+  isNonEmptyArray,
+  hasDirectives,
+} from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import {
@@ -84,7 +89,10 @@ export function useSuspenseQuery_experimental<
     // immediately
     if (!cacheEntry) {
       cacheEntry = suspenseCache.add(query, variables, {
-        promise: observable.reobserve(watchQueryOptions),
+        promise: wrapConcastWithPromise(
+          observable.reobserveAsConcast(watchQueryOptions),
+          { deferred: hasDirectives(['defer'], query) }
+        ),
         observable,
       });
     }
@@ -191,6 +199,29 @@ function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
+}
+
+function wrapConcastWithPromise<TData>(
+  concast: Concast<ApolloQueryResult<TData>>,
+  { deferred }: { deferred: boolean }
+): Promise<ApolloQueryResult<TData>> {
+  if (deferred) {
+    return new Promise((resolve, reject) => {
+      // Unlike `concast.promise`, we want to resolve the promise on the initial
+      // chunk of the deferred query. This allows the component to unsuspend
+      // when we get the initial set of data, rather than waiting until all
+      // chunks have been loaded.
+      const subscription = concast.subscribe({
+        next: (value) => {
+          resolve(value);
+          subscription.unsubscribe();
+        },
+        error: reject,
+      });
+    });
+  }
+
+  return concast.promise;
 }
 
 interface UseWatchQueryOptionsHookOptions<TData, TVariables> {

@@ -23,7 +23,12 @@ import {
   TypedDocumentNode,
 } from '../../../core';
 import { compact, concatPagination } from '../../../utilities';
-import { MockedProvider, MockedResponse, MockLink } from '../../../testing';
+import {
+  MockedProvider,
+  MockedResponse,
+  MockSubscriptionLink,
+  MockLink,
+} from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
@@ -3465,5 +3470,90 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(client.getObservableQueries().size).toBe(1);
+  });
+
+  it('suspends deferred queries until initial chunk loads and streams in new data', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { link }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: 'Alice', __typename: 'Person' },
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      },
+    ]);
   });
 });

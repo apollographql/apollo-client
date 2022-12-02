@@ -784,10 +784,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     return this.last;
   }
 
-  public reobserve(
+  // The logic of `reobserve`, but returns a concast instead of a promise.
+  public reobserveAsConcast(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-    newNetworkStatus?: NetworkStatus,
-  ): Promise<ApolloQueryResult<TData>> {
+    newNetworkStatus?: NetworkStatus
+  ): Concast<ApolloQueryResult<TData>> {
     this.isTornDown = false;
 
     const useDisposableConcast =
@@ -860,7 +861,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     concast.addObserver(observer);
 
-    return concast.promise;
+    return concast;
+  }
+
+  public reobserve(
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus,
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.reobserveAsConcast(
+      newOptions,
+      newNetworkStatus
+    ).promise
   }
 
   // (Re)deliver the current result to this.observers without applying fetch

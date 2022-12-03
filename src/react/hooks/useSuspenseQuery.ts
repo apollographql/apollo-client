@@ -67,6 +67,7 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
+  const deferred = useIsDeferred(query);
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
@@ -79,7 +80,19 @@ export function useSuspenseQuery_experimental<
 
   const result = useObservableQueryResult(observable);
 
-  if (result.error && errorPolicy === 'none') {
+  const hasFullResult = result.data && !result.partial;
+  const hasPartialResult = result.data && result.partial;
+  const usePartialResult = returnPartialData && hasPartialResult;
+
+  if (
+    result.error &&
+    errorPolicy === 'none' &&
+    // If we've got a deferred query that errors on an incremental chunk, we
+    // will have a partial result before the error is collected. We do not want
+    // to throw errors that have been returned from incremental chunks. Instead
+    // we offload those errors to the `error` property.
+    (!deferred || !hasPartialResult)
+  ) {
     throw result.error;
   }
 
@@ -91,14 +104,11 @@ export function useSuspenseQuery_experimental<
       cacheEntry = suspenseCache.add(query, variables, {
         promise: wrapConcastWithPromise(
           observable.reobserveAsConcast(watchQueryOptions),
-          { deferred: hasDirectives(['defer'], query) }
+          { deferred }
         ),
         observable,
       });
     }
-
-    const hasFullResult = result.data && !result.partial;
-    const usePartialResult = returnPartialData && result.partial && result.data;
 
     const hasUsableResult =
       // When we have partial data in the cache, a network request will be kicked
@@ -140,7 +150,7 @@ export function useSuspenseQuery_experimental<
   return useMemo(() => {
     return {
       data: result.data,
-      error: errorPolicy === 'all' ? toApolloError(result) : void 0,
+      error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
       fetchMore: (options) => {
         const promise = observable.fetchMore(options);
 
@@ -277,6 +287,10 @@ function useWatchQueryOptions<TData, TVariables>({
   }
 
   return watchQueryOptions;
+}
+
+function useIsDeferred(query: DocumentNode) {
+  return useMemo(() => hasDirectives(['defer'], query), [query]);
 }
 
 function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {

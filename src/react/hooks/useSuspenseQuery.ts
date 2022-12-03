@@ -12,7 +12,6 @@ import {
   ApolloError,
   ApolloQueryResult,
   DocumentNode,
-  NetworkStatus,
   ObservableQuery,
   OperationVariables,
   TypedDocumentNode,
@@ -79,30 +78,8 @@ export function useSuspenseQuery_experimental<
     throw result.error;
   }
 
-  // Sometimes the observable reports a network status of error even
-  // when our error policy is set to 'ignore' or 'all'.
-  // This patches the network status to avoid a rerender when the observable
-  // first subscribes and gets back a ready network status.
-  if (result.networkStatus === NetworkStatus.error && errorPolicy !== 'none') {
-    result.networkStatus = NetworkStatus.ready;
-  }
-
-  const hasFullResult = result.data && !result.partial;
-  const hasPartialResult = result.partial && result.data;
-  const usePartialResult = returnPartialData && hasPartialResult;
-
-  const hasUsableResult =
-    // When we have partial data in the cache, a network request will be kicked
-    // off to load the full set of data but we want to avoid suspending when the
-    // request is in flight.
-    usePartialResult ||
-    // `cache-and-network` kicks off a network request even with a full set of
-    // data in the cache, which means the loading state will be set to `true`.
-    // Ensure we don't suspend when this is the case.
-    (fetchPolicy === 'cache-and-network' && hasFullResult);
-
-  if (result.loading && !hasUsableResult) {
-    // If we don't have a cache entry, yet we are in a loading state, we are on
+  if (result.loading) {
+    // If we don't have a cache entry, but we are in a loading state, we are on
     // the first run of the hook. Kick off a network request so we can suspend
     // immediately
     if (!cacheEntry) {
@@ -112,7 +89,20 @@ export function useSuspenseQuery_experimental<
       });
     }
 
-    if (!cacheEntry.fulfilled) {
+    const hasFullResult = result.data && !result.partial;
+    const usePartialResult = returnPartialData && result.partial && result.data;
+
+    const hasUsableResult =
+      // When we have partial data in the cache, a network request will be kicked
+      // off to load the full set of data. Avoid suspending when the request is
+      // in flight to return the partial data immediately.
+      usePartialResult ||
+      // `cache-and-network` kicks off a network request even with a full set of
+      // data in the cache, which means the loading state will be set to `true`.
+      // Avoid suspending in this case.
+      (fetchPolicy === 'cache-and-network' && hasFullResult);
+
+    if (!hasUsableResult && !cacheEntry.fulfilled) {
       throw cacheEntry.promise;
     }
   }
@@ -217,7 +207,9 @@ function useWatchQueryOptions<TData, TVariables>({
 > {
   const { watchQuery: defaultOptions } = client.defaultOptions;
 
-  const watchQueryOptions = useDeepMemo(() => {
+  const watchQueryOptions = useDeepMemo<
+    WatchQueryOptions<TVariables, TData>
+  >(() => {
     const {
       errorPolicy,
       fetchPolicy,
@@ -228,6 +220,7 @@ function useWatchQueryOptions<TData, TVariables>({
 
     return {
       ...watchQueryOptions,
+      fetchOnFirstSubscribe: false,
       query,
       errorPolicy:
         errorPolicy || defaultOptions?.errorPolicy || DEFAULT_ERROR_POLICY,
@@ -246,7 +239,6 @@ function useWatchQueryOptions<TData, TVariables>({
 }
 
 function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
-  const suspenseCache = useSuspenseCache();
   const resultRef = useRef<ApolloQueryResult<TData>>();
   const isMountedRef = useRef(false);
 
@@ -292,29 +284,10 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
           }
         }
 
-        // ObservableQuery will call `reobserve` as soon as the first
-        // subscription is created. Because we don't subscribe to the
-        // observable until after we've suspended via the initial fetch, we
-        // don't want to initiate another network request for fetch policies
-        // that always fetch (e.g. 'network-only'). Instead, we set the cache
-        // policy to `cache-only` to prevent the network request until the
-        // subscription is created, then reset it back to its original.
-        const originalFetchPolicy = observable.options.fetchPolicy;
-        const cacheEntry = suspenseCache.lookup(
-          observable.options.query,
-          observable.options.variables
-        );
-
-        if (cacheEntry?.fulfilled) {
-          observable.options.fetchPolicy = 'cache-only';
-        }
-
         const subscription = observable.subscribe({
           next: handleUpdate,
           error: handleUpdate,
         });
-
-        observable.options.fetchPolicy = originalFetchPolicy;
 
         return () => {
           subscription.unsubscribe();

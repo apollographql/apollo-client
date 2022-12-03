@@ -102,7 +102,7 @@ export function useSuspenseQuery_experimental<
     // immediately
     if (!cacheEntry) {
       cacheEntry = suspenseCache.add(query, variables, {
-        promise: wrapConcastWithPromise(
+        promise: maybeWrapConcastWithCustomPromise(
           observable.reobserveAsConcast(watchQueryOptions),
           { deferred }
         ),
@@ -211,7 +211,7 @@ function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
-function wrapConcastWithPromise<TData>(
+function maybeWrapConcastWithCustomPromise<TData>(
   concast: Concast<ApolloQueryResult<TData>>,
   { deferred }: { deferred: boolean }
 ): Promise<ApolloQueryResult<TData>> {

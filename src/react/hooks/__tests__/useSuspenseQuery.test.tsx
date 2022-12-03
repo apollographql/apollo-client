@@ -3556,4 +3556,168 @@ describe('useSuspenseQuery', () => {
       },
     ]);
   });
+
+  it('suspends deferred queries with lists and properly patches results', async () => {
+    const query = gql`
+      query {
+        greetings {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { link }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    link.simulateResult({
+      result: {
+        data: {
+          greetings: [
+            { __typename: 'Greeting', message: 'Hello world' },
+            { __typename: 'Greeting', message: 'Hello again' },
+          ],
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            { __typename: 'Greeting', message: 'Hello world' },
+            { __typename: 'Greeting', message: 'Hello again' },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              __typename: 'Greeting',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            path: ['greetings', 0],
+          },
+        ],
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              __typename: 'Greeting',
+              recipient: { __typename: 'Person', name: 'Bob' },
+            },
+            path: ['greetings', 1],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+              recipient: { __typename: 'Person', name: 'Bob' },
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greetings: [
+            { __typename: 'Greeting', message: 'Hello world' },
+            { __typename: 'Greeting', message: 'Hello again' },
+          ],
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+            },
+          ],
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+              recipient: { __typename: 'Person', name: 'Bob' },
+            },
+          ],
+        },
+        error: undefined,
+      },
+    ]);
+  });
 });

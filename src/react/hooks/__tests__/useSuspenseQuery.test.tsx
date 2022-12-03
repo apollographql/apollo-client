@@ -3656,6 +3656,194 @@ describe('useSuspenseQuery', () => {
     }
   );
 
+  it('does not suspend deferred queries with data in the cache and using a "cache-first" fetch policy', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello world',
+          recipient: { __typename: 'Person', name: 'Alice' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
+      { cache }
+    );
+
+    expect(result.current).toMatchObject({
+      data: {
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Alice' },
+        },
+      },
+      error: undefined,
+    });
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      },
+    ]);
+  });
+
+  // TODO: Determine if this is the correct behavior or not
+  it.skip('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({ cache, link });
+
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello cached',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-and-network' }),
+      { client }
+    );
+
+    expect(result.current).toMatchObject({
+      data: {
+        greeting: {
+          message: 'Hello cached',
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      },
+      error: undefined,
+    });
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { __typename: 'Greeting', message: 'Hello world' } },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: 'Alice', __typename: 'Person' },
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello cached',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      },
+    ]);
+  });
+
   it('suspends deferred queries with lists and properly patches results', async () => {
     const query = gql`
       query {

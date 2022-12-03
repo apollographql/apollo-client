@@ -145,6 +145,12 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
    * behavior, for backwards compatibility with Apollo Client 3.x.
    */
   refetchWritePolicy?: RefetchWritePolicy;
+
+  /**
+   * Determines whether the observable should execute a request when the first
+   * observer subscribes to it.
+   */
+  fetchOnFirstSubscribe?: boolean
 }
 
 export interface NextFetchPolicyContext<TData, TVariables> {

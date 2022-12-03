@@ -4141,4 +4141,90 @@ describe('useSuspenseQuery', () => {
       });
     });
   });
+
+  it('throws network errors returned by deferred queries', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      link,
+    });
+
+    link.simulateResult({
+      error: new Error('Could not fetch'),
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toEqual(new Error('Could not fetch'));
+    expect(error.graphQLErrors).toEqual([]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('throws graphql errors returned by deferred queries', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      link,
+    });
+
+    link.simulateResult({
+      result: {
+        errors: [new GraphQLError('Could not fetch greeting')],
+      },
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toBeNull();
+    expect(error.graphQLErrors).toEqual([
+      new GraphQLError('Could not fetch greeting'),
+    ]);
+
+    consoleSpy.mockRestore();
+  });
 });

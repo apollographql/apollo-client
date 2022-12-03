@@ -2149,7 +2149,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('returns partial data results and throws away errors when errorPolicy is set to "ignore"', async () => {
+  it('returns partial data results and discards errors when errorPolicy is set to "ignore"', async () => {
     const { query, mocks } = useErrorCase({
       data: { currentUser: { id: '1', name: null } },
       graphQLErrors: [new GraphQLError('`name` could not be found')],
@@ -2175,7 +2175,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('throws away multiple graphql errors when errorPolicy is set to "ignore"', async () => {
+  it('discards multiple graphql errors when errorPolicy is set to "ignore"', async () => {
     const { query, mocks } = useErrorCase({
       graphQLErrors: [
         new GraphQLError('Fool me once'),

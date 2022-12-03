@@ -3472,7 +3472,7 @@ describe('useSuspenseQuery', () => {
     expect(client.getObservableQueries().size).toBe(1);
   });
 
-  it('suspends deferred queries until initial chunk loads and streams in new data', async () => {
+  it('suspends deferred queries until initial chunk loads then streams in data as it loads', async () => {
     const query = gql`
       query {
         greeting {
@@ -3556,6 +3556,105 @@ describe('useSuspenseQuery', () => {
       },
     ]);
   });
+
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    'suspends deferred queries until initial chunk loads then streams in data as it loads when using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const query = gql`
+        query {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const { result, renders } = renderSuspenseHook(
+        () => useSuspenseQuery(query, { fetchPolicy }),
+        { link }
+      );
+
+      expect(renders.suspenseCount).toBe(1);
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: { message: 'Hello world', __typename: 'Greeting' },
+          },
+          hasNext: true,
+        },
+      });
+
+      await waitFor(() => {
+        expect(result.current).toMatchObject({
+          data: {
+            greeting: { message: 'Hello world', __typename: 'Greeting' },
+          },
+          error: undefined,
+        });
+      });
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Alice', __typename: 'Person' },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      });
+
+      await waitFor(() => {
+        expect(result.current).toMatchObject({
+          data: {
+            greeting: {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+          },
+          error: undefined,
+        });
+      });
+
+      expect(renders.count).toBe(3);
+      expect(renders.suspenseCount).toBe(1);
+      expect(renders.frames).toMatchObject([
+        {
+          data: {
+            greeting: { message: 'Hello world', __typename: 'Greeting' },
+          },
+          error: undefined,
+        },
+        {
+          data: {
+            greeting: {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+          },
+          error: undefined,
+        },
+      ]);
+    }
+  );
 
   it('suspends deferred queries with lists and properly patches results', async () => {
     const query = gql`
@@ -3719,5 +3818,139 @@ describe('useSuspenseQuery', () => {
         error: undefined,
       },
     ]);
+  });
+
+  it('suspends queries with deferred fragments in lists and properly merges arrays', async () => {
+    const query = gql`
+      query DeferVariation {
+        allProducts {
+          delivery {
+            ...MyFragment @defer
+          }
+          sku
+          id
+        }
+      }
+
+      fragment MyFragment on DeliveryEstimates {
+        estimatedDelivery
+        fastestDelivery
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { link }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    link.simulateResult({
+      result: {
+        data: {
+          allProducts: [
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-federation',
+              sku: 'federation',
+            },
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-studio',
+              sku: 'studio',
+            },
+          ],
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          allProducts: [
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-federation',
+              sku: 'federation',
+            },
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-studio',
+              sku: 'studio',
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        hasNext: true,
+        incremental: [
+          {
+            data: {
+              __typename: 'DeliveryEstimates',
+              estimatedDelivery: '6/25/2021',
+              fastestDelivery: '6/24/2021',
+            },
+            path: ['allProducts', 0, 'delivery'],
+          },
+          {
+            data: {
+              __typename: 'DeliveryEstimates',
+              estimatedDelivery: '6/25/2021',
+              fastestDelivery: '6/24/2021',
+            },
+            path: ['allProducts', 1, 'delivery'],
+          },
+        ],
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          allProducts: [
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+                estimatedDelivery: '6/25/2021',
+                fastestDelivery: '6/24/2021',
+              },
+              id: 'apollo-federation',
+              sku: 'federation',
+            },
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+                estimatedDelivery: '6/25/2021',
+                fastestDelivery: '6/24/2021',
+              },
+              id: 'apollo-studio',
+              sku: 'studio',
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
   });
 });

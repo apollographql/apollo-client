@@ -114,9 +114,11 @@ export function useSuspenseQuery_experimental<
     if (variables !== previousOpts.variables || query !== previousOpts.query) {
       suspenseCache.remove(previousOpts.query, previousOpts.variables);
 
-      const promise = observable.reobserve({ query, variables });
+      suspenseCache.add(query, variables, {
+        promise: observable.reobserve({ query, variables }),
+        observable,
+      });
 
-      suspenseCache.add(query, variables, { promise, observable });
       previousWatchQueryOptionsRef.current = watchQueryOptions;
     }
   }, [watchQueryOptions]);

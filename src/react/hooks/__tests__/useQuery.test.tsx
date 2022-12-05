@@ -2449,11 +2449,9 @@ describe('useQuery Hook', () => {
           result: { data: { dogs: dogData } },
         },
         // use the same mock for the initial query on select change
-        // and subsequent refetch() call * 2 breeds
+        // and subsequent refetch() call
         detailsMock('airedale'),
         detailsMock('airedale'),
-        detailsMock('affenpinscher'),
-        detailsMock('affenpinscher'),
       ];
       const Dogs: React.FC<{
         onDogSelected: (event: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -2490,14 +2488,17 @@ describe('useQuery Hook', () => {
         if (loading) return <p>Loading!</p>;
         return (
           <div>
-            {JSON.stringify(data)}
-            {!error ? (
-              <div>
-                Rendering!
-              </div>
-            ) : (
-              `Error!: ${error}`
-            )}
+            <div>
+              {data ? 'Partial data rendered' : null}
+            </div>
+
+            <div>
+              {error ? (
+                `Error!: ${error}`
+                ) : (
+                'Rendering!'
+              )}
+            </div>
             <button onClick={() => refetch()}>Refetch!</button>
           </div>
         );
@@ -2531,25 +2532,17 @@ describe('useQuery Hook', () => {
         screen.getByRole('option', { name: 'airedale' })
       );
 
-      // With the default errorPolicy of 'none',
-      // the error is rendered without the partial data from the initial query
-      // in the <Dogs /> component
+      // With the default errorPolicy of 'none', the error is rendered
+      // and partial data is not
       await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
+      expect(screen.queryByText(/partial data rendered/i)).toBeNull();
 
-      // When we call refetch
+      // When we call refetch...
       await user.click(screen.getByRole('button', { name: /Refetch!/i }))
 
-      // The partial data should also not be rendered
+      // The error is still present, and partial data still not rendered
       await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
-
-      await user.selectOptions(
-        screen.getByRole('combobox'),
-        screen.getByRole('option', { name: 'affenpinscher' })
-      );
-
-      await user.click(screen.getByRole('button', { name: /Refetch!/i }))
-
-      await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
+      expect(screen.queryByText(/partial data rendered/i)).toBeNull();
     });
 
     it('should persist errors on re-render with inline onError/onCompleted callbacks',  async () => {

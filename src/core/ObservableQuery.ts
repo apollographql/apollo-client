@@ -155,10 +155,8 @@ export class ObservableQuery<
     this.isTornDown = false;
 
     const {
-      query: {
-        errorPolicy: defaultErrorPolicy = "none",
-      } = {},
       watchQuery: {
+        errorPolicy: defaultErrorPolicy = "none",
         fetchPolicy: defaultFetchPolicy = "cache-first",
       } = {},
     } = queryManager.defaultOptions;

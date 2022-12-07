@@ -168,6 +168,21 @@ An object representing headers to include in every HTTP request, such as `{Authe
 <tr>
 <td>
 
+###### `preserveHeaderCase`
+
+`Boolean`
+</td>
+<td>
+
+If set to true, header names won't be automatically normalized to lowercase. This allows for non-http-spec-compliant servers that might expect capitalized header names.
+
+The default value is `false`.
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `credentials`
 
 `String`
@@ -227,10 +242,12 @@ operation.setContext({
 })
 ```
 
-The context `http` object currently supports two keys:
+From the context `http` object:
 
 * `includeExtensions`: Send the extensions object for this request.
 * `includeQuery`: Don't send the `query` field for this request.
+
+See the [http option fields](https://www.apollographql.com/docs/react/api/link/apollo-link-http/#http-option-fields) for more information.
 
 One way to use persisted queries is with [apollo-link-persisted-queries](https://www.apollographql.com/docs/react/api/link/persisted-queries) and [Apollo Server](/apollo-server/performance/apq/).
 

@@ -60,6 +60,40 @@ You can use `read` functions to perform any sort of logic you want, including:
 
 > If you query a local-only field that _doesn't_ define a `read` function, Apollo Client performs a default cache lookup for the field. See [Storing local state in the cache](#storing-local-state-in-the-cache) for details.
 
+### Reads are synchronous by design
+
+Many UI frameworks like React (when not using `Suspense`) have synchronous rendering pipelines, therefore it's important for UI components to have immediate access to any existing data.  This is why all `read` functions are synchronous, as are the cache's `readQuery` and `readFragment` methods.  It is possible, however, to leverage reactive variables and `options.storage` to compose a `read` function that behaves in a manner that resembles an asynchronous action:
+
+<ExpansionPanel title="See example">
+
+```js
+new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        isInCart: {
+          read(_, { variables, storage }) {
+            if (!storage.var) {
+              storage.var = makeVar(false);
+              setTimeout(() => {
+                storage.var(
+                  localStorage.getItem('CART').includes(
+                    variables.productId
+                  )
+                );
+              }, 100);
+            }
+            return storage.var();
+          }
+        }
+      }
+    }
+  }
+})
+```
+
+</ExpansionPanel>
+
 ## Querying
 
 Now that we've defined a field policy for `isInCart`, we can include the field in a query that _also_ queries our back-end server, like so:
@@ -99,16 +133,16 @@ That's it! The `@client` directive tells Apollo Client that `isInCart` is a loca
 >
 > </ExpansionPanel>
 
-## Storing
+## Storing and mutations
 
-You can use Apollo Client to query local state, regardless of how you _store_ that state. Apollo Client provides a couple of optional but helpful mechanisms for representing local state:
+You can use Apollo Client to query and modify local state, regardless of how you _store_ that state. Apollo Client provides a couple of optional but helpful mechanisms for representing local state:
 
 * [Reactive variables](#storing-local-state-in-reactive-variables)
 * [The Apollo Client cache itself](#storing-local-state-in-the-cache)
 
-> **Note:** Apollo Client >= 3 no longer recommends the [local resolver](./local-resolvers) approach of using `client.mutate` / `useMutation` combined with an `@client` mutation operation to [update local state](./local-resolvers/#local-resolvers). To update local state, we recommend using [`writeQuery`](../caching/cache-interaction/#writequery), [`writeFragment`](../caching/cache-interaction/#writefragment), or [reactive variables](./reactive-variables/).
+It's tempting to think of local-only mutations as being expressed similarly to other local-only fields. When using previous versions of Apollo Client, developers would define local-only mutations using `@client`. They would then use [local resolvers](./local-resolvers) to handle `client.mutate` / `useMutation` calls. This is no longer the case, however. For Apollo Client version >= 3 users we recommend using [`writeQuery`](../caching/cache-interaction/#writequery), [`writeFragment`](../caching/cache-interaction/#writefragment), or [reactive variables](./reactive-variables/) to manage local state.
 
-### Storing local state in reactive variables
+### Storing and updating local state with reactive variables
 
 Apollo Client [reactive variables](./reactive-variables) are great for representing local state:
 
@@ -238,7 +272,7 @@ As with the preceding `useQuery` example, whenever the `cartItemsVar` variable i
 
 > **Important:** If you call `cartItemsVar()` instead of `useReactiveVar(cartItemsVar)` in the example above, future variable updates _do not_ cause the `Cart` component to rerender.
 
-### Storing local state in the cache
+### Storing and modifying local state in the cache
 
 Storing local state directly in the Apollo Client cache provides some advantages, but usually requires more code than [using reactive variables](#storing-local-state-in-reactive-variables):
 

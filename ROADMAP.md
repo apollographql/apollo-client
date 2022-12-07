@@ -24,6 +24,8 @@ For up to date release notes, refer to the project's [Change Log](https://github
 
 As we release each new feature we'll be looking for feedback from the community on performance, usage and developer experience of adopting and implementing these new concepts in your applications.
 
+See Github [3.8 Milestone](https://github.com/apollographql/apollo-client/milestone/30) for more details.
+
 ## 3.9
 
 - TBD

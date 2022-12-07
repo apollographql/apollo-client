@@ -14,7 +14,7 @@ For up to date release notes, refer to the project's [Change Log](https://github
 ---
 
 ## 3.8
-`Release 3.8` will be a series of Alpha releases introducing React 18 & SSR `experimental` features so they can be tested and adopted incrementally.  Eventually these features be will be moving to Beta and then to RC and GA release status.
+`Release 3.8` will be a series of Alpha releases introducing React 18 & SSR `experimental` features so they can be tested and adopted incrementally.  Eventually these features will be moving to Beta and then to RC and GA release status.
 
 - Adding a new hook `useSuspenseQuery` which will provide the core functionality for React 18 `Suspense` capabilities.
 - Adding support for `Suspense` to `@defer`.

@@ -18,7 +18,7 @@ For up to date release notes, refer to the project's [Change Log](https://github
 
 - Adding a new hook `useSuspenseQuery` which will provide the core functionality for React 18 `Suspense` capabilities.
 - Adding support for `Suspense` to `@defer`.
-- Introducing another new hook `useBackGroundQuery` with `Suspense` support.
+- Introducing another new hook `useBackgroundQuery` with `Suspense` support.
 - Updating `useFragment` with `Suspense` support.
 - Offer support for React 18's `SSR` `renderToPipeableStream`
 

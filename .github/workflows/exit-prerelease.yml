@@ -10,7 +10,7 @@ on:
         required: true
 
 jobs:
-  deploy:
+  exit_prerelease:
     name: Changesets Exit Prerelease
     runs-on: ubuntu-latest
     # Allow GITHUB_TOKEN to have write permissions

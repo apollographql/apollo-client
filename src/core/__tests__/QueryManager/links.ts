@@ -1,5 +1,6 @@
 // externals
 import gql from 'graphql-tag';
+import { print } from 'graphql'
 
 import { Observable, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../../link/core';
@@ -359,5 +360,48 @@ describe('Link interactions', () => {
           book: { title: 'Woo', __typename: 'Book' },
         });
       });
+  });
+
+  it('strips client directives from the query before it reaches the link', async () => {
+    const query = gql`
+      query {
+        books {
+          id
+          title
+          isRead @client
+        }
+      }
+    `;
+
+    const expectedQuery = gql`
+      query {
+        books {
+          id
+          title
+        }
+      }
+    `;
+
+    const bookData = {
+      books: [
+        { id: 1, title: 'Woo', __typename: 'Book' },
+        { id: 2, title: 'Foo', __typename: 'Book' },
+      ],
+    };
+
+    const link = new ApolloLink((operation) => {
+      expect(print(operation.query)).toEqual(print(expectedQuery))
+
+      return Observable.of({ data: bookData });
+    });
+
+    const queryManager = new QueryManager({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const { data } = await queryManager.query({ query });
+
+    expect(data).toEqual(bookData);
   });
 });

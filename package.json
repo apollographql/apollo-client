@@ -52,7 +52,10 @@
     "bundlesize": "npm run build && ts-node-script ./config/bundlesize.ts",
     "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag next",
-    "typedoc": "typedoc src/index.ts --json docs/public/docs.json"
+    "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
+    "changeset-publish": "npm run build && changeset publish",
+    "changeset-check": "changeset status --verbose --since=origin/main",
+    "changeset-version": "changeset version && npm i"
   },
   "engines": {
     "npm": "^7.20.3 || ^8.0.0"
@@ -95,6 +98,8 @@
   },
   "devDependencies": {
     "@babel/parser": "7.20.5",
+    "@changesets/changelog-github": "0.4.7",
+    "@changesets/cli": "2.25.2",
     "@graphql-tools/schema": "9.0.10",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@testing-library/react": "13.4.0",

@@ -50,6 +50,13 @@ jobs:
         if: ${{ steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')}}
         run: npx changeset pre enter alpha
 
+      - name: Create alpha release PR
+        uses: changesets/action@v1
+        with:
+          version: npm run changeset-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run publish
         id: changesets
         # Only run publish if we're still in pre mode and the last commit was

@@ -58,6 +58,7 @@ jobs:
         run: npm run changeset-publish
 
       - name: Send a Slack notification on publish
+        if: steps.changesets.outcome == 'success' && steps.changesets.outputs.published == 'true'
         id: slack
         uses: slackapi/slack-github-action@v1.23.0
         with:

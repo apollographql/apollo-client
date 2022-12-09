@@ -1,0 +1,12 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "3.7.2"
+  },
+  "changesets": [
+    "early-pens-retire",
+    "shiny-balloons-matter",
+    "small-timers-shake"
+  ]
+}

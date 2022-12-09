@@ -1,6 +1,41 @@
+##### DISCLAIMER ######
+# We have disabled the use of prettier in this project for a variety of reasons.
+# Because much of this project has not been formatted, we don't want to want to
+# apply formatting to everything and skew `git blame` stats. Instead, we should
+# only format newly created files that we can guarantee have no existing git
+# history. For this reason, we have disabled prettier project-wide except for
+# a handful of files.
+#
+# ONLY ADD NEWLY CREATED FILES/PATHS TO THE LIST BELOW. DO NOT ADD EXISTING
+# PROJECT FILES.
+
 # ignores all files in /docs directory
 /docs/**
 
 # Ignore all mdx & md files:
 *.mdx
 *.md
+
+# Do not format anything automatically except files listed below
+/*
+
+#####  PATHS TO BE FORMATTED #####
+!src/
+src/*
+!src/react/
+src/react/*
+
+# Allow src/react/cache
+!src/react/cache/
+
+## Allowed React Hooks
+!src/react/hooks/
+src/react/hooks/*
+!src/react/hooks/internal
+!src/react/hooks/useSuspenseCache.ts
+!src/react/hooks/useSuspenseQuery.ts
+
+## Allowed React hook tests
+!src/react/hooks/__tests__/
+src/react/hooks/__tests__/*
+!src/react/hooks/__tests__/useSuspenseQuery.test.tsx

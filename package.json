@@ -33,6 +33,7 @@
     "prebuild": "npm run clean",
     "build": "tsc",
     "postbuild": "npm run update-version && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run postprocess-dist && npm run verify-version",
+    "postinstall": "patch-package",
     "update-version": "node config/version.js update",
     "verify-version": "node config/version.js verify",
     "invariants": "ts-node-script config/processInvariants.ts",
@@ -102,6 +103,7 @@
     "@changesets/cli": "2.25.2",
     "@graphql-tools/schema": "9.0.10",
     "@rollup/plugin-node-resolve": "11.2.1",
+    "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "13.4.0",
     "@testing-library/react-12": "npm:@testing-library/react@^12",
     "@testing-library/react-hooks": "8.0.1",
@@ -130,10 +132,13 @@
     "jest-environment-jsdom": "29.3.1",
     "jest-junit": "15.0.0",
     "lodash": "4.17.21",
+    "patch-package": "6.5.0",
+    "prettier": "2.7.1",
     "react": "18.2.0",
     "react-17": "npm:react@^17",
     "react-dom": "18.2.0",
     "react-dom-17": "npm:react-dom@^17",
+    "react-error-boundary": "^3.1.4",
     "recast": "0.21.5",
     "resolve": "1.22.1",
     "rimraf": "3.0.2",
@@ -152,5 +157,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "prettier": {
+    "bracketSpacing": true,
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5"
   }
 }

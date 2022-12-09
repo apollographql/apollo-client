@@ -2,7 +2,7 @@ const defaults = {
   rootDir: "src",
   preset: "ts-jest",
   testEnvironment: "jsdom",
-  setupFiles: ["<rootDir>/config/jest/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   testEnvironmentOptions: {
     url: "http://localhost",
   },
@@ -24,6 +24,13 @@ const defaults = {
 
 const ignoreTSFiles = '.ts$';
 const ignoreTSXFiles = '.tsx$';
+
+const react17TestFileIgnoreList = [
+  ignoreTSFiles,
+  // For now, we only support useSuspenseQuery with React 18, so no need to test
+  // it with React 17
+  'src/react/hooks/__tests__/useSuspenseQuery.test.tsx'
+]
 
 const react18TestFileIgnoreList = [
   // ignore core tests (.ts files) as they are run separately
@@ -68,7 +75,7 @@ const standardReact18Config = {
 const standardReact17Config = {
   ...defaults,
   displayName: "ReactDOM 17",
-  testPathIgnorePatterns: [ignoreTSFiles],
+  testPathIgnorePatterns: react17TestFileIgnoreList,
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",

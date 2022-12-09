@@ -140,7 +140,7 @@ export type ApolloQueryResult<T> = {
   */
   errors?: ReadonlyArray<GraphQLError>;
   /**
-  * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls. 
+  * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
   * This will contain both a NetworkError field and any GraphQLErrors.
   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
   */
@@ -193,4 +193,12 @@ export interface Resolvers {
   [key: string]: {
     [ field: string ]: Resolver;
   };
+}
+
+export interface TransformQueryOptions {
+  /**
+  * Determines whether fields using the `@client` directive should be removed
+  * from the query before it is sent through the link chain. Defaults to `true`.
+  */
+  removeClientFields?: boolean
 }

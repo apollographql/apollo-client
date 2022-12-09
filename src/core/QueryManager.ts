@@ -52,6 +52,7 @@ import {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
+  TransformQueryOptions,
 } from './types';
 import { LocalState } from './LocalState';
 
@@ -607,12 +608,17 @@ export class QueryManager<TStore> {
 
   public transform(document: DocumentNode) {
     const { transformCache } = this;
+    const {
+      removeClientFields = true
+    } = this.defaultOptions.transformQuery || Object.create(null);
 
     if (!transformCache.has(document)) {
       const transformed = this.cache.transformDocument(document);
       const noConnection = removeConnectionDirectiveFromDocument(transformed);
       const clientQuery = this.localState.clientQuery(transformed);
-      const serverQuery = noConnection && this.localState.serverQuery(noConnection);
+      const serverQuery =
+        noConnection &&
+          this.localState.serverQuery(noConnection, { removeClientFields });
 
       const cacheEntry: TransformCacheEntry = {
         document: transformed,

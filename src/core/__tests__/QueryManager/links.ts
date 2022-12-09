@@ -404,4 +404,67 @@ describe('Link interactions', () => {
 
     expect(data).toEqual(bookData);
   });
+
+  it('sends client directives to the link when defaultOptions.transformQuery.removeClientFields is false', async () => {
+    const query = gql`
+      query {
+        books {
+          id
+          title
+          isRead @client
+        }
+      }
+    `;
+
+    const expectedQuery = gql`
+      query {
+        books {
+          id
+          title
+          isRead @client
+          __typename
+        }
+      }
+    `;
+
+    const bookData = {
+      books: [
+        { id: 1, title: 'Woo', __typename: 'Book' },
+        { id: 2, title: 'Foo', __typename: 'Book' },
+      ],
+    };
+
+    const link = new ApolloLink((operation) => {
+      expect(print(operation.query)).toEqual(print(expectedQuery))
+
+      return Observable.of({ data: bookData });
+    });
+
+    const queryManager = new QueryManager({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Book: {
+            fields: {
+              isRead: () => true
+            }
+          }
+        }
+      }),
+      defaultOptions: {
+        transformQuery: {
+          removeClientFields: false
+        }
+      }
+    });
+
+    const { data } = await queryManager.query({ query });
+
+    expect(data).toEqual({
+      books: [
+        { id: 1, title: 'Woo', isRead: true, __typename: 'Book' },
+        { id: 2, title: 'Foo', isRead: true, __typename: 'Book' },
+      ],
+    })
+  });
 });

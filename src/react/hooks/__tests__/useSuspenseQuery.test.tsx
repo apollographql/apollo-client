@@ -3714,8 +3714,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  // TODO: Determine the merge behavior when there is partial data in the cache
-  it.skip('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+  it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
     const query = gql`
       query {
         greeting {
@@ -3844,8 +3843,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  // TODO: Determine if this is the correct behavior or not
-  it.skip('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+  it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
     const query = gql`
       query {
         greeting {

@@ -784,7 +784,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     return this.last;
   }
 
-  // The logic of `reobserve`, but returns a concast instead of a promise.
+  // For cases like suspense with a deferred query where we need a custom
+  // promise wrapped around the concast, we need access to the raw concast
+  // created from `reobserve`. This function provides the original `reobserve`
+  // functionality, but returns a concast instead of a promise. Most consumers
+  // should prefer `reobserve` instead of this function.
   public reobserveAsConcast(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus

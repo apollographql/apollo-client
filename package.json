@@ -54,7 +54,7 @@
     "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
-    "changeset-publish": "npm run build && changeset publish",
+    "changeset-publish": "npm run build && cp -R .changeset dist && cd dist && echo '.changeset' > .npmignore && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
     "changeset-version": "changeset version && npm i"
   },

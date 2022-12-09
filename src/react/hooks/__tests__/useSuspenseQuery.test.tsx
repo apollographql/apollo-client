@@ -1290,7 +1290,7 @@ describe('useSuspenseQuery', () => {
       });
 
       // Renders:
-      // 1. Initate fetch and suspend
+      // 1. Initiate fetch and suspend
       // 2. Unsuspend and return results from initial fetch
       // 3. Change variables
       // 4. Unsuspend and return results from refetch
@@ -1462,7 +1462,7 @@ describe('useSuspenseQuery', () => {
       });
 
       // Renders:
-      // 1. Initate fetch and suspend
+      // 1. Initiate fetch and suspend
       // 2. Unsuspend and return results from initial fetch
       // 3. Change variables
       // 4. Initiate refetch and suspend
@@ -1531,7 +1531,7 @@ describe('useSuspenseQuery', () => {
       });
 
       // Renders:
-      // 1. Initate fetch and suspend
+      // 1. Initiate fetch and suspend
       // 2. Unsuspend and return results from initial fetch
       // 3. Change queries
       // 4. Initiate refetch and suspend

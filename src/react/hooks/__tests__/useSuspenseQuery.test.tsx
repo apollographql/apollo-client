@@ -1546,11 +1546,6 @@ describe('useSuspenseQuery', () => {
     }
   );
 
-  // Due to the way the suspense hook works, we don't subscribe to the observable
-  // until after we have suspended. Once an observable is subscribed, it calls
-  // `reobserve` which has the potential to kick off a network request. We want
-  // to ensure we don't accidentally kick off the network request more than
-  // necessary after a component has been suspended.
   it.each<SuspenseQueryHookFetchPolicy>([
     'cache-first',
     'network-only',

@@ -1,5 +1,5 @@
 import { cloneDeep, assign } from 'lodash';
-import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
+import { GraphQLError, ExecutionResult, DocumentNode, print } from 'graphql';
 import gql from 'graphql-tag';
 
 import {
@@ -8,6 +8,7 @@ import {
   WatchQueryFetchPolicy,
   QueryOptions,
   ObservableQuery,
+  Operation,
   TypedDocumentNode,
 } from '../core';
 
@@ -939,6 +940,94 @@ describe('client', () => {
       })
       .then(resolve, reject);
   });
+
+  it('removes client fields from the query before it reaches the link', async () => {
+    let operation: Operation;
+
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+          isInCollection @client
+        }
+      }
+    `;
+
+    const transformedQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const link = new ApolloLink((_operation) => {
+      operation = _operation
+
+      return Observable.of({
+        data: {
+          author: {
+            firstName: 'John',
+            lastName: 'Smith',
+            __typename: 'Author',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    await client.query({ query });
+
+    expect(print(operation!.query)).toEqual(print(transformedQuery));
+  })
+
+  it('sends client fields to the link when defaultOptions.transformQuery.removeClientFields is `false`', async () => {
+    let operation: Operation;
+
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+          isInCollection @client
+        }
+      }
+    `;
+
+    const link = new ApolloLink((_operation) => {
+      operation = _operation
+
+      return Observable.of({
+        data: {
+          author: {
+            firstName: 'John',
+            lastName: 'Smith',
+            __typename: 'Author',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+      defaultOptions: {
+        transformQuery: {
+          removeClientFields: false,
+        }
+      }
+    });
+
+    await client.query({ query });
+
+    expect(print(operation!.query)).toEqual(print(query));
+  })
 
   itAsync('should handle named fragments on mutations', (resolve, reject) => {
     const mutation = gql`

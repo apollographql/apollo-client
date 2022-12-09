@@ -61,7 +61,7 @@ jobs:
         id: changesets
         # Only run publish if we're still in pre mode and the last commit was
         # via an automatically created Version Packages PR
-        if: ${{ steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')}}
+        if: ${{ steps.check_files.outputs.files_exists == 'true'}}
         run: npm run changeset-publish
 
       - name: Send a Slack notification on publish

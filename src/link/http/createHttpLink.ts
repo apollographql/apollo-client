@@ -21,7 +21,7 @@ import {
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError } from '../utils';
-import { maybe } from '../../utilities';
+import { maybe, removeClientSetsFromDocument } from '../../utilities';
 
 const backupFetch = maybe(() => fetch);
 
@@ -85,6 +85,20 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       credentials: context.credentials,
       headers: contextHeaders,
     };
+
+    if (hasDirectives(['client'], operation.query)) {
+      const transformedQuery = removeClientSetsFromDocument(operation.query);
+
+      if (!transformedQuery) {
+        return fromError(
+          new Error(
+            'HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option.'
+          )
+        );
+      }
+
+      operation.query = transformedQuery;
+    }
 
     //uses fallback, link, and then context to build options
     const { options, body } = selectHttpOptionsAndBodyInternal(

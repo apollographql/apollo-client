@@ -1014,6 +1014,76 @@ describe('HttpLink', () => {
         () => {},
       );
     });
+
+    it('removes client fields from the query before sending it to the server', async () => {
+      fetchMock.mock('https://example.com/graphql', {
+        status: 200,
+        body: JSON.stringify({
+          data: {
+            author: { __typename: 'Author', name: 'Test User' }
+          }
+        }),
+        headers: { 'content-type': 'application/json' }
+      });
+
+      const query = gql`
+        query {
+          author {
+            name
+            isInCollection @client
+          }
+        }
+      `;
+
+      const serverQuery = gql`
+        query {
+          author {
+            name
+          }
+        }
+      `;
+
+      const link = createHttpLink({ uri: 'https://example.com/graphql' });
+
+      await new Promise((resolve, reject) => {
+        execute(link, { query }).subscribe({
+          next: resolve,
+          error: reject
+        });
+      });
+
+      const [, options] = fetchMock.lastCall()!;
+      const { body } = options!
+
+      expect(JSON.parse(body!.toString())).toEqual({
+        query: print(serverQuery),
+        variables: {}
+      });
+    });
+
+    it('responds with error when trying to send a client-only query', async () => {
+      const errorHandler = jest.fn()
+      const query = gql`
+        query {
+          author @client {
+            name
+          }
+        }
+      `;
+
+      const link = createHttpLink({ uri: 'https://example.com/graphql' });
+
+      await new Promise<void>((resolve, reject) => {
+        execute(link, { query }).subscribe({
+          next: reject,
+          error: errorHandler.mockImplementation(resolve)
+        });
+      });
+
+      expect(errorHandler).toHaveBeenCalledWith(
+        new Error('HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option.')
+      );
+    })
   });
 
   describe('Dev warnings', () => {

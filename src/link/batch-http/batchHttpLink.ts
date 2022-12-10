@@ -104,7 +104,7 @@ export class BatchHttpLink extends ApolloLink {
           return removeClientSetsFromDocument(query);
         }
 
-        return query
+        return query;
       });
 
       // If we have a query that returned `null` after removing client-only
@@ -118,15 +118,15 @@ export class BatchHttpLink extends ApolloLink {
       }
 
       //uses fallback, link, and then context to build options
-      const optsAndBody = operations.map((operation, index) => {
-        return selectHttpOptionsAndBodyInternal(
+      const optsAndBody = operations.map((operation, index) =>
+        selectHttpOptionsAndBodyInternal(
           { ...operation, query: queries[index]! },
           print,
           fallbackHttpConfig,
           linkConfig,
           contextConfig,
-        )
-      });
+        ),
+      );
 
       const loadedBody = optsAndBody.map(({ body }) => body);
       const options = optsAndBody[0].options;

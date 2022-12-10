@@ -942,7 +942,9 @@ describe('client', () => {
   });
 
   it('removes client fields from the query before it reaches the link', async () => {
-    let operation: Operation;
+    const result: { current: Operation | undefined } = {
+      current: undefined
+    }
 
     const query = gql`
       query {
@@ -963,8 +965,8 @@ describe('client', () => {
       }
     `;
 
-    const link = new ApolloLink((_operation) => {
-      operation = _operation
+    const link = new ApolloLink((operation) => {
+      result.current = operation;
 
       return Observable.of({
         data: {
@@ -984,11 +986,13 @@ describe('client', () => {
 
     await client.query({ query });
 
-    expect(print(operation!.query)).toEqual(print(transformedQuery));
-  })
+    expect(print(result.current!.query)).toEqual(print(transformedQuery));
+  });
 
   it('sends client fields to the link when defaultOptions.transformQuery.removeClientFields is `false`', async () => {
-    let operation: Operation;
+    const result: { current: Operation | undefined } = {
+      current: undefined
+    };
 
     const query = gql`
       query {
@@ -1000,8 +1004,8 @@ describe('client', () => {
       }
     `;
 
-    const link = new ApolloLink((_operation) => {
-      operation = _operation
+    const link = new ApolloLink((operation) => {
+      result.current = operation
 
       return Observable.of({
         data: {
@@ -1026,8 +1030,8 @@ describe('client', () => {
 
     await client.query({ query });
 
-    expect(print(operation!.query)).toEqual(print(query));
-  })
+    expect(print(result.current!.query)).toEqual(print(query));
+  });
 
   itAsync('should handle named fragments on mutations', (resolve, reject) => {
     const mutation = gql`

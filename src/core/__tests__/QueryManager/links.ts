@@ -362,7 +362,11 @@ describe('Link interactions', () => {
       });
   });
 
-  it('strips client directives from the query before it reaches the link', async () => {
+  it('removes client fields from the query before it reaches the link', async () => {
+    const result: { current: Operation | undefined } = {
+      current: undefined
+    };
+
     const query = gql`
       query {
         books {
@@ -382,17 +386,17 @@ describe('Link interactions', () => {
       }
     `;
 
-    const bookData = {
-      books: [
-        { id: 1, title: 'Woo', __typename: 'Book' },
-        { id: 2, title: 'Foo', __typename: 'Book' },
-      ],
-    };
-
     const link = new ApolloLink((operation) => {
-      expect(print(operation.query)).toEqual(print(expectedQuery))
+      result.current = operation;
 
-      return Observable.of({ data: bookData });
+      return Observable.of({
+        data: {
+          books: [
+            { id: 1, title: 'Woo', __typename: 'Book' },
+            { id: 2, title: 'Foo', __typename: 'Book' },
+          ],
+        }
+      });
     });
 
     const queryManager = new QueryManager({
@@ -400,12 +404,16 @@ describe('Link interactions', () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    const { data } = await queryManager.query({ query });
+    await queryManager.query({ query });
 
-    expect(data).toEqual(bookData);
+    expect(print(result.current!.query)).toEqual(print(expectedQuery))
   });
 
   it('sends client directives to the link when defaultOptions.transformQuery.removeClientFields is false', async () => {
+    const result: { current: Operation | undefined } = {
+      current: undefined
+    };
+
     const query = gql`
       query {
         books {
@@ -422,35 +430,26 @@ describe('Link interactions', () => {
           id
           title
           isRead @client
-          __typename
         }
       }
     `;
 
-    const bookData = {
-      books: [
-        { id: 1, title: 'Woo', __typename: 'Book' },
-        { id: 2, title: 'Foo', __typename: 'Book' },
-      ],
-    };
-
     const link = new ApolloLink((operation) => {
-      expect(print(operation.query)).toEqual(print(expectedQuery))
+      result.current = operation;
 
-      return Observable.of({ data: bookData });
+      return Observable.of({
+        data: {
+          books: [
+            { id: 1, title: 'Woo', __typename: 'Book' },
+            { id: 2, title: 'Foo', __typename: 'Book' },
+          ],
+        }
+      });
     });
 
     const queryManager = new QueryManager({
       link,
-      cache: new InMemoryCache({
-        typePolicies: {
-          Book: {
-            fields: {
-              isRead: () => true
-            }
-          }
-        }
-      }),
+      cache: new InMemoryCache({ addTypename: false }),
       defaultOptions: {
         transformQuery: {
           removeClientFields: false
@@ -458,13 +457,8 @@ describe('Link interactions', () => {
       }
     });
 
-    const { data } = await queryManager.query({ query });
+    await queryManager.query({ query });
 
-    expect(data).toEqual({
-      books: [
-        { id: 1, title: 'Woo', isRead: true, __typename: 'Book' },
-        { id: 2, title: 'Foo', isRead: true, __typename: 'Book' },
-      ],
-    })
+    expect(print(result.current!.query)).toEqual(print(expectedQuery))
   });
 });

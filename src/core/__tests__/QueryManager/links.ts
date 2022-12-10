@@ -362,7 +362,7 @@ describe('Link interactions', () => {
       });
   });
 
-  it('removes client fields from the query before it reaches the link', async () => {
+  it('removes @client fields from the query before it reaches the link', async () => {
     const result: { current: Operation | undefined } = {
       current: undefined
     };
@@ -409,7 +409,7 @@ describe('Link interactions', () => {
     expect(print(result.current!.query)).toEqual(print(expectedQuery))
   });
 
-  it('sends client directives to the link when defaultOptions.transformQuery.removeClientFields is false', async () => {
+  it('sends @client fields to the link when defaultOptions.transformQuery.removeClientFields is false', async () => {
     const result: { current: Operation | undefined } = {
       current: undefined
     };

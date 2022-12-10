@@ -1015,7 +1015,7 @@ describe('HttpLink', () => {
       );
     });
 
-    it('removes client fields from the query before sending it to the server', async () => {
+    it('removes @client fields from the query before sending it to the server', async () => {
       fetchMock.mock('https://example.com/graphql', {
         status: 200,
         body: JSON.stringify({

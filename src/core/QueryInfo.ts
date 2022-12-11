@@ -530,9 +530,15 @@ export function shouldWriteResult<T>(
   const ignoreErrors =
     errorPolicy === "ignore" ||
     errorPolicy === "all";
-  let writeWithErrors = !graphQLResultHasError(result);
-  if (!writeWithErrors && ignoreErrors && result.data) {
-    writeWithErrors = true;
+  const hasErrors = graphQLResultHasError(result);
+
+  if (!result.data) {
+    return false;
   }
-  return writeWithErrors;
+
+  if (hasErrors && !ignoreErrors) {
+    return false;
+  }
+
+  return true;
 }

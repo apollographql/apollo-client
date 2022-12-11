@@ -10,7 +10,14 @@ import { itAsync, MockSubscriptionLink } from '../../../testing/core';
 
 // core
 import { QueryManager } from '../../QueryManager';
-import { NextLink, Operation, Reference } from '../../../core';
+import { FetchResult, NextLink, Operation, Reference } from '../../../core';
+import { invariant } from '../../../utilities/globals';
+
+jest.spyOn(invariant, "error");
+
+beforeEach(() => {
+  jest.clearAllMocks();
+})
 
 describe('Link interactions', () => {
   itAsync('includes the cache on the context for eviction links', (resolve, reject) => {
@@ -359,5 +366,51 @@ describe('Link interactions', () => {
           book: { title: 'Woo', __typename: 'Book' },
         });
       });
+  });
+  itAsync('allow errors to be ignored for mutations', (resolve, reject) => {
+    const mutation = gql`
+      mutation UpdateLuke {
+        people_one(id: 1) {
+          name
+          friends {
+            name
+          }
+        }
+      }
+    `;
+
+    const errorLink = (operation: Operation, forward: NextLink) => {
+      const ignoreErrorResult: FetchResult = {
+        data: null,
+        errors: [],
+      }
+
+      return new Observable<FetchResult>(observer => {
+        forward(operation).subscribe({
+          next: observer.next.bind(observer),
+          complete: observer.complete.bind(observer),
+          error() {
+            observer.next(ignoreErrorResult);
+          }
+        })
+      });
+    };
+
+    const mockLink = new MockSubscriptionLink();
+    const link = ApolloLink.from([errorLink, mockLink]);
+    const queryManager = new QueryManager({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
+
+    queryManager.mutate({ mutation })
+      .then(() => {
+        expect(invariant.error).not.toBeCalled();
+        resolve();
+      })
+      .catch(reject);
+
+    // fire off error
+    mockLink.simulateResult({ error: new Error("UNAUTHENTICATED") });
   });
 });

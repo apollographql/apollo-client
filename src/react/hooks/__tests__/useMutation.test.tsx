@@ -468,8 +468,7 @@ describe('useMutation Hook', () => {
         });
 
         expect(fetchResult).toEqual({});
-        expect(errorMock).toHaveBeenCalledTimes(1);
-        expect(errorMock.mock.calls[0][0]).toMatch("Missing field");
+        expect(errorMock).not.toBeCalled();
         errorMock.mockRestore();
       });
     });

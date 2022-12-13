@@ -1,0 +1,15 @@
+name: No prerelease file (pre.json) present
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check_prerelease:
+    name: "Check branch does not have a prerelease file committed"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Check that the file .changeset/pre.json is not present"
+        run: "! test -f .changeset/pre.json"

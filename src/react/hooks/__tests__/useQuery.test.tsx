@@ -5647,5 +5647,201 @@ describe('useQuery Hook', () => {
         }
       });
     });
+
+    it('returns eventually consistent data from deferred queries with data in the cache while using a "cache-and-network" fetch policy', async () => {
+      const query = gql`
+        query {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({ cache, link });
+
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello cached',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+      });
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { fetchPolicy: 'cache-and-network' }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        }
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.data).toEqual({
+        greeting: {
+          message: 'Hello cached',
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      });
+
+      link.simulateResult({
+        result: {
+          data: { greeting: { __typename: 'Greeting', message: 'Hello world' } },
+          hasNext: true,
+        },
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello world',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      });
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Alice', __typename: 'Person' },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello world',
+          recipient: { __typename: 'Person', name: 'Alice' },
+        },
+      });
+    });
+
+    it('returns eventually consistent data from deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+      const query = gql`
+        query {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({ cache, link });
+
+      // We know we are writing partial data to the cache so suppress the console
+      // warning.
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+      });
+      consoleSpy.mockRestore();
+
+      const { result, waitForNextUpdate } = renderHook(
+        () =>
+          useQuery(query, {
+            fetchPolicy: 'cache-first',
+            returnPartialData: true
+          }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        }
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.data).toEqual({
+        greeting: {
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      });
+
+      link.simulateResult({
+        result: {
+          data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+          hasNext: true,
+        },
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello world',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      });
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              data: {
+                __typename: 'Greeting',
+                recipient: { name: 'Alice', __typename: 'Person' },
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      });
+
+      await waitForNextUpdate();
+      expect(result.current.loading).toBe(false);
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data).toEqual({
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello world',
+          recipient: { __typename: 'Person', name: 'Alice' },
+        },
+      });
+    });
   });
 });

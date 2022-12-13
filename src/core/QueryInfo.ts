@@ -363,6 +363,7 @@ export class QueryInfo {
       | "errorPolicy">,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
+    const merger = new DeepMerger();
     const graphQLErrors = isNonEmptyArray(result.errors)
       ? result.errors.slice(0)
       : [];
@@ -373,7 +374,7 @@ export class QueryInfo {
 
     if ('incremental' in result && isNonEmptyArray(result.incremental)) {
       let mergedData = this.getDiff().result;
-      const merger = new DeepMerger();
+
       result.incremental.forEach(({ data, path, errors }) => {
         for (let i = path.length - 1; i >= 0; --i) {
           const key = path[i];
@@ -388,6 +389,15 @@ export class QueryInfo {
         mergedData = merger.merge(mergedData, data);
       });
       result.data = mergedData;
+
+    // Detect the first chunk of a deferred query and merge it with existing
+    // cache data. This ensures a `cache-first` fetch policy that returns
+    // partial cache data or a `cache-and-network` fetch policy that already
+    // has full data in the cache does not complain when trying to merge the
+    // initial deferred server data with existing cache data.
+    } else if ('hasNext' in result && result.hasNext) {
+      const diff = this.getDiff();
+      result.data = merger.merge(diff.result, result.data)
     }
 
     this.graphQLErrors = graphQLErrors;

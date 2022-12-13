@@ -1,21 +1,21 @@
-## Apollo Client 3.7.2 (unreleased)
+## Apollo Client 3.7.2 (2022-12-06)
 
 ### Improvements
 
-- Add array examples to reactive variable documentation. <br />
-  [@larrymyers](https://github.com/larrymyers) in [#10235](https://github.com/apollographql/apollo-client/pull/10235)
-- Additional documentation for managing local state
-  [@bignimbus](https://github.com/bignimbus) in [#10282](https://github.com/apollographql/apollo-client/pull/10282)
 - Only show dev tools suggestion in the console when `connectToDevTools` is `true`. <br/>
   [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
+
 - Pass `TCache` generic to `MutationHookOptions` for better type support in `useMutation`. <br />
   [@igrlk](https://github.com/igrlk) in [#10223](https://github.com/apollographql/apollo-client/pull/10223)
-- Add `name` property to `ApolloError` to ensure better type safety and help error reporting tools better identify the error.
+
+- Add `name` property to `ApolloError` to ensure better type safety and help error reporting tools better identify the error. <br />
   [@aaronadamsCA](https://github.com/aaronadamsCA) in [#9323](https://github.com/apollographql/apollo-client/pull/9323)
-- docs: displays the error correctly<br/>
-  [@ctesniere](https://github.com/ctesniere) in [#10275](https://github.com/apollographql/apollo-client/pull/10275)
+
 - Export a `ModifierDetails` type for the `details` parameter of a `Modifier` function. <br />
   [@KeithGillette](https://github.com/KeithGillette) in [#7133](https://github.com/apollographql/apollo-client/pull/7133)
+
+- Revert use of `cloneDeep` to clone options when fetching queries. <br />
+  [@MrDoomBringer](https://github.com/MrDoomBringer) in [#10215](https://github.com/apollographql/apollo-client/pull/10215)
 
 ## Apollo Client 3.7.1 (2022-10-20)
 

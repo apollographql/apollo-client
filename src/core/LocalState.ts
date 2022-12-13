@@ -353,6 +353,10 @@ export class LocalState<TCacheShape> {
     rootValue: any,
     execContext: ExecContext,
   ): Promise<any> {
+    if (!rootValue) {
+      return null;
+    }
+
     const { variables } = execContext;
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);

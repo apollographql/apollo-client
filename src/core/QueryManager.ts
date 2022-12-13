@@ -85,6 +85,7 @@ export class QueryManager<TStore> {
   public link: ApolloLink;
   public defaultOptions: DefaultOptions;
 
+  public readonly notifyOnTeardown: boolean;
   public readonly assumeImmutableResults: boolean;
   public readonly ssrMode: boolean;
 
@@ -115,6 +116,7 @@ export class QueryManager<TStore> {
     clientAwareness = {},
     localState,
     assumeImmutableResults,
+    notifyOnTeardown = true
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
@@ -125,6 +127,7 @@ export class QueryManager<TStore> {
     clientAwareness?: Record<string, string>;
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
+    notifyOnTeardown?: boolean;
   }) {
     this.cache = cache;
     this.link = link;
@@ -134,6 +137,7 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = !!assumeImmutableResults;
+    this.notifyOnTeardown = !!notifyOnTeardown;
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
@@ -915,6 +919,7 @@ export class QueryManager<TStore> {
 
   public stopQuery(queryId: string) {
     this.stopQueryNoBroadcast(queryId);
+    if(!this.notifyOnTeardown) return;
     this.broadcastQueries();
   }
 

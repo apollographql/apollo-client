@@ -65,7 +65,7 @@ $ yarn run compile
 
 ## Typing hooks
 
-GraphQL Code Generator automatically creates a `gql` function (from the `src/__genterated__/gql.ts` file). This function enables us to type the variables that go into our React hooks, along with the results from those hooks.
+GraphQL Code Generator automatically creates a `gql` function (from the `src/__generated__/gql.ts` file). This function enables us to type the variables that go into our React hooks, along with the results from those hooks.
 
 ### `useQuery`
 

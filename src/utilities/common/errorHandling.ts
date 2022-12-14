@@ -1,5 +1,5 @@
 import { FetchResult } from "../../link/core";
-import { isNonEmptyArray } from "../../utilities";
+import { isNonEmptyArray } from "../../utilities/common/arrays";
 import { isExecutionPatchIncrementalResult } from "../../utilities/common/incrementalResult";
 
 export function graphQLResultHasError(result: FetchResult<unknown>): boolean {

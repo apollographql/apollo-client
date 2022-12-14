@@ -30,8 +30,8 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
-  DeepMerger,
 } from '../utilities';
+import { mergeIncrementalData } from '../utilities/common/incrementalResult';
 import { ApolloError, isApolloError } from '../errors';
 import {
   QueryOptions,
@@ -378,18 +378,7 @@ export class QueryManager<TStore> {
           optimistic: false,
           returnPartialData: true,
         });
-        let mergedData = diff.result;
-        const merger = new DeepMerger();
-        result.incremental.forEach(({ data, path, errors }) => {
-          for (let i = path.length - 1; i >= 0; --i) {
-            const key = path[i];
-            const isNumericKey = !isNaN(+key);
-            const parent: Record<string | number, any> = isNumericKey ? [] : {};
-            parent[key] = data;
-            data = parent as typeof data;
-          }
-          mergedData = merger.merge(mergedData, data);
-        });
+        const mergedData = mergeIncrementalData<TData | undefined>(diff.result, result);
         if (typeof mergedData !== 'undefined') {
           result.data = mergedData;
           cacheWrites.push({

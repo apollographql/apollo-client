@@ -9,7 +9,7 @@ import fetchMock from "fetch-mock";
 
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
+import { itAsync, MockedProvider, MockSubscriptionLink, mockSingleLink, subscribeAndCount } from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
@@ -2204,6 +2204,102 @@ describe('useMutation Hook', () => {
       userEvent.click(screen.getByRole('button', { name: /mutate/i }));
 
       await screen.findByText('item 3');
+    });
+  });
+  describe('defer', () => {
+    it('should handle defer directive', async () => {
+      const CREATE_TODO_MUTATION_DEFER = gql`
+        mutation createTodo($description: String!, $priority: String) {
+          createTodo(description: $description, priority: $priority) {
+            id
+            ... @defer {
+              description
+              priority
+            }
+          }
+        }
+      `;
+      const variables = {
+        description: 'Get milk!'
+      };
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const useCreateTodo = () => {
+        const [createTodo, { loading, data }] = useMutation(
+          CREATE_TODO_MUTATION_DEFER
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, [variables]);
+
+        return { loading, data };
+      };
+
+      const { result, waitForNextUpdate } = renderHook(
+        () => useCreateTodo(),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              createTodo: {
+                id: 1,
+                __typename: 'Todo',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                description: 'Get milk!',
+                priority: 'High',
+                __typename: 'Todo',
+              },
+              path: ['createTodo'],
+            }],
+            hasNext: false
+          },
+        }, true);
+      });
+
+
+      // When defer is used in a mutation, the final value resolves
+      // in a single result
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({
+        createTodo: {
+          id: 1,
+          description: "Get milk!",
+          priority: "High",
+          __typename: 'Todo',
+        },
+      });
     });
   });
 });

@@ -6,7 +6,10 @@ type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
-import { isExecutionPatchIncrementalResult } from '../utilities/common/incrementalResult';
+import {
+  isExecutionPatchIncrementalResult,
+  isExecutionPatchResult,
+} from '../utilities/common/incrementalResult';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
 import {
@@ -26,6 +29,7 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
+  DeepMerger,
 } from '../utilities';
 import { ApolloError, isApolloError } from '../errors';
 import {
@@ -301,7 +305,9 @@ export class QueryManager<TStore> {
           // multiple FetchResult payloads from the ApolloLink chain, so we will
           // probably need to collect those results in this next method and call
           // resolve only later, in an observer.complete function.
-          resolve(storeResult);
+          if (!('hasNext' in storeResult) || storeResult.hasNext === false) {
+            resolve(storeResult);
+          }
         },
 
         error(err: Error) {
@@ -361,6 +367,43 @@ export class QueryManager<TStore> {
         query: mutation.document,
         variables: mutation.variables,
       });
+      if (isExecutionPatchResult(result)) {
+        const diff = cache.diff<TData>({
+          id: "ROOT_MUTATION",
+          // The cache complains if passed a mutation where it expects a
+          // query, so we transform mutations and subscriptions to queries
+          // (only once, thanks to this.transformCache).
+          query: this.transform(mutation.document).asQuery,
+          variables: mutation.variables,
+          optimistic: false,
+          returnPartialData: true,
+        });
+        let mergedData = diff.result;
+        const merger = new DeepMerger();
+        result.incremental?.forEach(({ data, path, errors }) => {
+          for (let i = path.length - 1; i >= 0; --i) {
+            const key = path[i];
+            const isNumericKey = !isNaN(+key);
+            const parent: Record<string | number, any> = isNumericKey ? [] : {};
+            parent[key] = data;
+            data = parent as typeof data;
+          }
+          // TODO: handle errors
+          // if (errors) {
+          //   graphQLErrors.push(...errors);
+          // }
+          mergedData = merger.merge(mergedData, data);
+        });
+        if (typeof mergedData !== 'undefined') {
+          result.data = mergedData;
+          cacheWrites.push({
+            result: mergedData,
+            dataId: 'ROOT_MUTATION',
+            query: mutation.document,
+            variables: mutation.variables,
+          })
+        }
+      }
 
       const { updateQueries } = mutation;
       if (updateQueries) {
@@ -438,6 +481,7 @@ export class QueryManager<TStore> {
                 returnPartialData: true,
               });
 
+              // TODO: does this still make sense?
               if (diff.complete && !(isExecutionPatchIncrementalResult(result))) {
                 result = { ...result, data: diff.result };
               }
@@ -451,7 +495,14 @@ export class QueryManager<TStore> {
 
           // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
           // shallow to allow rolling back optimistic evictions.
-          if (!skipCache && !mutation.keepRootFields) {
+          if (
+            !skipCache &&
+            !mutation.keepRootFields &&
+            (
+              !isExecutionPatchResult(result) ||
+              (isExecutionPatchIncrementalResult(result) && !result.hasNext)
+            )
+          ) {
             cache.modify({
               id: 'ROOT_MUTATION',
               fields(value, { fieldName, DELETE }) {

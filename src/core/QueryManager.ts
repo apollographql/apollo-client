@@ -466,17 +466,28 @@ export class QueryManager<TStore> {
                 returnPartialData: true,
               });
 
-              // TODO: is this !isExecutionPatchIncrementalResult(result)
-              // check still necessary?
-              if (diff.complete && !isExecutionPatchIncrementalResult(result)) {
-                result = { ...result, data: diff.result };
+              if (diff.complete) {
+                if ('incremental' in result) {
+                  delete result.incremental;
+                }
+                if ('hasNext' in result) {
+                  delete result.hasNext;
+                }
+                result = { ...result as FetchResult, data: diff.result };
               }
             }
 
-            update(cache, result, {
-              context: mutation.context,
-              variables: mutation.variables,
-            });
+            // If the result is a SingleExecutionResult or is the final
+            // ExecutionPatchIncrementalResult, call the update function.
+            if (
+              !isExecutionPatchResult(result) ||
+              (isExecutionPatchIncrementalResult(result) && !result.hasNext)
+            ) {
+              update(cache, result, {
+                context: mutation.context,
+                variables: mutation.variables,
+              });
+            }
           }
 
           // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it

@@ -2361,5 +2361,82 @@ describe('useMutation Hook', () => {
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
     });
+    it('update function', async () => {
+      let variablesMatched = false;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION_DEFER,
+          {
+            update(_, result, options) {
+              expect(result).toEqual({
+                data: {
+                  createTodo: {
+                    id: 1,
+                    description: "Get milk!",
+                    priority: "High",
+                    __typename: 'Todo',
+                  },
+                }
+              })
+              expect(options.variables).toEqual(variables);
+              variablesMatched = true;
+            }
+          }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      const createTodo = result.current[0];
+
+      let fetchResult: any;
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              createTodo: {
+                id: 1,
+                __typename: 'Todo',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                description: 'Get milk!',
+                priority: 'High',
+                __typename: 'Todo',
+              },
+              path: ['createTodo'],
+            }],
+            hasNext: false
+          },
+        }, true);
+      });
+
+      await act(async () => {
+        fetchResult = await createTodo({ variables });
+      });
+
+      await waitFor(() => expect(variablesMatched).toBe(true));
+    });
   });
 });

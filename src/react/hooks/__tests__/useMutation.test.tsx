@@ -2400,8 +2400,6 @@ describe('useMutation Hook', () => {
 
       const createTodo = result.current[0];
 
-      let fetchResult: any;
-
       setTimeout(() => {
         link.simulateResult({
           result: {
@@ -2433,7 +2431,7 @@ describe('useMutation Hook', () => {
       });
 
       await act(async () => {
-        fetchResult = await createTodo({ variables });
+        await createTodo({ variables });
       });
 
       await waitFor(() => expect(variablesMatched).toBe(true));

@@ -18,6 +18,7 @@ import {
   getOperationName,
   hasClientExports,
   graphQLResultHasError,
+  mergeGraphQLErrors,
   removeConnectionDirectiveFromDocument,
   canUseWeakMap,
   ObservableSubscription,
@@ -251,9 +252,8 @@ export class QueryManager<TStore> {
 
         (result: FetchResult<TData>) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
-            throw new ApolloError({
-              graphQLErrors: result.errors,
-            });
+            const graphQLErrors = mergeGraphQLErrors(result);
+            throw new ApolloError({ graphQLErrors });
           }
 
           if (mutationStoreValue) {
@@ -367,7 +367,7 @@ export class QueryManager<TStore> {
         query: mutation.document,
         variables: mutation.variables,
       });
-      if (isExecutionPatchResult(result)) {
+      if (isExecutionPatchResult(result) && isNonEmptyArray(result.incremental)) {
         const diff = cache.diff<TData>({
           id: "ROOT_MUTATION",
           // The cache complains if passed a mutation where it expects a
@@ -380,7 +380,7 @@ export class QueryManager<TStore> {
         });
         let mergedData = diff.result;
         const merger = new DeepMerger();
-        result.incremental?.forEach(({ data, path, errors }) => {
+        result.incremental.forEach(({ data, path, errors }) => {
           for (let i = path.length - 1; i >= 0; --i) {
             const key = path[i];
             const isNumericKey = !isNaN(+key);
@@ -388,10 +388,6 @@ export class QueryManager<TStore> {
             parent[key] = data;
             data = parent as typeof data;
           }
-          // TODO: handle errors
-          // if (errors) {
-          //   graphQLErrors.push(...errors);
-          // }
           mergedData = merger.merge(mergedData, data);
         });
         if (typeof mergedData !== 'undefined') {
@@ -481,8 +477,9 @@ export class QueryManager<TStore> {
                 returnPartialData: true,
               });
 
-              // TODO: does this still make sense?
-              if (diff.complete && !(isExecutionPatchIncrementalResult(result))) {
+              // TODO: is this !isExecutionPatchIncrementalResult(result)
+              // check still necessary?
+              if (diff.complete && !isExecutionPatchIncrementalResult(result)) {
                 result = { ...result, data: diff.result };
               }
             }
@@ -1104,19 +1101,8 @@ export class QueryManager<TStore> {
       ),
 
       result => {
-        const graphQLErrors = isNonEmptyArray(result.errors)
-          ? result.errors.slice(0)
-          : [];
-
-        if ('incremental' in result && isNonEmptyArray(result.incremental)) {
-          result.incremental.forEach(incrementalResult => {
-            if (incrementalResult.errors) {
-              graphQLErrors.push(...incrementalResult.errors);
-            }
-          });
-        }
-
-        const hasErrors = isNonEmptyArray(graphQLErrors);
+        const graphQLErrors = mergeGraphQLErrors(result);
+        const hasErrors = graphQLResultHasError(result);
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.

@@ -2207,22 +2207,21 @@ describe('useMutation Hook', () => {
     });
   });
   describe('defer', () => {
-    it('should handle defer directive', async () => {
-      const CREATE_TODO_MUTATION_DEFER = gql`
-        mutation createTodo($description: String!, $priority: String) {
-          createTodo(description: $description, priority: $priority) {
-            id
-            ... @defer {
-              description
-              priority
-            }
+    const CREATE_TODO_MUTATION_DEFER = gql`
+      mutation createTodo($description: String!, $priority: String) {
+        createTodo(description: $description, priority: $priority) {
+          id
+          ... @defer {
+            description
+            priority
           }
         }
-      `;
-      const variables = {
-        description: 'Get milk!'
-      };
-
+      }
+    `;
+    const variables = {
+      description: 'Get milk!'
+    };
+    it('should handle defer directive', async () => {
       const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
@@ -2300,6 +2299,67 @@ describe('useMutation Hook', () => {
           __typename: 'Todo',
         },
       });
+    });
+    it('resolves with the resulting data and errors', async () => {
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const onError = jest.fn();
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION_DEFER, { onError }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      const createTodo = result.current[0];
+
+      let fetchResult: any;
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              createTodo: {
+                id: 1,
+                __typename: 'Todo',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: null,
+              errors: [
+                new GraphQLError(CREATE_TODO_ERROR)
+              ],
+              path: ['createTodo'],
+            }],
+            hasNext: false
+          },
+        }, true);
+      });
+      await act(async () => {
+        fetchResult = await createTodo({ variables });
+      });
+
+      expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
+      expect(fetchResult.data).toBe(undefined);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
     });
   });
 });

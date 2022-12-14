@@ -394,6 +394,7 @@ Array [
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
+  "mergeGraphQLErrors",
   "mergeOptions",
   "offsetLimitPagination",
   "relayStylePagination",

@@ -1,9 +1,21 @@
-## Apollo Client 3.7.2 (unreleased)
+## Apollo Client 3.7.2 (2022-12-06)
 
 ### Improvements
 
 - Only show dev tools suggestion in the console when `connectToDevTools` is `true`. <br/>
   [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
+
+- Pass `TCache` generic to `MutationHookOptions` for better type support in `useMutation`. <br />
+  [@igrlk](https://github.com/igrlk) in [#10223](https://github.com/apollographql/apollo-client/pull/10223)
+
+- Add `name` property to `ApolloError` to ensure better type safety and help error reporting tools better identify the error. <br />
+  [@aaronadamsCA](https://github.com/aaronadamsCA) in [#9323](https://github.com/apollographql/apollo-client/pull/9323)
+
+- Export a `ModifierDetails` type for the `details` parameter of a `Modifier` function. <br />
+  [@KeithGillette](https://github.com/KeithGillette) in [#7133](https://github.com/apollographql/apollo-client/pull/7133)
+
+- Revert use of `cloneDeep` to clone options when fetching queries. <br />
+  [@MrDoomBringer](https://github.com/MrDoomBringer) in [#10215](https://github.com/apollographql/apollo-client/pull/10215)
 
 ## Apollo Client 3.7.1 (2022-10-20)
 
@@ -31,6 +43,8 @@
 - Support `onError` callback for `useSubscription` hook. <br/>
   [@jeroenvisser101](https://github.com/jeroenvisser101) in [#9495](https://github.com/apollographql/apollo-client/pull/9495)
 
+- Implement `preserveHeaderCase` option for `http` context object, enabling preserved header capitalization for non-http-spec-compliant servers. <br/>
+  [@mrdoombringer](https://github.com/mrdoombringer) in [#9891](https://github.com/apollographql/apollo-client/pull/9891)
 ### Improvements
 
 - Delay calling `onCompleted` and `onError` callbacks passed to `useQuery` using `Promise.resolve().then(() => ...)` to fix issue [#9794](https://github.com/apollographql/apollo-client/pull/9794). <br/>

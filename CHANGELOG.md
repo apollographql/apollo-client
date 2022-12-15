@@ -1,6 +1,8 @@
-## Apollo Client 3.7.2 (2022-12-06)
+# @apollo/client
 
-### Improvements
+## 3.7.2
+
+### Patch Changes
 
 - Only show dev tools suggestion in the console when `connectToDevTools` is `true`. <br/>
   [@chris110408](https://github.com/chris110408) in [#10258](https://github.com/apollographql/apollo-client/pull/10258)
@@ -17,9 +19,9 @@
 - Revert use of `cloneDeep` to clone options when fetching queries. <br />
   [@MrDoomBringer](https://github.com/MrDoomBringer) in [#10215](https://github.com/apollographql/apollo-client/pull/10215)
 
-## Apollo Client 3.7.1 (2022-10-20)
+## 3.7.1
 
-### Bug fixes
+### Patch Changes
 
 - Fix issue where `loading` remains `true` after `observer.refetch` is called repeatedly with different variables when the same data are returned. <br/>
   [@alessbell](https://github.com/alessbell) in [#10143](https://github.com/apollographql/apollo-client/pull/10143)
@@ -27,9 +29,9 @@
 - Fix race condition where `useFragment_experimental` could receive cache updates before initially calling `cache.watch` in `useEffect`. <br/>
   [@benjamn](https://github.com/benjamn) in [#10212](https://github.com/apollographql/apollo-client/pull/10212)
 
-## Apollo Client 3.7.0 (2022-09-30)
+## 3.7.0
 
-### New Features
+### Minor Changes
 
 - Implement preview support for the [`@defer` directive](https://github.com/graphql/graphql-spec/pull/742). <br/>
   [@alessbell](https://github.com/alessbell) and [@benjamn](https://github.com/benjamn) in [#10018](https://github.com/apollographql/apollo-client/pull/10018)
@@ -45,7 +47,8 @@
 
 - Implement `preserveHeaderCase` option for `http` context object, enabling preserved header capitalization for non-http-spec-compliant servers. <br/>
   [@mrdoombringer](https://github.com/mrdoombringer) in [#9891](https://github.com/apollographql/apollo-client/pull/9891)
-### Improvements
+
+### Patch Changes
 
 - Delay calling `onCompleted` and `onError` callbacks passed to `useQuery` using `Promise.resolve().then(() => ...)` to fix issue [#9794](https://github.com/apollographql/apollo-client/pull/9794). <br/>
   [@dylanwulf](https://github.com/dylanwulf) in [#9823](https://github.com/apollographql/apollo-client/pull/9823)

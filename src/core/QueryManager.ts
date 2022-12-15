@@ -300,12 +300,11 @@ export class QueryManager<TStore> {
         next(storeResult) {
           self.broadcastQueries();
 
-          // At the moment, a mutation can have only one result, so we can
-          // immediately resolve upon receiving the first result. In the future,
-          // mutations containing @defer or @stream directives might receive
-          // multiple FetchResult payloads from the ApolloLink chain, so we will
-          // probably need to collect those results in this next method and call
-          // resolve only later, in an observer.complete function.
+          // Since mutations might receive multiple payloads from the
+          // ApolloLink chain (e.g. when used with @defer),
+          // we resolve with a SingleExecutionResult or after the final
+          // ExecutionPatchResult has arrived and we have assembled the
+          // multipart response into a single result.
           if (!('hasNext' in storeResult) || storeResult.hasNext === false) {
             resolve(storeResult);
           }
@@ -501,14 +500,7 @@ export class QueryManager<TStore> {
 
           // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
           // shallow to allow rolling back optimistic evictions.
-          if (
-            !skipCache &&
-            !mutation.keepRootFields &&
-            (
-              !isExecutionPatchResult(result) ||
-              (isExecutionPatchIncrementalResult(result) && !result.hasNext)
-            )
-          ) {
+          if (!skipCache && !mutation.keepRootFields && isFinalResult) {
             cache.modify({
               id: 'ROOT_MUTATION',
               fields(value, { fieldName, DELETE }) {

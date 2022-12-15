@@ -3,11 +3,11 @@ import { isNonEmptyArray } from "../../utilities/common/arrays";
 import { isExecutionPatchIncrementalResult } from "../../utilities/common/incrementalResult";
 
 export function graphQLResultHasError(result: FetchResult): boolean {
-  const errors = mergeGraphQLErrors(result);
+  const errors = getGraphQLErrorsFromResult(result);
   return isNonEmptyArray(errors);
 }
 
-export function mergeGraphQLErrors(result: FetchResult) {
+export function getGraphQLErrorsFromResult(result: FetchResult) {
   const graphQLErrors = isNonEmptyArray(result.errors)
     ? result.errors.slice(0)
     : [];

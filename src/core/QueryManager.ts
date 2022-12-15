@@ -18,7 +18,7 @@ import {
   getOperationName,
   hasClientExports,
   graphQLResultHasError,
-  mergeGraphQLErrors,
+  getGraphQLErrorsFromResult,
   removeConnectionDirectiveFromDocument,
   canUseWeakMap,
   ObservableSubscription,
@@ -253,7 +253,7 @@ export class QueryManager<TStore> {
         (result: FetchResult<TData>) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
             throw new ApolloError({
-              graphQLErrors: mergeGraphQLErrors(result),
+              graphQLErrors: getGraphQLErrorsFromResult(result),
             });
           }
 
@@ -1108,7 +1108,7 @@ export class QueryManager<TStore> {
       ),
 
       result => {
-        const graphQLErrors = mergeGraphQLErrors(result);
+        const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;
 
         // If we interrupted this request by calling getResultsFromLink again

@@ -14,6 +14,7 @@ import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
+import { FetchResult } from '../../../link/core';
 
 describe('useMutation Hook', () => {
   interface Todo {
@@ -2221,7 +2222,8 @@ describe('useMutation Hook', () => {
     const variables = {
       description: 'Get milk!'
     };
-    it('should handle defer directive', async () => {
+    it('resolves a deferred mutation with the full result', async () => {
+      const errorSpy = jest.spyOn(console, "error");
       const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
@@ -2299,8 +2301,11 @@ describe('useMutation Hook', () => {
           __typename: 'Todo',
         },
       });
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
-    it('resolves with the resulting data and errors', async () => {
+    it('resolves with resulting errors and calls onError callback', async () => {
+      const errorSpy = jest.spyOn(console, "error");
       const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
@@ -2360,12 +2365,13 @@ describe('useMutation Hook', () => {
       expect(fetchResult.data).toBe(undefined);
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
-    it('update function', async () => {
-      let variablesMatched = false;
-
+    it('calls the update function with the final merged result data', async () => {
+      const errorSpy = jest.spyOn(console, "error");
       const link = new MockSubscriptionLink();
-
+      const update = jest.fn();
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
@@ -2373,22 +2379,7 @@ describe('useMutation Hook', () => {
 
       const { result } = renderHook(
         () => useMutation(CREATE_TODO_MUTATION_DEFER,
-          {
-            update(_, result, options) {
-              expect(result).toEqual({
-                data: {
-                  createTodo: {
-                    id: 1,
-                    description: "Get milk!",
-                    priority: "High",
-                    __typename: 'Todo',
-                  },
-                }
-              })
-              expect(options.variables).toEqual(variables);
-              variablesMatched = true;
-            }
-          }),
+          { update }),
         {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>
@@ -2397,44 +2388,67 @@ describe('useMutation Hook', () => {
           ),
         },
       );
+      const [createTodo] = result.current;
 
-      const createTodo = result.current[0];
-
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              createTodo: {
-                id: 1,
-                __typename: 'Todo',
-              },
-            },
-            hasNext: true
-          },
-        });
-      });
-
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [{
-              data: {
-                description: 'Get milk!',
-                priority: 'High',
-                __typename: 'Todo',
-              },
-              path: ['createTodo'],
-            }],
-            hasNext: false
-          },
-        }, true);
-      });
+      let promiseReturnedByMutate: Promise<FetchResult>;
 
       await act(async () => {
-        await createTodo({ variables });
+        promiseReturnedByMutate = createTodo({ variables });
       });
 
-      await waitFor(() => expect(variablesMatched).toBe(true));
+      link.simulateResult({
+        result: {
+          data: {
+            createTodo: {
+              id: 1,
+              __typename: 'Todo',
+            },
+          },
+          hasNext: true
+        },
+      });
+
+      link.simulateResult({
+        result: {
+          incremental: [{
+            data: {
+              description: 'Get milk!',
+              priority: 'High',
+              __typename: 'Todo',
+            },
+            path: ['createTodo'],
+          }],
+          hasNext: false
+        },
+      }, true);
+
+      await act(async () => {
+        await promiseReturnedByMutate;
+      });
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(
+        // the first item is the cache, which we don't need to make any
+        // assertions against in this test
+        expect.anything(),
+        // second argument is the result
+        expect.objectContaining({
+          data: {
+            createTodo: {
+              id: 1,
+              description: "Get milk!",
+              priority: "High",
+              __typename: 'Todo',
+            },
+          }
+        }),
+        // third argument is an object containing context and variables
+        // but we only care about variables here
+        expect.objectContaining({ variables })
+      );
+
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
   });
 });

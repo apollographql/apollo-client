@@ -362,12 +362,14 @@ export class QueryManager<TStore> {
     const skipCache = mutation.fetchPolicy === "no-cache";
 
     if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
-      cacheWrites.push({
-        result: result.data,
-        dataId: 'ROOT_MUTATION',
-        query: mutation.document,
-        variables: mutation.variables,
-      });
+      if (!isExecutionPatchIncrementalResult(result)) {
+        cacheWrites.push({
+          result: result.data,
+          dataId: 'ROOT_MUTATION',
+          query: mutation.document,
+          variables: mutation.variables,
+        });
+      }
       if (isExecutionPatchIncrementalResult(result) && isNonEmptyArray(result.incremental)) {
         const diff = cache.diff<TData>({
           id: "ROOT_MUTATION",

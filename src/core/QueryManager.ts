@@ -252,8 +252,9 @@ export class QueryManager<TStore> {
 
         (result: FetchResult<TData>) => {
           if (graphQLResultHasError(result) && errorPolicy === 'none') {
-            const graphQLErrors = mergeGraphQLErrors(result);
-            throw new ApolloError({ graphQLErrors });
+            throw new ApolloError({
+              graphQLErrors: mergeGraphQLErrors(result),
+            });
           }
 
           if (mutationStoreValue) {
@@ -367,7 +368,7 @@ export class QueryManager<TStore> {
         query: mutation.document,
         variables: mutation.variables,
       });
-      if (isExecutionPatchResult(result) && isNonEmptyArray(result.incremental)) {
+      if (isExecutionPatchIncrementalResult(result) && isNonEmptyArray(result.incremental)) {
         const diff = cache.diff<TData>({
           id: "ROOT_MUTATION",
           // The cache complains if passed a mutation where it expects a
@@ -378,9 +379,11 @@ export class QueryManager<TStore> {
           optimistic: false,
           returnPartialData: true,
         });
-        const mergedData = mergeIncrementalData<TData | undefined>(diff.result, result);
+        const mergedData = mergeIncrementalData(diff.result, result);
         if (typeof mergedData !== 'undefined') {
-          result.data = mergedData;
+          // cast the ExecutionPatchResult to FetchResult here since
+          // ExecutionPatchResult never has `data` when returned from the server
+          (result as FetchResult).data = mergedData;
           cacheWrites.push({
             result: mergedData,
             dataId: 'ROOT_MUTATION',
@@ -449,6 +452,12 @@ export class QueryManager<TStore> {
           // apply those writes to the store by running this reducer again with
           // a write action.
           const { update } = mutation;
+          // Determine whether result is a SingleExecutionResult,
+          // or the final ExecutionPatchResult.
+          const isFinalResult =
+            !isExecutionPatchResult(result) ||
+            (isExecutionPatchIncrementalResult(result) && !result.hasNext);
+
           if (update) {
             if (!skipCache) {
               // Re-read the ROOT_MUTATION data we just wrote into the cache
@@ -467,22 +476,20 @@ export class QueryManager<TStore> {
               });
 
               if (diff.complete) {
+                result = { ...result as FetchResult, data: diff.result };
                 if ('incremental' in result) {
                   delete result.incremental;
                 }
                 if ('hasNext' in result) {
                   delete result.hasNext;
                 }
-                result = { ...result as FetchResult, data: diff.result };
               }
             }
 
-            // If the result is a SingleExecutionResult or is the final
-            // ExecutionPatchIncrementalResult, call the update function.
-            if (
-              !isExecutionPatchResult(result) ||
-              (isExecutionPatchIncrementalResult(result) && !result.hasNext)
-            ) {
+            // If we've received the whole response,
+            // either a SingleExecutionResult or the final ExecutionPatchResult,
+            // call the update function.
+            if (isFinalResult) {
               update(cache, result, {
                 context: mutation.context,
                 variables: mutation.variables,
@@ -1102,7 +1109,7 @@ export class QueryManager<TStore> {
 
       result => {
         const graphQLErrors = mergeGraphQLErrors(result);
-        const hasErrors = graphQLResultHasError(result);
+        const hasErrors = graphQLErrors.length > 0;
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.

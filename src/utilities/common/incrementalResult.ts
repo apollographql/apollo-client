@@ -2,27 +2,25 @@ import {
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
+  FetchResult,
 } from "../../link/core";
 import { isNonEmptyArray } from "./arrays";
 import { DeepMerger } from "./mergeDeep";
 
 export function isExecutionPatchIncrementalResult(
-  value: any
+  value: FetchResult
 ): value is ExecutionPatchIncrementalResult {
-  return !!(value as ExecutionPatchIncrementalResult).incremental;
+  return 'incremental' in value;
 }
 
 export function isExecutionPatchInitialResult(
-  value: any
+  value: FetchResult
 ): value is ExecutionPatchInitialResult {
-  return (
-    !!(value as ExecutionPatchInitialResult).hasNext &&
-    !!(value as ExecutionPatchInitialResult).data
-  );
+  return 'hasNext' in value && 'data' in value;
 }
 
 export function isExecutionPatchResult(
-  value: any
+  value: FetchResult
 ): value is ExecutionPatchResult {
   return (
     isExecutionPatchIncrementalResult(value) ||
@@ -32,7 +30,7 @@ export function isExecutionPatchResult(
 
 export function mergeIncrementalData<TData>(
   prevResult: TData,
-  result: ExecutionPatchResult<TData, Record<string, any>>
+  result: ExecutionPatchResult<TData>
 ) {
   let mergedData = prevResult;
   const merger = new DeepMerger();

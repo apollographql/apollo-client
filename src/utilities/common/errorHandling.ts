@@ -2,12 +2,12 @@ import { FetchResult } from "../../link/core";
 import { isNonEmptyArray } from "../../utilities/common/arrays";
 import { isExecutionPatchIncrementalResult } from "../../utilities/common/incrementalResult";
 
-export function graphQLResultHasError(result: FetchResult<unknown>): boolean {
+export function graphQLResultHasError(result: FetchResult): boolean {
   const errors = mergeGraphQLErrors(result);
   return isNonEmptyArray(errors);
 }
 
-export function mergeGraphQLErrors(result: FetchResult<unknown>) {
+export function mergeGraphQLErrors(result: FetchResult) {
   const graphQLErrors = isNonEmptyArray(result.errors)
     ? result.errors.slice(0)
     : [];

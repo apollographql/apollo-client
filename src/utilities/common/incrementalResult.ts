@@ -10,13 +10,13 @@ import { DeepMerger } from "./mergeDeep";
 export function isExecutionPatchIncrementalResult(
   value: FetchResult
 ): value is ExecutionPatchIncrementalResult {
-  return 'incremental' in value;
+  return "incremental" in value;
 }
 
 export function isExecutionPatchInitialResult(
   value: FetchResult
 ): value is ExecutionPatchInitialResult {
-  return 'hasNext' in value && 'data' in value;
+  return "hasNext" in value && "data" in value;
 }
 
 export function isExecutionPatchResult(

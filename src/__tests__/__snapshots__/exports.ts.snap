@@ -369,6 +369,7 @@ Array [
   "getFragmentDefinitions",
   "getFragmentFromSelection",
   "getFragmentQueryDocument",
+  "getGraphQLErrorsFromResult",
   "getInclusionDirectives",
   "getMainDefinition",
   "getOperationDefinition",

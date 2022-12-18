@@ -99,7 +99,7 @@
   },
   "devDependencies": {
     "@babel/parser": "7.20.5",
-    "@changesets/changelog-github": "0.4.7",
+    "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.0",
     "@graphql-tools/schema": "9.0.12",
     "@rollup/plugin-node-resolve": "11.2.1",

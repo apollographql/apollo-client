@@ -29,6 +29,25 @@ jobs:
       - store_artifacts:
           path: reports/junit
 
+  # Ensure that any PR that changes packages has a changeset on it (perhaps
+  # an empty one created with `changeset --empty`).
+  # We run the Changesets job itself on all branches so that we can require
+  # it to pass, but we don't run any steps on the "Version Packages" PRs
+  # themselves.
+  Changesets:
+    docker:
+      - image: circleci/node:16.13.1
+    steps:
+      - checkout
+      - run: npm ci
+      - unless:
+          condition:
+            matches:
+              pattern: "^changeset-release/.+$"
+              value: << pipeline.git.branch >>
+          steps:
+            - run: npm run changeset-check
+
 workflows:
   version: 2
   Build and Test:

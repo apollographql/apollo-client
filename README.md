@@ -21,13 +21,13 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 
 ## Maintainers
 
-- [@benjamn](https://github.com/benjamn)
-- [@alessbell](https://github.com/alessbell)
-- [@bignimbus](https://github.com/bignimbus)
-- [@hwillson](https://github.com/hwillson)
-- [@jpvajda](https://github.com/jpvajda)
-- [@mrdoombringer](https://github.com/mrdoombringer)
-- [@jerelmiller](https://github.com/jerelmiller)
+|Name|Username|
+|---|---|
+|Ben Newman|[@benjamn](https://github.com/benjamn)|
+|Alessia Bellisario|[@alessbell](https://github.com/alessbell)|
+|Jeff Auriemma|[@bignimbus](https://github.com/bignimbus)|
+|Hugh Willson|[@hwillson](https://github.com/hwillson)|
+|Jerel Miller|[@jerelmiller](https://github.com/jerelmiller)|
 
 ## Who is Apollo?
 

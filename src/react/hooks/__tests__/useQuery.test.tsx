@@ -1943,6 +1943,38 @@ describe('useQuery Hook', () => {
       });
     });
 
+    it('returns partial data and discards GraphQL errors when using an `errorPolicy` set to "ignore"', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: { hello: null },
+            errors: [new GraphQLError('Could not fetch "hello"')]
+          }
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError, errorPolicy: 'ignore' }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.data).toEqual({ hello: null })
+      expect(result.current.error).toBeUndefined();
+    });
+
     it('calls `onError` a single time when refetching returns a successful result', async () => {
       const query = gql`{ hello }`;
       const mocks = [

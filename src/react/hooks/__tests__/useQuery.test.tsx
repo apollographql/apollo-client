@@ -1960,9 +1960,8 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const onError = jest.fn();
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { onError, errorPolicy: 'ignore' }),
+        () => useQuery(query, { errorPolicy: 'ignore' }),
         { wrapper },
       );
 

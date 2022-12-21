@@ -1976,6 +1976,135 @@ describe('useQuery Hook', () => {
       expect(result.current.error).toBeUndefined();
     });
 
+    it('calls `onError` when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            errors: [new GraphQLError('error')]
+          }
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError, errorPolicy: 'all' }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('error');
+      expect(result.current.error!.graphQLErrors).toEqual([
+        new GraphQLError('error')
+      ]);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+          new ApolloError({ graphQLErrors: [new GraphQLError('error')] })
+        );
+      });
+    });
+
+    it('returns partial data when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: { hello: null },
+            errors: [new GraphQLError('Could not fetch "hello"')]
+          }
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError, errorPolicy: 'all' }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: null });
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('Could not fetch "hello"');
+      expect(result.current.error!.graphQLErrors).toEqual([
+        new GraphQLError('Could not fetch "hello"')
+      ]);
+    });
+
+    it('calls `onError` but not `onCompleted` when returning partial data with GraphQL errors while using an `errorPolicy` set to "all"', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: { hello: null },
+            errors: [new GraphQLError('Could not fetch "hello"')]
+          }
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const onCompleted = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError, onCompleted, errorPolicy: 'all' }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: null });
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('Could not fetch "hello"');
+      expect(result.current.error!.graphQLErrors).toEqual([
+        new GraphQLError('Could not fetch "hello"')
+      ]);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+          new ApolloError({
+            graphQLErrors: [new GraphQLError('Could not fetch "hello"')]
+          })
+        );
+
+        expect(onCompleted).not.toHaveBeenCalled();
+      })
+    });
+
     it('calls `onError` a single time when refetching returns a successful result', async () => {
       const query = gql`{ hello }`;
       const mocks = [

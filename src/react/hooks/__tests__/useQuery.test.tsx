@@ -1903,7 +1903,7 @@ describe('useQuery Hook', () => {
       });
     });
 
-    it('calls `onError` once when refetching returns a successful result', async () => {
+    it('calls `onError` a single time when refetching returns a successful result', async () => {
       const query = gql`{ hello }`;
       const mocks = [
         {

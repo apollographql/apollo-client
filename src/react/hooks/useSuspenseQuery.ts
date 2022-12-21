@@ -19,7 +19,12 @@ import {
   WatchQueryFetchPolicy,
 } from '../../core';
 import { invariant } from '../../utilities/globals';
-import { compact, isNonEmptyArray } from '../../utilities';
+import {
+  compact,
+  Concast,
+  isNonEmptyArray,
+  hasDirectives,
+} from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import {
@@ -62,6 +67,7 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
+  const deferred = useIsDeferred(query);
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
@@ -74,7 +80,19 @@ export function useSuspenseQuery_experimental<
 
   const result = useObservableQueryResult(observable);
 
-  if (result.error && errorPolicy === 'none') {
+  const hasFullResult = result.data && !result.partial;
+  const hasPartialResult = result.data && result.partial;
+  const usePartialResult = returnPartialData && hasPartialResult;
+
+  if (
+    result.error &&
+    errorPolicy === 'none' &&
+    // If we've got a deferred query that errors on an incremental chunk, we
+    // will have a partial result before the error is collected. We do not want
+    // to throw errors that have been returned from incremental chunks. Instead
+    // we offload those errors to the `error` property.
+    (!deferred || !hasPartialResult)
+  ) {
     throw result.error;
   }
 
@@ -84,13 +102,13 @@ export function useSuspenseQuery_experimental<
     // immediately
     if (!cacheEntry) {
       cacheEntry = suspenseCache.add(query, variables, {
-        promise: observable.reobserve(watchQueryOptions),
+        promise: maybeWrapConcastWithCustomPromise(
+          observable.reobserveAsConcast(watchQueryOptions),
+          { deferred }
+        ),
         observable,
       });
     }
-
-    const hasFullResult = result.data && !result.partial;
-    const usePartialResult = returnPartialData && result.partial && result.data;
 
     const hasUsableResult =
       // When we have partial data in the cache, a network request will be kicked
@@ -132,7 +150,7 @@ export function useSuspenseQuery_experimental<
   return useMemo(() => {
     return {
       data: result.data,
-      error: errorPolicy === 'all' ? toApolloError(result) : void 0,
+      error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
       fetchMore: (options) => {
         const promise = observable.fetchMore(options);
 
@@ -193,6 +211,29 @@ function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
+function maybeWrapConcastWithCustomPromise<TData>(
+  concast: Concast<ApolloQueryResult<TData>>,
+  { deferred }: { deferred: boolean }
+): Promise<ApolloQueryResult<TData>> {
+  if (deferred) {
+    return new Promise((resolve, reject) => {
+      // Unlike `concast.promise`, we want to resolve the promise on the initial
+      // chunk of the deferred query. This allows the component to unsuspend
+      // when we get the initial set of data, rather than waiting until all
+      // chunks have been loaded.
+      const subscription = concast.subscribe({
+        next: (value) => {
+          resolve(value);
+          subscription.unsubscribe();
+        },
+        error: reject,
+      });
+    });
+  }
+
+  return concast.promise;
+}
+
 interface UseWatchQueryOptionsHookOptions<TData, TVariables> {
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SuspenseQueryHookOptions<TData, TVariables>;
@@ -246,6 +287,10 @@ function useWatchQueryOptions<TData, TVariables>({
   }
 
   return watchQueryOptions;
+}
+
+function useIsDeferred(query: DocumentNode) {
+  return useMemo(() => hasDirectives(['defer'], query), [query]);
 }
 
 function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {

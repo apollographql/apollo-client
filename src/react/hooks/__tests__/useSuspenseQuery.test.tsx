@@ -23,7 +23,12 @@ import {
   TypedDocumentNode,
 } from '../../../core';
 import { compact, concatPagination } from '../../../utilities';
-import { MockedProvider, MockedResponse, MockLink } from '../../../testing';
+import {
+  MockedProvider,
+  MockedResponse,
+  MockSubscriptionLink,
+  MockLink,
+} from '../../../testing';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
@@ -2144,7 +2149,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('returns partial data results and throws away errors when errorPolicy is set to "ignore"', async () => {
+  it('returns partial data results and discards errors when errorPolicy is set to "ignore"', async () => {
     const { query, mocks } = useErrorCase({
       data: { currentUser: { id: '1', name: null } },
       graphQLErrors: [new GraphQLError('`name` could not be found')],
@@ -2170,7 +2175,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('throws away multiple graphql errors when errorPolicy is set to "ignore"', async () => {
+  it('discards multiple graphql errors when errorPolicy is set to "ignore"', async () => {
     const { query, mocks } = useErrorCase({
       graphQLErrors: [
         new GraphQLError('Fool me once'),
@@ -3465,5 +3470,1439 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(client.getObservableQueries().size).toBe(1);
+  });
+
+  it('suspends deferred queries until initial chunk loads then streams in data as it loads', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { link }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: 'Alice', __typename: 'Person' },
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      },
+    ]);
+  });
+
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    'suspends deferred queries until initial chunk loads then streams in data as it loads when using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const query = gql`
+        query {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const { result, renders } = renderSuspenseHook(
+        () => useSuspenseQuery(query, { fetchPolicy }),
+        { link }
+      );
+
+      expect(renders.suspenseCount).toBe(1);
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: { message: 'Hello world', __typename: 'Greeting' },
+          },
+          hasNext: true,
+        },
+      });
+
+      await waitFor(() => {
+        expect(result.current).toMatchObject({
+          data: {
+            greeting: { message: 'Hello world', __typename: 'Greeting' },
+          },
+          error: undefined,
+        });
+      });
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Alice', __typename: 'Person' },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      });
+
+      await waitFor(() => {
+        expect(result.current).toMatchObject({
+          data: {
+            greeting: {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+          },
+          error: undefined,
+        });
+      });
+
+      expect(renders.count).toBe(3);
+      expect(renders.suspenseCount).toBe(1);
+      expect(renders.frames).toMatchObject([
+        {
+          data: {
+            greeting: { message: 'Hello world', __typename: 'Greeting' },
+          },
+          error: undefined,
+        },
+        {
+          data: {
+            greeting: {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+          },
+          error: undefined,
+        },
+      ]);
+    }
+  );
+
+  it('does not suspend deferred queries with data in the cache and using a "cache-first" fetch policy', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello world',
+          recipient: { __typename: 'Person', name: 'Alice' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
+      { cache }
+    );
+
+    expect(result.current).toMatchObject({
+      data: {
+        greeting: {
+          message: 'Hello world',
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Alice' },
+        },
+      },
+      error: undefined,
+    });
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-first',
+          returnPartialData: true,
+        }),
+      { cache, link }
+    );
+
+    expect(result.current).toMatchObject({
+      data: {
+        greeting: {
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      },
+      error: undefined,
+    });
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              __typename: 'Greeting',
+              recipient: { name: 'Alice', __typename: 'Person' },
+            },
+            path: ['greeting'],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({ cache, link });
+
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Hello cached',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-and-network' }),
+      { client }
+    );
+
+    expect(result.current).toMatchObject({
+      data: {
+        greeting: {
+          message: 'Hello cached',
+          __typename: 'Greeting',
+          recipient: { __typename: 'Person', name: 'Cached Alice' },
+        },
+      },
+      error: undefined,
+    });
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { __typename: 'Greeting', message: 'Hello world' } },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: 'Alice', __typename: 'Person' },
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello cached',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: { __typename: 'Person', name: 'Alice' },
+          },
+        },
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('suspends deferred queries with lists and properly patches results', async () => {
+    const query = gql`
+      query {
+        greetings {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { link }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    link.simulateResult({
+      result: {
+        data: {
+          greetings: [
+            { __typename: 'Greeting', message: 'Hello world' },
+            { __typename: 'Greeting', message: 'Hello again' },
+          ],
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            { __typename: 'Greeting', message: 'Hello world' },
+            { __typename: 'Greeting', message: 'Hello again' },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              __typename: 'Greeting',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            path: ['greetings', 0],
+          },
+        ],
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              __typename: 'Greeting',
+              recipient: { __typename: 'Person', name: 'Bob' },
+            },
+            path: ['greetings', 1],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+              recipient: { __typename: 'Person', name: 'Bob' },
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greetings: [
+            { __typename: 'Greeting', message: 'Hello world' },
+            { __typename: 'Greeting', message: 'Hello again' },
+          ],
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+            },
+          ],
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Hello again',
+              recipient: { __typename: 'Person', name: 'Bob' },
+            },
+          ],
+        },
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('suspends queries with deferred fragments in lists and properly merges arrays', async () => {
+    const query = gql`
+      query DeferVariation {
+        allProducts {
+          delivery {
+            ...MyFragment @defer
+          }
+          sku
+          id
+        }
+      }
+
+      fragment MyFragment on DeliveryEstimates {
+        estimatedDelivery
+        fastestDelivery
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { link }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    link.simulateResult({
+      result: {
+        data: {
+          allProducts: [
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-federation',
+              sku: 'federation',
+            },
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-studio',
+              sku: 'studio',
+            },
+          ],
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          allProducts: [
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-federation',
+              sku: 'federation',
+            },
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+              },
+              id: 'apollo-studio',
+              sku: 'studio',
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        hasNext: true,
+        incremental: [
+          {
+            data: {
+              __typename: 'DeliveryEstimates',
+              estimatedDelivery: '6/25/2021',
+              fastestDelivery: '6/24/2021',
+            },
+            path: ['allProducts', 0, 'delivery'],
+          },
+          {
+            data: {
+              __typename: 'DeliveryEstimates',
+              estimatedDelivery: '6/25/2021',
+              fastestDelivery: '6/24/2021',
+            },
+            path: ['allProducts', 1, 'delivery'],
+          },
+        ],
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          allProducts: [
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+                estimatedDelivery: '6/25/2021',
+                fastestDelivery: '6/24/2021',
+              },
+              id: 'apollo-federation',
+              sku: 'federation',
+            },
+            {
+              __typename: 'Product',
+              delivery: {
+                __typename: 'DeliveryEstimates',
+                estimatedDelivery: '6/25/2021',
+                fastestDelivery: '6/24/2021',
+              },
+              id: 'apollo-studio',
+              sku: 'studio',
+            },
+          ],
+        },
+        error: undefined,
+      });
+    });
+  });
+
+  it('throws network errors returned by deferred queries', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      link,
+    });
+
+    link.simulateResult({
+      error: new Error('Could not fetch'),
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toEqual(new Error('Could not fetch'));
+    expect(error.graphQLErrors).toEqual([]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('throws graphql errors returned by deferred queries', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      link,
+    });
+
+    link.simulateResult({
+      result: {
+        errors: [new GraphQLError('Could not fetch greeting')],
+      },
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toBeNull();
+    expect(error.graphQLErrors).toEqual([
+      new GraphQLError('Could not fetch greeting'),
+    ]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('throws errors returned by deferred queries that include partial data', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { renders } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      link,
+    });
+
+    link.simulateResult({
+      result: {
+        data: { greeting: null },
+        errors: [new GraphQLError('Could not fetch greeting')],
+      },
+    });
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toBeNull();
+    expect(error.graphQLErrors).toEqual([
+      new GraphQLError('Could not fetch greeting'),
+    ]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('discards partial data and does not throw errors returned in incremental chunks but returns them in `error` property', async () => {
+    const query = gql`
+      query {
+        hero {
+          name
+          heroFriends {
+            id
+            name
+            ... @defer {
+              homeWorld
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { link }
+    );
+
+    link.simulateResult({
+      result: {
+        data: {
+          hero: {
+            name: 'R2-D2',
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            path: ['hero', 'heroFriends', 0],
+            errors: [
+              new GraphQLError(
+                'homeWorld for character with ID 1000 could not be fetched.',
+                { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+              ),
+            ],
+            data: {
+              homeWorld: null,
+            },
+          },
+          // This chunk is ignored since errorPolicy `none` throws away partial
+          // data
+          {
+            path: ['hero', 'heroFriends', 1],
+            data: {
+              homeWorld: 'Alderaan',
+            },
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: new ApolloError({
+          graphQLErrors: [
+            new GraphQLError(
+              'homeWorld for character with ID 1000 could not be fetched.',
+              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+            ),
+          ],
+        }),
+      });
+    });
+
+    expect(result.current.error).toBeInstanceOf(ApolloError);
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: new ApolloError({
+          graphQLErrors: [
+            new GraphQLError(
+              'homeWorld for character with ID 1000 could not be fetched.',
+              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+            ),
+          ],
+        }),
+      },
+    ]);
+  });
+
+  it('adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`', async () => {
+    const query = gql`
+      query {
+        hero {
+          name
+          heroFriends {
+            id
+            name
+            ... @defer {
+              homeWorld
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
+      { link }
+    );
+
+    link.simulateResult({
+      result: {
+        data: {
+          hero: {
+            name: 'R2-D2',
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            path: ['hero', 'heroFriends', 0],
+            errors: [
+              new GraphQLError(
+                'homeWorld for character with ID 1000 could not be fetched.',
+                { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+              ),
+            ],
+            data: {
+              homeWorld: null,
+            },
+          },
+          // Unlike the default (errorPolicy = `none`), this data will be
+          // added to the final result
+          {
+            path: ['hero', 'heroFriends', 1],
+            data: {
+              homeWorld: 'Alderaan',
+            },
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+                homeWorld: null,
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+                homeWorld: 'Alderaan',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: new ApolloError({
+          graphQLErrors: [
+            new GraphQLError(
+              'homeWorld for character with ID 1000 could not be fetched.',
+              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+            ),
+          ],
+        }),
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+                homeWorld: null,
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+                homeWorld: 'Alderaan',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: new ApolloError({
+          graphQLErrors: [
+            new GraphQLError(
+              'homeWorld for character with ID 1000 could not be fetched.',
+              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+            ),
+          ],
+        }),
+      },
+    ]);
+  });
+
+  it('adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`', async () => {
+    const query = gql`
+      query {
+        hero {
+          name
+          heroFriends {
+            id
+            name
+            ... @defer {
+              homeWorld
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
+      { link }
+    );
+
+    link.simulateResult({
+      result: {
+        data: {
+          hero: {
+            name: 'R2-D2',
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            path: ['hero', 'heroFriends', 0],
+            errors: [
+              new GraphQLError(
+                'homeWorld for character with ID 1000 could not be fetched.',
+                { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+              ),
+            ],
+            data: {
+              homeWorld: null,
+            },
+          },
+          {
+            path: ['hero', 'heroFriends', 1],
+            data: {
+              homeWorld: 'Alderaan',
+            },
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+                homeWorld: null,
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+                homeWorld: 'Alderaan',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      },
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                id: '1000',
+                name: 'Luke Skywalker',
+                homeWorld: null,
+              },
+              {
+                id: '1003',
+                name: 'Leia Organa',
+                homeWorld: 'Alderaan',
+              },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        error: undefined,
+      },
+    ]);
   });
 });

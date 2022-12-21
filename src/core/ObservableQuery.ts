@@ -784,10 +784,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     return this.last;
   }
 
-  public reobserve(
+  // For cases like suspense with a deferred query where we need a custom
+  // promise wrapped around the concast, we need access to the raw concast
+  // created from `reobserve`. This function provides the original `reobserve`
+  // functionality, but returns a concast instead of a promise. Most consumers
+  // should prefer `reobserve` instead of this function.
+  public reobserveAsConcast(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-    newNetworkStatus?: NetworkStatus,
-  ): Promise<ApolloQueryResult<TData>> {
+    newNetworkStatus?: NetworkStatus
+  ): Concast<ApolloQueryResult<TData>> {
     this.isTornDown = false;
 
     const useDisposableConcast =
@@ -860,7 +865,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     concast.addObserver(observer);
 
-    return concast.promise;
+    return concast;
+  }
+
+  public reobserve(
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus,
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.reobserveAsConcast(
+      newOptions,
+      newNetworkStatus
+    ).promise
   }
 
   // (Re)deliver the current result to this.observers without applying fetch

@@ -1995,7 +1995,7 @@ describe('useQuery Hook', () => {
       const onError = jest.fn();
       const onCompleted = jest.fn();
       const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { onError, errorPolicy: 'ignore' }),
+        () => useQuery(query, { onError, onCompleted, errorPolicy: 'ignore' }),
         { wrapper },
       );
 

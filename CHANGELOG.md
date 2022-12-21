@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.0-alpha.2
+
+### Minor Changes
+
+- [#10346](https://github.com/apollographql/apollo-client/pull/10346) [`3bcfc42d3`](https://github.com/apollographql/apollo-client/commit/3bcfc42d394b6a97900495eacdaf58c31ae96d9f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to allow `@client` fields to be sent to the link chain.
+
 ## 3.8.0-alpha.1
 
 ### Patch Changes

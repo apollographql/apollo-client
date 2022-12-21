@@ -1976,6 +1976,47 @@ describe('useQuery Hook', () => {
       expect(result.current.error).toBeUndefined();
     });
 
+    it('calls `onCompleted` with partial data but avoids calling `onError` when using an `errorPolicy` set to "ignore"', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: { hello: null },
+            errors: [new GraphQLError('Could not fetch "hello"')]
+          }
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const onCompleted = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError, errorPolicy: 'ignore' }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: null })
+      expect(result.current.error).toBeUndefined();
+
+      await waitFor(() => {
+        expect(onCompleted).toHaveBeenCalledTimes(1);
+        expect(onCompleted).toHaveBeenCalledWith({ hello: null });
+
+        expect(onError).not.toHaveBeenCalled();
+      });
+    });
+
     it('calls `onError` when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
       const query = gql`{ hello }`;
       const mocks = [

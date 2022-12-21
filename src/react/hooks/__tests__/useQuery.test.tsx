@@ -1743,6 +1743,86 @@ describe('useQuery Hook', () => {
       expect(result.current.error!.message).toBe('error');
     });
 
+    it('calls `onError` when a GraphQL error is returned', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            errors: [new GraphQLError('error')],
+          },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('error');
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+          new ApolloError({ graphQLErrors: [new GraphQLError('error')] })
+        );
+      })
+    });
+
+    it('calls `onError` when a network error has occured', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          error: new Error('Could not fetch')
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('Could not fetch');
+      expect(result.current.error!.networkError).toEqual(
+        new Error('Could not fetch')
+      );
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+          new ApolloError({ networkError: new Error('Could not fetch') })
+        );
+      })
+    });
+
     it('calls `onError` once when refetching returns a successful resuult', async () => {
       const query = gql`{ hello }`;
       const mocks = [

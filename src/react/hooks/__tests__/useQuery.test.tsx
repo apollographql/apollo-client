@@ -1743,7 +1743,7 @@ describe('useQuery Hook', () => {
       expect(result.current.error!.message).toBe('error');
     });
 
-    it('should only call onError callbacks once', async () => {
+    it('calls `onError` once when refetching returns a successful resuult', async () => {
       const query = gql`{ hello }`;
       const mocks = [
         {

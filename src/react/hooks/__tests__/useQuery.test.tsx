@@ -1772,6 +1772,7 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
 
       expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('error');
 
@@ -1810,6 +1811,7 @@ describe('useQuery Hook', () => {
       await waitForNextUpdate();
 
       expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('Could not fetch');
       expect(result.current.error!.networkError).toEqual(

@@ -1824,6 +1824,44 @@ describe('useQuery Hook', () => {
       })
     });
 
+    it('removes partial data from result when response has errors', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: { hello: null },
+            errors: [new GraphQLError('Could not fetch "hello"')]
+          }
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('Could not fetch "hello"');
+      expect(result.current.error!.graphQLErrors).toEqual([
+        new GraphQLError('Could not fetch "hello"')
+      ]);
+    });
+
     it('does not call `onError` when returning GraphQL errors while using an `errorPolicy` set to "ignore"', async () => {
       const query = gql`{ hello }`;
       const mocks = [

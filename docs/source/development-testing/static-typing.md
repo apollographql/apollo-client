@@ -1,9 +1,9 @@
 ---
 title: TypeScript with Apollo Client
-descriptions: How to generate and use TypeScript types in your application 
+descriptions: How to generate and use TypeScript types in your application
 ---
 
-As your application grows, a type system can become an essential tool for catching bugs early and improving your overall developer experience. 
+As your application grows, a type system can become an essential tool for catching bugs early and improving your overall developer experience.
 
 GraphQL uses a type system to clearly define the available data for each type and field in a GraphQL schema. Given that a GraphQL server's schema is strongly typed, we can generate TypeScript definitions automatically using a tool like [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen). We'll use our generated types to ensure type safety for the _inputs_ and _results_ of our GraphQL operations.
 
@@ -65,7 +65,7 @@ $ yarn run compile
 
 ## Typing hooks
 
-GraphQL Code Generator automatically creates a `gql` function (from the `src/__genterated__/gql.ts` file). This function enables us to type the variables that go into our React hooks, along with the results from those hooks.
+GraphQL Code Generator automatically creates a `gql` function (from the `src/__generated__/gql.ts` file). This function enables us to type the variables that go into our React hooks, along with the results from those hooks.
 
 ### `useQuery`
 
@@ -127,7 +127,7 @@ export function RocketInventoryList() {
 
 The `useQuery` hook returns an instance of `QueryResult`, which includes the `fetchMore` and `subscribeToMore` functions. See [Queries for detailed type information](../data/queries#result). Because these functions execute GraphQL operations, they accept type parameters.
 
-By default, the type parameters for `fetchMore` are the same as those for `useQuery`. Because both `fetchMore` and `useQuery` encapsulate a query operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`. 
+By default, the type parameters for `fetchMore` are the same as those for `useQuery`. Because both `fetchMore` and `useQuery` encapsulate a query operation, it's unlikely that you'll need to pass any type arguments to `fetchMore`.
 
 Expanding our previous example, notice that we don't explicitly type `fetchMore`, because it defaults to using the same type parameters as `useQuery`:
 ```tsx
@@ -177,7 +177,7 @@ export function RocketInventoryList() {
 
   React.useEffect(() => {
     subscribeToMore(
-      // variables are typed! 
+      // variables are typed!
       { document: ROCKET_STOCK_SUBSCRIPTION, variables: { year: 2019 } }
     );
   }, [subscribeToMore])
@@ -288,7 +288,7 @@ export function LatestNews() {
 
 ## Typing Render Prop components
 
-To type render prop components, you'll first define a GraphQL query using the generated `gql` function (from `src/__generated__/gql`). 
+To type render prop components, you'll first define a GraphQL query using the generated `gql` function (from `src/__generated__/gql`).
 
 This creates a type for that query and its variables, which you can then pass to your `Query` component:
 
@@ -312,7 +312,7 @@ const AllPeopleComponent = <Query<AllPeopleQuery, AllPeopleQueryVariables> query
 </Query>
 ```
 
-Our `<Query />` component's function arguments are now typed. Since we aren't mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for our typing to work! 
+Our `<Query />` component's function arguments are now typed. Since we aren't mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for our typing to work!
 
 This approach works also works for `<Mutation />` and `<Subscription />` components.
 
@@ -340,7 +340,7 @@ export const SomeQuery = () => (
 
 To type higher-order components, begin by defining your GraphQL queries with the `gql` function (from `./src/__generated__/gql`). In the below example, this generates the query and variable types (`GetCharacterQuery` and `GetCharacterQueryVariables`).
 
-Our wrapped component receives our query's result as props, and we'll need to tell our type system the _shape_ these props take. 
+Our wrapped component receives our query's result as props, and we'll need to tell our type system the _shape_ these props take.
 
 Below is an example of setting types for an operation using the `graphql` higher-order component:
 
@@ -387,7 +387,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 > The following logic also works for query, mutation, and subscription higher-order components!
 ### Options
 
-Typically, our wrapper component's props pass in a query's variables. Wherever our application uses our wrapper component, we want to ensure that we correctly type those passed-in arguments. 
+Typically, our wrapper component's props pass in a query's variables. Wherever our application uses our wrapper component, we want to ensure that we correctly type those passed-in arguments.
 
 Below is an example of setting a type for a component's props:
 
@@ -574,9 +574,9 @@ export const withCharacter = graphql<GetCharacterQueryVariables, GetCharacterQue
 });
 ```
 
-## Using `TypeDocumentNode`
+## Using `TypedDocumentNode`
 
-In TypeScript, all APIs that intake `DocumentNode` can alternatively take `TypeDocumentNode<Data, Variables>`. This type has the same JavaScript representation but enables APIs to infer the data and variable types (instead of making you specify types upon invocation).
+In TypeScript, all APIs that intake `DocumentNode` can alternatively take `TypedDocumentNode<Data, Variables>`. This type has the same JavaScript representation but enables APIs to infer the data and variable types (instead of making you specify types upon invocation).
 
 This technique enables us to modify the [`useQuery` example](#usequery) above to use a type inference:
 

@@ -23,6 +23,7 @@ import {
   MockedProvider,
   MockSubscriptionLink,
   mockSingleLink,
+  tick,
 } from '../../../testing';
 import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
@@ -1821,6 +1822,85 @@ describe('useQuery Hook', () => {
           new ApolloError({ networkError: new Error('Could not fetch') })
         );
       })
+    });
+
+    it('does not call `onError` when returning GraphQL errors while using an `errorPolicy` set to "ignore"', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            errors: [new GraphQLError('error')]
+          }
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError, errorPolicy: 'ignore' }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.error).toBeUndefined();
+
+      await tick();
+
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    it('calls `onError` when a network error has occurred while using an `errorPolicy` set to "ignore"', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          error: new Error('Could not fetch')
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
+      );
+
+      const onError = jest.fn();
+      const { result, waitForNextUpdate } = renderHook(
+        () => useQuery(query, { onError, errorPolicy: 'ignore' }),
+        { wrapper },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.error).toBe(undefined);
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.error).toBeInstanceOf(ApolloError);
+      expect(result.current.error!.message).toBe('Could not fetch');
+      expect(result.current.error!.networkError).toEqual(
+        new Error('Could not fetch')
+      );
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+          new ApolloError({ networkError: new Error('Could not fetch') })
+        );
+      });
     });
 
     it('calls `onError` once when refetching returns a successful result', async () => {

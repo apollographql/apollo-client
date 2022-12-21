@@ -1081,7 +1081,7 @@ describe('HttpLink', () => {
       });
 
       expect(errorHandler).toHaveBeenCalledWith(
-        new Error('HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option.')
+        new Error('HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`.')
       );
     })
   });

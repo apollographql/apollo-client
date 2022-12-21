@@ -1971,6 +1971,7 @@ describe('useQuery Hook', () => {
 
       await waitForNextUpdate();
 
+      expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: null })
       expect(result.current.error).toBeUndefined();
     });

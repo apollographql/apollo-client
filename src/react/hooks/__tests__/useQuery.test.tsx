@@ -1781,7 +1781,7 @@ describe('useQuery Hook', () => {
         expect(onError).toHaveBeenCalledWith(
           new ApolloError({ graphQLErrors: [new GraphQLError('error')] })
         );
-      })
+      });
     });
 
     it('calls `onError` when a network error has occured', async () => {
@@ -1823,7 +1823,7 @@ describe('useQuery Hook', () => {
         expect(onError).toHaveBeenCalledWith(
           new ApolloError({ networkError: new Error('Could not fetch') })
         );
-      })
+      });
     });
 
     it('removes partial data from result when response has errors', async () => {

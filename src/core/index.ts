@@ -24,7 +24,10 @@ export {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
 } from './watchQueryOptions';
-export { NetworkStatus } from './networkStatus';
+export { 
+  NetworkStatus,
+  isNetworkRequestInFlight
+} from './networkStatus';
 export * from './types';
 export {
   Resolver,

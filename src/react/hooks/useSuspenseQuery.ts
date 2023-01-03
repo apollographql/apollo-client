@@ -4,7 +4,6 @@ import {
   useCallback,
   useMemo,
   useState,
-  useLayoutEffect,
 } from 'react';
 import { equal } from '@wry/equality';
 import {
@@ -24,6 +23,7 @@ import {
   Concast,
   isNonEmptyArray,
   hasDirectives,
+  useIsomorphicLayoutEffect,
 } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -309,7 +309,7 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
   //
   // Unlike useEffect, useLayoutEffect will run its cleanup and initialization
   // functions each time a component is suspended.
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     isMountedRef.current = true;
 
     return () => {

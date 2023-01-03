@@ -92,6 +92,7 @@ export * from './common/arrays';
 export * from './common/objects';
 export * from './common/errorHandling';
 export * from './common/canUse';
+export * from './common/hooks';
 export * from './common/compact';
 export * from './common/makeUniqueId';
 export * from './common/stringifyForDisplay';

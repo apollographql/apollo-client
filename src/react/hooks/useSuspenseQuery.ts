@@ -23,7 +23,6 @@ import {
   Concast,
   isNonEmptyArray,
   hasDirectives,
-  useIsomorphicLayoutEffect,
 } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -31,7 +30,7 @@ import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
-import { useDeepMemo } from './internal';
+import { useDeepMemo, useIsomorphicLayoutEffect } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 

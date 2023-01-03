@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.0-alpha.3
+
+### Patch Changes
+
+- [#10399](https://github.com/apollographql/apollo-client/pull/10399) [`652a1ae08`](https://github.com/apollographql/apollo-client/commit/652a1ae0868e4a5b75b9ff656d26f57eeca1081a) Thanks [@alessbell](https://github.com/alessbell)! - Silence useLayoutEffect warning when useSuspenseQuery runs on server
+
 ## 3.8.0-alpha.2
 
 ### Minor Changes

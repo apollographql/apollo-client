@@ -83,14 +83,17 @@ export function useSuspenseQuery_experimental<
   const hasPartialResult = result.data && result.partial;
   const usePartialResult = returnPartialData && hasPartialResult;
 
-  if (
-    result.error &&
-    errorPolicy === 'none' &&
+  const allowsThrownErrors =
     // If we've got a deferred query that errors on an incremental chunk, we
     // will have a partial result before the error is collected. We do not want
     // to throw errors that have been returned from incremental chunks. Instead
     // we offload those errors to the `error` property.
-    (!deferred || !hasPartialResult)
+    errorPolicy === 'none' && (!deferred || !hasPartialResult);
+
+  if (
+    result.error &&
+    // Always throw network errors regardless of the error policy
+    (result.error.networkError || allowsThrownErrors)
   ) {
     throw result.error;
   }

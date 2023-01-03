@@ -64,6 +64,10 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
         run: npm run changeset-publish
 
+      - name: Echo values from changesets step
+        if: steps.changesets.outcome == 'success'
+        run: echo "${{steps.changesets.outcome}} v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
+
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'
         id: slack
@@ -75,6 +79,6 @@ jobs:
           # a comma-delimited list of channel IDs
           channel-id: 'C01PS0CB41G'
           # For posting a simple plain text message
-          slack-message: "Published @apollo/client v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
+          slack-message: "Published v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }} 🚀"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

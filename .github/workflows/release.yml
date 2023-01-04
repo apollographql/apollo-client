@@ -40,10 +40,14 @@ jobs:
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
-          publish: npm run changeset-publish
+          publish: npm run changeset-publish -- --tag next
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Echo values from changesets step
+        if: steps.changesets.outcome == 'success'
+        run: echo "${{steps.changesets.outcome}} v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
 
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success' && steps.changesets.outputs.published == 'true'
@@ -56,6 +60,6 @@ jobs:
           # a comma-delimited list of channel IDs
           channel-id: 'C01PS0CB41G'
           # For posting a simple plain text message
-          slack-message: "Published @apollo/client v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
+          slack-message: "Published v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

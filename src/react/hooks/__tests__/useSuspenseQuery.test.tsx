@@ -2097,30 +2097,32 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it('does not throw or return network errors when errorPolicy is set to "ignore"', async () => {
-    const { query, mocks } = useErrorCase({
-      networkError: new Error('Could not fetch'),
-    });
+  it('throws network errors when errorPolicy is set to "ignore"', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const networkError = new Error('Could not fetch');
 
-    const { result, renders } = renderSuspenseHook(
+    const { query, mocks } = useErrorCase({ networkError });
+
+    const { renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        data: undefined,
-        error: undefined,
-      });
+      expect(renders.errorCount).toBe(1);
     });
 
-    expect(renders.errorCount).toBe(0);
-    expect(renders.errors).toEqual([]);
-    expect(renders.count).toBe(2);
+    expect(renders.errors.length).toBe(1);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
-      { data: undefined, error: undefined },
-    ]);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error!.networkError).toEqual(networkError);
+    expect(error!.graphQLErrors).toEqual([]);
+
+    consoleSpy.mockRestore();
   });
 
   it('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
@@ -2149,7 +2151,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('returns partial data results and discards errors when errorPolicy is set to "ignore"', async () => {
+  it('returns partial data results and discards GraphQL errors when errorPolicy is set to "ignore"', async () => {
     const { query, mocks } = useErrorCase({
       data: { currentUser: { id: '1', name: null } },
       graphQLErrors: [new GraphQLError('`name` could not be found')],
@@ -2200,36 +2202,33 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('does not throw and returns network errors when errorPolicy is set to "all"', async () => {
+  it('throws network errors when errorPolicy is set to "all"', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
     const networkError = new Error('Could not fetch');
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { result, renders } = renderSuspenseHook(
+    const { renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: 'all' }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        data: undefined,
-        error: new ApolloError({ networkError }),
-      });
+      expect(renders.errorCount).toBe(1);
     });
 
-    expect(renders.errorCount).toBe(0);
-    expect(renders.errors).toEqual([]);
-    expect(renders.count).toBe(2);
+    expect(renders.errors.length).toBe(1);
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
-      { data: undefined, error: new ApolloError({ networkError }) },
-    ]);
+    expect(renders.frames).toEqual([]);
 
-    const { error } = result.current;
+    const [error] = renders.errors as ApolloError[];
 
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toEqual(networkError);
     expect(error!.graphQLErrors).toEqual([]);
+
+    consoleSpy.mockRestore();
   });
 
   it('does not throw and returns graphql errors when errorPolicy is set to "all"', async () => {

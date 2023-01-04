@@ -506,9 +506,11 @@ class InternalState<TData, TVariables> {
     previousResult?: ApolloQueryResult<TData>
   ) {
     if (!result.loading) {
+      const error = this.toApolloError(result);
+
       // wait a tick in case we are in the middle of rendering a component
       Promise.resolve().then(() => {
-        if (result.error) {
+        if (error) {
           this.onError(result.error);
         } else if (
           result.data &&
@@ -521,6 +523,12 @@ class InternalState<TData, TVariables> {
         invariant.warn(error);
       });
     }
+  }
+
+  private toApolloError(result: ApolloQueryResult<TData>): ApolloError | undefined {
+    return isNonEmptyArray(result.errors)
+      ? new ApolloError({ graphQLErrors: result.errors })
+      : result.error
   }
 
   private getCurrentResult(): ApolloQueryResult<TData> {

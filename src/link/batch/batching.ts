@@ -32,7 +32,7 @@ export class OperationBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   private batchesByKey = new Map<string, RequestBatch>();
 
-  private scheduledBatchTimer: ReturnType<typeof setTimeout>;
+  private scheduledBatchTimerByKey = new Map<string, ReturnType<typeof setTimeout>>();
   private batchDebounce?: boolean;
   private batchInterval?: number;
   private batchMax: number;
@@ -211,9 +211,9 @@ export class OperationBatcher {
   }
 
   private scheduleQueueConsumption(key: string): void {
-    clearTimeout(this.scheduledBatchTimer);
-    this.scheduledBatchTimer = setTimeout(() => {
+    clearTimeout(this.scheduledBatchTimerByKey.get(key));
+    this.scheduledBatchTimerByKey.set(key, setTimeout(() => {
       this.consumeQueue(key);
-    }, this.batchInterval);
+    }, this.batchInterval));
   }
 }

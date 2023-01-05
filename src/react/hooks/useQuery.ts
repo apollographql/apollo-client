@@ -511,7 +511,7 @@ class InternalState<TData, TVariables> {
       // wait a tick in case we are in the middle of rendering a component
       Promise.resolve().then(() => {
         if (error) {
-          this.onError(result.error);
+          this.onError(error);
         } else if (
           result.data &&
           previousResult?.networkStatus !== result.networkStatus &&

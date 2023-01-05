@@ -4100,6 +4100,49 @@ describe('useQuery Hook', () => {
       expect(linkFn).toHaveBeenCalledTimes(1);
     });
 
+    it('should not make network requests when `skip` is truthy', async () => {
+      const linkFn = jest.fn();
+      const link = new ApolloLink((o, f) => {
+        linkFn();
+        return f ? f(o) : null;
+      }).concat(mockSingleLink(...mocks));
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const wrapper = ({ children }: any) => (
+        <ApolloProvider client={client}>
+          {children}
+        </ApolloProvider>
+      );
+
+      const { result, rerender, waitForNextUpdate } = renderHook(
+        ({ skip }) => useQuery(query, { skip, variables: { someVar: true } }),
+        { wrapper, initialProps: { skip: 'true' as any } },
+      );
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toBe(undefined);
+
+      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+
+      expect(linkFn).not.toHaveBeenCalled();
+
+      // Ensure skip as a falsey value starts the network request
+      rerender({ skip: '' });
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+
+      await waitForNextUpdate();
+
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: 'world' });
+      expect(linkFn).toHaveBeenCalledTimes(1);
+    });
+
     it('should tear down the query if `skip` is `true`', async () => {
       const client = new ApolloClient({
         link: new ApolloLink(() => Observable.of({ data: { hello: 'world' } })),

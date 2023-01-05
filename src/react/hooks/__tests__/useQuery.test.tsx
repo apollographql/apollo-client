@@ -4077,8 +4077,8 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip, variables }) => useQuery(query, { skip, variables }),
-        { wrapper, initialProps: { skip: true, variables: undefined as any } },
+        ({ skip }) => useQuery(query, { skip }),
+        { wrapper, initialProps: { skip: true } },
       );
 
       expect(result.current.loading).toBe(false);
@@ -4088,7 +4088,7 @@ describe('useQuery Hook', () => {
 
       expect(linkFn).not.toHaveBeenCalled();
 
-      rerender({ skip: false, variables: { someVar: true } });
+      rerender({ skip: false });
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
@@ -4119,7 +4119,7 @@ describe('useQuery Hook', () => {
       );
 
       const { result, rerender, waitForNextUpdate } = renderHook(
-        ({ skip }) => useQuery(query, { skip, variables: { someVar: true } }),
+        ({ skip }) => useQuery(query, { skip }),
         { wrapper, initialProps: { skip: 'true' as any } },
       );
 

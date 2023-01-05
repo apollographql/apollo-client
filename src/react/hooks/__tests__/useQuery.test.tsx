@@ -4064,6 +4064,7 @@ describe('useQuery Hook', () => {
         linkFn();
         return f ? f(o) : null;
       }).concat(mockSingleLink(...mocks));
+
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
@@ -4077,19 +4078,25 @@ describe('useQuery Hook', () => {
 
       const { result, rerender, waitForNextUpdate } = renderHook(
         ({ skip, variables }) => useQuery(query, { skip, variables }),
-        { wrapper, initialProps: { skip: false, variables: undefined as any } },
+        { wrapper, initialProps: { skip: true, variables: undefined as any } },
       );
 
-      expect(result.current.loading).toBe(true);
+      expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
+
+      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+
+      expect(linkFn).not.toHaveBeenCalled();
+
+      rerender({ skip: false, variables: { someVar: true } });
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
 
       await waitForNextUpdate();
+
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
-
-      rerender({ skip: true, variables: { someVar: true } });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
       expect(linkFn).toHaveBeenCalledTimes(1);
     });
 

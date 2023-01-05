@@ -4059,11 +4059,13 @@ describe('useQuery Hook', () => {
     });
 
     it('should not make network requests when `skip` is `true`', async () => {
-      const linkFn = jest.fn();
-      const link = new ApolloLink((o, f) => {
-        linkFn();
-        return f ? f(o) : null;
-      }).concat(mockSingleLink(...mocks));
+      const requestHandler = jest.fn((operation, forward) => {
+        return forward(operation)
+      });
+
+      const link = new ApolloLink(requestHandler).concat(
+        mockSingleLink(...mocks)
+      );
 
       const client = new ApolloClient({
         link,
@@ -4086,7 +4088,7 @@ describe('useQuery Hook', () => {
 
       await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
 
-      expect(linkFn).not.toHaveBeenCalled();
+      expect(requestHandler).not.toHaveBeenCalled();
 
       rerender({ skip: false });
 
@@ -4097,15 +4099,17 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
-      expect(linkFn).toHaveBeenCalledTimes(1);
+      expect(requestHandler).toHaveBeenCalledTimes(1);
     });
 
     it('should not make network requests when `skip` is truthy', async () => {
-      const linkFn = jest.fn();
-      const link = new ApolloLink((o, f) => {
-        linkFn();
-        return f ? f(o) : null;
-      }).concat(mockSingleLink(...mocks));
+      const requestHandler = jest.fn((operation, forward) => {
+        return forward(operation);
+      });
+
+      const link = new ApolloLink(requestHandler).concat(
+        mockSingleLink(...mocks)
+      );
 
       const client = new ApolloClient({
         link,
@@ -4128,7 +4132,7 @@ describe('useQuery Hook', () => {
 
       await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
 
-      expect(linkFn).not.toHaveBeenCalled();
+      expect(requestHandler).not.toHaveBeenCalled();
 
       // Ensure skip as a falsey value starts the network request
       rerender({ skip: '' });
@@ -4140,7 +4144,7 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
-      expect(linkFn).toHaveBeenCalledTimes(1);
+      expect(requestHandler).toHaveBeenCalledTimes(1);
     });
 
     it('should tear down the query if `skip` is `true`', async () => {

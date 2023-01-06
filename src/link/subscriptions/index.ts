@@ -35,7 +35,7 @@ import { ApolloLink, Operation, FetchResult } from "../core";
 import { Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 
-function isLikeCloseEvent(err: unknown): err is Event & {target: WebSocket } {
+function isLikeCloseEvent(err: unknown): err is Event & {target: WebSocket, code?: number, reason?: string } {
   return err instanceof Event && err.target instanceof WebSocket && err.target.readyState === WebSocket.CLOSED;
 }
 

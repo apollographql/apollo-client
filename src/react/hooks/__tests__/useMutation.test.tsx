@@ -2230,7 +2230,7 @@ describe('useMutation Hook', () => {
     const variables = {
       description: 'Get milk!'
     };
-    it.skip('resolves a deferred mutation with the full result', async () => {
+    it('resolves a deferred mutation with the full result', async () => {
       const errorSpy = jest.spyOn(console, "error");
       const link = new MockSubscriptionLink();
 

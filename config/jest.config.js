@@ -39,8 +39,6 @@ const react18TestFileIgnoreList = [
   'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
   'src/react/hoc/__tests__/queries/skip.test.tsx',
   'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
-  // failing hooks tests (1)
-  'src/react/hooks/__tests__/useQuery.test.tsx',
   // failing components tests (1)
   'src/react/components/__tests__/client/Query.test.tsx',
 ];

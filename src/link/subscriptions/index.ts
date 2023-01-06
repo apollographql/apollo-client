@@ -28,24 +28,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { print } from "graphql";
+import { GraphQLError, print } from "graphql";
 import type { Client } from "graphql-ws";
 
 import { ApolloLink, Operation, FetchResult } from "../core";
-import { isNonNullObject, Observable } from "../../utilities";
+import { Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 
-interface LikeCloseEvent {
-  /** Returns the WebSocket connection close code provided by the server. */
-  readonly code: number;
-  /** Returns the WebSocket connection close reason provided by the server. */
-  readonly reason: string;
+function isLikeCloseEvent(err: unknown): err is Event & {target: WebSocket } {
+  return err instanceof Event && err.target instanceof WebSocket && err.target.readyState === WebSocket.CLOSED;
 }
-
-function isLikeCloseEvent(val: unknown): val is LikeCloseEvent {
-  return isNonNullObject(val) && 'code' in val && 'reason' in val;
-}
-
 
 export class GraphQLWsLink extends ApolloLink {
   constructor(public readonly client: Client) {
@@ -59,24 +51,28 @@ export class GraphQLWsLink extends ApolloLink {
         {
           next: observer.next.bind(observer),
           complete: observer.complete.bind(observer),
-          error: (err) => {
+          error: (err: any) => {
             if (err instanceof Error) {
               return observer.error(err);
             }
 
             if (isLikeCloseEvent(err)) {
+              // reason will be available on clean closes
+              let msg = 'GraphQL WebSocket connection closed.';
+              if ('code' in err) msg += ' Code: ' + err.code;
+              if ('reason' in err) msg += ' Reason: ' + err.reason;
+              return observer.error(new ApolloError({ networkError: new Error(msg) }));
+            }
+
+            const errArray = Array.isArray(err) ? err : [err];
+            if (errArray.every((err) => err instanceof GraphQLError)) {
               return observer.error(
-                // reason will be available on clean closes
-                new Error(
-                  `Socket closed with event ${err.code} ${err.reason || ""}`
-                )
+                new ApolloError({ graphQLErrors: errArray })
               );
             }
 
             return observer.error(
-              new ApolloError({
-                graphQLErrors: Array.isArray(err) ? err : [err],
-              })
+              new Error("An unknown error occurred on the GraphQL WebSocket link")
             );
           },
         }

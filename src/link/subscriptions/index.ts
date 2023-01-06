@@ -51,7 +51,7 @@ export class GraphQLWsLink extends ApolloLink {
         {
           next: observer.next.bind(observer),
           complete: observer.complete.bind(observer),
-          error: (err: any) => {
+          error: (err: unknown) => {
             if (err instanceof Error) {
               return observer.error(err);
             }

@@ -1,5 +1,5 @@
-import React, { PropsWithChildren } from 'react';
-import { renderHook } from '@testing-library/react-hooks';
+import React from 'react';
+import { renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
@@ -33,7 +33,7 @@ describe('useSubscription Hook', () => {
     });
 
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
@@ -48,21 +48,25 @@ describe('useSubscription Hook', () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
     setTimeout(() => link.simulateResult(results[0]));
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.data).toEqual(results[0].result.data);
+    }, { interval: 1 });
     expect(result.current.loading).toBe(false);
-    expect(result.current.data).toEqual(results[0].result.data);
     setTimeout(() => link.simulateResult(results[1]));
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.data).toEqual(results[1].result.data);
+    }, { interval: 1 });
     expect(result.current.loading).toBe(false);
-    expect(result.current.data).toEqual(results[1].result.data);
     setTimeout(() => link.simulateResult(results[2]));
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.data).toEqual(results[2].result.data);
+    }, { interval: 1 });
     expect(result.current.loading).toBe(false);
-    expect(result.current.data).toEqual(results[2].result.data);
     setTimeout(() => link.simulateResult(results[3]));
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.data).toEqual(results[3].result.data);
+    }, { interval: 1 });
     expect(result.current.loading).toBe(false);
-    expect(result.current.data).toEqual(results[3].result.data);
   });
 
   it('should call onError after error results', async () => {
@@ -91,7 +95,7 @@ describe('useSubscription Hook', () => {
 
 
     const onError = jest.fn();
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useSubscription(subscription, { onError }),
       {
         wrapper: ({ children }) => (
@@ -106,14 +110,15 @@ describe('useSubscription Hook', () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
     setTimeout(() => link.simulateResult(results[0]));
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current.loading).toBe(false);
     expect(result.current.data).toEqual(results[0].result.data);
     setTimeout(() => link.simulateResult(errorResult));
-    await waitForNextUpdate();
-    setTimeout(() => {
+    await waitFor(() => {
       expect(onError).toHaveBeenCalledTimes(1);
-    });
+    }, { interval: 1 });
   });
 
   it('should call onComplete after subscription is complete', async () => {
@@ -136,7 +141,7 @@ describe('useSubscription Hook', () => {
     });
 
     const onComplete = jest.fn();
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () => useSubscription(subscription, { onComplete }),
       {
         wrapper: ({ children }) => (
@@ -150,9 +155,9 @@ describe('useSubscription Hook', () => {
     link.simulateResult(results[0]);
 
     setTimeout(() => link.simulateComplete());
-    await waitForNextUpdate();
-
-    expect(onComplete).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    }, { interval: 1 });
   });
 
   it('should cleanup after the subscription component has been unmounted', async () => {
@@ -177,7 +182,7 @@ describe('useSubscription Hook', () => {
     });
 
     const onData = jest.fn();
-    const { result, unmount, waitForNextUpdate } = renderHook(
+    const { result, unmount } = renderHook(
       () => useSubscription(subscription, {
         onData,
       }),
@@ -194,8 +199,9 @@ describe('useSubscription Hook', () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
     setTimeout(() => link.simulateResult(results[0]));
-    await waitForNextUpdate();
-    expect(result.current.loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(results[0].result.data);
     setTimeout(() => {
@@ -230,13 +236,8 @@ describe('useSubscription Hook', () => {
     });
 
     const onData = jest.fn();
-    const wrapper: React.FC<PropsWithChildren<{ variables: { foo: string } }>> = ({ children }) => (
-      <ApolloProvider client={client}>
-        {children}
-      </ApolloProvider>
-    );
 
-    const { result, unmount, waitForNextUpdate, rerender } = renderHook(
+    const { result, unmount, rerender } = renderHook(
       ({ variables }) => useSubscription(subscription, {
         variables,
         skip: true,
@@ -248,7 +249,11 @@ describe('useSubscription Hook', () => {
             foo: 'bar'
           }
         },
-        wrapper
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        )
       },
     );
 
@@ -257,8 +262,9 @@ describe('useSubscription Hook', () => {
     expect(result.current.data).toBe(undefined);
 
     rerender({ variables: { foo: 'bar2' }});
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
+    await expect(waitFor(() => {
+      expect(result.current.data).not.toBe(undefined);
+    }, { interval: 1, timeout: 20 })).rejects.toThrow();
 
     expect(onSetup).toHaveBeenCalledTimes(0);
     expect(onData).toHaveBeenCalledTimes(0);
@@ -288,15 +294,14 @@ describe('useSubscription Hook', () => {
       link,
       cache: new Cache({ addTypename: false })
     });
-    const wrapper: React.FC<PropsWithChildren<{ skip: boolean }>> = ({ children }) => (
-      <ApolloProvider client={client}>
-        {children}
-      </ApolloProvider>
-    );
-    const { result, rerender, waitForNextUpdate } = renderHook(
+    const { result, rerender } = renderHook(
       ({ skip }) => useSubscription(subscription, { skip }),
       {
-        wrapper,
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        ),
         initialProps: { skip: true },
       },
     );
@@ -314,8 +319,9 @@ describe('useSubscription Hook', () => {
       link.simulateResult(results[0]);
     });
 
-    await waitForNextUpdate();
-    expect(result.current.loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current.data).toEqual(results[0].result.data);
     expect(result.current.error).toBe(undefined);
 
@@ -331,8 +337,9 @@ describe('useSubscription Hook', () => {
     expect(result.current.data).toBe(undefined);
     expect(result.current.error).toBe(undefined);
 
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
+    await expect(waitFor(() => {
+      expect(result.current.data).not.toBe(undefined);
+    }, { interval: 1, timeout: 20 })).rejects.toThrow();
 
     // ensure state persists across rerenders
     rerender({ skip: false });
@@ -344,8 +351,9 @@ describe('useSubscription Hook', () => {
       link.simulateResult(results[1]);
     });
 
-    await waitForNextUpdate();
-    expect(result.current.loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current.data).toEqual(results[1].result.data);
     expect(result.current.error).toBe(undefined);
   });
@@ -374,7 +382,7 @@ describe('useSubscription Hook', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useSubscription(subscription, {
         context: { make: 'Audi' },
       }),
@@ -394,19 +402,21 @@ describe('useSubscription Hook', () => {
       link.simulateResult(results[0]);
     }, 100);
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.data).toEqual(results[0].result.data);
+    }, { interval: 1 });
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toEqual(results[0].result.data);
 
     setTimeout(() => {
       link.simulateResult(results[1]);
     });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.data).toEqual(results[1].result.data);
+    }, { interval: 1 });
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toEqual(results[1].result.data);
 
     expect(context!).toBe('Audi');
   });
@@ -430,7 +440,7 @@ describe('useSubscription Hook', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => ({
         sub1: useSubscription(subscription),
         sub2: useSubscription(subscription),
@@ -455,10 +465,11 @@ describe('useSubscription Hook', () => {
       link.simulateResult(results[0]);
     });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.sub1.data).toEqual(results[0].result.data);
+    }, { interval: 1 });
     expect(result.current.sub1.loading).toBe(false);
     expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toEqual(results[0].result.data);
     expect(result.current.sub2.loading).toBe(false);
     expect(result.current.sub2.error).toBe(undefined);
     expect(result.current.sub2.data).toEqual(results[0].result.data);
@@ -467,10 +478,11 @@ describe('useSubscription Hook', () => {
       link.simulateResult(results[1]);
     });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.sub1.data).toEqual(results[1].result.data);
+    }, { interval: 1 });
     expect(result.current.sub1.loading).toBe(false);
     expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toEqual(results[1].result.data);
     expect(result.current.sub2.loading).toBe(false);
     expect(result.current.sub2.error).toBe(undefined);
     expect(result.current.sub2.data).toEqual(results[1].result.data);
@@ -493,7 +505,7 @@ describe('useSubscription Hook', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
@@ -512,13 +524,11 @@ describe('useSubscription Hook', () => {
     expect(result.current.loading).toBe(true);
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
-    await waitForNextUpdate();
-    expect(result.current.loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(null);
-
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
     expect(errorSpy.mock.calls[0][0]).toBe(
@@ -543,7 +553,7 @@ describe('useSubscription Hook', () => {
       cache: new Cache({ addTypename: false }),
     });
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => ({
         sub1: useSubscription(subscription),
         sub2: useSubscription(subscription),
@@ -573,9 +583,10 @@ describe('useSubscription Hook', () => {
       link.simulateResult({ result: { data: null } }, /* complete */ true);
     });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.sub1.loading).toBe(false);
+    }, { interval: 1 });
 
-    expect(result.current.sub1.loading).toBe(false);
     expect(result.current.sub1.error).toBe(undefined);
     expect(result.current.sub1.data).toBe(null);
     expect(result.current.sub2.loading).toBe(false);
@@ -584,9 +595,6 @@ describe('useSubscription Hook', () => {
     expect(result.current.sub3.loading).toBe(false);
     expect(result.current.sub3.error).toBe(undefined);
     expect(result.current.sub3.data).toBe(null);
-
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
 
     expect(errorSpy).toHaveBeenCalledTimes(3);
     expect(errorSpy.mock.calls[0][0]).toBe(
@@ -660,7 +668,7 @@ describe('useSubscription Hook', () => {
     const onData = jest.fn();
     const onSubscriptionData = jest.fn();
 
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () => useSubscription(subscription, {
         onData,
         onSubscriptionData,
@@ -675,12 +683,10 @@ describe('useSubscription Hook', () => {
     );
 
     setTimeout(() => link.simulateResult(results[0]));
-    await waitForNextUpdate();
-
-    setTimeout(() => {
+    await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
       expect(onSubscriptionData).toHaveBeenCalledTimes(0);
-    });
+    }, { interval: 1 });
   });
 
   test("uses 'onSubscriptionData' when 'onData' is absent", async () => {
@@ -707,7 +713,7 @@ describe('useSubscription Hook', () => {
 
     const onSubscriptionData = jest.fn();
 
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () => useSubscription(subscription, {
         onSubscriptionData,
       }),
@@ -721,11 +727,9 @@ describe('useSubscription Hook', () => {
     );
 
     setTimeout(() => link.simulateResult(results[0]));
-    await waitForNextUpdate();
-
-    setTimeout(() => {
+    await waitFor(() => {
       expect(onSubscriptionData).toHaveBeenCalledTimes(1);
-    });
+    }, { interval: 1 });
   });
 
   test("only warns once using `onSubscriptionData`", () => {
@@ -819,7 +823,7 @@ describe('useSubscription Hook', () => {
     const onComplete = jest.fn();
     const onSubscriptionComplete = jest.fn();
 
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () => useSubscription(subscription, {
         onComplete,
         onSubscriptionComplete,
@@ -836,10 +840,11 @@ describe('useSubscription Hook', () => {
     link.simulateResult(results[0]);
 
     setTimeout(() => link.simulateComplete());
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
+    }, { interval: 1 });
 
-    expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
   });
 
   test("uses 'onSubscriptionComplete' when 'onComplete' is absent", async () => {
@@ -864,7 +869,7 @@ describe('useSubscription Hook', () => {
 
     const onSubscriptionComplete = jest.fn();
 
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () => useSubscription(subscription, {
         onSubscriptionComplete,
       }),
@@ -880,9 +885,10 @@ describe('useSubscription Hook', () => {
     link.simulateResult(results[0]);
 
     setTimeout(() => link.simulateComplete());
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
+    }, { interval: 1 });
 
-    expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
   });
 
   test("only warns once using `onSubscriptionComplete`", () => {

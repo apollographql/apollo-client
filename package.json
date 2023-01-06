@@ -106,7 +106,6 @@
     "@rollup/plugin-node-resolve": "11.2.1",
     "@testing-library/react": "13.4.0",
     "@testing-library/react-12": "npm:@testing-library/react@^12",
-    "@testing-library/react-hooks": "8.0.1",
     "@testing-library/user-event": "14.4.3",
     "@types/bytes": "3.1.1",
     "@types/fast-json-stable-stringify": "2.0.0",

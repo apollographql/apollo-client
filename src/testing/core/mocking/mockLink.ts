@@ -139,13 +139,14 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
             // example, the default implementation of onError calls
             // observer.error(configError) and then returns false to
             // prevent this extra (harmless) observer.error call.
-            if (this.onErrorCustomHandler(configError, {
-              key,
-              mockedResponses,
-              operation,
-              unmatchedVars,
-            }) !== false
-            && this.onError(configError, observer) !== false) {
+            const shouldPassToOnError = typeof this.onErrorCustomHandler === 'undefined'
+              || this.onErrorCustomHandler(configError, {
+                key,
+                mockedResponses,
+                operation,
+                unmatchedVars,
+              }) !== false;
+            if (shouldPassToOnError && this.onError(configError, observer) !== false) {
               throw configError;
             }
           } catch (error) {

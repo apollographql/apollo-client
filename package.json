@@ -59,7 +59,7 @@
     "changeset-version": "changeset version && npm i"
   },
   "engines": {
-    "npm": "^7.20.3 || ^8.0.0"
+    "npm": "^9.0.0"
   },
   "peerDependencies": {
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0",

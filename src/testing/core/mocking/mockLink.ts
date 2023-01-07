@@ -29,6 +29,13 @@ export interface MockedResponse<TData = Record<string, any>> {
   newData?: ResultFunction<FetchResult>;
 }
 
+export interface MockOnErrorData {
+  key: string;
+  mockedResponses: ReadonlyArray<MockedResponse>;
+  operation: Operation;
+  unmatchedVars: Array<Record<string, any>>;
+}
+
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
   const queryString =
     request.query &&
@@ -40,14 +47,19 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 export class MockLink extends ApolloLink {
   public operation: Operation;
   public addTypename: Boolean = true;
+  public onErrorCustomHandler: (error: Error, mockOnErrorData: MockOnErrorData) => Boolean;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse>,
-    addTypename: Boolean = true
+    addTypename: Boolean = true,
+    onErrorCustomHandler?: (error: Error, mockOnErrorData: MockOnErrorData) => Boolean,
   ) {
     super();
     this.addTypename = addTypename;
+    if (onErrorCustomHandler) {
+      this.onErrorCustomHandler = onErrorCustomHandler;
+    }
     if (mockedResponses) {
       mockedResponses.forEach(mockedResponse => {
         this.addMockedResponse(mockedResponse);
@@ -127,7 +139,13 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
             // example, the default implementation of onError calls
             // observer.error(configError) and then returns false to
             // prevent this extra (harmless) observer.error call.
-            if (this.onError(configError, observer) !== false) {
+            if (this.onErrorCustomHandler(configError, {
+              key,
+              mockedResponses,
+              operation,
+              unmatchedVars,
+            }) !== false
+            && this.onError(configError, observer) !== false) {
               throw configError;
             }
           } catch (error) {

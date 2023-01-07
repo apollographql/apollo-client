@@ -3,7 +3,7 @@ import * as React from 'react';
 import { ApolloClient, DefaultOptions } from '../../core';
 import { InMemoryCache as Cache } from '../../cache';
 import { ApolloProvider } from '../../react/context';
-import { MockLink, MockedResponse } from '../core';
+import { MockLink, MockOnErrorData, MockedResponse } from '../core';
 import { ApolloLink } from '../../link/core';
 import { Resolvers } from '../../core';
 import { ApolloCache } from '../../cache';
@@ -17,6 +17,7 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   childProps?: object;
   children?: any;
   link?: ApolloLink;
+  onError?: (error: Error, mockOnErrorData: MockOnErrorData) => Boolean;
 }
 
 export interface MockedProviderState {
@@ -40,7 +41,8 @@ export class MockedProvider extends React.Component<
       defaultOptions,
       cache,
       resolvers,
-      link
+      link,
+      onError,
     } = this.props;
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
@@ -48,6 +50,7 @@ export class MockedProvider extends React.Component<
       link: link || new MockLink(
         mocks || [],
         addTypename,
+        onError,
       ),
       resolvers,
     });

@@ -1,6 +1,6 @@
 export {
   MockLink,
-  MockOnErrorData,
+  MockLinkData,
   mockSingleLink,
   MockedResponse,
   ResultFunction

@@ -29,7 +29,7 @@ export interface MockedResponse<TData = Record<string, any>> {
   newData?: ResultFunction<FetchResult>;
 }
 
-export interface MockOnErrorData {
+export interface MockLinkData {
   key: string;
   mockedResponses: ReadonlyArray<MockedResponse>;
   operation: Operation;
@@ -47,18 +47,18 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 export class MockLink extends ApolloLink {
   public operation: Operation;
   public addTypename: Boolean = true;
-  public onErrorCustomHandler: (error: Error, mockOnErrorData: MockOnErrorData) => Boolean;
+  public customErrorHandler: (error: Error, mockLinkData: MockLinkData) => Boolean;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse>,
     addTypename: Boolean = true,
-    onErrorCustomHandler?: (error: Error, mockOnErrorData: MockOnErrorData) => Boolean,
+    customErrorHandler?: (error: Error, mockLinkData: MockLinkData) => Boolean,
   ) {
     super();
     this.addTypename = addTypename;
-    if (onErrorCustomHandler) {
-      this.onErrorCustomHandler = onErrorCustomHandler;
+    if (customErrorHandler) {
+      this.customErrorHandler = customErrorHandler;
     }
     if (mockedResponses) {
       mockedResponses.forEach(mockedResponse => {
@@ -134,18 +134,21 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
       const timer = setTimeout(() => {
         if (configError) {
           try {
-            // The onError function can return false to indicate that
-            // configError need not be passed to observer.error. For
-            // example, the default implementation of onError calls
-            // observer.error(configError) and then returns false to
-            // prevent this extra (harmless) observer.error call.
-            const shouldPassToOnError = typeof this.onErrorCustomHandler === 'undefined'
-              || this.onErrorCustomHandler(configError, {
+            // The customErrorHandler function can return false to indicate that
+            // configError need not be passed to the onError function.
+            const shouldPassToOnError = typeof this.customErrorHandler !== 'function'
+              || this.customErrorHandler(configError, {
                 key,
                 mockedResponses,
                 operation,
                 unmatchedVars,
               }) !== false;
+
+            // The onError function can return false to indicate that
+            // configError need not be passed to observer.error. For
+            // example, the default implementation of onError calls
+            // observer.error(configError) and then returns false to
+            // prevent this extra (harmless) observer.error call.
             if (shouldPassToOnError && this.onError(configError, observer) !== false) {
               throw configError;
             }

@@ -1369,14 +1369,12 @@ describe('useQuery Hook', () => {
 
       checkObservableQueries(1);
 
-      await waitFor(() => {
-        result.current.reobserve().then(result => {
-          expect(result.loading).toBe(false);
-          expect(result.loading).toBe(false);
-          expect(result.networkStatus).toBe(NetworkStatus.ready);
-          expect(result.data).toEqual({
-            linkCount: 2,
-          });
+      await result.current.reobserve().then(result => {
+        expect(result.loading).toBe(false);
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual({
+          linkCount: 2,
         });
       });
 

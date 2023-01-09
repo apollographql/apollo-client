@@ -11,8 +11,6 @@ import { MockedProvider, mockSingleLink } from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 describe('useLazyQuery Hook', () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;
@@ -1105,22 +1103,14 @@ describe('useLazyQuery Hook', () => {
         expect(result.current.query.data).toBeUndefined();
       }, { interval: 1 });
 
-      await waitFor(() => {
-        result.current.exec().then(result => {
-          expect(result.loading).toBe(false);
-          expect(result.called).toBe(true);
-          expect(result.data).toEqual({ counter: 1 });
-        });
-      }, { interval: 1 });
+      const execResult = await result.current.exec();
+      expect(execResult.loading).toBe(false);
+      expect(execResult.called).toBe(true);
+      expect(execResult.data).toEqual({ counter: 1 });
 
       await waitFor(() => {
-        // NB: React 17/18 discrepancies here
-        expect(result.current.query.loading).toBe(IS_REACT_18 ? true : false);
-        if (IS_REACT_18) {
-          expect(result.current.query.data).toBeUndefined();
-        } else {
-          expect(result.current.query.data).toMatchObject({ counter: 1 });
-        }
+        expect(result.current.query.loading).toBe(false);
+        expect(result.current.query.data).toMatchObject({ counter: 1 });
         expect(result.current.query.called).toBe(true);
       }, { interval: 1 });
 

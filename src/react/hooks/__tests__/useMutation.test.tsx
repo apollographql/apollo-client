@@ -653,6 +653,54 @@ describe('useMutation Hook', () => {
       expect(onError).toHaveBeenCalledTimes(0);
     });
 
+    it('prefers the onCompleted handler passed to the execution function rather than the hook', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            data: CREATE_TODO_DATA
+          },
+        }
+      ];
+
+      const hookOnCompleted = jest.fn();
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { onCompleted: hookOnCompleted }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )
+        },
+      );
+
+      const [createTodo] = result.current;
+      const onCompleted = jest.fn();
+      await act(async () => {
+        await createTodo({ variables, onCompleted });
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+      expect(hookOnCompleted).not.toHaveBeenCalled();
+    });
+
     it('should allow passing an onError handler to the execution function', async () => {
       const errors = [new GraphQLError(CREATE_TODO_ERROR)];
       const variables = {
@@ -704,6 +752,46 @@ describe('useMutation Hook', () => {
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
+    });
+
+    it('prefers the onError handler passed to the execution function instead of the hook', async () => {
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+          },
+        }
+      ];
+
+      const hookOnError = jest.fn();
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { onError: hookOnError }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )
+        },
+      );
+
+      const [createTodo] = result.current;
+      const onError = jest.fn();
+      await act(async () => {
+        await createTodo({ variables, onError });
+      });
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(hookOnError).not.toHaveBeenCalled();
     });
 
     it('should allow updating onError while mutation is executing', async () => {

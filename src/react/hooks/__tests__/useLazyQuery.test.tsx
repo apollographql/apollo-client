@@ -7,7 +7,7 @@ import { act } from 'react-dom/test-utils';
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
 import { ApolloProvider } from '../../../react';
-import { MockedProvider, mockSingleLink } from '../../../testing';
+import { MockedProvider, mockSingleLink, wait, tick } from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
 
@@ -569,9 +569,8 @@ describe('useLazyQuery Hook', () => {
 
     expect(result.current[1].data).toBe(undefined);
 
-    await waitFor(() => {
-      result.current[1].startPolling(10);
-    });
+    await tick();
+    result.current[1].startPolling(10);
 
     await waitFor(() => {
       expect(result.current[1].loading).toBe(true);
@@ -974,10 +973,8 @@ describe('useLazyQuery Hook', () => {
       execute();
     }, { interval: 1 });
 
-    await waitFor(() => {
-      // Making sure the rejection triggers a test failure.
-      new Promise((resolve) => setTimeout(resolve, 50));
-    }, { interval: 1 });
+    // Making sure the rejection triggers a test failure.
+    await wait(50);
   });
 
   describe("network errors", () => {

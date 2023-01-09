@@ -3812,10 +3812,7 @@ describe('useQuery Hook', () => {
       expect(result.current.query.data).toEqual(allCarsData);
 
       expect(onError).toHaveBeenCalledTimes(0);
-      await waitFor(async () => {
-        await Promise.resolve();
-      });
-
+      await tick();
       // The mutation ran and is loading the result. The query stays at
       // not loading as nothing has changed for the query.
       expect(result.current.mutation[1].loading).toBe(true);

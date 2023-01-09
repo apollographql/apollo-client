@@ -72,7 +72,7 @@ function App() {
 }
 ```
 
-When our call to the `useQuery` hook first resolves with an initial payload of data, `firstName` and `lastName` will be populated with the values from the server. We can render these fields as we normally would. **Our deferred fields will not exist as keys on `data` yet**, so we must add conditional logic that checks for their presence.
+When our call to the `useQuery` hook first resolves with an initial payload of data, `loading` will go from `true` to `false` and `firstName` and `lastName` will be populated with the values from the server. **Our deferred fields will not exist as keys on `data` yet**, so we must add conditional logic that checks for their presence. When subsequent chunks of deferred data arrive, `useQuery` will re-render (`loading` remains `false` between re-renders from deferred multipart responses) and `data` will include the deferred data as they arrive.
 
 For this reason, `@defer` can be thought of as a tool to improve initial rendering speeds when some slower data will be displayed below the fold or offscreen. In this case, we're rendering the friends list inside a `<details>` element which is closed by default, avoiding any layout shift as the `friends` data arrives.
 

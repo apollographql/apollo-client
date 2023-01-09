@@ -3454,9 +3454,8 @@ describe('useQuery Hook', () => {
       );
 
       const onCompleted = jest.fn();
-      let updates = 0;
       const { result } = renderHook(
-        () => (updates++, useQuery(query, {
+        () => (useQuery(query, {
           fetchPolicy: 'cache-only',
           onCompleted,
         })),

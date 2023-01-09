@@ -1,6 +1,5 @@
 import * as React from "react";
-import { render, waitFor, screen } from "@testing-library/react";
-import { renderHook } from '@testing-library/react-hooks';
+import { render, waitFor, screen, renderHook } from "@testing-library/react";
 import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 

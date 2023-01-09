@@ -1,0 +1,63 @@
+diff --git a/node_modules/@testing-library/react-12/dist/pure.js b/node_modules/@testing-library/react-12/dist/pure.js
+index 72287ac..f0d2c59 100644
+--- a/node_modules/@testing-library/react-12/dist/pure.js
++++ b/node_modules/@testing-library/react-12/dist/pure.js
+@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", {
+ });
+ var _exportNames = {
+   render: true,
++  renderHook: true,
+   cleanup: true,
+   act: true,
+   fireEvent: true
+@@ -25,6 +26,7 @@ Object.defineProperty(exports, "fireEvent", {
+   }
+ });
+ exports.render = render;
++exports.renderHook = renderHook;
+
+ var React = _interopRequireWildcard(require("react"));
+
+@@ -138,6 +140,42 @@ function cleanup() {
+ } // maybe one day we'll expose this (perhaps even as a utility returned by render).
+ // but let's wait until someone asks for it.
+
++function renderHook(renderCallback, options = {}) {
++  const {
++    initialProps,
++    ...renderOptions
++  } = options;
++  const result = /*#__PURE__*/React.createRef();
++
++  function TestComponent({
++    renderCallbackProps
++  }) {
++    const pendingResult = renderCallback(renderCallbackProps);
++    React.useEffect(() => {
++      result.current = pendingResult;
++    });
++    return null;
++  }
++
++  const {
++    rerender: baseRerender,
++    unmount
++  } = render( /*#__PURE__*/React.createElement(TestComponent, {
++    renderCallbackProps: initialProps
++  }), renderOptions);
++
++  function rerender(rerenderCallbackProps) {
++    return baseRerender( /*#__PURE__*/React.createElement(TestComponent, {
++      renderCallbackProps: rerenderCallbackProps
++    }));
++  }
++
++  return {
++    result,
++    rerender,
++    unmount
++  };
++} // just re-export everything from dom-testing-library
+
+ function cleanupAtContainer(container) {
+   (0, _actCompat.default)(() => {

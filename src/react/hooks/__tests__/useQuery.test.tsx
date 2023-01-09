@@ -2,12 +2,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import {
-  render,
-  waitFor,
-  renderHook,
-  // RenderResult,
-} from '@testing-library/react';
+import { render, waitFor, renderHook } from '@testing-library/react';
 import {
   ApolloClient,
   ApolloError,
@@ -74,72 +69,72 @@ describe('useQuery Hook', () => {
       expect(oldResult === result.current).toBe(true);
     });
 
-    // const expectFrames = <TData, TVariables>(result: RenderResult<QueryResult<TData, TVariables>>, expectedPartialFrames: Partial<QueryResult<TData, TVariables>>[]) => {
-    //   const actualPartialFrames = result.all.map((actualFrame, i) => {
-    //   const expectedPartialFrame = expectedPartialFrames[i];
-    //     if (actualFrame instanceof Error) {
-    //       return {
-    //         error: actualFrame,
-    //       };
-    //     }
-    //     if (expectedPartialFrame) {
-    //       const actualPartialFrame: Partial<Record<keyof QueryResult<TData, TVariables>, any>> = {};
-    //       (Object.keys(expectedPartialFrame) as (keyof typeof expectedPartialFrame)[]).forEach((key) => {
-    //         actualPartialFrame[key] = actualFrame[key];
-    //       });
-    //       return actualPartialFrame;
-    //     }
-    //     return {};
-    //   });
-    //   expect(actualPartialFrames).toEqual(expectedPartialFrames);
-    // };
+    it("useQuery produces the expected renders initially", async () => {
+      const query = gql`{ hello }`;
+      const mocks = [ {
+        request: { query },
+        result: { data: { hello: "world" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, rerender } = renderHook(() => useQuery(query), { wrapper });
+      await waitFor(() => result.current.loading === false);
+      rerender({ children: null });
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBeUndefined();
+      }, { interval: 1 });
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toEqual({ hello: "world" });
+      }, { interval: 1 });
+      // Repeat frame because rerender forces useQuery to be called again
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toEqual({ hello: "world" });
+      }, { interval: 1 });
+    });
 
-    // it("useQuery produces the expected frames initially", async () => {
-    //   const query = gql`{ hello }`;
-    //   const mocks = [ {
-    //     request: { query },
-    //     result: { data: { hello: "world" } },
-    //   } ];
-    //   const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
-    //   const { result, waitFor, rerender } = renderHook(() => useQuery(query), { wrapper });
-    //   await waitFor(() => result.current.loading === false);
-    //   rerender({ children: null });
-    //   expectFrames(result, [
-    //     { loading: true, data: void 0 },
-    //     { loading: false, data: { hello: "world" } },
-    //     // Repeat frame because rerender forces useQuery to be called again
-    //     { loading: false, data: { hello: "world" } },
-    //   ]);
-    // });
-
-    // it("useQuery produces the expected frames when variables change", async () => {
-    //   const query = gql`
-    //     query ($id: Int) {
-    //     hello(id: $id)
-    //   }
-    //   `;
-    //   const mocks = [ {
-    //     request: { query, variables: { id: 1 } },
-    //     result: { data: { hello: "world 1" } },
-    //   }, {
-    //     request: { query, variables: { id: 2 } },
-    //     result: { data: { hello: "world 2" } },
-    //   } ];
-    //   const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
-    //   const { result, rerender, waitFor } = renderHook(
-    //     (options) => useQuery(query, options),
-    //     { wrapper, initialProps: { variables: { id: 1 } } },
-    //   );
-    //   await waitFor(() => result.current.loading === false);
-    //   rerender({ variables: { id: 2 } });
-    //   await waitFor(() => result.current.loading === false);
-    //   expectFrames(result, [
-    //     { loading: true, data: void 0, networkStatus: NetworkStatus.loading },
-    //     { loading: false, data: { hello: "world 1" }, networkStatus: NetworkStatus.ready },
-    //     { loading: true, data: void 0, networkStatus: NetworkStatus.setVariables },
-    //     { loading: false, data: { hello: "world 2" }, networkStatus: NetworkStatus.ready },
-    //   ]);
-    // });
+    it("useQuery produces the expected frames when variables change", async () => {
+      const query = gql`
+        query ($id: Int) {
+        hello(id: $id)
+      }
+      `;
+      const mocks = [ {
+        request: { query, variables: { id: 1 } },
+        result: { data: { hello: "world 1" } },
+      }, {
+        request: { query, variables: { id: 2 } },
+        result: { data: { hello: "world 2" } },
+      } ];
+      const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
+      const { result, rerender } = renderHook(
+        (options) => useQuery(query, options),
+        { wrapper, initialProps: { variables: { id: 1 } } },
+      );
+      await waitFor(() => result.current.loading === false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBeUndefined();
+        expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      }, { interval: 1 });
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toEqual({ hello: "world 1" });
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
+      rerender({ variables: { id: 2 } });
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBeUndefined();
+        expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
+      }, { interval: 1 });
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toEqual({ hello: "world 2" });
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
+    });
 
     it('should read and write results from the cache', async () => {
       const query = gql`{ hello }`;

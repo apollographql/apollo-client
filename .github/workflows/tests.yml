@@ -15,7 +15,7 @@ on:
 
 jobs:
   setup:
-    name: "Prepare for tests and bundlesize checks"
+    name: "Run tests and bundlesize checks"
     if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
     steps:
@@ -36,20 +36,8 @@ jobs:
       - name: Run npm version
         run: npm version
 
-  bundlesize:
-    needs: setup
-    if: github.repository == 'apollographql/apollo-client'
-    name: "Run bundlesize check"
-    runs-on: ubuntu-latest
-    steps:
       - name: Run bundlesize check
         run: npm run bundlesize
 
-  tests:
-    needs: setup
-    if: github.repository == 'apollographql/apollo-client'
-    name: "Run tests"
-    runs-on: ubuntu-latest
-    steps:
       - name: Run tests
         run: npm run test:ci

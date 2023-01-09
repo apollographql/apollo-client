@@ -2,7 +2,6 @@ import React from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { renderHook, waitFor } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
 
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
@@ -235,7 +234,7 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].data).toEqual({ hello: 'world 2' });
   });
 
-  it.skip('should merge variables from original hook and execution function', async () => {
+  it('should merge variables from original hook and execution function', async () => {
     const counterQuery: TypedDocumentNode<{
       counter: number;
     }, {
@@ -311,14 +310,11 @@ describe('useLazyQuery Hook', () => {
       },
     );
 
-    expect(result.current.query.loading).toBe(false);
-    expect(result.current.query.called).toBe(false);
-    expect(result.current.query.data).toBeUndefined();
-
-    const previousResult = result.current;
-    await expect(waitFor(() => {
-      expect(result.current).not.toBe(previousResult)
-    }, { interval: 1, timeout: 20 })).rejects.toThrow();
+    await waitFor(() => {
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.called).toBe(false);
+      expect(result.current.query.data).toBeUndefined();
+    }, { interval: 1 });
 
     const expectedFinalData = {
       counter: 1,
@@ -330,85 +326,82 @@ describe('useLazyQuery Hook', () => {
       },
     };
 
-    const execPromise = act(() => result.current.exec({
-      variables: {
-        execVar: true,
-      },
-    }).then(finalResult => {
-      expect(finalResult.loading).toBe(false);
-      expect(finalResult.called).toBe(true);
-      expect(finalResult.data).toEqual(expectedFinalData);
-    }));
+    const execResult = await result.current.exec(
+      {
+        variables: {
+          execVar: true
+        }
+      }
+    );
 
-    expect(result.current.query.loading).toBe(true);
-    expect(result.current.query.called).toBe(true);
-    expect(result.current.query.data).toBeUndefined();
+    await waitFor(() => {
+      expect(execResult.loading).toBe(false);
+      expect(execResult.called).toBe(true);
+      expect(execResult.networkStatus).toBe(NetworkStatus.ready);
+      expect(execResult.data).toEqual(expectedFinalData);
+    }, { interval: 1 });
+
+    await waitFor(() => {
+      expect(result.current.query.called).toBe(true);
+    }, { interval: 1 });
+
     await waitFor(() => {
       expect(result.current.query.loading).toBe(false);
     }, { interval: 10 });
+
     expect(result.current.query.called).toBe(true);
     expect(result.current.query.data).toEqual(expectedFinalData);
 
-    await execPromise;
-
-    await expect(waitFor(() => {
-      expect(result.current).not.toBe(previousResult)
-    }, { interval: 1, timeout: 20 })).rejects.toThrow();
-
-    const refetchPromise = act(() => result.current.query.reobserve({
+    const refetchResult = await result.current.query.reobserve({
       fetchPolicy: "network-only",
       nextFetchPolicy: "cache-first",
       variables: {
         execVar: false,
       },
-    }).then(finalResult => {
-      expect(finalResult.loading).toBe(false);
-      expect(finalResult.data).toEqual({
-        counter: 2,
-        vars: {
-          execVar: false,
-        },
-      });
-    }));
-    await waitFor(() => {
-      expect(result.current.query.loading).toBe(false);
-    }, { interval: 10 });
-    expect(result.current.query.called).toBe(true);
-    expect(result.current.query.data).toEqual({
+    });
+    expect(refetchResult.loading).toBe(false);
+    expect(refetchResult.data).toEqual({
       counter: 2,
       vars: {
         execVar: false,
       },
     });
 
-    await refetchPromise;
+    await waitFor(() => {
+      expect(result.current.query.loading).toBe(false);
+      expect(result.current.query.called).toBe(true);
+      expect(result.current.query.data).toEqual({
+        counter: 2,
+        vars: {
+          execVar: false,
+        },
+      });
+    }, { interval: 10 });
 
-    const execPromise2 = act(() => result.current.exec({
+    const execResult2 = await result.current.exec({
       fetchPolicy: "cache-and-network",
       nextFetchPolicy: "cache-first",
       variables: {
         execVar: true,
       },
-    }).then(finalResult => {
-      expect(finalResult.loading).toBe(false);
-      expect(finalResult.called).toBe(true);
-      expect(finalResult.data).toEqual({
+    });
+
+    await waitFor(() => {
+      expect(execResult2.loading).toBe(false);
+      expect(execResult2.called).toBe(true);
+      expect(execResult2.data).toEqual({
         counter: 3,
         vars: {
           ...expectedFinalData.vars,
           execVar: true,
         },
       });
-    }));
+    }, { interval: 1 });
 
-    expect(result.current.query.loading).toBe(true);
-    expect(result.current.query.called).toBe(true);
-    expect(result.current.query.data).toEqual({
-      counter: 2,
-      vars: {
-        execVar: false,
-      },
-    });
+    await waitFor(() => {
+      expect(result.current.query.called).toBe(true);
+    }, { interval: 1 });
+
     await waitFor(() => {
       expect(result.current.query.loading).toBe(false);
     }, { interval: 10 });
@@ -420,8 +413,6 @@ describe('useLazyQuery Hook', () => {
         execVar: true,
       },
     });
-
-    await execPromise2;
   });
 
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {

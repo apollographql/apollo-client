@@ -5290,8 +5290,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+        expect(result.current.data).toEqual({ results });
       }, { interval: 1 });
-      expect(result.current.data).toEqual({ results });
       expect(result.current.data.results.length).toBe(7);
       resultSet = new Set(result.current.data.results);
       // Since canonization is happening now, the duplicate 1 results are

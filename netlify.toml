@@ -7,7 +7,7 @@
 
 [context.deploy-preview.build]
   base = "docs"
-  ignore = "git diff main..$HEAD -- ."
+  ignore = "git diff HEAD^ HEAD ."
   command = """\
   cd ../
   rm -rf monodocs

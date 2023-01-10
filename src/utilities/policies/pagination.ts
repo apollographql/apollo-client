@@ -89,9 +89,33 @@ export type RelayFieldPolicy<TNode> = FieldPolicy<
   TIncomingRelay<TNode> | null
 >;
 
-// As proof of the flexibility of field policies, this function generates
-// one that handles Relay-style pagination, without Apollo Client knowing
-// anything about connections, edges, cursors, or pageInfo objects.
+// As proof of the flexibility of field policies, this function generates one
+// that handles Relay-style pagination, without Apollo Client knowing anything
+// about connections, edges, cursors, or pageInfo objects.
+
+// There is one case where the `merge` function does not have enough information
+// to do the optimal correctly in all cases.
+//
+// Say we have one page in the cache and are doing `after`/`first` pagination.
+// Then, the `merge` function receives an incoming page and the `after` used to
+// request that page does not match any of the existing edges' cursors.
+//
+// 1. If the new `after` is the same as the original `after`, i.e. the incoming
+//    page is the result of repeating the original query, the incoming edges
+//    should REPLACE the existing edges.
+//
+// 2. If the new `after` comes from later in the sequence of cursors, i.e. there
+//    is a gap between the existing page and the incoming page, the incoming
+//    edges should probably be APPENDED to the existing edges. Though, the
+//    expected behavior could depend on what the consuming application is trying
+//    to accomplish.
+//
+// The `merge` function cannot distinguish between (1) and (2), so it cannot do
+// the correct thing in both cases. (1) is likely to happen in real
+// applications, while (2) would only happen if there is a bug in the consuming
+// application or the consuming application has a non-standard use case. Because
+// (1) is the more important case to handle correctly, the `merge` function
+// below is coded to REPLACE the existing edges with the incoming edeges.
 export function relayStylePagination<TNode = Reference>(
   keyArgs: KeyArgs = false,
 ): RelayFieldPolicy<TNode> {
@@ -188,27 +212,28 @@ export function relayStylePagination<TNode = Reference>(
         }
       }
 
-      let prefix = existing.edges;
-      let suffix: typeof prefix = [];
+      let prefix: TRelayEdge<TNode>[] = [];
+      let suffix: TRelayEdge<TNode>[] = [];
 
       if (args && args.after) {
         // This comparison does not need to use readField("cursor", edge),
         // because we stored the cursor field of any Reference edges as an
         // extra property of the Reference object.
-        const index = prefix.findIndex(edge => edge.cursor === args.after);
+        const index = existing.edges.findIndex((edge) => edge.cursor === args.after);
         if (index >= 0) {
-          prefix = prefix.slice(0, index + 1);
-          // suffix = []; // already true
+          prefix = existing.edges.slice(0, index + 1);
         }
       } else if (args && args.before) {
-        const index = prefix.findIndex(edge => edge.cursor === args.before);
-        suffix = index < 0 ? prefix : prefix.slice(index);
-        prefix = [];
+        const index = existing.edges.findIndex((edge) => edge.cursor === args.before);
+        if (index >= 0) {
+          suffix = existing.edges.slice(index);
+        }
       } else if (incoming.edges) {
         // If we have neither args.after nor args.before, the incoming
         // edges cannot be spliced into the existing edges, so they must
         // replace the existing edges. See #6592 for a motivating example.
-        prefix = [];
+      } else {
+        prefix = existing.edges;
       }
 
       const edges = [

@@ -8,7 +8,7 @@ import { ApolloLink, execute } from '../../core';
 import { Observable } from '../../../utilities';
 import { createHttpLink } from '../../http/createHttpLink';
 
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';
+import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
 import { itAsync } from '../../../testing';
 
 // Necessary configuration in order to mock multiple requests

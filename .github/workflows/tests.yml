@@ -36,6 +36,9 @@ jobs:
       - name: Run npm version
         run: npm version
 
+      - name: Run ESLint
+        run: npm run lint
+
       - name: Run bundlesize check
         run: npm run bundlesize
 

@@ -160,6 +160,7 @@ describe('graphql(mutation)', () => {
       }
 
       render() {
+        // eslint-disable-next-line testing-library/no-node-access
         return this.props.children;
       }
     }

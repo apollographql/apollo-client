@@ -136,6 +136,7 @@ describe('subscriptions', () => {
       }
 
       render() {
+        // eslint-disable-next-line testing-library/no-node-access
         return this.props.children;
       }
     }

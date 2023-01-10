@@ -1,34 +1,6 @@
 version: 2
 
 jobs:
-  Filesize:
-    docker:
-      - image: circleci/node:16.13.1
-    steps:
-      - checkout
-      - run: npm run ci:precheck
-      - run: npm version
-      - run: npm ci
-      - run: npm run bundlesize
-
-  Tests:
-    docker:
-      - image: circleci/node:16.10.0
-    steps:
-      - checkout
-      - run: npm run ci:precheck
-      - run: npm version
-      - run: npm ci
-      - run:
-          name: Jest suite with coverage
-          command: npm run test:ci
-          environment:
-            JEST_JUNIT_OUTPUT_FILE: "reports/junit/js-test-results.xml"
-      - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
-
   # Ensure that any PR that changes packages has a changeset on it (perhaps
   # an empty one created with `changeset --empty`).
   # We run the Changesets job itself on all branches so that we can require
@@ -52,5 +24,4 @@ workflows:
   version: 2
   Build and Test:
     jobs:
-      - Filesize
-      - Tests
+      - Changesets

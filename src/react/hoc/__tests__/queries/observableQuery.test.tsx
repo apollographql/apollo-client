@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render, waitFor, screen } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -34,8 +35,6 @@ describe('[queries] observableQuery', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    let unmount: any;
-    let queryByText: any;
     let count = 0;
 
     const assert1 = () => {
@@ -57,7 +56,7 @@ describe('[queries] observableQuery', () => {
       options: { fetchPolicy: 'cache-and-network' }
     })(
       class extends React.Component<ChildProps<{}, Data>> {
-        componentDidUpdate() {
+        async componentDidUpdate() {
           if (count === 2) {
             expect(this.props.data!.loading).toBeFalsy();
             expect(this.props.data!.allPeople).toEqual(
@@ -66,14 +65,13 @@ describe('[queries] observableQuery', () => {
 
             // ensure first assertion and umount tree
             assert1();
-            fireEvent.click(queryByText('Break things'));
+            userEvent.click(screen.getByText('Break things'));
 
             // ensure cleanup
             assert2();
           }
 
           if (count === 4) {
-            unmount();
             done = true;
           }
         }
@@ -137,13 +135,11 @@ describe('[queries] observableQuery', () => {
       }
     }
 
-    const result = render(
+    render(
       <ApolloProvider client={client}>
         <AppWrapper />
       </ApolloProvider>
     );
-    unmount = result.unmount;
-    queryByText = result.queryByText;
 
     await waitFor(() => {
       expect(done).toBeTruthy();

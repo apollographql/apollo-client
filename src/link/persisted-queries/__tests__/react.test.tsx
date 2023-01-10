@@ -11,8 +11,8 @@ import { ApolloClient } from '../../../core/ApolloClient';
 import { createHttpLink } from '../../http/createHttpLink';
 import { graphql } from '../../../react/hoc/graphql';
 import { getDataFromTree } from '../../../react/ssr/getDataFromTree';
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';
-import { sha256 } from './index';
+import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
+import { sha256 } from './persisted-queries.test';
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -126,11 +126,11 @@ describe('react application', () => {
 
     // change filter object to different variables and SSR
     await getDataFromTree(app2);
-    const markup2 = ReactDOM.renderToString(app2);
+    const view = ReactDOM.renderToString(app2);
 
     const [, [, request2]] = fetchMock.calls();
 
-    expect(markup2).not.toContain('data was returned');
+    expect(view).not.toContain('data was returned');
     expect(request2!.body).toBe(
       JSON.stringify({
         operationName: 'Test',

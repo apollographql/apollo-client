@@ -1,7 +1,8 @@
 import React, { useState, PropsWithChildren } from 'react';
 import gql from 'graphql-tag';
 import { ExecutionResult, GraphQLError } from 'graphql';
-import { render, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, act } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../core';
 import { ApolloError } from '../../../../errors';
@@ -74,8 +75,6 @@ const mocks = [
 const cache = new Cache({ addTypename: false });
 
 describe('General Mutation testing', () => {
-  afterEach(cleanup);
-
   it('pick prop client over context client', async () => {
     const mock = (text: string) => [
       {
@@ -136,32 +135,46 @@ describe('General Mutation testing', () => {
       );
     };
 
-    const { getByText, rerender } = render(<Component />);
-    const button = getByText('Create');
+    const { rerender } = render(<Component />);
+    await waitFor(() => {
+      screen.getByText('Create');
+    }, { interval: 1 });
 
     // context client mutation
-    fireEvent.click(button);
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksContext[0].result);
+    }, { interval: 1 });
 
     // props client mutation
     rerender(<Component propsClient={propsClient} />);
-    fireEvent.click(button);
+
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksProps[0].result);
+    }, { interval: 1 });
 
     // context client mutation
     rerender(<Component propsClient={undefined} />);
-    fireEvent.click(button);
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksContext[1].result);
+    }, { interval: 1 });
 
     // props client mutation
     rerender(<Component propsClient={propsClient} />);
-    fireEvent.click(button);
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksProps[1].result);
+    }, { interval: 1 });
 
     await waitFor(() => {
       expect(spy).toHaveBeenCalledTimes(4);
-    });
-
-    expect(spy).toHaveBeenCalledWith(mocksContext[0].result);
-    expect(spy).toHaveBeenCalledWith(mocksProps[0].result);
-    expect(spy).toHaveBeenCalledWith(mocksContext[1].result);
-    expect(spy).toHaveBeenCalledWith(mocksProps[1].result);
+    }, { interval: 1 });
   });
 
   itAsync('performs a mutation', (resolve, reject) => {
@@ -446,12 +459,12 @@ describe('General Mutation testing', () => {
       <Mutation mutation={mutation}>{() => <div>result</div>}</Mutation>
     );
 
-    const { unmount, getByText } = render(
+    const { unmount } = render(
       <MockedProvider mocks={mocks}>
         <Component />
       </MockedProvider>
     );
-    expect(getByText('result')).toBeTruthy();
+    expect(screen.getByText('result')).toBeTruthy();
     // unmount here or else the mutation will resolve later and schedule an update that's not wrapped in act.
     unmount()
   });
@@ -1420,7 +1433,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  itAsync('errors when changing from mutation to a query', (resolve, reject) => {
+  it('errors when changing from mutation to a query', async () => {
     let didError = false;
     const query = gql`
       query todos {
@@ -1470,11 +1483,10 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(didError).toBe(true);
-    }).finally(() => {
-      console.log = errorLogger;
-    }).then(resolve, reject);
+    });
+    console.log = errorLogger;
   });
 
   it('errors if a subscription is passed instead of a mutation', () => {
@@ -1504,7 +1516,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  itAsync('errors when changing from mutation to a subscription', (resolve, reject) => {
+  it('errors when changing from mutation to a subscription', async () => {
     let didError = false;
     const subscription = gql`
       subscription todos {
@@ -1555,15 +1567,14 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(didError).toBe(true);
-    }).finally(() => {
-      console.log = errorLogger;
-    }).then(resolve, reject);
+    });
+    console.log = errorLogger;
   });
 
   describe('after it has been unmounted', () => {
-    itAsync('calls the onCompleted prop after the mutation is complete', (resolve, reject) => {
+    it('calls the onCompleted prop after the mutation is complete', async () => {
       let finished = false;
       let success = false;
       const context = { "foo": "bar" }
@@ -1608,10 +1619,12 @@ describe('General Mutation testing', () => {
         </MockedProvider>
       );
 
-      waitFor(() => {
+      await waitFor(() => {
         expect(finished).toBe(true);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(success).toBe(true);
-      }, { timeout: 500 }).then(resolve, reject);
+      }, { interval: 1 });
     });
   });
 
@@ -1653,6 +1666,8 @@ describe('General Mutation testing', () => {
 
     await waitFor(() => {
       expect(onErrorCalled).toBe(true);
+    });
+    await waitFor(() => {
       expect(finished).toBe(true);
     });
   });

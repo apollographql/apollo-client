@@ -685,8 +685,8 @@ describe('useSubscription Hook', () => {
     setTimeout(() => link.simulateResult(results[0]));
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
-      expect(onSubscriptionData).toHaveBeenCalledTimes(0);
     }, { interval: 1 });
+    expect(onSubscriptionData).toHaveBeenCalledTimes(0);
   });
 
   test("uses 'onSubscriptionData' when 'onData' is absent", async () => {
@@ -842,9 +842,8 @@ describe('useSubscription Hook', () => {
     setTimeout(() => link.simulateComplete());
     await waitFor(() => {
       expect(onComplete).toHaveBeenCalledTimes(1);
-      expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
     }, { interval: 1 });
-
+    expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
   });
 
   test("uses 'onSubscriptionComplete' when 'onComplete' is absent", async () => {

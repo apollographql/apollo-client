@@ -4,3 +4,7 @@ import gql from 'graphql-tag';
 gql.disableFragmentWarnings();
 
 process.on('unhandledRejection', () => {});
+
+afterAll(() => {
+  global.gc && global.gc()
+})

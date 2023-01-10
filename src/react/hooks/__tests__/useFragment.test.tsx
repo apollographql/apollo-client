@@ -111,14 +111,15 @@ describe("useFragment", () => {
       return <li>{complete ? data!.text : "incomplete"}</li>;
     }
 
-    const { getAllByText } = render(
+    render(
       <MockedProvider cache={cache}>
         <List />
       </MockedProvider>
     );
 
     function getItemTexts() {
-      return getAllByText(/^Item/).map(
+      return screen.getAllByText(/^Item/).map(
+        // eslint-disable-next-line testing-library/no-node-access
         li => li.firstChild!.textContent
       );
     }
@@ -367,14 +368,15 @@ describe("useFragment", () => {
       return <li>{complete ? data!.text : "incomplete"}</li>;
     }
 
-    const { getAllByText } = render(
+    render(
       <MockedProvider cache={cache}>
         <List />
       </MockedProvider>
     );
 
     function getItemTexts() {
-      return getAllByText(/^Item/).map(
+      return screen.getAllByText(/^Item/).map(
+        // eslint-disable-next-line testing-library/no-node-access
         li => li.firstChild!.textContent
       );
     }
@@ -875,6 +877,7 @@ describe("useFragment", () => {
 
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
+        // eslint-disable-next-line testing-library/no-node-access
         li => li.firstChild!.textContent
       );
     }

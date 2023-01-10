@@ -7,7 +7,7 @@
 
 [context.deploy-preview.build]
   base = "docs"
-  ignore = "git fetch origin main && git diff FETCH_HEAD -- docs"
+  ignore = "git diff --quiet $HEAD^ $HEAD ."
   command = """\
   cd ../
   rm -rf monodocs

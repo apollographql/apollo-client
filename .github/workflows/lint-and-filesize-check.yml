@@ -1,4 +1,4 @@
-name: Tests
+name: Lint and Filesize Check
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,7 +18,7 @@ on:
       - "**/*.md"
 
 jobs:
-  setup:
+  lint_and_filesize_check:
     if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
     steps:
@@ -33,5 +33,14 @@ jobs:
       - name: Install dependencies with cache
         uses: bahmutov/npm-install@v1
 
-      - name: Run tests
-        run: npm run test:ci
+      - name: Run CI Precheck
+        run: npm run ci:precheck
+
+      - name: Run npm version
+        run: npm version
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run bundlesize check
+        run: npm run bundlesize

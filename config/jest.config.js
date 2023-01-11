@@ -1,5 +1,4 @@
 const defaults = {
-  bail: 1,
   rootDir: "src",
   preset: "ts-jest",
   testEnvironment: "jsdom",

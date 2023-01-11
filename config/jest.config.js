@@ -6,7 +6,6 @@ const defaults = {
   testEnvironmentOptions: {
     url: "http://localhost",
   },
-
   snapshotFormat: {
     escapeString: true,
     printBasicPrototype: true
@@ -25,7 +24,7 @@ const defaults = {
 
 const failingTestIgnore = [
   'src/react/hooks/__tests__/useLazyQuery.test.tsx'
-]
+];
 
 const ignoreTSFiles = '.ts$';
 const ignoreTSXFiles = '.tsx$';
@@ -48,7 +47,6 @@ const react18TestFileIgnoreList = [
   'src/react/components/__tests__/client/Query.test.tsx',
 ];
 
-
 const tsStandardConfig = {
   ...defaults,
   displayName: 'Core Tests',
@@ -64,7 +62,7 @@ const standardReact18Config = {
 const standardReact17Config = {
   ...defaults,
   displayName: "ReactDOM 17",
-  testPathIgnorePatterns: [...failingTestIgnore, ignoreTSFiles],
+  testPathIgnorePatterns: [ignoreTSFiles],
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",

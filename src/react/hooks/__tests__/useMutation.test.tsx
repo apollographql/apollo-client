@@ -9,13 +9,19 @@ import fetchMock from "fetch-mock";
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, MockSubscriptionLink, mockSingleLink, subscribeAndCount } from '../../../testing';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
 import { FetchResult } from '../../../link/core';
 
 describe('useMutation Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   interface Todo {
     id: number;
     description: string;

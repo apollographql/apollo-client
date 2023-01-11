@@ -5,7 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
-import { ApolloProvider } from '../../../react';
+import { ApolloProvider, resetApolloContext } from '../../../react';
 import { MockedProvider, mockSingleLink, wait, tick } from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
@@ -13,6 +13,12 @@ import { QueryResult } from '../../types/types';
 const IS_REACT_18 = React.version.startsWith("18");
 
 describe('useLazyQuery Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   const helloQuery: TypedDocumentNode<{
     hello: string;
   }> = gql`query { hello }`;

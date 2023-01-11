@@ -18,6 +18,9 @@ import {
 import { useQuery } from "../useQuery";
 
 describe("useFragment", () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
   it("is importable and callable", () => {
     expect(typeof useFragment).toBe("function");
   });

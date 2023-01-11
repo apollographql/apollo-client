@@ -12,7 +12,7 @@ import {
   WatchQueryFetchPolicy,
 } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import {
@@ -29,6 +29,12 @@ import { useMutation } from '../useMutation';
 const IS_REACT_18 = React.version.startsWith('18');
 
 describe('useQuery Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
@@ -1666,6 +1672,7 @@ describe('useQuery Hook', () => {
         expect(requestSpy).not.toHaveBeenCalledTimes(1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+      requestSpy.mockRestore();
     });
 
     it('should stop polling when component is unmounted in Strict Mode', async () => {
@@ -1719,6 +1726,7 @@ describe('useQuery Hook', () => {
         expect(requestSpy).not.toHaveBeenCalledTimes(1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+      requestSpy.mockRestore();
     });
 
     it('should start and stop polling in Strict Mode', async () => {
@@ -1775,6 +1783,7 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+      requestSpy.mockRestore();
     });
 
     it('should not throw an error if stopPolling is called manually', async () => {

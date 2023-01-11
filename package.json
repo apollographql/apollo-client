@@ -46,7 +46,7 @@
     "ci:precheck": "node config/precheck.js",
     "lint": "eslint '**/__tests__/**/*.[jt]sx'",
     "test": "jest --config ./config/jest.config.js",
-    "test:debug": "node --inspect-brk --unhandled-rejections=strict node_modules/.bin/jest --config ./config/jest.config.js --runInBand --no-cache --testTimeout 99999",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999",
     "test:ci": "TEST_ENV=ci npm run test:coverage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "test:memory": "cd scripts/memory && npm i && npm test",

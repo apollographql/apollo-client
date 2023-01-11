@@ -18,7 +18,7 @@ on:
       - "**/*.md"
 
 jobs:
-  lint_and_filesize_check:
+  lint_and_filesize:
     if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
     steps:

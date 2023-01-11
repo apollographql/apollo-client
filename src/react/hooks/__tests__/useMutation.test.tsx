@@ -2319,7 +2319,7 @@ describe('useMutation Hook', () => {
       expect(errorSpy).not.toHaveBeenCalled();
       errorSpy.mockRestore();
     });
-    it.skip('resolves with resulting errors and calls onError callback', async () => {
+    it('resolves with resulting errors and calls onError callback', async () => {
       const errorSpy = jest.spyOn(console, "error");
       const link = new MockSubscriptionLink();
 
@@ -2376,14 +2376,24 @@ describe('useMutation Hook', () => {
         fetchResult = await createTodo({ variables });
       });
 
-      expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
-      expect(fetchResult.data).toBe(undefined);
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
-      expect(errorSpy).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
+      });
+      await waitFor(() => {
+        expect(fetchResult.data).toBe(undefined);
+      });
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
+        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+      });
+      await waitFor(() => {
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
       errorSpy.mockRestore();
     });
-    it.skip('calls the update function with the final merged result data', async () => {
+    it('calls the update function with the final merged result data', async () => {
       const errorSpy = jest.spyOn(console, "error");
       const link = new MockSubscriptionLink();
       const update = jest.fn();
@@ -2461,8 +2471,10 @@ describe('useMutation Hook', () => {
         // but we only care about variables here
         expect.objectContaining({ variables })
       );
+      await waitFor(() => {
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
 
-      expect(errorSpy).not.toHaveBeenCalled();
       errorSpy.mockRestore();
     });
   });

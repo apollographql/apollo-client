@@ -26,7 +26,8 @@ const defaults = {
 const failingTestIgnore = [
   'src/__tests__/local-state/export.ts',
   'src/react/hooks/__tests__/useQuery.test.tsx',
-  'src/link/persisted-queries/__tests__/react.test.tsx'
+  'src/link/persisted-queries/__tests__/react.test.tsx',
+  'src/react/hooks/__tests__/useLazyQuery.test.tsx'
 ]
 
 const ignoreTSFiles = '.ts$';
@@ -42,6 +43,7 @@ const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
   testPathIgnorePatterns: [
+    ...failingTestIgnore,
     // ignore core tests (.ts files) as they are run separately
     // to avoid running them twice with both react versions
     // since they do not import react

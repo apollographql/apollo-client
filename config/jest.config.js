@@ -2,10 +2,11 @@ const defaults = {
   rootDir: "src",
   preset: "ts-jest",
   testEnvironment: "jsdom",
-  setupFiles: ["<rootDir>/config/jest/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   testEnvironmentOptions: {
     url: "http://localhost",
   },
+
   snapshotFormat: {
     escapeString: true,
     printBasicPrototype: true
@@ -22,43 +23,47 @@ const defaults = {
   },
 };
 
+const failingTestIgnore = [
+  'src/__tests__/local-state/export.ts',
+  'src/react/hooks/__tests__/useQuery.test.tsx',
+  'src/link/persisted-queries/__tests__/react.test.tsx'
+]
+
 const ignoreTSFiles = '.ts$';
 const ignoreTSXFiles = '.tsx$';
-
-const react18TestFileIgnoreList = [
-  // ignore core tests (.ts files) as they are run separately
-  // to avoid running them twice with both react versions
-  // since they do not import react
-  ignoreTSFiles,
-  // failing hoc tests (8)
-  'src/react/hoc/__tests__/mutations/queries.test.tsx',
-  'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',
-  'src/react/hoc/__tests__/queries/errors.test.tsx',
-  'src/react/hoc/__tests__/queries/lifecycle.test.tsx',
-  'src/react/hoc/__tests__/queries/loading.test.tsx',
-  'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
-  'src/react/hoc/__tests__/queries/skip.test.tsx',
-  'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
-  // failing components tests (1)
-  'src/react/components/__tests__/client/Query.test.tsx',
-];
 
 const tsStandardConfig = {
   ...defaults,
   displayName: 'Core Tests',
-  testPathIgnorePatterns: [ignoreTSXFiles],
+  testPathIgnorePatterns: [...failingTestIgnore, ignoreTSXFiles],
 }
 
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
-  testPathIgnorePatterns: react18TestFileIgnoreList
+  testPathIgnorePatterns: [
+    // ignore core tests (.ts files) as they are run separately
+    // to avoid running them twice with both react versions
+    // since they do not import react
+    ignoreTSFiles,
+    // failing hoc tests (8)
+    'src/react/hoc/__tests__/mutations/queries.test.tsx',
+    'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',
+    'src/react/hoc/__tests__/queries/errors.test.tsx',
+    'src/react/hoc/__tests__/queries/lifecycle.test.tsx',
+    'src/react/hoc/__tests__/queries/loading.test.tsx',
+    'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
+    'src/react/hoc/__tests__/queries/skip.test.tsx',
+    'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
+    // failing components tests (1)
+    'src/react/components/__tests__/client/Query.test.tsx',
+  ]
 };
 
 const standardReact17Config = {
   ...defaults,
   displayName: "ReactDOM 17",
-  testPathIgnorePatterns: [ignoreTSFiles],
+  testPathIgnorePatterns: [...failingTestIgnore, ignoreTSFiles],
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",

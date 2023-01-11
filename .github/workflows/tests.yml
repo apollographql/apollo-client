@@ -30,6 +30,9 @@ jobs:
         with:
           node-version: 18.x
 
+      - name: Run npm version
+        run: npm version
+
       - name: Install dependencies with cache
         uses: bahmutov/npm-install@v1
 

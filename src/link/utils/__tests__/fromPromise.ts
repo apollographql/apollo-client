@@ -9,16 +9,16 @@ describe('fromPromise', () => {
   };
   const error = new Error('I always error');
 
-  it('return next call as Promise resolution', () => {
+  it('return next call as Promise resolution', async () => {
     const observable = fromPromise(Promise.resolve(data));
-    return toPromise(observable).then(result =>
+    await toPromise(observable).then(result =>
       expect(data).toEqual(result),
     );
   });
 
-  it('return Promise rejection as error call', () => {
+  it('return Promise rejection as error call', async () => {
     const observable = fromPromise(Promise.reject(error));
-    return toPromise(observable)
+    await toPromise(observable)
       .then(() => { throw "should not have thrown" })
       .catch(actualError => expect(error).toEqual(actualError));
   });

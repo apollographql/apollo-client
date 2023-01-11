@@ -11,14 +11,14 @@ describe('toPromise', () => {
   };
   const error = new Error('I always error');
 
-  it('return next call as Promise resolution', async () => {
-    await toPromise(Observable.of(data)).then(result =>
+  it('return next call as Promise resolution', () => {
+    return toPromise(Observable.of(data)).then(result =>
       expect(data).toEqual(result),
     );
   });
 
-  it('return error call as Promise rejection', async () => {
-    await toPromise(fromError(error))
+  it('return error call as Promise rejection', () => {
+    return toPromise(fromError(error))
       .then(() => { throw "should not have thrown" })
       .catch(actualError => expect(error).toEqual(actualError));
   });

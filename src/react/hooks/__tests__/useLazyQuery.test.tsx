@@ -1183,5 +1183,5 @@ describe('useLazyQuery Hook', () => {
       const { options } = result.current.query.observable;
       expect(options.fetchPolicy).toBe(defaultFetchPolicy);
     });
-  })
+  });
 });

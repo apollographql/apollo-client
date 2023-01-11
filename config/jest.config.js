@@ -1,4 +1,5 @@
 const defaults = {
+  bail: 1,
   rootDir: "src",
   preset: "ts-jest",
   testEnvironment: "jsdom",
@@ -21,10 +22,6 @@ const defaults = {
     ],
   },
 };
-
-const failingTestIgnore = [
-  'src/react/hooks/__tests__/useLazyQuery.test.tsx'
-];
 
 const ignoreTSFiles = '.ts$';
 const ignoreTSXFiles = '.tsx$';

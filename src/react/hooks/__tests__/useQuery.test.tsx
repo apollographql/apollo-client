@@ -84,7 +84,11 @@ describe('useQuery Hook', () => {
       rerender({ children: null });
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(true);
+        if (IS_REACT_18) {
+          expect(result.current.loading).toBe(true);
+        } else {
+          expect(result.current.loading).toBe(false);
+        }
       });
       await waitFor(() => {
         if (IS_REACT_18) {

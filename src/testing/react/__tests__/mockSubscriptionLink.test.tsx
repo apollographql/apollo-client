@@ -11,7 +11,7 @@ import { useSubscription } from '../../../react/hooks';
 const IS_REACT_18 = React.version.startsWith('18');
 
 describe('mockSubscriptionLink', () => {
-  it('should work with multiple subscribers to the same mock websocket',async () => {
+  it('should work with multiple subscribers to the same mock websocket', async () => {
     const subscription = gql`
       subscription {
         car {

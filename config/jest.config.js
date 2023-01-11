@@ -2,7 +2,7 @@ const defaults = {
   rootDir: "src",
   preset: "ts-jest",
   testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
+  setupFiles: ["<rootDir>/config/jest/setup.ts"],
   testEnvironmentOptions: {
     url: "http://localhost",
   },
@@ -24,42 +24,41 @@ const defaults = {
 };
 
 const failingTestIgnore = [
-  // 'src/__tests__/local-state/export.ts',
-  // 'src/link/persisted-queries/__tests__/react.test.tsx',
-  // 'src/react/hooks/__tests__/useQuery.test.tsx',
   'src/react/hooks/__tests__/useLazyQuery.test.tsx'
 ]
 
 const ignoreTSFiles = '.ts$';
 const ignoreTSXFiles = '.tsx$';
 
+const react18TestFileIgnoreList = [
+  // ignore core tests (.ts files) as they are run separately
+  // to avoid running them twice with both react versions
+  // since they do not import react
+  ignoreTSFiles,
+  // failing hoc tests (8)
+  'src/react/hoc/__tests__/mutations/queries.test.tsx',
+  'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',
+  'src/react/hoc/__tests__/queries/errors.test.tsx',
+  'src/react/hoc/__tests__/queries/lifecycle.test.tsx',
+  'src/react/hoc/__tests__/queries/loading.test.tsx',
+  'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
+  'src/react/hoc/__tests__/queries/skip.test.tsx',
+  'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
+  // failing components tests (1)
+  'src/react/components/__tests__/client/Query.test.tsx',
+];
+
+
 const tsStandardConfig = {
   ...defaults,
   displayName: 'Core Tests',
-  testPathIgnorePatterns: [...failingTestIgnore, ignoreTSXFiles],
+  testPathIgnorePatterns: [ignoreTSXFiles],
 }
 
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
-  testPathIgnorePatterns: [
-    ...failingTestIgnore,
-    // ignore core tests (.ts files) as they are run separately
-    // to avoid running them twice with both react versions
-    // since they do not import react
-    ignoreTSFiles,
-    // failing hoc tests (8)
-    'src/react/hoc/__tests__/mutations/queries.test.tsx',
-    'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',
-    'src/react/hoc/__tests__/queries/errors.test.tsx',
-    'src/react/hoc/__tests__/queries/lifecycle.test.tsx',
-    'src/react/hoc/__tests__/queries/loading.test.tsx',
-    'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
-    'src/react/hoc/__tests__/queries/skip.test.tsx',
-    'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
-    // failing components tests (1)
-    'src/react/components/__tests__/client/Query.test.tsx',
-  ]
+  testPathIgnorePatterns: react18TestFileIgnoreList
 };
 
 const standardReact17Config = {

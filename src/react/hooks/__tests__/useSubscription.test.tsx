@@ -644,6 +644,7 @@ describe('useSubscription Hook', () => {
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining("supports only the 'onSubscriptionData' or 'onData' option"));
+    warningSpy.mockRestore();
   });
 
   test("prefers 'onData' when using 'onSubscriptionData' and 'onData' together", async () => {
@@ -693,7 +694,7 @@ describe('useSubscription Hook', () => {
   });
 
   test("uses 'onSubscriptionData' when 'onData' is absent", async () => {
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const subscription = gql`
       subscription {
         car {
@@ -733,6 +734,7 @@ describe('useSubscription Hook', () => {
     await waitFor(() => {
       expect(onSubscriptionData).toHaveBeenCalledTimes(1);
     }, { interval: 1 });
+    warningSpy.mockRestore();
   });
 
   test("only warns once using `onSubscriptionData`", () => {
@@ -767,6 +769,7 @@ describe('useSubscription Hook', () => {
     rerender();
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
+    warningSpy.mockRestore();
   });
 
   test("should warn when using 'onComplete' and 'onSubscriptionComplete' together", () => {
@@ -801,10 +804,11 @@ describe('useSubscription Hook', () => {
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining("supports only the 'onSubscriptionComplete' or 'onComplete' option"));
+    warningSpy.mockRestore();
   });
 
   test("prefers 'onComplete' when using 'onComplete' and 'onSubscriptionComplete' together", async () => {
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const subscription = gql`
       subscription {
         car {
@@ -847,10 +851,11 @@ describe('useSubscription Hook', () => {
       expect(onComplete).toHaveBeenCalledTimes(1);
     }, { interval: 1 });
     expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
+    warningSpy.mockRestore();
   });
 
   test("uses 'onSubscriptionComplete' when 'onComplete' is absent", async () => {
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const subscription = gql`
       subscription {
         car {
@@ -890,7 +895,7 @@ describe('useSubscription Hook', () => {
     await waitFor(() => {
       expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
     }, { interval: 1 });
-
+    warningSpy.mockRestore();
   });
 
   test("only warns once using `onSubscriptionComplete`", () => {
@@ -925,5 +930,6 @@ describe('useSubscription Hook', () => {
     rerender();
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
+    warningSpy.mockRestore();
   });
 });

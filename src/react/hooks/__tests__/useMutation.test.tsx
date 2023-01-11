@@ -2217,7 +2217,7 @@ describe('useMutation Hook', () => {
       render(<ApolloProvider client={client}><Test /></ApolloProvider>);
 
       await waitFor(() => screen.findByText('item 1'));
-      userEvent.click(screen.getByRole('button', { name: /mutate/i }));
+      await userEvent.click(screen.getByRole('button', { name: /mutate/i }));
       await waitFor(() => screen.findByText('item 3'));
     });
   });

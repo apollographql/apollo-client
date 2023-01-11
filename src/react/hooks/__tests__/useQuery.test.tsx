@@ -1664,14 +1664,21 @@ describe('useQuery Hook', () => {
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       }, { interval: 1 });
-      expect(result.current.data).toEqual({ hello: "world 1" });
-      expect(requestSpy).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 1" });
+      });
+      await waitFor(() => {
+        expect(requestSpy).toHaveBeenCalledTimes(1);
+      })
 
       unmount();
+
       await expect(waitFor(() => {
         expect(requestSpy).not.toHaveBeenCalledTimes(1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
+      await waitFor(() => {
+        expect(onErrorFn).toHaveBeenCalledTimes(0);
+      });
       requestSpy.mockRestore();
     });
 

@@ -3,7 +3,7 @@ version: 2
 jobs:
   Filesize:
     docker:
-      - image: cimg/node:19.4.0
+      - image: cimg/node:19.3.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -13,7 +13,7 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:19.4.0
+      - image: cimg/node:19.3.0
     steps:
       - checkout
       - run: npm run ci:precheck

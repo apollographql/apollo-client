@@ -50,7 +50,7 @@
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "test:memory": "cd scripts/memory && npm i && npm test",
-    "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
+    "test:coverage": "npm run coverage -- --ci",
     "coverage": "jest --config ./config/jest.config.js --coverage",
     "bundlesize": "npm run build && ts-node-script ./config/bundlesize.ts",
     "predeploy": "npm run build",

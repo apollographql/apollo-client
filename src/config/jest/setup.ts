@@ -4,7 +4,3 @@ import gql from 'graphql-tag';
 gql.disableFragmentWarnings();
 
 process.on('unhandledRejection', () => {});
-
-beforeEach(() => {
-  jest.restoreAllMocks();
-});

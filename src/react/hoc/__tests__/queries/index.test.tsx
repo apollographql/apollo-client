@@ -24,7 +24,7 @@ describe('queries', () => {
   });
 
   // general api
-  it('binds a query to props', () => {
+  it('binds a query to props', async() => {
     let done = false;
     const query: DocumentNode = gql`
       query people {
@@ -58,15 +58,15 @@ describe('queries', () => {
       }
     );
 
-    const { unmount } = render(
+    render(
       <ApolloProvider client={client}>
         <ContainerWithData />
       </ApolloProvider>
     );
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(done).toBe(true);
-    }).finally(unmount)
+    });
   });
 
   itAsync('includes the variables in the props', (resolve, reject) => {
@@ -588,6 +588,7 @@ describe('queries', () => {
           expect(props.data!.allPeople).toEqual(data.allPeople);
         }
         render() {
+          // eslint-disable-next-line testing-library/no-node-access
           return <div>{this.props.children}</div>;
         }
       }
@@ -610,6 +611,7 @@ describe('queries', () => {
       }
 
       render() {
+        // eslint-disable-next-line testing-library/no-node-access
         return <div>{this.props.children}</div>;
       }
     }
@@ -630,6 +632,7 @@ describe('queries', () => {
         }
 
         count++;
+        // eslint-disable-next-line testing-library/no-node-access
         return <div>{this.props.children}</div>;
       }
     }

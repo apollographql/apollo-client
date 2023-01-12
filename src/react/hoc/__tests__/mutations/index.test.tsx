@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -49,7 +49,6 @@ describe('graphql(mutation)', () => {
 
   afterEach(() => {
     console.error = error;
-    cleanup();
   });
 
   it('binds a mutation to props', () => {
@@ -160,6 +159,7 @@ describe('graphql(mutation)', () => {
       }
 
       render() {
+        // eslint-disable-next-line testing-library/no-node-access
         return this.props.children;
       }
     }

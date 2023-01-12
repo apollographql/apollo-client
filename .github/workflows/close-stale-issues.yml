@@ -162,7 +162,7 @@ jobs:
         # labels-to-add-when-unstale: # optional, default is 
 
         # A comma delimited list of labels to remove when a stale issue or pull request receives activity and has the stale-issue-label or stale-pr-label removed from it.
-        labels-to-remove-when-unstale: "awaiting-contributor-response"
+        labels-to-remove-when-unstale: "🏓 awaiting-contributor-response"
 
         # Any update (update/comment) can reset the stale idle time on the issues and pull requests.
         ignore-updates: false

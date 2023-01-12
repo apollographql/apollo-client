@@ -108,20 +108,20 @@ function renderSuspenseHook<Result, Props>(
     ...renderHookOptions
   } = options;
 
-  const result = renderHook(
+  const view = renderHook(
     (props) => {
       renders.count++;
 
-      const result = render(props);
+      const view = render(props);
 
-      renders.frames.push(result);
+      renders.frames.push(view);
 
-      return result;
+      return view;
     },
     { ...renderHookOptions, wrapper }
   );
 
-  return { ...result, renders };
+  return { ...view, renders };
 }
 
 function useSimpleQueryCase() {
@@ -582,6 +582,8 @@ describe('useSuspenseQuery', () => {
     // unsuspended, so we need to wait for the results of all queries
     await waitFor(() => {
       expect(result1.current.data).toEqual(mocks[0].result.data);
+    });
+    await waitFor(() => {
       expect(result2.current.data).toEqual(mocks[0].result.data);
     });
 

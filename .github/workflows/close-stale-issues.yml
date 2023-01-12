@@ -54,7 +54,7 @@ jobs:
         days-before-pr-close: -1
 
         # The label to apply when an issue is stale.
-        stale-issue-label: "awaiting-contributor-response"
+        stale-issue-label: "🏓 awaiting-contributor-response"
 
         # # The label to apply when an issue is closed.
         # close-issue-label: # optional

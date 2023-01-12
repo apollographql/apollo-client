@@ -238,11 +238,7 @@ describe('[queries] errors', () => {
                 expect(props.data!.error!.networkError).toBeTruthy();
                 // // We need to set a timeout to ensure the unhandled rejection is swept up
                 setTimeout(() => {
-                  // try {
                   expect(unhandled.length).toEqual(0);
-                  // } catch (err) {
-                  //   reject(err);
-                  // }
                   done = true;
                 });
               }

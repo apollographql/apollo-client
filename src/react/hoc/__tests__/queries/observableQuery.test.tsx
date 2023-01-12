@@ -37,18 +37,18 @@ describe('[queries] observableQuery', () => {
 
     let count = 0;
 
-    const assert1 = () => {
+    const assert1 = async () => {
       const keys = Array.from(
         ((client as any).queryManager as any).queries.keys()
       );
-      expect(keys).toEqual(['1']);
+      await waitFor(() => expect(keys).toEqual(['1']), { interval: 1 });
     };
 
-    const assert2 = () => {
+    const assert2 = async () => {
       const keys = Array.from(
         ((client as any).queryManager as any).queries.keys()
       );
-      expect(keys).toEqual(['1']);
+      await waitFor(() => expect(keys).toEqual(['1']), { interval: 1 });
     };
 
     let done = false;
@@ -64,11 +64,12 @@ describe('[queries] observableQuery', () => {
             );
 
             // ensure first assertion and umount tree
-            assert1();
+            await assert1();
+
             userEvent.click(screen.getByText('Break things'));
 
             // ensure cleanup
-            assert2();
+            await assert2();
           }
 
           if (count === 4) {

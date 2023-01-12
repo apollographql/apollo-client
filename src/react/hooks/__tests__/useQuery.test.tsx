@@ -5159,12 +5159,12 @@ describe('useQuery Hook', () => {
         expect(previousData).toEqual({ a: "a" });
       }, { interval: 1 });
 
-      await expect(await waitFor(() => {
+      await waitFor(() => {
         result.current.useQueryResult.reobserve().then(result => {
           expect(result.loading).toBe(false);
           expect(result.data).toEqual({ a: "aaa", b: 2 });
         });
-      }, { interval: 1 }));
+      }, { interval: 1 });
 
       await waitFor(() => {
         const { loading } = result.current.useQueryResult;
@@ -5179,9 +5179,9 @@ describe('useQuery Hook', () => {
         expect(previousData).toEqual({ a: "aa", b: 1 });
       }, { interval: 1 });
 
-      await expect(await waitFor(() => {
+      await waitFor(() => {
         result.current.setQuery(bQuery);
-      }, { interval: 1 }));
+      }, { interval: 1 });
 
       await waitFor(() => {
         const { loading } = result.current.useQueryResult;

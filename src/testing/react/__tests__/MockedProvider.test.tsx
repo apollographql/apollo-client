@@ -424,7 +424,7 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should return "No more mocked responses" errors in response', (resolve, reject) => {
+  it('should return "No more mocked responses" errors in response', async () => {
     let finished = false;
     function Component() {
       const { loading, error } = useQuery(query);
@@ -443,15 +443,15 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(finished).toBe(true);
-      // The "No more mocked responses" error should not be thrown as an
-      // uncaught exception.
-      expect(errorThrown).toBeFalsy();
-    }).then(resolve, reject);
+    });
+    // The "No more mocked responses" error should not be thrown as an
+    // uncaught exception.
+    expect(errorThrown).toBeFalsy();
   });
 
-  itAsync('should return "Mocked response should contain" errors in response', (resolve, reject) => {
+  it('should return "Mocked response should contain" errors in response', async () => {
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
@@ -477,12 +477,12 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(finished).toBe(true);
-      // The "Mocked response should contain" error should not be thrown as an
-      // uncaught exception.
-      expect(errorThrown).toBeFalsy();
-    }).then(resolve, reject);
+    });
+    // The "Mocked response should contain" error should not be thrown as an
+    // uncaught exception.
+    expect(errorThrown).toBeFalsy();
   });
 
   itAsync('should support custom error handling using setOnError', (resolve, reject) => {

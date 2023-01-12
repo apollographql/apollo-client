@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor, renderHook } from '@testing-library/react';
+import { render, screen, waitFor, renderHook } from '@testing-library/react';
 import {
   ApolloClient,
   ApolloError,
@@ -12,11 +12,10 @@ import {
   WatchQueryFetchPolicy,
 } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import {
-  itAsync,
   MockLink,
   MockedProvider,
   MockSubscriptionLink,
@@ -27,7 +26,15 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
+const IS_REACT_18 = React.version.startsWith('18');
+
 describe('useQuery Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
@@ -77,21 +84,38 @@ describe('useQuery Hook', () => {
       } ];
       const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
       const { result, rerender } = renderHook(() => useQuery(query), { wrapper });
+
       await waitFor(() => result.current.loading === false);
+
       rerender({ children: null });
+
       await waitFor(() => {
-        expect(result.current.loading).toBe(true);
-        expect(result.current.data).toBeUndefined();
-      }, { interval: 1 });
+        if (IS_REACT_18) {
+          expect(result.current.loading).toBe(true);
+        } else {
+          expect(result.current.loading).toBe(false);
+        }
+      });
+      await waitFor(() => {
+        if (IS_REACT_18) {
+          expect(result.current.data).toBeUndefined();
+        } else {
+          expect(result.current.data).toEqual({ hello: "world"});
+        }
+      });
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world" });
-      }, { interval: 1 });
+      });
       // Repeat frame because rerender forces useQuery to be called again
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world" });
-      }, { interval: 1 });
+      });
     });
 
     it("useQuery produces the expected frames when variables change", async () => {
@@ -114,26 +138,62 @@ describe('useQuery Hook', () => {
       );
       await waitFor(() => result.current.loading === false);
       await waitFor(() => {
-        expect(result.current.loading).toBe(true);
-        expect(result.current.data).toBeUndefined();
-        expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-      }, { interval: 1 });
+        if (IS_REACT_18) {
+          expect(result.current.loading).toBe(true);
+        } else {
+          expect(result.current.loading).toBe(false);
+        }
+      });
+      await waitFor(() => {
+        if (IS_REACT_18) {
+          expect(result.current.data).toBeUndefined();
+        } else {
+          expect(result.current.data).toEqual({ hello: "world 1" });
+        }
+      });
+      await waitFor(() => {
+        if (IS_REACT_18) {
+          expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+        } else {
+          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+        }
+      });
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 1" });
+      });
+      await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      }, { interval: 1 });
+      });
       rerender({ variables: { id: 2 } });
       await waitFor(() => {
         expect(result.current.loading).toBe(true);
-        expect(result.current.data).toBeUndefined();
-        expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
-      }, { interval: 1 });
+      });
+      await waitFor(() => {
+        if (IS_REACT_18) {
+          expect(result.current.data).toBeUndefined();
+        } else {
+          expect(result.current.data).toEqual({ hello: "world 2" });
+        }
+      });
+      await waitFor(() => {
+        if (IS_REACT_18) {
+          expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
+        } else {
+          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+        }
+      });
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 2" });
+      });
+      await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      }, { interval: 1 });
+      });
     });
 
     it('should read and write results from the cache', async () => {
@@ -479,13 +539,17 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current[0].loading).toBe(false);
+      });
+      await waitFor(() => {
         expect(result.current[0].data).toEqual({ hello: "world 2" });
+      });
+      await waitFor(() => {
         expect(result.current[0].variables).toEqual({ name: "world 2" });
       });
     });
 
     // TODO: Rewrite this test
-    itAsync('should not error when forcing an update with React >= 16.13.0', (resolve, reject) => {
+    it('should not error when forcing an update with React >= 16.13.0', async () => {
       const CAR_QUERY: DocumentNode = gql`
         query {
           cars {
@@ -543,7 +607,7 @@ describe('useQuery Hook', () => {
       }
 
       render(
-        <MockedProvider link={new MockLink(CAR_MOCKS).setOnError(reject)}>
+        <MockedProvider link={new MockLink(CAR_MOCKS)}>
           <Fragment>
             <WrapperComponent something={1} />
             <WrapperComponent something={3} />
@@ -552,11 +616,10 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      waitFor(() => {
+      await waitFor(() => {
         expect(renderCount).toBe(6);
-      }).finally(() => {
-        console.error = consoleError;
-      }).then(resolve, reject);
+      })
+      console.error = consoleError;
     });
 
     it('should tear down the query on unmount', async () => {
@@ -677,15 +740,27 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current[0].loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current[0].data).toEqual(allPeopleData);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current[1].loading).toBe(true);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current[1].data).toBe(undefined);
       }, { interval: 1 });
 
       await waitFor(() => {
         expect(result.current[0].loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current[0].data).toEqual(allPeopleData);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current[1].data).toEqual(allThingsData);
       }, { interval: 1 });
 
@@ -1375,9 +1450,13 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           linkCount: 2,
         });
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       }, { interval: 1 });
 
@@ -1585,14 +1664,22 @@ describe('useQuery Hook', () => {
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       }, { interval: 1 });
-      expect(result.current.data).toEqual({ hello: "world 1" });
-      expect(requestSpy).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 1" });
+      });
+      await waitFor(() => {
+        expect(requestSpy).toHaveBeenCalledTimes(1);
+      })
 
       unmount();
+
       await expect(waitFor(() => {
         expect(requestSpy).not.toHaveBeenCalledTimes(1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
+      await waitFor(() => {
+        expect(onErrorFn).toHaveBeenCalledTimes(0);
+      });
+      requestSpy.mockRestore();
     });
 
     it('should stop polling when component is unmounted in Strict Mode', async () => {
@@ -1646,6 +1733,7 @@ describe('useQuery Hook', () => {
         expect(requestSpy).not.toHaveBeenCalledTimes(1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+      requestSpy.mockRestore();
     });
 
     it('should start and stop polling in Strict Mode', async () => {
@@ -1702,6 +1790,7 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+      requestSpy.mockRestore();
     });
 
     it('should not throw an error if stopPolling is called manually', async () => {
@@ -1813,6 +1902,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
         expect(onError).toHaveBeenCalledWith(
           new ApolloError({ graphQLErrors: [new GraphQLError('error')] })
         );
@@ -1856,6 +1947,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
         expect(onError).toHaveBeenCalledWith(
           new ApolloError({ networkError: new Error('Could not fetch') })
         );
@@ -1976,6 +2069,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
         expect(onError).toHaveBeenCalledWith(
           new ApolloError({ networkError: new Error('Could not fetch') })
         );
@@ -2051,8 +2146,11 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(onCompleted).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
         expect(onCompleted).toHaveBeenCalledWith({ hello: null });
-
+      });
+      await waitFor(() => {
         expect(onError).not.toHaveBeenCalled();
       });
     });
@@ -2095,6 +2193,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
         expect(onError).toHaveBeenCalledWith(
           new ApolloError({ graphQLErrors: [new GraphQLError('error')] })
         );
@@ -2179,14 +2279,17 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
         expect(onError).toHaveBeenCalledWith(
           new ApolloError({
             graphQLErrors: [new GraphQLError('Could not fetch "hello"')]
           })
         );
-
+      });
+      await waitFor(() => {
         expect(onCompleted).not.toHaveBeenCalled();
-      })
+      });
     });
 
     it('calls `onError` a single time when refetching returns a successful result', async () => {
@@ -3457,8 +3560,14 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: 'world' });
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(onCompleted).toHaveBeenCalledTimes(1);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(onCompleted).toHaveBeenCalledWith({ hello: 'world' });
       }, { interval: 1 });
       expect(onCompleted).toHaveBeenCalledTimes(1);
@@ -3679,8 +3788,8 @@ describe('useQuery Hook', () => {
         );
       };
 
-      const { findByText } = render(<ParentComponent />);
-      await findByText("onCompletedCalled: true");
+      render(<ParentComponent />);
+      await screen.findByText("onCompletedCalled: true");
       expect(errorSpy).not.toHaveBeenCalled();
       errorSpy.mockRestore();
     });
@@ -4982,68 +5091,132 @@ describe('useQuery Hook', () => {
 
 
       await waitFor(() => {
-        const { loading, data, previousData } = result.current.useQueryResult;
+        const { loading } = result.current.useQueryResult;
         expect(loading).toBe(true);
-        expect(data).toBeUndefined();
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        if (IS_REACT_18) {
+          expect(data).toBeUndefined();
+        } else {
+          expect(data).toEqual({ a: "a" });
+        }
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
         expect(previousData).toBeUndefined();
       }, { interval: 1 });
 
 
       await waitFor(() => {
-        const { loading, data, previousData } = result.current.useQueryResult;
+        const { loading } = result.current.useQueryResult;
         expect(loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
         expect(data).toEqual({ a: "a" });
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
         expect(previousData).toBe(undefined);
       }, { interval: 1 });
 
-      await expect(waitFor(() => {
+      await expect(await waitFor(() => {
         result.current.setQuery(abQuery);
       }, { interval: 1 }));
 
       await waitFor(() => {
-        const { loading, data, previousData } = result.current.useQueryResult;
-        expect(loading).toBe(true);
-        expect(data).toBeUndefined();
+        const { loading } = result.current.useQueryResult;
+        if (IS_REACT_18) {
+          expect(loading).toBe(true);
+        } else {
+          expect(loading).toBe(false);
+        }
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        if (IS_REACT_18) {
+          expect(data).toBeUndefined();
+        } else {
+          expect(data).toEqual({ a: "aa", b: 1 });
+        }
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
         expect(previousData).toEqual({ a: "a" });
       }, { interval: 1 });
 
       await waitFor(() => {
-        const { loading, data, previousData } = result.current.useQueryResult;
+        const { loading } = result.current.useQueryResult;
         expect(loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
         expect(data).toEqual({ a: "aa", b: 1 });
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
         expect(previousData).toEqual({ a: "a" });
       }, { interval: 1 });
 
-      await expect(waitFor(() => {
+      await waitFor(() => {
         result.current.useQueryResult.reobserve().then(result => {
           expect(result.loading).toBe(false);
           expect(result.data).toEqual({ a: "aaa", b: 2 });
         });
-      }, { interval: 1 }));
+      }, { interval: 1 });
 
       await waitFor(() => {
-        const { loading, data, previousData } = result.current.useQueryResult;
+        const { loading } = result.current.useQueryResult;
         expect(loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
         expect(data).toEqual({ a: "aaa", b: 2 });
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
         expect(previousData).toEqual({ a: "aa", b: 1 });
       }, { interval: 1 });
 
-      await expect(waitFor(() => {
-        result.current.setQuery(bQuery);
-      }, { interval: 1 }));
-
       await waitFor(() => {
-        const { loading, data, previousData } = result.current.useQueryResult;
-        expect(loading).toBe(true);
-        expect(data).toEqual({ b: 2 });
-        expect(previousData).toEqual({ a: "aaa", b: 2 });
+        result.current.setQuery(bQuery);
       }, { interval: 1 });
 
       await waitFor(() => {
-        const { loading, data, previousData } = result.current.useQueryResult;
+        const { loading } = result.current.useQueryResult;
+        if (IS_REACT_18) {
+          expect(loading).toBe(true);
+        } else {
+          expect(loading).toBe(false);
+        }
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        if (IS_REACT_18) {
+          expect(data).toEqual({ b: 2 });
+        } else {
+          expect(data).toEqual({ b: 3 });
+        }
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        if (IS_REACT_18) {
+          expect(previousData).toEqual({ a: "aaa", b: 2 });
+        } else {
+          expect(previousData).toEqual({ b: 2 });
+        }
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
         expect(loading).toBe(false);
-        expect(loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
         expect(data).toEqual({ b: 3 });
+      }, { interval: 1 });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
         expect(previousData).toEqual({ b: 2 });
       }, { interval: 1 });
     });
@@ -5196,16 +5369,22 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: 'world 1' });
       }, { interval: 1 });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: 'world 2' });
       }, { interval: 1 });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: 'world 3' });
       }, { interval: 1 });
     });
@@ -5285,6 +5464,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ results });
       }, { interval: 1 });
       expect(result.current.data.results.length).toBe(7);
@@ -5372,6 +5553,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ results });
       }, { interval: 1 });
       expect(result.current.data.results.length).toBe(7);
@@ -5461,6 +5644,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.a.loading).toBe(false);
+      });
+      await waitFor(() => {
         expect(result.current.b.loading).toBe(false);
       });
       expect(result.current.a.data).toEqual(aData);
@@ -5514,7 +5699,7 @@ describe('useQuery Hook', () => {
   });
 
   describe('regression test issue #9204', () => {
-    itAsync('should handle a simple query', (resolve, reject) => {
+    it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
       const mocks = [
         {
@@ -5533,7 +5718,7 @@ describe('useQuery Hook', () => {
            * this component will re-render in an infinite loop.
            */
           if (counter > 10) {
-            reject(new Error(`Too many results (${counter})`));
+            console.error(`Too many results (${counter})`);
           } else {
             setCounter(c => c + 1);
           }
@@ -5547,15 +5732,15 @@ describe('useQuery Hook', () => {
         return <div>{result.data.hello}{counter}</div>;
       }
 
-      const { getByText } = render(
+      render(
         <MockedProvider mocks={mocks}>
           <Component query={query} />
         </MockedProvider>
       );
 
-      waitFor(() => {
-        expect(getByText('world2')).toBeTruthy();
-      }).then(resolve, reject);
+      await waitFor(() => {
+        expect(screen.getByText('world2')).toBeTruthy();
+      });
     });
   });
 
@@ -5638,6 +5823,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greeting: {
             message: 'Hello world',
@@ -5729,6 +5916,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greetings: [
             {
@@ -5761,6 +5950,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greetings: [
             {
@@ -5845,6 +6036,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           allProducts: [
             {
@@ -5903,6 +6096,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           allProducts: [
             {
@@ -5980,6 +6175,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greeting: {
             message: 'Hello world',
@@ -6008,6 +6205,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greeting: {
             message: 'Hello world',
@@ -6082,6 +6281,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           hero: {
             heroFriends: [
@@ -6129,10 +6330,14 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
-        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.error).toBeInstanceOf(ApolloError);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
-
+      }, { interval: 1 });
+      await waitFor(() => {
         // since default error policy is "none", we do *not* return partial results
         expect(result.current.data).toEqual({
           hero: {
@@ -6213,6 +6418,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           hero: {
             heroFriends: [
@@ -6264,13 +6471,22 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         // @ts-ignore
         expect(result.current.label).toBe(undefined);
+      }, { interval: 1 });
+      await waitFor(() => {
         // @ts-ignore
         expect(result.current.extensions).toBe(undefined);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.error).toBeInstanceOf(ApolloError);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.error!.message).toBe('homeWorld for character with ID 1000 could not be fetched.');
-
+      }, { interval: 1 });
+      await waitFor(() => {
         // since default error policy is "all", we *do* return partial results
         expect(result.current.data).toEqual({
           hero: {
@@ -6355,7 +6571,11 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greeting: {
             __typename: 'Greeting',
@@ -6382,7 +6602,11 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greeting: {
             __typename: 'Greeting',
@@ -6458,7 +6682,11 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greeting: {
             __typename: 'Greeting',
@@ -6485,7 +6713,11 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({
           greeting: {
             __typename: 'Greeting',

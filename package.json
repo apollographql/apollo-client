@@ -44,13 +44,14 @@
     "postprocess-dist": "ts-node-script config/postprocessDist.ts",
     "clean": "rimraf -r dist coverage lib temp",
     "ci:precheck": "node config/precheck.js",
+    "lint": "eslint '**/__tests__/**/*.[jt]sx'",
     "test": "jest --config ./config/jest.config.js",
-    "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999",
-    "test:ci": "TEST_ENV=ci npm run test:coverage && npm run test:memory",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999 --logHeapUsage",
+    "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
     "test:memory": "cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
-    "coverage": "jest --config ./config/jest.config.js --verbose --coverage",
+    "coverage": "node --no-compilation-cache --expose-gc --max_old_space_size=4096 node_modules/.bin/jest --config ./config/jest.config.js --logHeapUsage --coverage --watchAll=false",
     "bundlesize": "npm run build && ts-node-script ./config/bundlesize.ts",
     "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag next",
@@ -60,7 +61,7 @@
     "changeset-version": "changeset version && npm i"
   },
   "engines": {
-    "npm": "^7.20.3 || ^8.0.0"
+    "npm": "^7.20.3 || ^8.0.0 || ^9.0.0"
   },
   "peerDependencies": {
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0",
@@ -119,10 +120,14 @@
     "@types/react": "18.0.26",
     "@types/react-dom": "18.0.10",
     "@types/use-sync-external-store": "0.0.3",
+    "@typescript-eslint/eslint-plugin": "5.48.1",
+    "@typescript-eslint/parser": "5.48.1",
     "acorn": "8.8.1",
     "blob-polyfill": "7.0.20220408",
     "bytes": "3.1.2",
     "cross-fetch": "3.1.5",
+    "eslint": "8.31.0",
+    "eslint-plugin-testing-library": "5.9.1",
     "fetch-mock": "9.11.0",
     "glob": "8.0.3",
     "graphql": "16.6.0",

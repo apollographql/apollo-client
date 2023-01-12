@@ -15,13 +15,13 @@ index 72287ac..f0d2c59 100644
  });
  exports.render = render;
 +exports.renderHook = renderHook;
- 
+
  var React = _interopRequireWildcard(require("react"));
- 
+
 @@ -138,6 +140,42 @@ function cleanup() {
  } // maybe one day we'll expose this (perhaps even as a utility returned by render).
  // but let's wait until someone asks for it.
- 
+
 +function renderHook(renderCallback, options = {}) {
 +  const {
 +    initialProps,
@@ -58,6 +58,6 @@ index 72287ac..f0d2c59 100644
 +    unmount
 +  };
 +} // just re-export everything from dom-testing-library
- 
+
  function cleanupAtContainer(container) {
    (0, _actCompat.default)(() => {

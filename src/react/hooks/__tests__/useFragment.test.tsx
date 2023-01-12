@@ -1,6 +1,5 @@
 import * as React from "react";
-import { render, waitFor, screen } from "@testing-library/react";
-import { renderHook } from '@testing-library/react-hooks';
+import { render, waitFor, screen, renderHook } from "@testing-library/react";
 import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
@@ -19,6 +18,9 @@ import {
 import { useQuery } from "../useQuery";
 
 describe("useFragment", () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
   it("is importable and callable", () => {
     expect(typeof useFragment).toBe("function");
   });
@@ -112,14 +114,15 @@ describe("useFragment", () => {
       return <li>{complete ? data!.text : "incomplete"}</li>;
     }
 
-    const { getAllByText } = render(
+    render(
       <MockedProvider cache={cache}>
         <List />
       </MockedProvider>
     );
 
     function getItemTexts() {
-      return getAllByText(/^Item/).map(
+      return screen.getAllByText(/^Item/).map(
+        // eslint-disable-next-line testing-library/no-node-access
         li => li.firstChild!.textContent
       );
     }
@@ -368,14 +371,15 @@ describe("useFragment", () => {
       return <li>{complete ? data!.text : "incomplete"}</li>;
     }
 
-    const { getAllByText } = render(
+    render(
       <MockedProvider cache={cache}>
         <List />
       </MockedProvider>
     );
 
     function getItemTexts() {
-      return getAllByText(/^Item/).map(
+      return screen.getAllByText(/^Item/).map(
+        // eslint-disable-next-line testing-library/no-node-access
         li => li.firstChild!.textContent
       );
     }
@@ -876,6 +880,7 @@ describe("useFragment", () => {
 
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
+        // eslint-disable-next-line testing-library/no-node-access
         li => li.firstChild!.textContent
       );
     }

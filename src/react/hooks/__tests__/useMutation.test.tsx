@@ -9,13 +9,19 @@ import fetchMock from "fetch-mock";
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, MockSubscriptionLink, mockSingleLink, subscribeAndCount } from '../../../testing';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
 import { FetchResult } from '../../../link/core';
 
 describe('useMutation Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   interface Todo {
     id: number;
     description: string;
@@ -1369,7 +1375,7 @@ describe('useMutation Hook', () => {
       }).then(resolve, reject);
     });
 
-    itAsync('should be called with the provided context', async (resolve, reject) => {
+    it('should be called with the provided context', async () => {
       const optimisticResponse = {
         __typename: 'Mutation',
         createTodo: {
@@ -1423,10 +1429,10 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(contextFn).toHaveBeenCalledTimes(2);
-        expect(contextFn).toHaveBeenCalledWith(context);
-      }).then(resolve, reject);
+      });
+      expect(contextFn).toHaveBeenCalledWith(context);
     });
   });
 
@@ -2211,7 +2217,7 @@ describe('useMutation Hook', () => {
       render(<ApolloProvider client={client}><Test /></ApolloProvider>);
 
       await waitFor(() => screen.findByText('item 1'));
-      await waitFor(() => userEvent.click(screen.getByRole('button', { name: /mutate/i })));
+      await userEvent.click(screen.getByRole('button', { name: /mutate/i }));
       await waitFor(() => screen.findByText('item 3'));
     });
   });
@@ -2370,11 +2376,21 @@ describe('useMutation Hook', () => {
         fetchResult = await createTodo({ variables });
       });
 
-      expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
-      expect(fetchResult.data).toBe(undefined);
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
-      expect(errorSpy).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
+      });
+      await waitFor(() => {
+        expect(fetchResult.data).toBe(undefined);
+      });
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
+        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+      });
+      await waitFor(() => {
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
       errorSpy.mockRestore();
     });
     it('calls the update function with the final merged result data', async () => {
@@ -2455,8 +2471,10 @@ describe('useMutation Hook', () => {
         // but we only care about variables here
         expect.objectContaining({ variables })
       );
+      await waitFor(() => {
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
 
-      expect(errorSpy).not.toHaveBeenCalled();
       errorSpy.mockRestore();
     });
   });

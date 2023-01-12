@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { ApolloLink } from '../../../link/core';
 import { ApolloClient } from '../../../core';
@@ -8,31 +8,29 @@ import { ApolloProvider } from '../ApolloProvider';
 import { getApolloContext } from '../ApolloContext';
 
 describe('<ApolloProvider /> Component', () => {
-  afterEach(cleanup);
-
   const client = new ApolloClient({
     cache: new Cache(),
     link: new ApolloLink((o, f) => (f ? f(o) : null))
   });
 
   it('should render children components', () => {
-    const { getByText } = render(
+    render(
       <ApolloProvider client={client}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
 
-    expect(getByText('Test')).toBeTruthy();
+    expect(screen.getByText('Test')).toBeTruthy();
   });
 
   it('should support the 2.0', () => {
-    const { getByText } = render(
+    render(
       <ApolloProvider client={{} as ApolloClient<any>}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
 
-    expect(getByText('Test')).toBeTruthy();
+    expect(screen.getByText('Test')).toBeTruthy();
   });
 
   it('should require a client', () => {
@@ -59,12 +57,12 @@ describe('<ApolloProvider /> Component', () => {
   });
 
   it('should not require a store', () => {
-    const { getByText } = render(
+    render(
       <ApolloProvider client={client}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
-    expect(getByText('Test')).toBeTruthy();
+    expect(screen.getByText('Test')).toBeTruthy();
   });
 
   it('should add the client to the children context', () => {

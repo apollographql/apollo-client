@@ -327,7 +327,7 @@ describe('[queries] loading', () => {
     waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
-  itAsync('correctly sets loading state on remounted network-only query', (resolve, reject) => {
+  it('correctly sets loading state on remounted network-only query', async () => {
     const query: DocumentNode = gql`
       query pollingPeople {
         allPeople(first: 1) {
@@ -413,14 +413,16 @@ describe('[queries] loading', () => {
 
     render(App);
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(usedFetchPolicies).toEqual([
         "network-only",
         "network-only",
         "cache-first",
       ]);
+    }, { interval: 1 });
+    await waitFor(() => {
       expect(count).toBe(6);
-    }).then(resolve, reject);
+    }, { interval: 1 });
   });
 
   itAsync('correctly sets loading state on remounted component with changed variables', (resolve, reject) => {

@@ -1,0 +1,13 @@
+{
+  "overrides": [
+    {
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint"],
+      "files": ["**/__tests__/**/*.[jt]sx", "**/?(*.)+(test).[jt]sx"],
+      "extends": ["plugin:testing-library/react"],
+      "rules": {
+        "testing-library/prefer-user-event": "error"
+      }
+    }
+  ]
+}

@@ -98,8 +98,8 @@ jobs:
         # # Only issues or pull requests with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels.
         # any-of-labels: # optional, default is 
 
-        # # Only issues with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels. Override "any-of-labels" option regarding only the issues.
-        # any-of-issue-labels: # optional, default is 
+        # Only issues with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels. Override "any-of-labels" option regarding only the issues.
+        any-of-issue-labels: "🏓 awaiting-contributor-response"
 
         # # Only pull requests with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels. Override "any-of-labels" option regarding only the pull requests.
         # any-of-pr-labels: # optional, default is 

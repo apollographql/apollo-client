@@ -98,8 +98,8 @@ jobs:
         # # Only issues or pull requests with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels.
         # any-of-labels: # optional, default is 
 
-        # # Only issues with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels. Override "any-of-labels" option regarding only the issues.
-        # any-of-issue-labels: # optional, default is 
+        # Only issues with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels. Override "any-of-labels" option regarding only the issues.
+        any-of-issue-labels: "🏓 awaiting-contributor-response"
 
         # # Only pull requests with at least one of these labels are checked if stale. Defaults to `` (disabled) and can be a comma-separated list of labels. Override "any-of-labels" option regarding only the pull requests.
         # any-of-pr-labels: # optional, default is 
@@ -110,8 +110,8 @@ jobs:
         # # Only pull requests with all of these labels are checked if stale. Defaults to `[]` (disabled) and can be a comma-separated list of labels. Override "only-labels" option regarding only the pull requests.
         # only-pr-labels: # optional, default is 
 
-        # # The maximum number of operations per run, used to control rate limiting (GitHub API CRUD related).
-        # operations-per-run: # optional, default is 30
+        # The maximum number of operations per run, used to control rate limiting (GitHub API CRUD related).
+        operations-per-run: 100 # optional, default is 30
 
         # Remove stale labels from issues and pull requests when they are updated or commented on.
         remove-stale-when-updated: false

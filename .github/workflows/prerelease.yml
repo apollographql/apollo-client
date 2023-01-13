@@ -57,6 +57,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: get-npm-version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@main
+
       - name: Run publish
         id: changesets
         # Only run publish if we're still in pre mode and the last commit was
@@ -79,6 +83,38 @@ jobs:
           # a comma-delimited list of channel IDs
           channel-id: 'C01PS0CB41G'
           # For posting a simple plain text message
-          slack-message: "Published v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }} 🚀"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "A new version of `@apollo/client` was released :rocket:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n`${{ steps.package-version.outputs.current-version}}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Tag:*\n`alpha`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*GitHub release:*\nN/A"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
+                    }
+                  ]
+                }
+              ]
+            }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

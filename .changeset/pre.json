@@ -5,9 +5,11 @@
     "@apollo/client": "3.7.2"
   },
   "changesets": [
+    "curly-cameras-carry",
     "early-pens-retire",
     "polite-birds-rescue",
     "rude-mayflies-scream",
+    "short-bikes-mate",
     "sixty-trains-sniff",
     "small-timers-shake"
   ]

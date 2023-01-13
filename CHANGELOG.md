@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.8.0-alpha.4
+
+### Patch Changes
+
+- [#10383](https://github.com/apollographql/apollo-client/pull/10383) [`5c5ca9b01`](https://github.com/apollographql/apollo-client/commit/5c5ca9b01a2b9905f94de85e5b80ffc29522e2e3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure the `onError` callback is called when the `errorPolicy` is set to "all" and partial data is returned.
+
+- [#10401](https://github.com/apollographql/apollo-client/pull/10401) [`3e5b41a75`](https://github.com/apollographql/apollo-client/commit/3e5b41a751673bb2120c0b624e22afd3b7b860e5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Always throw network errors in `useSuspenseQuery` regardless of the set `errorPolicy`.
+
 ## 3.8.0-alpha.3
 
 ### Patch Changes

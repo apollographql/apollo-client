@@ -47,7 +47,7 @@ jobs:
       - name: Enter alpha prerelease mode
         # If .changeset/pre.json does not exist and we did not recently exit
         # prerelease mode, enter prerelease mode with tag alpha
-        if: ${{ steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')}}
+        if: steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')
         run: npx changeset pre enter alpha
 
       - name: Create alpha release PR
@@ -57,15 +57,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: get-npm-version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@main
+
       - name: Run publish
         id: changesets
         # Only run publish if we're still in pre mode and the last commit was
         # via an automatically created Version Packages PR
-        if: ${{ steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')}}
+        if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
         run: npm run changeset-publish
 
       - name: Send a Slack notification on publish
-        if: steps.changesets.outcome == 'success' && steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outcome == 'success'
         id: slack
         uses: slackapi/slack-github-action@v1.23.0
         with:
@@ -75,6 +79,38 @@ jobs:
           # a comma-delimited list of channel IDs
           channel-id: 'C01PS0CB41G'
           # For posting a simple plain text message
-          slack-message: "Published @apollo/client v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "A new version of `@apollo/client` was released :rocket:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n`${{ steps.package-version.outputs.current-version}}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Tag:*\n`alpha`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*GitHub release:*\nN/A"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
+                    }
+                  ]
+                }
+              ]
+            }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

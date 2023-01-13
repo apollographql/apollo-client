@@ -45,10 +45,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Echo values from changesets step
-        if: steps.changesets.outcome == 'success'
-        run: echo "${{steps.changesets.outcome}} v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
-
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success' && steps.changesets.outputs.published == 'true'
         id: slack
@@ -59,7 +55,38 @@ jobs:
           # You can pass in multiple channels to post to by providing
           # a comma-delimited list of channel IDs
           channel-id: 'C01PS0CB41G'
-          # For posting a simple plain text message
-          slack-message: "Published v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "A new version of `@apollo/client` was released :rocket:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n`${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Tag:*\n`next`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}|link>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
+                    }
+                  ]
+                }
+              ]
+            }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

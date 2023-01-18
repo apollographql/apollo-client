@@ -636,6 +636,28 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('returns the client used in the result', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const { result } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      client,
+    });
+
+    // wait for query to finish suspending to avoid warnings
+    await waitFor(() => {
+      expect(result.current.data).toEqual({ greeting: 'hello' });
+    });
+
+    expect(result.current.client).toBe(client);
+  });
+
   it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

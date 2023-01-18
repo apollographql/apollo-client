@@ -32,6 +32,7 @@ export interface UseSuspenseQueryResult<
   TData = any,
   TVariables = OperationVariables
 > {
+  client: ApolloClient<any>;
   data: TData;
   error: ApolloError | undefined;
   fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
@@ -146,6 +147,7 @@ export function useSuspenseQuery_experimental<
 
   return useMemo(() => {
     return {
+      client,
       data: result.data,
       error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
       fetchMore: (options) => {
@@ -170,7 +172,7 @@ export function useSuspenseQuery_experimental<
       },
       subscribeToMore: (options) => observable.subscribeToMore(options),
     };
-  }, [result, observable, errorPolicy]);
+  }, [client, result, observable, errorPolicy]);
 }
 
 function validateOptions(options: WatchQueryOptions) {

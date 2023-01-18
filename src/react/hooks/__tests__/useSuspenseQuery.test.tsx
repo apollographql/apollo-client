@@ -20,9 +20,16 @@ import {
   DocumentNode,
   InMemoryCache,
   Observable,
+  OperationVariables,
+  SubscribeToMoreOptions,
   TypedDocumentNode,
+  split,
 } from '../../../core';
-import { compact, concatPagination } from '../../../utilities';
+import {
+  compact,
+  concatPagination,
+  getMainDefinition,
+} from '../../../utilities';
 import {
   MockedProvider,
   MockedResponse,
@@ -4904,6 +4911,97 @@ describe('useSuspenseQuery', () => {
         },
         error: undefined,
       },
+    ]);
+  });
+
+  it('can subscribe to subscriptions and react to cache updates via `subscribeToMore`', async () => {
+    interface SubscriptionData {
+      greetingUpdated: string;
+    }
+
+    interface QueryData {
+      greeting: string;
+    }
+
+    type UpdateQueryFn = NonNullable<
+      SubscribeToMoreOptions<
+        QueryData,
+        OperationVariables,
+        SubscriptionData
+      >['updateQuery']
+    >;
+
+    const { mocks, query } = useSimpleQueryCase();
+
+    const wsLink = new MockSubscriptionLink();
+    const mockLink = new MockLink(mocks);
+
+    const link = split(
+      ({ query }) => {
+        const definition = getMainDefinition(query);
+
+        return (
+          definition.kind === 'OperationDefinition' &&
+          definition.operation === 'subscription'
+        );
+      },
+      wsLink,
+      mockLink
+    );
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
+      { link }
+    );
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({ greeting: 'Hello' });
+    });
+
+    const updateQuery = jest.fn<
+      ReturnType<UpdateQueryFn>,
+      Parameters<UpdateQueryFn>
+    >((_, { subscriptionData: { data } }) => {
+      return { greeting: data.greetingUpdated };
+    });
+
+    result.current.subscribeToMore<SubscriptionData>({
+      document: gql`
+        subscription {
+          greetingUpdated
+        }
+      `,
+      updateQuery,
+    });
+
+    wsLink.simulateResult({
+      result: {
+        data: {
+          greetingUpdated: 'Subscription hello',
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        greeting: 'Subscription hello',
+      });
+    });
+
+    expect(updateQuery).toHaveBeenCalledTimes(1);
+    expect(updateQuery).toHaveBeenCalledWith(
+      { greeting: 'Hello' },
+      expect.objectContaining({
+        subscriptionData: {
+          data: { greetingUpdated: 'Subscription hello' },
+        },
+      })
+    );
+
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toMatchObject([
+      { data: { greeting: 'Hello' } },
+      { data: { greeting: 'Subscription hello' } },
     ]);
   });
 });

@@ -6,7 +6,7 @@ import {
   waitFor,
   RenderHookOptions,
 } from '@testing-library/react';
-import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
+import { ErrorBoundary } from 'react-error-boundary';
 import { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
@@ -100,31 +100,31 @@ function renderSuspenseHook<Result, Props>(
     {
       ...renderHookOptions,
       wrapper: ({ children }) => {
-        const errorBoundaryProps: ErrorBoundaryProps = {
-          fallback: <div>Error</div>,
-          onError: (error) => {
-            renders.errorCount++;
-            renders.errors.push(error);
-          },
-        };
-
-        return client ? (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
-            <ErrorBoundary {...errorBoundaryProps}>
-              <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+        return (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ErrorBoundary
+              fallback={<div>Error</div>}
+              onError={(error) => {
+                renders.errorCount++;
+                renders.errors.push(error);
+              }}
+            >
+              {client ? (
+                <ApolloProvider client={client} suspenseCache={suspenseCache}>
+                  {children}
+                </ApolloProvider>
+              ) : (
+                <MockedProvider
+                  cache={cache}
+                  mocks={mocks}
+                  link={link}
+                  suspenseCache={suspenseCache}
+                >
+                  {children}
+                </MockedProvider>
+              )}
             </ErrorBoundary>
-          </ApolloProvider>
-        ) : (
-          <MockedProvider
-            cache={cache}
-            mocks={mocks}
-            link={link}
-            suspenseCache={suspenseCache}
-          >
-            <ErrorBoundary {...errorBoundaryProps}>
-              <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-            </ErrorBoundary>
-          </MockedProvider>
+          </Suspense>
         );
       },
     }

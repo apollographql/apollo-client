@@ -41,10 +41,10 @@ import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
 
-type RenderSuspenseHookOptions<
-  Props,
-  TSerializedCache = {}
-> = RenderHookOptions<Props> & {
+type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
+  RenderHookOptions<Props>,
+  'wrapper'
+> & {
   client?: ApolloClient<TSerializedCache>;
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
@@ -84,34 +84,6 @@ function renderSuspenseHook<Result, Props>(
     link,
     mocks = [],
     suspenseCache = new SuspenseCache(),
-    wrapper = ({ children }) => {
-      const errorBoundaryProps: ErrorBoundaryProps = {
-        fallback: <div>Error</div>,
-        onError: (error) => {
-          renders.errorCount++;
-          renders.errors.push(error);
-        },
-      };
-
-      return client ? (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
-          <ErrorBoundary {...errorBoundaryProps}>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </ErrorBoundary>
-        </ApolloProvider>
-      ) : (
-        <MockedProvider
-          cache={cache}
-          mocks={mocks}
-          link={link}
-          suspenseCache={suspenseCache}
-        >
-          <ErrorBoundary {...errorBoundaryProps}>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </ErrorBoundary>
-        </MockedProvider>
-      );
-    },
     ...renderHookOptions
   } = options;
 
@@ -125,7 +97,37 @@ function renderSuspenseHook<Result, Props>(
 
       return view;
     },
-    { ...renderHookOptions, wrapper }
+    {
+      ...renderHookOptions,
+      wrapper: ({ children }) => {
+        const errorBoundaryProps: ErrorBoundaryProps = {
+          fallback: <div>Error</div>,
+          onError: (error) => {
+            renders.errorCount++;
+            renders.errors.push(error);
+          },
+        };
+
+        return client ? (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <ErrorBoundary {...errorBoundaryProps}>
+              <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+            </ErrorBoundary>
+          </ApolloProvider>
+        ) : (
+          <MockedProvider
+            cache={cache}
+            mocks={mocks}
+            link={link}
+            suspenseCache={suspenseCache}
+          >
+            <ErrorBoundary {...errorBoundaryProps}>
+              <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+            </ErrorBoundary>
+          </MockedProvider>
+        );
+      },
+    }
   );
 
   return { ...view, renders };

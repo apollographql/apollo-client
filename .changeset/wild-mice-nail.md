@@ -2,4 +2,4 @@
 '@apollo/client': patch
 ---
 
-Add support for `subscribeToMore` from `useSuspenseQuery`
+Add support for the `subscribeToMore` and `client` fields returned in the `useSuspenseQuery` result.

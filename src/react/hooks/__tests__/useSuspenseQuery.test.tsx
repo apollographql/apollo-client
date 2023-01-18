@@ -1678,6 +1678,53 @@ describe('useSuspenseQuery', () => {
     }
   );
 
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    'ensures data is fetched and suspended the correct amount of times in strict mode while using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useVariablesQueryCase();
+
+      let fetchCount = 0;
+
+      const link = new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          fetchCount++;
+
+          const mock = mocks.find(({ request }) =>
+            equal(request.variables, operation.variables)
+          );
+
+          if (!mock) {
+            throw new Error('Could not find mock for operation');
+          }
+
+          observer.next(mock.result);
+          observer.complete();
+        });
+      });
+
+      const { result, renders } = renderSuspenseHook(
+        ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
+        { strictMode: true, link, initialProps: { id: '1' } }
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[0].result.data);
+      });
+
+      expect(fetchCount).toBe(1);
+
+      // React double invokes the render function in strict mode so the suspense
+      // fallback is rendered twice before the promise is resolved
+      // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
+      expect(renders.suspenseCount).toBe(2);
+    }
+  );
+
   it('uses the default fetch policy from the client when none provided in options', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

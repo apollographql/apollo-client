@@ -5013,11 +5013,12 @@ describe('useSuspenseQuery', () => {
     expect(updateQuery).toHaveBeenCalledTimes(1);
     expect(updateQuery).toHaveBeenCalledWith(
       { greeting: 'Hello' },
-      expect.objectContaining({
+      {
         subscriptionData: {
           data: { greetingUpdated: 'Subscription hello' },
         },
-      })
+        variables: {},
+      }
     );
 
     expect(renders.count).toBe(3);

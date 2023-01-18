@@ -614,15 +614,14 @@ describe('useSuspenseQuery', () => {
       </ApolloProvider>
     );
 
-    const { result: result1, unmount } = renderSuspenseHook(
+    const { result: result1, unmount } = renderHook(
       () => useSuspenseQuery(query),
       { wrapper }
     );
 
-    const { result: result2 } = renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { wrapper }
-    );
+    const { result: result2 } = renderHook(() => useSuspenseQuery(query), {
+      wrapper,
+    });
 
     // We don't subscribe to the observable until after the component has been
     // unsuspended, so we need to wait for the results of all queries

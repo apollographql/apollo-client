@@ -1,0 +1,24 @@
+name: Bug
+description: File a bug report
+body:
+  - type: markdown
+    attributes:
+      value: "Hello from the Apollo Client team! Hopefully we can help resolve your issue. To increase the chances of us being able to help, please take the time to fill out the form as completely as possible. A minimal, runnable reproduction is the best way to get us to help you quickly and in many cases we simply cannot help without one."
+  - type: textarea
+    attributes:
+      label: Issue Description
+      description: Describe the issue you are experiencing.
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Link to Reproduction
+      description: A link with runnable reproduction. You can fork our `react-apollo-error-template` to create one via [GitHub repository](https://github.com/apollographql/react-apollo-error-template) or [CodeSandbox](https://codesandbox.io/s/github/apollographql/react-apollo-error-template). Make sure this includes everything necessary (`package.json`, `tsconfig.json`, etc.) so we don't have to guess anything!
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      description: Please provide any additional non-trivial steps required to reproduce the issue.
+    validations:
+      required: false

@@ -101,10 +101,20 @@ class InternalState<TData, TVariables> {
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
 
-  asyncUpdate() {
-    return new Promise<QueryResult<TData, TVariables>>(resolve => {
+  asyncUpdate(signal: AbortSignal) {
+    return new Promise<QueryResult<TData, TVariables>>((resolve, reject) => {
+      const watchQueryOptions = this.watchQueryOptions;
+
+      const handleAborted = () => {
+        this.asyncResolveFns.delete(resolve)
+        this.optionsToIgnoreOnce.delete(watchQueryOptions);
+        signal.removeEventListener('abort', handleAborted)
+        reject(signal.reason);
+      };
+
       this.asyncResolveFns.add(resolve);
-      this.optionsToIgnoreOnce.add(this.watchQueryOptions);
+      this.optionsToIgnoreOnce.add(watchQueryOptions);
+      signal.addEventListener('abort', handleAborted)
       this.forceUpdate();
     });
   }

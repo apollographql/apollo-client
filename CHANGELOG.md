@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.7.4
+
+### Patch Changes
+
+- [#10427](https://github.com/apollographql/apollo-client/pull/10427) [`28d909cff`](https://github.com/apollographql/apollo-client/commit/28d909cff086f8352e2ea75421a1cac590917573) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure in-flight promises executed by `useLazyQuery` are rejected when `useLazyQuery` unmounts.
+
+- [#10383](https://github.com/apollographql/apollo-client/pull/10383) [`5c5ca9b01`](https://github.com/apollographql/apollo-client/commit/5c5ca9b01a2b9905f94de85e5b80ffc29522e2e3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure the `onError` callback is called when the `errorPolicy` is set to "all" and partial data is returned.
+
+- [#10425](https://github.com/apollographql/apollo-client/pull/10425) [`86e35a6d2`](https://github.com/apollographql/apollo-client/commit/86e35a6d25e9838f39a9de652e52a358b9c08488) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prefer the `onError` and `onCompleted` callback functions passed to the execute function returned from `useMutation` instead of calling both callback handlers.
+
 ## 3.7.3
 
 ### Patch Changes
@@ -1422,8 +1432,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
 - The `InMemoryCache` constructor should now be imported directly from `@apollo/client`, rather than from a separate package. The `apollo-cache-inmemory` package is no longer supported.
 
-  > The `@apollo/client/cache` entry point can be used to import `InMemoryCache` without importing other parts of the Apollo Client codebase. <br/>
-  > [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
+  > The `@apollo/client/cache` entry point can be used to import `InMemoryCache` without importing other parts of the Apollo Client codebase. <br/> > [@hwillson](https://github.com/hwillson) in [#5577](https://github.com/apollographql/apollo-client/pull/5577)
 
 - **[BREAKING]** `FragmentMatcher`, `HeuristicFragmentMatcher`, and `IntrospectionFragmentMatcher` have all been removed. We now recommend using `InMemoryCache`’s `possibleTypes` option instead. For more information see the [Defining `possibleTypes` manually](https://www.apollographql.com/docs/react/v3.0-beta/data/fragments/#defining-possibletypes-manually) section of the docs. <br/>
   [@benjamn](https://github.com/benjamn) in [#5073](https://github.com/apollographql/apollo-client/pull/5073)
@@ -1559,8 +1568,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - **[BREAKING]** We are no longer exporting certain (intended to be) internal utilities. If you are depending on some of the lesser known exports from `apollo-cache`, `apollo-cache-inmemory`, or `apollo-utilities`, they may no longer be available from `@apollo/client`. <br/>
   [@hwillson](https://github.com/hwillson) in [#5437](https://github.com/apollographql/apollo-client/pull/5437) and [#5514](https://github.com/apollographql/apollo-client/pull/5514)
 
-  > Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/>
-  > [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
+  > Utilities that were previously externally available through the `apollo-utilities` package are now only available by importing from `@apollo/client/utilities`. <br/> > [@hwillson](https://github.com/hwillson) in [#5683](https://github.com/apollographql/apollo-client/pull/5683)
 
 - Make sure all `graphql-tag` public exports are re-exported. <br/>
   [@hwillson](https://github.com/hwillson) in [#5861](https://github.com/apollographql/apollo-client/pull/5861)

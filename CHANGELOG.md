@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.0-alpha.5
+
+### Patch Changes
+
+- [#10450](https://github.com/apollographql/apollo-client/pull/10450) [`f8bc33387`](https://github.com/apollographql/apollo-client/commit/f8bc33387f66e28456aede53bae75694c9a7a45f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for the `subscribeToMore` and `client` fields returned in the `useSuspenseQuery` result.
+
 ## 3.8.0-alpha.4
 
 ### Patch Changes

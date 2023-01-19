@@ -1475,11 +1475,16 @@ export class QueryManager<TStore> {
         errorPolicy,
       },
     );
-
+    const diff = readCache();
     const shouldNotify =
       notifyOnNetworkStatusChange &&
       typeof oldNetworkStatus === "number" &&
       oldNetworkStatus !== networkStatus &&
+      !(
+        errorPolicy === 'none' &&
+        Array.isArray(diff.missing) &&
+        diff.missing.length > 0
+      ) &&
       isNetworkRequestInFlight(networkStatus);
 
     switch (fetchPolicy) {

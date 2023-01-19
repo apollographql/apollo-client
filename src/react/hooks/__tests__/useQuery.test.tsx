@@ -2400,7 +2400,7 @@ describe('useQuery Hook', () => {
       }, { interval: 1, timeout: 20 })).rejects.toThrow()
     });
 
-    it('should not return partial data from cache on refetch with errorPolicy: none (default)', async () => {
+    it('should not return partial data from cache on refetch with errorPolicy: none (default) and notifyOnNetworkStatusChange: true', async () => {
       const query = gql`
         {
           dogs {

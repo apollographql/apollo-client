@@ -111,7 +111,7 @@ jobs:
         # only-pr-labels: # optional, default is 
 
         # The maximum number of operations per run, used to control rate limiting (GitHub API CRUD related).
-        operations-per-run: 100 # optional, default is 30
+        operations-per-run: 500 # optional, default is 30
 
         # Remove stale labels from issues and pull requests when they are updated or commented on.
         remove-stale-when-updated: false
@@ -123,7 +123,7 @@ jobs:
         remove-pr-stale-when-updated: false
 
         # Run the processor in debug mode without actually performing any operations on live issues.
-        debug-only: true
+        debug-only: false
 
         # # The order to get issues or pull requests. Defaults to false, which is descending.
         # ascending: # optional, default is false

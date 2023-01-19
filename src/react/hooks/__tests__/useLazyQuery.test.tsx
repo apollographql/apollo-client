@@ -1,7 +1,7 @@
 import React from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
 import { Observable } from '../../../utilities';
@@ -1012,6 +1012,78 @@ describe('useLazyQuery Hook', () => {
 
     // Making sure the rejection triggers a test failure.
     await wait(50);
+  });
+
+  it('aborts in-flight requests when component unmounts', async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const link = new ApolloLink(() => {
+      // Do nothing to prevent
+      return null
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() })
+
+    const { result, unmount } = renderHook(() => useLazyQuery(query), {
+      wrapper: ({ children }) =>
+        <ApolloProvider client={client}>
+          {children}
+        </ApolloProvider>
+    });
+
+    const [execute] = result.current;
+
+    let promise: Promise<any>
+    act(() => {
+      promise = execute()
+    })
+
+    unmount();
+
+    await expect(promise!).rejects.toEqual(
+      new DOMException('The operation was aborted.', 'AbortError')
+    );
+  });
+
+  it('handles aborting multiple in-flight requests when component unmounts', async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const link = new ApolloLink(() => {
+      return null
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() })
+
+    const { result, unmount } = renderHook(() => useLazyQuery(query), {
+      wrapper: ({ children }) =>
+        <ApolloProvider client={client}>
+          {children}
+        </ApolloProvider>
+    });
+
+    const [execute] = result.current;
+
+    let promise1: Promise<any>
+    let promise2: Promise<any>
+    act(() => {
+      promise1 = execute();
+      promise2 = execute();
+    })
+
+    unmount();
+
+    const expectedError = new DOMException('The operation was aborted.', 'AbortError');
+
+    await expect(promise1!).rejects.toEqual(expectedError);
+    await expect(promise2!).rejects.toEqual(expectedError);
   });
 
   describe("network errors", () => {

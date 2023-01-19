@@ -1,10 +1,4 @@
-import {
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { equal } from '@wry/equality';
 import {
   ApolloClient,
@@ -38,10 +32,12 @@ export interface UseSuspenseQueryResult<
   TData = any,
   TVariables = OperationVariables
 > {
+  client: ApolloClient<any>;
   data: TData;
   error: ApolloError | undefined;
   fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
   refetch: ObservableQueryFields<TData, TVariables>['refetch'];
+  subscribeToMore: ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 }
 
 const SUPPORTED_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
@@ -151,6 +147,7 @@ export function useSuspenseQuery_experimental<
 
   return useMemo(() => {
     return {
+      client,
       data: result.data,
       error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
       fetchMore: (options) => {
@@ -173,8 +170,9 @@ export function useSuspenseQuery_experimental<
 
         return promise;
       },
+      subscribeToMore: (options) => observable.subscribeToMore(options),
     };
-  }, [result, observable, errorPolicy]);
+  }, [client, result, observable, errorPolicy]);
 }
 
 function validateOptions(options: WatchQueryOptions) {

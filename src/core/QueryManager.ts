@@ -1483,6 +1483,7 @@ export class QueryManager<TStore> {
         errorPolicy,
       },
     );
+
     const shouldNotify =
       notifyOnNetworkStatusChange &&
       typeof oldNetworkStatus === "number" &&

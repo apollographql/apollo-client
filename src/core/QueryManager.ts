@@ -1453,6 +1453,14 @@ export class QueryManager<TStore> {
         }).then(resolved => fromData(resolved.data || void 0));
       }
 
+      if (
+        errorPolicy === 'none' &&
+        networkStatus === NetworkStatus.refetch &&
+        Array.isArray(diff.missing)
+      ) {
+        return fromData(void 0);
+      }
+
       return fromData(data);
     };
 
@@ -1475,16 +1483,10 @@ export class QueryManager<TStore> {
         errorPolicy,
       },
     );
-    const diff = readCache();
     const shouldNotify =
       notifyOnNetworkStatusChange &&
       typeof oldNetworkStatus === "number" &&
       oldNetworkStatus !== networkStatus &&
-      !(
-        errorPolicy === 'none' &&
-        Array.isArray(diff.missing) &&
-        diff.missing.length > 0
-      ) &&
       isNetworkRequestInFlight(networkStatus);
 
     switch (fetchPolicy) {

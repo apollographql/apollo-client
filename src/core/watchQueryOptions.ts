@@ -73,7 +73,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /**
    * Context to be passed to link execution chain
    */
-  context?: any;
+  context?: DefaultContext;
 
   /**
    * Specifies the {@link FetchPolicy} to be used for this query
@@ -159,7 +159,7 @@ export interface NextFetchPolicyContext<TData, TVariables> {
 export interface FetchMoreQueryOptions<TVariables, TData = any> {
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   variables?: Partial<TVariables>;
-  context?: any;
+  context?: DefaultContext;
 }
 
 export type UpdateQueryFn<

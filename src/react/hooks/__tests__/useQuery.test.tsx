@@ -2545,6 +2545,84 @@ describe('useQuery Hook', () => {
       expect(screen.queryByText(/partial data rendered/i)).toBeNull();
     });
 
+    it('should return partial data from cache on refetch', async () => {
+      const GET_DOG_DETAILS = gql`
+        query dog($breed: String!) {
+          dog(breed: $breed) {
+            id
+          }
+        }
+      `;
+      const detailsMock = (breed: string) => ({
+        request: { query: GET_DOG_DETAILS, variables: { breed } },
+        result: {
+          data: {
+            dog: {
+              "id": "ZNDtCU",
+              "__typename": "Dog"
+            }
+          }
+        },
+      });
+
+      const mocks = [
+        // use the same mock for the initial query on select change
+        // and subsequent refetch() call
+        detailsMock('airedale'),
+        detailsMock('airedale'),
+      ];
+
+      const DogDetails: React.FC<{
+        breed?: string;
+      }> = ({ breed = "airedale" }) => {
+        const { data, refetch, networkStatus } = useQuery(
+          GET_DOG_DETAILS,
+          {
+            variables: { breed },
+            notifyOnNetworkStatusChange: true
+          }
+        );
+        if (networkStatus === 1) return <p>Loading!</p>;
+        return (
+          // Render existing results, but dim the UI until the results
+          // have finished loading...
+          <div style={{ opacity: networkStatus === 4 ? 0.5 : 1 }}>
+            <div>
+              {data ? 'Data rendered' : null}
+            </div>
+            <button onClick={() => refetch()}>Refetch!</button>
+          </div>
+        );
+      };
+
+      const ParentComponent: React.FC = () => {
+        return (
+          <MockedProvider mocks={mocks}>
+            <DogDetails />
+          </MockedProvider>
+        );
+      };
+
+      render(<ParentComponent />);
+
+      const user = userEvent.setup();
+
+      await waitFor(() => {
+        expect(screen.getByText('Loading!')).toBeTruthy();
+      }, { interval: 1 });
+
+      await waitFor(() => {
+        expect(screen.getByText('Data rendered')).toBeTruthy();
+      }, { interval: 1 });
+
+      // When we call refetch...
+      await user.click(screen.getByRole('button', { name: /Refetch!/i }))
+
+      // Data from the cache remains onscreen while network request
+      // is made
+      expect(screen.getByText('Data rendered')).toBeTruthy();
+    });
+
     it('should persist errors on re-render with inline onError/onCompleted callbacks',  async () => {
       const query = gql`{ hello }`;
       const mocks = [

@@ -1453,6 +1453,10 @@ export class QueryManager<TStore> {
         }).then(resolved => fromData(resolved.data || void 0));
       }
 
+      // Resolves https://github.com/apollographql/apollo-client/issues/10317.
+      // If errorPolicy is 'none' and notifyOnNetworkStatusChange is true,
+      // data was incorrectly returned from the cache on refetch:
+      // if diff.missing exists, we should not return cache data.
       if (
         errorPolicy === 'none' &&
         networkStatus === NetworkStatus.refetch &&

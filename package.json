@@ -113,7 +113,7 @@
     "@types/fetch-mock": "7.3.5",
     "@types/glob": "8.0.0",
     "@types/hoist-non-react-statics": "3.3.1",
-    "@types/jest": "29.2.5",
+    "@types/jest": "29.2.6",
     "@types/lodash": "4.14.191",
     "@types/node": "18.11.18",
     "@types/node-fetch": "2.6.2",

@@ -111,7 +111,7 @@
     "@types/bytes": "3.1.1",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/fetch-mock": "7.3.5",
-    "@types/glob": "8.0.0",
+    "@types/glob": "8.0.1",
     "@types/hoist-non-react-statics": "3.3.1",
     "@types/jest": "29.2.6",
     "@types/lodash": "4.14.191",

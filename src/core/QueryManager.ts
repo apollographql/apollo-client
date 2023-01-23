@@ -380,7 +380,10 @@ export class QueryManager<TStore> {
           optimistic: false,
           returnPartialData: true,
         });
-        const mergedData = mergeIncrementalData(diff.result, result);
+        let mergedData;
+        if (diff.result) {
+          mergedData = mergeIncrementalData(diff.result, result);
+        }
         if (typeof mergedData !== 'undefined') {
           // cast the ExecutionPatchResult to FetchResult here since
           // ExecutionPatchResult never has `data` when returned from the server

@@ -11,6 +11,7 @@ import {
 
 import { useApolloClient } from "./useApolloClient";
 import { useSyncExternalStore } from "./useSyncExternalStore";
+import { OperationVariables } from "../../core";
 
 export interface UseFragmentOptions<TData, TVars>
 extends Omit<
@@ -48,7 +49,10 @@ export interface UseFragmentResult<TData> {
   missing?: MissingTree;
 }
 
-export function useFragment_experimental<TData, TVars>(
+export function useFragment_experimental<
+  TData = any,
+  TVars = OperationVariables
+>(
   options: UseFragmentOptions<TData, TVars>,
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient();

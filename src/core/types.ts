@@ -13,7 +13,7 @@ import { IsStrictlyAny } from '../utilities';
 
 export { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-export type DefaultContext = Record<string, any>;
+export interface DefaultContext extends Record<string, any> {};
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 

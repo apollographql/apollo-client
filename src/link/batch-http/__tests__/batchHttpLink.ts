@@ -510,7 +510,7 @@ describe('SharedHttpTest', () => {
 
     execute(link, { query: sampleQuery, variables }).subscribe(
       makeCallback(resolve, reject, (result: any) => {
-        const headers: any = fetchMock.lastCall()![1]!.headers;
+        const headers: Record<string, string> = fetchMock.lastCall()![1]!.headers as Record<string, string>;
         expect(headers.authorization).toBe('1234');
         expect(headers['content-type']).toBe('application/json');
         expect(headers.accept).toBe('*/*');
@@ -527,7 +527,7 @@ describe('SharedHttpTest', () => {
 
     execute(link, { query: sampleQuery, variables }).subscribe(
       makeCallback(resolve, reject, (result: any) => {
-        const headers: any = fetchMock.lastCall()![1]!.headers;
+        const headers: Record<string, string> = fetchMock.lastCall()![1]!.headers as Record<string, string>;
         expect(headers.authorization).toBe('1234');
         expect(headers['content-type']).toBe('application/json');
         expect(headers.accept).toBe('*/*');
@@ -549,7 +549,7 @@ describe('SharedHttpTest', () => {
 
     execute(link, { query: sampleQuery, variables }).subscribe(
       makeCallback(resolve, reject, (result: any) => {
-        const headers: any = fetchMock.lastCall()![1]!.headers;
+        const headers: Record<string, string> = fetchMock.lastCall()![1]!.headers as Record<string, string>;
         expect(headers.authorization).toBe('1234');
         expect(headers['content-type']).toBe('application/json');
         expect(headers.accept).toBe('*/*');
@@ -570,7 +570,7 @@ describe('SharedHttpTest', () => {
       context,
     }).subscribe(
       makeCallback(resolve, reject, (result: any) => {
-        const headers: any = fetchMock.lastCall()![1]!.headers;
+        const headers: Record<string, string> = fetchMock.lastCall()![1]!.headers as Record<string, string>;
         expect(headers.authorization).toBe('1234');
         expect(headers['content-type']).toBe('application/json');
         expect(headers.accept).toBe('*/*');

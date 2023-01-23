@@ -40,11 +40,11 @@ export interface HttpOptions {
   /**
    * An object representing values to be sent as headers on the request.
    */
-  headers?: any;
+  headers?: Record<string, string>;
 
   /**
-   * If set to true, header names won't be automatically normalized to 
-   * lowercase. This allows for non-http-spec-compliant servers that might 
+   * If set to true, header names won't be automatically normalized to
+   * lowercase. This allows for non-http-spec-compliant servers that might
    * expect capitalized header names.
    */
   preserveHeaderCase?: boolean;
@@ -92,7 +92,7 @@ export interface HttpQueryOptions {
 export interface HttpConfig {
   http?: HttpQueryOptions;
   options?: any;
-  headers?: any;
+  headers?: Record<string, string>;
   credentials?: any;
 }
 
@@ -173,7 +173,9 @@ export function selectHttpOptionsAndBodyInternal(
     };
   });
 
-  options.headers = removeDuplicateHeaders(options.headers, http.preserveHeaderCase);
+  if (options.headers) {
+    options.headers = removeDuplicateHeaders(options.headers, http.preserveHeaderCase);
+  }
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
@@ -191,7 +193,7 @@ export function selectHttpOptionsAndBodyInternal(
 };
 
 // Remove potential duplicate header names, preserving last (by insertion order).
-// This is done to prevent unintentionally duplicating a header instead of 
+// This is done to prevent unintentionally duplicating a header instead of
 // overwriting it (See #8447 and #8449).
 function removeDuplicateHeaders(
   headers: Record<string, string>,
@@ -204,12 +206,12 @@ function removeDuplicateHeaders(
     Object.keys(Object(headers)).forEach(name => {
       normalizedHeaders[name.toLowerCase()] = headers[name];
     });
-    return normalizedHeaders; 
+    return normalizedHeaders;
   }
 
   // If we are preserving the case, remove duplicates w/ normalization,
   // preserving the original name.
-  // This allows for non-http-spec-compliant servers that expect intentionally 
+  // This allows for non-http-spec-compliant servers that expect intentionally
   // capitalized header names (See #6741).
   const headerData = Object.create(null);
   Object.keys(Object(headers)).forEach(name => {

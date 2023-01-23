@@ -10,6 +10,8 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   release:
     name: Changesets Release
+    # Prevents action from creating a PR on forks
+    if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo

@@ -11,6 +11,8 @@ on:
 
 jobs:
   stale:
+    # Prevents action from running on forks
+    if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
     permissions:
       issues: write

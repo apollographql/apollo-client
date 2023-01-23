@@ -3,7 +3,7 @@ title: View integrations
 description: How to use Apollo Client with the view layer your application is developed in!
 ---
 
-## React
+## React foo
 
 Apollo Client's built-in React support allows you to fetch data from your GraphQL server and use it in building complex and reactive UIs using the React framework. Apollo Client may be used in any context that React may be used. In the browser, in React Native, or in Node.js when you want to server side render.
 

@@ -71,27 +71,30 @@ export function useFragment_experimental<TData, TVars>(
   const resultRef = useRef<UseFragmentResult<TData>>();
   let latestDiff = cache.diff<TData>(diffOptions);
 
+  // Used for both getSnapshot and getServerSnapshot
+  const getSnapshot = () => {
+    const latestDiffToResult = diffToResult(latestDiff);
+    return resultRef.current &&
+      equal(resultRef.current.data, latestDiffToResult.data)
+      ? resultRef.current
+      : (resultRef.current = latestDiffToResult);
+  };
+
   return useSyncExternalStore(
-    forceUpdate => {
+    (forceUpdate) => {
       return cache.watch({
         ...diffOptions,
         immediate: true,
         callback(diff) {
           if (!equal(diff, latestDiff)) {
-            resultRef.current = diffToResult(latestDiff = diff);
+            resultRef.current = diffToResult((latestDiff = diff));
             forceUpdate();
           }
         },
       });
     },
-
-    () => {
-      const latestDiffToResult = diffToResult(latestDiff);
-      return resultRef.current &&
-        equal(resultRef.current.data, latestDiffToResult.data)
-        ? resultRef.current
-        : (resultRef.current = latestDiffToResult);
-    },
+    getSnapshot,
+    getSnapshot
   );
 }
 

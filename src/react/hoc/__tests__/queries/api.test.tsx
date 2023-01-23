@@ -275,7 +275,7 @@ describe('[queries] api', () => {
     };
 
     let done = false;
-    const Container = graphql<{}, Data, Variables, FinalProps>(query, {
+    const Container = graphql<{}, Data, Variables, Record<string, any>>(query, {
       props({ data }) {
         const { loading, allPeople, fetchMore } = data!;
 

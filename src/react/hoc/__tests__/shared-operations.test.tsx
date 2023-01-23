@@ -88,23 +88,16 @@ describe('shared operations', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    interface PeopleChildProps {
-      people: DataValue<PeopleData>;
-    }
-
     // Since we want to test decorators usage, and this does not play well with Typescript,
     // we resort to setting everything as any to avoid type checking.
-    const withPeople: any = graphql<{}, PeopleData, {}, PeopleChildProps>(
+    const withPeople: any = graphql<{}, PeopleData, {}, {}>(
       peopleQuery,
       {
         name: 'people'
       }
     );
 
-    interface ShipsChildProps {
-      ships: DataValue<PeopleData>;
-    }
-    const withShips: any = graphql<{}, ShipsData, {}, ShipsChildProps>(
+    const withShips: any = graphql<{}, ShipsData, {}, {}>(
       shipsQuery,
       {
         name: 'ships'
@@ -175,7 +168,7 @@ describe('shared operations', () => {
       people: DataValue<PeopleData>;
     }
 
-    const withPeople = graphql<{}, PeopleData, {}, PeopleChildProps>(
+    const withPeople = graphql<{}, PeopleData, {}, {}>(
       peopleQuery,
       {
         name: 'people'
@@ -187,9 +180,7 @@ describe('shared operations', () => {
     }
     const withShips = graphql<
       PeopleChildProps,
-      ShipsData,
-      {},
-      ShipsAndPeopleChildProps
+      ShipsData
     >(shipsQuery, {
       name: 'ships'
     });
@@ -380,10 +371,10 @@ describe('shared operations', () => {
       }
 
       const enhanced = compose(
-        graphql<{}, PeopleData, {}, PeopleChildProps>(peopleQuery, {
+        graphql<{}, PeopleData, {}, {}>(peopleQuery, {
           name: 'people'
         }),
-        graphql<PeopleChildProps, ShipsData, {}, ShipsAndPeopleChildProps>(
+        graphql<PeopleChildProps, ShipsData, {}, {}>(
           shipsQuery,
           {
             name: 'ships'

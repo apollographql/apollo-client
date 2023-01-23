@@ -35,7 +35,7 @@ import observableToPromise, {
   observableToPromiseAndSubscription,
 } from '../../../testing/core/observableToPromise';
 import { itAsync, subscribeAndCount } from '../../../testing/core';
-import { ApolloClient } from '../../../core'
+import { ApolloClient, OperationVariables } from '../../../core'
 import { mockFetchQuery } from '../ObservableQuery';
 
 interface MockedMutation {
@@ -198,7 +198,7 @@ describe('QueryManager', () => {
     return mockQueryManager(reject, ...args);
   };
 
-  function getCurrentQueryResult<TData, TVars>(
+  function getCurrentQueryResult<TData, TVars extends OperationVariables>(
     observableQuery: ObservableQuery<TData, TVars>,
   ): {
     data?: TData;

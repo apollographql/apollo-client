@@ -4,7 +4,6 @@ import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor, renderHook } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import {
   ApolloClient,
   ApolloError,

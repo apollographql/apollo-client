@@ -166,7 +166,7 @@ export class QueryManager<TStore> {
   public async mutate<
     TData,
     TVariables extends OperationVariables,
-    TContext extends {},
+    TContext extends Record<string, unknown>,
     TCache extends ApolloCache<any>
   >({
     mutation,

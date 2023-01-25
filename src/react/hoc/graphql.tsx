@@ -7,12 +7,12 @@ import { withSubscription } from './subscription-hoc';
 import { OperationOption, DataProps, MutateProps } from './types';
 import { OperationVariables } from '../../core';
 
-type ChildProps<TData extends {}, TGraphQLVariables extends OperationVariables> =
+type ChildProps<TData extends object, TGraphQLVariables extends OperationVariables> =
   Partial<DataProps<TData, TGraphQLVariables>> & Partial<MutateProps<TData, TGraphQLVariables>>;
 
 export function graphql<
-  TProps extends TGraphQLVariables | {} = {},
-  TData extends {} = {},
+  TProps extends TGraphQLVariables | object = object ,
+  TData extends object = object,
   TGraphQLVariables extends OperationVariables = {},
   TChildProps extends ChildProps<TData, TGraphQLVariables> = ChildProps<TData, TGraphQLVariables>
 >(

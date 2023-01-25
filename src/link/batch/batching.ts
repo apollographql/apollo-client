@@ -214,6 +214,7 @@ export class OperationBatcher {
     clearTimeout(this.scheduledBatchTimerByKey.get(key));
     this.scheduledBatchTimerByKey.set(key, setTimeout(() => {
       this.consumeQueue(key);
+      this.scheduledBatchTimerByKey.delete(key);
     }, this.batchInterval));
   }
 }

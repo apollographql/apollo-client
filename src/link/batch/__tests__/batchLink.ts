@@ -315,6 +315,9 @@ describe('OperationBatcher', () => {
     });
 
     itAsync('should be able to consume from a queue containing multiple queries with different batch keys', (resolve, reject) => {
+      // NOTE: this test was added to ensure that queries don't "hang" when consumed by BatchLink.
+      // "Hanging" in this case results in this test never resolving.  So
+      // if this test times out it's probably a real issue and not a flake
       const request2: Operation = createOperation(
         {},
         {

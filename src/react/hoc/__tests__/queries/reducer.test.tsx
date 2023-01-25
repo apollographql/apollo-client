@@ -8,6 +8,7 @@ import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
+import { DataValue } from '../../types';
 
 describe('[queries] reducer', () => {
   // props reducer
@@ -30,9 +31,11 @@ describe('[queries] reducer', () => {
     });
 
     type Data = typeof result;
+    // in case of a skip
+    type ChildProps = DataValue<Data>;
 
     let count = 0;
-    const ContainerWithData = graphql<{}, Data, {}, Record<string, any>>(query, {
+    const ContainerWithData = graphql<{}, Data, {}, ChildProps>(query, {
       props: ({ data }) => ({ ...data! })
     })(({ getThing, loading }) => {
       count++;
@@ -69,12 +72,19 @@ describe('[queries] reducer', () => {
       cache: new Cache({ addTypename: false })
     });
 
+    interface Data {
+      getThing: { thing: boolean };
+    }
+    interface Props {
+      sample: number;
+    }
+
     type FinalProps = {
       showSpinner: boolean;
     };
 
     let count = 0;
-    const ContainerWithData = graphql<Record<string, any>, {}, {}, {}>(query, {
+    const ContainerWithData = graphql<Props, Data, {}, FinalProps>(query, {
       props: ({ data, ownProps }) => {
         expect(ownProps.sample).toBe(1);
         return { showSpinner: data!.loading };
@@ -125,7 +135,7 @@ describe('[queries] reducer', () => {
       thingy: { thing: boolean };
     }
 
-    const withData = graphql<{}, Data, {}, Record<string,any>>(query, {
+    const withData = graphql<{}, Data, {}, FinalProps>(query, {
       props: ({ data }) => ({ thingy: data!.getThing! })
     });
 
@@ -184,7 +194,7 @@ describe('[queries] reducer', () => {
       refetch: () => any;
     }
 
-    const withData = graphql<{}, Data, {}, Record<string, any>>(query, {
+    const withData = graphql<{}, Data, {}, FinalProps>(query, {
       props: ({ data }, lastProps) => {
         const refetch = data!.refetch!;
         let wrapper = { thingy: data!.getThing! };

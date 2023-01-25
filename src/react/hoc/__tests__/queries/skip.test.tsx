@@ -252,7 +252,7 @@ describe('[queries] skip', () => {
       data?: {};
     }
 
-    const Container = graphql<Props, {}, {}, {}>(query, {
+    const Container = graphql<Props, {}, {}, FinalProps>(query, {
       skip: ({ skip }) => skip,
       options: props => {
         optionsCalled = true;

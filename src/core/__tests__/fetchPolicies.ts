@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 
-import { ApolloClient, NetworkStatus, OperationVariables } from '../../core';
+import { ApolloClient, NetworkStatus } from '../../core';
 import { ApolloLink } from '../../link/core';
 import { InMemoryCache } from '../../cache';
 import { Observable } from '../../utilities';
@@ -781,7 +781,7 @@ describe("nextFetchPolicy", () => {
     }));
   }
 
-  const checkNextFetchPolicy = <TData, TVars extends OperationVariables>(args: {
+  const checkNextFetchPolicy = <TData, TVars>(args: {
     fetchPolicy: WatchQueryFetchPolicy;
     nextFetchPolicy: WatchQueryOptions<TVars, TData>["nextFetchPolicy"];
     useDefaultOptions: boolean;

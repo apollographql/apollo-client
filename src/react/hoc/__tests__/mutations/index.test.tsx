@@ -93,7 +93,12 @@ describe('graphql(mutation)', () => {
   it('binds a mutation to props with a custom name', () => {
     interface Props {}
 
-    const ContainerWithData = graphql<Props, Data, Variables, Record<string, any>>(
+    type InjectedProps = {
+      customMutation: any;
+      customMutationResult: any;
+    };
+
+    const ContainerWithData = graphql<Props, Data, Variables, InjectedProps>(
       query,
       { name: 'customMutation' }
     )(({ customMutation, customMutationResult }) => {

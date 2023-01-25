@@ -891,12 +891,12 @@ describe('SSR', () => {
         data: DataValue<Data>;
       }
 
-      const withQuery = graphql<QueryProps, Data, {}, QueryChildProps | null>(
+      const withQuery = graphql<QueryProps, Data, {}, QueryChildProps | {}>(
         query,
         {
           options: () => ({ ssr: true }),
           props: ({ data }) => {
-            if (data!.loading) return null;
+            if (data!.loading) return {};
             expect(data!.refetch).toBeTruthy();
             return {
               refetchQuery: data!.refetch,
@@ -910,11 +910,11 @@ describe('SSR', () => {
         QueryChildProps,
         {},
         {},
-        { action: (variables: {}) => Promise<any> } | null
+        { action: (variables: {}) => Promise<any> }
       >(mutation, {
         props: ({ ownProps, mutate }: any) => {
           if (ownProps.loading || typeof ownProps.loading === 'undefined')
-            return null;
+            return { action: () => Promise.resolve() };
           expect(ownProps.refetchQuery).toBeTruthy();
           return {
             action(variables: {}) {

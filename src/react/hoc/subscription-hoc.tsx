@@ -18,7 +18,7 @@ export function withSubscription<
   TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>,
   TData = {},
   TGraphQLVariables extends Record<string, any> = Record<string, any>,
-  TChildProps extends { [x: string]: any; } = DataProps<TData, TGraphQLVariables>
+  TChildProps extends Record<string, any> = DataProps<TData, TGraphQLVariables>
 >(
   document: DocumentNode,
   operationOptions: OperationOption<

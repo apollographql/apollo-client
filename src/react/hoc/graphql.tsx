@@ -13,7 +13,7 @@ type ChildProps<TData extends Record<string, any>, TGraphQLVariables extends Ope
 export function graphql<
   TProps extends TGraphQLVariables | Record<string, any> = Record<string, any> ,
   TData extends Record<string, any> = Record<string, any>,
-  TGraphQLVariables extends OperationVariables = {},
+  TGraphQLVariables extends OperationVariables = Record<string, any>,
   TChildProps extends ChildProps<TData, TGraphQLVariables> = ChildProps<TData, TGraphQLVariables>
 >(
   document: DocumentNode,

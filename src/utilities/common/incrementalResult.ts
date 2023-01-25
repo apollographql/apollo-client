@@ -24,7 +24,7 @@ export function isExecutionPatchResult<T>(
 ): value is ExecutionPatchResult<T> {
   return (
     isExecutionPatchIncrementalResult(value) ||
-    isExecutionPatchInitialResult<T>(value)
+    isExecutionPatchInitialResult(value)
   );
 }
 

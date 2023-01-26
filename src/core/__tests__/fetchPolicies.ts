@@ -781,7 +781,7 @@ describe("nextFetchPolicy", () => {
     }));
   }
 
-  const checkNextFetchPolicy = <TData, TVars>(args: {
+  const checkNextFetchPolicy = <TData, TVars extends object>(args: {
     fetchPolicy: WatchQueryFetchPolicy;
     nextFetchPolicy: WatchQueryOptions<TVars, TData>["nextFetchPolicy"];
     useDefaultOptions: boolean;

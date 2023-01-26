@@ -7,14 +7,14 @@ import { withSubscription } from './subscription-hoc';
 import { OperationOption, DataProps, MutateProps } from './types';
 import { OperationVariables } from '../../core';
 
-type ChildProps<TData extends Record<string, any>, TGraphQLVariables extends OperationVariables> =
-  Partial<DataProps<TData, TGraphQLVariables>> & Partial<MutateProps<TData, TGraphQLVariables>>;
-
 export function graphql<
-  TProps extends TGraphQLVariables | Record<string, any> = Record<string, any> ,
+  TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>,
   TData extends Record<string, any> = Record<string, any>,
   TGraphQLVariables extends OperationVariables = Record<string, any>,
-  TChildProps extends ChildProps<TData, TGraphQLVariables> = ChildProps<TData, TGraphQLVariables>
+  TChildProps extends Record<string, any> = Partial<
+    DataProps<TData, TGraphQLVariables>
+  > &
+    Partial<MutateProps<TData, TGraphQLVariables>>
 >(
   document: DocumentNode,
   operationOptions: OperationOption<

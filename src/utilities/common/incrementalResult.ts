@@ -28,7 +28,7 @@ export function isExecutionPatchResult<T>(
   );
 }
 
-export function mergeIncrementalData<TData extends Record<string, any>>(
+export function mergeIncrementalData<TData extends object>(
   prevResult: TData,
   result: ExecutionPatchResult<TData>
 ) {

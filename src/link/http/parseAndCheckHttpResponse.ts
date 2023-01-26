@@ -12,7 +12,7 @@ export type ServerParseError = Error & {
 };
 
 export async function readMultipartBody<
-  T extends Record<string, unknown> = Record<string, unknown>
+  T extends object = Record<string, unknown>
 >(response: Response, observer: Observer<T>) {
   if (TextDecoder === undefined) {
     throw new Error(

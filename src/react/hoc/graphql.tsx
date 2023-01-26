@@ -8,12 +8,10 @@ import { OperationOption, DataProps, MutateProps } from './types';
 import { OperationVariables } from '../../core';
 
 export function graphql<
-  TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>,
-  TData extends Record<string, any> = Record<string, any>,
-  TGraphQLVariables extends OperationVariables = Record<string, any>,
-  TChildProps extends Record<string, any> = Partial<
-    DataProps<TData, TGraphQLVariables>
-  > &
+  TProps extends TGraphQLVariables | {} = {},
+  TData extends object = {},
+  TGraphQLVariables extends OperationVariables = {},
+  TChildProps extends object = Partial<DataProps<TData, TGraphQLVariables>> &
     Partial<MutateProps<TData, TGraphQLVariables>>
 >(
   document: DocumentNode,

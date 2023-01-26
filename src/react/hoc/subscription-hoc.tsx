@@ -15,10 +15,10 @@ import {
 import { OperationOption, OptionProps, DataProps } from './types';
 
 export function withSubscription<
-  TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>,
-  TData = {},
-  TGraphQLVariables extends Record<string, any> = Record<string, any>,
-  TChildProps extends Record<string, any> = DataProps<TData, TGraphQLVariables>
+  TProps extends TGraphQLVariables | {} = {},
+  TData extends object = {},
+  TGraphQLVariables extends object = {},
+  TChildProps extends object = DataProps<TData, TGraphQLVariables>
 >(
   document: DocumentNode,
   operationOptions: OperationOption<

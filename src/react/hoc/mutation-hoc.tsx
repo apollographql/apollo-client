@@ -23,7 +23,7 @@ import { ApolloCache } from '../../core';
 export function withMutation<
   TProps extends TGraphQLVariables | {} = {},
   TData extends Record<string, any> = {},
-  TGraphQLVariables extends OperationVariables = Record<string, any>,
+  TGraphQLVariables extends OperationVariables = {},
   TChildProps = MutateProps<TData, TGraphQLVariables>,
   TContext extends Record<string, any> = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,

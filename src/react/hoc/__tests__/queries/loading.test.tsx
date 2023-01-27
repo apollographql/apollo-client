@@ -3,7 +3,7 @@ import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient, NetworkStatus } from '../../../../core';
+import { ApolloClient, NetworkStatus, WatchQueryFetchPolicy } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
 import { itAsync, mockSingleLink } from '../../../../testing';
@@ -327,7 +327,7 @@ describe('[queries] loading', () => {
     waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
-  itAsync('correctly sets loading state on remounted network-only query', (resolve, reject) => {
+  it('correctly sets loading state on remounted network-only query', async () => {
     const query: DocumentNode = gql`
       query pollingPeople {
         allPeople(first: 1) {
@@ -360,32 +360,46 @@ describe('[queries] loading', () => {
 
     let count = 0;
 
+    const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
     const Container = graphql<{}, Data>(query, {
       options: {
         fetchPolicy: 'network-only',
-        nextFetchPolicy: 'cache-first',
+        nextFetchPolicy(currentFetchPolicy, info) {
+          if (info.reason === "variables-changed") {
+            return info.initialFetchPolicy;
+          }
+          usedFetchPolicies.push(currentFetchPolicy);
+          if (info.reason === "after-fetch") {
+            return "cache-first";
+          }
+          return currentFetchPolicy;
+        }
       },
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
+          ++count;
           if (count === 1) {
+            expect(this.props.data!.loading).toBe(true);
+            expect(this.props.data!.allPeople).toBeUndefined();
+          } else if (count === 2) {
+            expect(this.props.data!.loading).toBe(false);
+            expect(this.props.data!.allPeople!.people[0].name).toMatch(
+              /Darth Skywalker - /
+            );
             // Has data
-            setTimeout(() => {
-              render(App);
-            }, 0);
-          }
-          if (count === 2) {
+            setTimeout(() => render(App));
+          } else if (count === 3) {
             // Loading after remount
-            expect(this.props.data!.loading).toBeTruthy();
-          }
-          if (count === 3) {
+            expect(this.props.data!.loading).toBe(true);
+            expect(this.props.data!.allPeople).toBeUndefined();
+          } else if (count >= 4) {
             // Fetched data loading after remount
-            expect(this.props.data!.loading).toBeFalsy();
+            expect(this.props.data!.loading).toBe(false);
             expect(this.props.data!.allPeople!.people[0].name).toMatch(
               /Darth Skywalker - /
             );
           }
-          count += 1;
           return null;
         }
       }
@@ -399,7 +413,16 @@ describe('[queries] loading', () => {
 
     render(App);
 
-    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
+    await waitFor(() => {
+      expect(usedFetchPolicies).toEqual([
+        "network-only",
+        "network-only",
+        "cache-first",
+      ]);
+    }, { interval: 1 });
+    await waitFor(() => {
+      expect(count).toBe(6);
+    }, { interval: 1 });
   });
 
   itAsync('correctly sets loading state on remounted component with changed variables', (resolve, reject) => {
@@ -594,8 +617,8 @@ describe('[queries] loading', () => {
     }
 
     const connect = (
-      component: React.ComponentType<Props>
-    ): React.ComponentType<{}> => {
+      component: React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<Props>>>
+    ): React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<{}>>> => {
       return class extends React.Component<{}, { first: number }> {
         constructor(props: {}) {
           super(props);
@@ -712,8 +735,8 @@ describe('[queries] loading', () => {
       }
 
       const connect = (
-        component: React.ComponentType<Props>
-      ): React.ComponentType<{}> => {
+        component: React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<Props>>>
+      ): React.ComponentType<React.PropsWithChildren<React.PropsWithChildren<{}>>> => {
         return class extends React.Component<{}, { first: number }> {
           constructor(props: {}) {
             super(props);

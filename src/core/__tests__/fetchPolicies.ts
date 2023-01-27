@@ -781,7 +781,7 @@ describe("nextFetchPolicy", () => {
     }));
   }
 
-  const checkNextFetchPolicy = <TData, TVars>(args: {
+  const checkNextFetchPolicy = <TData, TVars extends object>(args: {
     fetchPolicy: WatchQueryFetchPolicy;
     nextFetchPolicy: WatchQueryOptions<TVars, TData>["nextFetchPolicy"];
     useDefaultOptions: boolean;
@@ -896,7 +896,7 @@ describe("nextFetchPolicy", () => {
       }).catch(reject);
 
       // Changing variables resets the fetchPolicy to its initial value.
-      expect(observable.options.fetchPolicy).toBe("network-only");
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
     } else if (count === 3) {
       expect(result.loading).toBe(false);
@@ -1163,7 +1163,17 @@ describe("nextFetchPolicy", () => {
       // resets the fetchPolicy to context.initialPolicy), so cache-first is
       // still what we see here.
       expect(observable.options.fetchPolicy).toBe("cache-first");
+    } else if (count === 3) {
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        linkCounter: 2,
+        opName: "EchoQuery",
+        opVars: {
+          refetching: true,
+        },
+      });
 
+      expect(observable.options.fetchPolicy).toBe("cache-first");
       setTimeout(resolve, 20);
     } else {
       reject(`Too many results (${count})`);

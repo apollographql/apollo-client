@@ -270,3 +270,7 @@ const cache = new InMemoryCache({
   possibleTypes,
 });
 ```
+
+## `useFragment_experimental`
+
+> ⚠️ **The `useFragment_experimental` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client.** [See the API reference for more details.](../api/react/hooks-experimental)

@@ -2,7 +2,11 @@ import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { ApolloClient, NetworkStatus } from '../../core';
+import {
+  ApolloClient,
+  NetworkStatus,
+  WatchQueryFetchPolicy,
+} from '../../core';
 import { ObservableQuery } from '../ObservableQuery';
 import { QueryManager } from '../QueryManager';
 
@@ -1190,11 +1194,21 @@ describe('ObservableQuery', () => {
         },
       );
 
+      const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
       const observable = queryManager.watchQuery({
         query: queryWithVars,
         variables: variables1,
         fetchPolicy: 'cache-and-network',
-        nextFetchPolicy: 'cache-first',
+        nextFetchPolicy(currentFetchPolicy, info) {
+          if (info.reason === "variables-changed") {
+            return info.initialFetchPolicy;
+          }
+          usedFetchPolicies.push(currentFetchPolicy);
+          if (info.reason === "after-fetch") {
+            return "cache-first";
+          }
+          return currentFetchPolicy;
+        },
         notifyOnNetworkStatusChange: true,
       });
 
@@ -1222,7 +1236,7 @@ describe('ObservableQuery', () => {
           }).then(result => {
             expect(result.data).toEqual(data);
           }).catch(reject);
-          expect(observable.options.fetchPolicy).toBe('cache-and-network');
+          expect(observable.options.fetchPolicy).toBe('cache-first');
         } else if (handleCount === 4) {
           expect(result.loading).toBe(true);
           expect(result.networkStatus).toBe(NetworkStatus.setVariables);
@@ -1236,7 +1250,7 @@ describe('ObservableQuery', () => {
           }).then(result => {
             expect(result.data).toEqual(data2);
           }).catch(reject);
-          expect(observable.options.fetchPolicy).toBe('cache-and-network');
+          expect(observable.options.fetchPolicy).toBe('cache-first');
         } else if (handleCount === 6) {
           expect(result.data).toEqual(data2);
           expect(result.loading).toBe(true);
@@ -1245,6 +1259,14 @@ describe('ObservableQuery', () => {
           expect(result.data).toEqual(data2);
           expect(result.loading).toBe(false);
           expect(observable.options.fetchPolicy).toBe('cache-first');
+
+          expect(usedFetchPolicies).toEqual([
+            "cache-and-network",
+            "network-only",
+            "cache-and-network",
+            "cache-and-network",
+          ]);
+
           setTimeout(resolve, 10);
         } else {
           reject(`too many renders (${handleCount})`);
@@ -1444,7 +1466,7 @@ describe('ObservableQuery', () => {
               'Called refetch({"variables":["d","e"]}) for query QueryWithoutVariables, which does not declare a $variables variable.',
               "Did you mean to call refetch(variables) instead of refetch({ variables })?",
             ].join("\n"));
-            consoleWarnSpy.mockReset();
+            consoleWarnSpy.mockRestore();
 
             setTimeout(resolve, 10);
           } else {
@@ -1525,7 +1547,7 @@ describe('ObservableQuery', () => {
                 'Called refetch({"variables":{"vars":["d","e"]}}) for query QueryWithVarsVar, which does not declare a $variables variable.',
                 "Did you mean to call refetch(variables) instead of refetch({ variables })?",
               ].join("\n"));
-              consoleWarnSpy.mockReset();
+              consoleWarnSpy.mockRestore();
 
               setTimeout(resolve, 10);
             });
@@ -1604,7 +1626,7 @@ describe('ObservableQuery', () => {
             });
 
             expect(consoleWarnSpy).not.toHaveBeenCalled();
-            consoleWarnSpy.mockReset();
+            consoleWarnSpy.mockRestore();
 
             setTimeout(resolve, 10);
           } else {

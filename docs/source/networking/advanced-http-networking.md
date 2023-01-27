@@ -107,27 +107,29 @@ In this example, the user is logged out of the application if the server returns
 
 ### Modifying response data
 
-You can create a custom link that adds, edits, or removes fields from `response.data`. To do so, you call `map` on the result of the link's `forward(operation)` call. In the `map` function, make any desired changes to `response.data` and then return it:
+You can create a custom link that edits or removes fields from `response.data`. To do so, you call `map` on the result of the link's `forward(operation)` call. In the `map` function, make the desired changes to `response.data` and then return it:
 
 ```js
 import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from '@apollo/client';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 
-const addDateLink = new ApolloLink((operation, forward) => {
+const formatDateLink = new ApolloLink((operation, forward) => {
   return forward(operation).map(response => {
-    response.data.date = new Date();
+    if (response.data.date) {
+      response.data.date = new Date(response.data.date);
+    }
     return response;
   });
 });
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: addDateLink.concat(httpLink),
+  link: formatDateLink.concat(httpLink),
 });
 ```
 
-In the above example, `addDateLink` adds a `date` field to the top level of each response.
+In the above example, `formatDateLink` changes a `date` field to a Javascript Date object at the top level of each response.
 
 Note that `forward(operation).map(func)` _doesn't_ support asynchronous execution of the `func` mapping function. If you need to make asynchronous modifications, use the `asyncMap` function from `@apollo/client/utilities`, like so:
 
@@ -189,6 +191,7 @@ The `HttpLink` constructor accepts the following options:
 | `includeExtensions` | If `true`, you can pass an `extensions` field to your GraphQL server. (default: `false`) |
 | `fetch` | A `fetch`-compatible API for making a request. See [Providing a `fetch` replacement for certain environments](#providing-a-fetch-replacement-for-certain-environments). |
 | `headers` | An object containing header names and values to include in each request. |
+| `preserveHeaderCase` | If `true`, header values retain their capitalization for non-http-spec-compliant servers. (default: `false`) |
 | `credentials` | A string representing the credentials policy to use for the `fetch` call. (valid values: `omit`, `include`, `same-origin`) |
 | `fetchOptions` | Include this to override the values of certain options that are provided to the `fetch` call. |
 | `useGETForQueries` | If `true`, `HttpLink` uses `GET` requests instead of `POST` requests to execute query operations (but not mutation operations). (default: `false`) |

@@ -22,13 +22,31 @@ export type MissingTree = string | {
   readonly [key: string]: MissingTree;
 };
 
-export class MissingFieldError {
+export class MissingFieldError extends Error {
   constructor(
     public readonly message: string,
     public readonly path: MissingTree | Array<string | number>,
     public readonly query: DocumentNode,
     public readonly variables?: Record<string, any>,
-  ) {}
+  ) {
+    // 'Error' breaks prototype chain here
+    super(message);
+
+    if (Array.isArray(this.path)) {
+      this.missing = this.message;
+      for (let i = this.path.length - 1; i >= 0; --i) {
+        this.missing = { [this.path[i]]: this.missing };
+      }
+    } else {
+      this.missing = this.path;
+    }
+
+    // We're not using `Object.setPrototypeOf` here as it isn't fully supported
+    // on Android (see issue #3236).
+    (this as any).__proto__ = MissingFieldError.prototype;
+  }
+
+  public readonly missing: MissingTree;
 }
 
 export interface FieldSpecifier {
@@ -58,7 +76,7 @@ export type ToReferenceFunction = (
 
 export type CanReadFunction = (value: StoreValue) => boolean;
 
-export type Modifier<T> = (value: T, details: {
+export type ModifierDetails = {
   DELETE: any;
   INVALIDATE: any;
   fieldName: string;
@@ -68,7 +86,9 @@ export type Modifier<T> = (value: T, details: {
   isReference: typeof isReference;
   toReference: ToReferenceFunction;
   storage: StorageType;
-}) => T;
+}
+
+export type Modifier<T> = (value: T, details: ModifierDetails) => T;
 
 export type Modifiers = {
   [fieldName: string]: Modifier<any>;

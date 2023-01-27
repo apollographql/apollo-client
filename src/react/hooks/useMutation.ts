@@ -26,7 +26,7 @@ export function useMutation<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<TData, TVariables, TContext>,
+  options?: MutationHookOptions<TData, TVariables, TContext, TCache>,
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
@@ -61,7 +61,7 @@ export function useMutation<
   ) => {
     const {client, options, mutation} = ref.current;
     const baseOptions = { ...options, mutation };
-    if (!ref.current.result.loading && !baseOptions.ignoreResults) {
+    if (!ref.current.result.loading && !baseOptions.ignoreResults && ref.current.isMounted) {
       setResult(ref.current.result = {
         loading: true,
         error: void 0,
@@ -101,8 +101,9 @@ export function useMutation<
         }
       }
 
-      baseOptions.onCompleted?.(response.data!);
-      executeOptions.onCompleted?.(response.data!);
+      const onCompleted = executeOptions.onCompleted || ref.current.options?.onCompleted
+      onCompleted?.(response.data!, clientOptions);
+
       return response;
     }).catch((error) => {
       if (
@@ -122,9 +123,11 @@ export function useMutation<
         }
       }
 
-      if (baseOptions.onError || clientOptions.onError) {
-        baseOptions.onError?.(error);
-        executeOptions.onError?.(error);
+      const onError = executeOptions.onError || ref.current.options?.onError
+
+      if (onError) {
+        onError(error, clientOptions);
+
         // TODO(brian): why are we returning this here???
         return { data: void 0, errors: error };
       }
@@ -134,7 +137,9 @@ export function useMutation<
   }, []);
 
   const reset = useCallback(() => {
-    setResult({ called: false, loading: false, client });
+    if (ref.current.isMounted) {
+      setResult({ called: false, loading: false, client });
+    }
   }, []);
 
   useEffect(() => {

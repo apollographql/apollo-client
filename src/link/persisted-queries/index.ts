@@ -74,7 +74,7 @@ const defaultOptions = {
 
     const { response } = operation.getContext();
     // if the server responds with bad request
-    // apollo-server responds with 400 for GET and 500 for POST when no query is found
+    // Apollo Server responds with 400 for GET and 500 for POST when no query is found
     if (
       response &&
       response.status &&

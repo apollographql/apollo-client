@@ -1,3 +1,5 @@
+import { invariant } from '../../utilities/globals';
+
 import {
   useCallback,
   useContext,
@@ -5,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js';
+import { useSyncExternalStore } from './useSyncExternalStore';
 import { equal } from '@wry/equality';
 
 import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';
@@ -28,7 +30,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { canUseWeakMap, canUseWeakSet, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
   prototype: {
@@ -38,7 +40,7 @@ const {
 
 export function useQuery<
   TData = any,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<TData, TVariables> = Object.create(null),
@@ -49,7 +51,7 @@ export function useQuery<
   ).useQuery(options);
 }
 
-export function useInternalState<TData, TVariables>(
+export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ): InternalState<TData, TVariables> {
@@ -59,7 +61,7 @@ export function useInternalState<TData, TVariables>(
     client !== stateRef.current.client ||
     query !== stateRef.current.query
   ) {
-    stateRef.current = new InternalState(client, query);
+    stateRef.current = new InternalState(client, query, stateRef.current);
   }
   const state = stateRef.current;
 
@@ -77,17 +79,53 @@ export function useInternalState<TData, TVariables>(
   return state;
 }
 
-class InternalState<TData, TVariables> {
+class InternalState<TData, TVariables extends OperationVariables> {
   constructor(
     public readonly client: ReturnType<typeof useApolloClient>,
     public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    previous?: InternalState<TData, TVariables>,
   ) {
     verifyDocumentType(query, DocumentType.Query);
+
+    // Reuse previousData from previous InternalState (if any) to provide
+    // continuity of previousData even if/when the query or client changes.
+    const previousResult = previous && previous.result;
+    const previousData = previousResult && previousResult.data;
+    if (previousData) {
+      this.previousData = previousData;
+    }
   }
 
   forceUpdate() {
     // Replaced (in useInternalState) with a method that triggers an update.
+    invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
+
+  asyncUpdate(signal: AbortSignal) {
+    return new Promise<QueryResult<TData, TVariables>>((resolve, reject) => {
+      const watchQueryOptions = this.watchQueryOptions;
+
+      const handleAborted = () => {
+        this.asyncResolveFns.delete(resolve)
+        this.optionsToIgnoreOnce.delete(watchQueryOptions);
+        signal.removeEventListener('abort', handleAborted)
+        reject(signal.reason);
+      };
+
+      this.asyncResolveFns.add(resolve);
+      this.optionsToIgnoreOnce.add(watchQueryOptions);
+      signal.addEventListener('abort', handleAborted)
+      this.forceUpdate();
+    });
+  }
+
+  private asyncResolveFns = new Set<
+    (result: QueryResult<TData, TVariables>) => void
+  >();
+
+  private optionsToIgnoreOnce = new (canUseWeakSet ? WeakSet : Set)<
+    WatchQueryOptions<TVariables, TData>
+  >();
 
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
@@ -190,7 +228,14 @@ class InternalState<TData, TVariables> {
     // TODO Remove this method when we remove support for options.partialRefetch.
     this.unsafeHandlePartialRefetch(result);
 
-    return this.toQueryResult(result);
+    const queryResult = this.toQueryResult(result);
+
+    if (!queryResult.loading && this.asyncResolveFns.size) {
+      this.asyncResolveFns.forEach(resolve => resolve(queryResult));
+      this.asyncResolveFns.clear();
+    }
+
+    return queryResult;
   }
 
   // These members (except for renderPromises) are all populated by the
@@ -212,9 +257,27 @@ class InternalState<TData, TVariables> {
     // allows us to depend on the referential stability of
     // this.watchQueryOptions elsewhere.
     const currentWatchQueryOptions = this.watchQueryOptions;
-    if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
+
+    // To force this equality test to "fail," thereby reliably triggering
+    // observable.reobserve, add any current WatchQueryOptions object(s) you
+    // want to be ignored to this.optionsToIgnoreOnce. A similar effect could be
+    // achieved by nullifying this.watchQueryOptions so the equality test
+    // immediately fails because currentWatchQueryOptions is null, but this way
+    // we can promise a truthy this.watchQueryOptions at all times.
+    if (
+      this.optionsToIgnoreOnce.has(currentWatchQueryOptions) ||
+      !equal(watchQueryOptions, currentWatchQueryOptions)
+    ) {
       this.watchQueryOptions = watchQueryOptions;
+
       if (currentWatchQueryOptions && this.observable) {
+        // As advertised in the -Once of this.optionsToIgnoreOnce, this trick is
+        // only good for one forced execution of observable.reobserve per
+        // ignored WatchQueryOptions object, though it is unlikely we will ever
+        // see this exact currentWatchQueryOptions object again here, since we
+        // just replaced this.watchQueryOptions with watchQueryOptions.
+        this.optionsToIgnoreOnce.delete(currentWatchQueryOptions);
+
         // Though it might be tempting to postpone this reobserve call to the
         // useEffect block, we need getCurrentResult to return an appropriate
         // loading:true result synchronously (later within the same call to
@@ -223,7 +286,11 @@ class InternalState<TData, TVariables> {
         // subscriptions, though it does feel less than ideal that reobserve
         // (potentially) kicks off a network request (for example, when the
         // variables have changed), which is technically a side-effect.
-        this.observable.reobserve(watchQueryOptions);
+        this.observable.reobserve(this.getObsQueryOptions());
+
+        // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+        // but save the current data as this.previousData, just like setResult
+        // usually does.
         this.previousData = this.result?.data || this.previousData;
         this.result = void 0;
       }
@@ -240,7 +307,8 @@ class InternalState<TData, TVariables> {
 
     if (
       (this.renderPromises || this.client.disableNetworkFetches) &&
-      this.queryHookOptions.ssr === false
+      this.queryHookOptions.ssr === false &&
+      !this.queryHookOptions.skip
     ) {
       // If SSR has been explicitly disabled, and this function has been called
       // on the server side, return the default loading state.
@@ -268,6 +336,38 @@ class InternalState<TData, TVariables> {
     }
   }
 
+  private getObsQueryOptions(): WatchQueryOptions<TVariables, TData> {
+    const toMerge: Array<
+      Partial<WatchQueryOptions<TVariables, TData>>
+    > = [];
+
+    const globalDefaults = this.client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+
+    if (this.queryHookOptions.defaultOptions) {
+      toMerge.push(this.queryHookOptions.defaultOptions);
+    }
+
+    // We use compact rather than mergeOptions for this part of the merge,
+    // because we want watchQueryOptions.variables (if defined) to replace
+    // this.observable.options.variables whole. This replacement allows
+    // removing variables by removing them from the variables input to
+    // useQuery. If the variables were always merged together (rather than
+    // replaced), there would be no way to remove existing variables.
+    // However, the variables from options.defaultOptions and globalDefaults
+    // (if provided) should be merged, to ensure individual defaulted
+    // variables always have values, if not otherwise defined in
+    // observable.options or watchQueryOptions.
+    toMerge.push(compact(
+      this.observable && this.observable.options,
+      this.watchQueryOptions,
+    ));
+
+    return toMerge.reduce(
+      mergeOptions
+    ) as WatchQueryOptions<TVariables, TData>;
+  }
+
   private ssrDisabledResult = maybeDeepFreeze({
     loading: true,
     data: void 0 as unknown as TData,
@@ -288,7 +388,6 @@ class InternalState<TData, TVariables> {
     ssr,
     onCompleted,
     onError,
-    displayName,
     defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
@@ -366,13 +465,7 @@ class InternalState<TData, TVariables> {
       this.renderPromises
         && this.renderPromises.getSSRObservable(this.watchQueryOptions)
         || this.observable // Reuse this.observable if possible (and not SSR)
-        || this.client.watchQuery(mergeOptions(
-          // Any options.defaultOptions passed to useQuery serve as default
-          // options because we use them only here, when first creating the
-          // ObservableQuery by calling client.watchQuery.
-          this.queryHookOptions.defaultOptions,
-          this.watchQueryOptions,
-        ));
+        || this.client.watchQuery(this.getObsQueryOptions());
 
     this.obsQueryFields = useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
@@ -420,12 +513,25 @@ class InternalState<TData, TVariables> {
 
   private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
     if (!result.loading) {
-      if (result.error) {
-        this.onError(result.error);
-      } else if (result.data) {
-        this.onCompleted(result.data);
-      }
+      const error = this.toApolloError(result);
+
+      // wait a tick in case we are in the middle of rendering a component
+      Promise.resolve().then(() => {
+        if (error) {
+          this.onError(error);
+        } else if (result.data) {
+          this.onCompleted(result.data);
+        }
+      }).catch(error => {
+        invariant.warn(error);
+      });
     }
+  }
+
+  private toApolloError(result: ApolloQueryResult<TData>): ApolloError | undefined {
+    return isNonEmptyArray(result.errors)
+      ? new ApolloError({ graphQLErrors: result.errors })
+      : result.error
   }
 
   private getCurrentResult(): ApolloQueryResult<TData> {
@@ -462,7 +568,7 @@ class InternalState<TData, TVariables> {
       client: this.client,
       observable: this.observable,
       variables: this.observable.variables,
-      called: true,
+      called: !this.queryHookOptions.skip,
       previousData: this.previousData,
     });
 

@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom/server';
@@ -277,7 +278,7 @@ describe('SSR', () => {
           variables: { id: data!.currentUser!.id }
         })
       });
-      const Component: React.StatelessComponent<any> = ({
+      const Component: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<any>>> = ({
         data
       }) => (
         <div>
@@ -360,7 +361,7 @@ describe('SSR', () => {
 
       const WrappedBorkedComponent = withLastName(BorkedComponent);
 
-      const ContainerComponent: React.StatelessComponent<WithLastNameProps> = ({
+      const ContainerComponent: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<WithLastNameProps>>> = ({
         data
       }) => (
         <div>
@@ -419,7 +420,7 @@ describe('SSR', () => {
       const WrappedElement = graphql<Props, Data>(
         query
       )(({ data }: ChildProps<Props, Data>) => (
-        <div>{!data || data.loading ? 'loading' : data.error}</div>
+        <div>{!data || data.loading ? 'loading' : data.error?.toString()}</div>
       ));
 
       const Page = () => (
@@ -890,12 +891,12 @@ describe('SSR', () => {
         data: DataValue<Data>;
       }
 
-      const withQuery = graphql<QueryProps, Data, {}, QueryChildProps | null>(
+      const withQuery = graphql<QueryProps, Data, {}, QueryChildProps | {}>(
         query,
         {
           options: () => ({ ssr: true }),
           props: ({ data }) => {
-            if (data!.loading) return null;
+            if (data!.loading) return {};
             expect(data!.refetch).toBeTruthy();
             return {
               refetchQuery: data!.refetch,
@@ -909,11 +910,11 @@ describe('SSR', () => {
         QueryChildProps,
         {},
         {},
-        { action: (variables: {}) => Promise<any> } | null
+        { action: (variables: {}) => Promise<any> }
       >(mutation, {
         props: ({ ownProps, mutate }: any) => {
           if (ownProps.loading || typeof ownProps.loading === 'undefined')
-            return null;
+            return { action: () => Promise.resolve() };
           expect(ownProps.refetchQuery).toBeTruthy();
           return {
             action(variables: {}) {
@@ -923,9 +924,9 @@ describe('SSR', () => {
         }
       });
 
-      const Element: React.StatelessComponent<QueryChildProps & {
+      const Element: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<QueryChildProps & {
         action: (variables: {}) => Promise<any>;
-      }> = ({ data }) => (
+      }>>> = ({ data }) => (
         <div>
           {!data || data.loading || !data.currentUser
             ? 'loading'
@@ -1003,11 +1004,11 @@ describe('SSR', () => {
         }
       });
 
-      const Element: React.StatelessComponent<ChildProps<
+      const Element: React.FunctionComponent<React.PropsWithChildren<React.PropsWithChildren<ChildProps<
         ChildProps<Props, MutationData>,
         QueryData,
         {}
-      >> = ({ data }) => (
+      >>>> = ({ data }) => (
         <div>
           {!data || data.loading || !data.currentUser
             ? 'loading'
@@ -1061,7 +1062,7 @@ describe('SSR', () => {
         </div>
       ));
 
-      class MyRootContainer extends React.Component<{}, { color: string }> {
+      class MyRootContainer extends React.Component<React.PropsWithChildren, { color: string }> {
         constructor(props: {}) {
           super(props);
           this.state = { color: 'purple' };

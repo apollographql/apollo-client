@@ -5,7 +5,7 @@ Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
     "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
-      "localeString": "9/25/2020, 1:08:33 PM",
+      "localeString": "9/25/2020, 1:08:33 PM",
     },
     "someJSON": Object {
       "foos": Array [

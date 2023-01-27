@@ -51,14 +51,15 @@ One way to access the configured Apollo Client instance directly is to create an
 ### Example
 
 ```jsx
-import React from 'react';
 import { ApolloConsumer } from '@apollo/client';
 
-const WithApolloClient = () => (
-  <ApolloConsumer>
-    {client => 'We have access to the client!' /* do stuff here */}
-  </ApolloConsumer>
-);
+function WithApolloClient() {
+  return (
+    <ApolloConsumer>
+      {client => 'We have access to the client!' /* do stuff here */}
+    </ApolloConsumer>
+  );
+}
 ```
 
 ## `useQuery`
@@ -149,7 +150,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
   options?: LazyQueryHookOptions<TData, TVariables>,
 ): [
-  (options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
+  (options?: LazyQueryHookOptions<TData, TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
   LazyQueryResult<TData, TVariables>
 ] {}
 ```
@@ -172,7 +173,7 @@ function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
 | Param            | Type                                                  | Description                                                                                                                     |
 | ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Execute function | `(options?: QueryLazyOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>` | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails. |
+| Execute function | `(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>` | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails. |
 
 **`LazyQueryResult<TData, TVariables>` object (second tuple item)**
 
@@ -326,3 +327,25 @@ function useApolloClient(): ApolloClient<object> {}
 | Param                  | Type                       | Description                                                |
 | ---------------------- | -------------------------- | ---------------------------------------------------------- |
 | Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
+
+
+## `useReactiveVar`
+
+Reads the value of a [reactive variable](../../local-state/reactive-variables/) and re-renders the containing component whenever that variable's value changes. This enables a reactive variable to trigger changes _without_ relying on the `useQuery` hook.
+
+### Example
+
+```tsx
+import { makeVar, useReactiveVar } from "@apollo/client";
+export const cartItemsVar = makeVar([]);
+
+export function Cart() {
+  const cartItems = useReactiveVar(cartItemsVar);
+  // ...
+```
+
+### Function Signature
+
+```tsx
+function useReactiveVar<T>(rv: ReactiveVar<T>): T {}
+```

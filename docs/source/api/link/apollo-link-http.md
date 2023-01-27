@@ -95,10 +95,24 @@ See [Customizing `fetch`](#customizing-fetch).
 
 <td>
 
-An object representing headers to include in every HTTP request, such as `{Authentication: 'Bearer abc123'}`.
+An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer abc123'}`.
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `preserveHeaderCase`
+
+`Boolean`
+</td>
+<td>
+
+If set to true, header names won't be automatically normalized to lowercase. This allows for non-http-spec-compliant servers that might expect capitalized header names.
+
+The default value is `false`.
+</td>
+</tr>
 
 <tr>
 <td>
@@ -220,7 +234,7 @@ The default value is `/graphql`.
 
 <td>
 
-An object representing headers to include in the HTTP request, such as `{Authentication: 'Bearer abc123'}`.
+An object representing headers to include in the HTTP request, such as `{Authorization: 'Bearer abc123'}`.
 </td>
 </tr>
 
@@ -314,6 +328,21 @@ The default value is `false`.
 If `false`, the GraphQL query string is _not_ included in the request. Set this option if you're sending a request that uses a [persisted query](./persisted-queries/).
 
 The default value is `true`.
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `preserveHeaderCase`
+
+`Boolean`
+</td>
+<td>
+
+If set to true, header names won't be automatically normalized to lowercase. This allows for non-http-spec-compliant servers that might expect capitalized header names.
+
+The default value is `false`.
 </td>
 </tr>
 

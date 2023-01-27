@@ -24,7 +24,7 @@ describe('queries', () => {
   });
 
   // general api
-  it('binds a query to props', () => {
+  it('binds a query to props', async() => {
     let done = false;
     const query: DocumentNode = gql`
       query people {
@@ -58,18 +58,19 @@ describe('queries', () => {
       }
     );
 
-    const { unmount } = render(
+    render(
       <ApolloProvider client={client}>
         <ContainerWithData />
       </ApolloProvider>
     );
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(done).toBe(true);
-    }).finally(unmount)
+    });
   });
 
   itAsync('includes the variables in the props', (resolve, reject) => {
+    const TIME_SCALE = 5000;
     let renderCount = 0;
     const query: DocumentNode = gql`
       query people($first: Int) {
@@ -122,7 +123,7 @@ describe('queries', () => {
 
     waitFor(() => {
       expect(renderCount).toBe(2);
-    }).then(resolve, reject);
+    }, {timeout: TIME_SCALE}).then(resolve, reject);
   });
 
   itAsync('should update query variables when props change', (resolve, reject) => {
@@ -580,19 +581,20 @@ describe('queries', () => {
     });
 
     const Container = graphql<{}, Data>(query)(
-      class extends React.Component<ChildProps<{}, Data>> {
+      class extends React.Component<ChildProps<React.PropsWithChildren, Data>> {
         componentDidUpdate() {
           const { props } = this;
           expect(props.data!.loading).toBeFalsy();
           expect(props.data!.allPeople).toEqual(data.allPeople);
         }
         render() {
+          // eslint-disable-next-line testing-library/no-node-access
           return <div>{this.props.children}</div>;
         }
       }
     );
 
-    class ContextContainer extends React.Component<{}, { color: string }> {
+    class ContextContainer extends React.Component<React.PropsWithChildren, { color: string }> {
       constructor(props: {}) {
         super(props);
         this.state = { color: 'purple' };
@@ -609,6 +611,7 @@ describe('queries', () => {
       }
 
       render() {
+        // eslint-disable-next-line testing-library/no-node-access
         return <div>{this.props.children}</div>;
       }
     }
@@ -619,7 +622,7 @@ describe('queries', () => {
 
     let count = 0;
     let done = false;
-    class ChildContextContainer extends React.Component<any, any> {
+    class ChildContextContainer extends React.Component<React.PropsWithChildren> {
       render() {
         const { color } = this.context as any;
         if (count === 0) expect(color).toBe('purple');
@@ -629,6 +632,7 @@ describe('queries', () => {
         }
 
         count++;
+        // eslint-disable-next-line testing-library/no-node-access
         return <div>{this.props.children}</div>;
       }
     }
@@ -687,7 +691,7 @@ describe('queries', () => {
     @graphql(query, {
       alias: 'withFoo'
     })
-    class Container extends React.Component<any, any> {
+    class Container extends React.Component {
       render(): React.ReactNode {
         return null;
       }

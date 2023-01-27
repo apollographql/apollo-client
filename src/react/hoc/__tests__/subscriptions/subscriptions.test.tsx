@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, cleanup } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -22,7 +22,6 @@ describe('subscriptions', () => {
 
   afterEach(() => {
     console.error = error;
-    cleanup();
   });
 
   const results = [
@@ -128,7 +127,7 @@ describe('subscriptions', () => {
       return null;
     });
 
-    class ErrorBoundary extends React.Component {
+    class ErrorBoundary extends React.Component<React.PropsWithChildren> {
       componentDidCatch(e: any) {
         expect(e.name).toMatch(/TypeError/);
         expect(e.message).toMatch(/bar is not a function/);
@@ -136,6 +135,7 @@ describe('subscriptions', () => {
       }
 
       render() {
+        // eslint-disable-next-line testing-library/no-node-access
         return this.props.children;
       }
     }

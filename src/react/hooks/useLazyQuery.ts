@@ -1,9 +1,9 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
-import { ApolloError } from '../../errors';
+import { mergeOptions } from '../../utilities';
 import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
@@ -11,7 +11,6 @@ import {
 } from '../types/types';
 import { useInternalState } from './useQuery';
 import { useApolloClient } from './useApolloClient';
-import { isNonEmptyArray } from '../../utilities';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -24,20 +23,23 @@ const EAGER_METHODS = [
   'subscribeToMore',
 ] as const;
 
-export function useLazyQuery<TData = any, TVariables = OperationVariables>(
+export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
 ): LazyQueryResultTuple<TData, TVariables> {
+  const abortControllersRef = useRef(new Set<AbortController>());
   const internalState = useInternalState(
     useApolloClient(options && options.client),
     query,
   );
 
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
+  const merged = execOptionsRef.current
+    ? mergeOptions(options, execOptionsRef.current)
+    : options;
 
   const useQueryResult = internalState.useQuery({
-    ...options,
-    ...execOptionsRef.current,
+    ...merged,
     skip: !execOptionsRef.current,
   });
 
@@ -70,49 +72,38 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
   Object.assign(result, eagerMethods);
 
+  useEffect(() => {
+    return () => {
+      abortControllersRef.current.forEach((controller) => {
+        controller.abort();
+      });
+    }
+  }, [])
+
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    const promise = result.reobserve(
-      execOptionsRef.current = executeOptions ? {
-        ...executeOptions,
-        fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
-      } : {
-        fetchPolicy: initialFetchPolicy,
-      },
-    ).then(apolloQueryResult => {
-      // If this.observable.options.fetchPolicy is "standby", the
-      // apolloQueryResult we receive here can be undefined, so we call
-      // getCurrentResult to obtain a stub result.
-      // TODO Investigate whether standby queries could return this stub result
-      // in the first place.
-      apolloQueryResult = apolloQueryResult || internalState["getCurrentResult"]();
+    const controller = new AbortController();
+    abortControllersRef.current.add(controller);
 
-      if (
-        apolloQueryResult.error ||
-        isNonEmptyArray(apolloQueryResult.errors)
-      ) {
-        const {
-          errorPolicy = "none",
-        } = result.observable.options;
+    execOptionsRef.current = executeOptions ? {
+      ...executeOptions,
+      fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
+    } : {
+      fetchPolicy: initialFetchPolicy,
+    };
 
-        if (errorPolicy === "none") {
-          throw apolloQueryResult.error || new ApolloError({
-            graphQLErrors: apolloQueryResult.errors,
-          });
-        }
-      }
+    const promise = internalState
+      .asyncUpdate(controller.signal) // Like internalState.forceUpdate, but returns a Promise.
+      .then(queryResult => {
+        abortControllersRef.current.delete(controller);
 
-      return internalState.toQueryResult(apolloQueryResult);
+        return Object.assign(queryResult, eagerMethods);
+      });
 
-    }).then(queryResult => Object.assign(queryResult, eagerMethods));
-
-    // Deliver the loading state for this reobservation immediately.
-    internalState.forceUpdate();
-
-    // Because the return value of `useLazyQuery` is usually floated, we need
-    // to catch the promise to prevent unhandled rejections.
-    promise.catch(() => {});
+    promise.catch(() => {
+      abortControllersRef.current.delete(controller);
+    });
 
     return promise;
   }, []);

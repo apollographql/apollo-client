@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
@@ -83,16 +84,42 @@ describe('useQuery Hook SSR', () => {
     return renderToStringWithData(app);
   });
 
-  it('should skip SSR tree rendering if `ssr` option is `false`', async () => {
+  it('should skip SSR tree rendering and return a loading state if `ssr` option is `false`', async () => {
     let renderCount = 0;
     const Component = () => {
       const { data, loading } = useQuery(CAR_QUERY, { ssr: false });
       renderCount += 1;
 
+      expect(loading).toBeTruthy();
+
       if (!loading) {
         const { make } = data.cars[0];
         return <div>{make}</div>;
       }
+      return null;
+    };
+
+    const app = (
+      <MockedProvider mocks={CAR_MOCKS}>
+        <Component />
+      </MockedProvider>
+    );
+
+    return renderToStringWithData(app).then(result => {
+      expect(renderCount).toBe(1);
+      expect(result).toEqual('');
+    });
+  });
+
+  it('should skip SSR tree rendering and not return a loading state loading if `ssr` option is `false` and `skip` is `true`', async () => {
+    let renderCount = 0;
+    const Component = () => {
+      const { data, loading } = useQuery(CAR_QUERY, { ssr: false, skip: true });
+      renderCount += 1;
+
+      expect(loading).toBeFalsy();
+      expect(data).toBeUndefined();
+
       return null;
     };
 
@@ -146,12 +173,12 @@ describe('useQuery Hook SSR', () => {
         </ApolloProvider>
       );
 
-      const result = await renderToStringWithData(app);
+      const view = await renderToStringWithData(app);
       expect(renderCount).toBe(1);
-      expect(result).toEqual('');
+      expect(view).toEqual('');
       await new Promise((resolve) => setTimeout(resolve, 20));
       expect(renderCount).toBe(1);
-      expect(result).toEqual('');
+      expect(view).toEqual('');
     }
   );
 

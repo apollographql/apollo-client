@@ -173,6 +173,7 @@ const cache = new InMemoryCache({
     Query: {
       fields: {
         moreComments: {
+          keyArgs: false,
           merge(existing, incoming, { readField }) {
             const comments = existing ? { ...existing.comments } : {};
             incoming.comments.forEach(comment => {

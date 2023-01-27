@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: April 2022**
+**Last updated: Jan 2023**
 
 For up to date release notes, refer to the project's [Change Log](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -12,26 +12,26 @@ For up to date release notes, refer to the project's [Change Log](https://github
 - If you already see an issue that interests you please add a 👍 or a comment so we can measure community interest.
 
 ---
-## 3.7
-
-1. Web Cache and performance improvements through new hooks (useBackgroundQuery, useFragment)
-   - [#8694](https://github.com/apollographql/apollo-client/issues/8694)
-   - [#8236](https://github.com/apollographql/apollo-client/issues/8236)
-2. RefetchQueries not working when using string array after mutation
-   - [#5419](https://github.com/apollographql/apollo-client/issues/5419)
-3. Adding React suspense + data fetching support
-   - [#9627](https://github.com/apollographql/apollo-client/issues/9627)
 
 ## 3.8
 
-- *TBD*
+Currently in active development and being shipped in a series alpha releases.  React 18 users will get a lot out of this release since it introduces support for Suspense and (for you server-side rendering enthusiasts) `renderToPipeableStream`.  There are also new features added to the core as well.  Here's a brief overview:
 
-## 3.9
+- Add a new hook `useSuspenseQuery` which will provide the core functionality for React 18 `Suspense` capabilities
+- Ability to use `Suspense` with `@defer`
+- Introduce another new hook `useBackgroundQuery` with `Suspense` support
+- Ability to use `Suspense` with  `useFragment`
+- Server-side rendering (SSR) upgrade: support `renderToPipeableStream` for streaming renders
+- Add the (opt-in) ability to access fields with the `@client` directive in the link chain
 
-- *TBD*
+As we release each new feature we'll be looking for feedback from the community on performance, usage and developer experience of adopting and implementing these new concepts in your applications.  Try it today: `npm i @apollo/client@alpha` and let us know what you think!  Once new feature development is complete we'll move this to beta and then GA once stable.
+
+See the [3.8 Milestone](https://github.com/apollographql/apollo-client/milestone/30) for more details.
+
+## Future 3.x releases
+
+The 3.8 release is a major milestone for the project's React support.  Feedback from the community will have a big impact on where we go next, particularly as use cases for React Server Components and other React 18 features emerge.  In addition to new functionality, there is a significant backlog of questions and fixes that we want to categorize and thoughtfully address in upcoming releases.
 
 ## 4.0
 
-- Full React layer rewrite ([#8245](https://github.com/apollographql/apollo-client/issues/8245))
--  Removal of React from the default `@apollo/client` entry point ([#8190](https://github.com/apollographql/apollo-client/issues/8190))
-- Core APIs to facilitate client/cache persistence (making life simpler for tools like [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist), for example) ([#8591](https://github.com/apollographql/apollo-client/issues/8591))
+- `Release 4.0` will be our next major release of the Client and is still in early planning.  See Github [4.0 Milestone](https://github.com/apollographql/apollo-client/milestone/31) for more details.

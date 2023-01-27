@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { ApolloLink } from '../../../link/core';
 import { ApolloClient } from '../../../core';
@@ -15,8 +15,6 @@ const client = new ApolloClient({
 });
 
 describe('<ApolloConsumer /> component', () => {
-  afterEach(cleanup);
-
   itAsync('has a render prop', (resolve, reject) => {
     render(
       <ApolloProvider client={client}>
@@ -36,13 +34,13 @@ describe('<ApolloConsumer /> component', () => {
   });
 
   it('renders the content in the children prop', () => {
-    const { getByText } = render(
+    render(
       <ApolloProvider client={client}>
         <ApolloConsumer>{() => <div>Test</div>}</ApolloConsumer>
       </ApolloProvider>
     );
 
-    expect(getByText('Test')).toBeTruthy();
+    expect(screen.getByText('Test')).toBeTruthy();
   });
 
   it('errors if there is no client in the context', () => {

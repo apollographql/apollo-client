@@ -4,10 +4,6 @@ title: Configuring the Apollo Client cache
 
 This article describes cache setup and configuration. To learn how to interact with cached data, see [Reading and writing data to the cache](./cache-interaction).
 
-## Installation
-
-In Apollo Client 3, the `InMemoryCache` class is provided by the `@apollo/client` package. No additional libraries are required.
-
 ## Initialization
 
 Create an `InMemoryCache` object and provide it to the `ApolloClient` constructor, like so:
@@ -54,7 +50,9 @@ To customize cache behavior, you provide a configuration object to the `InMemory
 </td>
 <td>
 
-If `true`, the cache automatically adds `__typename` fields to all objects in outgoing queries, removing the need to add them manually.
+If `true`, the cache automatically requests the `__typename` field for every object in your outgoing operations, which means you can omit `__typename` from your operation definitions.
+
+By default, the cache uses the `__typename` field as part of the cache ID for every cached object, so it's helpful to guarantee that the field is always fetched.
 
 The default value is `true`.
 
@@ -124,9 +122,9 @@ Each key in the object is the `__typename` of a type to customize, and the corre
 </td>
 <td>
 
-**Deprecated.** A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store.
+A function that takes a response object and returns a unique identifier to be used when normalizing the data in the store.
 
-Deprecated in favor of the `keyFields` option of the [`TypePolicy` object](#typepolicy-fields).
+For details, see [Customizing identifier generation globally](#customizing-identifier-generation-globally).
 
 </td>
 </tr>
@@ -182,7 +180,7 @@ This example shows a variety of `typePolicies` with different `keyFields`:
 
 If an object has multiple `keyFields`, the cache ID always lists those fields in the same order to ensure uniqueness.
 
-Note that these `keyFields` strings always refer to the actual field names as defined in your schema, meaning the ID computation is not sensitive to [field aliases](/resources/graphql-glossary/#alias).
+Note that these `keyFields` strings always refer to the canonical field names defined in the schema. This means that ID computation is _not_ sensitive to [field aliases](/resources/graphql-glossary/#alias).
 
 ### Calculating an object's cache ID
 
@@ -208,7 +206,7 @@ const cache = new InMemoryCache({
 });
 ```
 
-> The `dataIdFromObject` API is included in Apollo Client 3 to ease the transition from Apollo Client 2.x. The API might be removed in a future version of `@apollo/client`.
+> The `dataIdFromObject` API is included in Apollo Client 3 to ease the transition from Apollo Client 2.x.
 
 Notice that the above function still uses different logic to generate keys based on an object's `__typename`. In a case like this, you should almost always define `keyFields` arrays for the `Product` and `Person` types via `typePolicies`.
 
@@ -308,7 +306,7 @@ const equivalentResult = cache.readQuery({
 });
 ```
 
-The cache normally obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use this same method for the outermost selection set of every operation, but the `__typename`s of the root query and mutation are almost always `"Query"` and `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
+The cache usually obtains `__typename` information by adding the `__typename` field to every query selection set it sends to the server. It could technically use this same method for the outermost selection set of every operation, but the `__typename`s of the root query and mutation are almost always `"Query"` and `"Mutation"`, so the cache assumes those common defaults unless instructed otherwise in a `TypePolicy`.
 
 For most objects in a graph, the `__typename` field is vital for proper identification and normalization. For the root query and mutation types, the `__typename` is not nearly as useful or important, because those types are singletons with only one instance per client.
 

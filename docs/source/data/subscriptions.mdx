@@ -22,6 +22,8 @@ You _should_ use subscriptions for the following:
 
 * **Low-latency, real-time updates**. For example, a chat application's client wants to receive new messages as soon as they're available.
 
+> **Note**: Subscriptions cannot be used to listen to local client events, like subscribing to changes in the cache. Subscriptions are intended to be used to subscribe to external data changes, and have those received changes be stored in the cache. You can then leverage Apollo Client's observability model to watch for changes in the cache, using [`client.watchQuery`](../api/core/ApolloClient#ApolloClient.watchQuery) or [`useQuery`](../api/react/hooks#usequery).
+
 ## Choosing a subscription library
 
 The GraphQL spec does not define a specific protocol for sending subscription requests. The first popular JavaScript library to implement subscriptions over WebSocket is called `subscriptions-transport-ws`. **This library is no longer actively maintained.** Its successor is a library called `graphql-ws`. The two libraries _do not use the same WebSocket subprotocol_, so you need to make sure that your server and clients all use the same library.
@@ -80,7 +82,7 @@ Whenever your GraphQL server _does_ push data to a subscribing client, that data
 
 Because subscriptions usually maintain a persistent connection, they shouldn't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library.
 
-> As mentioned in [Choosing a subscription protocol](#choosing-a-subscription-protocol), some servers use an older library called `subscriptions-transport-ws`. For necessary changes to use that library, see [below](#the-older-subscriptions-transport-ws-library).
+> As mentioned in [Choosing a subscription library](#choosing-a-subscription-library), some servers use an older library called `subscriptions-transport-ws`. For necessary changes to use that library, see [below](#the-older-subscriptions-transport-ws-library).
 
 ### 1. Install required libraries
 
@@ -292,11 +294,10 @@ In the example above, we pass three options to `subscribeToMore`:
 
 Finally, in our definition of `CommentsPage`, we tell the component to `subscribeToNewComments` when it mounts:
 
-```js
-export class CommentsPage extends Component {
-  componentDidMount() {
-    this.props.subscribeToNewComments();
-  }
+```jsx
+export function CommentsPage({subscribeToNewComments}) {
+  useEffect(() => subscribeToNewComments(), []);
+  return <>...</>
 }
 ```
 
@@ -354,12 +355,10 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 
 const wsLink = new WebSocketLink(
   new SubscriptionClient("ws://localhost:4000/subscriptions", {
-    options: {
-      connectionParams: {
-        authToken: user.authToken,
-      },
-    },
-  }),
+    connectionParams: {
+      authToken: user.authToken
+    }
+  })
 );
 ```
 

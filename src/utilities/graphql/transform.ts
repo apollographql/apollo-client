@@ -66,12 +66,11 @@ const TYPENAME_FIELD: FieldNode = {
 
 function isEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
-  fragments: FragmentMap,
+  fragmentMap: FragmentMap,
 ): boolean {
-  return op.selectionSet.selections.every(
-    selection =>
-      selection.kind === 'FragmentSpread' &&
-      isEmpty(fragments[selection.name.value], fragments),
+  return !op || op.selectionSet.selections.every(
+    selection => selection.kind === 'FragmentSpread' &&
+      isEmpty(fragmentMap[selection.name.value], fragmentMap)
   );
 }
 

@@ -120,7 +120,7 @@
     "@types/react": "18.0.27",
     "@types/react-dom": "18.0.10",
     "@types/use-sync-external-store": "0.0.3",
-    "@typescript-eslint/eslint-plugin": "5.48.2",
+    "@typescript-eslint/eslint-plugin": "5.49.0",
     "@typescript-eslint/parser": "5.48.2",
     "acorn": "8.8.2",
     "blob-polyfill": "7.0.20220408",

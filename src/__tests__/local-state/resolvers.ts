@@ -578,10 +578,12 @@ describe('Basic resolver capabilities', () => {
       }
     `;
 
+    const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
+
     const resolvers = {
       Query: {
         foo: () => ({ __typename: `Foo`, bar: true }),
-        bar: () => ({ __typename: `Bar`, baz: false }),
+        bar: barResolver
       },
     };
 
@@ -595,6 +597,7 @@ describe('Basic resolver capabilities', () => {
         next({ data }) {
           try {
             expect(data).toEqual({ foo: { bar: true }, bar: { baz: true } });
+            expect(barResolver).not.toHaveBeenCalled();
           } catch (error) {
             reject(error);
           }

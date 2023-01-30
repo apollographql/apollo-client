@@ -79,7 +79,7 @@ export interface SingleExecutionResult<
   TContext = DefaultContext,
   TExtensions = Record<string, any>
 > extends ExecutionResult<TData, TExtensions> {
-  data?: Data<TData>;
+  data?: TData | null;
   context?: TContext;
 }
 

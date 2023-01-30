@@ -482,7 +482,7 @@ export class LocalState<TCacheShape> {
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
   ): Set<SelectionNode> {
-    const isNode = (node: ASTNode | readonly ASTNode[]): node is ASTNode => !Array.isArray(node);
+    const isSingleASTNode = (node: ASTNode | readonly ASTNode[]): node is ASTNode => !Array.isArray(node);
     const selectionsToResolve = this.selectionsToResolve;
 
     function collectByDefinition(definitionNode: ExecutableDefinitionNode): Set<SelectionNode> {
@@ -494,7 +494,7 @@ export class LocalState<TCacheShape> {
           Directive(node: DirectiveNode, _, __, ___, ancestors) {
             if (node.name.value === 'client') {
               ancestors.forEach(node => {
-                if (isNode(node) && isSelectionNode(node)) {
+                if (isSingleASTNode(node) && isSelectionNode(node)) {
                   matches.add(node);
                 }
               })
@@ -509,7 +509,7 @@ export class LocalState<TCacheShape> {
               // Fragment for this spread contains @client directive (either directly or transitively)
               // Collect selection nodes on paths from the root down to fields with the @client directive
               ancestors.forEach(node => {
-                if (isNode(node) && isSelectionNode(node)) {
+                if (isSingleASTNode(node) && isSelectionNode(node)) {
                   matches.add(node);
                 }
               })

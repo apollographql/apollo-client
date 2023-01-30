@@ -81,7 +81,7 @@ export class LocalState<TCacheShape> {
   private client: ApolloClient<TCacheShape>;
   private resolvers?: Resolvers;
   private fragmentMatcher: FragmentMatcher;
-  private selectionsToResolve = new WeakMap<ExecutableDefinitionNode, Set<SelectionNode>>()
+  private selectionsToResolveCache = new WeakMap<ExecutableDefinitionNode, Set<SelectionNode>>()
 
   constructor({
     cache,
@@ -483,12 +483,12 @@ export class LocalState<TCacheShape> {
     fragmentMap: FragmentMap
   ): Set<SelectionNode> {
     const isSingleASTNode = (node: ASTNode | readonly ASTNode[]): node is ASTNode => !Array.isArray(node);
-    const selectionsToResolve = this.selectionsToResolve;
+    const selectionsToResolveCache = this.selectionsToResolveCache;
 
     function collectByDefinition(definitionNode: ExecutableDefinitionNode): Set<SelectionNode> {
-      if (!selectionsToResolve.has(definitionNode)) {
+      if (!selectionsToResolveCache.has(definitionNode)) {
         const matches = new Set<SelectionNode>();
-        selectionsToResolve.set(definitionNode, matches);
+        selectionsToResolveCache.set(definitionNode, matches);
 
         visit(definitionNode, {
           Directive(node: DirectiveNode, _, __, ___, ancestors) {
@@ -521,7 +521,7 @@ export class LocalState<TCacheShape> {
           }
         })
       }
-      return selectionsToResolve.get(definitionNode)!;
+      return selectionsToResolveCache.get(definitionNode)!;
     }
     return collectByDefinition(mainDefinition);
   }

@@ -475,13 +475,13 @@ export class LocalState<TCacheShape> {
     );
   }
 
+  // Collect selection nodes on paths from document root down to all @client directives.
+  // This function takes into account transitive fragment spreads.
+  // Complexity equals to a single `visit` over the full document.
   private collectSelectionsToResolve(
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
   ): Set<SelectionNode> {
-    // Collect selection nodes on paths from document root down to all @client directives.
-    // This function takes into account transitive fragment spreads.
-    // Complexity equals to a single `visit` over the full document.
     const isNode = (node: ASTNode | readonly ASTNode[]): node is ASTNode => !Array.isArray(node);
     const selectionsToResolve = this.selectionsToResolve;
 

@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Allow useLazyQuery trigger fn to change query
+Allow the execution function returned by `useLazyQuery` to change the query.

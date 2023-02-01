@@ -198,7 +198,7 @@ describe('QueryManager', () => {
     return mockQueryManager(reject, ...args);
   };
 
-  function getCurrentQueryResult<TData, TVars>(
+  function getCurrentQueryResult<TData, TVars extends object>(
     observableQuery: ObservableQuery<TData, TVars>,
   ): {
     data?: TData;

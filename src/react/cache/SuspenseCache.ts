@@ -7,7 +7,7 @@ import {
 } from '../../core';
 import { canonicalStringify } from '../../cache';
 
-interface CacheEntry<TData, TVariables> {
+interface CacheEntry<TData, TVariables extends OperationVariables> {
   observable: ObservableQuery<TData, TVariables>;
   fulfilled: boolean;
   promise: Promise<ApolloQueryResult<TData>>;
@@ -16,7 +16,7 @@ interface CacheEntry<TData, TVariables> {
 export class SuspenseCache {
   private queries = new Map<
     DocumentNode,
-    Map<string, CacheEntry<unknown, unknown>>
+    Map<string, CacheEntry<unknown, any>>
   >();
 
   add<TData = any, TVariables extends OperationVariables = OperationVariables>(

@@ -165,8 +165,8 @@ export class QueryManager<TStore> {
 
   public async mutate<
     TData,
-    TVariables,
-    TContext,
+    TVariables extends OperationVariables,
+    TContext extends Record<string, any>,
     TCache extends ApolloCache<any>
   >({
     mutation,
@@ -380,7 +380,10 @@ export class QueryManager<TStore> {
           optimistic: false,
           returnPartialData: true,
         });
-        const mergedData = mergeIncrementalData(diff.result, result);
+        let mergedData;
+        if (diff.result) {
+          mergedData = mergeIncrementalData(diff.result, result);
+        }
         if (typeof mergedData !== 'undefined') {
           // cast the ExecutionPatchResult to FetchResult here since
           // ExecutionPatchResult never has `data` when returned from the server
@@ -568,7 +571,7 @@ export class QueryManager<TStore> {
     }, mutation.mutationId);
   }
 
-  public fetchQuery<TData, TVars>(
+  public fetchQuery<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus,
@@ -671,7 +674,7 @@ export class QueryManager<TStore> {
     };
   }
 
-  public watchQuery<T, TVariables = OperationVariables>(
+  public watchQuery<T, TVariables extends OperationVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     // assign variable default values if supplied
@@ -705,7 +708,7 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  public query<TData, TVars = OperationVariables>(
+  public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId(),
   ): Promise<ApolloQueryResult<TData>> {
@@ -1080,7 +1083,7 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  private getResultsFromLink<TData, TVars>(
+  private getResultsFromLink<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
     options: Pick<WatchQueryOptions<TVars, TData>,
@@ -1155,7 +1158,7 @@ export class QueryManager<TStore> {
     );
   }
 
-  public fetchQueryObservable<TData, TVars>(
+  public fetchQueryObservable<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
@@ -1403,7 +1406,7 @@ export class QueryManager<TStore> {
     return results;
   }
 
-  private fetchQueryByPolicy<TData, TVars>(
+  private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     { query,
       variables,

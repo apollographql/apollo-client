@@ -11,10 +11,9 @@ export type ServerParseError = Error & {
   bodyText: string;
 };
 
-export async function readMultipartBody<T = Record<string, unknown>>(
-  response: Response,
-  observer: Observer<T>
-) {
+export async function readMultipartBody<
+  T extends object = Record<string, unknown>
+>(response: Response, observer: Observer<T>) {
   if (TextDecoder === undefined) {
     throw new Error(
       "TextDecoder must be defined in the environment: please import a polyfill."

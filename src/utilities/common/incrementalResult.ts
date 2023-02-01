@@ -7,28 +7,28 @@ import {
 import { isNonEmptyArray } from "./arrays";
 import { DeepMerger } from "./mergeDeep";
 
-export function isExecutionPatchIncrementalResult(
-  value: FetchResult
+export function isExecutionPatchIncrementalResult<T>(
+  value: FetchResult<T>
 ): value is ExecutionPatchIncrementalResult {
   return "incremental" in value;
 }
 
-export function isExecutionPatchInitialResult(
-  value: FetchResult
-): value is ExecutionPatchInitialResult {
+export function isExecutionPatchInitialResult<T>(
+  value: FetchResult<T>
+): value is ExecutionPatchInitialResult<T> {
   return "hasNext" in value && "data" in value;
 }
 
-export function isExecutionPatchResult(
-  value: FetchResult
-): value is ExecutionPatchResult {
+export function isExecutionPatchResult<T>(
+  value: FetchResult<T>
+): value is ExecutionPatchResult<T> {
   return (
     isExecutionPatchIncrementalResult(value) ||
     isExecutionPatchInitialResult(value)
   );
 }
 
-export function mergeIncrementalData<TData>(
+export function mergeIncrementalData<TData extends object>(
   prevResult: TData,
   result: ExecutionPatchResult<TData>
 ) {

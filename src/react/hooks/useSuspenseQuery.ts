@@ -30,7 +30,7 @@ import { useSyncExternalStore } from './useSyncExternalStore';
 
 export interface UseSuspenseQueryResult<
   TData = any,
-  TVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables
 > {
   client: ApolloClient<any>;
   data: TData;
@@ -234,13 +234,16 @@ function maybeWrapConcastWithCustomPromise<TData>(
   return concast.promise;
 }
 
-interface UseWatchQueryOptionsHookOptions<TData, TVariables> {
+interface UseWatchQueryOptionsHookOptions<
+  TData,
+  TVariables extends OperationVariables
+> {
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SuspenseQueryHookOptions<TData, TVariables>;
   client: ApolloClient<any>;
 }
 
-function useWatchQueryOptions<TData, TVariables>({
+function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   query,
   options,
   client,

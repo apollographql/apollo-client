@@ -976,7 +976,7 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it("should not remove __typename only fragment without @client", () => {
+  it("should not remove __typename only fragment (without @client)", () => {
     const query = gql`
       query {
         author {

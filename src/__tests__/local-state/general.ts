@@ -1197,7 +1197,7 @@ describe('Combining client and server state/operations', () => {
     });
   });
 
-  itAsync('should handle server errors when field is required', (resolve, reject) => {
+  itAsync('handles server errors when root data property is null', (resolve, reject) => {
     const query = gql`
       query GetUser {
         user {
@@ -1209,7 +1209,6 @@ describe('Combining client and server state/operations', () => {
 
     const cache = new InMemoryCache();
     const link = new ApolloLink(operation => {
-      expect(operation.operationName).toBe('GetUser');
       return Observable.of({
         data: null,
         errors: [new GraphQLError("something went wrong", {

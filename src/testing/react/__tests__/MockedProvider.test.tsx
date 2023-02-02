@@ -175,7 +175,7 @@ describe('General use', () => {
     };
 
     render(
-      <MockedProvider silenceWarnings mocks={mocks}>
+      <MockedProvider showWarnings={false} mocks={mocks}>
         <Component {...variables2} />
       </MockedProvider>
     );
@@ -215,7 +215,7 @@ describe('General use', () => {
     };
 
     render(
-      <MockedProvider silenceWarnings mocks={mocks2}>
+      <MockedProvider showWarnings={false} mocks={mocks2}>
         <Component {...variables2} />
       </MockedProvider>
     );
@@ -325,7 +325,7 @@ describe('General use', () => {
     ];
 
     render(
-      <MockedProvider silenceWarnings mocks={mocksDifferentQuery}>
+      <MockedProvider showWarnings={false} mocks={mocksDifferentQuery}>
         <Component {...variables} />
       </MockedProvider>
     );
@@ -437,7 +437,7 @@ describe('General use', () => {
 
     const link = ApolloLink.from([
       errorLink,
-      new MockLink([], true, { silenceWarnings: true })
+      new MockLink([], true, { showWarnings: false })
     ]);
 
     render(
@@ -533,7 +533,7 @@ describe('General use', () => {
     consoleSpy.mockRestore();
   });
 
-  it('silences console warning for unmatched mocks when silenceWarnings is `true`', async () => {
+  it('silences console warning for unmatched mocks when `showWarnings` is `false`', async () => {
     const consoleSpy = jest.spyOn(console, 'warn');
     let finished = false;
     function Component({ ...variables }: Variables) {
@@ -561,7 +561,7 @@ describe('General use', () => {
     ];
 
     render(
-      <MockedProvider mocks={mocksDifferentQuery} silenceWarnings={true}>
+      <MockedProvider mocks={mocksDifferentQuery} showWarnings={false}>
         <Component {...variables} />
       </MockedProvider>
     );
@@ -575,7 +575,7 @@ describe('General use', () => {
     consoleSpy.mockRestore();
   });
 
-  it('silences console warning for unmatched mocks when passing `silenceWarnings` to `MockLink` directly', async () => {
+  it('silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly', async () => {
     const consoleSpy = jest.spyOn(console, 'warn');
     let finished = false;
     function Component({ ...variables }: Variables) {
@@ -605,7 +605,7 @@ describe('General use', () => {
     const link = new MockLink(
       mocksDifferentQuery,
       false,
-      { silenceWarnings: true }
+      { showWarnings: false }
     );
 
     render(
@@ -630,7 +630,7 @@ describe('General use', () => {
       return null;
     }
 
-    const mockLink = new MockLink([], true, { silenceWarnings: true });
+    const mockLink = new MockLink([], true, { showWarnings: false });
     mockLink.setOnError(error => {
       expect(error).toMatchSnapshot();
       finished = true;
@@ -659,7 +659,7 @@ describe('General use', () => {
       return null;
     }
 
-    const mockLink = new MockLink([], true, { silenceWarnings: true });
+    const mockLink = new MockLink([], true, { showWarnings: false });
     mockLink.setOnError(() => {
       throw new Error('oh no!');
     });

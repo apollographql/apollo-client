@@ -401,12 +401,12 @@ const {
   cache,
   resolvers,
   link,
-  silenceWarnings 
+  showWarnings,
 } = this.props;
 const client = new ApolloClient({
   cache: cache || new Cache({ addTypename }),
   defaultOptions,
-  link: link || new MockLink(mocks || [], addTypename, { silenceWarnings }),
+  link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
   resolvers,
 });
 ```

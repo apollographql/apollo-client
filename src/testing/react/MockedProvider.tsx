@@ -17,7 +17,7 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   childProps?: object;
   children?: any;
   link?: ApolloLink;
-  silenceWarnings?: boolean;
+  showWarnings?: boolean;
 }
 
 export interface MockedProviderState {
@@ -42,7 +42,7 @@ export class MockedProvider extends React.Component<
       cache,
       resolvers,
       link,
-      silenceWarnings,
+      showWarnings,
     } = this.props;
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
@@ -50,7 +50,7 @@ export class MockedProvider extends React.Component<
       link: link || new MockLink(
         mocks || [],
         addTypename,
-        { silenceWarnings }
+        { showWarnings }
       ),
       resolvers,
     });

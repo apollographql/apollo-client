@@ -30,7 +30,7 @@ export interface MockedResponse<TData = Record<string, any>> {
 }
 
 export interface MockLinkOptions {
-  silenceWarnings?: boolean;
+  showWarnings?: boolean;
 }
 
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
@@ -44,17 +44,17 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 export class MockLink extends ApolloLink {
   public operation: Operation;
   public addTypename: Boolean = true;
-  public silenceWarnings: boolean = false;
+  public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse>,
     addTypename: Boolean = true,
-    options: MockLinkOptions = {}
+    options: MockLinkOptions = Object.create(null)
   ) {
     super();
     this.addTypename = addTypename;
-    this.silenceWarnings = options.silenceWarnings ?? false;
+    this.showWarnings = options.showWarnings ?? true;
 
     if (mockedResponses) {
       mockedResponses.forEach(mockedResponse => {
@@ -111,7 +111,7 @@ Failed to match ${unmatchedVars.length} mock${
 ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
 ` : ""}`);
 
-      if (!this.silenceWarnings) {
+      if (this.showWarnings) {
         console.warn(
           configError.message + 
             '\nThis typically indicates a configuration error in your mocks ' +

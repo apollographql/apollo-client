@@ -122,13 +122,13 @@ Props to pass down to the `MockedProvider`'s child.
 <tr>
 <td>
 
-###### `silenceWarnings`
+###### `showWarnings`
 
 `boolean`
 </td>
 <td>
 
-When a request fails to match a mock, a warning is logged to the console to indicate the mismatch. Set this to `true` to silence these warnings.
+When a request fails to match a mock, a warning is logged to the console to indicate the mismatch. Set this to `false` to silence these warnings.
 
 The default value is `false`.
 

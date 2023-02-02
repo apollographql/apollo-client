@@ -2,20 +2,26 @@ import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
-import { render, waitFor, screen } from '@testing-library/react';
-import { renderHook } from '@testing-library/react-hooks';
+import { render, waitFor, screen, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import fetchMock from "fetch-mock";
 
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { itAsync, MockedProvider, mockSingleLink, subscribeAndCount } from '../../../testing';
-import { ApolloProvider } from '../../context';
+import { itAsync, MockedProvider, MockSubscriptionLink, mockSingleLink, subscribeAndCount } from '../../../testing';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
+import { FetchResult } from '../../../link/core';
 
 describe('useMutation Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+  afterEach(() => {
+    resetApolloContext();
+  });
   interface Todo {
     id: number;
     description: string;
@@ -59,7 +65,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation(CREATE_TODO_MUTATION),
         { wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -75,8 +81,9 @@ describe('useMutation Hook', () => {
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current[1].loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current[1].data).toEqual(CREATE_TODO_RESULT);
     });
 
@@ -106,7 +113,7 @@ describe('useMutation Hook', () => {
         return { loading, data };
       };
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useCreateTodo(),
         { wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>
@@ -118,8 +125,9 @@ describe('useMutation Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(CREATE_TODO_RESULT);
     });
 
@@ -166,15 +174,15 @@ describe('useMutation Hook', () => {
           result: { data: data2 },
         },
       ];
-      const wrapper: React.FC<React.PropsWithChildren<{variables: typeof variables1 }>> = ({ children }) => (
-        <MockedProvider mocks={mocks}>
-          {children}
-        </MockedProvider>
-      );
-      const { result, rerender, waitForNextUpdate } = renderHook(
+
+      const { result, rerender } = renderHook(
         ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
         {
-          wrapper,
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
           initialProps: {
             variables: variables1,
           },
@@ -190,17 +198,19 @@ describe('useMutation Hook', () => {
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 })
       expect(result.current[0]).toBe(createTodo);
-      expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(data1);
 
       rerender({ variables: variables2 });
       act(() => void createTodo());
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 })
       expect(result.current[0]).toBe(createTodo);
-      expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(data2);
     });
 
@@ -558,7 +568,7 @@ describe('useMutation Hook', () => {
         }
       ];
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation<
           { createTodo: Todo },
           { priority: string, description: string }
@@ -584,8 +594,9 @@ describe('useMutation Hook', () => {
         result.current[1].reset();
       });
 
-      await waitForNextUpdate();
-      expect(result.current[1].data).toBe(undefined);
+      await waitFor(() => {
+        expect(result.current[1].data).toBe(undefined);
+      }, { interval: 1 });
     });
   });
 
@@ -648,6 +659,54 @@ describe('useMutation Hook', () => {
       expect(onError).toHaveBeenCalledTimes(0);
     });
 
+    it('prefers the onCompleted handler passed to the execution function rather than the hook', async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: 'Low',
+          description: 'Get milk!',
+          __typename: 'Todo',
+        },
+      };
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            data: CREATE_TODO_DATA
+          },
+        }
+      ];
+
+      const hookOnCompleted = jest.fn();
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { onCompleted: hookOnCompleted }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )
+        },
+      );
+
+      const [createTodo] = result.current;
+      const onCompleted = jest.fn();
+      await act(async () => {
+        await createTodo({ variables, onCompleted });
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+      expect(hookOnCompleted).not.toHaveBeenCalled();
+    });
+
     it('should allow passing an onError handler to the execution function', async () => {
       const errors = [new GraphQLError(CREATE_TODO_ERROR)];
       const variables = {
@@ -701,6 +760,46 @@ describe('useMutation Hook', () => {
       expect(onError).toHaveBeenCalledWith(errors[0], expect.objectContaining({variables}));
     });
 
+    it('prefers the onError handler passed to the execution function instead of the hook', async () => {
+      const variables = {
+        priority: 'Low',
+        description: 'Get milk.',
+      }
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+          },
+        }
+      ];
+
+      const hookOnError = jest.fn();
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { onError: hookOnError }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )
+        },
+      );
+
+      const [createTodo] = result.current;
+      const onError = jest.fn();
+      await act(async () => {
+        await createTodo({ variables, onError });
+      });
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(hookOnError).not.toHaveBeenCalled();
+    });
+
     it('should allow updating onError while mutation is executing', async () => {
       const errors = [new GraphQLError(CREATE_TODO_ERROR)];
       const variables = {
@@ -721,14 +820,7 @@ describe('useMutation Hook', () => {
 
       const onCompleted = jest.fn();
       const onError = jest.fn();
-      const wrapper: React.FC<React.PropsWithChildren<{
-        onCompleted: typeof onCompleted;
-        onError: typeof onError
-      }>> = ({ children }) => (
-        <MockedProvider mocks={mocks}>
-          {children}
-        </MockedProvider>
-      );
+
       const { result, rerender } = renderHook(
         ({ onCompleted, onError }) => {
           return useMutation<
@@ -737,22 +829,25 @@ describe('useMutation Hook', () => {
           >(CREATE_TODO_MUTATION, { onCompleted, onError });
         },
         {
-          wrapper,
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
           initialProps: { onCompleted, onError },
         },
       );
 
       const createTodo = result.current[0];
       let fetchResult: any;
-      const mutationPromise = act(async () => {
+
+      const onError1 = jest.fn();
+      rerender({ onCompleted, onError: onError1 });
+      await act(async () => {
         fetchResult = await createTodo({
           variables,
         });
       });
-
-      const onError1 = jest.fn();
-      rerender({ onCompleted, onError: onError1 });
-      await mutationPromise;
 
       expect(fetchResult).toEqual({
         data: undefined,
@@ -794,11 +889,6 @@ describe('useMutation Hook', () => {
       ];
 
       const onCompleted = jest.fn();
-      const wrapper: React.FC<React.PropsWithChildren<{ onCompleted: typeof onCompleted }>> = ({ children }) => (
-        <MockedProvider mocks={mocks}>
-          {children}
-        </MockedProvider>
-      );
       const { result, rerender } = renderHook(
         ({ onCompleted }) => {
           return useMutation<
@@ -807,7 +897,11 @@ describe('useMutation Hook', () => {
           >(CREATE_TODO_MUTATION, { onCompleted });
         },
         {
-          wrapper,
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
           initialProps: { onCompleted },
         },
       );
@@ -857,11 +951,7 @@ describe('useMutation Hook', () => {
       ];
 
       const onCompleted = jest.fn();
-      const wrapper: React.FC<React.PropsWithChildren<{ onCompleted: typeof onCompleted }>> = ({ children }) => (
-        <MockedProvider mocks={mocks}>
-          {children}
-        </MockedProvider>
-      );
+
       const { result, rerender } = renderHook(
         ({ onCompleted }) => {
           return useMutation<
@@ -870,22 +960,26 @@ describe('useMutation Hook', () => {
           >(CREATE_TODO_MUTATION, { onCompleted });
         },
         {
-          wrapper,
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          ),
           initialProps: { onCompleted },
         },
       );
 
       const createTodo = result.current[0];
       let fetchResult: any;
-      const mutationPromise = act(async () => {
+
+      const onCompleted1 = jest.fn();
+      rerender({ onCompleted: onCompleted1 });
+
+      await act(async () => {
         fetchResult = await createTodo({
           variables,
         });
       });
-
-      const onCompleted1 = jest.fn();
-      rerender({ onCompleted: onCompleted1 });
-      await mutationPromise;
 
       expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
       expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
@@ -944,7 +1038,7 @@ describe('useMutation Hook', () => {
         }),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation(mutation),
         { wrapper: ({ children }) => (
           <ApolloProvider client={client}>
@@ -1016,8 +1110,9 @@ describe('useMutation Hook', () => {
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current[1].loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      });
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBeDefined();
 
@@ -1061,7 +1156,7 @@ describe('useMutation Hook', () => {
         }),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useMutation(mutation, {
           keepRootFields: true,
         }),
@@ -1133,8 +1228,9 @@ describe('useMutation Hook', () => {
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current[1].loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      });
       expect(result.current[1].called).toBe(true);
       expect(result.current[1].data).toBeDefined();
 
@@ -1367,7 +1463,7 @@ describe('useMutation Hook', () => {
       }).then(resolve, reject);
     });
 
-    itAsync('should be called with the provided context', async (resolve, reject) => {
+    it('should be called with the provided context', async () => {
       const optimisticResponse = {
         __typename: 'Mutation',
         createTodo: {
@@ -1421,10 +1517,10 @@ describe('useMutation Hook', () => {
         </MockedProvider>
       );
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(contextFn).toHaveBeenCalledTimes(2);
-        expect(contextFn).toHaveBeenCalledWith(context);
-      }).then(resolve, reject);
+      });
+      expect(contextFn).toHaveBeenCalledWith(context);
     });
   });
 
@@ -1555,7 +1651,7 @@ describe('useMutation Hook', () => {
       onUpdatePromise.catch(() => {});
 
       let finishedReobserving = false;
-      const { result, waitForNextUpdate } = renderHook(() => ({
+      const { result } = renderHook(() => ({
         query: useQuery(countQuery),
         mutation: useMutation(CREATE_TODO_MUTATION, {
           optimisticResponse,
@@ -1601,16 +1697,18 @@ describe('useMutation Hook', () => {
       expect(result.current.mutation[1].data).toBe(undefined);
       expect(finishedReobserving).toBe(false);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.data).toEqual({ todoCount: 1 });
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual({ todoCount: 1 });
       expect(result.current.mutation[1].loading).toBe(true);
       expect(result.current.mutation[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.mutation[1].loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual({ todoCount: 1 });
-      expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].data).toEqual(CREATE_TODO_RESULT);
       expect(finishedReobserving).toBe(true);
 
@@ -1649,7 +1747,7 @@ describe('useMutation Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate, waitForValueToChange } = renderHook(
+      const { result } = renderHook(
         () => ({
           query: useQuery(GET_TODOS_QUERY),
           mutation: useMutation(CREATE_TODO_MUTATION),
@@ -1665,23 +1763,23 @@ describe('useMutation Hook', () => {
 
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
-      setTimeout(() => {
-        act(() => {
-          mutate({
-            variables,
-            refetchQueries: ['getTodos'],
-          });
+      act(() => {
+        mutate({
+          variables,
+          refetchQueries: ['getTodos'],
         });
       });
 
-      await waitForValueToChange(() => result.current.query.data);
+      await waitFor(() => {
+        expect(result.current.query.data).toEqual(mocks[2].result.data);
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(mocks[2].result.data);
 
       expect(client.readQuery({ query: GET_TODOS_QUERY}))
         .toEqual(mocks[2].result.data);
@@ -1721,7 +1819,7 @@ describe('useMutation Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => ({
           query: useQuery(GET_TODOS_QUERY),
           mutation: useMutation(CREATE_TODO_MUTATION),
@@ -1737,13 +1835,15 @@ describe('useMutation Hook', () => {
 
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
+      let mutation: Promise<unknown>;
       act(() => {
-        mutate({
+        mutation = mutate({
           variables,
           refetchQueries: [GET_TODOS_QUERY],
         });
@@ -1751,13 +1851,16 @@ describe('useMutation Hook', () => {
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
-      await waitForNextUpdate();
+      await act(async () => {
+        await mutation;
+      });
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.data).toEqual(mocks[2].result.data);
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(mocks[2].result.data);
       expect(client.readQuery({ query: GET_TODOS_QUERY }))
         .toEqual(mocks[2].result.data);
     });
@@ -1794,7 +1897,7 @@ describe('useMutation Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate, unmount } = renderHook(
+      const { result, unmount } = renderHook(
         () => ({
           query: useQuery(GET_TODOS_QUERY),
           mutation: useMutation(CREATE_TODO_MUTATION),
@@ -1810,13 +1913,15 @@ describe('useMutation Hook', () => {
 
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
       let onMutationDone: Function;
       const mutatePromise = new Promise((resolve) => (onMutationDone = resolve));
+
       setTimeout(() => {
         act(() => {
           mutate({
@@ -1832,13 +1937,12 @@ describe('useMutation Hook', () => {
         });
       });
 
-      await waitForNextUpdate();
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
       await mutatePromise;
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(
           client.readQuery({ query: GET_TODOS_QUERY })
         ).toEqual(mocks[2].result.data);
@@ -1946,7 +2050,7 @@ describe('useMutation Hook', () => {
         }
       `;
 
-      const { result, waitForNextUpdate } = renderHook(() => ({
+      const { result } = renderHook(() => ({
         query: useQuery(NumbersQuery, {
           notifyOnNetworkStatusChange: true,
         }),
@@ -2041,9 +2145,10 @@ describe('useMutation Hook', () => {
       expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].called).toBe(false);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.query.loading).toBe(false);
       expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.mutation[1].loading).toBe(false);
       expect(result.current.mutation[1].called).toBe(false);
@@ -2199,11 +2304,266 @@ describe('useMutation Hook', () => {
 
       render(<ApolloProvider client={client}><Test /></ApolloProvider>);
 
-      await screen.findByText('item 1');
+      await waitFor(() => screen.findByText('item 1'));
+      await userEvent.click(screen.getByRole('button', { name: /mutate/i }));
+      await waitFor(() => screen.findByText('item 3'));
+    });
+  });
+  describe('defer', () => {
+    const CREATE_TODO_MUTATION_DEFER = gql`
+      mutation createTodo($description: String!, $priority: String) {
+        createTodo(description: $description, priority: $priority) {
+          id
+          ... @defer {
+            description
+            priority
+          }
+        }
+      }
+    `;
+    const variables = {
+      description: 'Get milk!'
+    };
+    it('resolves a deferred mutation with the full result', async () => {
+      const errorSpy = jest.spyOn(console, "error");
+      const link = new MockSubscriptionLink();
 
-      userEvent.click(screen.getByRole('button', { name: /mutate/i }));
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
 
-      await screen.findByText('item 3');
+      const useCreateTodo = () => {
+        const [createTodo, { loading, data }] = useMutation(
+          CREATE_TODO_MUTATION_DEFER
+        );
+
+        useEffect(() => {
+          createTodo({ variables });
+        }, [variables]);
+
+        return { loading, data };
+      };
+
+      const { result } = renderHook(
+        () => useCreateTodo(),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              createTodo: {
+                id: 1,
+                __typename: 'Todo',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: {
+                description: 'Get milk!',
+                priority: 'High',
+                __typename: 'Todo',
+              },
+              path: ['createTodo'],
+            }],
+            hasNext: false
+          },
+        }, true);
+      });
+
+
+      // When defer is used in a mutation, the final value resolves
+      // in a single result
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+
+      expect(result.current.data).toEqual({
+        createTodo: {
+          id: 1,
+          description: "Get milk!",
+          priority: "High",
+          __typename: 'Todo',
+        },
+      });
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
+    });
+    it('resolves with resulting errors and calls onError callback', async () => {
+      const errorSpy = jest.spyOn(console, "error");
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const onError = jest.fn();
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION_DEFER, { onError }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      const createTodo = result.current[0];
+
+      let fetchResult: any;
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              createTodo: {
+                id: 1,
+                __typename: 'Todo',
+              },
+            },
+            hasNext: true
+          },
+        });
+      });
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            incremental: [{
+              data: null,
+              errors: [
+                new GraphQLError(CREATE_TODO_ERROR)
+              ],
+              path: ['createTodo'],
+            }],
+            hasNext: false
+          },
+        }, true);
+      });
+      await act(async () => {
+        fetchResult = await createTodo({ variables });
+      });
+
+      await waitFor(() => {
+        expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
+      });
+      await waitFor(() => {
+        expect(fetchResult.data).toBe(undefined);
+      });
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
+        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+      });
+      await waitFor(() => {
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+      errorSpy.mockRestore();
+    });
+    it('calls the update function with the final merged result data', async () => {
+      const errorSpy = jest.spyOn(console, "error");
+      const link = new MockSubscriptionLink();
+      const update = jest.fn();
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION_DEFER,
+          { update }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+      const [createTodo] = result.current;
+
+      let promiseReturnedByMutate: Promise<FetchResult>;
+
+      await act(async () => {
+        promiseReturnedByMutate = createTodo({ variables });
+      });
+
+      link.simulateResult({
+        result: {
+          data: {
+            createTodo: {
+              id: 1,
+              __typename: 'Todo',
+            },
+          },
+          hasNext: true
+        },
+      });
+
+      link.simulateResult({
+        result: {
+          incremental: [{
+            data: {
+              description: 'Get milk!',
+              priority: 'High',
+              __typename: 'Todo',
+            },
+            path: ['createTodo'],
+          }],
+          hasNext: false
+        },
+      }, true);
+
+      await act(async () => {
+        await promiseReturnedByMutate;
+      });
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith(
+        // the first item is the cache, which we don't need to make any
+        // assertions against in this test
+        expect.anything(),
+        // second argument is the result
+        expect.objectContaining({
+          data: {
+            createTodo: {
+              id: 1,
+              description: "Get milk!",
+              priority: "High",
+              __typename: 'Todo',
+            },
+          }
+        }),
+        // third argument is an object containing context and variables
+        // but we only care about variables here
+        expect.objectContaining({ variables })
+      );
+      await waitFor(() => {
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+
+      errorSpy.mockRestore();
     });
   });
 });

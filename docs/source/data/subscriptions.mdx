@@ -82,7 +82,7 @@ Whenever your GraphQL server _does_ push data to a subscribing client, that data
 
 Because subscriptions usually maintain a persistent connection, they shouldn't use the default HTTP transport that Apollo Client uses for queries and mutations. Instead, Apollo Client subscriptions most commonly communicate over WebSocket, via the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library.
 
-> As mentioned in [Choosing a subscription protocol](#choosing-a-subscription-protocol), some servers use an older library called `subscriptions-transport-ws`. For necessary changes to use that library, see [below](#the-older-subscriptions-transport-ws-library).
+> As mentioned in [Choosing a subscription library](#choosing-a-subscription-library), some servers use an older library called `subscriptions-transport-ws`. For necessary changes to use that library, see [below](#the-older-subscriptions-transport-ws-library).
 
 ### 1. Install required libraries
 

@@ -10,6 +10,8 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   release:
     name: Changesets Release
+    # Prevents action from creating a PR on forks
+    if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -28,7 +30,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Setup Node.js 18.x
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
 
@@ -40,7 +42,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
-          publish: npm run changeset-publish
+          publish: npm run changeset-publish -- --tag next
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -55,7 +57,38 @@ jobs:
           # You can pass in multiple channels to post to by providing
           # a comma-delimited list of channel IDs
           channel-id: 'C01PS0CB41G'
-          # For posting a simple plain text message
-          slack-message: "Published @apollo/client v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "A new version of `@apollo/client` was released :rocket:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n`${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Tag:*\n`next`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}|link>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
+                    }
+                  ]
+                }
+              ]
+            }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

@@ -2453,6 +2453,7 @@ describe('client', () => {
     await client.refetchQueries(options);
 
     expect(spy).toHaveBeenCalledWith(options);
+    spy.mockRestore();
   });
 
   it('has a getObservableQueries method which calls QueryManager', async () => {

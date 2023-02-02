@@ -63,7 +63,7 @@ interface Last<TData, TVariables> {
 
 export class ObservableQuery<
   TData = any,
-  TVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables
 > extends Observable<ApolloQueryResult<TData>> {
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
@@ -397,7 +397,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
   public fetchMore<
     TFetchData = TData,
-    TFetchVars = TVariables,
+    TFetchVars extends OperationVariables = TVariables,
   >(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
     updateQuery?: (
       previousQueryResult: TData,
@@ -508,7 +508,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
   public subscribeToMore<
     TSubscriptionData = TData,
-    TSubscriptionVariables = TVariables
+    TSubscriptionVariables extends OperationVariables = TVariables
   >(
     options: SubscribeToMoreOptions<
       TData,
@@ -606,7 +606,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     }, NetworkStatus.setVariables);
   }
 
-  public updateQuery<TVars = TVariables>(
+  public updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (
       previousQueryResult: TData,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">,
@@ -940,7 +940,7 @@ fixObservableSubclass(ObservableQuery);
 // this.options.fetchPolicy is "cache-and-network" or "network-only". When
 // this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
 // "standby", or "no-cache"), we call this.reobserve() as usual.
-export function reobserveCacheFirst<TData, TVars>(
+export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
   obsQuery: ObservableQuery<TData, TVars>,
 ) {
   const { fetchPolicy, nextFetchPolicy } = obsQuery.options;

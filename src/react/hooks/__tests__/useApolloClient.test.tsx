@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { InvariantError } from 'ts-invariant';
 
 import { ApolloClient } from '../../../core';
@@ -9,8 +9,10 @@ import { InMemoryCache } from '../../../cache';
 import { useApolloClient } from '../useApolloClient';
 
 describe('useApolloClient Hook', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
   afterEach(() => {
-    cleanup();
     resetApolloContext();
   });
 

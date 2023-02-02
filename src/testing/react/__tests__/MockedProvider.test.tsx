@@ -175,7 +175,7 @@ describe('General use', () => {
     };
 
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider silenceWarnings mocks={mocks}>
         <Component {...variables2} />
       </MockedProvider>
     );
@@ -215,7 +215,7 @@ describe('General use', () => {
     };
 
     render(
-      <MockedProvider mocks={mocks2}>
+      <MockedProvider silenceWarnings mocks={mocks2}>
         <Component {...variables2} />
       </MockedProvider>
     );
@@ -325,7 +325,7 @@ describe('General use', () => {
     ];
 
     render(
-      <MockedProvider mocks={mocksDifferentQuery}>
+      <MockedProvider silenceWarnings mocks={mocksDifferentQuery}>
         <Component {...variables} />
       </MockedProvider>
     );
@@ -435,7 +435,10 @@ describe('General use', () => {
       return null;
     }
 
-    const link = ApolloLink.from([errorLink, new MockLink([])]);
+    const link = ApolloLink.from([
+      errorLink,
+      new MockLink([], true, { silenceWarnings: true })
+    ]);
 
     render(
       <MockedProvider link={link}>
@@ -627,7 +630,7 @@ describe('General use', () => {
       return null;
     }
 
-    const mockLink = new MockLink([]);
+    const mockLink = new MockLink([], true, { silenceWarnings: true });
     mockLink.setOnError(error => {
       expect(error).toMatchSnapshot();
       finished = true;
@@ -656,7 +659,7 @@ describe('General use', () => {
       return null;
     }
 
-    const mockLink = new MockLink([]);
+    const mockLink = new MockLink([], true, { silenceWarnings: true });
     mockLink.setOnError(() => {
       throw new Error('oh no!');
     });

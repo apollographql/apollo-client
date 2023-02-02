@@ -130,7 +130,7 @@ Props to pass down to the `MockedProvider`'s child.
 
 When a request fails to match a mock, a warning is logged to the console to indicate the mismatch. Set this to `false` to silence these warnings.
 
-The default value is `false`.
+The default value is `true`.
 
 </td>
 </tr>

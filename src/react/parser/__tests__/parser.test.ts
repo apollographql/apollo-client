@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 
-import { parser, DocumentType } from '../parser';
+import { parser, DocumentType } from '..';
 
 type OperationDefinition = any;
 

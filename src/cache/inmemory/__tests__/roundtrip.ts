@@ -1,11 +1,16 @@
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 
-import { withError } from './diffAgainstStore';
 import { EntityStore } from '../entityStore';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
-import { Policies } from '../policies';
+import { InMemoryCache } from '../inMemoryCache';
+import {
+  writeQueryToStore,
+  readQueryFromStore,
+  withError,
+} from './helpers';
+import { withErrorSpy } from '../../../testing';
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === 'object' && stack.indexOf(value) < 0) {
@@ -20,16 +25,17 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
 }
 
 function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
-  const policies = new Policies({
+  const cache = new InMemoryCache({
     possibleTypes: {
       Character: ["Jedi", "Droid"],
     },
   });
 
-  const reader = new StoreReader({ policies });
-  const writer = new StoreWriter({ policies });
+  const reader = new StoreReader({ cache });
+  const writer = new StoreWriter(cache);
 
-  const store = writer.writeQueryToStore({
+  const store = writeQueryToStore({
+    writer,
     result,
     query,
     variables,
@@ -41,18 +47,18 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     variables,
   };
 
-  const reconstructedResult = reader.readQueryFromStore<any>(readOptions);
+  const reconstructedResult = readQueryFromStore(reader, readOptions);
   expect(reconstructedResult).toEqual(result);
 
   // Make sure the result is identical if we haven't written anything new
   // to the store. https://github.com/apollographql/apollo-client/pull/3394
   expect(store).toBeInstanceOf(EntityStore);
-  expect(reader.readQueryFromStore(readOptions)).toBe(reconstructedResult);
+  expect(readQueryFromStore(reader, readOptions)).toBe(reconstructedResult);
 
-  const immutableResult = reader.readQueryFromStore(readOptions);
+  const immutableResult = readQueryFromStore(reader, readOptions);
   expect(immutableResult).toEqual(reconstructedResult);
-  expect(reader.readQueryFromStore(readOptions)).toBe(immutableResult);
-  if (process.env.NODE_ENV !== 'production') {
+  expect(readQueryFromStore(reader, readOptions)).toBe(immutableResult);
+  if (__DEV__) {
     try {
       // Note: this illegal assignment will only throw in strict mode, but that's
       // safe to assume because this test file is a module.
@@ -67,7 +73,8 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
 
   // Now make sure subtrees of the result are identical even after we write
   // an additional bogus field to the store.
-  writer.writeQueryToStore({
+  writeQueryToStore({
+    writer,
     store,
     result: { oyez: 1234 },
     query: gql`
@@ -77,7 +84,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     `,
   });
 
-  const deletedRootResult = reader.readQueryFromStore<any>(readOptions);
+  const deletedRootResult = readQueryFromStore(reader, readOptions);
   expect(deletedRootResult).toEqual(result);
 
   if (deletedRootResult === reconstructedResult) {
@@ -309,7 +316,7 @@ describe('roundtrip', () => {
 
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
-    it('should throw an error on two of the same inline fragment types', () => {
+    withErrorSpy(it, 'should throw an error on two of the same inline fragment types', () => {
       expect(() => {
         storeRoundtrip(
           gql`
@@ -336,7 +343,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Missing field 'rank' /);
+      }).toThrowError(/Can't find field 'rank' /);
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
@@ -449,7 +456,7 @@ describe('roundtrip', () => {
       });
     });
 
-    it('should throw on error on two of the same spread fragment types', () => {
+    withErrorSpy(it, 'should throw on error on two of the same spread fragment types', () => {
       expect(() => {
         storeRoundtrip(
           gql`
@@ -480,7 +487,7 @@ describe('roundtrip', () => {
             ],
           },
         );
-      }).toThrowError(/Missing field 'rank' /);
+      }).toThrowError(/Can't find field 'rank' /);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

@@ -1,5 +1,5 @@
-import { GraphQLRequest, Operation } from '../core/types';
-import { getOperationName } from '../../utilities/graphql/getFromAST';
+import { GraphQLRequest, Operation } from '../core';
+import { getOperationName } from '../../utilities';
 
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   const transformedOperation: GraphQLRequest = {

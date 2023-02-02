@@ -1,0 +1,452 @@
+---
+title: Key arguments in Apollo Client
+description: Using the keyArgs API
+---
+
+> We recommend reading [Core pagination API](./core-api) before learning about considerations specific to `keyArgs` configuration.
+
+The Apollo Client cache can store multiple entries for a single schema field. By default, each entry corresponds to a different set of values for the field's arguments.
+
+For example, consider this `Query.user` field:
+
+```graphql {3}
+type Query {
+  # Returns whichever User object corresponds to `id`
+  user(id: ID!): User
+}
+```
+
+If we query for `User`s with `id`s `1` and `2`, the Apollo Client cache stores entries for _both_ like so:
+
+```js {3,6} title="Cache"
+{
+  'ROOT_QUERY': {
+    'user({"id":"1"})': {
+      '__ref': 'User:1'
+    },
+    'user({"id":"2"})': {
+      '__ref': 'User:2'
+    }
+  }
+}
+```
+
+As shown above, each entry's **storage key** includes the corresponding argument values. This means that if _any_ of a field's arguments differ between queries, the storage keys _also_ differ, and those queries result in distinct cache entries.
+
+> If a field has no arguments, its storage key is just its name.
+
+This default behavior is for safety: the cache doesn't know whether it can _merge_ the values returned for different argument combinations without invalidating data. In the example above, the cache definitely _shouldn't_ merge the results of querying for `User`s with `id`s `1` and `2`.
+
+## Pagination issues
+
+Certain arguments _shouldn't_ cause the Apollo Client cache to store a separate entry. This is almost always the case for arguments related to paginated lists.
+
+Consider this `Query.feed` field:
+
+```graphql {2}
+type Query {
+  feed(offset: Int, limit: Int, category: Category): [FeedItem!]
+}
+```
+
+The `offset` and `limit` arguments enable a client to specify which "page" of the feed it wants to fetch. In an app with an infinitely scrolling feed, the client might initially fetch the first ten items, then fetch the _next_ ten:
+
+```graphql
+# First query
+query GetFeedItems {
+  feed(offset: 0, limit: 10, category: "SPORTS")
+}
+
+# Second query
+query GetFeedItems {
+  feed(offset: 10, limit: 10, category: "SPORTS")
+}
+```
+
+But because their argument values differ, these two lists of ten items are cached _separately_ by default. This means that when the second query completes, the returned items _aren't_ appended to the original list in the feed!
+
+```js {3-4,10-11} title="Cache"
+{
+  'ROOT_QUERY': {
+    // First query
+    'feed({"offset":"0","limit":"10","category":"SPORTS"})': [
+      {
+        '__ref': 'FeedItem:1'
+      },
+      // ...additional items...
+    ],
+    // Second query
+    'feed({"offset":"10","limit":"10","category":"SPORTS"})': [
+      {
+        '__ref': 'FeedItem:11'
+      },
+      // ...additional items...
+    ]
+  }
+}
+```
+
+In this case, we _don't_ want `offset` or `limit` to be included in a cache entry's storage key. Instead, we want the cache to _merge_ the results of the two above queries into a single cache entry that includes the items from both lists.
+
+To help handle this case, we can [set key arguments](#setting-keyargs) for the field.
+
+## Setting `keyArgs`
+
+A **key argument** is an argument for a GraphQL field that's included in cache storage keys for that field. By default, _all_ GraphQL arguments are key arguments, as shown in our feed example:
+
+```js {3-4,10-11} title="Cache"
+{
+  'ROOT_QUERY': {
+    // First query
+    'feed({"offset":"0","limit":"10","category":"SPORTS"})': [
+      {
+        '__ref': 'FeedItem:1'
+      },
+      // ...additional items...
+    ],
+    // Second query
+    'feed({"offset":"10","limit":"10","category":"SPORTS"})': [
+      {
+        '__ref': 'FeedItem:11'
+      },
+      // ...additional items...
+    ]
+  }
+}
+```
+
+You can override this default behavior by defining a cache [field policy](../caching/cache-field-behavior) for a particular field:
+
+```js {5-7}
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["category"],
+        },
+      },
+    },
+  },
+});
+```
+
+This field policy for `Query.feed` includes a `keyArgs` array, which contains the names of all arguments that the cache _should_ include in its storage keys.
+
+In this case, we don't want the cache to treat `offset` or `limit` as key arguments, because those arguments don't change _which_ list we're fetching from. However, we _do_ want to treat `category` as a key argument, because we want to store our `SPORTS` feed separately from other feeds (such as `FASHION` or `MUSIC`).
+
+After setting `keyArgs` as shown, we end up with a _single_ cache entry for our `SPORTS` feed (note the absence of `offset` and `limit` in the storage key):
+
+```js:title=Cache
+{
+  'ROOT_QUERY': {
+    'feed({"category":"SPORTS"})': [
+      {
+        '__ref': 'FeedItem:1'
+      },
+      // ...additional items from first query...
+      {
+        '__ref': 'FeedItem:11'
+      },
+      // ...additional items from second query...
+    ]
+  }
+}
+```
+
+> **Important:** After you define `keyArgs` for a paginated list field like `Query.feed`, you also need to [define a `merge` function](./core-api/#defining-a-field-policy) for the field. Otherwise, the list returned by the second query will _overwrite_ the first list instead of merging with it.
+
+## Supported values for `keyArgs`
+
+You can provide the following values for a field's `keyArgs`:
+
+* `false` (indicates that the field has _no_ key arguments)
+* [An array](#keyargs-array) of argument, directive, and variable names
+* [A function](#keyargs-function) (advanced)
+
+### `keyArgs` array
+
+A `keyArgs` array can include the types of values shown below. The storage key for a cached field uses the values of _all_ arguments, directives, and variables included in the array.
+
+* Argument names:
+
+    ```js
+    // Here, category and id are two arguments of the field
+    ["category", "id"]
+    ```
+
+* _Nested_ argument names for input types with subfields:
+
+    ```js
+    // Here, details is an input type argument
+    // with subfields name and date
+    ["details", ["name", "date"] ]
+    ```
+
+* Directive names (indicated with `@`), optionally with one or more of their arguments:
+
+    ```js
+    // Here, @units is a directive that can be applied
+    // to the field, and it has a type argument
+    ["@units", ["type"] ]
+    ```
+
+* Variable names (indicated with `$`):
+
+    ```js
+    // Here, $userId is a variable that's provided to some
+    // operations that include the field
+    ["$userId"]
+    ```
+
+### `keyArgs` function (advanced)
+
+You can define a completely different format for a field's storage key by providing a custom function to `keyArgs`. This function takes the field's arguments and other context as parameters, and it can return any string to use as the storage key (or a dynamically-generated `keyArgs` array).
+
+This is for advanced use cases. For details, see [`FieldPolicy` API reference](../caching/cache-field-behavior/#fieldpolicy-api-reference).
+
+## Which arguments belong in `keyArgs`?
+
+When deciding which of a field's arguments to include in `keyArgs`, it's helpful to start by considering the two extremes: _all_ arguments and _no_ arguments. These initial options help to demonstrate the effects of adding or removing a single argument.
+
+### Using all arguments
+
+If all arguments are key arguments (this is the default behavior), every distinct combination of argument values for a field results in a distinct cache entry. In other words, changing any argument value results in a different storage key, so the returned value is stored separately. We see this in our pagination example:
+
+```js {3-4,10-11} title="Cache"
+{
+  'ROOT_QUERY': {
+    // First query
+    'feed({"offset":"0","limit":"10","category":"SPORTS"})': [
+      {
+        '__ref': 'FeedItem:1'
+      },
+      // ...additional items...
+    ],
+    // Second query
+    'feed({"offset":"10","limit":"10","category":"SPORTS"})': [
+      {
+        '__ref': 'FeedItem:11'
+      },
+      // ...additional items...
+    ]
+  }
+}
+```
+
+With this approach, Apollo Client can't return a cached value for a field unless _all_ of the field's arguments match a previously cached result. This significantly reduces the cache's hit rate, but it also prevents the cache from returning an incorrect value when differences in arguments are relevant (as with our `User` example):
+
+```js {3,6} title="Cache"
+{
+  'ROOT_QUERY': {
+    'user({"id":"1"})': {
+      '__ref': 'User:1'
+    },
+    'user({"id":"2"})': {
+      '__ref': 'User:2'
+    }
+  }
+}
+```
+
+### Using no arguments
+
+If no arguments are key arguments (you configure this by setting `keyArgs: false`), the field's storage key is just the field's name, without any argument values appended to it. This means that by default, whenever a query returns a value for that field, that value _replaces_ whatever value was already in the cache.
+
+This default behavior is often undesirable (especially for a paginated list), so you can define `read` and `merge` functions that use argument values to determine how a newly returned value is combined with an _existing_ cached value.
+
+#### Example
+
+Recall this `Query.feed` field from [Pagination issues](#pagination-issues):
+
+```graphql {2}
+type Query {
+  feed(offset: Int, limit: Int, category: Category): [FeedItem!]
+}
+```
+
+We originally set `keyArgs: ["category"]` for this field to keep feed items from different categories separate. We can achieve the same behavior by setting `keyArgs: false` and defining the following `read` and `merge` functions:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: false,
+
+          read(existing = {}, { args: { offset, limit, category }}) {
+            return existing[category]?.slice(offset, offset + limit);
+          },
+
+          merge(existing = {}, incoming, { args: { category, offset = 0 }}) {
+            const merged = existing[category] ? existing[category].slice(0) : [];
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            existing[category] = merged;
+            return existing;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+With the code above, the value of the `existing` cached value passed to our `read` and `merge` functions is a _map_ of `category` names to `FeedItem` lists. This map enables our single cached field value to store multiple distinct lists. This manual separation is logically equivalent to using `keyArgs: ["category"]`, so the extra effort is often unnecessary.
+
+If we know that feeds with different `category` values have different data, _and_ we know that our `read` function never needs simultaneous access to _multiple_ category feeds, we can safely shift the responsibility for the `category` argument to `keyArgs`. This enables us to simplify our `read` and `merge` functions to handle only one feed at a time.
+
+### Summary
+
+If the logic for storing and retrieving a field's data is identical for different values of a given argument (like `category` above), and the distinct field values are logically independent from one another, then you should probably add that argument to `keyArgs` to avoid handling it in your `read` and `merge` functions.
+
+By contrast, arguments that limit, filter, sort, or otherwise reprocess existing field data usually do _not_ belong in `keyArgs`. This is because putting them in `keyArgs` makes storage keys more diverse, reducing cache hit rate and limiting your ability to use different arguments to retrieve different views of the same data.
+
+As a general rule, `read` and `merge` functions can do almost anything with your cached field data, but `keyArgs` often provide similar functionality with less code complexity. Whenever possible you should prefer the limited, declarative API of `keyArgs` over the unlimited power of functions like `merge` and `read`.
+
+## The `@connection` directive
+
+The `@connection` directive is a Relay-inspired convention that Apollo Client supports. However, we recommend using `keyArgs` instead, because you can achieve the same effect with a single `keyArgs` configuration, whereas you need to include the `@connection` directive in every query you send to your server.
+
+In other words, whereas Relay encourages the following `@connection(...)` directive for `Query.feed` queries:
+
+```js
+const FEED_QUERY = gql`
+  query Feed($category: FeedCategory!, $offset: Int, $limit: Int) {
+    feed(category: $category, offset: $offset, limit: $limit) @connection(
+      key: "feed",
+      filter: ["category"]
+    ) {
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+`;
+```
+
+in Apollo Client, you can use the following query (the same query without the `@connection(...)` directive):
+
+```js
+const FEED_QUERY = gql`
+  query Feed($category: FeedCategory!, $offset: Int, $limit: Int) {
+    feed(category: $category, offset: $offset, limit: $limit) {
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+`;
+```
+
+and instead configure `keyArgs` in your `Query.feed` field policy:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["category"],
+        },
+      },
+    },
+  },
+})
+```
+
+If the `Query.feed` field does not have an argument like `category` that you can use in `keyArgs: [...]`, then it might make sense to use the `@connection` directive after all:
+
+```js
+const FEED_QUERY = gql`
+  query Feed($offset: Int, $limit: Int, $feedKey: String) {
+    feed(offset: $offset, limit: $limit) @connection(key: $feedKey) {
+      edges {
+        node { ... }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+`;
+```
+
+If you execute this query with different values for the `$feedKey` variable, those feed results are stored separately in the cache, whereas normally they would all be stored in the same list.
+
+When choosing a `keyArgs` configuration for this `Query.feed` field, you should include the `@connection` directive as if it were an argument (the `@` tells `InMemoryCache` you mean a directive):
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["@connection", ["key"]],
+        },
+      },
+    },
+  },
+})
+```
+
+With this configuration, your cache uses a `feed:{"@connection":{"key":...}}` key instead of just `feed` to store separate `{ edges, pageInfo }` objects within the `ROOT_QUERY` object:
+
+```js
+expect(cache.extract()).toEqual({
+  ROOT_QUERY: {
+    __typename: "Query",
+    'feed:{"@connection":{"key":"some feed key"}}': { edges, pageInfo },
+    'feed:{"@connection":{"key":"another feed key"}}': { edges, pageInfo },
+    'feed:{"@connection":{"key":"yet another key"}}': { edges, pageInfo },
+    // ...
+  },
+})
+```
+
+The `["key"]` in `keyArgs: ["@connection", ["key"]]` means only the `key` argument to the `@connection` directive is considered, and any other arguments (like `filter`) are ignored. Passing just `key` to `@connection` is usually adequate, but if you want to pass a `filter: ["someArg", "anotherArg"]` argument as well, you should instead include those argument names directly in `keyArgs`:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["someArg", "anotherArg", "@connection", ["key"]],
+        },
+      },
+    },
+  },
+})
+```
+
+If any of these arguments or directives are not provided for the current query, they're omitted from the field key automatically, without error. This means it's generally safe to include more arguments or directives in `keyArgs` than you expect to receive in all cases.
+
+> As mentioned above, if a `keyArgs` array is insufficient to specify your desired field keys, you can alternatively pass a function for `keyArgs`, which takes the `args` object and a `{ typename, field, fieldName, variables }` context parameter. This function can return either a string or a dynamically-generated `keyArgs` array.
+
+Although `keyArgs` (and `@connection`) are useful for more than just paginated fields, it's worth noting that `relayStylePagination` configures `keyArgs: false` by default. You can reconfigure this `keyArgs` behavior by passing an alternate value to `relayStylePagination`:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: relayStylePagination(["type", "@connection", ["key"]]),
+      },
+    },
+  },
+})
+```
+
+In the unlikely event that a `keyArgs` array is insufficient to capture the identity of a field, remember that you can pass a function for `keyArgs`, which allows you to serialize the `args` object however you want.

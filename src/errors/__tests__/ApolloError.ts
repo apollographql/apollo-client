@@ -1,4 +1,4 @@
-import { ApolloError } from '../ApolloError';
+import { ApolloError } from '..';
 import { GraphQLError } from 'graphql';
 
 describe('ApolloError', () => {

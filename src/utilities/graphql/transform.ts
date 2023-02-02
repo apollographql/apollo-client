@@ -1,3 +1,5 @@
+import { invariant } from '../globals';
+
 import {
   DocumentNode,
   SelectionNode,
@@ -10,9 +12,12 @@ import {
   FragmentSpreadNode,
   VariableDefinitionNode,
   VariableNode,
+  visit,
+  ASTNode,
 } from 'graphql';
-import { visit } from 'graphql/language/visitor';
-import { invariant } from 'ts-invariant';
+
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type Kind = any;
 
 import {
   checkDocument,
@@ -52,21 +57,20 @@ export type RemoveVariableDefinitionConfig = RemoveNodeConfig<
 >;
 
 const TYPENAME_FIELD: FieldNode = {
-  kind: 'Field',
+  kind: 'Field' as Kind,
   name: {
-    kind: 'Name',
+    kind: 'Name' as Kind,
     value: '__typename',
   },
 };
 
 function isEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
-  fragments: FragmentMap,
+  fragmentMap: FragmentMap,
 ): boolean {
-  return op.selectionSet.selections.every(
-    selection =>
-      selection.kind === 'FragmentSpread' &&
-      isEmpty(fragments[selection.name.value], fragments),
+  return !op || op.selectionSet.selections.every(
+    selection => selection.kind === 'FragmentSpread' &&
+      isEmpty(fragmentMap[selection.name.value], fragmentMap)
   );
 }
 
@@ -112,7 +116,7 @@ export function removeDirectivesFromDocument(
           // Store each variable that's referenced as part of an argument
           // (excluding operation definition variables), so we know which
           // variables are being used. If we later want to remove a variable
-          // we'll fist check to see if it's being used, before continuing with
+          // we'll first check to see if it's being used, before continuing with
           // the removal.
           if (
             (parent as VariableDefinitionNode).kind !== 'VariableDefinition'
@@ -163,7 +167,7 @@ export function removeDirectivesFromDocument(
 
               if (node.selectionSet) {
                 // Store fragment spread names so they can be removed from the
-                // docuemnt.
+                // document.
                 getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
                   frag => {
                     fragmentSpreadsToRemove.push({
@@ -247,8 +251,12 @@ export function removeDirectivesFromDocument(
   return modifiedDoc;
 }
 
-export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
-  return visit(checkDocument(doc), {
+export const addTypenameToDocument = Object.assign(function <
+  TNode extends ASTNode
+>(
+  doc: TNode
+): TNode {
+  return visit(doc, {
     SelectionSet: {
       enter(node, _key, parent) {
         // Don't add __typename to OperationDefinitions.
@@ -297,14 +305,11 @@ export function addTypenameToDocument(doc: DocumentNode): DocumentNode {
       },
     },
   });
-}
-
-export interface addTypenameToDocument {
-  added(field: FieldNode): boolean;
-}
-addTypenameToDocument.added = function (field: FieldNode) {
-  return field === TYPENAME_FIELD;
-};
+}, {
+  added(field: FieldNode): boolean {
+    return field === TYPENAME_FIELD;
+  },
+});
 
 const connectionRemoveConfig = {
   test: (directive: DirectiveNode) => {

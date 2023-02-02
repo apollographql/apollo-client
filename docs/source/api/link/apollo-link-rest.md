@@ -5,6 +5,8 @@ description: Call REST APIs inside your GraphQL queries.
 
 ## Overview
 
+> The [Apollo Link Rest](https://github.com/apollographql/apollo-link-rest) library is maintained by Apollo community members and not an Apollo GraphQL maintained library.
+
 Calling REST APIs from a GraphQL client opens the benefits of GraphQL for more people, whether:
 
 * You are in a front-end developer team that wants to try GraphQL without asking for the backend team to implement a GraphQL server.
@@ -14,7 +16,7 @@ Calling REST APIs from a GraphQL client opens the benefits of GraphQL for more p
 
 With `apollo-link-rest`, you can call your endpoints inside your GraphQL queries and have all your data managed by Apollo Client. `apollo-link-rest` is suitable for just dipping your toes in the water, or doing a full-steam ahead integration, and then later on migrating to a backend-driven GraphQL experience.
 
-> For more advanced or complex back-ends, you may want to consider using [`apollo-server`](https://www.apollographql.com/docs/apollo-server/).
+> For more advanced or complex back-ends, you may want to consider using [`@apollo/server`](/apollo-server/).
 
 ## Quick start
 
@@ -27,19 +29,20 @@ npm install --save @apollo/client apollo-link-rest graphql qs
 After this, you're ready to setup the Apollo Client instance:
 
 ```js
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { RestLink } from 'apollo-link-rest';
 
 // Set `RestLink` with your endpoint
-const restLink = new RestLink({ uri: "https://swapi.co/api/" });
+const restLink = new RestLink({ uri: "https://swapi.dev/api/" });
 
 // Setup your client
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: restLink
 });
 ```
 
-Now it's time to write our first query. Defining a query is straightforward:
+Now it's time to write our first query:
 
 ```js
 import { gql } from '@apollo/client';
@@ -58,7 +61,7 @@ You can then fetch your data using Apollo Client:
 ```js
 // Invoke the query and log the person's name
 client.query({ query }).then(response => {
-  console.log(response.data.name);
+  console.log(response.data.person.name);
 });
 ```
 
@@ -68,17 +71,17 @@ The `RestLink` constructor accepts an options object that can be used to customi
 
 | Option | Type | Description |
 | - | - | - |
-| `uri` | `string` | The URI key is a string endpoint/domain for your requests to hit (_optional_ when `endpoints` provides a default) |
-| `endpoints: /map-of-endpoints/` | `any` | _optional_ A map of endpoints. If you use this, you need to provide `endpoint` to the `@rest(...)` directives. |
-| `customFetch?` | `any` | _optional_ A custom `fetch` to handle `REST` calls |
-| `headers?` | `Headers` | _optional_ An object representing values to be sent as headers with all requests. [Documented here](https://developer.mozilla.org/en-US/docs/Web/API/Request/headers) |
-| `credentials?` | `string` | _optional_ A string representing the credentials policy the fetch call should operate with. [Document here](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) |
-| `fieldNameNormalizer?: /function/` | `any` | _optional_ A function that takes the response field name and converts it into a GraphQL compliant name. This is useful if your `REST` API returns fields that aren't representable as GraphQL, or if you want to convert between `snake_case` field names in JSON to `camelCase` keyed fields. |
-| `fieldNameDenormalizer?: /function/` | `any` | _optional_ A function that takes a GraphQL-compliant field name and converts it back into an endpoint-specific name. |
-| `typePatcher: /map-of-functions/` | `any` | _optional_ A structure to allow you to specify the `__typename` when you have nested objects in your REST response. |
-| `defaultSerializer /function/` | `any` | _optional_ A function that will be used by the `RestLink` as the default serializer when no `bodySerializer` is defined for a `@rest` call. The function will also be passed the current `Header` set, which can be updated before the request is sent to `fetch`. Default method uses `JSON.stringify` and sets the `Content-Type` to `application/json`. |
-| `bodySerializers: /map-of-functions/` | `any` | _optional_ Structure to allow the definition of alternative serializers, which can then be specified by their key. |
-| `responseTransformer?: /function/` | `any` | _optional_ Apollo expects a record response to return a root object, and a collection of records response to return an array of objects. Use this function to structure the response into the format Apollo expects if your response data is structured differently. |
+| `uri` | `string` | The URI key is a string endpoint/domain for your requests to hit (*optional* when `endpoints` provides a default) |
+| `endpoints: /map-of-endpoints/` | `any` | *optional* A map of endpoints. If you use this, you need to provide `endpoint` to the `@rest(...)` directives. |
+| `customFetch?` | `any` | *optional* A custom `fetch` to handle `REST` calls |
+| `headers?` | `Headers` | *optional* An object representing values to be sent as headers with all requests. [Documented here](https://developer.mozilla.org/en-US/docs/Web/API/Request/headers) |
+| `credentials?` | `string` | *optional* A string representing the credentials policy the fetch call should operate with. [Document here](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) |
+| `fieldNameNormalizer?: /function/` | `any` | *optional* A function that takes the response field name and converts it into a GraphQL compliant name. This is useful if your `REST` API returns fields that aren't representable as GraphQL, or if you want to convert between `snake_case` field names in JSON to `camelCase` keyed fields. |
+| `fieldNameDenormalizer?: /function/` | `any` | *optional* A function that takes a GraphQL-compliant field name and converts it back into an endpoint-specific name. |
+| `typePatcher: /map-of-functions/` | `any` | *optional* A structure to allow you to specify the `__typename` when you have nested objects in your REST response. |
+| `defaultSerializer /function/` | `any` | *optional* A function that will be used by the `RestLink` as the default serializer when no `bodySerializer` is defined for a `@rest` call. The function will also be passed the current `Header` set, which can be updated before the request is sent to `fetch`. Default method uses `JSON.stringify` and sets the `Content-Type` to `application/json`. |
+| `bodySerializers: /map-of-functions/` | `any` | *optional* Structure to allow the definition of alternative serializers, which can then be specified by their key. |
+| `responseTransformer?: /function/` | `any` | *optional* Apollo expects a record response to return a root object, and a collection of records response to return an array of objects. Use this function to structure the response into the format Apollo expects if your response data is structured differently. |
 
 ### Multiple endpoints
 
@@ -324,7 +327,7 @@ const link = new RestLink({
 
 ### Custom Fetch
 
-By default, Apollo uses the browsers `fetch` method to handle `REST` requests to your domain/endpoint. The `customFetch` option allows you to specify _your own_ request handler by defining a function that returns a `Promise` with a fetch-response-like object:
+By default, Apollo uses the browsers `fetch` method to handle `REST` requests to your domain/endpoint. The `customFetch` option allows you to specify *your own* request handler by defining a function that returns a `Promise` with a fetch-response-like object:
 
 ```js
 const link = new RestLink({
@@ -338,7 +341,7 @@ const link = new RestLink({
 
 To resolve your GraphQL queries quickly, Apollo will issue requests to relevant endpoints as soon as possible. This is generally ok, but can lead to large numbers of `REST` requests to be fired at once; especially for deeply nested queries [(see `@export` directive)](#export-directive).
 
-> Some endpoints (like public APIs) might enforce _rate limits_, leading to failed responses and unresolved queries in such cases.
+> Some endpoints (like public APIs) might enforce *rate limits*, leading to failed responses and unresolved queries in such cases.
 
 By example, `customFetch` is a good place to manage your apps fetch operations. The following implementation makes sure to only issue 2 requests at a time (concurrency) while waiting at least 500ms until the next batch of requests is fired.
 
@@ -355,6 +358,7 @@ const link = new RestLink({
   ),
 });
 ```
+
 > Since Apollo issues `Promise` based requests, we can resolve them as we see fit. This example uses [`pThrottle`](https://github.com/sindresorhus/p-throttle); part of the popular [promise-fun](https://github.com/sindresorhus/promise-fun) collection.
 
 ### Complete options
@@ -383,18 +387,18 @@ const link = new RestLink({
   },
   defaultSerializer: (data: any, headers: Headers) => {
     const formData = new FormData();
-    for (let key in body) {
-      formData.append(key, body[key]);
+    for (let key in data) {
+      formData.append(key, data[key]);
     }
     headers.set("Content-Type", "x-www-form-encoded")
-    return {body: formData, headers};
+    return {data: formData, headers};
   }
 });
 ```
 
 ## Link Context
 
-`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`@apollo/link-context`](./apollo-link-context) page for a discussion of why you might want this).
+`RestLink` has an [interface `LinkChainContext`](https://github.com/apollographql/apollo-link-rest/blob/1824da47d5db77a2259f770d9c9dd60054c4bb1c/src/restLink.ts#L557-L570) which it uses as the structure of things that it will look for in the `context`, as it decides how to fulfill a specific `RestLink` request. (Please see the [`@apollo/client/link/context`](./apollo-link-context) page for a discussion of why you might want this).
 
 | Option | Type | Description |
 | - | - | - |
@@ -406,7 +410,7 @@ const link = new RestLink({
 
 ### Example
 
-`RestLink` uses the `headers` field on the [`@apollo/link-context`](./apollo-link-context) so you can compose other links that provide additional & dynamic headers to a given query.
+`RestLink` uses the `headers` field on the [`@apollo/client/link/context`](./apollo-link-context) so you can compose other links that provide additional & dynamic headers to a given query.
 
 Here is one way to add request `headers` to the context and retrieve the response headers of the operation:
 
@@ -436,6 +440,7 @@ const authRestLink = new ApolloLink((operation, forward) => {
 const restLink = new RestLink({ uri: "uri" });
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: ApolloLink.from([authRestLink, restLink])
 });
 ```
@@ -451,6 +456,7 @@ const httpLink = createHttpLink({ uri: "server.com/graphql" });
 const restLink = new RestLink({ uri: "api.server.com" });
 
 const client = new ApolloClient({
+  cache: new InMemoryCache(),
   link: ApolloLink.from([authLink, restLink, errorLink, retryLink, httpLink])
   // Note: httpLink is terminating so must be last, while retry & error wrap
   // the links to their right. State & context links should happen before (to
@@ -458,7 +464,7 @@ const client = new ApolloClient({
 });
 ```
 
-_Note: you should also consider this if you're using [`@apollo/link-context`](./apollo-link-context) to set `Headers`, you need that link to be before `restLink` as well._
+_Note: you should also consider this if you're using [`@apollo/client/link/context`](./apollo-link-context) to set `Headers`, you need that link to be before `restLink` as well._
 
 ## @rest directive
 
@@ -477,7 +483,7 @@ An `@rest(…)` directive takes two required and several optional arguments:
 | `pathBuilder?: /function/` | `string` | If provided, this function gets to control what path is produced for this request. |
 | `bodyKey?: "input"` | `string` | This is the name of the `variable` to use when looking to build a REST request-body for a `PUT` or `POST` request. It defaults to `input` if not supplied. |
 | `bodyBuilder?: /function/` | `string` | If provided, this is the name a `function` that you provided to `variables`, that is called when a request-body needs to be built. This lets you combine arguments or encode the body in some format other than JSON. |
-| `bodySerializer?: /string | function/` | `string` | String key to look up a function in `bodySerializers` or a custom serialization function for the body/headers of this request before it is passed to the fetch call. Defaults to `JSON.stringify` and setting `Content-Type: application-json`. |
+| `bodySerializer?: /string \| function/` | `string` | String key to look up a function in `bodySerializers` or a custom serialization function for the body/headers of this request before it is passed to the fetch call. Defaults to `JSON.stringify` and setting `Content-Type: application-json`. |
 
 ### Variables
 
@@ -509,7 +515,7 @@ query PostTitle {
 Things to note:
 
 1. This will be converted into `/search?query=some%20key%20words&page_size=5&lang=en`
-2. The `context.language / lang=en` is extracting an object from the Apollo Context, that was added via an `@apollo/link-context` Link.
+2. The `context.language / lang=en` is extracting an object from the Apollo Context, that was added via an `@apollo/client/link/context` Link.
 3. The query string arguments are assembled by npm:qs and have `encodeURIComponent` called on them.
 
 The available variable sources are:
@@ -518,7 +524,7 @@ The available variable sources are:
 | - | - |
 | `args` | These are the things passed directly to this field parameters. In the above example `postSearch` had `query` and `page_size` in args. |
 | `exportVariables` | These are the things in the parent context that were tagged as `@export(as: ...)` |
-| `context` | These are the apollo-context, so you can have globals set up via `@apollo/link-context` |
+| `context` | These are the apollo-context, so you can have globals set up via `@apollo/client/link/context` |
 | `@rest` | These include any other parameters you pass to the `@rest()` directive. This is probably more useful when working with `pathBuilder`, documented below. |
 
 #### `pathBuilder`
@@ -643,7 +649,7 @@ const restLink = new RestLink({
 
 The export directive re-exposes a field for use in a later (nested) query. These are the same semantics that will be supported on the server, but when used in a `RestLink` you can use the exported variables for further calls (i.e. waterfall requests from nested fields).
 
-_Note: If you're constantly using @export you may prefer to take a look at [`apollo-server`](https://www.apollographql.com/docs/apollo-server/)._
+_Note: If you're constantly using @export you may prefer to take a look at [`@apollo/server`](/apollo-server/)._
 
 ### Arguments
 
@@ -700,4 +706,4 @@ To get you started, here are some example apps:
 
 ## Contributing
 
-Please join us on github [apollographql/apollo-link-rest](https://github.com/apollographql/apollo-link-rest/) and in [Spectrum](https://spectrum.chat/apollo).
+Please join us on github [apollographql/apollo-link-rest](https://github.com/apollographql/apollo-link-rest/) and in the [Apollo GraphQL community forums](https://community.apollographql.com).

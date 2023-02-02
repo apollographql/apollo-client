@@ -1,8 +1,9 @@
-import { invariant } from 'ts-invariant';
+import { invariant } from '../../utilities/globals';
 
-import { ApolloClient } from '../../ApolloClient';
+import * as React from 'react';
+
+import { ApolloClient } from '../../core';
 import { getApolloContext } from './ApolloContext';
-import { requireReactLazily } from '../react';
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;
@@ -13,7 +14,6 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   client,
   children
 }) => {
-  const React = requireReactLazily();
   const ApolloContext = getApolloContext();
   return (
     <ApolloContext.Consumer>

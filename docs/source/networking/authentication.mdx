@@ -2,15 +2,13 @@
 title: Authentication
 ---
 
-import { MultiCodeBlock } from 'gatsby-theme-apollo-docs';
-
 Unless all of the data you are loading is completely public, your app has some sort of users, accounts and permissions systems. If different users have different permissions in your application, then you need a way to tell the server which user is associated with each request.
 
-Apollo Client uses the ultra flexible [Apollo Link](https://www.apollographql.com/docs/link) that includes several options for authentication.
+Apollo Client uses the ultra flexible [Apollo Link](../api/link/introduction/) that includes several options for authentication.
 
 ## Cookie
 
-If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `credentials: 'same-origin'` as shown below, if your backend server is the same domain or else `credentials: 'include'` if your backend is a different domain.
+If your app is browser based and you are using cookies for login and session management with a backend, tell your network interface to send the cookie along with every request. Pass the credentials option e.g.  `credentials: 'same-origin'` if your backend server is the same domain, as shown below, or else `credentials: 'include'` if your backend is a different domain.
 
 ```js
 const link = createHttpLink({
@@ -24,7 +22,7 @@ const client = new ApolloClient({
 });
 ```
 
-This option is simply passed through to the [`fetch` implementation](https://github.com/github/fetch) used by the HttpLink when sending the query.
+This option is passed through to the [`fetch` implementation](https://github.com/github/fetch) used by the HttpLink when sending the query.
 
 Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings:
 
@@ -39,11 +37,12 @@ app.use(cors(corsOptions));
 
 ## Header
 
-Another common way to identify yourself when using HTTP is to send along an authorization header. It's easy to add an `authorization` header to every HTTP request by chaining together Apollo Links. In this example, we'll pull the login token from `localStorage` every time a request is sent:
+Another common way to identify yourself when using HTTP is to send along an authorization header. Add an `authorization` header to every HTTP request by chaining together Apollo Links. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
+ReactJS example:
 ```js
 import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client';
-import { setContext } from '@apollo/link-context';
+import { setContext } from '@apollo/client/link/context';
 
 const httpLink = createHttpLink({
   uri: '/graphql',
@@ -66,17 +65,39 @@ const client = new ApolloClient({
   cache: new InMemoryCache()
 });
 ```
+VueJS example:
+```js
+import ApolloClient from "apollo-client";
+import { HttpLink } from "apollo-link-http";
+import { ApolloLink, concat, split } from "apollo-link";
+import { InMemoryCache } from "apollo-cache-inmemory";
+import { getMainDefinition } from "apollo-utilities";
 
+const httpLink = new HttpLink({ uri: process.env.VUE_APP_API_TARGET });
+
+const authMiddleware = new ApolloLink((operation, forward) => {
+  // add the authorization to the headers
+const token = localStorage.getItem('token');
+  operation.setContext({
+    headers: {
+      authorization: token ? `Bearer ${token}` : "",
+    },
+  });
+  return forward(operation);
+});
+export const apolloClient = new ApolloClient({
+  link: concat(authMiddleware, httpLink),
+  cache: new InMemoryCache(),
+});
+
+```
 The server can use that header to authenticate the user and attach it to the GraphQL execution context, so resolvers can modify their behavior based on a user's role and permissions.
 
 ## Reset store on logout
 
 Since Apollo caches all of your query results, it's important to get rid of them when the login state changes.
 
-The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. If you just want the store to be cleared and don't want to refetch active queries, use `client.clearStore()` instead. Another option is to reload the page, which will have a similar effect.
-
-<MultiCodeBlock>
-<div data-language="hooks-js">
+The most straightforward way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. If you just want the store to be cleared and don't want to refetch active queries, use `client.clearStore()` instead. Another option is to reload the page, which will have a similar effect.
 
 ```jsx
 const PROFILE_QUERY = gql`
@@ -124,53 +145,3 @@ function Profile() {
   );
 }
 ```
-
-</div>
-<div data-language="js">
-
-```jsx
-const PROFILE_QUERY = gql`
-  query CurrentUserForLayout {
-    currentUser {
-      login
-      avatar_url
-    }
-  }
-`;
-
-const Profile = () => (
-  <Query query={PROFILE_QUERY} fetchPolicy="network-only">
-    {({ client, loading, data: { currentUser } }) => {
-      if (loading) {
-        return <p className="navbar-text navbar-right">Loading...</p>;
-      }
-      if (currentUser) {
-        return (
-          <span>
-            <p className="navbar-text navbar-right">
-              {currentUser.login}
-              &nbsp;
-              <button
-                onClick={() => {
-                  // call your auth logout code then reset store
-                  App.logout().then(() => client.resetStore());
-                }}
-              >
-                Log out
-              </button>
-            </p>
-          </span>
-        );
-      }
-      return (
-        <p className="navbar-text navbar-right">
-          <a href="/login/github">Log in with GitHub</a>
-        </p>
-      );
-    }}
-  </Query>
-);
-```
-
-</div>
-</MultiCodeBlock>

@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, gql } from '../..';
+import { ApolloClient, InMemoryCache, gql } from '../../core';
 
 /**
  * Creates an apollo-client instance with a local query resolver named 'localQuery'.

@@ -1,4 +1,4 @@
-import { InvariantError } from 'ts-invariant';
+import { InvariantError } from '../../utilities/globals';
 
 export type ClientParseError = InvariantError & {
   parseError: Error;

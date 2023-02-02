@@ -1,10 +1,29 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, FieldNode } from 'graphql';
 
 import { Transaction } from '../core/cache';
-import { StoreValue, StoreObject } from '../../utilities/graphql/storeUtils';
-import { FieldValueGetter, ToReferenceFunction } from './entityStore';
-import { KeyFieldsFunction } from './policies';
-export { StoreObject, StoreValue }
+import {
+  StoreObject,
+  StoreValue,
+  Reference,
+} from '../../utilities';
+import { FieldValueGetter } from './entityStore';
+import {
+  TypePolicies,
+  PossibleTypesMap,
+  KeyFieldsFunction,
+  StorageType,
+  FieldMergeFunction,
+} from './policies';
+import {
+  Modifier,
+  Modifiers,
+  ToReferenceFunction,
+  CanReadFunction,
+} from '../core/types/common';
+
+import { FragmentRegistryAPI } from './fragmentRegistry';
+
+export { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -23,7 +42,15 @@ export declare type IdGetter = (
 export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
-  merge(dataId: string, incoming: StoreObject): StoreObject;
+
+  // The store.merge method allows either argument to be a string ID, but
+  // the other argument has to be a StoreObject. Either way, newer fields
+  // always take precedence over older fields.
+  merge(olderId: string, newerObject: StoreObject): void;
+  merge(olderObject: StoreObject, newerId: string): void;
+
+  modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
+  delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
   // non-Map elements:
@@ -49,6 +76,12 @@ export interface NormalizedCache {
 
   getFieldValue: FieldValueGetter;
   toReference: ToReferenceFunction;
+  canRead: CanReadFunction;
+
+  getStorage(
+    idOrObj: string | StoreObject,
+    ...storeFieldNames: (string | number)[]
+  ): StorageType;
 }
 
 /**
@@ -56,6 +89,15 @@ export interface NormalizedCache {
  * a flattened representation of query result trees.
  */
 export interface NormalizedCacheObject {
+  __META?: {
+    // Well-known singleton IDs like ROOT_QUERY and ROOT_MUTATION are
+    // always considered to be root IDs during cache.gc garbage
+    // collection, but other IDs can become roots if they are written
+    // directly with cache.writeFragment or retained explicitly with
+    // cache.retain. When such IDs exist, we include them in the __META
+    // section so that they can survive cache.{extract,restore}.
+    extraRootIds: string[];
+  };
   [dataId: string]: StoreObject | undefined;
 }
 
@@ -70,6 +112,7 @@ export type ReadQueryOptions = {
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;
+  canonizeResults?: boolean;
   rootId?: string;
   config?: ApolloReducerConfig;
 };
@@ -83,18 +126,29 @@ export type ApolloReducerConfig = {
   addTypename?: boolean;
 };
 
-export type CacheResolver = (
-  rootValue: any,
-  args: { [argName: string]: any },
-  context: any,
-) => any;
+export interface InMemoryCacheConfig extends ApolloReducerConfig {
+  resultCaching?: boolean;
+  possibleTypes?: PossibleTypesMap;
+  typePolicies?: TypePolicies;
+  resultCacheMaxSize?: number;
+  canonizeResults?: boolean;
+  fragments?: FragmentRegistryAPI;
+}
 
-export type CacheResolverMap = {
-  [typeName: string]: {
-    [fieldName: string]: CacheResolver;
-  };
+export interface MergeInfo {
+  field: FieldNode;
+  typename: string | undefined;
+  merge: FieldMergeFunction;
 };
 
-// backwards compat
-export type CustomResolver = CacheResolver;
-export type CustomResolverMap = CacheResolverMap;
+export interface MergeTree {
+  info?: MergeInfo;
+  map: Map<string | number, MergeTree>;
+};
+
+export interface ReadMergeModifyContext {
+  store: NormalizedCache;
+  variables?: Record<string, any>;
+  // A JSON.stringify-serialized version of context.variables.
+  varString?: string;
+}

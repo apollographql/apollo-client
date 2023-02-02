@@ -1,16 +1,19 @@
-import { invariant } from 'ts-invariant';
+import { invariant } from '../../utilities/globals';
+import { useContext } from 'react';
+import { ApolloClient } from '../../core';
+import { getApolloContext } from '../context';
 
-import { ApolloClient } from '../../ApolloClient';
-import { getApolloContext } from '../context/ApolloContext';
-import { requireReactLazily } from '../react';
-
-export function useApolloClient(): ApolloClient<object> {
-  const React = requireReactLazily();
-  const { client } = React.useContext(getApolloContext());
+export function useApolloClient(
+  override?: ApolloClient<object>,
+): ApolloClient<object> {
+  const context = useContext(getApolloContext());
+  const client = override || context.client;
   invariant(
-    client,
-    'No Apollo Client instance can be found. Please ensure that you ' +
-      'have called `ApolloProvider` higher up in your tree.'
+    !!client,
+    'Could not find "client" in the context or passed in as an option. ' +
+    'Wrap the root component in an <ApolloProvider>, or pass an ApolloClient ' +
+    'instance in via options.',
   );
-  return client!;
+
+  return client;
 }

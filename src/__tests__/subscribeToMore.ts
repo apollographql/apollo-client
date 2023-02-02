@@ -1,14 +1,14 @@
 import gql from 'graphql-tag';
 import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
-import { ApolloLink } from '../link/core/ApolloLink';
-import { Operation } from '../link/core/types';
-import { mockSingleLink } from '../utilities/testing/mocking/mockLink';
-import { mockObservableLink } from '../utilities/testing/mocking/mockSubscriptionLink';
-import { ApolloClient } from '../';
-import { InMemoryCache } from '../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../utilities/testing/stripSymbols';
-import { itAsync } from '../utilities/testing/itAsync';
+import { ApolloClient } from '../core';
+import { InMemoryCache } from '../cache';
+import { ApolloLink, Operation } from '../link/core';
+import {
+  itAsync,
+  mockSingleLink,
+  mockObservableLink,
+} from '../testing';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
@@ -153,7 +153,7 @@ describe('subscribeToMore', () => {
 
     setTimeout(() => {
       sub.unsubscribe();
-      expect(stripSymbols(latestResult)).toEqual({
+      expect(latestResult).toEqual({
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
@@ -212,7 +212,7 @@ describe('subscribeToMore', () => {
 
     setTimeout(() => {
       sub.unsubscribe();
-      expect(stripSymbols(latestResult)).toEqual({
+      expect(latestResult).toEqual({
         data: { entry: { value: '1' } },
         loading: false,
         networkStatus: 7,
@@ -302,7 +302,7 @@ describe('subscribeToMore', () => {
     }
     sub.unsubscribe();
     expect(counter).toBe(3);
-    expect(stripSymbols(latestResult)).toEqual({
+    expect(latestResult).toEqual({
       data: {
         entry: [
           {

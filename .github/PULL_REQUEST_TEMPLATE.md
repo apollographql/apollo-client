@@ -5,13 +5,13 @@
   with reviewing and ensuring Apollo Client is production ready after each
   pull request merge.
 
-    - meteor-bot will respond asking you to sign the CLA if this is your first PR.
+    - apollo-cla will respond asking you to sign the CLA if this is your first PR.
       It may also respond with warnings, messages, or fail the build if something is off.
       Don't worry, it'll help you to fix what is broken!
 
     - bundlesize is a status check to keep the footprint of Apollo Client as small as possible.
 
-    - travis-ci will run tests, checking style of code, and generally make
+    - circleci will run tests, checking style of code, and generally make
       sure everything is working as expected
 
   Please look at the following checklist to ensure that your PR
@@ -20,5 +20,6 @@
 
 ### Checklist:
 
+- [ ] If this PR contains changes to the library itself (not necessary for e.g. docs updates), please include a changeset (see [CONTRIBUTING.md](../CONTRIBUTING.md#changesets))
 - [ ] If this PR is a new feature, please reference an issue where a consensus about the design was reached (not necessary for small changes)
 - [ ] Make sure all of the significant new logic is covered by tests

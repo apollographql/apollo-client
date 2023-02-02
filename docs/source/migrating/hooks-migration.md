@@ -49,10 +49,10 @@ npm install @apollo/client @apollo/react-components @apollo/react-hoc
 
 ## Server-side rendering
 
-The `getDataFromTree` and `renderToStringWithData` React SSR functions are not bundled with Apollo Client, in order to help reduce bundle sizes for those who aren't using SSR. If you want to use these functions, you'll need to add in the `@apollo/react-ssr` package:
+The `getDataFromTree`, `getMarkupFromTree`, and `renderToStringWithData` React SSR functions are bundled with Apollo Client 3. If you want to use these functions, you'll need to import them from `@apollo/client/react/ssr`:
 
 ```
-npm install @apollo/react-ssr
+import { getDataFromTree } from "@apollo/client/react/ssr";
 ```
 
 ## Testing

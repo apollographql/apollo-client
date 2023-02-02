@@ -1,0 +1,306 @@
+---
+title: Core pagination API
+description: Fetching and caching paginated results
+---
+
+Regardless of which pagination strategy your GraphQL server uses for a particular list field, your Apollo Client app needs to do the following to query that field effectively:
+
+* Call the [`fetchMore` function](#the-fetchmore-function) to fetch the next page of results when needed
+* [Merge individual pages of results](#merging-paginated-results) into a single list in the Apollo Client cache
+
+This article describes these core requirements for paginated fields.
+
+## The `fetchMore` function
+
+Pagination always involves sending followup queries to your GraphQL server to obtain additional pages of results. In Apollo Client, the recommended way to send these followup queries is with the [`fetchMore`](../caching/advanced-topics/#incremental-loading-fetchmore) function. This function is a member of the `ObservableQuery` object returned by `client.watchQuery`, and it's also provided by the `useQuery` hook:
+
+```jsx {11} title="FeedWithData.jsx"
+const FEED_QUERY = gql`
+  query Feed($offset: Int, $limit: Int) {
+    feed(offset: $offset, limit: $limit) {
+      id
+      # ...
+    }
+  }
+`;
+
+const FeedWithData() {
+  const { loading, data, fetchMore } = useQuery(FEED_QUERY, {
+    variables: {
+      offset: 0,
+      limit: 10
+    },
+  });
+  // ...continues below...
+}
+```
+
+You usually call `fetchMore` in response to a user action, such as clicking a button or scrolling to the current "bottom" of an infinite-scroll feed.
+
+By default, `fetchMore` executes a query with the exact same shape and variables as your original query. You can pass new values for the query's `variables` (such as providing a new `offset`) like so:
+
+```jsx {12-16} title="FeedWithData.jsx"
+const FeedWithData() {
+// ...continuing from above...
+
+// If you want your component to rerender with loading:true whenever
+// fetchMore is called, add `notifyOnNetworkStatusChange:true` to the
+// options you pass to useQuery.
+if (loading) return 'Loading...';
+
+return (
+    <Feed
+      entries={data.feed || []}
+      onLoadMore={() => fetchMore({
+        variables: {
+          offset: data.feed.length
+        },
+      })}
+    />
+  );
+}
+```
+
+Here, we set the `offset` variable to `feed.length` to fetch items _after_ the last item in our cached list. The `variables` we provide here are merged with the `variables` provided for the original query, which means that variables _omitted_ here (such as `limit`) retain their original value (`10`) in the followup query.
+
+In addition to `variables`, you can optionally provide an entirely different shape of `query` to execute. This can be useful when `fetchMore` needs to fetch only a single paginated field, but the original query contained unrelated fields.
+
+> Additional examples of using `fetchMore` are provided in the detailed documentation for [offset-based pagination](./offset-based) and [cursor-based pagination](./cursor-based).
+
+**Our `fetchMore` function is ready, but we're not finished!** The cache _doesn't know yet_ that it should merge our followup query's result with the _original_ query's result. Instead, it will store the two results as two completely separate lists. To resolve this, let's move on to [Merging paginated results](#merging-paginated-results).
+
+## Merging paginated results
+
+> The examples in this section use offset-based pagination, but this article applies to all pagination strategies.
+
+As mentioned above, a [`fetchMore`](#the-fetchmore-function) followup query doesn't automatically merge its result with the _original_ query's cached result. To achieve this behavior, we need to define a **field policy** for our paginated field.
+
+### Why do I need a field policy?
+
+Let's say we have a field in our GraphQL schema that takes an argument:
+
+```graphql {2}
+type Query {
+  user(id: ID!): User
+}
+```
+
+Now, let's say we execute the following query two times and provide different values for the `$id` variable each time:
+
+```graphql
+query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    name
+  }
+}
+```
+
+Our two queries return two entirely different `User` objects. Helpfully, the Apollo Client cache automatically stores these two objects separately, because it sees that _different values_ were provided for at least one field argument (`id`). Otherwise, the cache might overwrite the _first_ `User` object with the _second_ `User` object, and we want to cache both!
+
+Now, let's say we execute _this_ query two times, with different values for the `$offset` variable:
+
+```graphql
+query Feed($offset: Int, $limit: Int) {
+  feed(offset: $offset, limit: $limit) {
+    id
+    # ...
+  }
+}
+```
+
+In _this_ case, we're querying a paginated list field twice to obtain two different pages of results, and we want those two pages to be _merged_. But the cache doesn't know that! It sees no difference between this scenario and the `User` scenario above, so it stores the results as two completely separate lists.
+
+With field policies, we can modify the cache's behavior for individual fields that require it. For example, we can tell the cache _not_ to store separate results for the `feed` field based on the values of `offset` and `limit`. Let's look at how.
+
+### Defining a field policy
+
+A field policy specifies how a particular field in your `InMemoryCache` is read and written. You can define a field policy to merge the results of paginated queries into a single list.
+
+#### Example
+
+Here's the server-side schema for our message feed application that uses offset-based pagination:
+
+```graphql {2}
+type Query {
+  feed(offset: Int, limit: Int): [FeedItem!]
+}
+
+type FeedItem {
+  id: String!
+  message: String!
+}
+```
+
+In our client, we want to define a field policy for `Query.feed` so that all returned pages of the list are merged into a _single_ list in our cache.
+
+We define our field policy within the `typePolicies` option we provide the `InMemoryCache` constructor:
+
+```js {5-15}
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          // Don't cache separate results based on
+          // any of this field's arguments.
+          keyArgs: false,
+
+          // Concatenate the incoming list items with
+          // the existing list items.
+          merge(existing = [], incoming) {
+            return [...existing, ...incoming];
+          },
+        }
+      }
+    }
+  }
+})
+```
+
+This field policy specifies the field's `keyArgs`, along with a **`merge` function**. Both of these configurations are necessary for handling pagination:
+
+* `keyArgs` specifies which of the field's arguments cause the cache to store a _separate_ value for each unique combination of those arguments.
+  * In our case, the cache shouldn't store a separate result based on _any_ argument value (`offset` or `limit`). So, we disable this behavior entirely by passing `false`. An empty array (`keyArgs: []`) also works, but `keyArgs: false` is more expressive, and it results in a cleaner field key within the cache (`feed` in this case).
+  * If a particular argument's value could cause items from an _entirely different list_ to be returned in the field, that argument _should_ be included in `keyArgs`.
+  * For more information, see [Specifying key arguments](../caching/cache-field-behavior/#specifying-key-arguments) and [The `keyArgs` API](./key-args).
+* A `merge` function tells the Apollo Client cache how to combine `incoming` data with `existing` cached data for a particular field. Without this function, incoming field values _overwrite_ existing field values by default.
+  * For more information, see [The `merge` function](../caching/cache-field-behavior/#the-merge-function).
+
+With this field policy in place, the cache automatically merges the results of _all_ queries that use the following structure, regardless of argument values:
+
+```ts
+// Client-side query definition
+const FEED_QUERY = gql`
+  query Feed($offset: Int, $limit: Int) {
+    feed(offset: $offset, limit: $limit) {
+      id
+      message
+    }
+  }
+`;
+```
+
+### Improving the `merge` function
+
+In [the example above](#example), our `merge` function is a single line:
+
+```js
+merge(existing = [], incoming) {
+  return [...existing, ...incoming];
+}
+```
+
+This function makes risky assumptions about the order in which the client requests pages, because it ignores the values of `offset` and `limit`. A more robust `merge` function can use `options.args` to decide where to put `incoming` data relative to `existing` data, like so:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: [],
+          merge(existing, incoming, { args: { offset = 0 }}) {
+            // Slicing is necessary because the existing data is
+            // immutable, and frozen in development.
+            const merged = existing ? existing.slice(0) : [];
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+This logic handles sequential page writes the same way the single-line strategy does, but it can also tolerate repeated, overlapping, or out-of-order writes, without duplicating any list items.
+
+## `read` functions for paginated fields
+
+[As shown above](#defining-a-field-policy), a `merge` function helps you combine paginated query results from your GraphQL server into a single list in your client cache. But what if you also want to configure how that locally cached list is _read_? For that, you can define a **`read` function**.
+
+You define a `read` function for a field within its [field policy](#defining-a-field-policy), alongside the `merge` function and `keyArgs`. If you define a `read` function for a field, the cache calls that function whenever you query the field, passing the field's existing cached value (if any) as the first argument. In the query response, the field is populated with the `read` function's return value, _instead of_ the existing cached value.
+
+> If a field policy includes both a `merge` function and a `read` function, the default value of `keyArgs` becomes `false` (i.e., _no_ arguments are key arguments). If either function _isn't_ defined, _all_ of the field's arguments are considered key arguments by default. In either case, you can define `keyArgs` yourself to override the default behavior.
+
+A `read` function for a paginated field typically uses one of the following approaches:
+
+* [Re-pagination](#paginated-read-functions), in which the cached list is split back into pages, based on field arguments
+* [_No_ pagination](#non-paginated-read-functions), in which the cached list is always returned in full
+
+Although the "right" approach varies from field to field, a [non-paginated `read` function](#non-paginated-read-functions) often works best for infinitely scrolling feeds, because it gives your code full control over which elements to display at a given time, without requiring any additional cache reads.
+
+### Paginated `read` functions
+
+The `read` function for a list field can perform client-side re-pagination for that list. It can even transform a page before returning it, such as by sorting or filtering its elements.
+
+This capability goes beyond returning the same pages that you fetched from your server, because a `read` function for `offset`/`limit` pagination could read from any available `offset`, with any desired `limit`:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          read(existing, { args: { offset, limit }}) {
+            // A read function should always return undefined if existing is
+            // undefined. Returning undefined signals that the field is
+            // missing from the cache, which instructs Apollo Client to
+            // fetch its value from your GraphQL server.
+            return existing && existing.slice(offset, offset + limit);
+          },
+
+          // The keyArgs list and merge function are the same as above.
+          keyArgs: [],
+          merge(existing, incoming, { args: { offset = 0 }}) {
+            const merged = existing ? existing.slice(0) : [];
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+Depending on the assumptions you feel comfortable making, you might want to make this code more defensive. For example, you can provide default values for `offset` and `limit`, in case someone fetches `Query.feed` without providing arguments:
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          read(existing, {
+            args: {
+              // Default to returning the entire cached list,
+              // if offset and limit are not provided.
+              offset = 0,
+              limit = existing?.length,
+            } = {},
+          }) {
+            return existing && existing.slice(offset, offset + limit);
+          },
+          // ... keyArgs, merge ...
+        },
+      },
+    },
+  },
+});
+```
+
+This style of `read` function takes responsibility for re-paginating your data based on field arguments, essentially inverting the behavior of your `merge` function. This way, your application can query different pages using different arguments.
+
+### Non-paginated `read` functions
+
+The `read` function for a paginated field can choose to _ignore_ arguments like `offset` and `limit`, and always return the entire list as it exists in the cache. In this case, your application code takes responsibility for slicing the list into pages depending on your needs.
+
+If you adopt this approach, you might not need to define a `read` function at all, because the cached list can be returned without any processing. That's why the [`offsetLimitPagination` helper function](./offset-based/#the-offsetlimitpagination-helper) is implemented _without_ a `read` function.
+
+Regardless of how you configure `keyArgs`, your `read` (and `merge`) functions can always examine any arguments passed to the field using the `options.args` object. See [The `keyArgs` API](./key-args) for a deeper discussion of how to reason about dividing argument-handling responsibility between `keyArgs` and your `read` or `merge` functions.

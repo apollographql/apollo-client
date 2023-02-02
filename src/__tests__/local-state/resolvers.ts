@@ -218,10 +218,6 @@ describe('Basic resolver capabilities', () => {
     const serverQuery = gql`
       fragment Foo on Foo {
         bar
-        ...Foo2
-      }
-      fragment Foo2 on Foo {
-        __typename
       }
       query Mixed {
         foo {

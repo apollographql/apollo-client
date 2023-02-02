@@ -98,7 +98,9 @@ function getDirectiveMatcher(
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
-  {removeTypenameOnlyFragment}: {removeTypenameOnlyFragment: boolean} = {removeTypenameOnlyFragment: false}
+  { removeTypenameOnlyFragment }: { removeTypenameOnlyFragment: boolean } = {
+    removeTypenameOnlyFragment: false,
+  }
 ): DocumentNode | null {
   const variablesInUse: Record<string, boolean> = Object.create(null);
   let variablesToRemove: RemoveArgumentsConfig[] = [];

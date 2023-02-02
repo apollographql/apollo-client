@@ -114,8 +114,8 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
       if (!this.silenceWarnings) {
         console.warn(
           configError.message + 
-            '\nThis typically indicates an error in your mocks setup, usually ' +
-            'due to a typo.'
+            '\nThis typically indicates a configuration error in your mocks ' +
+            'setup, usually due to a typo or mismatched variable.'
         );
       }
     } else {

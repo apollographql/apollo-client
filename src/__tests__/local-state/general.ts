@@ -1196,4 +1196,44 @@ describe('Combining client and server state/operations', () => {
       },
     });
   });
+
+  itAsync('handles server errors when root data property is null', (resolve, reject) => {
+    const query = gql`
+      query GetUser {
+        user {
+          firstName @client
+          lastName
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const link = new ApolloLink(operation => {
+      return Observable.of({
+        data: null,
+        errors: [new GraphQLError("something went wrong", {
+          extensions: {
+            code: "INTERNAL_SERVER_ERROR"
+          },
+          path: ["user"]
+        })]
+      });
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link,
+      resolvers: {},
+    });
+
+    client.watchQuery({ query }).subscribe({
+      error(error) {
+        expect(error.message).toEqual("something went wrong");
+        resolve();
+      },
+      next() {
+        reject();
+      },
+    });
+  });
 });

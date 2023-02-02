@@ -485,6 +485,141 @@ describe('General use', () => {
     expect(errorThrown).toBeFalsy();
   });
 
+  it('shows a warning in the console when there is no matched mock', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    let finished = false;
+    function Component({ ...variables }: Variables) {
+      const { loading } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        finished = true;
+      }
+      return null;
+    }
+
+    const mocksDifferentQuery = [
+      {
+        request: {
+          query: gql`
+            query OtherQuery {
+              otherQuery {
+                id
+              }
+            }
+          `,
+          variables
+        },
+        result: { data: { user } }
+      }
+    ];
+
+    render(
+      <MockedProvider mocks={mocksDifferentQuery}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(finished).toBe(true);
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('No more mocked responses for the query')
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('silences console warning for unmatched mocks when silenceWarnings is `true`', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
+    let finished = false;
+    function Component({ ...variables }: Variables) {
+      const { loading } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        finished = true;
+      }
+      return null;
+    }
+
+    const mocksDifferentQuery = [
+      {
+        request: {
+          query: gql`
+            query OtherQuery {
+              otherQuery {
+                id
+              }
+            }
+          `,
+          variables
+        },
+        result: { data: { user } }
+      }
+    ];
+
+    render(
+      <MockedProvider mocks={mocksDifferentQuery} silenceWarnings={true}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(finished).toBe(true);
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
+
+  it('silences console warning for unmatched mocks when passing `silenceWarnings` to `MockLink` directly', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
+    let finished = false;
+    function Component({ ...variables }: Variables) {
+      const { loading } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        finished = true;
+      }
+      return null;
+    }
+
+    const mocksDifferentQuery = [
+      {
+        request: {
+          query: gql`
+            query OtherQuery {
+              otherQuery {
+                id
+              }
+            }
+          `,
+         variables
+        },
+        result: { data: { user } }
+      }
+    ];
+
+    const link = new MockLink(
+      mocksDifferentQuery,
+      false,
+      { silenceWarnings: true }
+    );
+
+    render(
+      <MockedProvider link={link}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(finished).toBe(true);
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
+
   itAsync('should support custom error handling using setOnError', (resolve, reject) => {
     let finished = false;
     function Component({ ...variables }: Variables) {

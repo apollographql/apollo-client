@@ -29,6 +29,10 @@ export interface MockedResponse<TData = Record<string, any>> {
   newData?: ResultFunction<FetchResult>;
 }
 
+export interface MockLinkOptions {
+  silenceWarnings?: boolean;
+}
+
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
   const queryString =
     request.query &&
@@ -40,14 +44,18 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 export class MockLink extends ApolloLink {
   public operation: Operation;
   public addTypename: Boolean = true;
+  public silenceWarnings: boolean = false;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse>,
-    addTypename: Boolean = true
+    addTypename: Boolean = true,
+    options: MockLinkOptions = {}
   ) {
     super();
     this.addTypename = addTypename;
+    this.silenceWarnings = options.silenceWarnings ?? false;
+
     if (mockedResponses) {
       mockedResponses.forEach(mockedResponse => {
         this.addMockedResponse(mockedResponse);
@@ -102,6 +110,14 @@ Failed to match ${unmatchedVars.length} mock${
 } for this query. The mocked response had the following variables:
 ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
 ` : ""}`);
+
+      if (!this.silenceWarnings) {
+        console.warn(
+          configError.message + 
+            '\nThis typically indicates an error in your mocks setup, usually ' +
+            'due to a typo.'
+        );
+      }
     } else {
       mockedResponses.splice(responseIndex, 1);
 

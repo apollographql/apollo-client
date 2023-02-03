@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.7.7
+
+### Patch Changes
+
+- [#10502](https://github.com/apollographql/apollo-client/pull/10502) [`315faf9ca`](https://github.com/apollographql/apollo-client/commit/315faf9ca5b326852919ab7fc2082d6ba92bcb59) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Log a warning to the console when a mock passed to `MockedProvider` or `MockLink` cannot be matched to a query during a test. This makes it easier to debug user errors in the mock setup, such as typos, especially if the query under test is using an `errorPolicy` set to `ignore`, which makes it difficult to know that a match did not occur.
+
+- [#10499](https://github.com/apollographql/apollo-client/pull/10499) [`9e54f5dfa`](https://github.com/apollographql/apollo-client/commit/9e54f5dfa05fd363e534c432ba8c569bb96a6e35) Thanks [@phryneas](https://github.com/phryneas)! - Allow the execution function returned by `useLazyQuery` to change the query.
+
+- [#10362](https://github.com/apollographql/apollo-client/pull/10362) [`14a56b105`](https://github.com/apollographql/apollo-client/commit/14a56b105fefcbb2ce5daa9fd6924e5decafcc16) Thanks [@mccraveiro](https://github.com/mccraveiro)! - Fix error when server returns an error and we are also querying for a local field
+
 ## 3.7.6
 
 ### Patch Changes

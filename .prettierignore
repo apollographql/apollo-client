@@ -31,6 +31,9 @@ src/cache/*
 !src/cache/inmemory
 src/cache/inmemory/*
 !src/cache/inmemory/documentTransformer.ts
+!src/cache/inmemory/__tests__/
+src/cache/inmemory/__tests__/*
+!src/cache/inmemory/__tests__/documentTransforms.ts
 
 
 # Allow src/react/cache/ApolloProvider

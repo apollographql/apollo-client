@@ -15,7 +15,7 @@ import { ApolloLink } from '../../link/core';
 import { InMemoryCache, NormalizedCacheObject } from '../../cache';
 import { ApolloError } from '../../errors';
 
-import { itAsync, mockSingleLink, subscribeAndCount } from '../../testing';
+import { itAsync, MockLink, mockSingleLink, subscribeAndCount } from '../../testing';
 import mockQueryManager from '../../testing/core/mocking/mockQueryManager';
 import mockWatchQuery from '../../testing/core/mocking/mockWatchQuery';
 import wrap from '../../testing/core/wrap';
@@ -1509,11 +1509,25 @@ describe('ObservableQuery', () => {
           };
         }
 
-        const observableWithVarsVar: ObservableQuery<any> = mockWatchQuery(
-          reject,
-          makeMock("a", "b", "c"),
-          makeMock("d", "e"),
-        );
+        // We construct the queryManager manually here rather than using 
+        // `mockWatchQuery` because we need to silence console warnings for 
+        // unmatched variables since. This test checks for calls to 
+        // `console.warn` and unfortunately `mockSingleLink` (used by 
+        // `mockWatchQuery`) does not support the ability to disable warnings 
+        // without introducing a breaking change. Instead we construct this 
+        // manually to be able to turn off warnings for this test.
+        const mocks = [makeMock('a', 'b', 'c'), makeMock('d', 'e')];
+        const firstRequest = mocks[0].request;
+        const queryManager = new QueryManager({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink(mocks, true, { showWarnings: false })
+        })
+
+        const observableWithVarsVar = queryManager.watchQuery({
+          query: firstRequest.query,
+          variables: firstRequest.variables,
+          notifyOnNetworkStatusChange: false
+        });
 
         subscribeAndCount(error => {
           expect(error.message).toMatch(
@@ -1536,7 +1550,7 @@ describe('ObservableQuery', () => {
             // to call refetch(variables).
             observableWithVarsVar.refetch({
               variables: { vars: ["d", "e"] },
-            }).then(result => {
+            } as any).then(result => {
               reject(`unexpected result ${JSON.stringify(result)}; should have thrown`);
             }, error => {
               expect(error.message).toMatch(

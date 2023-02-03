@@ -1,47 +1,49 @@
-import React from "react";
-import { render, wait, act } from "@testing-library/react";
+import React, { StrictMode, useEffect } from "react";
+import { screen, render, waitFor, act } from "@testing-library/react";
 
 import { itAsync } from "../../../testing";
 import { makeVar } from "../../../core";
 import { useReactiveVar } from "../useReactiveVar";
 
+const IS_REACT_18 = React.version.startsWith('18');
+
 describe("useReactiveVar Hook", () => {
-  itAsync("works with one component", (resolve, reject) => {
+  it("works with one component", async () => {
     const counterVar = makeVar(0);
     let renderCount = 0;
 
     function Component() {
       const count = useReactiveVar(counterVar);
 
-      switch (++renderCount) {
-        case 1:
-          expect(count).toBe(0);
-          act(() => {
+      useEffect(() => {
+        switch (++renderCount) {
+          case 1:
+            expect(count).toBe(0);
             counterVar(count + 1);
-          });
-          break;
-        case 2:
-          expect(count).toBe(1);
-          act(() => {
+            break;
+          case 2:
+            expect(count).toBe(1);
             counterVar(counterVar() + 2);
-          });
-          break;
-        case 3:
-          expect(count).toBe(3);
-          break;
-        default:
-          reject(`too many (${renderCount}) renders`);
-      }
+            break;
+          case 3:
+            expect(count).toBe(3);
+            break;
+          default:
+            console.error(`too many (${renderCount}) renders`);
+        }
+      });
 
       return null;
     }
 
     render(<Component/>);
 
-    return wait(() => {
+    await waitFor(() => {
       expect(renderCount).toBe(3);
+    });
+    await waitFor(() => {
       expect(counterVar()).toBe(3);
-    }).then(resolve, reject);
+    });
   });
 
   itAsync("works when two components share a variable", async (resolve, reject) => {
@@ -91,8 +93,11 @@ describe("useReactiveVar Hook", () => {
 
     render(<Parent/>);
 
-    await wait(() => {
+    await waitFor(() => {
       expect(parentRenderCount).toBe(1);
+    });
+
+    await waitFor(() => {
       expect(childRenderCount).toBe(1);
     });
 
@@ -101,8 +106,10 @@ describe("useReactiveVar Hook", () => {
       counterVar(1);
     });
 
-    await wait(() => {
+    await waitFor(() => {
       expect(parentRenderCount).toBe(2);
+    });
+    await waitFor(() => {
       expect(childRenderCount).toBe(2);
     });
 
@@ -111,8 +118,10 @@ describe("useReactiveVar Hook", () => {
       counterVar(counterVar() + 10);
     });
 
-    await wait(() => {
+    await waitFor(() => {
       expect(parentRenderCount).toBe(3);
+    });
+    await waitFor(() => {
       expect(childRenderCount).toBe(3);
     });
 
@@ -121,7 +130,7 @@ describe("useReactiveVar Hook", () => {
     resolve();
   });
 
-  itAsync("does not update if component has been unmounted", (resolve, reject) => {
+  it("does not update if component has been unmounted", async () => {
     const counterVar = makeVar(0);
     let renderCount = 0;
     let attemptedUpdateAfterUnmount = false;
@@ -129,20 +138,13 @@ describe("useReactiveVar Hook", () => {
     function Component() {
       const count = useReactiveVar(counterVar);
 
-      switch (++renderCount) {
-        case 1:
-          expect(count).toBe(0);
-          act(() => {
-            counterVar(count + 1);
-          });
-          break;
-        case 2:
-          expect(count).toBe(1);
-          act(() => {
-            counterVar(counterVar() + 2);
-          });
-          break;
-        case 3:
+      useEffect(() => {
+        if (count < 3) {
+          expect(count).toBe(renderCount++);
+          counterVar(count + 1);
+        }
+
+        if (count === 3) {
           expect(count).toBe(3);
           setTimeout(() => {
             unmount();
@@ -151,10 +153,8 @@ describe("useReactiveVar Hook", () => {
               attemptedUpdateAfterUnmount = true;
             }, 10);
           }, 10);
-          break;
-        default:
-          reject(`too many (${renderCount}) renders`);
-      }
+        }
+      });
 
       return null;
     }
@@ -170,14 +170,154 @@ describe("useReactiveVar Hook", () => {
 
     const { unmount } = render(<Component/>);
 
-    return wait(() => {
+    await waitFor(() => {
       expect(attemptedUpdateAfterUnmount).toBe(true);
-    }).then(() => {
+    });
+    await waitFor(() => {
       expect(renderCount).toBe(3);
+    })
+    await waitFor(() => {
       expect(counterVar()).toBe(6);
+    })
+    await waitFor(() => {
       expect(consoleErrorArgs).toEqual([]);
-    }).finally(() => {
-      console.error = error;
-    }).then(resolve, reject);
+    })
+    console.error = error;
+  });
+
+  describe("useEffect", () => {
+    it("works if updated higher in the component tree", async () => {
+      const counterVar = makeVar(0);
+
+      function ComponentOne() {
+        const count = useReactiveVar(counterVar);
+
+        useEffect(() => {
+          counterVar(1);
+        }, []);
+
+        return (<div>{count}</div>);
+      }
+
+      function ComponentTwo() {
+        const count = useReactiveVar(counterVar);
+
+        return (<div>{count}</div>);
+      }
+
+      render(
+        <>
+          <ComponentOne />
+          <ComponentTwo />
+        </>
+      );
+
+      await waitFor(() => {
+        expect(screen.getAllByText("1")).toHaveLength(2);
+      });
+    });
+
+    it("works if updated lower in the component tree", async () => {
+      const counterVar = makeVar(0);
+
+      function ComponentOne() {
+        const count = useReactiveVar(counterVar);
+
+        return (<div>{count}</div>);
+      }
+
+      function ComponentTwo() {
+        const count = useReactiveVar(counterVar);
+
+        useEffect(() => {
+          counterVar(1);
+        }, []);
+
+        return (<div>{count}</div>);
+      }
+
+      render(
+        <>
+          <ComponentOne />
+          <ComponentTwo />
+        </>
+      );
+
+      await waitFor(() => {
+        expect(screen.getAllByText("1")).toHaveLength(2);
+      });
+    });
+
+    itAsync("works with strict mode", async (resolve, reject) => {
+      const counterVar = makeVar(0);
+      const mock = jest.fn();
+
+      function Component() {
+        const count = useReactiveVar(counterVar);
+        useEffect(() => {
+          mock(count);
+        }, [count]);
+
+        useEffect(() => {
+          Promise.resolve().then(() => {
+            counterVar(counterVar() + 1);
+          });
+        }, []);
+
+        return (
+          <div />
+        );
+      }
+
+      render(
+        <StrictMode>
+          <Component />
+        </StrictMode>
+      );
+
+      await waitFor(() => {
+        if (IS_REACT_18) {
+          expect(mock).toHaveBeenCalledTimes(3);
+          expect(mock).toHaveBeenNthCalledWith(1, 0);
+          expect(mock).toHaveBeenNthCalledWith(2, 0);
+          expect(mock).toHaveBeenNthCalledWith(3, 2);
+        } else {
+          expect(mock).toHaveBeenCalledTimes(2);
+          expect(mock).toHaveBeenNthCalledWith(1, 0);
+          expect(mock).toHaveBeenNthCalledWith(2, 1);
+        }
+      });
+
+      resolve();
+    });
+
+    itAsync("works with multiple synchronous calls", async (resolve, reject) => {
+      const counterVar = makeVar(0);
+      function Component() {
+        const count = useReactiveVar(counterVar);
+
+        return (<div>{count}</div>);
+      }
+
+      render(<Component />);
+      Promise.resolve().then(() => {
+        counterVar(1);
+        counterVar(2);
+        counterVar(3);
+        counterVar(4);
+        counterVar(5);
+        counterVar(6);
+        counterVar(7);
+        counterVar(8);
+        counterVar(9);
+        counterVar(10);
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByText("10")).toHaveLength(1);
+      });
+
+      resolve();
+    });
   });
 });

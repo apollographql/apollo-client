@@ -1,0 +1,59 @@
+name: Exit Prerelease Mode
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Exit prerelease mode on release branch"
+        type: string
+        default: "release-"
+        required: true
+
+jobs:
+  exit_prerelease:
+    name: Changesets Exit Prerelease
+    runs-on: ubuntu-latest
+    # Allow GITHUB_TOKEN to have write permissions
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          # Checkout release branch entered when workflow was kicked off
+          ref: ${{ github.event.inputs.branch }}
+          # Fetch entire git history so  Changesets can generate changelogs
+          # with the correct commits
+          fetch-depth: 0
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      - name: Get latest tagged version
+        id: previoustag
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+
+      - name: Remove 'v' prefix from version number (e.g. v1.0.0)
+        uses: mad9000/actions-find-and-replace-string@3
+        id: formatversion
+        with:
+          source: ${{ steps.previoustag.outputs.tag }}
+          find: "v"
+          replace: ""
+
+      - name: Write previous version to package.json
+        uses: jaywcjlove/github-action-package@v1.3.0
+        with:
+          version: ${{ steps.formatversion.outputs.value }}
+
+      - name: Remove pre.json
+        run: npx rimraf .changeset/pre.json
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Exit prerelease mode
+          # Commit these changes to the branch workflow is running against
+          branch: ${{ github.event.inputs.branch }}

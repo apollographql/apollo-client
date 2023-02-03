@@ -1,12 +1,13 @@
 import React from 'react';
-import { render, fireEvent, wait } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render, waitFor, screen } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -34,22 +35,20 @@ describe('[queries] observableQuery', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    let unmount: any;
-    let queryByText: any;
     let count = 0;
 
-    const assert1 = () => {
+    const assert1 = async () => {
       const keys = Array.from(
         ((client as any).queryManager as any).queries.keys()
       );
-      expect(keys).toEqual(['1']);
+      await waitFor(() => expect(keys).toEqual(['1']), { interval: 1 });
     };
 
-    const assert2 = () => {
+    const assert2 = async () => {
       const keys = Array.from(
         ((client as any).queryManager as any).queries.keys()
       );
-      expect(keys).toEqual(['1']);
+      await waitFor(() => expect(keys).toEqual(['1']), { interval: 1 });
     };
 
     let done = false;
@@ -57,23 +56,23 @@ describe('[queries] observableQuery', () => {
       options: { fetchPolicy: 'cache-and-network' }
     })(
       class extends React.Component<ChildProps<{}, Data>> {
-        componentDidUpdate() {
+        async componentDidUpdate() {
           if (count === 2) {
             expect(this.props.data!.loading).toBeFalsy();
-            expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+            expect(this.props.data!.allPeople).toEqual(
               data.allPeople
             );
 
             // ensure first assertion and umount tree
-            assert1();
-            fireEvent.click(queryByText('Break things'));
+            await assert1();
+
+            userEvent.click(screen.getByText('Break things'));
 
             // ensure cleanup
-            assert2();
+            await assert2();
           }
 
           if (count === 4) {
-            unmount();
             done = true;
           }
         }
@@ -88,7 +87,7 @@ describe('[queries] observableQuery', () => {
           // be present;
           if (count === 3) {
             expect(this.props.data!.loading).toBeFalsy();
-            expect(stripSymbols(this.props.data!.allPeople)).toEqual(
+            expect(this.props.data!.allPeople).toEqual(
               data.allPeople
             );
           }
@@ -137,15 +136,13 @@ describe('[queries] observableQuery', () => {
       }
     }
 
-    const result = render(
+    render(
       <ApolloProvider client={client}>
         <AppWrapper />
       </ApolloProvider>
     );
-    unmount = result.unmount;
-    queryByText = result.queryByText;
 
-    return wait(() => {
+    await waitFor(() => {
       expect(done).toBeTruthy();
     });
   });
@@ -198,7 +195,7 @@ describe('[queries] observableQuery', () => {
             if (variables.first === 1) {
               if (loading) expect(allPeople).toBeUndefined();
               if (!loading) {
-                expect(stripSymbols(allPeople)).toEqual(data.allPeople);
+                expect(allPeople).toEqual(data.allPeople);
               }
             }
 
@@ -206,7 +203,7 @@ describe('[queries] observableQuery', () => {
               // second variables render
               if (loading) expect(allPeople).toBeUndefined();
               if (!loading)
-                expect(stripSymbols(allPeople)).toEqual(data2.allPeople);
+                expect(allPeople).toEqual(data2.allPeople);
             }
           } catch (e) {
             reject(e);
@@ -269,7 +266,7 @@ describe('[queries] observableQuery', () => {
       }, 20);
     }, 5);
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    return waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   it('not overly rerender', async () => {
@@ -318,11 +315,11 @@ describe('[queries] observableQuery', () => {
               break;
             case 2:
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(data.allPeople);
+              expect(allPeople).toEqual(data.allPeople);
               break;
             case 3:
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(data.allPeople);
+              expect(allPeople).toEqual(data.allPeople);
               break;
             default: // Do nothing
           }
@@ -380,7 +377,7 @@ describe('[queries] observableQuery', () => {
       }, 20);
     }, 5);
 
-    return wait(() => {
+    await waitFor(() => {
       expect(done).toBeTruthy();
     });
   });
@@ -445,12 +442,12 @@ describe('[queries] observableQuery', () => {
             }
             if (count === 2) {
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(dataOne.allPeople);
+              expect(allPeople).toEqual(dataOne.allPeople);
               refetch();
             }
             if (count === 3) {
               expect(loading).toBe(false);
-              expect(stripSymbols(allPeople)).toEqual(dataTwo.allPeople);
+              expect(allPeople).toEqual(dataTwo.allPeople);
             }
             if (count > 3) {
               throw new Error('too many renders');
@@ -472,6 +469,6 @@ describe('[queries] observableQuery', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(3)).then(resolve, reject);
+    return waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 });

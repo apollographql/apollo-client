@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../../testing';
+import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
@@ -71,12 +71,12 @@ describe('[queries] api', () => {
             data!
               .refetch()
               .then((result: any) => {
-                expect(stripSymbols(result.data)).toEqual(data1);
+                expect(result.data).toEqual(data1);
                 return data!
                   .refetch({ first: 2 }) // new variables
                   .then((response: any) => {
-                    expect(stripSymbols(response.data)).toEqual(data1);
-                    expect(stripSymbols(data!.allPeople)).toEqual(
+                    expect(response.data).toEqual(data1);
+                    expect(data!.allPeople).toEqual(
                       data1.allPeople
                     );
                     done = true;
@@ -102,10 +102,11 @@ describe('[queries] api', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('exposes subscribeToMore as part of the props api', (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -132,6 +133,7 @@ describe('[queries] api', () => {
           if (data && !data.loading) {
             expect(data!.subscribeToMore).toBeTruthy();
             expect(data!.subscribeToMore instanceof Function).toBeTruthy();
+            done = true;
           }
           return null;
         }
@@ -144,7 +146,7 @@ describe('[queries] api', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('exposes fetchMore as part of the props api', (resolve, reject) => {
@@ -177,7 +179,6 @@ describe('[queries] api', () => {
     });
 
     let count = 0;
-    let done = false;
     const Container = graphql<{}, Data, Variables>(query, {
       options: () => ({ variables })
     })(
@@ -187,8 +188,8 @@ describe('[queries] api', () => {
           if (count === 0) {
             expect(props.data!.fetchMore).toBeTruthy();
             expect(props.data!.fetchMore instanceof Function).toBeTruthy();
-            props
-              .data!.fetchMore({
+            props.data!
+              .fetchMore({
                 variables: { skip: 2 },
                 updateQuery: (prev: any, { fetchMoreResult }) => ({
                   allPeople: {
@@ -199,21 +200,19 @@ describe('[queries] api', () => {
                 })
               })
               .then((result: any) => {
-                try {
-                  expect(stripSymbols(result.data.allPeople.people)).toEqual(
-                    data1.allPeople.people
-                  );
-                } catch (error) {
-                  reject(error);
-                }
-              });
+                expect(result.data.allPeople.people).toEqual(
+                  data1.allPeople.people
+                );
+              })
+              .catch(reject);
           } else if (count === 1) {
-            expect(stripSymbols(props.data!.variables)).toEqual(variables);
+            expect(props.data!.variables).toEqual(variables);
             expect(props.data!.loading).toBeFalsy();
-            expect(stripSymbols(props.data!.allPeople!.people)).toEqual(
+            expect(props.data!.allPeople!.people).toEqual(
               data.allPeople.people.concat(data1.allPeople.people)
             );
-            done = true;
+            // This ends the test (passing).
+            setTimeout(() => resolve(), 20);
           } else {
             throw new Error('should not reach this point');
           }
@@ -233,8 +232,6 @@ describe('[queries] api', () => {
         <Container />
       </ApolloProvider>
     );
-
-    return wait(() => expect(done).toBeTruthy()).then(resolve, reject);
   });
 
   itAsync('reruns props function after query results change via fetchMore', (resolve, reject) => {
@@ -258,7 +255,7 @@ describe('[queries] api', () => {
     };
 
     type Data = typeof data1;
-    type Variables = typeof vars1;
+    type Variables = { cursor: number | undefined };
 
     const link = mockSingleLink(
       { request: { query, variables: vars1 }, result: { data: data1 } },
@@ -313,7 +310,7 @@ describe('[queries] api', () => {
               done = true;
             } else {
               isUpdated = true;
-              expect(stripSymbols(this.props.people)).toEqual(
+              expect(this.props.people).toEqual(
                 data1.allPeople.people
               );
               this.props.getMorePeople!();
@@ -331,6 +328,6 @@ describe('[queries] api', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(done).toBe(true)).then(resolve, reject);
+    waitFor(() => expect(done).toBe(true)).then(resolve, reject);
   });
 });

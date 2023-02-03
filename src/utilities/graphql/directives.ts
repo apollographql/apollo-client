@@ -1,3 +1,5 @@
+import { invariant } from '../globals';
+
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.
 import {
@@ -10,9 +12,8 @@ import {
   ValueNode,
   ASTNode,
   visit,
+  BREAK,
 } from 'graphql';
-
-import { invariant } from 'ts-invariant';
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
@@ -54,18 +55,42 @@ export function getDirectiveNames(root: ASTNode) {
   return names;
 }
 
-export function hasDirectives(names: string[], root: ASTNode) {
-  return getDirectiveNames(root).some(
-    (name: string) => names.indexOf(name) > -1,
-  );
+export const hasAnyDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, false);
+
+export const hasAllDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, true);
+
+export function hasDirectives(
+  names: string[],
+  root: ASTNode,
+  all?: boolean,
+) {
+  const nameSet = new Set(names);
+  const uniqueCount = nameSet.size;
+
+  visit(root, {
+    Directive(node) {
+      if (
+        nameSet.delete(node.name.value) &&
+        (!all || !nameSet.size)
+      ) {
+        return BREAK;
+      }
+    },
+  });
+
+  // If we found all the names, nameSet will be empty. If we only care about
+  // finding some of them, the < condition is sufficient.
+  return all ? !nameSet.size : nameSet.size < uniqueCount;
 }
 
 export function hasClientExports(document: DocumentNode) {
-  return (
-    document &&
-    hasDirectives(['client'], document) &&
-    hasDirectives(['export'], document)
-  );
+  return document && hasDirectives(['client', 'export'], document, true);
 }
 
 export type InclusionDirectives = Array<{

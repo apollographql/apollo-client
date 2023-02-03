@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, wait } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
@@ -43,22 +43,23 @@ describe('[queries] polling', () => {
       { request: { query }, result: { data: data2 } },
       { request: { query }, result: { data } }
     );
+    const cache = new Cache({ addTypename: false })
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache,
     });
 
     let count = 0;
     const Container = graphql(query, {
       options: () => ({
         pollInterval: POLL_INTERVAL,
-        notifyOnNetworkStatusChange: false
+        notifyOnNetworkStatusChange: false,
       })
     })(({ data }) => {
       count++;
-      expect(true).toBe(true);
       if (count === 4) {
         data!.stopPolling();
+        expect(cache.readQuery({query})).toBeTruthy();
         resolve();
       }
       return null;
@@ -70,7 +71,57 @@ describe('[queries] polling', () => {
       </ApolloProvider>
     );
 
-    return wait(() => expect(count).toBe(4)).then(resolve, reject);
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+  });
+
+  itAsync('ensures polling respects no-cache fetchPolicy', (resolve, reject) => {
+    const POLL_INTERVAL = 5;
+    const query: DocumentNode = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+    const link = mockSingleLink(
+      { request: { query }, result: { data } },
+      { request: { query }, result: { data: data2 } },
+      { request: { query }, result: { data } }
+    );
+    const cache = new Cache({ addTypename: false })
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    let count = 0;
+    const Container = graphql(query, {
+      options: () => ({
+        pollInterval: POLL_INTERVAL,
+        notifyOnNetworkStatusChange: false,
+        fetchPolicy: 'no-cache'
+      })
+    })(({ data }) => {
+      count++;
+      if (count === 4) {
+        data!.stopPolling();
+        expect(cache.readQuery({query})).toBeNull();
+        resolve();
+      }
+      return null;
+    });
+
+    render(
+      <ApolloProvider client={client}>
+        <Container />
+      </ApolloProvider>
+    );
+
+    waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
   const allPeopleQuery: DocumentNode = gql`
@@ -98,6 +149,7 @@ describe('[queries] polling', () => {
   }));
 
   itAsync('exposes stopPolling as part of the props api', (resolve, reject) => {
+    let done = false;
     const client = new ApolloClient({
       link: lukeLink,
       cache: new Cache({ addTypename: false })
@@ -111,6 +163,7 @@ describe('[queries] polling', () => {
             expect(data!.stopPolling).toBeTruthy();
             expect(data!.stopPolling instanceof Function).toBeTruthy();
             expect(data!.stopPolling).not.toThrow();
+            done = true;
           } catch (e) {
             reject(e);
           }
@@ -126,10 +179,13 @@ describe('[queries] polling', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 
   itAsync('exposes startPolling as part of the props api', (resolve, reject) => {
+    let done = false;
     const client = new ApolloClient({
       link: lukeLink,
       cache: new Cache({ addTypename: false })
@@ -142,6 +198,7 @@ describe('[queries] polling', () => {
             const { data } = this.props;
             expect(data!.startPolling).toBeTruthy();
             expect(data!.startPolling instanceof Function).toBeTruthy();
+            done = true;
           } catch (e) {
             reject(e);
           }
@@ -158,6 +215,8 @@ describe('[queries] polling', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 });

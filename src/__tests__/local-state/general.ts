@@ -1,12 +1,23 @@
 import gql from 'graphql-tag';
-import { DocumentNode, GraphQLError, getIntrospectionQuery } from 'graphql';
+import {
+  graphql,
+  GraphQLInt,
+  print,
+  DocumentNode,
+  GraphQLError,
+  getIntrospectionQuery,
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString
+} from 'graphql';
 
 import { Observable } from '../../utilities';
 import { ApolloLink } from '../../link/core';
 import { Operation } from '../../link/core';
 import { ApolloClient } from '../../core';
 import { ApolloCache, InMemoryCache } from '../../cache';
-import { itAsync } from '../../testing';
+import { itAsync, withErrorSpy } from '../../testing';
 
 describe('General functionality', () => {
   it('should not impact normal non-@client use', () => {
@@ -819,6 +830,102 @@ describe('Combining client and server state/operations', () => {
     }, 10);
   });
 
+  itAsync('query resolves with loading: false if subsequent responses contain the same data', (resolve, reject) => {
+    const request = {
+      query: gql`
+        query people($id: Int) {
+          people(id: $id) {
+            id
+            name
+          }
+        }
+      `,
+      variables: {
+        id: 1,
+      },
+      notifyOnNetworkStatusChange: true
+    };
+
+    const PersonType = new GraphQLObjectType({
+      name: "Person",
+      fields: {
+        id: { type: GraphQLID },
+        name: { type: GraphQLString }
+      }
+    });
+
+    const peopleData = [
+      { id: 1, name: "John Smith" },
+      { id: 2, name: "Sara Smith" },
+      { id: 3, name: "Budd Deey" }
+    ];
+
+    const QueryType = new GraphQLObjectType({
+      name: "Query",
+      fields: {
+        people: {
+          type: PersonType,
+          args: {
+            id: {
+              type: GraphQLInt
+            }
+          },
+          resolve: (_, { id }) => {
+            return peopleData;
+          }
+        }
+      }
+    });
+
+    const schema = new GraphQLSchema({ query: QueryType });
+
+    const link = new ApolloLink(operation => {
+      // @ts-ignore
+      return new Observable(async observer => {
+        const { query, operationName, variables } = operation;
+        try {
+          const result = await graphql({
+            schema,
+            source: print(query),
+            variableValues: variables,
+            operationName,
+          });
+          observer.next(result);
+          observer.complete();
+        } catch (err) {
+          observer.error(err);
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observer = client.watchQuery(request);
+
+    let count = 0;
+    observer.subscribe({
+      next: ({ loading, data }) => {
+        if (count === 0) expect(loading).toBe(false);
+        if (count === 1) expect(loading).toBe(true);
+        if (count === 2) {
+          expect(loading).toBe(false)
+          resolve();
+        };
+        count++;
+      },
+      error: reject,
+    });
+
+    setTimeout(() => {
+      observer.refetch({
+        id: 2
+      });
+    }, 1);
+  });
+
   itAsync('should correctly propagate an error from a client resolver', async (resolve, reject) => {
     const data = {
       list: {
@@ -885,7 +992,7 @@ describe('Combining client and server state/operations', () => {
     resolve();
   });
 
-  itAsync('should handle a simple query with both server and client fields', (resolve, reject) => {
+  withErrorSpy(itAsync, 'should handle a simple query with both server and client fields', (resolve, reject) => {
     const query = gql`
       query GetCount {
         count @client
@@ -920,7 +1027,7 @@ describe('Combining client and server state/operations', () => {
     });
   });
 
-  itAsync('should support nested querying of both server and client fields', (resolve, reject) => {
+  withErrorSpy(itAsync, 'should support nested querying of both server and client fields', (resolve, reject) => {
     const query = gql`
       query GetUser {
         user {
@@ -1086,6 +1193,46 @@ describe('Combining client and server state/operations', () => {
           });
           resolve();
         }
+      },
+    });
+  });
+
+  itAsync('handles server errors when root data property is null', (resolve, reject) => {
+    const query = gql`
+      query GetUser {
+        user {
+          firstName @client
+          lastName
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const link = new ApolloLink(operation => {
+      return Observable.of({
+        data: null,
+        errors: [new GraphQLError("something went wrong", {
+          extensions: {
+            code: "INTERNAL_SERVER_ERROR"
+          },
+          path: ["user"]
+        })]
+      });
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link,
+      resolvers: {},
+    });
+
+    client.watchQuery({ query }).subscribe({
+      error(error) {
+        expect(error.message).toEqual("something went wrong");
+        resolve();
+      },
+      next() {
+        reject();
       },
     });
   });

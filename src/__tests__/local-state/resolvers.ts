@@ -15,8 +15,8 @@ import { InMemoryCache } from '../../cache';
 import { Observable, Observer } from '../../utilities';
 import { ApolloLink } from '../../link/core';
 import { itAsync } from '../../testing';
-import mockQueryManager from '../../utilities/testing/mocking/mockQueryManager';
-import wrap from '../../utilities/testing/wrap';
+import mockQueryManager from '../../testing/core/mocking/mockQueryManager';
+import wrap from '../../testing/core/wrap';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
@@ -43,7 +43,7 @@ const assertWithObserver = ({
   delay?: number;
   observer: Observer<ApolloQueryResult<any>>;
 }) => {
-  const queryManager = mockQueryManager(reject, {
+  const queryManager = mockQueryManager({
     request: { query: serverQuery || query, variables },
     result: serverResult,
     error,
@@ -184,6 +184,72 @@ describe('Basic resolver capabilities', () => {
           try {
             expect(data).toEqual({
               foo: { bar: true, __typename: 'ClientData' },
+              bar: { baz: true },
+            });
+          } catch (error) {
+            reject(error);
+          }
+          resolve();
+        },
+      },
+    });
+  });
+
+  itAsync('should handle @client fields inside fragments', (resolve, reject) => {
+    const query = gql`
+      fragment Foo on Foo {
+        bar
+        ...Foo2
+      }
+      fragment Foo2 on Foo {
+        __typename
+        baz @client
+      }
+      query Mixed {
+        foo {
+          ...Foo
+        }
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const serverQuery = gql`
+      fragment Foo on Foo {
+        bar
+        ...Foo2
+      }
+      fragment Foo2 on Foo {
+        __typename
+      }
+      query Mixed {
+        foo {
+          ...Foo
+        }
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const resolvers = {
+      Foo: {
+        baz: () => false,
+      },
+    };
+
+    assertWithObserver({
+      reject,
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: { data: { foo: { bar: true, __typename: `Foo` }, bar: { baz: true } } },
+      observer: {
+        next({ data }) {
+          try {
+            expect(data).toEqual({
+              foo: { bar: true, baz: false, __typename: 'Foo' },
               bar: { baz: true },
             });
           } catch (error) {
@@ -447,7 +513,7 @@ describe('Basic resolver capabilities', () => {
     });
 
     function check(result: ApolloQueryResult<any>) {
-      return new Promise(resolve => {
+      return new Promise<void>(resolve => {
         expect(result.data.developer.id).toBe(developerId);
         expect(result.data.developer.handle).toBe('@benjamn');
         expect(result.data.developer.tickets.length).toBe(ticketsPerDev);
@@ -490,6 +556,55 @@ describe('Basic resolver capabilities', () => {
         })
         .then(check),
     ]);
+  });
+
+  itAsync('should not run resolvers without @client directive (issue #9571)', (resolve, reject) => {
+    const query = gql`
+      query Mixed {
+        foo @client {
+          bar
+        }
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const serverQuery = gql`
+      query Mixed {
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
+
+    const resolvers = {
+      Query: {
+        foo: () => ({ __typename: `Foo`, bar: true }),
+        bar: barResolver
+      },
+    };
+
+    assertWithObserver({
+      reject,
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: { data: { bar: { baz: true } } },
+      observer: {
+        next({ data }) {
+          try {
+            expect(data).toEqual({ foo: { bar: true }, bar: { baz: true } });
+            expect(barResolver).not.toHaveBeenCalled();
+          } catch (error) {
+            reject(error);
+          }
+          resolve();
+        },
+      },
+    });
   });
 });
 

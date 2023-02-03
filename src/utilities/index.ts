@@ -1,8 +1,12 @@
+export { DEV, maybe } from './globals';
+
 export {
   DirectiveInfo,
   InclusionDirectives,
   shouldInclude,
   hasDirectives,
+  hasAnyDirectives,
+  hasAllDirectives,
   hasClientExports,
   getDirectiveNames,
   getInclusionDirectives,
@@ -10,6 +14,7 @@ export {
 
 export {
   FragmentMap,
+  FragmentMapFunction,
   createFragmentMap,
   getFragmentQueryDocument,
   getFragmentFromSelection,
@@ -33,6 +38,7 @@ export {
   Directives,
   VariableValue,
   makeReference,
+  isDocumentNode,
   isReference,
   isField,
   isInlineFragment,
@@ -81,7 +87,14 @@ export * from './common/maybeDeepFreeze';
 export * from './observables/iteration';
 export * from './observables/asyncMap';
 export * from './observables/Concast';
+export * from './observables/subclassing';
 export * from './common/arrays';
+export * from './common/objects';
 export * from './common/errorHandling';
 export * from './common/canUse';
 export * from './common/compact';
+export * from './common/makeUniqueId';
+export * from './common/stringifyForDisplay';
+export * from './common/mergeOptions';
+
+export * from './types/IsStrictlyAny';

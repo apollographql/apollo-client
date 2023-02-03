@@ -1,6 +1,6 @@
 /* Core */
 
-import { DEV } from '../utilities/globals';
+import { __DEV__ } from '../utilities/globals';
 
 export {
   ApolloClient,
@@ -90,7 +90,7 @@ export {
 // Note that all invariant.* logging is hidden in production.
 import { setVerbosity } from "ts-invariant";
 export { setVerbosity as setLogVerbosity }
-setVerbosity(DEV ? "log" : "silent");
+setVerbosity(__DEV__ ? "log" : "silent");
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.

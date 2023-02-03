@@ -1,4 +1,4 @@
-import '../globals'; // For __DEV__
+import { __DEV__ } from '../globals';
 import { isNonNullObject } from './objects';
 
 function deepFreeze(value: any) {

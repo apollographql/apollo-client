@@ -22,7 +22,6 @@ import type {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
-  TransformQueryOptions,
 } from './types';
 
 import type {
@@ -43,7 +42,6 @@ export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
   query?: Partial<QueryOptions<any, any>>;
   mutate?: Partial<MutationOptions<any, any, any>>;
-  transformQuery?: Partial<TransformQueryOptions>;
 }
 
 let hasSuggestedDevtools = false;

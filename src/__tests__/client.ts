@@ -989,50 +989,6 @@ describe('client', () => {
     expect(print(result.current!.query)).toEqual(print(transformedQuery));
   });
 
-  it('sends @client fields to the link when defaultOptions.transformQuery.removeClientFields is `false`', async () => {
-    const result: { current: Operation | undefined } = {
-      current: undefined
-    };
-
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-          isInCollection @client
-        }
-      }
-    `;
-
-    const link = new ApolloLink((operation) => {
-      result.current = operation
-
-      return Observable.of({
-        data: {
-          author: {
-            firstName: 'John',
-            lastName: 'Smith',
-            __typename: 'Author',
-          }
-        }
-      });
-    });
-
-    const client = new ApolloClient({
-      link,
-      cache: new InMemoryCache({ addTypename: false }),
-      defaultOptions: {
-        transformQuery: {
-          removeClientFields: false,
-        }
-      }
-    });
-
-    await client.query({ query });
-
-    expect(print(result.current!.query)).toEqual(print(query));
-  });
-
   itAsync('should handle named fragments on mutations', (resolve, reject) => {
     const mutation = gql`
       mutation {

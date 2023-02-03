@@ -618,14 +618,11 @@ export class QueryManager<TStore> {
 
   public transform(document: DocumentNode) {
     const { transformCache } = this;
-    const {
-      removeClientFields = true
-    } = this.defaultOptions.transformQuery || Object.create(null);
 
     if (!transformCache.has(document)) {
       const transformed = this.cache.transformDocument(document);
       const serverQuery = removeDirectivesFromDocument([
-        removeClientFields ? { name: 'client', remove: true } : {},
+        { name: 'client', remove: true },
         { name: 'connection' },
         { name: 'nonreactive' },
       ], transformed);

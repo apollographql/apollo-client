@@ -179,16 +179,9 @@ export class LocalState<TCacheShape> {
     return null;
   }
 
-  // Server queries by default are stripped of all @client based selection sets.
-  public serverQuery(
-    document: DocumentNode,
-    options: { removeClientFields?: boolean } = Object.create(null)
-  ) {
-    const { removeClientFields = true } = options;
-
-    return removeClientFields
-      ? removeClientSetsFromDocument(document)
-      : document;
+  // Server queries are stripped of all @client based selection sets.
+  public serverQuery(document: DocumentNode) {
+    return removeClientSetsFromDocument(document);
   }
 
   public prepareContext(context?: Record<string, any>) {

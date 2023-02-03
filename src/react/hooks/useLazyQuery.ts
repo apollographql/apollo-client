@@ -7,6 +7,7 @@ import { mergeOptions } from '../../utilities';
 import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
+  NoInfer,
   QueryResult,
 } from '../types/types';
 import { useInternalState } from './useQuery';
@@ -25,7 +26,7 @@ const EAGER_METHODS = [
 
 export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryHookOptions<TData, TVariables>
+  options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
   const abortControllersRef = useRef(new Set<AbortController>());
   const internalState = useInternalState(

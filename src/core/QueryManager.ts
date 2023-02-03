@@ -9,7 +9,7 @@ import { ApolloLink, execute, FetchResult } from '../link/core';
 import {
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
-} from '../utilities/common/incrementalResult';
+} from '../utilities';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
 import {

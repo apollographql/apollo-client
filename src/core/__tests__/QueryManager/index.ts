@@ -107,7 +107,7 @@ describe('QueryManager', () => {
     delay?: number;
     observer: Observer<ApolloQueryResult<any>>;
   }) => {
-    const queryManager = mockQueryManager(reject, {
+    const queryManager = mockQueryManager({
       request: { query, variables },
       result,
       error,
@@ -168,13 +168,11 @@ describe('QueryManager', () => {
   // Helper method that takes a query with a first response and a second response.
   // Used to assert stuff about refetches.
   const mockRefetch = ({
-    reject,
     request,
     firstResult,
     secondResult,
     thirdResult,
   }: {
-    reject: (reason: any) => any;
     request: GraphQLRequest;
     firstResult: FetchResult;
     secondResult: FetchResult;
@@ -195,7 +193,7 @@ describe('QueryManager', () => {
       args.push({ request, result: thirdResult });
     }
 
-    return mockQueryManager(reject, ...args);
+    return mockQueryManager(...args);
   };
 
   function getCurrentQueryResult<TData, TVars extends object>(
@@ -671,7 +669,7 @@ describe('QueryManager', () => {
       },
     };
 
-    const handle = mockWatchQuery(reject, {
+    const handle = mockWatchQuery({
       request: {
         query: gql`
           query people {
@@ -732,7 +730,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request,
         result: { data: data1 },
@@ -802,7 +799,7 @@ describe('QueryManager', () => {
     });
   });
 
-  itAsync('resolves all queries when one finishes after another', (resolve, reject) => {
+  itAsync('resolves all queries when one finishes after another', (resolve) => {
     const request = {
       query: gql`
         query fetchLuke($id: String) {
@@ -860,7 +857,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request,
         result: { data: data1 },
@@ -926,7 +922,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockRefetch({
-      reject,
       request,
       firstResult: { data: data1 },
       secondResult: { data: data2 },
@@ -982,7 +977,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockRefetch({
-      reject,
       request,
       firstResult: { data: data1 },
       secondResult: { data: data2 },
@@ -1052,7 +1046,7 @@ describe('QueryManager', () => {
       d: { e: 3, f: { g: 4 } },
     };
 
-    const queryManager = mockQueryManager(reject, {
+    const queryManager = mockQueryManager({
       request,
       result: { data: data1 },
     });
@@ -1103,7 +1097,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockRefetch({
-      reject,
       request,
       firstResult: { data: data1 },
       secondResult: { data: data2 },
@@ -1147,7 +1140,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockRefetch({
-      reject,
       request,
       firstResult: { data: data1 },
       secondResult: { data: data2 },
@@ -1204,7 +1196,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query: query },
         result: { data: data1 },
@@ -1273,7 +1264,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query: query },
         result: { data: data1 },
@@ -1333,7 +1323,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query },
         result: { data: data1 },
@@ -1368,7 +1357,7 @@ describe('QueryManager', () => {
     ).then(resolve, reject);
   });
 
-  itAsync('sets networkStatus to `poll` if a polling query is in flight', (resolve, reject) => {
+  itAsync('sets networkStatus to `poll` if a polling query is in flight', (resolve) => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -1396,7 +1385,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query },
         result: { data: data1 },
@@ -1433,7 +1421,7 @@ describe('QueryManager', () => {
     });
   });
 
-  itAsync('can handle null values in arrays (#1551)', (resolve, reject) => {
+  itAsync('can handle null values in arrays (#1551)', (resolve) => {
     const query = gql`
       {
         list {
@@ -1442,7 +1430,7 @@ describe('QueryManager', () => {
       }
     `;
     const data = { list: [null, { value: 1 }] };
-    const queryManager = mockQueryManager(reject, {
+    const queryManager = mockQueryManager({
       request: { query },
       result: { data },
     });
@@ -1483,7 +1471,7 @@ describe('QueryManager', () => {
       },
     };
 
-    const queryManager = mockQueryManager(reject, {
+    const queryManager = mockQueryManager({
       request: { query: primeQuery },
       result: { data: data1 },
     });
@@ -1716,7 +1704,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query: query1 },
         result: { data: data1 },
@@ -1785,7 +1772,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query: query1 },
         result: { data: data1 },
@@ -1817,8 +1803,8 @@ describe('QueryManager', () => {
     });
   });
 
-  itAsync('warns if you forget the template literal tag', async (resolve, reject) => {
-    const queryManager = mockQueryManager(reject);
+  itAsync('warns if you forget the template literal tag', async (resolve) => {
+    const queryManager = mockQueryManager();
     expect(() => {
       queryManager.query<any>({
         // Bamboozle TypeScript into letting us do this
@@ -1937,7 +1923,7 @@ describe('QueryManager', () => {
       }
     `;
     const networkError = new Error('Network error');
-    mockQueryManager(reject, {
+    mockQueryManager({
       request: { query },
       error: networkError,
     })
@@ -1966,7 +1952,7 @@ describe('QueryManager', () => {
       }
     `;
     const graphQLErrors = [new GraphQLError('GraphQL error')];
-    return mockQueryManager(reject, {
+    return mockQueryManager({
       request: { query },
       result: { errors: graphQLErrors },
     })
@@ -2000,7 +1986,6 @@ describe('QueryManager', () => {
       },
     };
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query },
         result: { data },
@@ -2051,7 +2036,7 @@ describe('QueryManager', () => {
       },
     };
 
-    const observable = mockQueryManager(reject, {
+    const observable = mockQueryManager({
       request: { query },
       result: { data },
     }).watchQuery({ query, pollInterval: 20 });
@@ -2086,7 +2071,6 @@ describe('QueryManager', () => {
       },
     };
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query },
         result: { data },
@@ -2139,7 +2123,6 @@ describe('QueryManager', () => {
       },
     };
     const queryManager = mockQueryManager(
-      reject,
       {
         request: { query },
         result: { data },
@@ -2718,7 +2701,6 @@ describe('QueryManager', () => {
     };
 
     const queryManager = mockRefetch({
-      reject,
       request,
       firstResult,
       secondResult,
@@ -2848,7 +2830,7 @@ describe('QueryManager', () => {
       },
     ];
 
-    const queryManager = mockQueryManager(reject, ...mockedResponses);
+    const queryManager = mockQueryManager(...mockedResponses);
     const queryOptions: WatchQueryOptions<any> = {
       query,
       variables,
@@ -2911,7 +2893,6 @@ describe('QueryManager', () => {
       };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data: data1 },
@@ -3002,7 +2983,7 @@ describe('QueryManager', () => {
       });
     });
 
-    itAsync('should let you handle multiple polled queries and unsubscribe from one of them', (resolve, reject) => {
+    itAsync('should let you handle multiple polled queries and unsubscribe from one of them', (resolve) => {
       const query1 = gql`
         query {
           author {
@@ -3053,7 +3034,6 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query: query1 },
           result: { data: data11 },
@@ -3145,7 +3125,6 @@ describe('QueryManager', () => {
       };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data: data1 },
@@ -3205,7 +3184,6 @@ describe('QueryManager', () => {
       };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data: data1 },
@@ -3280,7 +3258,6 @@ describe('QueryManager', () => {
       };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data: data1 },
@@ -3331,7 +3308,6 @@ describe('QueryManager', () => {
       };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data: data1 },
@@ -3379,7 +3355,6 @@ describe('QueryManager', () => {
       };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data: data1 },
@@ -3580,7 +3555,7 @@ describe('QueryManager', () => {
       );
     });
 
-    itAsync('should not refetch torn-down queries', (resolve, reject) => {
+    itAsync('should not refetch torn-down queries', (resolve) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const query = gql`
@@ -3730,7 +3705,7 @@ describe('QueryManager', () => {
           lastName: 'Smith',
         },
       };
-      const queryManager = mockQueryManager(reject, {
+      const queryManager = mockQueryManager({
         request: { query },
         result: { data },
         delay: 10000, //i.e. forever
@@ -3749,7 +3724,7 @@ describe('QueryManager', () => {
       setTimeout(() => resetStore(queryManager), 100);
     });
 
-    itAsync('should call refetch on a mocked Observable if the store is reset', (resolve, reject) => {
+    itAsync('should call refetch on a mocked Observable if the store is reset', (resolve) => {
       const query = gql`
         query {
           author {
@@ -3764,7 +3739,7 @@ describe('QueryManager', () => {
           lastName: 'Smith',
         },
       };
-      const queryManager = mockQueryManager(reject, {
+      const queryManager = mockQueryManager({
         request: { query },
         result: { data }
       });
@@ -4070,7 +4045,7 @@ describe('QueryManager', () => {
       });
     });
 
-    itAsync('should not refetch torn-down queries', (resolve, reject) => {
+    itAsync('should not refetch torn-down queries', (resolve) => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       let observable: ObservableQuery<any>;
       const query = gql`
@@ -4180,7 +4155,7 @@ describe('QueryManager', () => {
           lastName: 'Smith',
         },
       };
-      const queryManager = mockQueryManager(reject, {
+      const queryManager = mockQueryManager({
         request: { query },
         result: { data },
         delay: 100,
@@ -4194,7 +4169,7 @@ describe('QueryManager', () => {
       queryManager.reFetchObservableQueries();
     });
 
-    itAsync('should call refetch on a mocked Observable if the observed queries are refetched', (resolve, reject) => {
+    itAsync('should call refetch on a mocked Observable if the observed queries are refetched', (resolve) => {
       const query = gql`
         query {
           author {
@@ -4209,7 +4184,7 @@ describe('QueryManager', () => {
           lastName: 'Smith',
         },
       };
-      const queryManager = mockQueryManager(reject, {
+      const queryManager = mockQueryManager({
         request: { query },
         result: { data },
       });
@@ -4513,7 +4488,7 @@ describe('QueryManager', () => {
       const data = {
         fortuneCookie: 'Buy it',
       };
-      return mockQueryManager(reject, {
+      return mockQueryManager({
         request: { query },
         result: { data },
       })
@@ -4547,7 +4522,6 @@ describe('QueryManager', () => {
       const fullData = { fortuneCookie, author };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query },
           result: { data: fullData },
@@ -4632,7 +4606,6 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query: testQuery },
           result: { data: data1 },
@@ -4688,7 +4661,6 @@ describe('QueryManager', () => {
         b: { x2: 3, y2: 2, z2: 1 },
       };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query: query1 },
           result: { data: data1 },
@@ -4777,7 +4749,6 @@ describe('QueryManager', () => {
       };
       const variables = { id: '1234' };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data },
@@ -4847,7 +4818,6 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query },
           result: { data },
@@ -4919,7 +4889,6 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query },
           result: { data },
@@ -4989,7 +4958,6 @@ describe('QueryManager', () => {
       const variables = { id: '1234' };
       const mutationVariables = { id: '2345' };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data },
@@ -5069,7 +5037,6 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query },
           result: { data },
@@ -5131,7 +5098,6 @@ describe('QueryManager', () => {
         },
       };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query },
           result: { data },
@@ -5198,7 +5164,6 @@ describe('QueryManager', () => {
       };
       const variables = { id: '1234' };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data },
@@ -5278,7 +5243,6 @@ describe('QueryManager', () => {
       };
       const variables = { id: '1234' };
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data },
@@ -5370,9 +5334,8 @@ describe('QueryManager', () => {
 
     const variables = { id: '1234' };
 
-    function makeQueryManager(reject: (reason?: any) => void) {
+    function makeQueryManager() {
       return mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data },
@@ -5389,7 +5352,7 @@ describe('QueryManager', () => {
     }
 
     itAsync('should refetch the right query when a result is successfully returned', (resolve, reject) => {
-      const queryManager = makeQueryManager(reject);
+      const queryManager = makeQueryManager();
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -5443,7 +5406,7 @@ describe('QueryManager', () => {
     });
 
     itAsync('should refetch using the original query context (if any)', (resolve, reject) => {
-      const queryManager = makeQueryManager(reject);
+      const queryManager = makeQueryManager();
 
       const headers = {
         someHeader: 'some value',
@@ -5493,7 +5456,7 @@ describe('QueryManager', () => {
     });
 
     itAsync('should refetch using the specified context, if provided', (resolve, reject) => {
-      const queryManager = makeQueryManager(reject);
+      const queryManager = makeQueryManager();
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -5588,7 +5551,6 @@ describe('QueryManager', () => {
       const refetchError = testQueryError ? new Error('Refetch failed') : undefined;
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query, variables },
           result: { data: queryData },
@@ -5936,7 +5898,6 @@ describe('QueryManager', () => {
       };
 
       const queryManager = mockQueryManager(
-        reject,
         {
           request: { query: query1 },
           result: { data: data1 },

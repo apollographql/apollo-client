@@ -2,6 +2,7 @@ export {
   MockLink,
   mockSingleLink,
   MockedResponse,
+  MockLinkOptions,
   ResultFunction
 } from './mocking/mockLink';
 export {

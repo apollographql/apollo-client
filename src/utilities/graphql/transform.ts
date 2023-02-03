@@ -98,9 +98,6 @@ function getDirectiveMatcher(
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
-  { removeTypenameOnlyFragment }: { removeTypenameOnlyFragment: boolean } = {
-    removeTypenameOnlyFragment: false,
-  }
 ): DocumentNode | null {
   const variablesInUse: Record<string, boolean> = Object.create(null);
   let variablesToRemove: RemoveArgumentsConfig[] = [];
@@ -151,7 +148,7 @@ export function removeDirectivesFromDocument(
               node.directives &&
               node.directives.some(getDirectiveMatcher(directives))
             ) {
-              if(currentFragmentName) {
+              if (currentFragmentName) {
                 modifiedFragmentNames.push(currentFragmentName);
               }
 
@@ -223,7 +220,11 @@ export function removeDirectivesFromDocument(
     }),
   );
 
-  if (modifiedDoc && removeTypenameOnlyFragment && modifiedFragmentNames.length > 0) {
+  // After a fragment definition has had its @client related document
+  // sets removed, if the only field it has left is a __typename field,
+  // remove the entire fragment operation to prevent it from being fired
+  // on the server.
+  if (modifiedDoc && modifiedFragmentNames.length > 0) {
     modifiedDoc = visit(modifiedDoc, {
       FragmentDefinition: {
         enter(node) {
@@ -547,11 +548,6 @@ export function removeClientSetsFromDocument(
       },
     ],
     document,
-    // After a fragment definition has had its @client related document
-    // sets removed, if the only field it has left is a __typename field,
-    // remove the entire fragment operation to prevent it from being fired
-    // on the server.
-    {removeTypenameOnlyFragment: true}
   );
 
   return modifiedDoc;

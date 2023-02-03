@@ -24,6 +24,13 @@
 src/*
 !src/react/
 src/react/*
+!src/cache/
+src/cache/*
+
+# Allowed cache files
+!src/cache/inmemory
+src/cache/inmemory/*
+!src/cache/inmemory/documentTransformer.ts
 
 
 # Allow src/react/cache/ApolloProvider

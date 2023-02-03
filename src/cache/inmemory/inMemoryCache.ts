@@ -18,7 +18,11 @@ import {
   addTypenameToDocument,
   isReference,
 } from '../../utilities';
-import type { InMemoryCacheConfig, NormalizedCacheObject } from './types';
+import type {
+  DocumentTransform,
+  InMemoryCacheConfig,
+  NormalizedCacheObject,
+} from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
@@ -45,6 +49,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+  private documentTransforms: DocumentTransform[];
+  private documentTransformsForLink: DocumentTransform[];
 
   private maybeBroadcastWatch: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
@@ -66,6 +72,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     super();
     this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
+
+    this.documentTransforms = [
+      this.addTypenameToDocument.bind(this),
+    ].concat(config.documentTransformsForLink ?? []);
+
+    this.documentTransformsForLink = [
+      this.addFragmentsToDocument.bind(this),
+    ].concat(this.config.documentTransformsForLink ?? []);
 
     this.policies = new Policies({
       cache: this,
@@ -509,6 +523,31 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
+    return this.documentTransforms.reduce((document, transform) => {
+      return transform(document);
+    }, document);
+  }
+
+  public transformForLink(document: DocumentNode): DocumentNode {
+    return this.documentTransformsForLink.reduce((document, transform) => {
+      return transform(document);
+    }, document);
+  }
+
+  protected broadcastWatches(options?: BroadcastOptions) {
+    if (!this.txCount) {
+      this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
+    }
+  }
+
+  private addFragmentsToDocument(document: DocumentNode): DocumentNode {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
+  }
+
+  private addTypenameToDocument(document: DocumentNode): DocumentNode {
     if (this.addTypename) {
       let result = this.typenameDocumentCache.get(document);
       if (!result) {
@@ -522,19 +561,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
-  }
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    const { fragments } = this.config;
-    return fragments
-      ? fragments.transform(document)
-      : document;
-  }
-
-  protected broadcastWatches(options?: BroadcastOptions) {
-    if (!this.txCount) {
-      this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
-    }
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

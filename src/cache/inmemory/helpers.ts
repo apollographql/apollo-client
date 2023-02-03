@@ -1,6 +1,13 @@
-import { SelectionSetNode } from 'graphql';
+import { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql';
 
-import { NormalizedCache } from './types';
+import {
+  NormalizedCache,
+  InMemoryCacheConfig,
+} from './types';
+
+import { KeyFieldsContext } from './policies';
+import { FragmentRegistryAPI } from './fragmentRegistry';
+
 import {
   Reference,
   isReference,
@@ -10,9 +17,69 @@ import {
   DeepMerger,
   resultKeyNameFromField,
   shouldInclude,
+  isNonNullObject,
+  compact,
+  FragmentMap,
+  FragmentMapFunction,
+  createFragmentMap,
+  getFragmentDefinitions,
 } from '../../utilities';
 
-export const hasOwn = Object.prototype.hasOwnProperty;
+export const {
+  hasOwnProperty: hasOwn,
+} = Object.prototype;
+
+export function isNullish(value: any): value is null | undefined {
+  return value === null || value === void 0;
+}
+
+export const isArray: (a: any) => a is any[] | readonly any[] = Array.isArray;
+
+export function defaultDataIdFromObject(
+  { __typename, id, _id }: Readonly<StoreObject>,
+  context?: KeyFieldsContext,
+): string | undefined {
+  if (typeof __typename === "string") {
+    if (context) {
+      context.keyObject =
+        !isNullish(id) ? { id } :
+        !isNullish(_id) ? { _id } :
+        void 0;
+    }
+
+    // If there is no object.id, fall back to object._id.
+    if (isNullish(id) && !isNullish(_id)) {
+      id = _id;
+    }
+
+    if (!isNullish(id)) {
+      return `${__typename}:${(
+        typeof id === "number" ||
+        typeof id === "string"
+      ) ? id : JSON.stringify(id)}`;
+    }
+  }
+}
+
+const defaultConfig = {
+  dataIdFromObject: defaultDataIdFromObject,
+  addTypename: true,
+  resultCaching: true,
+  // Thanks to the shouldCanonizeResults helper, this should be the only line
+  // you have to change to reenable canonization by default in the future.
+  canonizeResults: false,
+};
+
+export function normalizeConfig(config: InMemoryCacheConfig) {
+  return compact(defaultConfig, config);
+}
+
+export function shouldCanonizeResults(
+  config: Pick<InMemoryCacheConfig, "canonizeResults">,
+): boolean {
+  const value = config.canonizeResults;
+  return value === void 0 ? defaultConfig.canonizeResults : value;
+}
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,
@@ -35,8 +102,8 @@ export function selectionSetMatchesResult(
   result: Record<string, any>,
   variables?: Record<string, any>,
 ): boolean {
-  if (result && typeof result === "object") {
-    return Array.isArray(result)
+  if (isNonNullObject(result)) {
+    return isArray(result)
       ? result.every(item => selectionSetMatchesResult(selectionSet, item, variables))
       : selectionSet.selections.every(field => {
         if (isField(field) && shouldInclude(field, variables)) {
@@ -59,12 +126,33 @@ export function selectionSetMatchesResult(
 export function storeValueIsStoreObject(
   value: StoreValue,
 ): value is StoreObject {
-  return value !== null &&
-    typeof value === "object" &&
+  return isNonNullObject(value) &&
     !isReference(value) &&
-    !Array.isArray(value);
+    !isArray(value);
 }
 
 export function makeProcessedFieldsMerger() {
   return new DeepMerger;
+}
+
+export function extractFragmentContext(
+  document: DocumentNode,
+  fragments?: FragmentRegistryAPI,
+): {
+  fragmentMap: FragmentMap;
+  lookupFragment: FragmentMapFunction;
+} {
+  // FragmentMap consisting only of fragments defined directly in document, not
+  // including other fragments registered in the FragmentRegistry.
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+  return {
+    fragmentMap,
+    lookupFragment(name) {
+      let def: FragmentDefinitionNode | null = fragmentMap[name];
+      if (!def && fragments) {
+        def = fragments.lookup(name);
+      }
+      return def || null;
+    },
+  };
 }

@@ -21,6 +21,7 @@ Array [
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -44,6 +45,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -51,6 +53,7 @@ Array [
   "throwServerError",
   "toPromise",
   "useApolloClient",
+  "useFragment_experimental",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -63,10 +66,15 @@ exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
   "ApolloCache",
   "Cache",
+  "EntityStore",
   "InMemoryCache",
   "MissingFieldError",
+  "Policies",
   "cacheSlot",
+  "canonicalStringify",
+  "createFragmentRegistry",
   "defaultDataIdFromObject",
+  "fieldNameFromStoreName",
   "isReference",
   "makeReference",
   "makeVar",
@@ -91,6 +99,7 @@ Array [
   "createHttpLink",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
+  "defaultPrinter",
   "disableExperimentalFragmentVariables",
   "disableFragmentWarnings",
   "empty",
@@ -110,6 +119,7 @@ Array [
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
@@ -169,10 +179,12 @@ Array [
   "checkFetcher",
   "createHttpLink",
   "createSignalIfSupported",
+  "defaultPrinter",
   "fallbackHttpConfig",
   "parseAndCheckHttpResponse",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
+  "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
 ]
@@ -180,6 +192,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
+  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -194,6 +207,12 @@ Array [
 exports[`exports of public entry points @apollo/client/link/schema 1`] = `
 Array [
   "SchemaLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/subscriptions 1`] = `
+Array [
+  "GraphQLWsLink",
 ]
 `;
 
@@ -225,6 +244,7 @@ Array [
   "parser",
   "resetApolloContext",
   "useApolloClient",
+  "useFragment_experimental",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -250,15 +270,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/data 1`] = `
-Array [
-  "MutationData",
-  "OperationData",
-  "QueryData",
-  "SubscriptionData",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
 Array [
   "graphql",
@@ -272,6 +283,7 @@ Array [
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
   "useApolloClient",
+  "useFragment_experimental",
   "useLazyQuery",
   "useMutation",
   "useQuery",
@@ -285,6 +297,7 @@ Array [
   "DocumentType",
   "operationName",
   "parser",
+  "verifyDocumentType",
 ]
 `;
 
@@ -306,32 +319,61 @@ Array [
   "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "stripSymbols",
   "subscribeAndCount",
+  "tick",
+  "wait",
+  "withErrorSpy",
+  "withLogSpy",
+  "withWarningSpy",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/core 1`] = `
+Array [
+  "MockLink",
+  "MockSubscriptionLink",
+  "createMockClient",
+  "itAsync",
+  "mockObservableLink",
+  "mockSingleLink",
+  "subscribeAndCount",
+  "tick",
+  "wait",
+  "withErrorSpy",
+  "withLogSpy",
+  "withWarningSpy",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
   "Concast",
+  "DEV",
   "DeepMerger",
   "Observable",
   "addTypenameToDocument",
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "canUseAsyncIteratorSymbol",
+  "canUseDOM",
+  "canUseLayoutEffect",
+  "canUseSymbol",
   "canUseWeakMap",
+  "canUseWeakSet",
   "checkDocument",
   "cloneDeep",
   "compact",
   "concatPagination",
   "createFragmentMap",
+  "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
   "getFragmentDefinition",
   "getFragmentDefinitions",
   "getFragmentFromSelection",
   "getFragmentQueryDocument",
+  "getGraphQLErrorsFromResult",
   "getInclusionDirectives",
   "getMainDefinition",
   "getOperationDefinition",
@@ -340,17 +382,24 @@ Array [
   "getStoreKeyName",
   "getTypenameFromResult",
   "graphQLResultHasError",
+  "hasAllDirectives",
+  "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
+  "isDocumentNode",
   "isField",
   "isInlineFragment",
   "isNonEmptyArray",
+  "isNonNullObject",
   "isReference",
   "iterateObserversSafely",
   "makeReference",
+  "makeUniqueId",
+  "maybe",
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
+  "mergeOptions",
   "offsetLimitPagination",
   "relayStylePagination",
   "removeArgumentsFromDocument",
@@ -361,6 +410,18 @@ Array [
   "resultKeyNameFromField",
   "shouldInclude",
   "storeKeyNameFromField",
+  "stringifyForDisplay",
   "valueToObjectRepresentation",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
+Array [
+  "DEV",
+  "InvariantError",
+  "checkDEV",
+  "global",
+  "invariant",
+  "maybe",
 ]
 `;

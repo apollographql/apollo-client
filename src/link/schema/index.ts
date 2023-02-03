@@ -63,14 +63,14 @@ export class SchemaLink extends ApolloLink {
           }
         }
 
-        return execute(
-          this.schema,
-          operation.query,
-          this.rootValue,
-          context,
-          operation.variables,
-          operation.operationName,
-        )
+        return execute({
+          schema: this.schema,
+          document: operation.query,
+          rootValue: this.rootValue,
+          contextValue: context,
+          variableValues: operation.variables,
+          operationName: operation.operationName,
+        });
       }).then(data => {
         if (!observer.closed) {
           observer.next(data);

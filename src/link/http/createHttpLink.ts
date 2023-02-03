@@ -1,44 +1,51 @@
-import { DefinitionNode, VariableDefinitionNode } from 'graphql';
-import { visit } from 'graphql/language/visitor';
+import '../../utilities/globals';
+
+import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../core';
-import { Observable } from '../../utilities';
+import { Observable, hasDirectives } from '../../utilities';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
-import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';
+import {
+  handleError,
+  readMultipartBody,
+  readJsonBody
+} from './parseAndCheckHttpResponse';
 import { checkFetcher } from './checkFetcher';
 import {
-  selectHttpOptionsAndBody,
+  selectHttpOptionsAndBodyInternal,
+  defaultPrinter,
   fallbackHttpConfig,
   HttpOptions
 } from './selectHttpOptionsAndBody';
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError } from '../utils';
+import { maybe } from '../../utilities';
+
+const backupFetch = maybe(() => fetch);
 
 export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   let {
     uri = '/graphql',
     // use default global fetch if nothing passed in
-    fetch: fetcher,
+    fetch: preferredFetch,
+    print = defaultPrinter,
     includeExtensions,
+    preserveHeaderCase,
     useGETForQueries,
     includeUnusedVariables = false,
     ...requestOptions
   } = linkOptions;
 
-  // dev warnings to ensure fetch is present
-  checkFetcher(fetcher);
-
-  //fetcher is set here rather than the destructuring to ensure fetch is
-  //declared before referencing it. Reference in the destructuring would cause
-  //a ReferenceError
-  if (!fetcher) {
-    fetcher = fetch;
+  if (__DEV__) {
+    // Make sure at least one of preferredFetch, window.fetch, or backupFetch is
+    // defined, so requests won't fail at runtime.
+    checkFetcher(preferredFetch || backupFetch);
   }
 
   const linkConfig = {
-    http: { includeExtensions },
+    http: { includeExtensions, preserveHeaderCase },
     options: requestOptions.fetchOptions,
     credentials: requestOptions.credentials,
     headers: requestOptions.headers,
@@ -80,8 +87,9 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     };
 
     //uses fallback, link, and then context to build options
-    const { options, body } = selectHttpOptionsAndBody(
+    const { options, body } = selectHttpOptionsAndBodyInternal(
       operation,
+      print,
       fallbackHttpConfig,
       linkConfig,
       contextConfig,
@@ -128,6 +136,12 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.method = 'GET';
     }
 
+    // does not match custom directives beginning with @defer
+    if (hasDirectives(['defer'], operation.query)) {
+      options.headers = options.headers || {};
+      options.headers.accept = "multipart/mixed; deferSpec=20220824, application/json";
+    }
+
     if (options.method === 'GET') {
       const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
       if (parseError) {
@@ -143,58 +157,25 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     return new Observable(observer => {
-      fetcher!(chosenURI, options)
+      // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
+      // fall back to the *current* global window.fetch function (see issue
+      // #7832), or (if all else fails) the backupFetch function we saved when
+      // this module was first evaluated. This last option protects against the
+      // removal of window.fetch, which is unlikely but not impossible.
+      const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
+
+      currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
-          return response;
-        })
-        .then(parseAndCheckHttpResponse(operation))
-        .then(result => {
-          // we have data and can send it to back up the link chain
-          observer.next(result);
-          observer.complete();
-          return result;
-        })
-        .catch(err => {
-          // fetch was cancelled so it's already been cleaned up in the unsubscribe
-          if (err.name === 'AbortError') return;
-          // if it is a network error, BUT there is graphql result info
-          // fire the next observer before calling error
-          // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networErrors`
-          // to pass to UI
-          // this should only happen if we *also* have data as part of the response key per
-          // the spec
-          if (err.result && err.result.errors && err.result.data) {
-            // if we don't call next, the UI can only show networkError because AC didn't
-            // get any graphqlErrors
-            // this is graphql execution result info (i.e errors and possibly data)
-            // this is because there is no formal spec how errors should translate to
-            // http status codes. So an auth error (401) could have both data
-            // from a public field, errors from a private field, and a status of 401
-            // {
-            //  user { // this will have errors
-            //    firstName
-            //  }
-            //  products { // this is public so will have data
-            //    cost
-            //  }
-            // }
-            //
-            // the result of above *could* look like this:
-            // {
-            //   data: { products: [{ cost: "$10" }] },
-            //   errors: [{
-            //      message: 'your session has timed out',
-            //      path: []
-            //   }]
-            // }
-            // status code of above would be a 401
-            // in the UI you want to show data where you can, errors as data where you can
-            // and use correct http status codes
-            observer.next(err.result);
+          const ctype = response.headers?.get('content-type');
+
+          if (ctype !== null && /^multipart\/mixed/i.test(ctype)) {
+            return readMultipartBody(response, observer);
+          } else {
+            return readJsonBody(response, operation, observer);
           }
-          observer.error(err);
-        });
+        })
+        .catch(err => handleError(err, observer));
 
       return () => {
         // XXX support canceling this request

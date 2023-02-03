@@ -1,6 +1,5 @@
 ---
-title: 'Cursor-based pagination'
-sidebar_title: 'Cursor-based'
+title: Cursor-based pagination
 ---
 
 > We recommend reading [Core pagination API](./core-api) before learning about considerations specific to cursor-based pagination.
@@ -174,6 +173,7 @@ const cache = new InMemoryCache({
     Query: {
       fields: {
         moreComments: {
+          keyArgs: false,
           merge(existing, incoming, { readField }) {
             const comments = existing ? { ...existing.comments } : {};
             incoming.comments.forEach(comment => {
@@ -229,24 +229,25 @@ const COMMENTS_QUERY = gql`
 `;
 
 function CommentsWithData() {
-  const {
-    data,
-    loading,
-    fetchMore,
-  } = useQuery(COMMENTS_QUERY);
+  const { data, loading, fetchMore } = useQuery(COMMENTS_QUERY);
 
-  if (loading) return <Loading/>;
+  if (loading) return <Loading />;
 
-  const nodes = data.comments.edges.map(edge => edge.node);
+  const nodes = data.comments.edges.map((edge) => edge.node);
+  const pageInfo = data.comments.pageInfo;
 
   return (
     <Comments
       entries={nodes}
-      onLoadMore={() => fetchMore({
-        variables: {
-          cursor: data.comments.pageInfo.endCursor,
-        },
-      })}
+      onLoadMore={() => {
+        if (pageInfo.hasNextPage) {
+          fetchMore({
+            variables: {
+              cursor: pageInfo.endCursor,
+            },
+          });
+        }
+      }}
     />
   );
 }

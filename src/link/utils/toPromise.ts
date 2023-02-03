@@ -1,5 +1,4 @@
-import { invariant } from 'ts-invariant';
-
+import { invariant } from '../../utilities/globals';
 import { Observable } from '../../utilities';
 
 export function toPromise<R>(observable: Observable<R>): Promise<R> {

@@ -32,19 +32,23 @@ export function offsetLimitPagination<T = Reference>(
     keyArgs,
     merge(existing, incoming, { args }) {
       const merged = existing ? existing.slice(0) : [];
-      if (args) {
-        // Assume an offset of 0 if args.offset omitted.
-        const { offset = 0 } = args;
-        for (let i = 0; i < incoming.length; ++i) {
-          merged[offset + i] = incoming[i];
+
+      if (incoming) {
+        if (args) {
+          // Assume an offset of 0 if args.offset omitted.
+          const { offset = 0 } = args;
+          for (let i = 0; i < incoming.length; ++i) {
+            merged[offset + i] = incoming[i];
+          }
+        } else {
+          // It's unusual (probably a mistake) for a paginated field not
+          // to receive any arguments, so you might prefer to throw an
+          // exception here, instead of recovering by appending incoming
+          // onto the existing array.
+          merged.push.apply(merged, incoming);
         }
-      } else {
-        // It's unusual (probably a mistake) for a paginated field not
-        // to receive any arguments, so you might prefer to throw an
-        // exception here, instead of recovering by appending incoming
-        // onto the existing array.
-        merged.push.apply(merged, incoming);
       }
+
       return merged;
     },
   };
@@ -80,37 +84,42 @@ export type TIncomingRelay<TNode> = {
 };
 
 export type RelayFieldPolicy<TNode> = FieldPolicy<
-  TExistingRelay<TNode>,
-  TIncomingRelay<TNode>,
-  TIncomingRelay<TNode>
+  TExistingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null,
+  TIncomingRelay<TNode> | null
 >;
 
 // As proof of the flexibility of field policies, this function generates
 // one that handles Relay-style pagination, without Apollo Client knowing
 // anything about connections, edges, cursors, or pageInfo objects.
-export function relayStylePagination<TNode = Reference>(
+export function relayStylePagination<TNode extends Reference = Reference>(
   keyArgs: KeyArgs = false,
 ): RelayFieldPolicy<TNode> {
   return {
     keyArgs,
 
     read(existing, { canRead, readField }) {
-      if (!existing) return;
+      if (!existing) return existing;
 
       const edges: TRelayEdge<TNode>[] = [];
-      let startCursor = "";
-      let endCursor = "";
+      let firstEdgeCursor = "";
+      let lastEdgeCursor = "";
       existing.edges.forEach(edge => {
         // Edges themselves could be Reference objects, so it's important
         // to use readField to access the edge.edge.node property.
         if (canRead(readField("node", edge))) {
           edges.push(edge);
           if (edge.cursor) {
-            startCursor = startCursor || edge.cursor;
-            endCursor = edge.cursor;
+            firstEdgeCursor = firstEdgeCursor || edge.cursor || "";
+            lastEdgeCursor = edge.cursor || lastEdgeCursor;
           }
         }
       });
+
+      const {
+        startCursor,
+        endCursor,
+      } = existing.pageInfo || {};
 
       return {
         // Some implementations return additional Connection fields, such
@@ -120,13 +129,23 @@ export function relayStylePagination<TNode = Reference>(
         edges,
         pageInfo: {
           ...existing.pageInfo,
-          startCursor,
-          endCursor,
+          // If existing.pageInfo.{start,end}Cursor are undefined or "", default
+          // to firstEdgeCursor and/or lastEdgeCursor.
+          startCursor: startCursor || firstEdgeCursor,
+          endCursor: endCursor || lastEdgeCursor,
         },
       };
     },
 
-    merge(existing = makeEmptyData(), incoming, { args, isReference, readField }) {
+    merge(existing, incoming, { args, isReference, readField }) {
+      if (!existing) {
+        existing = makeEmptyData();
+      }
+
+      if (!incoming) {
+        return existing;
+      }
+
       const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
         if (isReference(edge = { ...edge })) {
           // In case edge is a Reference, we read out its cursor field and

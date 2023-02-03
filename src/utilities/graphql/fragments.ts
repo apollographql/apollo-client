@@ -1,11 +1,15 @@
+import { invariant, InvariantError } from '../globals';
+
 import {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
-  SelectionNode
+  SelectionNode,
 } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
 
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type Kind = any;
+type OperationTypeNode = any;
 /**
  * Returns a query document which adds a single query operation that only
  * spreads the target fragment inside of it.
@@ -74,15 +78,16 @@ export function getFragmentQueryDocument(
     ...document,
     definitions: [
       {
-        kind: 'OperationDefinition',
-        operation: 'query',
+        kind: 'OperationDefinition' as Kind,
+        // OperationTypeNode is an enum
+        operation: 'query' as OperationTypeNode,
         selectionSet: {
-          kind: 'SelectionSet',
+          kind: 'SelectionSet' as Kind,
           selections: [
             {
-              kind: 'FragmentSpread',
+              kind: 'FragmentSpread' as Kind,
               name: {
-                kind: 'Name',
+                kind: 'Name' as Kind,
                 value: actualFragmentName,
               },
             },
@@ -103,6 +108,9 @@ export interface FragmentMap {
   [fragmentName: string]: FragmentDefinitionNode;
 }
 
+export type FragmentMapFunction =
+  (fragmentName: string) => FragmentDefinitionNode | null;
+
 // Utility function that takes a list of fragment definitions and makes a hash out of them
 // that maps the name of the fragment to the fragment definition.
 export function createFragmentMap(
@@ -117,15 +125,19 @@ export function createFragmentMap(
 
 export function getFragmentFromSelection(
   selection: SelectionNode,
-  fragmentMap?: FragmentMap,
+  fragmentMap?: FragmentMap | FragmentMapFunction,
 ): InlineFragmentNode | FragmentDefinitionNode | null {
   switch (selection.kind) {
     case 'InlineFragment':
       return selection;
     case 'FragmentSpread': {
-      const fragment = fragmentMap && fragmentMap[selection.name.value];
-      invariant(fragment, `No fragment named ${selection.name.value}.`);
-      return fragment!;
+      const fragmentName = selection.name.value;
+      if (typeof fragmentMap === "function") {
+        return fragmentMap(fragmentName);
+      }
+      const fragment = fragmentMap && fragmentMap[fragmentName];
+      invariant(fragment, `No fragment named ${fragmentName}`);
+      return fragment || null;
     }
     default:
       return null;

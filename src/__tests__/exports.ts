@@ -1,3 +1,8 @@
+/** @jest-environment node */
+// We run this in a node environment because:
+// A) JSDOM doesn't yet support the TextEncoder/TextDecoder globals added in node 11, meaning certain imports (e.g. reactSSR) will fail (See https://github.com/jsdom/jsdom/issues/2524) 
+// B) We're just testing imports/exports, so no reason not to use Node for slightly better performance.
+
 import * as cache from "../cache";
 import * as client from "..";
 import * as core from "../core";
@@ -11,18 +16,20 @@ import * as linkHTTP from "../link/http";
 import * as linkPersistedQueries from "../link/persisted-queries";
 import * as linkRetry from "../link/retry";
 import * as linkSchema from "../link/schema";
+import * as linkSubscriptions from "../link/subscriptions";
 import * as linkUtils from "../link/utils";
 import * as linkWS from "../link/ws";
 import * as react from "../react";
 import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
-import * as reactData from "../react/data";
 import * as reactHOC from "../react/hoc";
 import * as reactHooks from "../react/hooks";
 import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
+import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
+import * as utilitiesGlobals from "../utilities/globals";
 
 const entryPoints = require("../../config/entryPoints.js");
 
@@ -51,18 +58,20 @@ describe('exports of public entry points', () => {
   check("@apollo/client/link/persisted-queries", linkPersistedQueries);
   check("@apollo/client/link/retry", linkRetry);
   check("@apollo/client/link/schema", linkSchema);
+  check("@apollo/client/link/subscriptions", linkSubscriptions);
   check("@apollo/client/link/utils", linkUtils);
   check("@apollo/client/link/ws", linkWS);
   check("@apollo/client/react", react);
   check("@apollo/client/react/components", reactComponents);
   check("@apollo/client/react/context", reactContext);
-  check("@apollo/client/react/data", reactData);
   check("@apollo/client/react/hoc", reactHOC);
   check("@apollo/client/react/hooks", reactHooks);
   check("@apollo/client/react/parser", reactParser);
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
+  check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
+  check("@apollo/client/utilities/globals", utilitiesGlobals);
 
   it("completeness", () => {
     const { join } = require("path").posix;

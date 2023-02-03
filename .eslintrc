@@ -1,0 +1,21 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "overrides": [
+    {
+      "files": ["**/__tests__/**/*.[jt]sx", "**/?(*.)+(test).[jt]sx"],
+      "extends": ["plugin:testing-library/react"],
+      "rules": {
+        "testing-library/prefer-user-event": "error"
+      }
+    }
+  ]
+}

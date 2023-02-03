@@ -28,6 +28,29 @@ describe('documentTransforms', () => {
     expect(print(result)).toEqual(print(expected));
   });
 
+  it('adheres to the addTypename configuration in the default document transform', () => {
+    const cache = new InMemoryCache({ addTypename: false });
+    const query = gql`
+      query {
+        greeting {
+          hello
+        }
+      }
+    `;
+
+    const expected = gql`
+      query {
+        greeting {
+          hello
+        }
+      }
+    `;
+
+    const result = cache.transformDocument(query);
+
+    expect(print(result)).toEqual(print(expected));
+  });
+
   it('allows custom document transforms to be registered', () => {
     const transformDocument = (document: DocumentNode) => {
       const transformed = removeDirectivesFromDocument(
@@ -113,6 +136,26 @@ describe('documentTransformsForLink', () => {
 
       fragment BasicFragment on Query {
         basic
+      }
+    `;
+
+    const result = cache.transformForLink(query);
+
+    expect(print(result)).toEqual(print(expected));
+  });
+
+  it('does not modify document with no fragments using the default link document', () => {
+    const cache = new InMemoryCache();
+
+    const query = gql`
+      query {
+        ...BasicFragment
+      }
+    `;
+
+    const expected = gql`
+      query {
+        ...BasicFragment
       }
     `;
 

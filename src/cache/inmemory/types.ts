@@ -155,4 +155,4 @@ export interface ReadMergeModifyContext {
   varString?: string;
 }
 
-export type DocumentTransform = (document: DocumentNode) => DocumentNode
+export type DocumentTransform = (document: Readonly<DocumentNode>) => DocumentNode

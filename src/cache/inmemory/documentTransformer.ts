@@ -20,7 +20,7 @@ export class DocumentTransformer {
     return this;
   }
 
-  public transform(document: DocumentNode): DocumentNode {
+  public transform(document: Readonly<DocumentNode>): DocumentNode {
     return this.transforms.reduce((document, transform) => {
       return transform(document);
     }, document);

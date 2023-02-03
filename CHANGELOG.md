@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.0-alpha.6
+
+### Patch Changes
+
+- [#7555](https://github.com/apollographql/apollo-client/pull/7555) [`45562d6fa`](https://github.com/apollographql/apollo-client/commit/45562d6fa20eab658bd86d79d092862ace4e1225) Thanks [@TheCeloReis](https://github.com/TheCeloReis)! - Adds `TVariables` generic to `GraphQLRequest` and `MockedResponse` interfaces.
+
 ## 3.8.0-alpha.5
 
 ### Patch Changes

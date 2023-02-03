@@ -131,7 +131,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(
       [{ name: 'client', remove: true }],
       query,
-    );
+    )!;
     expect(print(doc)).toBe(print(expected));
   });
 

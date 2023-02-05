@@ -65,7 +65,7 @@ jobs:
         run: echo ::set-output name=version::$(node -p "require('./dist/package.json').version")
 
       - name: Create comment
-        uses: peter-evans/create-or-update-comment@v2.1.0
+        uses: peter-evans/create-or-update-comment@v2.1.1
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |

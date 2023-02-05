@@ -2,7 +2,7 @@ import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
+import { ApolloClient, ApolloError, ApolloLink, concat, TypedDocumentNode } from '../../../core';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider, resetApolloContext } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
@@ -933,3 +933,19 @@ describe('useSubscription Hook', () => {
     warningSpy.mockRestore();
   });
 });
+
+describe.skip("Type Tests", () => {
+  test('NoInfer prevents adding arbitrary additional variables', () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+    const { variables } = useSubscription(typedNode, {
+      variables: {
+        bar: 4,
+        // @ts-expect-error
+        nonExistingVariable: "string"
+      }
+    });
+    variables?.bar
+    // @ts-expect-error
+    variables?.nonExistingVariable
+  })
+})

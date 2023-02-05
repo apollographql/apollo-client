@@ -12,10 +12,11 @@ import {
 import { useApolloClient } from "./useApolloClient";
 import { useSyncExternalStore } from "./useSyncExternalStore";
 import { OperationVariables } from "../../core";
+import { NoInfer } from "../types/types";
 
 export interface UseFragmentOptions<TData, TVars>
 extends Omit<
-  Cache.DiffOptions<TData, TVars>,
+  Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
   | "id"
   | "query"
   | "optimistic"
@@ -23,6 +24,7 @@ extends Omit<
 >, Omit<
   Cache.ReadFragmentOptions<TData, TVars>,
   | "id"
+  | "variables"
 > {
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).

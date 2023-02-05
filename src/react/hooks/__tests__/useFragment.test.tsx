@@ -915,3 +915,18 @@ describe("useFragment", () => {
     });
   });
 });
+
+describe.skip("Type Tests", () => {
+  test('NoInfer prevents adding arbitrary additional variables', () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+    useFragment({
+      fragment: typedNode,
+      from: { __typename: "Query" },
+      variables: {
+        bar: 4,
+        // @ts-expect-error
+        nonExistingVariable: "string"
+      }
+    });
+  })
+})

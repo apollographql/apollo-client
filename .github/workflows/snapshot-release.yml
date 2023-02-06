@@ -18,7 +18,8 @@ jobs:
         github.event.sender.login == 'alessbell' ||
         github.event.sender.login == 'bignimbus' ||
         github.event.sender.login == 'hwillson' ||
-        github.event.sender.login == 'jerelmiller'
+        github.event.sender.login == 'jerelmiller' ||
+        github.event.sender.login == 'phryneas'
       ) &&
       startsWith(github.event.comment.body, '/release:pr')
 

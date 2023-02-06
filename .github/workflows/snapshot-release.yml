@@ -18,7 +18,8 @@ jobs:
         github.event.sender.login == 'alessbell' ||
         github.event.sender.login == 'bignimbus' ||
         github.event.sender.login == 'hwillson' ||
-        github.event.sender.login == 'jerelmiller'
+        github.event.sender.login == 'jerelmiller' ||
+        github.event.sender.login == 'phryneas'
       ) &&
       startsWith(github.event.comment.body, '/release:pr')
 
@@ -48,6 +49,20 @@ jobs:
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
 
+      - name: Check for pre.json file existence
+        id: check_files
+        uses: andstor/file-existence-action@v2.0.0
+        with:
+          files: ".changeset/pre.json"
+
+      - name: Exit pre mode if pre.json exists
+        # Changesets prevents us from generating a snapshot release
+        # if we're in prerelease mode, so we remove `pre.json` if it exists
+        # (but do not commit this change since we want the branch to remain
+        # in pre mode)
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: rm .changeset/pre.json
+
       # https://github.com/atlassian/changesets/blob/master/docs/snapshot-releases.md
       - name: Release to pr tag
         run: |
@@ -65,7 +80,7 @@ jobs:
         run: echo ::set-output name=version::$(node -p "require('./dist/package.json').version")
 
       - name: Create comment
-        uses: peter-evans/create-or-update-comment@v2.1.0
+        uses: peter-evans/create-or-update-comment@v2.1.1
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |

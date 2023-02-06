@@ -57,9 +57,9 @@ export type ExecutionPatchResult<
   | ExecutionPatchInitialResult<TData, TExtensions>
   | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
-export interface GraphQLRequest {
+export interface GraphQLRequest<TVariables = Record<string, any>> {
   query: DocumentNode;
-  variables?: Record<string, any>;
+  variables?: TVariables;
   operationName?: string;
   context?: DefaultContext;
   extensions?: Record<string, any>;

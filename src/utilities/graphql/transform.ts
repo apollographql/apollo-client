@@ -95,6 +95,21 @@ function getDirectiveMatcher(
   };
 }
 
+function shouldRemoveField(
+  directives: RemoveDirectiveConfig[],
+  nodeDirectives: FieldNode["directives"]
+) {
+  if (!nodeDirectives) return false;
+  const hasRemoveDirective = directives.some(directive => directive.remove);
+  if (
+    hasRemoveDirective &&
+    nodeDirectives.some(getDirectiveMatcher(directives))
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
@@ -104,9 +119,6 @@ export function removeDirectivesFromDocument(
 
   const fragmentSpreadsInUse: Record<string, boolean> = Object.create(null);
   let fragmentSpreadsToRemove: RemoveFragmentSpreadConfig[] = [];
-
-  const modifiedFragmentNames: string[] = [];
-  let currentFragmentName: string | undefined;
 
   let modifiedDoc = nullIfDocIsEmpty(
     visit(doc, {
@@ -127,58 +139,68 @@ export function removeDirectivesFromDocument(
 
       FragmentDefinition: {
         enter(node) {
-          currentFragmentName = node.name.value;
+          if (node.selectionSet) {
+            const isTypenameOnly = node.selectionSet.selections.every(
+              (selection) => isField(selection) &&
+                selection.name.value === "__typename"
+            );
+            const isTypenameAndRemovableDirectivesOnly =
+              node.selectionSet.selections.every(
+                (selection) => (
+                  isField(selection) &&
+                  selection.name.value === "__typename"
+                ) || (
+                    isField(selection) &&
+                    shouldRemoveField(directives, selection.directives)
+                  )
+              );
+
+            // If a fragment contains only a __typename field,
+            // do not remove it from the document.
+            if (isTypenameOnly) return;
+
+            // If a fragment consists only of a __typename field and field(s)
+            // annotated with the directive being removed, remove the fragment
+            // definition and add the fragment name to fragmentSpreadsInUse
+            // for removal.
+            if (isTypenameAndRemovableDirectivesOnly) {
+              fragmentSpreadsInUse[node.name.value] = false;
+              fragmentSpreadsToRemove.push({
+                name: node.name.value,
+              });
+              return null;
+            }
+          }
         },
-        leave() {
-          currentFragmentName = undefined;
-        }
       },
 
       Field: {
         enter(node) {
-          if (directives && node.directives) {
-            // If `remove` is set to true for a directive, and a directive match
-            // is found for a field, remove the field as well.
-            const shouldRemoveField = directives.some(
-              directive => directive.remove,
-            );
-
-            if (
-              shouldRemoveField &&
-              node.directives &&
-              node.directives.some(getDirectiveMatcher(directives))
-            ) {
-              if (currentFragmentName) {
-                modifiedFragmentNames.push(currentFragmentName);
-              }
-
-              if (node.arguments) {
-                // Store field argument variables so they can be removed
-                // from the operation definition.
-                node.arguments.forEach(arg => {
-                  if (arg.value.kind === 'Variable') {
-                    variablesToRemove.push({
-                      name: (arg.value as VariableNode).name.value,
-                    });
-                  }
-                });
-              }
-
-              if (node.selectionSet) {
-                // Store fragment spread names so they can be removed from the
-                // document.
-                getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
-                  frag => {
-                    fragmentSpreadsToRemove.push({
-                      name: frag.name.value,
-                    });
-                  },
-                );
-              }
-
-              // Remove the field.
-              return null;
+          if (shouldRemoveField(directives, node.directives)) {
+            if (node.arguments) {
+              // Store field argument variables so they can be removed
+              // from the operation definition.
+              node.arguments.forEach(arg => {
+                if (arg.value.kind === 'Variable') {
+                  variablesToRemove.push({
+                    name: (arg.value as VariableNode).name.value,
+                  });
+                }
+              });
             }
+            if (node.selectionSet) {
+              // Store fragment spread names so they can be removed from the
+              // document.
+              getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(
+                frag => {
+                  fragmentSpreadsToRemove.push({
+                    name: frag.name.value,
+                  });
+                },
+              );
+            }
+            // Remove the field.
+            return null;
           }
         },
       },
@@ -193,18 +215,8 @@ export function removeDirectivesFromDocument(
 
       InlineFragment: {
         enter(node) {
-          if (directives && node.directives) {
-            const shouldRemoveField = directives.some(
-              directive => directive.remove,
-            );
-
-            if (
-              shouldRemoveField &&
-                node.directives &&
-                node.directives.some(getDirectiveMatcher(directives))
-            ) {
-              return null;
-            }
+          if (shouldRemoveField(directives, node.directives)) {
+            return null;
           }
         },
       },
@@ -219,31 +231,6 @@ export function removeDirectivesFromDocument(
       },
     }),
   );
-
-  // After a fragment definition has had its @client related document
-  // sets removed, if the only field it has left is a __typename field,
-  // remove the entire fragment operation to prevent it from being fired
-  // on the server.
-  if (modifiedDoc && modifiedFragmentNames.length > 0) {
-    modifiedDoc = visit(modifiedDoc, {
-      FragmentDefinition: {
-        enter(node) {
-          if (node.selectionSet) {
-            const isTypenameOnly = node.selectionSet.selections.every(
-              selection =>
-                isField(selection) && selection.name.value === '__typename',
-            );
-            const name = node.name.value;
-            if (isTypenameOnly && modifiedFragmentNames.includes(name)) {
-              fragmentSpreadsToRemove.push({name});
-              fragmentSpreadsInUse[name] = false;
-              return null;
-            }
-          }
-        },
-      },
-    });
-  }
 
   // If we've removed fields with arguments, make sure the associated
   // variables are also removed from the rest of the document, as long as they

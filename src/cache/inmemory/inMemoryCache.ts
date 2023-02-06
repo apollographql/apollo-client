@@ -79,21 +79,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
     this.documentTransforms = new DocumentTransformer({
       transforms: [this.addTypenameToDocument.bind(this)]
-    });
-
-    if (this.config.documentTransforms) {
-      this.documentTransforms.add(...this.config.documentTransforms);
-    }
+    }).add(...(this.config.documentTransforms ?? []));
 
     this.documentTransformsForLink = new DocumentTransformer({
       transforms: [this.addFragmentsToDocument.bind(this)]
-    });
-
-    if (this.config.documentTransformsForLink) {
-      this.documentTransformsForLink.add(
-        ...this.config.documentTransformsForLink
-      );
-    }
+    }).add(...(this.config.documentTransformsForLink ?? []));
 
     this.policies = new Policies({
       cache: this,

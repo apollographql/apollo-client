@@ -9,9 +9,7 @@ export class DocumentTransformer {
   private transforms: DocumentTransform[] = [];
 
   constructor(config?: DocumentTransformerConfig) {
-    if (config?.transforms) {
-      this.add(...config.transforms);
-    }
+    this.add(...(config?.transforms ?? []));
   }
 
   public add(...transforms: DocumentTransform[]) {

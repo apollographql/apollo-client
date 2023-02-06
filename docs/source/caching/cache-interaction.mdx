@@ -269,6 +269,8 @@ Each of these methods takes two parameters:
 
 After either method fetches data from the cache, it calls its update function and passes it the cached `data`. The update function can then return a value to _replace_ that `data` in the cache. In the example above, every cached `Todo` object has its `completed` field set to `true` (and other fields remain unchanged).
 
+Please note that the replacement value has to be calculated in an immutable way. You can read more about immutable updates in [the React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
+
 If the update function shouldn't make _any_ changes to the cached data, it can return `undefined`.
 
 The update function's return value is passed to either `writeQuery` or `writeFragment`, which modifies the cached data.

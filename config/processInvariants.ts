@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import * as path from "path";
+import { posix, join as osPathJoin } from "path";
 import { distDir, eachFile, reparse, reprint } from './helpers';
 
 eachFile(distDir, (file, relPath) => {
@@ -10,7 +10,7 @@ eachFile(distDir, (file, relPath) => {
   }
 }).then(() => {
   fs.writeFileSync(
-    path.join(distDir, "invariantErrorCodes.js"),
+    osPathJoin(distDir, "invariantErrorCodes.js"),
     recast.print(errorCodeManifest, {
       tabWidth: 2,
     }).code + "\n",
@@ -56,7 +56,7 @@ function getErrorCode(
   return numLit;
 }
 
-function transform(code: string, file: string) {
+function transform(code: string, relativeFilePath: string) {
   // If the code doesn't seem to contain anything invariant-related, we
   // can skip parsing and transforming it.
   if (!/invariant/i.test(code)) {
@@ -64,6 +64,7 @@ function transform(code: string, file: string) {
   }
 
   const ast = reparse(code);
+  let addedDEV = false;
 
   recast.visit(ast, {
     visitCallExpression(path) {
@@ -76,8 +77,9 @@ function transform(code: string, file: string) {
         }
 
         const newArgs = node.arguments.slice(0, 1);
-        newArgs.push(getErrorCode(file, node));
+        newArgs.push(getErrorCode(relativeFilePath, node));
 
+        addedDEV = true;
         return b.conditionalExpression(
           makeDEVExpr(),
           node,
@@ -94,6 +96,7 @@ function transform(code: string, file: string) {
         if (isDEVLogicalAnd(path.parent.node)) {
           return;
         }
+        addedDEV = true;
         return b.logicalExpression("&&", makeDEVExpr(), node);
       }
     },
@@ -106,8 +109,9 @@ function transform(code: string, file: string) {
           return;
         }
 
-        const newArgs = [getErrorCode(file, node)];
+        const newArgs = [getErrorCode(relativeFilePath, node)];
 
+        addedDEV = true;
         return b.conditionalExpression(
           makeDEVExpr(),
           node,
@@ -120,11 +124,58 @@ function transform(code: string, file: string) {
     }
   });
 
+  if (addedDEV) {
+    // Make sure there's an import { __DEV__ } from "../utilities/globals" or
+    // similar declaration in any module where we injected __DEV__.
+    let foundExistingImportDecl = false;
+
+    recast.visit(ast, {
+      visitImportDeclaration(path) {
+        this.traverse(path);
+        const node = path.node;
+        const importedModuleId = node.source.value;
+
+        // Normalize node.source.value relative to the current file.
+        if (
+          typeof importedModuleId === "string" &&
+          importedModuleId.startsWith(".")
+        ) {
+          const normalized = posix.normalize(posix.join(
+            posix.dirname(relativeFilePath),
+            importedModuleId,
+          ));
+          if (normalized === "utilities/globals") {
+            foundExistingImportDecl = true;
+            if (node.specifiers?.some(s => isIdWithName(s.local || s.id, "__DEV__"))) {
+              return false;
+            }
+            if (!node.specifiers) node.specifiers = [];
+            node.specifiers.push(b.importSpecifier(b.identifier("__DEV__")));
+            return false;
+          }
+        }
+      }
+    });
+
+    if (!foundExistingImportDecl) {
+      // We could modify the AST to include a new import declaration, but since
+      // this code is running at build time, we can simplify things by throwing
+      // here, because we expect invariant and InvariantError to be imported
+      // from the utilities/globals subpackage.
+      throw new Error(`Missing import from "${
+        posix.relative(
+          posix.dirname(relativeFilePath),
+          "utilities/globals",
+        )
+       } in ${relativeFilePath}`);
+    }
+  }
+
   return reprint(ast);
 }
 
-function isIdWithName(node: Node, ...names: string[]) {
-  return n.Identifier.check(node) &&
+function isIdWithName(node: Node | null | undefined, ...names: string[]) {
+  return node && n.Identifier.check(node) &&
     names.some(name => name === node.name);
 }
 

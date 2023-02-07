@@ -11,7 +11,7 @@ import {
   isNodeReadableStream,
   isReadableStream,
   isStreamableBlob,
-} from "../../utilities/common/responseIterator";
+} from "../../utilities";
 
 import asyncIterator from "./iterators/async";
 import nodeStreamIterator from "./iterators/nodeStream";

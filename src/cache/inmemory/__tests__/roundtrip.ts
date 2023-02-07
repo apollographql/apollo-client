@@ -1,3 +1,4 @@
+import { __DEV__ } from "../../../utilities/globals";
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 

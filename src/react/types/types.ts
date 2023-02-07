@@ -85,13 +85,20 @@ export interface QueryDataOptions<TData = any, TVariables extends OperationVaria
 
 export interface QueryHookOptions<TData = any, TVariables extends OperationVariables = OperationVariables>
   extends QueryFunctionOptions<TData, TVariables> {
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
-> extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {}
+> extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {
+}
+
+export interface LazyQueryHookExecOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+> extends LazyQueryHookOptions<TData, TVariables> {
+  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+}
 
 /**
  * suspensePolicy determines how suspense behaves for a refetch. The options are:
@@ -153,7 +160,7 @@ export type QueryTuple<TData, TVariables extends OperationVariables> =
   LazyQueryResultTuple<TData, TVariables>;
 
 export type LazyQueryExecFunction<TData, TVariables extends OperationVariables> = (
-  options?: Partial<LazyQueryHookOptions<TData, TVariables>>,
+  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>,
 ) => Promise<QueryResult<TData, TVariables>>;
 
 export type LazyQueryResultTuple<TData, TVariables extends OperationVariables> = [
@@ -216,7 +223,6 @@ export interface MutationHookOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-  mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface MutationDataOptions<
@@ -292,7 +298,6 @@ export interface SubscriptionHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 > extends BaseSubscriptionOptions<TData, TVariables> {
-  subscription?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface SubscriptionDataOptions<

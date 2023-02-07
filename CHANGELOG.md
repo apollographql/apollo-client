@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.8.0-alpha.6
+
+### Minor Changes
+
+- [#10521](https://github.com/apollographql/apollo-client/pull/10521) [`fbf729414`](https://github.com/apollographql/apollo-client/commit/fbf729414b6322a84158d9864bdfb5b17b2c7d77) Thanks [@benjamn](https://github.com/benjamn)! - Simplify `__DEV__` polyfill to use imports instead of global scope
+
+### Patch Changes
+
+- [#7555](https://github.com/apollographql/apollo-client/pull/7555) [`45562d6fa`](https://github.com/apollographql/apollo-client/commit/45562d6fa20eab658bd86d79d092862ace4e1225) Thanks [@TheCeloReis](https://github.com/TheCeloReis)! - Adds `TVariables` generic to `GraphQLRequest` and `MockedResponse` interfaces.
+
 ## 3.8.0-alpha.5
 
 ### Patch Changes

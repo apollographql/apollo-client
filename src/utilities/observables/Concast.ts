@@ -85,9 +85,12 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
-  // A consumable array of source observables, incrementally consumed
-  // each time this.handlers.complete is called.
-  private sources: Source<T>[];
+  // A consumable array of source observables, incrementally consumed each time
+  // this.handlers.complete is called. This private field is not initialized
+  // until the concast.start method is called, which can happen asynchronously
+  // if a Promise is passed to the Concast constructor, so undefined is a
+  // possible value for this.sources before concast.start is called.
+  private sources: Source<T>[] | undefined;
 
   private start(sources: ConcastSourcesIterable<T>) {
     if (this.sub !== void 0) return;
@@ -185,9 +188,14 @@ export class Concast<T> extends Observable<T> {
     },
 
     complete: () => {
-      const { sub } = this;
+      const { sub, sources = [] } = this;
       if (sub !== null) {
-        const value = this.sources.shift();
+        // If complete is called before concast.start, this.sources may be
+        // undefined, so we use a default value of [] for sources. That works
+        // here because it falls into the if (!value) {...} block, which
+        // appropriately terminates the Concast, even if this.sources might
+        // eventually have been initialized to a non-empty array.
+        const value = sources.shift();
         if (!value) {
           if (sub) setTimeout(() => sub.unsubscribe());
           this.sub = null;

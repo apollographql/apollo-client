@@ -43,7 +43,7 @@ const assertWithObserver = ({
   delay?: number;
   observer: Observer<ApolloQueryResult<any>>;
 }) => {
-  const queryManager = mockQueryManager(reject, {
+  const queryManager = mockQueryManager({
     request: { query: serverQuery || query, variables },
     result: serverResult,
     error,

@@ -20,7 +20,7 @@ export async function readMultipartBody<
     );
   }
   const decoder = new TextDecoder("utf-8");
-  const contentType = response.headers?.get('content-type');
+  const contentType = response.headers?.get("content-type");
   const delimiter = "boundary=";
 
   // parse boundary value and ignore any subsequent name/value pairs after ;
@@ -61,7 +61,9 @@ export async function readMultipartBody<
           contentType &&
           contentType.toLowerCase().indexOf("application/json") === -1
         ) {
-          throw new Error("Unsupported patch content type: application/json is required.");
+          throw new Error(
+            "Unsupported patch content type: application/json is required."
+          );
         }
         const body = message.slice(i);
 
@@ -69,13 +71,30 @@ export async function readMultipartBody<
           const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
           if (
             Object.keys(result).length > 1 ||
-            "data" in result ||
-            "incremental" in result ||
-            "errors" in result
+            ["data", "incremental", "payload", "errors"].some(
+              (val) => val in result
+            )
           ) {
-            // for the last chunk with only `hasNext: false`,
-            // we don't need to call observer.next as there is no data/errors
-            observer.next?.(result);
+            // Here we detect done instead of errors since errors can exist
+            // on other incremental payloads, but we're only interested in
+            // transport errors on subscriptions which are accompanied by
+            // "done": true.
+            if ("payload" in result || "done" in result) {
+              let next = {};
+              if ("payload" in result) {
+                next = { ...result.payload as T };
+              }
+              if ("errors" in result) {
+                // TODO: should we pass `data: null` here? In keeping with
+                // other fetch results with top-level errors.
+                next = { errors: result.errors, data: null }
+              }
+              observer.next?.(next as T);
+            } else {
+              // for the last chunk with only `hasNext: false`
+              // we don't need to call observer.next as there is no data/errors
+              observer.next?.(result);
+            }
           }
         } catch (err) {
           handleError(err, observer);
@@ -108,13 +127,13 @@ export function parseJsonBody<T>(response: Response, bodyText: string): T {
       try {
         return JSON.parse(bodyText);
       } catch (err) {
-        return bodyText
+        return bodyText;
       }
-    }
+    };
     throwServerError(
       response,
       getResult(),
-      `Response not successful: Received status code ${response.status}`,
+      `Response not successful: Received status code ${response.status}`
     );
   }
 

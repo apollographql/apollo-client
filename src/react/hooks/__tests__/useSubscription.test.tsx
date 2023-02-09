@@ -929,4 +929,10 @@ describe('useSubscription Hook', () => {
     expect(warningSpy).toHaveBeenCalledTimes(1);
     warningSpy.mockRestore();
   });
+
+  describe('multipart subscriptions', () => {
+    it('errors?', () => {
+
+    });
+  });
 });

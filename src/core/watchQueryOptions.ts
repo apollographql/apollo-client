@@ -73,7 +73,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /**
    * Context to be passed to link execution chain
    */
-  context?: any;
+  context?: DefaultContext;
 
   /**
    * Specifies the {@link FetchPolicy} to be used for this query
@@ -115,7 +115,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
 /**
  * Watched query options.
  */
-export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
+export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any>
   extends Omit<QueryOptions<TVariables, TData>, 'fetchPolicy'> {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query.
@@ -147,7 +147,7 @@ export interface WatchQueryOptions<TVariables = OperationVariables, TData = any>
   refetchWritePolicy?: RefetchWritePolicy;
 }
 
-export interface NextFetchPolicyContext<TData, TVariables> {
+export interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
   reason:
     | "after-fetch"
     | "variables-changed";
@@ -159,7 +159,7 @@ export interface NextFetchPolicyContext<TData, TVariables> {
 export interface FetchMoreQueryOptions<TVariables, TData = any> {
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   variables?: Partial<TVariables>;
-  context?: any;
+  context?: DefaultContext;
 }
 
 export type UpdateQueryFn<

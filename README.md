@@ -29,6 +29,7 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 |Jeff Auriemma|[@bignimbus](https://github.com/bignimbus)|
 |Hugh Willson|[@hwillson](https://github.com/hwillson)|
 |Jerel Miller|[@jerelmiller](https://github.com/jerelmiller)|
+|Lenz Weber-Tronic|[@phryneas](https://github.com/phryneas)|
 
 ## Who is Apollo?
 

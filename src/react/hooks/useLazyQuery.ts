@@ -23,20 +23,19 @@ const EAGER_METHODS = [
   'subscribeToMore',
 ] as const;
 
-export function useLazyQuery<TData = any, TVariables = OperationVariables>(
+export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
 ): LazyQueryResultTuple<TData, TVariables> {
   const abortControllersRef = useRef(new Set<AbortController>());
-  const internalState = useInternalState(
-    useApolloClient(options && options.client),
-    query,
-  );
 
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
-  const merged = execOptionsRef.current
-    ? mergeOptions(options, execOptionsRef.current)
-    : options;
+  const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
+
+  const internalState = useInternalState<TData, TVariables>(
+    useApolloClient(options && options.client),
+    merged?.query ?? query
+  );
 
   const useQueryResult = internalState.useQuery({
     ...merged,

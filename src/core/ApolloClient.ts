@@ -283,7 +283,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
    */
-  public watchQuery<T = any, TVariables = OperationVariables>(
+  public watchQuery<T = any, TVariables extends OperationVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
@@ -311,7 +311,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query<T = any, TVariables = OperationVariables>(
+  public query<T = any, TVariables extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVariables, T>,
   ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
@@ -342,8 +342,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public mutate<
     TData = any,
-    TVariables = OperationVariables,
-    TContext = DefaultContext,
+    TVariables extends OperationVariables = OperationVariables,
+    TContext extends Record<string, any> = DefaultContext,
     TCache extends ApolloCache<any> = ApolloCache<any>
   >(
     options: MutationOptions<TData, TVariables, TContext>,
@@ -358,7 +358,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe<T = any, TVariables = OperationVariables>(
+  public subscribe<T = any, TVariables extends OperationVariables = OperationVariables>(
     options: SubscriptionOptions<TVariables, T>,
   ): Observable<FetchResult<T>> {
     return this.queryManager.startGraphQLSubscription<T>(options);

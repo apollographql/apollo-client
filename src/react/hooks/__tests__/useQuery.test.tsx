@@ -2,6 +2,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
+import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor, renderHook } from '@testing-library/react';
 import {
   ApolloClient,
@@ -2397,6 +2398,229 @@ describe('useQuery Hook', () => {
       await expect(waitFor(() => {
         expect(updates).not.toEqual(previousUpdates)
       }, { interval: 1, timeout: 20 })).rejects.toThrow()
+    });
+
+    it('should not return partial data from cache on refetch with errorPolicy: none (default) and notifyOnNetworkStatusChange: true', async () => {
+      const query = gql`
+        {
+          dogs {
+            id
+            breed
+          }
+        }
+      `;
+
+      const GET_DOG_DETAILS = gql`
+        query dog($breed: String!) {
+          dog(breed: $breed) {
+            id
+            unexisting
+          }
+          dogs {
+            id
+            breed
+          }
+        }
+      `;
+
+      const dogData = [
+        {
+          "id": "Z1fdFgU",
+          "breed": "affenpinscher",
+          "__typename": "Dog"
+        },
+        {
+          "id": "ZNDtCU",
+          "breed": "airedale",
+          "__typename": "Dog"
+        },
+      ];
+
+      const detailsMock = (breed: string) => ({
+        request: { query: GET_DOG_DETAILS, variables: { breed } },
+        result: {
+          errors: [new GraphQLError(`Cannot query field "unexisting" on type "Dog".`)],
+        },
+      });
+
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { dogs: dogData } },
+        },
+        // use the same mock for the initial query on select change
+        // and subsequent refetch() call
+        detailsMock('airedale'),
+        detailsMock('airedale'),
+      ];
+      const Dogs: React.FC<{
+        onDogSelected: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+      }> = ({ onDogSelected }) => {
+        const { loading, error, data } = useQuery<
+          { dogs: { id: string; breed: string; }[] }
+        >(query);
+
+        if (loading) return <>Loading...</>;
+        if (error) return <>{`Error! ${error.message}`}</>;
+
+        return (
+          <select name="dog" onChange={onDogSelected}>
+            {data?.dogs.map((dog) => (
+              <option key={dog.id} value={dog.breed}>
+                {dog.breed}
+              </option>
+            ))}
+          </select>
+        );
+      };
+
+      const DogDetails: React.FC<{
+        breed: string;
+      }> = ({ breed }) => {
+        const { loading, error, data, refetch, networkStatus } = useQuery(
+          GET_DOG_DETAILS,
+          {
+            variables: { breed },
+            notifyOnNetworkStatusChange: true
+          }
+        );
+        if (networkStatus === 4) return <p>Refetching!</p>;
+        if (loading) return <p>Loading!</p>;
+        return (
+          <div>
+            <div>
+              {data ? 'Partial data rendered' : null}
+            </div>
+
+            <div>
+              {error ? (
+                `Error!: ${error}`
+                ) : (
+                'Rendering!'
+              )}
+            </div>
+            <button onClick={() => refetch()}>Refetch!</button>
+          </div>
+        );
+      };
+
+      const ParentComponent: React.FC = () => {
+        const [selectedDog, setSelectedDog] = useState<null | string>(null);
+        function onDogSelected(event: React.ChangeEvent<HTMLSelectElement>) {
+          setSelectedDog(event.target.value);
+        }
+        return (
+          <MockedProvider mocks={mocks}>
+            <div>
+              {selectedDog && <DogDetails breed={selectedDog} />}
+              <Dogs onDogSelected={onDogSelected} />
+            </div>
+          </MockedProvider>
+        );
+      };
+
+      render(<ParentComponent />);
+
+      // on initial load, the list of dogs populates the dropdown
+      await screen.findByText('affenpinscher');
+
+      // the user selects a different dog from the dropdown which
+      // fires the GET_DOG_DETAILS query, retuning an error
+      const user = userEvent.setup();
+      await user.selectOptions(
+        screen.getByRole('combobox'),
+        screen.getByRole('option', { name: 'airedale' })
+      );
+
+      // With the default errorPolicy of 'none', the error is rendered
+      // and partial data is not
+      await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
+      expect(screen.queryByText(/partial data rendered/i)).toBeNull();
+
+      // When we call refetch...
+      await user.click(screen.getByRole('button', { name: /Refetch!/i }))
+
+      // The error is still present, and partial data still not rendered
+      await screen.findByText('Error!: ApolloError: Cannot query field "unexisting" on type "Dog".')
+      expect(screen.queryByText(/partial data rendered/i)).toBeNull();
+    });
+
+    it('should return partial data from cache on refetch', async () => {
+      const GET_DOG_DETAILS = gql`
+        query dog($breed: String!) {
+          dog(breed: $breed) {
+            id
+          }
+        }
+      `;
+      const detailsMock = (breed: string) => ({
+        request: { query: GET_DOG_DETAILS, variables: { breed } },
+        result: {
+          data: {
+            dog: {
+              "id": "ZNDtCU",
+              "__typename": "Dog"
+            }
+          }
+        },
+      });
+
+      const mocks = [
+        // use the same mock for the initial query on select change
+        // and subsequent refetch() call
+        detailsMock('airedale'),
+        detailsMock('airedale'),
+      ];
+
+      const DogDetails: React.FC<{
+        breed?: string;
+      }> = ({ breed = "airedale" }) => {
+        const { data, refetch, networkStatus } = useQuery(
+          GET_DOG_DETAILS,
+          {
+            variables: { breed },
+            notifyOnNetworkStatusChange: true
+          }
+        );
+        if (networkStatus === 1) return <p>Loading!</p>;
+        return (
+          // Render existing results, but dim the UI until the results
+          // have finished loading...
+          <div style={{ opacity: networkStatus === 4 ? 0.5 : 1 }}>
+            <div>
+              {data ? 'Data rendered' : null}
+            </div>
+            <button onClick={() => refetch()}>Refetch!</button>
+          </div>
+        );
+      };
+
+      const ParentComponent: React.FC = () => {
+        return (
+          <MockedProvider mocks={mocks}>
+            <DogDetails />
+          </MockedProvider>
+        );
+      };
+
+      render(<ParentComponent />);
+
+      const user = userEvent.setup();
+
+      await waitFor(() => {
+        expect(screen.getByText('Loading!')).toBeTruthy();
+      }, { interval: 1 });
+
+      await waitFor(() => {
+        expect(screen.getByText('Data rendered')).toBeTruthy();
+      }, { interval: 1 });
+
+      // When we call refetch...
+      await user.click(screen.getByRole('button', { name: /Refetch!/i }))
+
+      // Data from the cache remains onscreen while network request
+      // is made
+      expect(screen.getByText('Data rendered')).toBeTruthy();
     });
 
     it('should persist errors on re-render with inline onError/onCompleted callbacks',  async () => {

@@ -2,11 +2,8 @@ import { MockedResponse } from './mockLink';
 import mockQueryManager from './mockQueryManager';
 import { ObservableQuery } from '../../../core';
 
-export default (
-  reject: (reason: any) => any,
-  ...mockedResponses: MockedResponse[]
-): ObservableQuery<any> => {
-  const queryManager = mockQueryManager(reject, ...mockedResponses);
+export default (...mockedResponses: MockedResponse[]): ObservableQuery<any> => {
+  const queryManager = mockQueryManager(...mockedResponses);
   const firstRequest = mockedResponses[0].request;
   return queryManager.watchQuery({
     query: firstRequest.query!,

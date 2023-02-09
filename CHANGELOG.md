@@ -1,5 +1,39 @@
 # @apollo/client
 
+## 3.7.7
+
+### Patch Changes
+
+- [#10502](https://github.com/apollographql/apollo-client/pull/10502) [`315faf9ca`](https://github.com/apollographql/apollo-client/commit/315faf9ca5b326852919ab7fc2082d6ba92bcb59) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Log a warning to the console when a mock passed to `MockedProvider` or `MockLink` cannot be matched to a query during a test. This makes it easier to debug user errors in the mock setup, such as typos, especially if the query under test is using an `errorPolicy` set to `ignore`, which makes it difficult to know that a match did not occur.
+
+- [#10499](https://github.com/apollographql/apollo-client/pull/10499) [`9e54f5dfa`](https://github.com/apollographql/apollo-client/commit/9e54f5dfa05fd363e534c432ba8c569bb96a6e35) Thanks [@phryneas](https://github.com/phryneas)! - Allow the execution function returned by `useLazyQuery` to change the query.
+
+- [#10362](https://github.com/apollographql/apollo-client/pull/10362) [`14a56b105`](https://github.com/apollographql/apollo-client/commit/14a56b105fefcbb2ce5daa9fd6924e5decafcc16) Thanks [@mccraveiro](https://github.com/mccraveiro)! - Fix error when server returns an error and we are also querying for a local field
+
+## 3.7.6
+
+### Patch Changes
+
+- [#10470](https://github.com/apollographql/apollo-client/pull/10470) [`47435e879`](https://github.com/apollographql/apollo-client/commit/47435e879ebc867d9fc3de5b6fd5785204b4dbd4) Thanks [@alessbell](https://github.com/alessbell)! - Bumps TypeScript to `4.9.4` (previously `4.7.4`) and updates types to account for changes in TypeScript 4.8 by [propagating contstraints on generic types](https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#unconstrained-generics-no-longer-assignable-to). Technically this makes some types stricter as attempting to pass `null|undefined` into certain functions is now disallowed by TypeScript, but these were never expected runtime values in the first place.
+
+- [#10408](https://github.com/apollographql/apollo-client/pull/10408) [`55ffafc58`](https://github.com/apollographql/apollo-client/commit/55ffafc585e9eb66314755b4f40804b8b8affb13) Thanks [@zlrlo](https://github.com/zlrlo)! - fix: modify BatchHttpLink to have a separate timer for each different batch key
+
+- [#9573](https://github.com/apollographql/apollo-client/pull/9573) [`4a4f48dda`](https://github.com/apollographql/apollo-client/commit/4a4f48dda8dd290ef110aed9e4e73d0c1c977c31) Thanks [@vladar](https://github.com/vladar)! - Improve performance of local resolvers by only executing selection sets that contain an `@client` directive. Previously, local resolvers were executed even when the field did not contain `@client`. While the result was properly discarded, the unncessary work could negatively affect query performance, sometimes signficantly.
+
+## 3.7.5
+
+### Patch Changes
+
+- [#10458](https://github.com/apollographql/apollo-client/pull/10458) [`b5ccef229`](https://github.com/apollographql/apollo-client/commit/b5ccef229046d230e82a68a4834ac09ae1ef2009) Thanks [@lennyburdette](https://github.com/lennyburdette)! - Passes `getServerSnapshot` to `useSyncExternalStore` so that it doesn't trigger a `Missing getServerSnapshot` error when using `useFragment_experimental` on the server.
+
+- [#10471](https://github.com/apollographql/apollo-client/pull/10471) [`895ddcb54`](https://github.com/apollographql/apollo-client/commit/895ddcb546b5692cd53caae1b604412728641374) Thanks [@alessbell](https://github.com/alessbell)! - More robust type definition for `headers` property passed to `createHttpLink`
+
+- [#10321](https://github.com/apollographql/apollo-client/pull/10321) [`bbaa3ef2d`](https://github.com/apollographql/apollo-client/commit/bbaa3ef2d95a03e2453ef86a25096c314fbd8998) Thanks [@alessbell](https://github.com/alessbell)! - Refetch should not return partial data with `errorPolicy: none` and `notifyOnNetworkStatusChange: true`.
+
+- [#10402](https://github.com/apollographql/apollo-client/pull/10402) [`0b07aa955`](https://github.com/apollographql/apollo-client/commit/0b07aa955bab2e929f21590b565507a66f930539) Thanks [@Hugodby](https://github.com/Hugodby)! - Improve context types
+
+- [#10469](https://github.com/apollographql/apollo-client/pull/10469) [`328c58f90`](https://github.com/apollographql/apollo-client/commit/328c58f90d3fd985a58a68d8ba07f7c03f9808f6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add generic type defaults when using `useFragment` to allow passing `TData` directly to the function without needing to specify `TVars`.
+
 ## 3.7.4
 
 ### Patch Changes

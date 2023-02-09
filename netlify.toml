@@ -3,11 +3,11 @@
   command = "npm run typedoc"
 
 [build.environment]
-  NODE_VERSION = "16"
+  NODE_VERSION = "18"
 
 [context.deploy-preview.build]
   base = "docs"
-  ignore = "exit 1"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
   command = """\
   cd ../
   rm -rf monodocs

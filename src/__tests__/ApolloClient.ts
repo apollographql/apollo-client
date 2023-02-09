@@ -2245,7 +2245,7 @@ describe('ApolloClient', () => {
             query: {kind: Kind.DOCUMENT, definitions: []},
             variables: {foo: 'bar'},
             errorPolicy: 'none',
-            context: null,
+            context: undefined,
             fetchPolicy: 'cache-first',
             pollInterval: 100,
             notifyOnNetworkStatusChange: true,

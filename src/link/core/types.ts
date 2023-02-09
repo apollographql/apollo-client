@@ -1,4 +1,5 @@
 import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
+import { DefaultContext } from "../../core";
 export { DocumentNode };
 
 import { Observable } from "../../utilities";
@@ -56,11 +57,11 @@ export type ExecutionPatchResult<
   | ExecutionPatchInitialResult<TData, TExtensions>
   | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
-export interface GraphQLRequest {
+export interface GraphQLRequest<TVariables = Record<string, any>> {
   query: DocumentNode;
-  variables?: Record<string, any>;
+  variables?: TVariables;
   operationName?: string;
-  context?: Record<string, any>;
+  context?: DefaultContext;
   extensions?: Record<string, any>;
 }
 
@@ -69,13 +70,13 @@ export interface Operation {
   variables: Record<string, any>;
   operationName: string;
   extensions: Record<string, any>;
-  setContext: (context: Record<string, any>) => Record<string, any>;
-  getContext: () => Record<string, any>;
+  setContext: (context: DefaultContext) => DefaultContext;
+  getContext: () => DefaultContext;
 }
 
 export interface SingleExecutionResult<
   TData = Record<string, any>,
-  TContext = Record<string, any>,
+  TContext = DefaultContext,
   TExtensions = Record<string, any>
 > extends ExecutionResult<TData, TExtensions> {
   data?: Data<TData>;

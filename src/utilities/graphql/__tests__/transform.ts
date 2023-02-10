@@ -947,7 +947,7 @@ describe('query transforms', () => {
   });
 });
 
-describe('removeClientSetsFromDocument', () => {
+describe.only('removeClientSetsFromDocument', () => {
   it('should remove @client fields from document', () => {
     const query = gql`
       query Author {
@@ -982,7 +982,7 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it("should remove @client and __typename only fragment", () => {
+  it("should remove @client and __typename only fragment when query precedes fragment", () => {
     const query = gql`
       query {
         author {
@@ -1009,7 +1009,34 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it("should not remove __typename only fragment (without @client)", () => {
+  it.only("should remove @client and __typename only fragment when fragment precedes query", () => {
+    const query = gql`
+      fragment toBeRemoved on Author {
+        __typename
+        isLoggedIn @client
+      }
+
+      query {
+        author {
+          name
+          ...toBeRemoved
+        }
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove __typename only fragment (without @client) when query precedes fragment", () => {
     const query = gql`
       query {
         author {
@@ -1033,6 +1060,36 @@ describe('removeClientSetsFromDocument', () => {
 
       fragment authorInfo on Author {
         __typename
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove __typename only fragment (without @client) when fragment precedes query", () => {
+    const query = gql`
+      fragment authorInfo on Author {
+        __typename
+      }
+
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+    `;
+
+    const expected = gql`
+      fragment authorInfo on Author {
+        __typename
+      }
+      query {
+        author {
+          name
+          ...authorInfo
+        }
       }
     `;
 

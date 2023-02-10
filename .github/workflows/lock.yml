@@ -17,6 +17,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+          exclude-issue-created-after: '2018-01-01T00:00:00Z'
           issue-inactive-days: '30'
           exclude-any-issue-labels: '💬 discussion'
           # issue-comment: >
@@ -24,6 +25,7 @@ jobs:
 
           #   Please note this issue tracker is not a help forum. We recommend using [StackOverflow](https://stackoverflow.com/questions/tagged/apollo-client) or our [discord server](https://discord.gg/graphos) for questions.
 
+          exclude-pr-created-after: '2018-01-01T00:00:00Z'
           pr-inactive-days: '30'
           exclude-any-pr-labels: '💬 discussion'
           # pr-comment: >

@@ -386,6 +386,7 @@ Array [
   "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
+  "isArray",
   "isDocumentNode",
   "isField",
   "isInlineFragment",

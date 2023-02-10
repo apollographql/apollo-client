@@ -1009,8 +1009,7 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  // TODO(FIXME): https://github.com/apollographql/apollo-client/issues/10539
-  it.skip("should remove @client and __typename only fragment when fragment precedes query", () => {
+  it("should remove @client and __typename only fragment when fragment precedes query", () => {
     const query = gql`
       fragment toBeRemoved on Author {
         __typename
@@ -1037,7 +1036,7 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it("should not remove __typename only fragment (without @client) when query precedes fragment", () => {
+  it("should remove __typename only fragment (without @client) when query precedes fragment", () => {
     const query = gql`
       query {
         author {
@@ -1055,12 +1054,7 @@ describe('removeClientSetsFromDocument', () => {
       query {
         author {
           name
-          ...authorInfo
         }
-      }
-
-      fragment authorInfo on Author {
-        __typename
       }
     `;
 
@@ -1068,7 +1062,7 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it("should not remove __typename only fragment (without @client) when fragment precedes query", () => {
+  it("should remove __typename only fragment (without @client) when fragment precedes query", () => {
     const query = gql`
       fragment authorInfo on Author {
         __typename
@@ -1083,13 +1077,9 @@ describe('removeClientSetsFromDocument', () => {
     `;
 
     const expected = gql`
-      fragment authorInfo on Author {
-        __typename
-      }
       query {
         author {
           name
-          ...authorInfo
         }
       }
     `;

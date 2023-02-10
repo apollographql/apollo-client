@@ -5,8 +5,6 @@ export { DocumentNode };
 import { Observable } from "../../utilities";
 
 export type Path = ReadonlyArray<string | number>;
-type Data<T> = T | null | undefined;
-
 
 interface ExecutionPatchResultBase {
   hasNext?: boolean;
@@ -17,7 +15,7 @@ export interface ExecutionPatchInitialResult<
   TExtensions = Record<string, any>
 > extends ExecutionPatchResultBase {
   // if data is present, incremental is not
-  data: Data<TData>;
+  data: TData | null | undefined;
   incremental?: never;
   errors?: ReadonlyArray<GraphQLError>;
   extensions?: TExtensions;
@@ -29,7 +27,7 @@ export interface IncrementalPayload<
 > {
   // data and path must both be present
   // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
-  data: Data<TData>;
+  data: TData | null;
   label?: string;
   path: Path;
   errors?: ReadonlyArray<GraphQLError>;
@@ -79,7 +77,7 @@ export interface SingleExecutionResult<
   TContext = DefaultContext,
   TExtensions = Record<string, any>
 > extends ExecutionResult<TData, TExtensions> {
-  data?: Data<TData>;
+  data?: TData | null;
   context?: TContext;
 }
 

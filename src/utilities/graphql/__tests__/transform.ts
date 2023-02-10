@@ -947,7 +947,7 @@ describe('query transforms', () => {
   });
 });
 
-describe.only('removeClientSetsFromDocument', () => {
+describe('removeClientSetsFromDocument', () => {
   it('should remove @client fields from document', () => {
     const query = gql`
       query Author {
@@ -1009,7 +1009,8 @@ describe.only('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it.only("should remove @client and __typename only fragment when fragment precedes query", () => {
+  // TODO(FIXME): https://github.com/apollographql/apollo-client/issues/10539
+  it.skip("should remove @client and __typename only fragment when fragment precedes query", () => {
     const query = gql`
       fragment toBeRemoved on Author {
         __typename

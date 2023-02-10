@@ -207,7 +207,6 @@ export function removeDirectivesFromDocument(
 
       FragmentSpread: {
         enter(node) {
-          console.log(node.name.value, fragmentSpreadsInUse[node.name.value]);
           // Keep track of referenced fragment spreads. This is used to
           // determine if top level fragment definitions should be removed.
           fragmentSpreadsInUse[node.name.value] = true;

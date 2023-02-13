@@ -17,7 +17,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           log-output: true
-          process-only: 'issues'
 
           exclude-issue-created-after: '2018-01-01T00:00:00Z'
           issue-inactive-days: '30'

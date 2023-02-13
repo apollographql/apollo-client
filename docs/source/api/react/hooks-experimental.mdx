@@ -104,7 +104,7 @@ const suspenseCache = new SuspenseCache();
 <ApolloProvider suspenseCache={suspenseCache} />
 ```
 
-Write queries using `useSuspenseQuery_experimental`. Ensure the component is wrapped with React's [`Suspense`](https://beta.reactjs.org/reference/react/Suspense) component. 
+Write queries using `useSuspenseQuery_experimental`. Ensure the component is wrapped with React's [`Suspense`](https://beta.reactjs.org/reference/react/Suspense) component. Note that the hook returns only `data` and `error`: since Suspense provides the tools to manage our application's loading states, `useSuspenseQuery_experimental` does not return a `loading` boolean.
 
 See the [API reference](#usesuspensequery_experimental-api) for supported options.
 
@@ -129,7 +129,7 @@ function App() {
 }
 
 function List() {
-  const { loading, data } = useSuspenseQuery_experimental(listQuery);
+  const { data } = useSuspenseQuery_experimental(listQuery);
 
   return (
     <ol>

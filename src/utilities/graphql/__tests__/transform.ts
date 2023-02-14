@@ -1087,4 +1087,238 @@ describe('removeClientSetsFromDocument', () => {
     const doc = removeClientSetsFromDocument(query)!;
     expect(print(doc)).toBe(print(expected));
   });
+
+  it("should not remove fragment referenced by fragment used by operation", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should remove __typename only fragment after @client removal", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo @client
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+
+    const queryInAnotherOrder = gql`
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo @client
+      }
+
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+    `;
+
+    const docInAnotherOrder = removeClientSetsFromDocument(queryInAnotherOrder)!;
+    expect(print(docInAnotherOrder)).toBe(print(expected));
+  });
+
+  it("should keep moreAuthorInfo fragment if used elsewhere", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+          ...moreAuthorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo @client
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+          ...moreAuthorInfo
+        }
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+
+    const queryInAnotherOrder = gql`
+      fragment authorInfo on Author {
+        ...moreAuthorInfo @client
+        __typename
+      }
+
+      query {
+        author {
+          name
+          ...authorInfo
+          ...moreAuthorInfo
+        }
+      }
+
+      fragment moreAuthorInfo on Author {
+        isLoggedIn @client
+        extraDetails
+      }
+    `;
+
+    const docInAnotherOrder = removeClientSetsFromDocument(queryInAnotherOrder)!;
+    expect(print(docInAnotherOrder)).toBe(print(expected));
+  });
+
+  it("should remove unused variables in nested fragments", () => {
+    const query = gql`
+      query SomeQuery ($someVar: String) {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField {
+          ...SomeOtherFragment
+        }
+      }
+
+      fragment SomeOtherFragment on SomeType {
+        someField @client (someArg: $someVar)
+      }
+    `;
+
+    const expected = gql`
+      query SomeQuery {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove variables used in unremoved parts of query", () => {
+    const query = gql`
+      query SomeQuery ($someVar: String) {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField {
+          ...SomeOtherFragment
+        }
+      }
+
+      fragment SomeOtherFragment on SomeType {
+        someField(someArg: $someVar) @client
+        yetAnotherField(someArg: $someVar)
+      }
+    `;
+
+    const expected = gql`
+      query SomeQuery ($someVar: String) {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField {
+          ...SomeOtherFragment
+        }
+      }
+
+      fragment SomeOtherFragment on SomeType {
+        yetAnotherField(someArg: $someVar)
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
 });

@@ -84,13 +84,20 @@ function nullIfDocIsEmpty(doc: DocumentNode) {
 function getDirectiveMatcher(
   directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
 ) {
-  return function directiveMatcher(directive: DirectiveNode) {
-    return directives.some(
-      dir =>
-        (dir.name && dir.name === directive.name.value) ||
-        (dir.test && dir.test(directive)),
-    );
-  };
+  const nameSet = new Set<string>();
+  const tests: Array<(directive: DirectiveNode) => boolean> = [];
+  directives.forEach(directive => {
+    if (directive.name) {
+      nameSet.add(directive.name);
+    } else if (directive.test) {
+      tests.push(directive.test);
+    }
+  });
+
+  return (directive: DirectiveNode) => (
+    nameSet.has(directive.name.value) ||
+    tests.some(test => test(directive))
+  );
 }
 
 function shouldRemoveField(

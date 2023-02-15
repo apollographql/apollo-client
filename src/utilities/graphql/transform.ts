@@ -113,10 +113,12 @@ interface InternalInUseInfo {
   // Populated by the populateTransitiveVars helper function below.
   transitiveVars?: Set<string>;
 }
-function makeInUseGetterFunction<TKey>() {
+function makeInUseGetterFunction<TKey>(defaultKey: TKey) {
   const map = new Map<TKey, InternalInUseInfo>();
 
-  return function inUseGetterFunction(key: TKey): InternalInUseInfo {
+  return function inUseGetterFunction(
+    key: TKey = defaultKey
+  ): InternalInUseInfo {
     let inUse = map.get(key);
     if (!inUse) {
       map.set(key, inUse = {
@@ -136,8 +138,12 @@ export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
 ): DocumentNode | null {
-  const getInUseByOperationName = makeInUseGetterFunction<string>();
-  const getInUseByFragmentName = makeInUseGetterFunction<string>();
+  // Passing empty strings to makeInUseGetterFunction means we handle anonymous
+  // operations as if their names were "". Anonymous fragment definitions are
+  // not supposed to be possible, but the same default naming strategy seems
+  // appropriate for that case as well.
+  const getInUseByOperationName = makeInUseGetterFunction<string>("");
+  const getInUseByFragmentName = makeInUseGetterFunction<string>("");
   const getInUse = (
     ancestors: readonly (ASTNode | readonly ASTNode[])[],
   ): InternalInUseInfo | null => {
@@ -149,7 +155,7 @@ export function removeDirectivesFromDocument(
       if (isArray(ancestor)) continue;
       if (ancestor.kind === Kind.OPERATION_DEFINITION) {
         // If an operation is anonymous, we use the empty string as its key.
-        return getInUseByOperationName(ancestor.name ? ancestor.name.value : "");
+        return getInUseByOperationName(ancestor.name && ancestor.name.value);
       }
       if (ancestor.kind === Kind.FRAGMENT_DEFINITION) {
         return getInUseByFragmentName(ancestor.name.value);
@@ -321,7 +327,7 @@ export function removeDirectivesFromDocument(
   docWithoutDirectiveSubtrees.definitions.forEach(def => {
     if (def.kind === Kind.OPERATION_DEFINITION) {
       populateTransitiveVars(
-        getInUseByOperationName(def.name ? def.name.value : "")
+        getInUseByOperationName(def.name && def.name.value)
       ).fragmentSpreads.forEach(childFragmentName => {
         allFragmentNamesUsed.add(childFragmentName);
       });
@@ -383,7 +389,7 @@ export function removeDirectivesFromDocument(
         if (node.variableDefinitions) {
           const usedVariableNames = populateTransitiveVars(
             // If an operation is anonymous, we use the empty string as its key.
-            getInUseByOperationName(node.name ? node.name.value : "")
+            getInUseByOperationName(node.name && node.name.value)
           ).transitiveVars!;
 
           // According to the GraphQL spec, all variables declared by an

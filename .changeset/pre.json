@@ -5,8 +5,8 @@
     "@apollo/client": "3.7.2"
   },
   "changesets": [
+    "dry-radios-help",
     "early-pens-retire",
-    "gorgeous-buses-laugh",
     "heavy-ties-sneeze",
     "hungry-eagles-kick",
     "lazy-teachers-sell",
@@ -15,6 +15,7 @@
     "short-bikes-mate",
     "sixty-trains-sniff",
     "small-timers-shake",
+    "warm-rivers-develop",
     "wild-mice-nail"
   ]
 }

@@ -15,6 +15,7 @@ import {
   ASTNode,
   Kind,
   ASTVisitor,
+  InlineFragmentNode,
 } from 'graphql';
 
 import {
@@ -100,21 +101,6 @@ function getDirectiveMatcher(
   );
 }
 
-function shouldRemoveField(
-  directives: RemoveDirectiveConfig[],
-  nodeDirectives: FieldNode["directives"]
-) {
-  if (!nodeDirectives) return false;
-  const hasRemoveDirective = directives.some(directive => directive.remove);
-  if (
-    hasRemoveDirective &&
-    nodeDirectives.some(getDirectiveMatcher(directives))
-  ) {
-    return true;
-  }
-  return false;
-}
-
 // Helper interface and function used by removeDirectivesFromDocument to keep
 // track of variable references and fragments spreads found within a given
 // operation or fragment definition.
@@ -180,12 +166,37 @@ export function removeDirectivesFromDocument(
     }
   }
 
-
   const directiveMatcher = getDirectiveMatcher(directives);
+  const hasRemoveDirective = directives.some(directive => directive.remove);
+  const shouldRemoveField = (
+    nodeDirectives: FieldNode["directives"]
+  ) => (
+    hasRemoveDirective &&
+    nodeDirectives &&
+    nodeDirectives.some(directiveMatcher)
+  );
 
+  // Any time the first traversal of the document below makes a change like
+  // removing a fragment (by returning null), this variable should be set to
+  // true. Once it becomes true, it should never be set to false again. If this
+  // variable remains false throughout the traversal, then we can return the
+  // original doc immediately without any modifications.
   let firstVisitMadeChanges = false;
 
+  const fieldOrInlineFragmentVisitor: ASTVisitor = {
+    enter(node: FieldNode | InlineFragmentNode) {
+      if (shouldRemoveField(node.directives)) {
+        firstVisitMadeChanges = true;
+        return null;
+      }
+    },
+  };
+
   const docWithoutDirectiveSubtrees = visit(doc, {
+    // These two AST node types share the same implementation, defined above.
+    Field: fieldOrInlineFragmentVisitor,
+    InlineFragment: fieldOrInlineFragmentVisitor,
+
     VariableDefinition: {
       enter() {
         // VariableDefinition nodes do not count as variables in use, though
@@ -207,7 +218,7 @@ export function removeDirectivesFromDocument(
 
     FragmentSpread: {
       enter(node, _key, _parent, _path, ancestors) {
-        if (shouldRemoveField(directives, node.directives)) {
+        if (shouldRemoveField(node.directives)) {
           firstVisitMadeChanges = true;
           return null;
         }
@@ -220,24 +231,6 @@ export function removeDirectivesFromDocument(
         // by the logic below, but we can't control the relative order of those
         // events, so we have to postpone the removal of dangling FragmentSpread
         // nodes until after the current visit of the document has finished.
-      },
-    },
-
-    Field: {
-      enter(node) {
-        if (shouldRemoveField(directives, node.directives)) {
-          firstVisitMadeChanges = true;
-          return null;
-        }
-      },
-    },
-
-    InlineFragment: {
-      enter(node) {
-        if (shouldRemoveField(directives, node.directives)) {
-          firstVisitMadeChanges = true;
-          return null;
-        }
       },
     },
 

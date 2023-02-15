@@ -1,4 +1,4 @@
-import '../../utilities/globals';
+import { __DEV__ } from '../../utilities/globals';
 
 import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 

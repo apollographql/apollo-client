@@ -1,8 +1,7 @@
-import '../../utilities/globals';
+import { invariant } from '../../utilities/globals';
 import { useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { invariant } from '../../utilities/globals'
 import { equal } from '@wry/equality';
 
 import { DocumentType, verifyDocumentType } from '../parser';

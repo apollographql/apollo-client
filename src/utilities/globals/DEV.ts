@@ -1,29 +1,20 @@
 import global from "./global";
 import { maybe } from "./maybe";
 
-// To keep string-based find/replace minifiers from messing with __DEV__ inside
-// string literals or properties like global.__DEV__, we construct the "__DEV__"
-// string in a roundabout way that won't be altered by find/replace strategies.
-const __ = "__";
-const GLOBAL_KEY = [__, __].join("DEV");
+export default (
+  "__DEV__" in global
+    // We want it to be possible to set __DEV__ globally to control the result
+    // of this code, so it's important to check global.__DEV__ instead of
+    // assuming a naked reference like __DEV__ refers to global scope, since
+    // those references could be replaced with true or false by minifiers.
+    ? Boolean(global.__DEV__)
 
-function getDEV() {
-  try {
-    return Boolean(__DEV__);
-  } catch {
-    Object.defineProperty(global, GLOBAL_KEY, {
-      // In a buildless browser environment, maybe(() => process.env.NODE_ENV)
-      // evaluates as undefined, so __DEV__ becomes true by default, but can be
-      // initialized to false instead by a script/module that runs earlier.
-      value: maybe(() => process.env.NODE_ENV) !== "production",
-      enumerable: false,
-      configurable: true,
-      writable: true,
-    });
-    // Using computed property access rather than global.__DEV__ here prevents
-    // string-based find/replace strategies from munging this to global.false:
-    return (global as any)[GLOBAL_KEY];
-  }
-}
-
-export default getDEV();
+    // In a buildless browser environment, maybe(() => process.env.NODE_ENV)
+    // evaluates to undefined, so __DEV__ becomes true by default, but can be
+    // initialized to false instead by a script/module that runs earlier.
+    //
+    // If you use tooling to replace process.env.NODE_ENV with a string like
+    // "development", this code will become something like maybe(() =>
+    // "development") !== "production", which also works as expected.
+    : maybe(() => process.env.NODE_ENV) !== "production"
+);

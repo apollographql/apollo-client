@@ -439,6 +439,77 @@ describe('useLazyQuery Hook', () => {
     });
   });
 
+
+  it("changing queries", async () => {
+    const query1 = gql`
+      query {
+        hello
+      }
+    `;
+    const query2 = gql`
+      query {
+        name
+      }
+    `;
+    const mocks = [
+      {
+        request: { query: query1 },
+        result: { data: { hello: "world" } },
+      },
+      {
+        request: { query: query2 },
+        result: { data: { name: "changed" } },
+      },
+    ];
+
+    const cache = new InMemoryCache();
+    const { result } = renderHook(() => useLazyQuery(query1), {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      ),
+    });
+
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    const execute = result.current[0];
+
+    setTimeout(() => execute());
+
+    await waitFor(
+      () => {
+        expect(result.current[1].loading).toBe(true);
+      },
+      { interval: 1 }
+    );
+
+    await waitFor(
+      () => {
+        expect(result.current[1].loading).toBe(false);
+      },
+      { interval: 1 }
+    );
+    expect(result.current[1].data).toEqual({ hello: "world" });
+
+    setTimeout(() => execute({ query: query2 }));
+
+    await waitFor(
+      () => {
+        expect(result.current[1].loading).toBe(true);
+      },
+      { interval: 1 }
+    );
+
+    await waitFor(
+      () => {
+        expect(result.current[1].loading).toBe(false);
+      },
+      { interval: 1 }
+    );
+    expect(result.current[1].data).toEqual({ name: "changed" });
+  });
+
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
     const mocks = [
       {

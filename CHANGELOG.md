@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.8.0-alpha.7
+
+### Minor Changes
+
+- [#10527](https://github.com/apollographql/apollo-client/pull/10527) [`0cc7e2e19`](https://github.com/apollographql/apollo-client/commit/0cc7e2e194f84e137a502395f26acdaef392ecae) Thanks [@phryneas](https://github.com/phryneas)! - Remove the `query`/`mutation`/`subscription` option from hooks that already take that value as their first argument.
+
+- [#10506](https://github.com/apollographql/apollo-client/pull/10506) [`2dc2e1d4f`](https://github.com/apollographql/apollo-client/commit/2dc2e1d4f77318d8a4c29445344b4f8c5b08b7e3) Thanks [@phryneas](https://github.com/phryneas)! - prevent accidental widening of inferred TData and TVariables generics for query hook option arguments
+
 ## 3.8.0-alpha.6
 
 ### Minor Changes

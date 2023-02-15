@@ -1,0 +1,139 @@
+<table class="field-table api-ref">
+
+<thead>
+  <tr>
+    <td>Name /<br/>Type</td>
+    <td>Description</td>
+  </tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td colspan="2">
+
+**Operation result**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `data`
+
+`TData`
+</td>
+<td>
+
+An object containing the result of your GraphQL query after it completes.
+
+This value might be `undefined` if a query results in one or more errors (depending on the query's `errorPolicy`).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `error`
+
+`ApolloError`
+</td>
+<td>
+
+If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
+
+This property can be ignored when using the default `errorPolicy` or an `errorPolicy` of `none`. The hook will throw the error instead of setting this property.
+
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+
+**Network info**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `client`
+
+`ApolloClient`
+</td>
+
+<td>
+
+The instance of Apollo Client that executed the query.
+
+Can be useful for manually executing followup queries or writing data to the cache.
+
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+
+**Helper functions**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `refetch`
+
+`(variables?: Partial<TVariables>) => Promise<ApolloQueryResult>`
+</td>
+
+<td>
+
+A function that enables you to re-execute the query, optionally passing in new `variables`.
+
+To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request). 
+
+Calling this function will cause the component to re-suspend, unless the `suspensePolicy` option is set to `initial`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `fetchMore`
+
+`({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult>`
+</td>
+
+<td>
+
+A function that helps you fetch the next set of results for a [paginated list field](/react/pagination/core-api/).
+
+Calling this function will cause the component to re-suspend, unless the `suspensePolicy` option is set to `initial`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `subscribeToMore`
+
+`(options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function}) => () => void`
+</td>
+
+<td>
+
+A function that enables you to execute a [subscription](/react/data/subscriptions/), usually to subscribe to specific fields that were included in the query.
+
+This function returns _another_ function that you can call to terminate the subscription.
+
+</td>
+</tr>
+
+</tbody>
+</table>

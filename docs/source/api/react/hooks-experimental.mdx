@@ -5,6 +5,8 @@ description: Apollo Client experimental react hooks API reference
 
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
 import UseFragmentResult from '../../../shared/useFragment-result.mdx';
+import UseSuspenseQueryOptions from '../../../shared/useSuspenseQuery-options.mdx';
+import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
 
 ## `useFragment_experimental`
 
@@ -81,3 +83,90 @@ The `useFragment_experimental` hook accepts the following options:
 #### Result
 
 <UseFragmentResult />
+
+## `useSuspenseQuery_experimental`
+
+### Installation
+
+> ⚠️ **The `useSuspenseQuery_experimental` hook is currently at the [alpha stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+
+Beginning with version `3.8.0-alpha.0`, Apollo Client Web has alpha support for the `useSuspenseQuery_experimental` hook, which works with React's [Suspense](https://beta.reactjs.org/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@alpha`.
+
+### Using `useSuspenseQuery_experimental`
+
+Create and provide a `SuspenseCache` instance to your `ApolloProvider`.
+
+```js
+import { SuspenseCache } from '@apollo/client';
+
+const suspenseCache = new SuspenseCache();
+
+<ApolloProvider suspenseCache={suspenseCache} />
+```
+
+Write queries using `useSuspenseQuery_experimental`. Ensure the component is wrapped with React's [`Suspense`](https://beta.reactjs.org/reference/react/Suspense) component. Note that the hook returns only `data` and `error`: since Suspense provides the tools to manage our application's loading states, `useSuspenseQuery_experimental` does not return a `loading` boolean.
+
+See the [API reference](#usesuspensequery_experimental-api) for supported options.
+
+```jsx
+import { Suspense } from 'react';
+import { useSuspenseQuery_experimental } from '@apollo/client';
+
+const listQuery = gql`
+  query {
+    list {
+      id
+    }
+  }
+`;
+
+function App() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <List />
+    </Suspense>
+  );
+}
+
+function List() {
+  const { data } = useSuspenseQuery_experimental(listQuery);
+
+  return (
+    <ol>
+      {data.list.map(item => <Item key={item.id} id={item.id}/>)}
+    </ol>
+  );
+}
+
+```
+
+### `useSuspenseQuery_experimental` API
+
+#### Function Signature
+
+```ts
+function useSuspenseQuery_experimental<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode,
+  options?: SuspenseQueryHookOptions<TData, TVariables>,
+): UseSuspenseQueryResult<TData, TVariables> {}
+```
+
+#### Params
+
+##### `query`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
+
+
+##### `options`
+
+<UseSuspenseQueryOptions />
+
+#### Result
+
+<UseSuspenseQueryResult />

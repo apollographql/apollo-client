@@ -14,10 +14,6 @@
 
 - [#10521](https://github.com/apollographql/apollo-client/pull/10521) [`fbf729414`](https://github.com/apollographql/apollo-client/commit/fbf729414b6322a84158d9864bdfb5b17b2c7d77) Thanks [@benjamn](https://github.com/benjamn)! - Simplify `__DEV__` polyfill to use imports instead of global scope
 
-### Patch Changes
-
-- [#7555](https://github.com/apollographql/apollo-client/pull/7555) [`45562d6fa`](https://github.com/apollographql/apollo-client/commit/45562d6fa20eab658bd86d79d092862ace4e1225) Thanks [@TheCeloReis](https://github.com/TheCeloReis)! - Adds `TVariables` generic to `GraphQLRequest` and `MockedResponse` interfaces.
-
 ## 3.8.0-alpha.5
 
 ### Patch Changes
@@ -59,6 +55,15 @@
 - [#10229](https://github.com/apollographql/apollo-client/pull/10229) [`4f73c5ca1`](https://github.com/apollographql/apollo-client/commit/4f73c5ca15d367aa23f02018d062f221c4506a4d) Thanks [@alessbell](https://github.com/alessbell)! - Avoid calling `useQuery` `onCompleted` for cache writes
 
 - [#10334](https://github.com/apollographql/apollo-client/pull/10334) [`7d923939d`](https://github.com/apollographql/apollo-client/commit/7d923939dd7e6db7d69f04f598c666104b076e78) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Better handle deferred queries that have cached or partial cached data for them
+- [#10526](https://github.com/apollographql/apollo-client/pull/10526) [`1d13de4f1`](https://github.com/apollographql/apollo-client/commit/1d13de4f190150e96d61a9e987274ee6c249dbef) Thanks [@benjamn](https://github.com/benjamn)! - Tolerate undefined `concast.sources` if `complete` called earlier than `concast.start`
+
+- [#10497](https://github.com/apollographql/apollo-client/pull/10497) [`8a883d8a1`](https://github.com/apollographql/apollo-client/commit/8a883d8a1c8899f94a3e2ae09cb2069bde2b2150) Thanks [@nevir](https://github.com/nevir)! - Update `SingleExecutionResult` and `IncrementalPayload`'s `data` types such that they no longer include `undefined`, which was not a valid runtime value, to fix errors when TypeScript's `exactOptionalPropertyTypes` is enabled.
+
+## 3.7.8
+
+### Patch Changes
+
+- [#7555](https://github.com/apollographql/apollo-client/pull/7555) [`45562d6fa`](https://github.com/apollographql/apollo-client/commit/45562d6fa20eab658bd86d79d092862ace4e1225) Thanks [@TheCeloReis](https://github.com/TheCeloReis)! - Adds `TVariables` generic to `GraphQLRequest` and `MockedResponse` interfaces.
 
 ## 3.7.7
 

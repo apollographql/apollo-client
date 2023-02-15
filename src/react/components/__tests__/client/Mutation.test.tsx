@@ -1484,8 +1484,15 @@ describe('General Mutation testing', () => {
     );
 
     await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => didError)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(didError).toBe(true);
     });
+
     console.log = errorLogger;
   });
 
@@ -1568,6 +1575,12 @@ describe('General Mutation testing', () => {
     );
 
     await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => didError)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(didError).toBe(true);
     });
     console.log = errorLogger;
@@ -1582,7 +1595,7 @@ describe('General Mutation testing', () => {
       const checker = () => {
         setTimeout(() => {
           success = true;
-          expect(onCompletedFn).toHaveBeenCalledWith(data, expect.objectContaining({context}));
+          expect(onCompletedFn).toHaveBeenCalledWith(data, expect.objectContaining({ context }));
         }, 100);
       };
 
@@ -1603,6 +1616,8 @@ describe('General Mutation testing', () => {
                     createTodo({ context }).finally(() => {
                       finished = true;
                     });
+                    expect(onCompletedFn).toHaveBeenCalledWith
+                    // eslint-disable-next-line testing-library/await-async-utils
                     this.setState({ called: true }, checker);
                   });
                   return null;
@@ -1620,9 +1635,21 @@ describe('General Mutation testing', () => {
       );
 
       await waitFor(() => {
+        // TODO(fixme): The following line fixes the RTL lint rule error:
+        //
+        // expect(waitFor(() => finished)).resolves.toBe(true);
+        //
+        // ...however it also causes the test to fail against React 17.
+        // eslint-disable-next-line testing-library/await-async-utils
         expect(finished).toBe(true);
       }, { interval: 1 });
       await waitFor(() => {
+        // TODO(fixme): The following line fixes the RTL lint rule error:
+        //
+        // expect(waitFor(() => success)).resolves.toBe(true);
+        //
+        // ...however it also causes the test to fail against React 17.
+        // eslint-disable-next-line testing-library/await-async-utils
         expect(success).toBe(true);
       }, { interval: 1 });
     });
@@ -1665,10 +1692,22 @@ describe('General Mutation testing', () => {
     );
 
     await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => onErrorCalled)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(onErrorCalled).toBe(true);
-    });
+    }, { interval: 1 });
     await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => finished)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(finished).toBe(true);
-    });
+    }, { interval: 1 });
   });
 });

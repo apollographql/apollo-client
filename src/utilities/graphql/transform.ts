@@ -116,7 +116,7 @@ interface InternalInUseInfo {
 function makeInUseGetterFunction<TKey>() {
   const map = new Map<TKey, InternalInUseInfo>();
 
-  return function getInUse(key: TKey): InternalInUseInfo {
+  return function inUseGetterFunction(key: TKey): InternalInUseInfo {
     let inUse = map.get(key);
     if (!inUse) {
       map.set(key, inUse = {

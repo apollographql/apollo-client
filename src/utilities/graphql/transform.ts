@@ -56,9 +56,9 @@ export type RemoveVariableDefinitionConfig = RemoveNodeConfig<
 >;
 
 const TYPENAME_FIELD: FieldNode = {
-  kind: 'Field' as Kind.FIELD,
+  kind: Kind.FIELD,
   name: {
-    kind: 'Name' as Kind.NAME,
+    kind: Kind.NAME,
     value: '__typename',
   },
 };
@@ -68,7 +68,7 @@ function isEmpty(
   fragmentMap: FragmentMap,
 ): boolean {
   return !op || op.selectionSet.selections.every(
-    selection => selection.kind === 'FragmentSpread' &&
+    selection => selection.kind === Kind.FRAGMENT_SPREAD &&
       isEmpty(fragmentMap[selection.name.value], fragmentMap)
   );
 }
@@ -161,7 +161,7 @@ export function removeDirectivesFromDocument(
 
   let operationCount = 0;
   for (let i = doc.definitions.length - 1; i >= 0; --i) {
-    if (doc.definitions[i].kind === 'OperationDefinition') {
+    if (doc.definitions[i].kind === Kind.OPERATION_DEFINITION) {
       ++operationCount;
     }
   }
@@ -258,7 +258,7 @@ export function removeDirectivesFromDocument(
           // only fragments makes the document useless.
           operationCount > 0 &&
           node.selectionSet.selections.every(selection => (
-            selection.kind === 'Field' &&
+            selection.kind === Kind.FIELD &&
             selection.name.value === '__typename'
           ))
         ) {
@@ -319,14 +319,14 @@ export function removeDirectivesFromDocument(
   // spreads used (transitively) by any operations in the document.
   const allFragmentNamesUsed = new Set<string>();
   docWithoutDirectiveSubtrees.definitions.forEach(def => {
-    if (def.kind === 'OperationDefinition') {
+    if (def.kind === Kind.OPERATION_DEFINITION) {
       populateTransitiveVars(
         getInUseByOperationName(def.name ? def.name.value : "")
       ).fragmentSpreads.forEach(childFragmentName => {
         allFragmentNamesUsed.add(childFragmentName);
       });
     } else if (
-      def.kind === 'FragmentDefinition' &&
+      def.kind === Kind.FRAGMENT_DEFINITION &&
       // If there are no operations in the document, then all fragment
       // definitions count as usages of their own fragment names. This heuristic
       // prevents accidentally removing all fragment definitions from the
@@ -422,7 +422,7 @@ export const addTypenameToDocument = Object.assign(function <
         // Don't add __typename to OperationDefinitions.
         if (
           parent &&
-          (parent as OperationDefinitionNode).kind === 'OperationDefinition'
+          (parent as OperationDefinitionNode).kind === Kind.OPERATION_DEFINITION
         ) {
           return;
         }
@@ -540,7 +540,7 @@ function getArgumentMatcher(config: RemoveArgumentsConfig[]) {
     return config.some(
       (aConfig: RemoveArgumentsConfig) =>
         argument.value &&
-        argument.value.kind === 'Variable' &&
+        argument.value.kind === Kind.VARIABLE &&
         argument.value.name &&
         (aConfig.name === argument.value.name.value ||
           (aConfig.test && aConfig.test(argument))),

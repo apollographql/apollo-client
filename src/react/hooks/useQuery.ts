@@ -26,6 +26,7 @@ import {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
+  NoInfer,
 } from '../types/types';
 
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -43,7 +44,7 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<TData, TVariables> = Object.create(null),
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = Object.create(null),
 ): QueryResult<TData, TVariables> {
   return useInternalState(
     useApolloClient(options.client),

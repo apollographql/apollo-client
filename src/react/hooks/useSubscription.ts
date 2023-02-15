@@ -6,6 +6,7 @@ import { equal } from '@wry/equality';
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import {
+  NoInfer,
   SubscriptionHookOptions,
   SubscriptionResult
 } from '../types/types';
@@ -14,12 +15,12 @@ import { useApolloClient } from './useApolloClient';
 
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SubscriptionHookOptions<TData, TVariables>,
+  options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
 ) {
   const hasIssuedDeprecationWarningRef = useRef(false);
   const client = useApolloClient(options?.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
-  const [result, setResult] = useState<SubscriptionResult<TData>>({
+  const [result, setResult] = useState<SubscriptionResult<TData, TVariables>>({
     loading: !options?.skip,
     error: void 0,
     data: void 0,

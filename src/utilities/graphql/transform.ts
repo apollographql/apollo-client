@@ -176,6 +176,8 @@ export function removeDirectivesFromDocument(
     nodeDirectives.some(directiveMatcher)
   );
 
+  const originalFragmentDefsByPath = new Map<string, FragmentDefinitionNode>();
+
   // Any time the first traversal of the document below makes a change like
   // removing a fragment (by returning null), this variable should be set to
   // true. Once it becomes true, it should never be set to false again. If this
@@ -235,7 +237,21 @@ export function removeDirectivesFromDocument(
     },
 
     FragmentDefinition: {
-      leave(node) {
+      enter(node, _key, _parent, path) {
+        originalFragmentDefsByPath.set(JSON.stringify(path), node);
+      },
+      leave(node, _key, _parent, path) {
+        const originalNode = originalFragmentDefsByPath.get(JSON.stringify(path));
+        if (node === originalNode) {
+          // If the FragmentNode received by this leave function is identical to
+          // the one received by the corresponding enter function (above), then
+          // the visitor must not have made any changes within this
+          // FragmentDefinition node. This fragment definition may still be
+          // removed if there are no ...spread references to it, but it won't be
+          // removed just because it has only a __typename field.
+          return node;
+        }
+
         if (
           // This logic applies only if the document contains one or more
           // operations, since removing all fragments from a document containing
@@ -379,8 +395,8 @@ export function removeDirectivesFromDocument(
           // remove the last $var references from an operation or its fragments,
           // we must also remove the corresponding $var declaration from the
           // enclosing operation. This pruning applies only to operations and
-          // not fragment definitions, at the moment. Fragments may some day be
-          // able to declare variables, but today they can only consume them.
+          // not fragment definitions, at the moment. Fragments may be able to
+          // declare variables eventually, but today they can only consume them.
           if (usedVariableNames.size < node.variableDefinitions.length) {
             return {
               ...node,

@@ -1036,7 +1036,7 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it("should remove __typename only fragment (without @client) when query precedes fragment", () => {
+  it("should not remove __typename-only fragment (without @client) when query precedes fragment", () => {
     const query = gql`
       query {
         author {
@@ -1050,19 +1050,13 @@ describe('removeClientSetsFromDocument', () => {
       }
     `;
 
-    const expected = gql`
-      query {
-        author {
-          name
-        }
-      }
-    `;
+    const expected = query;
 
     const doc = removeClientSetsFromDocument(query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it("should remove __typename only fragment (without @client) when fragment precedes query", () => {
+  it("should not remove __typename-only fragment (without @client) when fragment precedes query", () => {
     const query = gql`
       fragment authorInfo on Author {
         __typename
@@ -1076,13 +1070,7 @@ describe('removeClientSetsFromDocument', () => {
       }
     `;
 
-    const expected = gql`
-      query {
-        author {
-          name
-        }
-      }
-    `;
+    const expected = query;
 
     const doc = removeClientSetsFromDocument(query)!;
     expect(print(doc)).toBe(print(expected));

@@ -68,10 +68,6 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
         run: npm run changeset-publish
 
-      - name: Echo values from changesets step
-        if: steps.changesets.outcome == 'success'
-        run: echo "${{steps.changesets.outcome}} v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}"
-
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'
         id: slack

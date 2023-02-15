@@ -3,7 +3,7 @@ import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
 import { DeepMerger } from "../utilities"
-import { mergeIncrementalData } from '../utilities/common/incrementalResult';
+import { mergeIncrementalData } from '../utilities';
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';

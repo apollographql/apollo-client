@@ -1,3 +1,4 @@
+import { invariant, __DEV__ } from '../../utilities/globals';
 import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { equal } from '@wry/equality';
 import {
@@ -11,7 +12,6 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from '../../core';
-import { invariant } from '../../utilities/globals';
 import {
   compact,
   Concast,

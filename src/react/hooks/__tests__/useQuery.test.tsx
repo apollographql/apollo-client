@@ -7135,3 +7135,19 @@ describe('useQuery Hook', () => {
     });
   });
 });
+
+describe.skip("Type Tests", () => {
+  test('NoInfer prevents adding arbitrary additional variables', () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+    const { variables } = useQuery(typedNode, {
+      variables: {
+        bar: 4,
+        // @ts-expect-error
+        nonExistingVariable: "string"
+      }
+    });
+    variables?.bar
+    // @ts-expect-error
+    variables?.nonExistingVariable
+  })
+})

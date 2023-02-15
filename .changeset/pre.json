@@ -1,0 +1,20 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "3.7.2"
+  },
+  "changesets": [
+    "early-pens-retire",
+    "gorgeous-buses-laugh",
+    "heavy-ties-sneeze",
+    "hungry-eagles-kick",
+    "lazy-teachers-sell",
+    "polite-birds-rescue",
+    "rude-mayflies-scream",
+    "short-bikes-mate",
+    "sixty-trains-sniff",
+    "small-timers-shake",
+    "wild-mice-nail"
+  ]
+}

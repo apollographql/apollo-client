@@ -21,6 +21,12 @@ jobs:
           # with the correct commits
           fetch-depth: 0
 
+      - name: Check for pre.json file existence
+        id: check_files
+        uses: andstor/file-existence-action@v2.0.0
+        with:
+          files: ".changeset/pre.json"
+
       - name: Append NPM token to .npmrc
         run: |
           cat << EOF > "$HOME/.npmrc"
@@ -39,6 +45,7 @@ jobs:
 
       - name: Create release PR or publish to npm + GitHub
         id: changesets
+        if: steps.check_files.outputs.files_exists == 'false'
         uses: changesets/action@v1
         with:
           version: npm run changeset-version

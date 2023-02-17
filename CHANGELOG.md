@@ -1,5 +1,23 @@
 # @apollo/client
 
+## 3.7.9
+
+### Patch Changes
+
+- [#10560](https://github.com/apollographql/apollo-client/pull/10560) [`a561ecf43`](https://github.com/apollographql/apollo-client/commit/a561ecf4306c56770ba0713f0136174275887f1a) Thanks [@benjamn](https://github.com/benjamn)! - Keep `__typename` fragment when it does not contain `@client` directive and strip out inline fragments which use a `@client` directive. Thanks @Gazler and @mtsmfm!
+
+- [#10560](https://github.com/apollographql/apollo-client/pull/10560) [`251a12806`](https://github.com/apollographql/apollo-client/commit/251a12806d1fa38bc8723540fb2d696c39db1097) Thanks [@benjamn](https://github.com/benjamn)! - Refactor `removeDirectivesFromDocument` to fix AST ordering sensitivities and avoid 1/3 AST traversals, potentially improving performance for large queries
+
+## 3.7.8
+
+### Patch Changes
+
+- [#7555](https://github.com/apollographql/apollo-client/pull/7555) [`45562d6fa`](https://github.com/apollographql/apollo-client/commit/45562d6fa20eab658bd86d79d092862ace4e1225) Thanks [@TheCeloReis](https://github.com/TheCeloReis)! - Adds `TVariables` generic to `GraphQLRequest` and `MockedResponse` interfaces.
+
+- [#10526](https://github.com/apollographql/apollo-client/pull/10526) [`1d13de4f1`](https://github.com/apollographql/apollo-client/commit/1d13de4f190150e96d61a9e987274ee6c249dbef) Thanks [@benjamn](https://github.com/benjamn)! - Tolerate undefined `concast.sources` if `complete` called earlier than `concast.start`
+
+- [#10497](https://github.com/apollographql/apollo-client/pull/10497) [`8a883d8a1`](https://github.com/apollographql/apollo-client/commit/8a883d8a1c8899f94a3e2ae09cb2069bde2b2150) Thanks [@nevir](https://github.com/nevir)! - Update `SingleExecutionResult` and `IncrementalPayload`'s `data` types such that they no longer include `undefined`, which was not a valid runtime value, to fix errors when TypeScript's `exactOptionalPropertyTypes` is enabled.
+
 ## 3.7.7
 
 ### Patch Changes

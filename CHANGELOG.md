@@ -14,6 +14,10 @@
 
 - [#10521](https://github.com/apollographql/apollo-client/pull/10521) [`fbf729414`](https://github.com/apollographql/apollo-client/commit/fbf729414b6322a84158d9864bdfb5b17b2c7d77) Thanks [@benjamn](https://github.com/benjamn)! - Simplify `__DEV__` polyfill to use imports instead of global scope
 
+### Patch Changes
+
+- [#7555](https://github.com/apollographql/apollo-client/pull/7555) [`45562d6fa`](https://github.com/apollographql/apollo-client/commit/45562d6fa20eab658bd86d79d092862ace4e1225) Thanks [@TheCeloReis](https://github.com/TheCeloReis)! - Adds `TVariables` generic to `GraphQLRequest` and `MockedResponse` interfaces.
+
 ## 3.8.0-alpha.5
 
 ### Patch Changes
@@ -23,6 +27,8 @@
 ## 3.8.0-alpha.4
 
 ### Patch Changes
+
+- [#10383](https://github.com/apollographql/apollo-client/pull/10383) [`5c5ca9b01`](https://github.com/apollographql/apollo-client/commit/5c5ca9b01a2b9905f94de85e5b80ffc29522e2e3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure the `onError` callback is called when the `errorPolicy` is set to "all" and partial data is returned.
 
 - [#10401](https://github.com/apollographql/apollo-client/pull/10401) [`3e5b41a75`](https://github.com/apollographql/apollo-client/commit/3e5b41a751673bb2120c0b624e22afd3b7b860e5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Always throw network errors in `useSuspenseQuery` regardless of the set `errorPolicy`.
 
@@ -52,18 +58,25 @@
 
 ### Patch Changes
 
-- [#10229](https://github.com/apollographql/apollo-client/pull/10229) [`4f73c5ca1`](https://github.com/apollographql/apollo-client/commit/4f73c5ca15d367aa23f02018d062f221c4506a4d) Thanks [@alessbell](https://github.com/alessbell)! - Avoid calling `useQuery` `onCompleted` for cache writes
+- [#10340](https://github.com/apollographql/apollo-client/pull/10340) [`4f73c5ca1`](https://github.com/apollographql/apollo-client/commit/4f73c5ca15d367aa23f02018d062f221c4506a4d) Thanks [@alessbell](https://github.com/alessbell)! - Avoid calling `useQuery` `onCompleted` for cache writes
 
-- [#10334](https://github.com/apollographql/apollo-client/pull/10334) [`7d923939d`](https://github.com/apollographql/apollo-client/commit/7d923939dd7e6db7d69f04f598c666104b076e78) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Better handle deferred queries that have cached or partial cached data for them
-- [#10526](https://github.com/apollographql/apollo-client/pull/10526) [`1d13de4f1`](https://github.com/apollographql/apollo-client/commit/1d13de4f190150e96d61a9e987274ee6c249dbef) Thanks [@benjamn](https://github.com/benjamn)! - Tolerate undefined `concast.sources` if `complete` called earlier than `concast.start`
+## 3.7.9
 
-- [#10497](https://github.com/apollographql/apollo-client/pull/10497) [`8a883d8a1`](https://github.com/apollographql/apollo-client/commit/8a883d8a1c8899f94a3e2ae09cb2069bde2b2150) Thanks [@nevir](https://github.com/nevir)! - Update `SingleExecutionResult` and `IncrementalPayload`'s `data` types such that they no longer include `undefined`, which was not a valid runtime value, to fix errors when TypeScript's `exactOptionalPropertyTypes` is enabled.
+### Patch Changes
+
+- [#10560](https://github.com/apollographql/apollo-client/pull/10560) [`a561ecf43`](https://github.com/apollographql/apollo-client/commit/a561ecf4306c56770ba0713f0136174275887f1a) Thanks [@benjamn](https://github.com/benjamn)! - Keep `__typename` fragment when it does not contain `@client` directive and strip out inline fragments which use a `@client` directive. Thanks @Gazler and @mtsmfm!
+
+- [#10560](https://github.com/apollographql/apollo-client/pull/10560) [`251a12806`](https://github.com/apollographql/apollo-client/commit/251a12806d1fa38bc8723540fb2d696c39db1097) Thanks [@benjamn](https://github.com/benjamn)! - Refactor `removeDirectivesFromDocument` to fix AST ordering sensitivities and avoid 1/3 AST traversals, potentially improving performance for large queries
 
 ## 3.7.8
 
 ### Patch Changes
 
 - [#7555](https://github.com/apollographql/apollo-client/pull/7555) [`45562d6fa`](https://github.com/apollographql/apollo-client/commit/45562d6fa20eab658bd86d79d092862ace4e1225) Thanks [@TheCeloReis](https://github.com/TheCeloReis)! - Adds `TVariables` generic to `GraphQLRequest` and `MockedResponse` interfaces.
+
+- [#10526](https://github.com/apollographql/apollo-client/pull/10526) [`1d13de4f1`](https://github.com/apollographql/apollo-client/commit/1d13de4f190150e96d61a9e987274ee6c249dbef) Thanks [@benjamn](https://github.com/benjamn)! - Tolerate undefined `concast.sources` if `complete` called earlier than `concast.start`
+
+- [#10497](https://github.com/apollographql/apollo-client/pull/10497) [`8a883d8a1`](https://github.com/apollographql/apollo-client/commit/8a883d8a1c8899f94a3e2ae09cb2069bde2b2150) Thanks [@nevir](https://github.com/nevir)! - Update `SingleExecutionResult` and `IncrementalPayload`'s `data` types such that they no longer include `undefined`, which was not a valid runtime value, to fix errors when TypeScript's `exactOptionalPropertyTypes` is enabled.
 
 ## 3.7.7
 
@@ -445,11 +458,11 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
   ```js
   // NOTE: No longer necessary in @apollo/client@3.6.4!
-  const { getDefaultConfig } = require('metro-config');
+  const { getDefaultConfig } = require("metro-config");
   const { resolver: defaultResolver } = getDefaultConfig.getDefaultValues();
   exports.resolver = {
     ...defaultResolver,
-    sourceExts: [...defaultResolver.sourceExts, 'cjs'],
+    sourceExts: [...defaultResolver.sourceExts, "cjs"],
   };
   ```
 
@@ -497,7 +510,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
       Query: {
         fields: {
           feed: {
-            keyArgs: ['type', '@connection', ['key']],
+            keyArgs: ["type", "@connection", ["key"]],
           },
         },
       },
@@ -846,7 +859,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
   new ApolloClient({
     defaultOptions: {
       watchQuery: {
-        refetchWritePolicy: 'merge',
+        refetchWritePolicy: "merge",
       },
     },
   });
@@ -1156,11 +1169,11 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
 - Internally, Apollo Client now avoids nested imports from the `graphql` package, importing everything from the top-level package instead. For example,
   ```ts
-  import { visit } from 'graphql/language/visitor';
+  import { visit } from "graphql/language/visitor";
   ```
   is now just
   ```ts
-  import { visit } from 'graphql';
+  import { visit } from "graphql";
   ```
   Since the `graphql` package uses `.mjs` modules, your bundler may need to be configured to recognize `.mjs` files as ECMAScript modules rather than CommonJS modules. <br/>
   [@benjamn](https://github.com/benjamn) in [#7185](https://github.com/apollographql/apollo-client/pull/7185)
@@ -1176,11 +1189,11 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - The verbosity of Apollo Client console messages can be globally adjusted using the `setLogVerbosity` function:
 
   ```ts
-  import { setLogVerbosity } from '@apollo/client';
-  setLogVerbosity('log'); // display all messages
-  setLogVerbosity('warn'); // display only warnings and errors (default)
-  setLogVerbosity('error'); // display only errors
-  setLogVerbosity('silent'); // hide all console messages
+  import { setLogVerbosity } from "@apollo/client";
+  setLogVerbosity("log"); // display all messages
+  setLogVerbosity("warn"); // display only warnings and errors (default)
+  setLogVerbosity("error"); // display only errors
+  setLogVerbosity("silent"); // hide all console messages
   ```
 
   Remember that all logs, warnings, and errors are hidden in production. <br/>
@@ -1577,7 +1590,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
     fields: {
       comments(comments: Reference[], { readField }) {
         return comments.filter(
-          (comment) => idToRemove !== readField('id', comment)
+          (comment) => idToRemove !== readField("id", comment)
         );
       },
     },
@@ -1591,12 +1604,12 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
 
   ```ts
-  import { makeVar } from '@apollo/client';
+  import { makeVar } from "@apollo/client";
   const v = makeVar(123);
   console.log(v()); // 123
   console.log(v(v() + 1)); // 124
   console.log(v()); // 124
-  v('asdf'); // TS type error
+  v("asdf"); // TS type error
   ```
 
   These variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
@@ -1648,7 +1661,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - The contents of the `@apollo/react-hooks` package have been merged into `@apollo/client`, enabling the following all-in-one `import`:
 
   ```ts
-  import { ApolloClient, ApolloProvider, useQuery } from '@apollo/client';
+  import { ApolloClient, ApolloProvider, useQuery } from "@apollo/client";
   ```
 
   [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
@@ -1823,13 +1836,13 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
   ```ts
   export type FetchPolicy =
-    | 'cache-first'
-    | 'network-only'
-    | 'cache-only'
-    | 'no-cache'
-    | 'standby';
+    | "cache-first"
+    | "network-only"
+    | "cache-only"
+    | "no-cache"
+    | "standby";
 
-  export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
+  export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
   ```
 
   The exception thrown if you ignore the type error has also been improved to explain the motivation behind this restriction. <br/>
@@ -2002,7 +2015,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
   purpose now. If you need the old functionality, use a visitor:
 
   ```ts
-  import { visit } from 'graphql/language/visitor';
+  import { visit } from "graphql/language/visitor";
 
   function flattenSelections(selection: SelectionNode) {
     const selections: SelectionNode[] = [];
@@ -2434,7 +2447,8 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
   Since the ^ operator only covers any minor version if the major version
   is not 0 (since a major version of 0 is technically considered development by
   semver 2), the current ^0.11.0 || ^14.0.0 graphql range doesn't cover
-  0.12._ or 0.13._. This fixes the `apollo-client@X has incorrect peer dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
+  0.12._ or 0.13._. This fixes the `apollo-client@X has incorrect peer
+dependency "graphql@^0.11.0 || ^14.0.0"` errors that people might have
   seen using `graphql` 0.12.x or 0.13.x. <br/>
   [@hwillson](https://github.com/hwillson) in [#3746](https://github.com/apollographql/apollo-client/pull/3746)
 - Document `setVariables` internal API status. <br/>

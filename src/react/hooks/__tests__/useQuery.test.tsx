@@ -27,8 +27,6 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 describe('useQuery Hook', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
@@ -71,10 +69,22 @@ describe('useQuery Hook', () => {
       } ];
       const wrapper = ({ children }: any) => <MockedProvider mocks={mocks}>{children}</MockedProvider>;
       const { result, rerender } = renderHook(() => useQuery(query), { wrapper });
-      await waitFor(() => result.current.loading === false);
-      const oldResult = result.current;
+      let oldResult: QueryResult<any, OperationVariables>;
+
+      await waitFor(() => {
+        result.current.loading === false
+      });
+
       rerender({ children: null });
-      expect(oldResult === result.current).toBe(true);
+
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+        oldResult = result.current;
+      });
+
+      await waitFor(() => {
+        expect(oldResult === result.current).toBe(true);
+      });
     });
 
     it("useQuery produces the expected renders initially", async () => {
@@ -91,32 +101,17 @@ describe('useQuery Hook', () => {
       rerender({ children: null });
 
       await waitFor(() => {
-        if (IS_REACT_18) {
-          expect(result.current.loading).toBe(true);
-        } else {
-          expect(result.current.loading).toBe(false);
-        }
-      });
-      await waitFor(() => {
-        if (IS_REACT_18) {
-          expect(result.current.data).toBeUndefined();
-        } else {
-          expect(result.current.data).toEqual({ hello: "world"});
-        }
-      });
-      await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      await waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world" });
-      });
+      expect(result.current.data).toEqual({ hello: "world"});
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ hello: "world" });
+
       // Repeat frame because rerender forces useQuery to be called again
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      await waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world" });
-      });
+      expect(result.current.data).toEqual({ hello: "world" });
     });
 
     it("useQuery produces the expected frames when variables change", async () => {
@@ -139,25 +134,13 @@ describe('useQuery Hook', () => {
       );
       await waitFor(() => result.current.loading === false);
       await waitFor(() => {
-        if (IS_REACT_18) {
-          expect(result.current.loading).toBe(true);
-        } else {
-          expect(result.current.loading).toBe(false);
-        }
+        expect(result.current.loading).toBe(false);
       });
       await waitFor(() => {
-        if (IS_REACT_18) {
-          expect(result.current.data).toBeUndefined();
-        } else {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        }
+        expect(result.current.data).toEqual({ hello: "world 1" });
       });
       await waitFor(() => {
-        if (IS_REACT_18) {
-          expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-        } else {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        }
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       });
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -168,23 +151,16 @@ describe('useQuery Hook', () => {
       await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       });
+
       rerender({ variables: { id: 2 } });
       await waitFor(() => {
         expect(result.current.loading).toBe(true);
       });
       await waitFor(() => {
-        if (IS_REACT_18) {
-          expect(result.current.data).toBeUndefined();
-        } else {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        }
+        expect(result.current.data).toEqual({ hello: "world 2" });
       });
       await waitFor(() => {
-        if (IS_REACT_18) {
-          expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
-        } else {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        }
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       });
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -5320,11 +5296,7 @@ describe('useQuery Hook', () => {
       }, { interval: 1 });
       await waitFor(() => {
         const { data } = result.current.useQueryResult;
-        if (IS_REACT_18) {
-          expect(data).toBeUndefined();
-        } else {
-          expect(data).toEqual({ a: "a" });
-        }
+        expect(data).toEqual({ a: "a" });
       }, { interval: 1 });
       await waitFor(() => {
         const { previousData } = result.current.useQueryResult;
@@ -5351,19 +5323,11 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         const { loading } = result.current.useQueryResult;
-        if (IS_REACT_18) {
-          expect(loading).toBe(true);
-        } else {
-          expect(loading).toBe(false);
-        }
+        expect(loading).toBe(false);
       }, { interval: 1 });
       await waitFor(() => {
         const { data } = result.current.useQueryResult;
-        if (IS_REACT_18) {
-          expect(data).toBeUndefined();
-        } else {
-          expect(data).toEqual({ a: "aa", b: 1 });
-        }
+        expect(data).toEqual({ a: "aa", b: 1 });
       }, { interval: 1 });
       await waitFor(() => {
         const { previousData } = result.current.useQueryResult;
@@ -5409,27 +5373,15 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         const { loading } = result.current.useQueryResult;
-        if (IS_REACT_18) {
-          expect(loading).toBe(true);
-        } else {
-          expect(loading).toBe(false);
-        }
+        expect(loading).toBe(false);
       }, { interval: 1 });
       await waitFor(() => {
         const { data } = result.current.useQueryResult;
-        if (IS_REACT_18) {
-          expect(data).toEqual({ b: 2 });
-        } else {
-          expect(data).toEqual({ b: 3 });
-        }
+        expect(data).toEqual({ b: 3 });
       }, { interval: 1 });
       await waitFor(() => {
         const { previousData } = result.current.useQueryResult;
-        if (IS_REACT_18) {
-          expect(previousData).toEqual({ a: "aaa", b: 2 });
-        } else {
-          expect(previousData).toEqual({ b: 2 });
-        }
+        expect(previousData).toEqual({ b: 2 });
       }, { interval: 1 });
       await waitFor(() => {
         const { loading } = result.current.useQueryResult;

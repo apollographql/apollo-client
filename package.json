@@ -105,7 +105,7 @@
     "@changesets/cli": "2.26.0",
     "@graphql-tools/schema": "9.0.16",
     "@rollup/plugin-node-resolve": "11.2.1",
-    "@testing-library/react": "13.4.0",
+    "@testing-library/react": "14.0.0",
     "@testing-library/react-12": "npm:@testing-library/react@^12",
     "@testing-library/user-event": "14.4.3",
     "@types/bytes": "3.1.1",

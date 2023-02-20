@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
 import { mergeOptions } from '../../utilities';
@@ -23,19 +23,19 @@ const EAGER_METHODS = [
   'subscribeToMore',
 ] as const;
 
-export function useLazyQuery<TData = any, TVariables = OperationVariables>(
+export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const internalState = useInternalState(
-    useApolloClient(options && options.client),
-    query,
-  );
+  const abortControllersRef = useRef(new Set<AbortController>());
 
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
-  const merged = execOptionsRef.current
-    ? mergeOptions(options, execOptionsRef.current)
-    : options;
+  const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
+
+  const internalState = useInternalState<TData, TVariables>(
+    useApolloClient(options && options.client),
+    merged?.query ?? query
+  );
 
   const useQueryResult = internalState.useQuery({
     ...merged,
@@ -71,9 +71,20 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
   Object.assign(result, eagerMethods);
 
+  useEffect(() => {
+    return () => {
+      abortControllersRef.current.forEach((controller) => {
+        controller.abort();
+      });
+    }
+  }, [])
+
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
+    const controller = new AbortController();
+    abortControllersRef.current.add(controller);
+
     execOptionsRef.current = executeOptions ? {
       ...executeOptions,
       fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
@@ -82,12 +93,16 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     };
 
     const promise = internalState
-      .asyncUpdate() // Like internalState.forceUpdate, but returns a Promise.
-      .then(queryResult => Object.assign(queryResult, eagerMethods));
+      .asyncUpdate(controller.signal) // Like internalState.forceUpdate, but returns a Promise.
+      .then(queryResult => {
+        abortControllersRef.current.delete(controller);
 
-    // Because the return value of `useLazyQuery` is usually floated, we need
-    // to catch the promise to prevent unhandled rejections.
-    promise.catch(() => {});
+        return Object.assign(queryResult, eagerMethods);
+      });
+
+    promise.catch(() => {
+      abortControllersRef.current.delete(controller);
+    });
 
     return promise;
   }, []);

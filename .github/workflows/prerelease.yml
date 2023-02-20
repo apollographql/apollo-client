@@ -1,0 +1,116 @@
+name: Prerelease
+
+on:
+  push:
+    branches:
+      # Target release-x.x branches
+      - "release-*"
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  prerelease:
+    name: Changesets Prerelease
+    # Prevents changesets action from creating a PR on forks
+    if: github.repository == 'apollographql/apollo-client'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          # Fetch entire git history so  Changesets can generate changelogs
+          # with the correct commits
+          fetch-depth: 0
+
+      - name: Append NPM token to .npmrc
+        run: |
+          cat << EOF > "$HOME/.npmrc"
+            //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          EOF
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies with cache
+        uses: bahmutov/npm-install@v1
+
+      - name: Check for pre.json file existence
+        id: check_files
+        uses: andstor/file-existence-action@v2.0.0
+        with:
+          files: ".changeset/pre.json"
+
+      - name: Enter alpha prerelease mode
+        # If .changeset/pre.json does not exist and we did not recently exit
+        # prerelease mode, enter prerelease mode with tag alpha
+        if: steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')
+        run: npx changeset pre enter alpha
+
+      - name: Create alpha release PR
+        uses: changesets/action@v1
+        with:
+          version: npm run changeset-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: get-npm-version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@main
+
+      - name: Run publish
+        id: changesets
+        # Only run publish if we're still in pre mode and the last commit was
+        # via an automatically created Version Packages PR
+        if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
+        run: npm run changeset-publish
+
+      - name: Send a Slack notification on publish
+        if: steps.changesets.outcome == 'success'
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          # Slack channel id, channel name, or user id to post message
+          # See also: https://api.slack.com/methods/chat.postMessage#channels
+          # You can pass in multiple channels to post to by providing
+          # a comma-delimited list of channel IDs
+          channel-id: 'C01PS0CB41G'
+          # For posting a simple plain text message
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "A new version of `@apollo/client` was released :rocket:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n`${{ steps.package-version.outputs.current-version}}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Tag:*\n`alpha`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*GitHub release:*\nN/A"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

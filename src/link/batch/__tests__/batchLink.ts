@@ -314,6 +314,74 @@ describe('OperationBatcher', () => {
       }
     });
 
+    itAsync('should be able to consume from a queue containing multiple queries with different batch keys', (resolve, reject) => {
+      // NOTE: this test was added to ensure that queries don't "hang" when consumed by BatchLink.
+      // "Hanging" in this case results in this test never resolving.  So
+      // if this test times out it's probably a real issue and not a flake
+      const request2: Operation = createOperation(
+        {},
+        {
+          query,
+        },
+      );
+
+      const BH = createMockBatchHandler(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data },
+        },
+      );
+
+      let key = true;
+      const batchKey = () => {
+        key = !key;
+        return '' + !key;
+      };
+
+      const myBatcher = new OperationBatcher({
+        batchInterval: 10,
+        batchMax: 10,
+        batchHandler: BH,
+        batchKey
+      });
+
+      const observable1 = myBatcher.enqueueRequest({ operation });
+      const observable2 = myBatcher.enqueueRequest({ operation: request2 });
+
+      let notify = false;
+      observable1.subscribe(resultObj1 => {
+        try {
+          expect(resultObj1).toEqual({ data });
+        } catch (e) {
+          reject(e);
+        }
+
+        if (notify) {
+          resolve();
+        } else {
+          notify = true;
+        }
+      });
+
+      observable2.subscribe(resultObj2 => {
+        try {
+          expect(resultObj2).toEqual({ data });
+        } catch (e) {
+          reject(e);
+        }
+
+        if (notify) {
+          resolve();
+        } else {
+          notify = true;
+        }
+      });
+    });
+
     itAsync('should return a promise when we enqueue a request and resolve it with a result', (resolve, reject) => {
       const BH = createMockBatchHandler({
         request: { query },

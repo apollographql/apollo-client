@@ -3,7 +3,7 @@ import { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
 import { parser } from '../parser';
-import { DefaultContext } from '../../core/types';
+import { DefaultContext, OperationVariables } from '../../core/types';
 import {
   BaseMutationOptions,
   MutationFunction,
@@ -23,9 +23,9 @@ import { ApolloCache } from '../../core';
 export function withMutation<
   TProps extends TGraphQLVariables | {} = {},
   TData extends Record<string, any> = {},
-  TGraphQLVariables = {},
+  TGraphQLVariables extends OperationVariables = {},
   TChildProps = MutateProps<TData, TGraphQLVariables>,
-  TContext = DefaultContext,
+  TContext extends Record<string, any> = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 >(
   document: DocumentNode,

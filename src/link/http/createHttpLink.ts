@@ -138,6 +138,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
 
     // does not match custom directives beginning with @defer
     if (hasDirectives(['defer'], operation.query)) {
+      options.headers = options.headers || {};
       options.headers.accept = "multipart/mixed; deferSpec=20220824, application/json";
     }
 

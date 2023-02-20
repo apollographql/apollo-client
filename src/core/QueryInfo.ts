@@ -3,6 +3,7 @@ import { equal } from "@wry/equality";
 
 import { Cache, ApolloCache } from '../cache';
 import { DeepMerger } from "../utilities"
+import { mergeIncrementalData } from '../utilities/common/incrementalResult';
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
 import { QueryListener } from './types';
@@ -363,6 +364,7 @@ export class QueryInfo {
       | "errorPolicy">,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
+    const merger = new DeepMerger();
     const graphQLErrors = isNonEmptyArray(result.errors)
       ? result.errors.slice(0)
       : [];
@@ -372,22 +374,17 @@ export class QueryInfo {
     this.reset();
 
     if ('incremental' in result && isNonEmptyArray(result.incremental)) {
-      let mergedData = this.getDiff().result;
-      const merger = new DeepMerger();
-      result.incremental.forEach(({ data, path, errors }) => {
-        for (let i = path.length - 1; i >= 0; --i) {
-          const key = path[i];
-          const isNumericKey = !isNaN(+key);
-          const parent: Record<string | number, any> = isNumericKey ? [] : {};
-          parent[key] = data;
-          data = parent as typeof data;
-        }
-        if (errors) {
-          graphQLErrors.push(...errors);
-        }
-        mergedData = merger.merge(mergedData, data);
-      });
+      const mergedData = mergeIncrementalData(this.getDiff().result, result);
       result.data = mergedData;
+
+    // Detect the first chunk of a deferred query and merge it with existing
+    // cache data. This ensures a `cache-first` fetch policy that returns
+    // partial cache data or a `cache-and-network` fetch policy that already
+    // has full data in the cache does not complain when trying to merge the
+    // initial deferred server data with existing cache data.
+    } else if ('hasNext' in result && result.hasNext) {
+      const diff = this.getDiff();
+      result.data = merger.merge(diff.result, result.data)
     }
 
     this.graphQLErrors = graphQLErrors;

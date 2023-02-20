@@ -23,6 +23,7 @@ import {
   FragmentMapFunction,
   createFragmentMap,
   getFragmentDefinitions,
+  isArray,
 } from '../../utilities';
 
 export const {
@@ -33,7 +34,7 @@ export function isNullish(value: any): value is null | undefined {
   return value === null || value === void 0;
 }
 
-export const isArray: (a: any) => a is any[] | readonly any[] = Array.isArray;
+export { isArray };
 
 export function defaultDataIdFromObject(
   { __typename, id, _id }: Readonly<StoreObject>,

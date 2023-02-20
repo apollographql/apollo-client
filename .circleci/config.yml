@@ -3,17 +3,25 @@ version: 2
 jobs:
   Filesize:
     docker:
-      - image: circleci/node:16.13.1
+      - image: cimg/node:19.6.1
     steps:
       - checkout
-      - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
       - run: npm run bundlesize
 
+  Lint:
+    docker:
+      - image: cimg/node:19.6.1
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run lint
+
   Tests:
     docker:
-      - image: circleci/node:16.10.0
+      - image: cimg/node:19.6.1
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -35,3 +43,4 @@ workflows:
     jobs:
       - Filesize
       - Tests
+      - Lint

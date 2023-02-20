@@ -5,6 +5,7 @@
 [![npm version](https://badge.fury.io/js/%40apollo%2Fclient.svg)](https://badge.fury.io/js/%40apollo%2Fclient)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-client.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-client)
 [![Join the community](https://img.shields.io/discourse/status?label=Join%20the%20community&server=https%3A%2F%2Fcommunity.apollographql.com)](https://community.apollographql.com)
+[![Join our Discord server](https://img.shields.io/discord/1022972389463687228.svg?color=7389D8&labelColor=6A7EC2&logo=discord&logoColor=ffffff&style=flat-square)](https://discord.gg/graphos)
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL.
 
@@ -21,13 +22,14 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 
 ## Maintainers
 
-- [@benjamn](https://github.com/benjamn)
-- [@alessbell](https://github.com/alessbell)
-- [@bignimbus](https://github.com/bignimbus)
-- [@hwillson](https://github.com/hwillson)
-- [@jpvajda](https://github.com/jpvajda)
-- [@mrdoombringer](https://github.com/mrdoombringer)
-- [@jerelmiller](https://github.com/jerelmiller)
+|Name|Username|
+|---|---|
+|Ben Newman|[@benjamn](https://github.com/benjamn)|
+|Alessia Bellisario|[@alessbell](https://github.com/alessbell)|
+|Jeff Auriemma|[@bignimbus](https://github.com/bignimbus)|
+|Hugh Willson|[@hwillson](https://github.com/hwillson)|
+|Jerel Miller|[@jerelmiller](https://github.com/jerelmiller)|
+|Lenz Weber-Tronic|[@phryneas](https://github.com/phryneas)|
 
 ## Who is Apollo?
 
@@ -35,7 +37,7 @@ Learn how to use Apollo Client with self-paced hands-on training on Odyssey, Apo
 
 - [Apollo Studio](https://www.apollographql.com/studio/develop/) – A free, end-to-end platform for managing your GraphQL lifecycle. Track your GraphQL schemas in a hosted registry to create a source of truth for everything in your graph. Studio provides an IDE (Apollo Explorer) so you can explore data, collaborate on queries, observe usage, and safely make schema changes.
 - [Apollo Federation](https://www.apollographql.com/apollo-federation) – The industry-standard open architecture for building a distributed graph. Use Apollo’s gateway to compose a unified graph from multiple subgraphs, determine a query plan, and route requests across your services.
-- [Apollo Client](https://www.apollographql.com/apollo-client/) – The most popular GraphQL client for the web. Apollo also builds and maintains [Apollo iOS](https://github.com/apollographql/apollo-ios) and [Apollo Android](https://github.com/apollographql/apollo-android).
+- [Apollo Client](https://www.apollographql.com/apollo-client/) – The most popular GraphQL client for the web. Apollo also builds and maintains [Apollo iOS](https://github.com/apollographql/apollo-ios) and [Apollo Kotlin](https://github.com/apollographql/apollo-kotlin).
 - [Apollo Server](https://www.apollographql.com/docs/apollo-server/) – A production-ready JavaScript GraphQL server that connects to any microservice, API, or database. Compatible with all popular JavaScript frameworks and deployable in serverless environments.
 
 ## Learn how to build with Apollo

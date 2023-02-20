@@ -1,6 +1,6 @@
 import { itAsync } from "../../../testing/core";
 import { Observable } from "../Observable";
-import { Concast } from "../Concast";
+import { Concast, ConcastSourcesIterable } from "../Concast";
 
 describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
   itAsync("can concatenate other observables", (resolve, reject) => {
@@ -28,6 +28,36 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
         }).catch(reject);
       },
     });
+  });
+
+  itAsync("Can tolerate being completed before input Promise resolves", (resolve, reject) => {
+    let resolvePromise: (sources: ConcastSourcesIterable<number>) => void;
+    const delayPromise = new Promise<ConcastSourcesIterable<number>>(resolve => {
+      resolvePromise = resolve;
+    });
+
+    const concast = new Concast<number>(delayPromise);
+    const observer = {
+      next() {
+        reject(new Error("should not have called observer.next"));
+      },
+      error: reject,
+      complete() {
+        reject(new Error("should not have called observer.complete"));
+      },
+    };
+
+    concast.addObserver(observer);
+    concast.removeObserver(observer);
+
+    return concast.promise.then(finalResult => {
+      expect(finalResult).toBeUndefined();
+      resolvePromise([]);
+      return delayPromise;
+    }).then(delayedPromiseResult => {
+      expect(delayedPromiseResult).toEqual([]);
+      resolve();
+    }).catch(reject);
   });
 
   itAsync("behaves appropriately if unsubscribed before first result", (resolve, reject) => {

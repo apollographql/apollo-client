@@ -35,17 +35,15 @@ import { ApolloLink, Operation, FetchResult } from "../core";
 import { isNonNullObject, Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 
-interface LikeCloseEvent {
-  /** Returns the WebSocket connection close code provided by the server. */
-  readonly code: number;
-  /** Returns the WebSocket connection close reason provided by the server. */
-  readonly reason: string;
+// https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
+function isLikeCloseEvent(val: unknown): val is CloseEvent {
+  return isNonNullObject(val) && "code" in val && "reason" in val;
 }
 
-function isLikeCloseEvent(val: unknown): val is LikeCloseEvent {
-  return isNonNullObject(val) && 'code' in val && 'reason' in val;
+// https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/error_event
+function isLikeErrorEvent(err: unknown): err is Event {
+  return isNonNullObject(err) && err.target?.readyState === WebSocket.CLOSED;
 }
-
 
 export class GraphQLWsLink extends ApolloLink {
   constructor(public readonly client: Client) {
@@ -63,13 +61,17 @@ export class GraphQLWsLink extends ApolloLink {
             if (err instanceof Error) {
               return observer.error(err);
             }
+            if (isLikeCloseEvent(err) || isLikeErrorEvent(err)) {
+              let reason = '';
+              let code = '';
 
-            if (isLikeCloseEvent(err)) {
+              if (isLikeCloseEvent(err)) {
+                reason = ` ${err.reason}`;
+                code = ` with event ${err.code}`;
+              }
               return observer.error(
                 // reason will be available on clean closes
-                new Error(
-                  `Socket closed with event ${err.code} ${err.reason || ""}`
-                )
+                new Error(`Socket closed${code}${reason}`)
               );
             }
 

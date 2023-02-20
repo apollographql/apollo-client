@@ -2,7 +2,7 @@ import '../utilities/globals';
 
 import { GraphQLError } from 'graphql';
 
-import { isNonEmptyArray } from '../utilities';
+import { isNonEmptyArray, isNonNullObject } from '../utilities';
 import { ServerParseError } from '../link/http';
 import { ServerError } from '../link/utils';
 
@@ -20,8 +20,8 @@ const generateErrorMessage = (err: ApolloError) => {
   if (isNonEmptyArray(err.graphQLErrors) || isNonEmptyArray(err.clientErrors)) {
     const errors = ((err.graphQLErrors || []) as readonly Error[])
       .concat(err.clientErrors || []);
-    errors.forEach((error: Error) => {
-      const errorMessage = error
+    errors.forEach((error: unknown) => {
+      const errorMessage = isNonNullObject(error)
         ? error.message
         : 'Error message not found.';
       message += `${errorMessage}\n`;

@@ -2370,7 +2370,7 @@ describe('ApolloClient', () => {
             setTimeout(() => {
               try {
                 expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
-                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error Error: refetch failed');
+                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error ApolloError: refetch failed');
                 resolve();
               } catch (err) {
                 reject(err);

@@ -2328,7 +2328,7 @@ describe('ApolloClient', () => {
       invariantDebugSpy.mockRestore();
     })
 
-    itAsync('should catch refetchQueries error when not caught explicitely', (resolve, reject) => {
+    itAsync('should catch refetchQueries error when not caught explicitly', (resolve, reject) => {
       const linkFn = jest.fn(() => 
         new Observable<any>(observer => {
           setTimeout(() => {

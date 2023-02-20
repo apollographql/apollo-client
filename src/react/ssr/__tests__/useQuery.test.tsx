@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
@@ -172,12 +173,12 @@ describe('useQuery Hook SSR', () => {
         </ApolloProvider>
       );
 
-      const result = await renderToStringWithData(app);
+      const view = await renderToStringWithData(app);
       expect(renderCount).toBe(1);
-      expect(result).toEqual('');
+      expect(view).toEqual('');
       await new Promise((resolve) => setTimeout(resolve, 20));
       expect(renderCount).toBe(1);
-      expect(result).toEqual('');
+      expect(view).toEqual('');
     }
   );
 

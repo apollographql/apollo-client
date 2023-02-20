@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, PropsWithChildren } from 'react';
 import gql from 'graphql-tag';
 import { ExecutionResult, GraphQLError } from 'graphql';
-import { render, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, act } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../core';
 import { ApolloError } from '../../../../errors';
@@ -15,6 +16,8 @@ import {
 } from '../../../../testing';
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
+
+const IS_REACT_18 = React.version.startsWith('18');
 
 const mutation = gql`
   mutation createTodo($text: String!) {
@@ -72,8 +75,6 @@ const mocks = [
 const cache = new Cache({ addTypename: false });
 
 describe('General Mutation testing', () => {
-  afterEach(cleanup);
-
   it('pick prop client over context client', async () => {
     const mock = (text: string) => [
       {
@@ -134,32 +135,46 @@ describe('General Mutation testing', () => {
       );
     };
 
-    const { getByText, rerender } = render(<Component />);
-    const button = getByText('Create');
+    const { rerender } = render(<Component />);
+    await waitFor(() => {
+      screen.getByText('Create');
+    }, { interval: 1 });
 
     // context client mutation
-    fireEvent.click(button);
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksContext[0].result);
+    }, { interval: 1 });
 
     // props client mutation
     rerender(<Component propsClient={propsClient} />);
-    fireEvent.click(button);
+
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksProps[0].result);
+    }, { interval: 1 });
 
     // context client mutation
     rerender(<Component propsClient={undefined} />);
-    fireEvent.click(button);
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksContext[1].result);
+    }, { interval: 1 });
 
     // props client mutation
     rerender(<Component propsClient={propsClient} />);
-    fireEvent.click(button);
+    await userEvent.click(screen.getByText('Create'));
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalledWith(mocksProps[1].result);
+    }, { interval: 1 });
 
     await waitFor(() => {
       expect(spy).toHaveBeenCalledTimes(4);
-    });
-
-    expect(spy).toHaveBeenCalledWith(mocksContext[0].result);
-    expect(spy).toHaveBeenCalledWith(mocksProps[0].result);
-    expect(spy).toHaveBeenCalledWith(mocksContext[1].result);
-    expect(spy).toHaveBeenCalledWith(mocksProps[1].result);
+    }, { interval: 1 });
   });
 
   itAsync('performs a mutation', (resolve, reject) => {
@@ -444,12 +459,12 @@ describe('General Mutation testing', () => {
       <Mutation mutation={mutation}>{() => <div>result</div>}</Mutation>
     );
 
-    const { unmount, getByText } = render(
+    const { unmount } = render(
       <MockedProvider mocks={mocks}>
         <Component />
       </MockedProvider>
     );
-    expect(getByText('result')).toBeTruthy();
+    expect(screen.getByText('result')).toBeTruthy();
     // unmount here or else the mutation will resolve later and schedule an update that's not wrapped in act.
     unmount()
   });
@@ -1016,7 +1031,7 @@ describe('General Mutation testing', () => {
 
     let count = 0;
 
-    const Component: React.FC<any> = props => {
+    const Component: React.FC<PropsWithChildren<PropsWithChildren<any>>> = props => {
       const [variables, setVariables] = useState(props.variables);
       return (
         <Mutation mutation={mutation} refetchQueries={refetchQueries}>
@@ -1073,7 +1088,7 @@ describe('General Mutation testing', () => {
     );
 
     waitFor(() => {
-      expect(count).toEqual(7);
+      expect(count).toEqual(IS_REACT_18 ? 6 : 7);
     }).then(resolve, reject);
   }));
 
@@ -1418,7 +1433,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  itAsync('errors when changing from mutation to a query', (resolve, reject) => {
+  it('errors when changing from mutation to a query', async () => {
     let didError = false;
     const query = gql`
       query todos {
@@ -1468,11 +1483,17 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => didError)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(didError).toBe(true);
-    }).finally(() => {
-      console.log = errorLogger;
-    }).then(resolve, reject);
+    });
+
+    console.log = errorLogger;
   });
 
   it('errors if a subscription is passed instead of a mutation', () => {
@@ -1502,7 +1523,7 @@ describe('General Mutation testing', () => {
     console.log = errorLogger;
   });
 
-  itAsync('errors when changing from mutation to a subscription', (resolve, reject) => {
+  it('errors when changing from mutation to a subscription', async () => {
     let didError = false;
     const subscription = gql`
       subscription todos {
@@ -1553,22 +1574,28 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => didError)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(didError).toBe(true);
-    }).finally(() => {
-      console.log = errorLogger;
-    }).then(resolve, reject);
+    });
+    console.log = errorLogger;
   });
 
   describe('after it has been unmounted', () => {
-    itAsync('calls the onCompleted prop after the mutation is complete', (resolve, reject) => {
+    it('calls the onCompleted prop after the mutation is complete', async () => {
       let finished = false;
       let success = false;
+      const context = { "foo": "bar" }
       const onCompletedFn = jest.fn();
       const checker = () => {
         setTimeout(() => {
           success = true;
-          expect(onCompletedFn).toHaveBeenCalledWith(data);
+          expect(onCompletedFn).toHaveBeenCalledWith(data, expect.objectContaining({ context }));
         }, 100);
       };
 
@@ -1586,9 +1613,11 @@ describe('General Mutation testing', () => {
               <Mutation mutation={mutation} onCompleted={onCompletedFn}>
                 {(createTodo: any) => {
                   setTimeout(() => {
-                    createTodo().finally(() => {
+                    createTodo({ context }).finally(() => {
                       finished = true;
                     });
+                    expect(onCompletedFn).toHaveBeenCalledWith
+                    // eslint-disable-next-line testing-library/await-async-utils
                     this.setState({ called: true }, checker);
                   });
                   return null;
@@ -1605,10 +1634,24 @@ describe('General Mutation testing', () => {
         </MockedProvider>
       );
 
-      waitFor(() => {
+      await waitFor(() => {
+        // TODO(fixme): The following line fixes the RTL lint rule error:
+        //
+        // expect(waitFor(() => finished)).resolves.toBe(true);
+        //
+        // ...however it also causes the test to fail against React 17.
+        // eslint-disable-next-line testing-library/await-async-utils
         expect(finished).toBe(true);
+      }, { interval: 1 });
+      await waitFor(() => {
+        // TODO(fixme): The following line fixes the RTL lint rule error:
+        //
+        // expect(waitFor(() => success)).resolves.toBe(true);
+        //
+        // ...however it also causes the test to fail against React 17.
+        // eslint-disable-next-line testing-library/await-async-utils
         expect(success).toBe(true);
-      }, { timeout: 500 }).then(resolve, reject);
+      }, { interval: 1 });
     });
   });
 
@@ -1649,8 +1692,22 @@ describe('General Mutation testing', () => {
     );
 
     await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => onErrorCalled)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(onErrorCalled).toBe(true);
+    }, { interval: 1 });
+    await waitFor(() => {
+      // TODO(fixme): The following line fixes the RTL lint rule error:
+      //
+      // expect(waitFor(() => finished)).resolves.toBe(true);
+      //
+      // ...however it also causes the test to fail against React 17.
+      // eslint-disable-next-line testing-library/await-async-utils
       expect(finished).toBe(true);
-    });
+    }, { interval: 1 });
   });
 });

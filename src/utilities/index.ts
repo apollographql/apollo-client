@@ -5,6 +5,8 @@ export {
   InclusionDirectives,
   shouldInclude,
   hasDirectives,
+  hasAnyDirectives,
+  hasAllDirectives,
   hasClientExports,
   getDirectiveNames,
   getInclusionDirectives,
@@ -12,6 +14,7 @@ export {
 
 export {
   FragmentMap,
+  FragmentMapFunction,
   createFragmentMap,
   getFragmentQueryDocument,
   getFragmentFromSelection,

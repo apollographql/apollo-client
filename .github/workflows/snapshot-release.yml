@@ -1,0 +1,90 @@
+name: Snapshot Release
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  release_next:
+    name: release:next
+    runs-on: ubuntu-latest
+
+    if: |
+      github.repository == 'apollographql/apollo-client' &&
+      github.event.issue.pull_request &&
+      (
+        github.event.sender.login == 'benjamn' ||
+        github.event.sender.login == 'alessbell' ||
+        github.event.sender.login == 'bignimbus' ||
+        github.event.sender.login == 'hwillson' ||
+        github.event.sender.login == 'jerelmiller' ||
+        github.event.sender.login == 'phryneas'
+      ) &&
+      startsWith(github.event.comment.body, '/release:pr')
+
+    steps:
+      - uses: alessbell/pull-request-comment-branch@v1.1
+        id: comment-branch
+
+      - name: Checkout head ref
+        uses: actions/checkout@v3
+        with:
+          ## specify the owner + repository in order to checkout the fork
+          ## for community PRs
+          repository: ${{ steps.comment-branch.outputs.head_owner }}/${{ steps.comment-branch.outputs.head_repo }}
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
+          fetch-depth: 0
+
+      - name: Append NPM token to .npmrc
+        run: |
+          cat << EOF > "$HOME/.npmrc"
+            //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          EOF
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies (with cache)
+        uses: bahmutov/npm-install@v1
+
+      - name: Check for pre.json file existence
+        id: check_files
+        uses: andstor/file-existence-action@v2.0.0
+        with:
+          files: ".changeset/pre.json"
+
+      - name: Exit pre mode if pre.json exists
+        # Changesets prevents us from generating a snapshot release
+        # if we're in prerelease mode, so we remove `pre.json` if it exists
+        # (but do not commit this change since we want the branch to remain
+        # in pre mode)
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: rm .changeset/pre.json
+
+      # https://github.com/atlassian/changesets/blob/master/docs/snapshot-releases.md
+      - name: Release to pr tag
+        run: |
+          npx changeset version --snapshot pr-${{ github.event.issue.number }} && npm i
+          npm run build
+          npm run prepdist:changesets
+          cd dist
+          npx changeset publish --no-git-tag --snapshot --tag pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get released version
+        id: version
+        run: echo ::set-output name=version::$(node -p "require('./dist/package.json').version")
+
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v2.1.1
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            A new release has been made for this PR. You can install it with `npm i @apollo/client@${{ steps.version.outputs.version }}`.

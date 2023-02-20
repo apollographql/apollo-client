@@ -3,8 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/server';
 import gql from 'graphql-tag';
 import { print } from 'graphql';
-import { sha256 } from 'crypto-hash';
-import fetch from 'jest-fetch-mock';
+import fetchMock from 'fetch-mock';
 
 import { ApolloProvider } from '../../../react/context';
 import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
@@ -12,9 +11,17 @@ import { ApolloClient } from '../../../core/ApolloClient';
 import { createHttpLink } from '../../http/createHttpLink';
 import { graphql } from '../../../react/hoc/graphql';
 import { getDataFromTree } from '../../../react/ssr/getDataFromTree';
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../';
+import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
+import { sha256 } from './persisted-queries.test';
 
-global.fetch = fetch;
+// Necessary configuration in order to mock multiple requests
+// to a single (/graphql) endpoint
+// see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
+fetchMock.config.overwriteRoutes = false;
+
+afterAll(() => {
+  fetchMock.config.overwriteRoutes = true;
+});
 
 const query = gql`
   query Test($filter: FilterObject) {
@@ -42,16 +49,22 @@ const response = JSON.stringify({ data });
 const response2 = JSON.stringify({ data: data2 });
 const queryString = print(query);
 
-let hash: string;
-(async () => {
-  hash = await sha256(queryString);
-})();
+const hash = sha256(queryString);
 
 describe('react application', () => {
-  beforeEach(fetch.mockReset);
+  beforeEach(async () => {
+    fetchMock.restore();
+  });
   it('works on a simple tree', async () => {
-    fetch.mockResponseOnce(response);
-    fetch.mockResponseOnce(response2);
+    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response })), { repeat: 1 });
+    // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
+    // it limits the number of times the route can be used,
+    // after which the call to `fetch()` will fall through to be
+    // handled by any other routes defined...
+    // With `overwriteRoutes = false`, this means
+    // subsequent /graphql mocks will be used
+    // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
+    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response2 })), { repeat: 1 });
 
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
@@ -61,7 +74,7 @@ describe('react application', () => {
       ssrMode: true,
     });
 
-    const Query = graphql(query)(({ data, children }) => {
+    const Query = graphql<React.PropsWithChildren>(query)(({ data, children }) => {
       if (data!.loading) return null;
 
       return (
@@ -82,7 +95,7 @@ describe('react application', () => {
     // preload all the data for client side request (with filter)
     const result = await getDataFromTree(app);
     expect(result).toContain('data was returned');
-    let [, request] = fetch.mock.calls[0];
+    const [[, request]] = fetchMock.calls();
     expect(request!.body).toBe(
       JSON.stringify({
         operationName: 'Test',
@@ -113,11 +126,11 @@ describe('react application', () => {
 
     // change filter object to different variables and SSR
     await getDataFromTree(app2);
-    const markup2 = ReactDOM.renderToString(app2);
+    const view = ReactDOM.renderToString(app2);
 
-    let [, request2] = fetch.mock.calls[1];
+    const [, [, request2]] = fetchMock.calls();
 
-    expect(markup2).not.toContain('data was returned');
+    expect(view).not.toContain('data was returned');
     expect(request2!.body).toBe(
       JSON.stringify({
         operationName: 'Test',

@@ -1,13 +1,13 @@
 [build]
   publish = "docs/public"
-  command = "npx typedoc src/index.ts --json docs/public/docs.json"
+  command = "npm run typedoc"
 
 [build.environment]
-  NODE_VERSION = "16"
+  NODE_VERSION = "18"
 
 [context.deploy-preview.build]
   base = "docs"
-  ignore = "git diff --quiet HEAD^ HEAD ."
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
   command = """\
   cd ../
   rm -rf monodocs

@@ -22,7 +22,7 @@ You can persist and rehydrate the `InMemoryCache` from a storage provider like `
 
 To get started, pass your cache and a storage provider to `persistCache`. By default, the contents of your cache are immediately restored asynchronously, and they're persisted on every write to the cache with a short configurable debounce interval.
 
-> Note: The `persistCache` method is async and returns a `Promise`.
+> **Note:** The `persistCache` method is async and returns a `Promise`.
 
 ```js
 import { AsyncStorage } from 'react-native';
@@ -46,13 +46,18 @@ For advanced usage and additional configuration options, see the [README of `apo
 Sometimes, you might want to reset the cache entirely, such as [when a user logs out](../networking/authentication/#reset-store-on-logout). To accomplish this, call `client.resetStore`. This method is asynchronous, because it also refetches any of your active queries.
 
 ```js
-export default withApollo(graphql(PROFILE_QUERY, {
-  props: ({ data: { loading, currentUser }, ownProps: { client }}) => ({
-    loading,
-    currentUser,
-    resetOnLogout: async () => client.resetStore(),
-  }),
-})(Profile));
+import { useQuery } from '@apollo/client';
+function Profile() {
+    const { data, client } = useQuery(PROFILE_QUERY);
+    return (
+      <Fragment>
+        <p>Current user: {data?.currentUser}</p>
+        <button onClick={async ()=>client.resetStore()}>
+            Log out
+        </button>
+      </Fragment>
+    );
+}
 ```
 
 > To reset the cache _without_ refetching active queries, use `client.clearStore()` instead of `client.resetStore()`.
@@ -84,26 +89,81 @@ You can also call `client.onResetStore` from your React components. This can be 
 
 The `client.onResetStore` method's return value is a function you can call to unregister your callback:
 
-```js {6-8,12}
-import { withApollo } from "@apollo/react-hoc";
+```js {8-10,13}
+import { useApolloClient } from '@apollo/client';
 
-export class Foo extends Component {
-  constructor(props) {
-    super(props);
-    this.unsubscribe = props.client.onResetStore(
-      () => this.setState({ reset: false })
+function Foo (){
+  const [reset, setReset] = useState(0);
+  const client = useApolloClient();
+
+  useEffect(() => {
+    const unsubscribe = client.onResetStore(() => 
+      new Promise(()=>setReset(reset + 1))
     );
-    this.state = { reset: false };
-  }
-  componentDidUnmount() {
-    this.unsubscribe();
-  }
-  render() {
-    return this.state.reset ? <div /> : <span />
-  }
+
+    return () => {
+      unsubscribe();
+    };
+  });
+
+  return reset ? <div /> : <span />
 }
 
-export default withApollo(Foo);
+export default Foo;
+```
+
+## TypePolicy inheritence
+
+JavaScript developers will be familiar with the idea of [inheritance](https://en.m.wikipedia.org/wiki/Inheritance_(object-oriented_programming)) from the `extends` clause of `class` declarations, or possibly from dealing with prototype chains created by `Object.create`.
+
+Inheritance is a powerful code-sharing tool, and it works well with Apollo Client for several reasons:
+
+ * `InMemoryCache` already knows about the supertype-subtype relationships (_interfaces and unions_) in your schema, thanks to `possibleTypes`, so no additional configuration is necessary to provide that information.
+
+ * Inheritance allows a supertype to provide default configuration values to all its subtypes, including `keyFields` and individual field policies, which can be selectively overridden by subtypes that want something different.
+
+ * A single subtype can have multiple supertypes in a GraphQL schema, which is difficult to model using the single inheritance model of classes or prototypes. In other words, supporting multiple inheritance in JavaScript requires building a system something like this one, rather than just reusing built-in language features.
+
+ * Developers can add their own client-only supertypes to the `possibleTypes` map, as a way of reusing behavior across types, even if their schema knows nothing about those supertypes.
+
+ * The `possibleTypes` map is currently used only for fragment matching purposes, which is an important but fairly small part of what the client does. Inheritance adds another compelling use for `possibleTypes`, and should drastically reduce repetition of `typePolicies` when used effectively.
+
+Here's how type policy inheritance works for `InMemoryCache`, considering the example below:
+
+```ts
+const cache = new InMemoryCache({
+  possibleTypes: {
+    Reptile: ["Snake", "Turtle"],
+    Snake: ["Python", "Viper", "Cobra"],
+    Viper: ["Cottonmouth", "DeathAdder"],
+  },
+
+  typePolicies: {
+    Reptile: {
+      // Suppose all our reptiles are captive, and have a tag with an ID.
+      keyFields: ["tagId"],
+      fields: {
+        // Scientific name-related logic can be shared among Reptile subtypes.
+        scientificName: {
+          merge(_, incoming) {
+            // Normalize all scientific names to lower case.
+            return incoming.toLowerCase();
+          },
+        },
+      },
+    },
+
+    Snake: {
+      fields: {
+        // Default to a truthy non-boolean value if we don't know
+        // whether this snake is venomous.
+        venomous(status = "unknown") {
+          return status;
+        },
+      },
+    },
+  },
+});
 ```
 
 ## Refetching queries after a mutation
@@ -185,11 +245,11 @@ For details, see [The `fetchMore` function](../pagination/core-api/#the-fetchmor
 
 ### The `@connection` directive
 
-Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Since these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don’t care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
+Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Because these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don't care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
 
-To solve this Apollo Client 1.6 introduced the `@connection` directive to specify a custom store key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
+To solve this, you can use the `@connection` directive to specify a custom cache key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
 
-To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+To use the `@connection` directive, add it to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
 ```js
 const query = gql`

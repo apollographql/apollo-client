@@ -9,7 +9,7 @@ Apollo Client supports multiple strategies for interacting with cached data:
 | Strategy | API | Description |
 |----------|-----|-------------|
 | [Using GraphQL queries](#using-graphql-queries) | `readQuery` / `writeQuery` / `updateQuery` | Use standard GraphQL queries for managing both remote and local data. |
-| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` / `updateFragment` | Access the fields of any cached object without composing an entire query to reach that object.  |
+| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` / `updateFragment` / `useFragment_experimental` | Access the fields of any cached object without composing an entire query to reach that object.  |
 | [Directly modifying cached fields](#using-cachemodify) | `cache.modify` | Manipulate cached data without using GraphQL at all. |
 
  You can use whichever combination of strategies and methods are most helpful for your use case.
@@ -26,7 +26,7 @@ You can read and write cache data using GraphQL queries that are similar (or eve
 
 The `readQuery` method enables you to execute a GraphQL query directly on your cache, like so:
 
-```js {12-17}
+```js {12-19}
 const READ_TODO = gql`
   query ReadTodo($id: ID!) {
     todo(id: $id) {
@@ -40,7 +40,9 @@ const READ_TODO = gql`
 // Fetch the cached to-do item with ID 5
 const { todo } = client.readQuery({
   query: READ_TODO,
-  variables: { // Provide any required variables here.  Variables of mismatched types will return `null`.
+  // Provide any required variables in this object.
+  // Variables of mismatched types will return `null`.
+  variables: {
     id: 5,
   },
 });
@@ -59,9 +61,9 @@ If your cache contains data for _all_ of the query's fields, `readQuery` returns
 }
 ```
 
-> Apollo Client automatically queries for every object's `__typename`, even if you don't include this field in your query string.
+> Apollo Client automatically queries for every object's `__typename` by default, even if you don't include this field in your query string.
 
-**Do not modify the returned object directly.** The same object might be returned to multiple components. To update data in the cache, see [Combining reads and writes](#combining-reads-and-writes).
+**Do not modify the returned object directly.** The same object might be returned to multiple components. To update cached data safely, see [Combining reads and writes](#combining-reads-and-writes).
 
 If the cache is missing data for _any_ of the query's fields, `readQuery` returns `null`. It does _not_ attempt to fetch data from your GraphQL server.
 
@@ -159,7 +161,10 @@ const todo = client.readFragment({
 
 Unlike `readQuery`, `readFragment` requires an `id` option. This option specifies the cache ID for the object in your cache. [By default](./overview/#2-generate-cache-ids), cache IDs have the format `<__typename>:<id>` (which is why we provide `Todo:5` above). You can [customize this ID](./cache-configuration/#customizing-cache-ids).
 
-In the example above, `readFragment` returns `null` if no `Todo` object with ID `5` exists in the cache, or if the object exists but is missing a value for either `text` or `completed`.
+In the example above, `readFragment` returns `null` in either of the following cases:
+
+* There is no cached `Todo` object with ID `5`.
+* There _is_ a cached `Todo` object with ID `5`, but it's missing a value for either `text` or `completed`.
 
 > Prior to Apollo Client 3.3, `readFragment` threw `MissingFieldError` exceptions to report missing fields, and returned `null` only when reading a fragment from a nonexistent ID. Beginning with Apollo Client 3.3, `readFragment` always returns `null` to indicate insufficient data (missing ID or missing fields), instead of throwing a `MissingFieldError`.
 
@@ -186,6 +191,12 @@ client.writeFragment({
 ```
 
 All subscribers to the Apollo Client cache (including all active queries) see this change and update your application's UI accordingly.
+
+### `useFragment_experimental`
+
+> ⚠️ **The `useFragment_experimental` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+
+You can read data for a given fragment directly from the cache using the `useFragment_experimental` hook. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. [See the API reference.](../api/react/hooks-experimental)
 
 ## Combining reads and writes
 
@@ -258,6 +269,8 @@ Each of these methods takes two parameters:
 
 After either method fetches data from the cache, it calls its update function and passes it the cached `data`. The update function can then return a value to _replace_ that `data` in the cache. In the example above, every cached `Todo` object has its `completed` field set to `true` (and other fields remain unchanged).
 
+Please note that the replacement value has to be calculated in an immutable way. You can read more about immutable updates in [the React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
+
 If the update function shouldn't make _any_ changes to the cached data, it can return `undefined`.
 
 The update function's return value is passed to either `writeQuery` or `writeFragment`, which modifies the cached data.
@@ -272,7 +285,7 @@ The `modify` method of `InMemoryCache` enables you to directly modify the values
 * _Unlike_ `writeQuery` and `writeFragment`:
     * `modify` circumvents any [`merge` functions](cache-field-behavior/#the-merge-function) you've defined, which means that fields are always overwritten with exactly the values you specify.
     * `modify` _cannot_ write fields that do not already exist in the cache.
-* Watched queries can control what happens when they are invalidated by updates to the cache, by passing options like `fetchPolicy` and `nextFetchPolicy` to [`client.watchQuery`](../api/core/ApolloClient/#ApolloClient.watchQuery) or the [`useQuery`](../api/react/hooks/#options) hook.
+* Watched queries can control what happens when they're invalidated by updates to the cache, by passing options like `fetchPolicy` and `nextFetchPolicy` to [`client.watchQuery`](../api/core/ApolloClient/#ApolloClient.watchQuery) or the [`useQuery`](../api/react/hooks/#options) hook.
 
 ### Parameters
 
@@ -310,7 +323,7 @@ When you define a modifier function for a field that contains a scalar, an enum,
 
 A modifier function can optionally take a second parameter, which is an object that contains several helpful utilities.
 
-A couple of these utilities (the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-function-api).
+Some of these utilities (namely, the `readField` function and the `DELETE` sentinel object) are used in the examples below. For descriptions of all available utilities, see the [API reference](../api/cache/InMemoryCache/#modifier-function-api).
 
 ### Examples
 

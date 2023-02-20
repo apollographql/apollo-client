@@ -3,7 +3,7 @@ import { invariant, InvariantError } from '../utilities/globals';
 import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
-import { ApolloCache, DataProxy } from '../cache';
+import { ApolloCache, DataProxy, Reference } from '../cache';
 import { Observable } from '../utilities';
 import { version } from '../version';
 import { HttpLink, UriFunction } from '../link/http';
@@ -192,7 +192,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!hasSuggestedDevtools && __DEV__) {
+    if (!hasSuggestedDevtools && connectToDevTools && __DEV__) {
       hasSuggestedDevtools = true;
       if (
         typeof window !== 'undefined' &&
@@ -283,7 +283,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
    */
-  public watchQuery<T = any, TVariables = OperationVariables>(
+  public watchQuery<T = any, TVariables extends OperationVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
@@ -311,7 +311,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query<T = any, TVariables = OperationVariables>(
+  public query<T = any, TVariables extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVariables, T>,
   ): Promise<ApolloQueryResult<T>> {
     if (this.defaultOptions.query) {
@@ -342,8 +342,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public mutate<
     TData = any,
-    TVariables = OperationVariables,
-    TContext = DefaultContext,
+    TVariables extends OperationVariables = OperationVariables,
+    TContext extends Record<string, any> = DefaultContext,
     TCache extends ApolloCache<any> = ApolloCache<any>
   >(
     options: MutationOptions<TData, TVariables, TContext>,
@@ -358,7 +358,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe<T = any, TVariables = OperationVariables>(
+  public subscribe<T = any, TVariables extends OperationVariables = OperationVariables>(
     options: SubscriptionOptions<TVariables, T>,
   ): Observable<FetchResult<T>> {
     return this.queryManager.startGraphQLSubscription<T>(options);
@@ -408,9 +408,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public writeQuery<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    this.cache.writeQuery<TData, TVariables>(options);
-    this.queryManager.broadcastQueries();
+  ): Reference | undefined {
+    const ref = this.cache.writeQuery<TData, TVariables>(options);
+
+    if (options.broadcast !== false) {
+      this.queryManager.broadcastQueries();
+    }
+
+    return ref;
   }
 
   /**
@@ -426,9 +431,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public writeFragment<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    this.cache.writeFragment<TData, TVariables>(options);
-    this.queryManager.broadcastQueries();
+  ): Reference | undefined {
+    const ref = this.cache.writeFragment<TData, TVariables>(options);
+
+    if (options.broadcast !== false) {
+      this.queryManager.broadcastQueries();
+    }
+
+    return ref;
   }
 
   public __actionHookForDevTools(cb: () => any) {

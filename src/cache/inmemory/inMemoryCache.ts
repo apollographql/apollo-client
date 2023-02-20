@@ -24,6 +24,7 @@ import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
+import { OperationVariables } from '../../core';
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -91,6 +92,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   private resetResultCache(resetResultIdentities?: boolean) {
     const previousReader = this.storeReader;
+    const { fragments } = this.config;
 
     // The StoreWriter is mostly stateless and so doesn't really need to be
     // reset, but it does need to have its writer.storeReader reference updated,
@@ -105,7 +107,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         canon: resetResultIdentities
           ? void 0
           : previousReader && previousReader.canon,
+        fragments,
       }),
+      fragments,
     );
 
     this.maybeBroadcastWatch = wrap((
@@ -120,7 +124,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         // currently using a data store that can track cache dependencies.
         const store = c.optimistic ? this.optimisticData : this.data;
         if (supportsResultCaching(store)) {
-          const { optimistic, rootId, variables } = c;
+          const { optimistic, id, variables } = c;
           return store.makeCacheKey(
             c.query,
             // Different watches can have the same query, optimistic
@@ -130,7 +134,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
             // separation is to include c.callback in the cache key for
             // maybeBroadcastWatch calls. See issue #5733.
             c.callback,
-            canonicalStringify({ optimistic, rootId, variables }),
+            canonicalStringify({ optimistic, id, variables }),
           );
         }
       }
@@ -178,11 +182,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       }).result || null;
     } catch (e) {
       if (e instanceof MissingFieldError) {
-        // Swallow MissingFieldError and return null, so callers do not
-        // need to worry about catching "normal" exceptions resulting from
-        // incomplete cache data. Unexpected errors will be re-thrown. If
-        // you need more information about which fields were missing, use
-        // cache.diff instead, and examine diffResult.missing.
+        // Swallow MissingFieldError and return null, so callers do not need to
+        // worry about catching "normal" exceptions resulting from incomplete
+        // cache data. Unexpected errors will be re-thrown. If you need more
+        // information about which fields were missing, use cache.diff instead,
+        // and examine diffResult.missing.
         return null;
       }
       throw e;
@@ -226,7 +230,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public diff<TData, TVariables = any>(
+  public diff<TData, TVariables extends OperationVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>,
   ): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({
@@ -512,6 +516,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
+  }
+
+  public transformForLink(document: DocumentNode): DocumentNode {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
   }
 
   protected broadcastWatches(options?: BroadcastOptions) {

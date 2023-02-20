@@ -15,6 +15,7 @@ import { HttpLink } from '../link/http';
 import { InMemoryCache } from '../cache';
 import { itAsync, withErrorSpy } from '../testing';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { invariant } from 'ts-invariant';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -2245,7 +2246,7 @@ describe('ApolloClient', () => {
             query: {kind: Kind.DOCUMENT, definitions: []},
             variables: {foo: 'bar'},
             errorPolicy: 'none',
-            context: null,
+            context: undefined,
             fetchPolicy: 'cache-first',
             pollInterval: 100,
             notifyOnNetworkStatusChange: true,
@@ -2313,6 +2314,71 @@ describe('ApolloClient', () => {
       const { data } = await client.query({ query: gql`{ widgets }` });
       expect(data.widgets).toBeDefined();
       expect(data.widgets.length).toBe(2);
+    });
+  });
+
+  describe('refetchQueries', () => {
+    let invariantDebugSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      invariantDebugSpy = jest.spyOn(invariant, 'debug');
+    })
+
+    afterEach(() => {
+      invariantDebugSpy.mockRestore();
+    })
+
+    itAsync('should catch refetchQueries error when not caught explicitly', (resolve, reject) => {
+      const linkFn = jest.fn(() => 
+        new Observable<any>(observer => {
+          setTimeout(() => {
+            observer.error(new Error('refetch failed'));
+          });
+        })
+      ).mockImplementationOnce(() => {
+        setTimeout(refetchQueries);
+        return Observable.of();
+      })
+
+      const client = new ApolloClient({
+        link: new ApolloLink(linkFn),
+        cache: new InMemoryCache()
+      });
+
+      const query = gql`
+        query someData {
+          foo {
+            bar
+          }
+        }
+      `;
+
+      const observable = client.watchQuery({
+        query,
+        fetchPolicy: 'network-only'
+      });
+
+      observable.subscribe({});
+
+      function refetchQueries() {
+        const result = client.refetchQueries({
+          include: 'all'
+        });
+
+        result.queries[0].subscribe({
+          error() {
+            setTimeout(() => {
+              try {
+                expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
+                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error ApolloError: refetch failed');
+                resolve();
+              } catch (err) {
+                reject(err);
+              }
+            });
+          }
+        });
+      }
     });
   });
 });

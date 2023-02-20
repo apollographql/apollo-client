@@ -1,8 +1,7 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
-// @ts-ignore
-import { withState } from './recomposeWithState.js';
+import { withState } from './recomposeWithState';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core';
@@ -46,13 +45,14 @@ describe('[queries] errors', () => {
       cache: new Cache({ addTypename: false })
     });
 
-    class ErrorBoundary extends React.Component {
+    class ErrorBoundary extends React.Component<React.PropsWithChildren> {
       componentDidCatch(e: Error) {
         expect(e.message).toMatch(/bar is not a function/);
         done = true;
       }
 
       render() {
+        // eslint-disable-next-line testing-library/no-node-access
         return this.props.children;
       }
     }
@@ -177,7 +177,7 @@ describe('[queries] errors', () => {
       process.removeListener('unhandledRejection', handle);
     });
 
-    itAsync('does not log when you change variables resulting in an error', (resolve, reject) => {
+    it('does not log when you change variables resulting in an error', async () => {
       const query: DocumentNode = gql`
         query people($var: Int) {
           allPeople(first: $var) {
@@ -221,35 +221,26 @@ describe('[queries] errors', () => {
             componentDidUpdate() {
               const { props } = this;
               iteration += 1;
-              try {
-                if (iteration === 1) {
-                  // initial loading state is done, we have data
-                  expect(props.data!.loading).toBe(false);
-                  expect(props.data!.allPeople).toEqual(data.allPeople);
-                  props.setVar(2);
-                } else if (iteration === 2) {
-                  expect(props.data!.loading).toBe(true);
-                  expect(props.data!.allPeople).toBeUndefined();
-                } else if (iteration === 3) {
-                  expect(props.data!.loading).toBe(false);
-                  expect(props.data!.allPeople).toBeUndefined();
-                  // the second request had an error!
-                  expect(props.data!.error).toBeTruthy();
-                  expect(props.data!.error!.networkError).toBeTruthy();
-                  // // We need to set a timeout to ensure the unhandled rejection is swept up
-                  setTimeout(() => {
-                    try {
-                      expect(unhandled.length).toEqual(0);
-                    } catch (err) {
-                      reject(err);
-                    }
-                    done = true;
-                  });
-                } else {
-                  reject(`Too many iterations (${iteration})`);
-                }
-              } catch (err) {
-                reject(err);
+
+              if (iteration === 1) {
+                // initial loading state is done, we have data
+                expect(props.data!.loading).toBe(false);
+                expect(props.data!.allPeople).toEqual(data.allPeople);
+                props.setVar(2);
+              } else if (iteration === 2) {
+                expect(props.data!.loading).toBe(true);
+                expect(props.data!.allPeople).toBeUndefined();
+              } else if (iteration === 3) {
+                expect(props.data!.loading).toBe(false);
+                expect(props.data!.allPeople).toBeUndefined();
+                // the second request had an error!
+                expect(props.data!.error).toBeTruthy();
+                expect(props.data!.error!.networkError).toBeTruthy();
+                // // We need to set a timeout to ensure the unhandled rejection is swept up
+                setTimeout(() => {
+                  expect(unhandled.length).toEqual(0);
+                  done = true;
+                });
               }
             }
             render() {
@@ -265,10 +256,12 @@ describe('[queries] errors', () => {
         </ApolloProvider>
       );
 
-      waitFor(() => {
-        expect(done).toBeTruthy();
+      await waitFor(() => {
         expect(iteration).toBe(3);
-      }).then(resolve, reject);
+      })
+      await waitFor(() => {
+        expect(done).toBeTruthy();
+      });
     });
   });
 
@@ -697,6 +690,7 @@ describe('[queries] errors', () => {
       }
       render() {
         if (!this.state.show) return null;
+        // eslint-disable-next-line testing-library/no-node-access
         return this.props.children(() =>
           this.setState(({ show }) => ({ show: !show }))
         );

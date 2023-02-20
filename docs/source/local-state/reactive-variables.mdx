@@ -19,7 +19,7 @@ import { makeVar } from '@apollo/client';
 const cartItemsVar = makeVar([]);
 ```
 
-This code creates a reactive variable with an empty array as its initial value. 
+This code creates a reactive variable with an empty array as its initial value.
 
 > **Important:** The return value of `makeVar` is a _function_ that you call to read or modify your reactive variable's value.
 
@@ -40,15 +40,19 @@ To modify the value of your reactive variable, call the function returned by `ma
 
 ```js
 const cartItemsVar = makeVar([]);
+const cartItemIds = [100, 101, 102];
 
-cartItemsVar([100, 101, 102]);
+cartItemsVar(cartItemIds);
 
 // Output: [100, 101, 102]
 console.log(cartItemsVar());
 
-cartItemsVar([456]);
+// Don't mutate an existing object or array.
+// cartItemIds.push(456) will not trigger an update.
+// Instead, pass a new copy:
+cartItemsVar([...cartItemIds, 456]);
 
-// Output: [456]
+// Output: [100, 101, 102, 456]
 console.log(cartItemsVar());
 ```
 
@@ -59,6 +63,21 @@ As their name suggests, reactive variables can trigger reactive changes in your 
 With the `useReactiveVar` hook, React components can also include reactive variable values in their state directly, _without_ wrapping them in a query.
 
 For more information, see [Storing local state in reactive variables](./managing-state-with-field-policies/#storing-local-state-in-reactive-variables).
+
+### useReactiveVar hook
+
+The `useReactiveVar` hook can be used to read from a reactive variable in a way that allows the React component to re-render if/when the variable is next updated.
+
+Previously, the only way for a reactive variable to trigger a React component re-render was through the use of `useQuery`. Now you don't have to be using `useQuery` to benefit from the reactivity that `ReactiveVar<T>` provides.
+
+```tsx
+import { makeVar, useReactiveVar } from "@apollo/client";
+export const cartItemsVar = makeVar([]);
+
+export function Cart() {
+  const cartItems = useReactiveVar(cartItemsVar);
+  // ...
+```
 
 ## Example application
 

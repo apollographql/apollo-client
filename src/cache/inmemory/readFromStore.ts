@@ -1,8 +1,9 @@
-import { invariant } from '../../utilities/globals';
+import { invariant, InvariantError } from '../../utilities/globals';
 
 import {
   DocumentNode,
   FieldNode,
+  Kind,
   SelectionSetNode,
 } from 'graphql';
 import { wrap, OptimisticWrapperFunction } from 'optimism';
@@ -14,12 +15,10 @@ import {
   isReference,
   makeReference,
   StoreObject,
-  createFragmentMap,
   FragmentMap,
   shouldInclude,
   addTypenameToDocument,
   getDefaultValues,
-  getFragmentDefinitions,
   getMainDefinition,
   getQueryDefinition,
   getFragmentFromSelection,
@@ -29,15 +28,17 @@ import {
   isNonNullObject,
   canUseWeakMap,
   compact,
+  FragmentMapFunction,
 } from '../../utilities';
 import { Cache } from '../core/types/Cache';
 import {
   DiffQueryAgainstStoreOptions,
+  InMemoryCacheConfig,
   NormalizedCache,
   ReadMergeModifyContext,
 } from './types';
 import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
-import { getTypenameFromStoreObject, isArray, shouldCanonizeResults } from './helpers';
+import { isArray, extractFragmentContext, getTypenameFromStoreObject, shouldCanonizeResults } from './helpers';
 import { Policies } from './policies';
 import { InMemoryCache } from './inMemoryCache';
 import { MissingFieldError, MissingTree } from '../core/types/common';
@@ -50,6 +51,7 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   canonizeResults: boolean;
   fragmentMap: FragmentMap;
+  lookupFragment: FragmentMapFunction;
 };
 
 export type ExecResult<R = any> = {
@@ -77,6 +79,7 @@ export interface StoreReaderConfig {
   resultCacheMaxSize?: number;
   canonizeResults?: boolean;
   canon?: ObjectCanon;
+  fragments?: InMemoryCacheConfig["fragments"];
 }
 
 // Arguments type after keyArgs translation.
@@ -119,6 +122,7 @@ export class StoreReader {
     addTypename: boolean;
     resultCacheMaxSize?: number;
     canonizeResults: boolean;
+    fragments?: InMemoryCacheConfig["fragments"];
   };
 
   private knownResults = new (
@@ -243,7 +247,7 @@ export class StoreReader {
         variables,
         varString: canonicalStringify(variables),
         canonizeResults,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
+        ...extractFragmentContext(query, this.config.fragments),
       },
     });
 
@@ -400,8 +404,12 @@ export class StoreReader {
       } else {
         const fragment = getFragmentFromSelection(
           selection,
-          context.fragmentMap,
+          context.lookupFragment,
         );
+
+        if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
+          throw new InvariantError(`No fragment named ${selection.name.value}`);
+        }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
           fragment.selectionSet.selections.forEach(workSet.add, workSet);

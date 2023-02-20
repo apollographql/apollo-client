@@ -410,8 +410,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
   ): Reference | undefined {
     const ref = this.cache.writeQuery<TData, TVariables>(options);
-    if(options.broadcast !== false)
+
+    if (options.broadcast !== false) {
       this.queryManager.broadcastQueries();
+    }
+
     return ref;
   }
 
@@ -430,8 +433,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
   ): Reference | undefined {
     const ref = this.cache.writeFragment<TData, TVariables>(options);
-    if(options.broadcast !== false)
+
+    if (options.broadcast !== false) {
       this.queryManager.broadcastQueries();
+    }
+
     return ref;
   }
 

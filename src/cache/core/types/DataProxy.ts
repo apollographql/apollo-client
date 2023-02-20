@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extrane
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { MissingFieldError } from './common';
-import {Reference} from "../../../utilities";
+import { Reference } from '../../../utilities';
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {

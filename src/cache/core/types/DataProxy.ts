@@ -2,6 +2,7 @@ import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extrane
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { MissingFieldError } from './common';
+import { Reference } from '../../../utilities';
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {
@@ -168,7 +169,7 @@ export interface DataProxy {
    */
   writeQuery<TData = any, TVariables = any>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void;
+  ): Reference | undefined;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there is more than
@@ -177,5 +178,5 @@ export interface DataProxy {
    */
   writeFragment<TData = any, TVariables = any>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void;
+  ): Reference | undefined;
 }

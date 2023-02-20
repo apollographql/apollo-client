@@ -2318,30 +2318,32 @@ describe('ApolloClient', () => {
   });
 
   describe('refetchQueries', () => {
-    let invariantDebugSpy: jest.SpyInstance
+    let invariantDebugSpy: jest.SpyInstance;
+
     beforeEach(() => {
-      invariantDebugSpy = jest.spyOn(invariant, 'debug')
+      invariantDebugSpy = jest.spyOn(invariant, 'debug');
     })
 
     afterEach(() => {
-      invariantDebugSpy.mockRestore()
+      invariantDebugSpy.mockRestore();
     })
 
     itAsync('should catch refetchQueries error when not caught explicitely', (resolve, reject) => {
-      const linkFn = jest.fn(() => new Observable<any>(observer => {
+      const linkFn = jest.fn(() => 
+        new Observable<any>(observer => {
           setTimeout(() => {
-            observer.error(new Error('refetch failed'))
-          })
+            observer.error(new Error('refetch failed'));
+          });
         })
       ).mockImplementationOnce(() => {
         setTimeout(refetchQueries);
-        return Observable.of()
+        return Observable.of();
       })
 
       const client = new ApolloClient({
         link: new ApolloLink(linkFn),
         cache: new InMemoryCache()
-      })
+      });
 
       const query = gql`
         query someData {
@@ -2354,29 +2356,29 @@ describe('ApolloClient', () => {
       const observable = client.watchQuery({
         query,
         fetchPolicy: 'network-only'
-      })
+      });
 
-      observable.subscribe({})
+      observable.subscribe({});
 
       function refetchQueries() {
         const result = client.refetchQueries({
           include: 'all'
-        })
+        });
 
         result.queries[0].subscribe({
           error() {
             setTimeout(() => {
               try {
-                expect(invariantDebugSpy).toHaveBeenCalledTimes(1)
-                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error Error: refetch failed')
-                resolve()
+                expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
+                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error Error: refetch failed');
+                resolve();
               } catch (err) {
-                reject(err)
+                reject(err);
               }
-            })
+            });
           }
-        })
+        });
       }
-    })
-  })
+    });
+  });
 });

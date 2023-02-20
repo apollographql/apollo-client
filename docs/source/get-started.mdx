@@ -28,7 +28,7 @@ npm install @apollo/client graphql
 
 > If you're using a React sandbox from CodeSandbox and you encounter a `TypeError`, try downgrading the version of the `graphql` package to `15.8.0` in the Dependencies panel. If you encounter a _different_ error after downgrading, refresh the page.
 
-Our example application will use the [FlyBy GraphQL API](https://flyby-gateway.herokuapp.com/) from Apollo Odyssey's [Voyage tutorial series](https://www.apollographql.com/tutorials/voyage-part1/). This API provides a list of intergalactic travel locations and details about those locations 👽
+Our example application will use the [FlyBy GraphQL API](https://flyby-router-demo.herokuapp.com/) from Apollo Odyssey's [Voyage tutorial series](https://www.apollographql.com/tutorials/voyage-part1/). This API provides a list of intergalactic travel locations and details about those locations 👽
 
 ## Step 3: Initialize `ApolloClient`
 
@@ -44,7 +44,7 @@ Next we'll initialize `ApolloClient`, passing its constructor a configuration ob
 
 ```js title="index.js"
 const client = new ApolloClient({
-  uri: 'https://flyby-gateway.herokuapp.com/',
+  uri: 'https://flyby-router-demo.herokuapp.com/',
   cache: new InMemoryCache(),
 });
 ```
@@ -94,7 +94,7 @@ import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import App from './App';
 
 const client = new ApolloClient({
-  uri: 'https://flyby-gateway.herokuapp.com/',
+  uri: 'https://flyby-router-demo.herokuapp.com/',
   cache: new InMemoryCache(),
 });
 

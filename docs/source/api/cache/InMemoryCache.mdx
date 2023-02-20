@@ -433,6 +433,8 @@ The update function of `updateQuery` takes a query's current cached value and re
 
 The returned value is automatically passed to [`writeQuery`](#writequery), which modifies the cached data.
 
+Please note the `update` function has to calculate the new value in an immutable way. You can read more about immutable updates in the [React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
+
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
@@ -891,6 +893,8 @@ The default value is `false`.
 The update function of `updateFragment` takes a fragment's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
 The returned value is automatically passed to [`writeFragment`](#writefragment), which modifies the cached data.
+
+Please note the `update` function has to calculate the new value in an immutable way. You can read more about immutable updates in the [React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
 
 ### Signature
 

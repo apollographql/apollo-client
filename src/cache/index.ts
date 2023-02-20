@@ -4,6 +4,10 @@ export { Transaction, ApolloCache } from './core/cache';
 export { Cache } from './core/types/Cache';
 export { DataProxy } from './core/types/DataProxy';
 export {
+  MissingTree,
+  Modifier,
+  Modifiers,
+  ModifierDetails,
   MissingFieldError,
   ReadFieldOptions
 } from './core/types/common';
@@ -44,5 +48,10 @@ export {
 export {
   canonicalStringify,
 } from './inmemory/object-canon';
+
+export {
+  FragmentRegistryAPI,
+  createFragmentRegistry,
+} from './inmemory/fragmentRegistry';
 
 export * from './inmemory/types';

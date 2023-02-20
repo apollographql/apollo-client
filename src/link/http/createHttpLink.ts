@@ -3,10 +3,14 @@ import '../../utilities/globals';
 import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../core';
-import { Observable } from '../../utilities';
+import { Observable, hasDirectives } from '../../utilities';
 import { serializeFetchParameter } from './serializeFetchParameter';
 import { selectURI } from './selectURI';
-import { parseAndCheckHttpResponse } from './parseAndCheckHttpResponse';
+import {
+  handleError,
+  readMultipartBody,
+  readJsonBody
+} from './parseAndCheckHttpResponse';
 import { checkFetcher } from './checkFetcher';
 import {
   selectHttpOptionsAndBodyInternal,
@@ -28,6 +32,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     fetch: preferredFetch,
     print = defaultPrinter,
     includeExtensions,
+    preserveHeaderCase,
     useGETForQueries,
     includeUnusedVariables = false,
     ...requestOptions
@@ -40,7 +45,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   }
 
   const linkConfig = {
-    http: { includeExtensions },
+    http: { includeExtensions, preserveHeaderCase },
     options: requestOptions.fetchOptions,
     credentials: requestOptions.credentials,
     headers: requestOptions.headers,
@@ -131,6 +136,12 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.method = 'GET';
     }
 
+    // does not match custom directives beginning with @defer
+    if (hasDirectives(['defer'], operation.query)) {
+      options.headers = options.headers || {};
+      options.headers.accept = "multipart/mixed; deferSpec=20220824, application/json";
+    }
+
     if (options.method === 'GET') {
       const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
       if (parseError) {
@@ -156,55 +167,15 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
-          return response;
-        })
-        .then(parseAndCheckHttpResponse(operation))
-        .then(result => {
-          // we have data and can send it to back up the link chain
-          observer.next(result);
-          observer.complete();
-          return result;
-        })
-        .catch(err => {
-          // fetch was cancelled so it's already been cleaned up in the unsubscribe
-          if (err.name === 'AbortError') return;
-          // if it is a network error, BUT there is graphql result info
-          // fire the next observer before calling error
-          // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networErrors`
-          // to pass to UI
-          // this should only happen if we *also* have data as part of the response key per
-          // the spec
-          if (err.result && err.result.errors && err.result.data) {
-            // if we don't call next, the UI can only show networkError because AC didn't
-            // get any graphqlErrors
-            // this is graphql execution result info (i.e errors and possibly data)
-            // this is because there is no formal spec how errors should translate to
-            // http status codes. So an auth error (401) could have both data
-            // from a public field, errors from a private field, and a status of 401
-            // {
-            //  user { // this will have errors
-            //    firstName
-            //  }
-            //  products { // this is public so will have data
-            //    cost
-            //  }
-            // }
-            //
-            // the result of above *could* look like this:
-            // {
-            //   data: { products: [{ cost: "$10" }] },
-            //   errors: [{
-            //      message: 'your session has timed out',
-            //      path: []
-            //   }]
-            // }
-            // status code of above would be a 401
-            // in the UI you want to show data where you can, errors as data where you can
-            // and use correct http status codes
-            observer.next(err.result);
+          const ctype = response.headers?.get('content-type');
+
+          if (ctype !== null && /^multipart\/mixed/i.test(ctype)) {
+            return readMultipartBody(response, observer);
+          } else {
+            return readJsonBody(response, operation, observer);
           }
-          observer.error(err);
-        });
+        })
+        .catch(err => handleError(err, observer));
 
       return () => {
         // XXX support canceling this request

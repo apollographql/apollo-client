@@ -14,7 +14,7 @@ import {
 
 export interface QueryComponentOptions<
   TData = any,
-  TVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables
 > extends QueryFunctionOptions<TData, TVariables> {
   children: (result: QueryResult<TData, TVariables>) => JSX.Element | null;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -35,7 +35,7 @@ export interface MutationComponentOptions<
 
 export interface SubscriptionComponentOptions<
   TData = any,
-  TVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables
 > extends BaseSubscriptionOptions<TData, TVariables> {
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);

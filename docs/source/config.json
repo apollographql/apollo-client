@@ -2,8 +2,8 @@
   "title": "Client (React)",
   "version": "v3",
   "algoliaFilters": [
-    "docset:react",
-    "docset:server"
+    "docset:apollo-client",
+    "docset:apollo-server"
   ],
   "sidebar": {
     "Introduction": "/",
@@ -16,6 +16,7 @@
       "Refetching": "/data/refetching",
       "Subscriptions": "/data/subscriptions",
       "Fragments": "/data/fragments",
+      "@defer support": "/data/defer",
       "Error handling": "/data/error-handling",
       "Best practices": "/data/operation-best-practices"
     },
@@ -39,7 +40,7 @@
       "Local-only fields": "/local-state/managing-state-with-field-policies",
       "Reactive variables": "/local-state/reactive-variables",
       "Client-side schema": "/local-state/client-side-schema",
-      "Local resolvers (deprecated)": "/local-state/local-resolvers"
+      "Local resolvers": "/local-state/local-resolvers"
     },
     "Development & Testing": {
       "Developer tools": "/development-testing/developer-tooling",
@@ -67,31 +68,34 @@
       "Migrating to Apollo Client 3.0": "/migrating/apollo-client-3-migration",
       "Hooks migration guide": "/migrating/hooks-migration"
     },
-    "API - Core": {
-      "ApolloClient": "/api/core/ApolloClient",
-      "InMemoryCache": "/api/cache/InMemoryCache",
-      "ObservableQuery": "/api/core/ObservableQuery"
-    },
-    "API - React": {
-      "Hooks": "/api/react/hooks",
-      "Testing": "/api/react/testing",
-      "SSR": "/api/react/ssr",
-      "Components (deprecated)": "/api/react/components",
-      "HOC (deprecated)": "/api/react/hoc"
-    },
-    "API - Link": {
-      "Apollo Link overview": "/api/link/introduction",
-      "HTTP": "/api/link/apollo-link-http",
-      "HTTP Batch": "/api/link/apollo-link-batch-http",
-      "Context": "/api/link/apollo-link-context",
-      "Error": "/api/link/apollo-link-error",
-      "Persisted Queries": "/api/link/persisted-queries",
-      "REST": "/api/link/apollo-link-rest",
-      "Retry": "/api/link/apollo-link-retry",
-      "Schema": "/api/link/apollo-link-schema",
-      "Subscriptions (newer protocol)": "/api/link/apollo-link-subscriptions",
-      "WebSocket (older protocol)": "/api/link/apollo-link-ws",
-      "Community links": "/api/link/community-links"
+    "API Reference": {
+      "Core": {
+        "ApolloClient": "/api/core/ApolloClient",
+        "InMemoryCache": "/api/cache/InMemoryCache",
+        "ObservableQuery": "/api/core/ObservableQuery"
+      },
+      "React": {
+        "Hooks": "/api/react/hooks",
+        "Hooks (experimental)": "/api/react/hooks-experimental",
+        "Testing": "/api/react/testing",
+        "SSR": "/api/react/ssr",
+        "Components (deprecated)": "/api/react/components",
+        "HOC (deprecated)": "/api/react/hoc"
+      },
+      "Apollo Link": {
+        "Overview": "/api/link/introduction",
+        "HTTP": "/api/link/apollo-link-http",
+        "HTTP Batch": "/api/link/apollo-link-batch-http",
+        "Context": "/api/link/apollo-link-context",
+        "Error": "/api/link/apollo-link-error",
+        "Persisted Queries": "/api/link/persisted-queries",
+        "REST": "/api/link/apollo-link-rest",
+        "Retry": "/api/link/apollo-link-retry",
+        "Schema": "/api/link/apollo-link-schema",
+        "Subscriptions (newer protocol)": "/api/link/apollo-link-subscriptions",
+        "WebSocket (older protocol)": "/api/link/apollo-link-ws",
+        "Community links": "/api/link/community-links"
+      }
     }
   }
 }

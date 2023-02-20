@@ -13,7 +13,7 @@ import { IsStrictlyAny } from '../utilities';
 
 export { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-export type DefaultContext = Record<string, any>;
+export interface DefaultContext extends Record<string, any> {};
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
@@ -140,7 +140,7 @@ export type ApolloQueryResult<T> = {
   */
   errors?: ReadonlyArray<GraphQLError>;
   /**
-  * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls. 
+  * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
   * This will contain both a NetworkError field and any GraphQLErrors.
   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
   */

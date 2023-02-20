@@ -389,17 +389,24 @@ export const cache = new ApolloClient({
 
 ## Testing local state
 
-In order to properly test local state using `MockedProvider`, you'll need to passed a configured cache into `MockedProvider` itself.
+In order to properly test local state using `MockedProvider`, you'll need to pass a configured cache into `MockedProvider` itself.
 
 `MockedProvider` creates its own ApolloClient instance behind the scenes like this:
 
 ```jsx
-const { mocks, addTypename, defaultOptions, cache, resolvers, link } =
-  this.props;
+const { 
+  mocks,
+  addTypename,
+  defaultOptions,
+  cache,
+  resolvers,
+  link,
+  showWarnings,
+} = this.props;
 const client = new ApolloClient({
   cache: cache || new Cache({ addTypename }),
   defaultOptions,
-  link: link || new MockLink(mocks || [], addTypename),
+  link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
   resolvers,
 });
 ```

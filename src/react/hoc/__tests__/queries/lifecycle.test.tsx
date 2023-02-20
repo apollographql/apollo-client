@@ -108,7 +108,7 @@ describe('[queries] lifecycle', () => {
     waitFor(() => expect(count).toBe(3)).then(resolve, reject);
   });
 
-  itAsync('rebuilds the queries on prop change when using `options`', (resolve, reject) => {
+  it('rebuilds the queries on prop change when using `options`', async () => {
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -166,10 +166,12 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(firstRun).toBeFalsy();
+    });
+    await waitFor(() => {
       expect(isDone).toBeTruthy();
-    }).then(resolve, reject);
+    });
   });
 
   itAsync('reruns the query if just the variables change', (resolve, reject) => {

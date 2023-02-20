@@ -40,7 +40,7 @@ const {
 
 export function useQuery<
   TData = any,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<TData, TVariables> = Object.create(null),
@@ -51,7 +51,7 @@ export function useQuery<
   ).useQuery(options);
 }
 
-export function useInternalState<TData, TVariables>(
+export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ): InternalState<TData, TVariables> {
@@ -79,7 +79,7 @@ export function useInternalState<TData, TVariables>(
   return state;
 }
 
-class InternalState<TData, TVariables> {
+class InternalState<TData, TVariables extends OperationVariables> {
   constructor(
     public readonly client: ReturnType<typeof useApolloClient>,
     public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -101,10 +101,20 @@ class InternalState<TData, TVariables> {
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
 
-  asyncUpdate() {
-    return new Promise<QueryResult<TData, TVariables>>(resolve => {
+  asyncUpdate(signal: AbortSignal) {
+    return new Promise<QueryResult<TData, TVariables>>((resolve, reject) => {
+      const watchQueryOptions = this.watchQueryOptions;
+
+      const handleAborted = () => {
+        this.asyncResolveFns.delete(resolve)
+        this.optionsToIgnoreOnce.delete(watchQueryOptions);
+        signal.removeEventListener('abort', handleAborted)
+        reject(signal.reason);
+      };
+
       this.asyncResolveFns.add(resolve);
-      this.optionsToIgnoreOnce.add(this.watchQueryOptions);
+      this.optionsToIgnoreOnce.add(watchQueryOptions);
+      signal.addEventListener('abort', handleAborted)
       this.forceUpdate();
     });
   }
@@ -378,7 +388,6 @@ class InternalState<TData, TVariables> {
     ssr,
     onCompleted,
     onError,
-    displayName,
     defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
@@ -504,12 +513,25 @@ class InternalState<TData, TVariables> {
 
   private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
     if (!result.loading) {
-      if (result.error) {
-        this.onError(result.error);
-      } else if (result.data) {
-        this.onCompleted(result.data);
-      }
+      const error = this.toApolloError(result);
+
+      // wait a tick in case we are in the middle of rendering a component
+      Promise.resolve().then(() => {
+        if (error) {
+          this.onError(error);
+        } else if (result.data) {
+          this.onCompleted(result.data);
+        }
+      }).catch(error => {
+        invariant.warn(error);
+      });
     }
+  }
+
+  private toApolloError(result: ApolloQueryResult<TData>): ApolloError | undefined {
+    return isNonEmptyArray(result.errors)
+      ? new ApolloError({ graphQLErrors: result.errors })
+      : result.error
   }
 
   private getCurrentResult(): ApolloQueryResult<TData> {

@@ -40,15 +40,19 @@ To modify the value of your reactive variable, call the function returned by `ma
 
 ```js
 const cartItemsVar = makeVar([]);
+const cartItemIds = [100, 101, 102];
 
-cartItemsVar([100, 101, 102]);
+cartItemsVar(cartItemIds);
 
 // Output: [100, 101, 102]
 console.log(cartItemsVar());
 
-cartItemsVar([456]);
+// Don't mutate an existing object or array.
+// cartItemIds.push(456) will not trigger an update.
+// Instead, pass a new copy:
+cartItemsVar([...cartItemIds, 456]);
 
-// Output: [456]
+// Output: [100, 101, 102, 456]
 console.log(cartItemsVar());
 ```
 

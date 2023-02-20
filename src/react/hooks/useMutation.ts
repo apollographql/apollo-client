@@ -26,7 +26,7 @@ export function useMutation<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<TData, TVariables, TContext>,
+  options?: MutationHookOptions<TData, TVariables, TContext, TCache>,
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
@@ -100,8 +100,10 @@ export function useMutation<
           setResult(ref.current.result = result);
         }
       }
-      ref.current.options?.onCompleted?.(response.data!, clientOptions);
-      executeOptions.onCompleted?.(response.data!, clientOptions);
+
+      const onCompleted = executeOptions.onCompleted || ref.current.options?.onCompleted
+      onCompleted?.(response.data!, clientOptions);
+
       return response;
     }).catch((error) => {
       if (
@@ -121,9 +123,11 @@ export function useMutation<
         }
       }
 
-      if (ref.current.options?.onError || clientOptions.onError) {
-        ref.current.options?.onError?.(error, clientOptions);
-        executeOptions.onError?.(error, clientOptions);
+      const onError = executeOptions.onError || ref.current.options?.onError
+
+      if (onError) {
+        onError(error, clientOptions);
+
         // TODO(brian): why are we returning this here???
         return { data: void 0, errors: error };
       }

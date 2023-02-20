@@ -175,7 +175,7 @@ describe('General use', () => {
     };
 
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider showWarnings={false} mocks={mocks}>
         <Component {...variables2} />
       </MockedProvider>
     );
@@ -215,7 +215,7 @@ describe('General use', () => {
     };
 
     render(
-      <MockedProvider mocks={mocks2}>
+      <MockedProvider showWarnings={false} mocks={mocks2}>
         <Component {...variables2} />
       </MockedProvider>
     );
@@ -325,7 +325,7 @@ describe('General use', () => {
     ];
 
     render(
-      <MockedProvider mocks={mocksDifferentQuery}>
+      <MockedProvider showWarnings={false} mocks={mocksDifferentQuery}>
         <Component {...variables} />
       </MockedProvider>
     );
@@ -424,7 +424,7 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should return "No more mocked responses" errors in response', (resolve, reject) => {
+  it('should return "No more mocked responses" errors in response', async () => {
     let finished = false;
     function Component() {
       const { loading, error } = useQuery(query);
@@ -435,7 +435,10 @@ describe('General use', () => {
       return null;
     }
 
-    const link = ApolloLink.from([errorLink, new MockLink([])]);
+    const link = ApolloLink.from([
+      errorLink,
+      new MockLink([], true, { showWarnings: false })
+    ]);
 
     render(
       <MockedProvider link={link}>
@@ -443,15 +446,15 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(finished).toBe(true);
-      // The "No more mocked responses" error should not be thrown as an
-      // uncaught exception.
-      expect(errorThrown).toBeFalsy();
-    }).then(resolve, reject);
+    });
+    // The "No more mocked responses" error should not be thrown as an
+    // uncaught exception.
+    expect(errorThrown).toBeFalsy();
   });
 
-  itAsync('should return "Mocked response should contain" errors in response', (resolve, reject) => {
+  it('should return "Mocked response should contain" errors in response', async () => {
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, { variables });
@@ -477,12 +480,147 @@ describe('General use', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(finished).toBe(true);
-      // The "Mocked response should contain" error should not be thrown as an
-      // uncaught exception.
-      expect(errorThrown).toBeFalsy();
-    }).then(resolve, reject);
+    });
+    // The "Mocked response should contain" error should not be thrown as an
+    // uncaught exception.
+    expect(errorThrown).toBeFalsy();
+  });
+
+  it('shows a warning in the console when there is no matched mock', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    let finished = false;
+    function Component({ ...variables }: Variables) {
+      const { loading } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        finished = true;
+      }
+      return null;
+    }
+
+    const mocksDifferentQuery = [
+      {
+        request: {
+          query: gql`
+            query OtherQuery {
+              otherQuery {
+                id
+              }
+            }
+          `,
+          variables
+        },
+        result: { data: { user } }
+      }
+    ];
+
+    render(
+      <MockedProvider mocks={mocksDifferentQuery}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(finished).toBe(true);
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('No more mocked responses for the query')
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('silences console warning for unmatched mocks when `showWarnings` is `false`', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
+    let finished = false;
+    function Component({ ...variables }: Variables) {
+      const { loading } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        finished = true;
+      }
+      return null;
+    }
+
+    const mocksDifferentQuery = [
+      {
+        request: {
+          query: gql`
+            query OtherQuery {
+              otherQuery {
+                id
+              }
+            }
+          `,
+          variables
+        },
+        result: { data: { user } }
+      }
+    ];
+
+    render(
+      <MockedProvider mocks={mocksDifferentQuery} showWarnings={false}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(finished).toBe(true);
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
+
+  it('silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
+    let finished = false;
+    function Component({ ...variables }: Variables) {
+      const { loading } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        finished = true;
+      }
+      return null;
+    }
+
+    const mocksDifferentQuery = [
+      {
+        request: {
+          query: gql`
+            query OtherQuery {
+              otherQuery {
+                id
+              }
+            }
+          `,
+         variables
+        },
+        result: { data: { user } }
+      }
+    ];
+
+    const link = new MockLink(
+      mocksDifferentQuery,
+      false,
+      { showWarnings: false }
+    );
+
+    render(
+      <MockedProvider link={link}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    await waitFor(() => {
+      expect(finished).toBe(true);
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
   });
 
   itAsync('should support custom error handling using setOnError', (resolve, reject) => {
@@ -492,7 +630,7 @@ describe('General use', () => {
       return null;
     }
 
-    const mockLink = new MockLink([]);
+    const mockLink = new MockLink([], true, { showWarnings: false });
     mockLink.setOnError(error => {
       expect(error).toMatchSnapshot();
       finished = true;
@@ -521,7 +659,7 @@ describe('General use', () => {
       return null;
     }
 
-    const mockLink = new MockLink([]);
+    const mockLink = new MockLink([], true, { showWarnings: false });
     mockLink.setOnError(() => {
       throw new Error('oh no!');
     });

@@ -22,7 +22,7 @@ sequenceDiagram
     Cache->>GraphQL Server: Queries remote fields;
     Note over GraphQL Server: Resolves remote fields;
     GraphQL Server->>Cache: Returns remote fields;
-    Note over Cache: Caches remote fields;
+    Note over Cache: Caches remote fields*;
     Cache->>Apollo Client: Returns ALL fields;
     Note over Apollo Client: Time passes…;
     Apollo Client->>Cache: Executes same query;
@@ -33,7 +33,7 @@ sequenceDiagram
 
 To support this flow, Apollo Client 3 introduces two complementary mechanisms for managing local state: [field policies](#field-policies-and-local-only-fields) and [reactive variables](#reactive-variables).
 
-> The [local resolver API](./local-resolvers/) from previous versions of Apollo Client is also available but is [deprecated](./local-resolvers/#deprecation-notice).
+> \* The [local resolver API](./local-resolvers/) from previous versions of Apollo Client is also available but is [deprecated](./local-resolvers/#deprecation-notice). Some additional steps may occur when using this, e.g. the `@client(always:true)` directive would recalculate local field resolvers after remote fields are cached.
 
 ## Field policies and local-only fields
 
@@ -57,12 +57,12 @@ Whenever the value of a reactive variable changes, Apollo Client automatically d
 
 [Get started with reactive variables](./reactive-variables)
 
-## Local resolvers (deprecated)
+## Local resolvers
 
 > Available in Apollo Client >= 2.5
 
 In earlier versions of Apollo Client, you define **local resolvers** to populate and modify local-only fields. These resolvers are similar in structure and purpose to the [resolvers that your GraphQL server defines](/apollo-server/data/resolvers/).
 
-This functionality is still available in Apollo Client 3, but it is deprecated.
+This functionality is still available in Apollo Client 3, but will be moved out of the core module in a future major release.
 
 [Learn more about local resolvers](./local-resolvers)

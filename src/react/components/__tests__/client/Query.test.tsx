@@ -1,7 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 import { ApolloClient, NetworkStatus } from '../../../../core';
 import { ApolloError } from '../../../../errors';
@@ -115,20 +115,20 @@ describe('Query component', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('renders using the children prop', (resolve, reject) => {
+  it('renders using the children prop', async () => {
     const Component = () => (
       <Query query={allPeopleQuery}>{(_: any) => <div>test</div>}</Query>
     );
 
-    const { getByText } = render(
+    render(
       <MockedProvider mocks={allPeopleMocks}>
         <Component />
       </MockedProvider>
     );
 
-    waitFor(() => {
-      expect(getByText('test')).toBeTruthy();
-    }).then(resolve, reject);
+    await waitFor(() => {
+      expect(screen.getByText('test')).toBeTruthy();
+    });
   });
 
   describe('result provides', () => {
@@ -1398,7 +1398,7 @@ describe('Query component', () => {
     });
   });
 
-  itAsync('should error if the query changes type to a subscription', (resolve, reject) => {
+  it('should error if the query changes type to a subscription', async () => {
     let finished = false;
     const subscription = gql`
       subscription onCommentAdded($repoFullName: String!) {
@@ -1445,11 +1445,10 @@ describe('Query component', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(finished).toBe(true);
-    }).finally(() => {
-      console.error = errorLog;
-    }).then(resolve, reject);
+    }, { interval: 1 });
+    console.error = errorLog;
   });
 
   itAsync('should be able to refetch after there was a network error', (resolve, reject) => {
@@ -1672,7 +1671,7 @@ describe('Query component', () => {
     }
   );
 
-  itAsync('should support mixing setState and onCompleted', (resolve, reject) => {
+  it('should support mixing setState and onCompleted', async () => {
     const query = gql`
       query people($first: Int) {
         allPeople(first: $first) {
@@ -1749,7 +1748,7 @@ describe('Query component', () => {
                   expect(data).toEqual(data1);
                   break;
                 default:
-                  reject(`Too many renders (${renderCount})`);
+                  console.error(`Too many renders (${renderCount})`);
               }
               return null;
             }}
@@ -1764,10 +1763,12 @@ describe('Query component', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(renderCount).toBe(5);
+    });
+    await waitFor(() => {
       expect(onCompletedCallCount).toBe(3);
-    }).then(resolve, reject);
+    });
   });
 
   itAsync('should not repeatedly call onError if setState in it', (resolve, reject) => {

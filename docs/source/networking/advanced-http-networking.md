@@ -191,6 +191,7 @@ The `HttpLink` constructor accepts the following options:
 | `includeExtensions` | If `true`, you can pass an `extensions` field to your GraphQL server. (default: `false`) |
 | `fetch` | A `fetch`-compatible API for making a request. See [Providing a `fetch` replacement for certain environments](#providing-a-fetch-replacement-for-certain-environments). |
 | `headers` | An object containing header names and values to include in each request. |
+| `preserveHeaderCase` | If `true`, header values retain their capitalization for non-http-spec-compliant servers. (default: `false`) |
 | `credentials` | A string representing the credentials policy to use for the `fetch` call. (valid values: `omit`, `include`, `same-origin`) |
 | `fetchOptions` | Include this to override the values of certain options that are provided to the `fetch` call. |
 | `useGETForQueries` | If `true`, `HttpLink` uses `GET` requests instead of `POST` requests to execute query operations (but not mutation operations). (default: `false`) |

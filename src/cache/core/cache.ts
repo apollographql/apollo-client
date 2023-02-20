@@ -97,7 +97,15 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   // Optional API
 
+  // Called once per input document, allowing the cache to make static changes
+  // to the query, such as adding __typename fields.
   public transformDocument(document: DocumentNode): DocumentNode {
+    return document;
+  }
+
+  // Called before each ApolloLink request, allowing the cache to make dynamic
+  // changes to the query, such as filling in missing fragment definitions.
+  public transformForLink(document: DocumentNode): DocumentNode {
     return document;
   }
 
@@ -111,12 +119,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public modify(options: Cache.ModifyOptions): boolean {
     return false;
-  }
-
-  // Experimental API
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    return document;
   }
 
   // DataProxy API

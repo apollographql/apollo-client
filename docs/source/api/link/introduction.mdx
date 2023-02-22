@@ -254,16 +254,19 @@ In the following example, all subscription operations are sent to `GraphQLWsLink
 
 ```js
 import { ApolloLink, HttpLink } from '@apollo/client';
+import { getMainDefinition } from '@apollo/client/utilities';
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 
-const definitionIsSubscription = (d) => {
-  return d.kind === "OperationDefinition" && d.operation === "subscription";
-};
-
 export const link = ApolloLink.split(
-  (operation) => operation.query.definitions.some(definitionIsSubscription),
-  new GraphQLWsLink(createClient({ url: "wss://localhost:3000/subscriptions" })),
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
+  },
+  new GraphQLWsLink(createClient({ url: "ws://localhost:3000/subscriptions" })),
   new HttpLink({ uri: "http://localhost:4000/graphql" })
 );
 ```

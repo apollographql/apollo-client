@@ -250,6 +250,24 @@ Other uses for the `split` method include:
 * Using different transport methods depending on the operation type (such as HTTP for queries and WebSocket for subscriptions)
 * Customizing logic depending on whether a user is logged in
 
+In the following example, all subscription operations are sent to `GraphQLWsLink`, with all other operations sent to `HttpLink`:
+
+```js
+import { ApolloLink, HttpLink } from '@apollo/client';
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
+
+const definitionIsSubscription = (d) => {
+  return d.kind === "OperationDefinition" && d.operation === "subscription";
+};
+
+export const link = ApolloLink.split(
+  (operation) => operation.query.definitions.some(definitionIsSubscription),
+  new GraphQLWsLink(createClient({ url: "wss://localhost:3000/subscriptions" })),
+  new HttpLink({ uri: "http://localhost:4000/graphql" })
+);
+```
+
 ### Providing to Apollo Client
 
 After you finish composing your entire link chain, you provide the resulting link to the constructor of `ApolloClient`, like so:

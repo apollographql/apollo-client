@@ -58,7 +58,7 @@ export function useSuspenseQuery_experimental<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
-  const suspenseCache = useSuspenseCache();
+  const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);

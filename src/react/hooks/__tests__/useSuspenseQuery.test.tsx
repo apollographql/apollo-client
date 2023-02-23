@@ -298,12 +298,51 @@ describe('useSuspenseQuery', () => {
       });
     }).toThrowError(
       new InvariantError(
-        'Could not find a "suspenseCache" in the context. Wrap the root component ' +
-          'in an <ApolloProvider> and provide a suspenseCache.'
+        'Could not find a "suspenseCache" in the context or passed in as an option. ' +
+          'Wrap the root component in an <ApolloProvider> and provide a suspenseCache, ' +
+          'or pass a SuspenseCache instance in via options.'
       )
     );
 
     consoleSpy.mockRestore();
+  });
+
+  it('does not throw when provided a `suspenseCache` option', () => {
+    const { query } = useSimpleQueryCase();
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const suspenseCache = new SuspenseCache();
+
+    expect(() => {
+      renderHook(() => useSuspenseQuery(query, { suspenseCache }), {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client} suspenseCache={undefined}>
+            {children}
+          </ApolloProvider>
+        ),
+      });
+    }).not.toThrow();
+  });
+
+  it('prioritizes the `suspenseCache` option over the context value', () => {
+    const { query } = useSimpleQueryCase();
+
+    const directSuspenseCache = new SuspenseCache();
+    const contextSuspenseCache = new SuspenseCache();
+
+    renderHook(
+      () => useSuspenseQuery(query, { suspenseCache: directSuspenseCache }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider suspenseCache={contextSuspenseCache}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
+
+    expect(directSuspenseCache.lookup(query, {})).toBeTruthy();
+    expect(contextSuspenseCache.lookup(query, {})).not.toBeTruthy();
   });
 
   it('ensures a valid fetch policy is used', () => {

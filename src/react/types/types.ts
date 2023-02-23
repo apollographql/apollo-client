@@ -86,13 +86,20 @@ export interface QueryDataOptions<TData = any, TVariables extends OperationVaria
 
 export interface QueryHookOptions<TData = any, TVariables extends OperationVariables = OperationVariables>
   extends QueryFunctionOptions<TData, TVariables> {
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
-> extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {}
+> extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {
+}
+
+export interface LazyQueryHookExecOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+> extends LazyQueryHookOptions<TData, TVariables> {
+  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+}
 
 /**
  * suspensePolicy determines how suspense behaves for a refetch. The options are:
@@ -155,7 +162,7 @@ export type QueryTuple<TData, TVariables extends OperationVariables> =
   LazyQueryResultTuple<TData, TVariables>;
 
 export type LazyQueryExecFunction<TData, TVariables extends OperationVariables> = (
-  options?: Partial<LazyQueryHookOptions<TData, TVariables>>,
+  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>,
 ) => Promise<QueryResult<TData, TVariables>>;
 
 export type LazyQueryResultTuple<TData, TVariables extends OperationVariables> = [
@@ -218,7 +225,6 @@ export interface MutationHookOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-  mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface MutationDataOptions<
@@ -294,7 +300,6 @@ export interface SubscriptionHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 > extends BaseSubscriptionOptions<TData, TVariables> {
-  subscription?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface SubscriptionDataOptions<
@@ -309,3 +314,30 @@ export interface SubscriptionCurrentObservable {
   query?: Observable<any>;
   subscription?: ObservableSubscription;
 }
+
+/**
+Helper type that allows using a type in a way that cannot be "widened" by inference on the value it is used on.
+
+This type was first suggested [in this Github discussion](https://github.com/microsoft/TypeScript/issues/14829#issuecomment-504042546).
+
+Example usage:
+```ts
+export function useQuery<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = Object.create(null),
+)
+```
+In this case, `TData` and `TVariables` should be inferred from `query`, but never widened from something in `options`.
+
+So, in this code example:
+```ts
+declare const typedNode: TypedDocumentNode<{ foo: string}, { bar: number }>
+const { variables } = useQuery(typedNode, { variables: { bar: 4, nonExistingVariable: "string" } });
+```
+Without the use of `NoInfer`, `variables` would now be of the type `{ bar: number, nonExistingVariable: "string" }`.
+With `NoInfer`, it will instead give an error on `nonExistingVariable`.
+ */
+export type NoInfer<T> = [T][T extends any ? 0 : never]

@@ -5,8 +5,10 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { OperationVariables } from '../../core';
 import { mergeOptions } from '../../utilities';
 import {
+  LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,
+  NoInfer,
   QueryResult,
 } from '../types/types';
 import { useInternalState } from './useQuery';
@@ -25,16 +27,16 @@ const EAGER_METHODS = [
 
 export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryHookOptions<TData, TVariables>
+  options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
   const abortControllersRef = useRef(new Set<AbortController>());
 
-  const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
+  const execOptionsRef = useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
   const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
 
   const internalState = useInternalState<TData, TVariables>(
     useApolloClient(options && options.client),
-    merged?.query ?? query
+    execOptionsRef.current?.query ?? query
   );
 
   const useQueryResult = internalState.useQuery({

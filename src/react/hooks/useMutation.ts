@@ -6,6 +6,7 @@ import {
   MutationHookOptions,
   MutationResult,
   MutationTuple,
+  NoInfer,
 } from '../types/types';
 
 import {
@@ -26,7 +27,7 @@ export function useMutation<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<TData, TVariables, TContext, TCache>,
+  options?: MutationHookOptions<NoInfer<TData>, NoInfer<TVariables>, TContext, TCache>,
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);

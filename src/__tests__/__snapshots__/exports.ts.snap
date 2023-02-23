@@ -391,6 +391,7 @@ Array [
   "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
+  "isArray",
   "isAsyncIterableIterator",
   "isBlob",
   "isDocumentNode",

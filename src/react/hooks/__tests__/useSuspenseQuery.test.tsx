@@ -307,7 +307,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it('also accepts a `suspenseCache` option', () => {
+  it('does not throw when provided a `suspenseCache` option', () => {
     const { query } = useSimpleQueryCase();
 
     const client = new ApolloClient({ cache: new InMemoryCache() });

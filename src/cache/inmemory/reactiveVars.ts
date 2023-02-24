@@ -55,7 +55,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
   // This is defined via an IIFE so that the `value` that was passed in as the
   // default is still available in the fallback scenario where a cache isn't
   // available.
-  const rv: ReactiveVar<T> = (() => function (newValue?: T) {
+  const rv = (() => function (newValue?: T) {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;

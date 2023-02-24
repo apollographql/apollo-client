@@ -348,6 +348,26 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
 
         let subscription: Subscription;
 
+        // We use a `setTimeout` here to avoid issues in React's strict mode
+        // where the subscription would be torn down, but resubscribing would
+        // be stuck in the torn down state, therefore updates to the cache would
+        // not trigger the observable's subscription. This occurs due to the new
+        // `fetchOnFirstSubscribe` option introduced with `useSuspenseQuery`,
+        // which avoids issuing a network request (via `reobserve`) when calling
+        // `subscribe` on the observable. Unfortunately `reobserve` is required
+        // to put the observable back into a non-torn-down state, which is not
+        // called due to this option. Instead we try delaying calling subscribe
+        // for the first time by allowing React to run this effect, tear it down,
+        // then set it back up again before we resubscribe.
+        //
+        // Authors note (Jerel): This feels super hacky and I hate it, but this
+        // seems like the best approach to avoid completely changing around the
+        // internals of ObservableQuery, which could introduce new bugs if I'm
+        // not careful. Ideally we could call `subscribe()`, `unsubscribe()`,
+        // then `subscribe()` again and be back into a normal state, but this
+        // might require a sizable refactor to accomplish.
+        //
+        // Related to https://github.com/apollographql/apollo-client/issues/10428
         subscribeTimeoutRef.current = setTimeout(() => {
           subscription = observable.subscribe({
             next: handleUpdate,

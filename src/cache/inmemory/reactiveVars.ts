@@ -52,7 +52,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
   const caches = new Set<ApolloCache<any>>();
   const listeners = new Set<ReactiveListener<T>>();
 
-  const rv: ReactiveVar<T> = function (newValue) {
+  const rv: ReactiveVar<T> = (newValue) => {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;

@@ -3800,6 +3800,9 @@ describe('useSuspenseQuery', () => {
     const link = new MockSubscriptionLink();
     const cache = new InMemoryCache();
 
+    // We are intentionally writing partial data to the cache. Supress console
+    // warnings to avoid unnecessary noise in the test.
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     cache.writeQuery({
       query,
       data: {
@@ -3809,6 +3812,7 @@ describe('useSuspenseQuery', () => {
         },
       },
     });
+    consoleSpy.mockRestore();
 
     const { result, renders } = renderSuspenseHook(
       () =>

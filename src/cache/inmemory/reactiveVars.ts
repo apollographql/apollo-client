@@ -52,7 +52,10 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
   const caches = new Set<ApolloCache<any>>();
   const listeners = new Set<ReactiveListener<T>>();
 
-  const rv: ReactiveVar<T> = function (newValue?: T) {
+  // This is defined via an IIFE so that the `value` that was passed in as the
+  // default is still available in the fallback scenario where a cache isn't
+  // available.
+  const rv: ReactiveVar<T> = (() => function (newValue?: T) {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;
@@ -82,7 +85,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     }
 
     return value;
-  }.bind(this);
+  })()
 
   rv.onNextChange = listener => {
     listeners.add(listener);

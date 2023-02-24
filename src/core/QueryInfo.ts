@@ -361,7 +361,7 @@ export class QueryInfo {
       "variables" | "fetchPolicy" | "errorPolicy"
     >,
     cacheWriteBehavior: CacheWriteBehavior
-  ) {
+  ): typeof result {
     const merger = new DeepMerger();
     const graphQLErrors = isNonEmptyArray(result.errors)
       ? result.errors.slice(0)
@@ -408,7 +408,10 @@ export class QueryInfo {
             });
 
             this.lastWrite = {
-              result,
+              // Make a shallow defensive copy of the result object, in case we
+              // later later modify result.data in place, since we don't want
+              // that mutation affecting the saved lastWrite.result.data.
+              result: { ...result },
               variables: options.variables,
               dmCount: destructiveMethodCounts.get(this.cache),
             };
@@ -448,7 +451,10 @@ export class QueryInfo {
             if (this.lastDiff && this.lastDiff.diff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
-              result.data = this.lastDiff.diff.result;
+              result = {
+                ...result,
+                data: this.lastDiff.diff.result,
+              };
               return;
             }
             // If the previous this.diff was incomplete, fall through to
@@ -470,20 +476,23 @@ export class QueryInfo {
             this.updateWatch(options.variables);
           }
 
-          // If we're allowed to write to the cache, and we can read a
-          // complete result from the cache, update result.data to be the
-          // result from the cache, rather than the raw network result.
-          // Set without setDiff to avoid triggering a notify call, since
-          // we have other ways of notifying for this result.
+          // If we're allowed to write to the cache, update result.data to be
+          // the result as re-read from the cache, rather than the raw network
+          // result. Set without setDiff to avoid triggering a notify call,
+          // since we have other ways of notifying for this result.
           this.updateLastDiff(diff, diffOptions);
-          if (diff.complete) {
-            result.data = diff.result;
-          }
+          result = {
+            ...result,
+            // TODO Improve types so we don't need this cast.
+            data: diff.result as any,
+          };
         });
       } else {
         this.lastWrite = void 0;
       }
     }
+
+    return result;
   }
 
   public markReady() {

@@ -334,7 +334,10 @@ describe('useSuspenseQuery', () => {
       () => useSuspenseQuery(query, { suspenseCache: directSuspenseCache }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider suspenseCache={contextSuspenseCache}>
+          <MockedProvider
+            suspenseCache={contextSuspenseCache}
+            showWarnings={false}
+          >
             {children}
           </MockedProvider>
         ),

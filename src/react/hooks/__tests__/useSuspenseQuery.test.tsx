@@ -1725,6 +1725,43 @@ describe('useSuspenseQuery', () => {
     }
   );
 
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'cache-and-network',
+  ])(
+    'response to cache updates in strict mode while using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useSimpleQueryCase();
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const { result } = renderSuspenseHook(
+        () => useSuspenseQuery(query, { fetchPolicy }),
+        { strictMode: true, client }
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[0].result.data);
+      });
+
+      client.writeQuery({
+        query,
+        data: { greeting: 'Updated hello' },
+      });
+
+      await waitFor(() => {
+        expect(result.current).toMatchObject({
+          data: { greeting: 'Updated hello' },
+          error: undefined,
+        });
+      });
+    }
+  );
+
   it('uses the default fetch policy from the client when none provided in options', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

@@ -27,6 +27,7 @@ import {
 import { useDeepMemo, useIsomorphicLayoutEffect } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
+import { Subscription } from 'zen-observable-ts';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -299,6 +300,7 @@ function useIsDeferred(query: DocumentNode) {
 function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
   const resultRef = useRef<ApolloQueryResult<TData>>();
   const isMountedRef = useRef(false);
+  const subscribeTimeoutRef = useRef<NodeJS.Timeout>();
 
   if (!resultRef.current) {
     resultRef.current = observable.getCurrentResult();
@@ -323,6 +325,8 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
   return useSyncExternalStore(
     useCallback(
       (forceUpdate) => {
+        clearTimeout(subscribeTimeoutRef.current);
+
         function handleUpdate() {
           const previousResult = resultRef.current!;
           const result = observable.getCurrentResult();
@@ -342,13 +346,17 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
           }
         }
 
-        const subscription = observable.subscribe({
-          next: handleUpdate,
-          error: handleUpdate,
+        let subscription: Subscription;
+
+        subscribeTimeoutRef.current = setTimeout(() => {
+          subscription = observable.subscribe({
+            next: handleUpdate,
+            error: handleUpdate,
+          });
         });
 
         return () => {
-          subscription.unsubscribe();
+          subscription?.unsubscribe();
         };
       },
       [observable]

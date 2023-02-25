@@ -12,10 +12,9 @@ import { QueryResult } from '../../types/types';
 
 const IS_REACT_18 = React.version.startsWith("18");
 
+jest.mock('optimism')
+
 describe('useLazyQuery Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });

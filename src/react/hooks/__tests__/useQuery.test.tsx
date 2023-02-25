@@ -1,9 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { act } from 'react-dom/test-utils';
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor, renderHook } from '@testing-library/react';
+import { act, render, screen, waitFor, renderHook } from '@testing-library/react';
 import {
   ApolloClient,
   ApolloError,
@@ -27,10 +26,9 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
+jest.mock('optimism')
+
 describe('useQuery Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });

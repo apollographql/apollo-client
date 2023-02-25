@@ -16,9 +16,6 @@ import { TypePolicies } from '../policies';
 disableFragmentWarnings();
 
 describe('Cache', () => {
-  afterAll(() => {
-    jest.restoreAllMocks();
-  });
   function itWithInitialData(
     message: string,
     initialDataForCaches: ({ [key: string]: any })[],

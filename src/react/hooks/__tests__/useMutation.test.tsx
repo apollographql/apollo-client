@@ -15,10 +15,9 @@ import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
 import { FetchResult } from '../../../link/core';
 
+jest.mock('optimism')
+
 describe('useMutation Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });

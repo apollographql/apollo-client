@@ -1,4 +1,4 @@
-function wrap<TResult>(key?: "only" | "skip" | "todo") {
+function wrap(key?: "only" | "skip" | "todo") {
   return (
     message: string,
     callback: (

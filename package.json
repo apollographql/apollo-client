@@ -148,7 +148,7 @@
     "rollup-plugin-terser": "7.0.2",
     "rxjs": "7.8.0",
     "subscriptions-transport-ws": "0.11.0",
-    "terser": "5.16.4",
+    "terser": "5.16.5",
     "ts-jest": "29.0.5",
     "ts-node": "10.9.1",
     "typedoc": "0.22.18",

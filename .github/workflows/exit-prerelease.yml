@@ -45,7 +45,7 @@ jobs:
           replace: ""
 
       - name: Write previous version to package.json
-        uses: jaywcjlove/github-action-package@v1.3.0
+        uses: jaywcjlove/github-action-package@v1.3.1
         with:
           version: ${{ steps.formatversion.outputs.value }}
 

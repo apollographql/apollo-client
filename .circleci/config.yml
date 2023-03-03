@@ -3,7 +3,7 @@ version: 2
 jobs:
   Filesize:
     docker:
-      - image: cimg/node:19.6.1
+      - image: cimg/node:19.7.0
     steps:
       - checkout
       - run: npm version
@@ -12,7 +12,7 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:19.6.1
+      - image: cimg/node:19.7.0
     steps:
       - checkout
       - run: npm version
@@ -21,7 +21,7 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:19.6.1
+      - image: cimg/node:19.7.0
     steps:
       - checkout
       - run: npm run ci:precheck

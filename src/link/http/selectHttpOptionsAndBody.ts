@@ -1,6 +1,6 @@
 import { ASTNode, print } from 'graphql';
 
-import { Operation } from '../core';
+import { Operation } from '../core/index.js';
 
 export interface Printer {
   (node: ASTNode, originalPrint: typeof print): string

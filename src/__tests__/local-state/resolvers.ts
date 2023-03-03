@@ -2,21 +2,21 @@ import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 
-import { LocalState } from '../../core/LocalState';
+import { LocalState } from '../../core/LocalState.js';
 
 import {
   ApolloClient,
   ApolloQueryResult,
   Resolvers,
   WatchQueryOptions,
-} from '../../core';
+} from '../../core/index.js';
 
-import { InMemoryCache } from '../../cache';
-import { Observable, Observer } from '../../utilities';
-import { ApolloLink } from '../../link/core';
-import { itAsync } from '../../testing';
-import mockQueryManager from '../../testing/core/mocking/mockQueryManager';
-import wrap from '../../testing/core/wrap';
+import { InMemoryCache } from '../../cache/index.js';
+import { Observable, Observer } from '../../utilities/index.js';
+import { ApolloLink } from '../../link/core/index.js';
+import { itAsync } from '../../testing/index.js';
+import mockQueryManager from '../../testing/core/mocking/mockQueryManager.js';
+import wrap from '../../testing/core/wrap.js';
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.

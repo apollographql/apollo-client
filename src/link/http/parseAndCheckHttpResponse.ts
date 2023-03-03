@@ -1,7 +1,7 @@
-import { responseIterator } from "./responseIterator";
-import { Operation } from "../core";
-import { throwServerError } from "../utils";
-import { Observer } from "../../utilities";
+import { responseIterator } from "./responseIterator.js";
+import { Operation } from "../core/index.js";
+import { throwServerError } from "../utils/index.js";
+import { Observer } from "../../utilities/index.js";
 
 const { hasOwnProperty } = Object.prototype;
 

@@ -8,7 +8,7 @@ To avoid this runtime overhead, you can precompile your queries created with `gr
 
 1. Using [babel-plugin-graphql-tag](#using-babel-plugin-graphql-tag)
 2. Using [graphql-tag.macro](#using-graphql-tagmacro)
-1. Using [ts-transform-graphql-tag](#using-ts-transform-graphql-tag) for Typescript
+3. Using [ts-transform-graphql-tag](#using-ts-transform-graphql-tag) for Typescript
 
 If you prefer to keep your GraphQL code in separate files (`.graphql` or `.gql`) you can use [babel-plugin-import-graphql](https://github.com/detrohutt/babel-plugin-import-graphql). This plugin still uses `graphql-tag` under the hood, but transparently. You simply `import` your operations/fragments as if each were an export from your GraphQL file. This carries the same precompilation benefits as the above approaches.
 
@@ -36,7 +36,7 @@ Then add the plugin in your `.babelrc` configuration file:
 }
 ```
 
-And that's it! All the usages of `import gql from 'graphql-tag'` will be removed, and the calls to `gql` will be replaced by the compiled version.
+And that's it! All the usages of `import * as gql from 'graphql-tag'` will be removed, and the calls to `gql` will be replaced by the compiled version.
 
 ## Using graphql-tag.macro
 

@@ -2,9 +2,9 @@ import { Client } from "graphql-ws";
 import { ExecutionResult } from "graphql";
 import gql from "graphql-tag";
 
-import { Observable } from "../../../utilities";
-import { execute } from "../../core";
-import { GraphQLWsLink } from "..";
+import { Observable } from "../../../utilities/index.js";
+import { execute } from "../../core/index.js";
+import { GraphQLWsLink } from "../index.js";
 
 const query = gql`
   query SampleQuery {

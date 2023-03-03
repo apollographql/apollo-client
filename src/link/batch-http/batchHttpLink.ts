@@ -1,6 +1,6 @@
-import { ApolloLink, Operation, FetchResult } from '../core';
-import { Observable } from '../../utilities';
-import { fromError } from '../utils';
+import { ApolloLink, Operation, FetchResult } from '../core/index.js';
+import { Observable } from '../../utilities/index.js';
+import { fromError } from '../utils/index.js';
 import {
   serializeFetchParameter,
   selectURI,
@@ -11,8 +11,8 @@ import {
   fallbackHttpConfig,
   HttpOptions,
   createSignalIfSupported,
-} from '../http';
-import { BatchLink } from '../batch';
+} from '../http/index.js';
+import { BatchLink } from '../batch/index.js';
 
 export namespace BatchHttpLink {
   export type Options = Pick<

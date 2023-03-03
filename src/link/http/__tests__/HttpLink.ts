@@ -5,16 +5,16 @@ import { TextDecoder } from 'util';
 import { ReadableStream } from 'web-streams-polyfill/ponyfill/es2018';
 import { Readable } from 'stream';
 
-import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable';
-import { ApolloLink } from '../../core/ApolloLink';
-import { execute } from '../../core/execute';
-import { HttpLink } from '../HttpLink';
-import { createHttpLink } from '../createHttpLink';
-import { ClientParseError } from '../serializeFetchParameter';
-import { ServerParseError } from '../parseAndCheckHttpResponse';
-import { ServerError } from '../../..';
-import { voidFetchDuringEachTest } from './helpers';
-import { itAsync } from '../../../testing';
+import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable.js';
+import { ApolloLink } from '../../core/ApolloLink.js';
+import { execute } from '../../core/execute.js';
+import { HttpLink } from '../HttpLink.js';
+import { createHttpLink } from '../createHttpLink.js';
+import { ClientParseError } from '../serializeFetchParameter.js';
+import { ServerParseError } from '../parseAndCheckHttpResponse.js';
+import { ServerError } from '../../../index.js';
+import { voidFetchDuringEachTest } from './helpers.js';
+import { itAsync } from '../../../testing/index.js';
 
 const sampleQuery = gql`
   query SampleQuery {

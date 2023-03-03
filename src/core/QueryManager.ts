@@ -1,16 +1,16 @@
-import { invariant, InvariantError } from '../utilities/globals';
+import { invariant, InvariantError } from '../utilities/globals/index.js';
 
 import { DocumentNode } from 'graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
-import { ApolloLink, execute, FetchResult } from '../link/core';
+import { ApolloLink, execute, FetchResult } from '../link/core/index.js';
 import {
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
-} from '../utilities/common/incrementalResult';
-import { Cache, ApolloCache, canonicalStringify } from '../cache';
+} from '../utilities/common/incrementalResult.js';
+import { Cache, ApolloCache, canonicalStringify } from '../cache/index.js';
 
 import {
   getDefaultValues,
@@ -30,9 +30,9 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
-} from '../utilities';
-import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError } from '../errors';
+} from '../utilities/index.js';
+import { mergeIncrementalData } from '../utilities/common/incrementalResult.js';
+import { ApolloError, isApolloError } from '../errors/index.js';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -40,9 +40,9 @@ import {
   MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
-} from './watchQueryOptions';
-import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery';
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
+} from './watchQueryOptions.js';
+import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery.js';
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus.js';
 import {
   ApolloQueryResult,
   OperationVariables,
@@ -52,15 +52,15 @@ import {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
-} from './types';
-import { LocalState } from './LocalState';
+} from './types.js';
+import { LocalState } from './LocalState.js';
 
 import {
   QueryInfo,
   QueryStoreValue,
   shouldWriteResult,
   CacheWriteBehavior,
-} from './QueryInfo';
+} from './QueryInfo.js';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -83,7 +83,7 @@ interface TransformCacheEntry {
   asQuery: DocumentNode;
 }
 
-type DefaultOptions = import("./ApolloClient").DefaultOptions;
+type DefaultOptions = import("./ApolloClient.js").DefaultOptions;
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;

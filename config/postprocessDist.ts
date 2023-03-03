@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import resolve from "resolve";
-import { distDir, eachFile, reparse, reprint } from './helpers';
+import { distDir, eachFile, reparse, reprint } from './helpers.js';
 
-import { applyDistSpotFixes } from "./distSpotFixes";
+import { applyDistSpotFixes } from "./distSpotFixes.js";
 applyDistSpotFixes();
 
 // The primary goal of the 'npm run resolve' script is to make ECMAScript

@@ -8,7 +8,7 @@ import {
   getQueryDefinition,
   getDefaultValues,
   getOperationName,
-} from '../getFromAST';
+} from '../getFromAST.js';
 
 describe('AST utility functions', () => {
   it('should correctly check a document for correctness', () => {

@@ -3,10 +3,10 @@ import { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql'
 import {
   NormalizedCache,
   InMemoryCacheConfig,
-} from './types';
+} from './types.js';
 
-import { KeyFieldsContext } from './policies';
-import { FragmentRegistryAPI } from './fragmentRegistry';
+import { KeyFieldsContext } from './policies.js';
+import { FragmentRegistryAPI } from './fragmentRegistry.js';
 
 import {
   Reference,
@@ -24,7 +24,7 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   isArray,
-} from '../../utilities';
+} from '../../utilities/index.js';
 
 export const {
   hasOwnProperty: hasOwn,

@@ -3,13 +3,13 @@ import { act, render } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../core';
-import { ApolloProvider } from '../../../context';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { ApolloLink } from '../../../../link/core';
-import { itAsync, MockSubscriptionLink } from '../../../../testing';
-import { graphql } from '../../graphql';
-import { ChildProps } from '../../types';
+import { ApolloClient } from '../../../../core/index.js';
+import { ApolloProvider } from '../../../context/index.js';
+import { InMemoryCache as Cache } from '../../../../cache/index.js';
+import { ApolloLink } from '../../../../link/core/index.js';
+import { itAsync, MockSubscriptionLink } from '../../../../testing/index.js';
+import { graphql } from '../../graphql.js';
+import { ChildProps } from '../../types.js';
 
 describe('subscriptions', () => {
   let error: typeof console.error;

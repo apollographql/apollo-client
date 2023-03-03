@@ -72,7 +72,7 @@ In this example, we use `client.onResetStore` to write default values to the cac
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { withClientState } from 'apollo-link-state';
 
-import { resolvers, defaults } from './resolvers';
+import { resolvers, defaults } from './resolvers.js';
 
 const cache = new InMemoryCache();
 const stateLink = withClientState({ cache, resolvers, defaults });
@@ -97,7 +97,7 @@ function Foo (){
   const client = useApolloClient();
 
   useEffect(() => {
-    const unsubscribe = client.onResetStore(() => 
+    const unsubscribe = client.onResetStore(() =>
       new Promise(()=>setReset(reset + 1))
     );
 

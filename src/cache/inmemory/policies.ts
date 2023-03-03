@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from '../../utilities/globals';
+import { invariant, InvariantError } from '../../utilities/globals/index.js';
 
 import {
   InlineFragmentNode,
@@ -18,13 +18,13 @@ import {
   getStoreKeyName,
   isNonNullObject,
   stringifyForDisplay,
-} from '../../utilities';
+} from '../../utilities/index.js';
 import {
   IdGetter,
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
-} from "./types";
+} from "./types.js";
 import {
   hasOwn,
   fieldNameFromStoreName,
@@ -33,9 +33,9 @@ import {
   TypeOrFieldNameRegExp,
   defaultDataIdFromObject,
   isArray,
-} from './helpers';
-import { cacheSlot } from './reactiveVars';
-import { InMemoryCache } from './inMemoryCache';
+} from './helpers.js';
+import { cacheSlot } from './reactiveVars.js';
+import { InMemoryCache } from './inMemoryCache.js';
 import {
   SafeReadonly,
   FieldSpecifier,
@@ -43,14 +43,14 @@ import {
   ReadFieldFunction,
   ReadFieldOptions,
   CanReadFunction,
-} from '../core/types/common';
-import { WriteContext } from './writeToStore';
+} from '../core/types/common.js';
+import { WriteContext } from './writeToStore.js';
 
 // Upgrade to a faster version of the default stable JSON.stringify function
 // used by getStoreKeyName. This function is used when computing storeFieldName
 // strings (when no keyArgs has been configured for a field).
-import { canonicalStringify } from './object-canon';
-import { keyArgsFnFromSpecifier, keyFieldsFnFromSpecifier } from './key-extractor';
+import { canonicalStringify } from './object-canon.js';
+import { keyArgsFnFromSpecifier, keyFieldsFnFromSpecifier } from './key-extractor.js';
 
 getStoreKeyName.setStringify(canonicalStringify);
 

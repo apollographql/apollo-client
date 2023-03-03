@@ -5,9 +5,9 @@ import {
   StoreObject,
   Reference,
   getFragmentQueryDocument,
-} from '../../utilities';
-import { DataProxy } from './types/DataProxy';
-import { Cache } from './types/Cache';
+} from '../../utilities/index.js';
+import { DataProxy } from './types/DataProxy.js';
+import { Cache } from './types/Cache.js';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

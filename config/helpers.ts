@@ -1,7 +1,10 @@
 import * as path from "path";
 import * as recast from "recast";
-import * as parser from "recast/parsers/babel";
+import * as parser from "recast/parsers/babel.js";
 import glob = require("glob");
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const distDir = path.resolve(__dirname, "..", "dist");
 

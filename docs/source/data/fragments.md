@@ -71,7 +71,7 @@ We can then include the `CoreCommentFields` fragment in a GraphQL operation like
 
 ```jsx {2,5,12} title="PostDetails.jsx"
 import { gql } from '@apollo/client';
-import { CORE_COMMENT_FIELDS } from './fragments';
+import { CORE_COMMENT_FIELDS } from './fragments.js';
 
 export const GET_POST_DETAILS = gql`
   ${CORE_COMMENT_FIELDS}

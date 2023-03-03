@@ -3,11 +3,11 @@ import { DocumentNode } from 'graphql';
 import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { itAsync, MockedResponse, MockLink } from '../../core';
-import { MockedProvider } from '../MockedProvider';
-import { useQuery } from '../../../react/hooks';
-import { InMemoryCache } from '../../../cache';
-import { ApolloLink } from '../../../link/core';
+import { itAsync, MockedResponse, MockLink } from '../../core/index.js';
+import { MockedProvider } from '../MockedProvider.js';
+import { useQuery } from '../../../react/hooks/index.js';
+import { InMemoryCache } from '../../../cache/index.js';
+import { ApolloLink } from '../../../link/core/index.js';
 
 const variables = {
   username: 'mock_username'

@@ -1,9 +1,9 @@
 import gql from "graphql-tag";
-import { execute } from "../../core/execute";
-import { HttpLink } from "../HttpLink";
-import { itAsync, subscribeAndCount } from "../../../testing";
+import { execute } from "../../core/execute.js";
+import { HttpLink } from "../HttpLink.js";
+import { itAsync, subscribeAndCount } from "../../../testing/index.js";
 import type { Observable } from "zen-observable-ts";
-import { ObservableQuery } from "../../../core";
+import { ObservableQuery } from "../../../core/index.js";
 import { TextEncoder, TextDecoder } from "util";
 import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
 import { Readable } from "stream";

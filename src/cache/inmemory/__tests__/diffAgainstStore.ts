@@ -1,15 +1,15 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { StoreReader } from '../readFromStore';
-import { StoreWriter } from '../writeToStore';
-import { defaultDataIdFromObject } from '../helpers';
-import { NormalizedCache, Reference } from '../types';
-import { InMemoryCache } from '../inMemoryCache';
+import { StoreReader } from '../readFromStore.js';
+import { StoreWriter } from '../writeToStore.js';
+import { defaultDataIdFromObject } from '../helpers.js';
+import { NormalizedCache, Reference } from '../types.js';
+import { InMemoryCache } from '../inMemoryCache.js';
 import {
   defaultNormalizedCacheFactory,
   writeQueryToStore,
   withError,
-} from './helpers';
+} from './helpers.js';
 
 disableFragmentWarnings();
 

@@ -2,11 +2,11 @@ import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
-import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider, resetApolloContext } from '../../context';
-import { MockSubscriptionLink } from '../../../testing';
-import { useSubscription } from '../useSubscription';
+import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core/index.js';
+import { InMemoryCache as Cache } from '../../../cache/index.js';
+import { ApolloProvider, resetApolloContext } from '../../context/index.js';
+import { MockSubscriptionLink } from '../../../testing/index.js';
+import { useSubscription } from '../useSubscription.js';
 
 describe('useSubscription Hook', () => {
   beforeEach(() => {

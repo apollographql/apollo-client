@@ -3,13 +3,13 @@ import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloCache, ApolloClient, MutationUpdaterFunction } from '../../../../core';
-import { ApolloProvider } from '../../../context';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { MutationFunction } from '../../../types/types';
-import { mockSingleLink } from '../../../../testing';
-import { graphql } from '../../graphql';
-import { ChildProps } from '../../types';
+import { ApolloCache, ApolloClient, MutationUpdaterFunction } from '../../../../core/index.js';
+import { ApolloProvider } from '../../../context/index.js';
+import { InMemoryCache as Cache } from '../../../../cache/index.js';
+import { MutationFunction } from '../../../types/types.js';
+import { mockSingleLink } from '../../../../testing/index.js';
+import { graphql } from '../../graphql.js';
+import { ChildProps } from '../../types.js';
 
 describe('graphql(mutation) update queries', () => {
   // This is a long test that keeps track of a lot of stuff. It is testing

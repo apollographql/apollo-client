@@ -1,4 +1,4 @@
-import { invariant } from '../../../utilities/globals';
+import { invariant } from '../../../utilities/globals/index.js';
 
 import { print } from 'graphql';
 import { equal } from '@wry/equality';
@@ -8,7 +8,7 @@ import {
   Operation,
   GraphQLRequest,
   FetchResult,
-} from '../../../link/core';
+} from '../../../link/core/index.js';
 
 import {
   Observable,
@@ -17,7 +17,7 @@ import {
   removeConnectionDirectiveFromDocument,
   cloneDeep,
   stringifyForDisplay,
-} from '../../../utilities';
+} from '../../../utilities/index.js';
 
 export type ResultFunction<T> = () => T;
 
@@ -116,7 +116,7 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
 
       if (this.showWarnings) {
         console.warn(
-          configError.message + 
+          configError.message +
             '\nThis typically indicates a configuration error in your mocks ' +
             'setup, usually due to a typo or mismatched variable.'
         );

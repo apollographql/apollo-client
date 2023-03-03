@@ -1,22 +1,22 @@
 import { assign, omit } from 'lodash';
 import gql from 'graphql-tag';
 
-import { InMemoryCache } from '../inMemoryCache';
-import { StoreObject } from '../types';
-import { StoreReader } from '../readFromStore';
-import { Cache } from '../../core/types/Cache';
-import { MissingFieldError } from '../../core/types/common';
+import { InMemoryCache } from '../inMemoryCache.js';
+import { StoreObject } from '../types.js';
+import { StoreReader } from '../readFromStore.js';
+import { Cache } from '../../core/types/Cache.js';
+import { MissingFieldError } from '../../core/types/common.js';
 import {
   defaultNormalizedCacheFactory,
   readQueryFromStore,
   withError,
-} from './helpers';
+} from './helpers.js';
 import {
   makeReference,
   Reference,
   isReference,
   TypedDocumentNode,
-} from '../../../core';
+} from '../../../core/index.js';
 
 jest.mock('optimism');
 import { wrap } from 'optimism';

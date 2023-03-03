@@ -195,7 +195,7 @@ This `read` function returns the value of our reactive variable whenever `cartIt
 Now, let's create a button component that enables the user to add a product to their cart:
 
 ```jsx {7} title="AddToCartButton.js"
-import { cartItemsVar } from './cache';
+import { cartItemsVar } from './cache/index.js';
 // ... other imports
 
 export function AddToCartButton({ productId }) {
@@ -328,8 +328,8 @@ import {
   gql
 } from '@apollo/client';
 
-import Pages from './pages';
-import Login from './pages/login';
+import Pages from './pages.js';
+import Login from './pages/login.js';
 
 const cache = new InMemoryCache();
 

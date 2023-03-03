@@ -5,14 +5,14 @@ import ReactDOM from 'react-dom/server';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../core';
-import { ApolloProvider } from '../../../context';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, mockSingleLink } from '../../../../testing';
-import { Query } from '../../../components';
-import { getDataFromTree, getMarkupFromTree } from '../../../ssr';
-import { graphql } from '../../graphql';
-import { ChildProps, DataValue } from '../../types';
+import { ApolloClient } from '../../../../core/index.js';
+import { ApolloProvider } from '../../../context/index.js';
+import { InMemoryCache as Cache } from '../../../../cache/index.js';
+import { itAsync, mockSingleLink } from '../../../../testing/index.js';
+import { Query } from '../../../components/index.js';
+import { getDataFromTree, getMarkupFromTree } from '../../../ssr/index.js';
+import { graphql } from '../../graphql.js';
+import { ChildProps, DataValue } from '../../types.js';
 
 describe('SSR', () => {
   describe('`getDataFromTree`', () => {

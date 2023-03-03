@@ -3,16 +3,16 @@ import { render } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../core';
+import { ApolloClient } from '../../../../core/index.js';
 import {
   createMockClient,
   itAsync,
   MockedProvider,
-} from '../../../../testing';
-import { NormalizedCacheObject } from '../../../../cache';
-import { ApolloProvider } from '../../../context';
-import { graphql } from '../../graphql';
-import { ChildProps } from '../../types';
+} from '../../../../testing/index.js';
+import { NormalizedCacheObject } from '../../../../cache/index.js';
+import { ApolloProvider } from '../../../context/index.js';
+import { graphql } from '../../graphql.js';
+import { ChildProps } from '../../types.js';
 
 const query: DocumentNode = gql`
   mutation addPerson {

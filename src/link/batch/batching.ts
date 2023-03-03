@@ -1,5 +1,5 @@
-import { FetchResult, NextLink, Operation } from '../core';
-import { Observable, ObservableSubscription } from '../../utilities';
+import { FetchResult, NextLink, Operation } from '../core/index.js';
+import { Observable, ObservableSubscription } from '../../utilities/index.js';
 
 export type BatchHandler = (
   operations: Operation[],

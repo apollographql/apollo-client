@@ -3,12 +3,12 @@ import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
-import { Observable } from '../../../utilities';
-import { ApolloProvider, resetApolloContext } from '../../../react';
-import { MockedProvider, mockSingleLink, wait, tick } from '../../../testing';
-import { useLazyQuery } from '../useLazyQuery';
-import { QueryResult } from '../../types/types';
+import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core/index.js';
+import { Observable } from '../../../utilities/index.js';
+import { ApolloProvider, resetApolloContext } from '../../../react/index.js';
+import { MockedProvider, mockSingleLink, wait, tick } from '../../../testing/index.js';
+import { useLazyQuery } from '../useLazyQuery.js';
+import { QueryResult } from '../../types/types.js';
 
 const IS_REACT_18 = React.version.startsWith("18");
 

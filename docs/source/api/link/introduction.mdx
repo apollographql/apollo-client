@@ -212,7 +212,7 @@ If you have a collection of two or more links that should always be executed in 
 ```js
 import { from, HttpLink } from '@apollo/client';
 import { RetryLink } from '@apollo/client/link/retry';
-import MyAuthLink from '../auth';
+import MyAuthLink from '../auth.js';
 
 const additiveLink = from([
   new RetryLink(),

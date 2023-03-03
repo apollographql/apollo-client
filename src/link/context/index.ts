@@ -1,6 +1,6 @@
-import { ApolloLink, Operation, GraphQLRequest, NextLink } from '../core';
-import { Observable, ObservableSubscription } from '../../utilities';
-import { DefaultContext } from '../../core';
+import { ApolloLink, Operation, GraphQLRequest, NextLink } from '../core/index.js';
+import { Observable, ObservableSubscription } from '../../utilities/index.js';
+import { DefaultContext } from '../../core/index.js';
 
 export type ContextSetter = (
   operation: GraphQLRequest,

@@ -2,10 +2,10 @@ import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { ApolloProvider } from '../../../context/ApolloProvider';
-import { itAsync, createMockClient } from '../../../../testing/core';
-import { graphql } from '../../graphql';
-import { ChildProps } from '../../types';
+import { ApolloProvider } from '../../../context/ApolloProvider.js';
+import { itAsync, createMockClient } from '../../../../testing/core/index.js';
+import { graphql } from '../../graphql.js';
+import { ChildProps } from '../../types.js';
 
 const query = gql`
   mutation addPerson($id: Int) {

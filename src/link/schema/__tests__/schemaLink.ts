@@ -1,9 +1,9 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import gql from 'graphql-tag';
 
-import { execute } from '../../core/execute';
-import { SchemaLink } from '../';
-import { itAsync } from '../../../testing';
+import { execute } from '../../core/execute.js';
+import { SchemaLink } from '../index.js';
+import { itAsync } from '../../../testing/index.js';
 
 const sampleQuery = gql`
   query SampleQuery {

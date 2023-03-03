@@ -9,27 +9,27 @@ import {
   ApolloLink,
   ApolloCache,
   MutationQueryReducersMap,
-} from '../core';
+} from '../core/index.js';
 
 import {
   QueryManager,
-} from '../core/QueryManager';
+} from '../core/QueryManager.js';
 
 import {
   Cache,
   InMemoryCache,
-} from '../cache';
+} from '../cache/index.js';
 
 import {
   Observable,
   ObservableSubscription as Subscription,
   addTypenameToDocument,
-} from '../utilities';
+} from '../utilities/index.js';
 
 import {
   itAsync,
   mockSingleLink,
-} from '../testing';
+} from '../testing/index.js';
 
 describe('optimistic mutation results', () => {
   const query = gql`

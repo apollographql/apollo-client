@@ -1,7 +1,7 @@
-import { ApolloLink, Operation, FetchResult, NextLink } from '../core';
-import { Observable } from '../../utilities';
-import { OperationBatcher, BatchHandler } from './batching';
-export { OperationBatcher, BatchableRequest, BatchHandler } from './batching';
+import { ApolloLink, Operation, FetchResult, NextLink } from '../core/index.js';
+import { Observable } from '../../utilities/index.js';
+import { OperationBatcher, BatchHandler } from './batching.js';
+export { OperationBatcher, BatchableRequest, BatchHandler } from './batching.js';
 
 
 export namespace BatchLink {

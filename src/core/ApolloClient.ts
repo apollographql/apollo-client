@@ -1,15 +1,15 @@
-import { invariant, InvariantError } from '../utilities/globals';
+import { invariant, InvariantError } from '../utilities/globals/index.js';
 
 import { ExecutionResult, DocumentNode } from 'graphql';
 
-import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
-import { ApolloCache, DataProxy, Reference } from '../cache';
-import { Observable } from '../utilities';
-import { version } from '../version';
-import { HttpLink, UriFunction } from '../link/http';
+import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core/index.js';
+import { ApolloCache, DataProxy, Reference } from '../cache/index.js';
+import { Observable } from '../utilities/index.js';
+import { version } from '../version.js';
+import { HttpLink, UriFunction } from '../link/http/index.js';
 
-import { QueryManager } from './QueryManager';
-import { ObservableQuery } from './ObservableQuery';
+import { QueryManager } from './QueryManager.js';
+import { ObservableQuery } from './ObservableQuery.js';
 
 import {
   ApolloQueryResult,
@@ -20,7 +20,7 @@ import {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
-} from './types';
+} from './types.js';
 
 import {
   QueryOptions,
@@ -28,12 +28,12 @@ import {
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-} from './watchQueryOptions';
+} from './watchQueryOptions.js';
 
 import {
   LocalState,
   FragmentMatcher,
-} from './LocalState';
+} from './LocalState.js';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
@@ -66,7 +66,7 @@ export type ApolloClientOptions<TCacheShape> = {
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities";
+import { mergeOptions } from "../utilities/index.js";
 export { mergeOptions }
 
 /**

@@ -89,7 +89,7 @@ The following example demonstrates using [`@apollo/client/link/error`](../api/li
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 
-import { logout } from './logout';
+import { logout } from './logout.js';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 
@@ -142,7 +142,7 @@ import {
 } from "@apollo/client";
 import { asyncMap } from "@apollo/client/utilities";
 
-import { usdToEur } from './currency';
+import { usdToEur } from './currency.js';
 
 const httpLink = new HttpLink({ uri: '/graphql' });
 

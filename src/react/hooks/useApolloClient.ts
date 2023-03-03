@@ -1,7 +1,7 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 import { useContext } from 'react';
-import { ApolloClient } from '../../core';
-import { getApolloContext } from '../context';
+import { ApolloClient } from '../../core/index.js';
+import { getApolloContext } from '../context/index.js';
 
 export function useApolloClient(
   override?: ApolloClient<object>,

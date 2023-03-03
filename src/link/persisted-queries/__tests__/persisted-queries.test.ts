@@ -4,12 +4,12 @@ import { times } from 'lodash';
 import fetchMock from 'fetch-mock';
 import crypto from 'crypto';
 
-import { ApolloLink, execute } from '../../core';
-import { Observable } from '../../../utilities';
-import { createHttpLink } from '../../http/createHttpLink';
+import { ApolloLink, execute } from '../../core/index.js';
+import { Observable } from '../../../utilities/index.js';
+import { createHttpLink } from '../../http/createHttpLink.js';
 
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
-import { itAsync } from '../../../testing';
+import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../index.js';
+import { itAsync } from '../../../testing/index.js';
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint

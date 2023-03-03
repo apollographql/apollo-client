@@ -1,13 +1,13 @@
 import gql from 'graphql-tag';
 import { cloneDeep } from 'lodash';
 
-import { getQueryDefinition } from '../getFromAST';
+import { getQueryDefinition } from '../getFromAST.js';
 import {
   shouldInclude,
   hasDirectives,
   hasAnyDirectives,
   hasAllDirectives,
-} from '../directives';
+} from '../directives.js';
 
 describe('hasDirectives', () => {
   it('should allow searching the ast for a directive', () => {

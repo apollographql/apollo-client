@@ -1,27 +1,27 @@
 import { DocumentNode, FieldNode } from 'graphql';
 
-import { Transaction } from '../core/cache';
+import { Transaction } from '../core/cache.js';
 import {
   StoreObject,
   StoreValue,
   Reference,
-} from '../../utilities';
-import { FieldValueGetter } from './entityStore';
+} from '../../utilities/index.js';
+import { FieldValueGetter } from './entityStore.js';
 import {
   TypePolicies,
   PossibleTypesMap,
   KeyFieldsFunction,
   StorageType,
   FieldMergeFunction,
-} from './policies';
+} from './policies.js';
 import {
   Modifier,
   Modifiers,
   ToReferenceFunction,
   CanReadFunction,
-} from '../core/types/common';
+} from '../core/types/common.js';
 
-import { FragmentRegistryAPI } from './fragmentRegistry';
+import { FragmentRegistryAPI } from './fragmentRegistry.js';
 
 export { StoreObject, StoreValue, Reference }
 

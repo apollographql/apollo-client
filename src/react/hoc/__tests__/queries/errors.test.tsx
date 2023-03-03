@@ -1,17 +1,17 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
-import { withState } from './recomposeWithState';
+import { withState } from './recomposeWithState.js';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient } from '../../../../core';
-import { ApolloProvider } from '../../../context';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { QueryResult } from '../../../types/types';
-import { itAsync, mockSingleLink } from '../../../../testing';
-import { Query } from '../../../components/Query';
-import { graphql } from '../../graphql';
-import { ChildProps, DataValue } from '../../types';
+import { ApolloClient } from '../../../../core/index.js';
+import { ApolloProvider } from '../../../context/index.js';
+import { InMemoryCache as Cache } from '../../../../cache/index.js';
+import { QueryResult } from '../../../types/types.js';
+import { itAsync, mockSingleLink } from '../../../../testing/index.js';
+import { Query } from '../../../components/Query.js';
+import { graphql } from '../../graphql.js';
+import { ChildProps, DataValue } from '../../types.js';
 
 describe('[queries] errors', () => {
   let error: typeof console.error;

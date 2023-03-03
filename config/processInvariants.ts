@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { distDir, eachFile, reparse, reprint } from './helpers';
+import { distDir, eachFile, reparse, reprint } from './helpers.js';
+import packageJson from "../package.json" assert { type: "json" };
 
 eachFile(distDir, (file, relPath) => {
   const source = fs.readFileSync(file, "utf8");
@@ -29,7 +30,7 @@ let nextErrorCode = 1;
 const errorCodeManifest = b.objectExpression([
   b.property("init",
     b.stringLiteral("@apollo/client version"),
-    b.stringLiteral(require("../package.json").version),
+    b.stringLiteral(packageJson.version),
   ),
 ]);
 

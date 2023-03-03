@@ -6,21 +6,21 @@ import {
   ApolloClient,
   NetworkStatus,
   WatchQueryFetchPolicy,
-} from '../../core';
-import { ObservableQuery } from '../ObservableQuery';
-import { QueryManager } from '../QueryManager';
+} from '../../core/index.js';
+import { ObservableQuery } from '../ObservableQuery.js';
+import { QueryManager } from '../QueryManager.js';
 
-import { Observable } from '../../utilities';
-import { ApolloLink } from '../../link/core';
-import { InMemoryCache, NormalizedCacheObject } from '../../cache';
-import { ApolloError } from '../../errors';
+import { Observable } from '../../utilities/index.js';
+import { ApolloLink } from '../../link/core/index.js';
+import { InMemoryCache, NormalizedCacheObject } from '../../cache/index.js';
+import { ApolloError } from '../../errors/index.js';
 
-import { itAsync, MockLink, mockSingleLink, subscribeAndCount } from '../../testing';
-import mockQueryManager from '../../testing/core/mocking/mockQueryManager';
-import mockWatchQuery from '../../testing/core/mocking/mockWatchQuery';
-import wrap from '../../testing/core/wrap';
+import { itAsync, MockLink, mockSingleLink, subscribeAndCount } from '../../testing/index.js';
+import mockQueryManager from '../../testing/core/mocking/mockQueryManager.js';
+import mockWatchQuery from '../../testing/core/mocking/mockWatchQuery.js';
+import wrap from '../../testing/core/wrap.js';
 
-import { resetStore } from './QueryManager';
+import { resetStore } from './QueryManager/index.js';
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchQueryObservable = queryManager.fetchQueryObservable;
@@ -1491,12 +1491,12 @@ describe('ObservableQuery', () => {
           };
         }
 
-        // We construct the queryManager manually here rather than using 
-        // `mockWatchQuery` because we need to silence console warnings for 
-        // unmatched variables since. This test checks for calls to 
-        // `console.warn` and unfortunately `mockSingleLink` (used by 
-        // `mockWatchQuery`) does not support the ability to disable warnings 
-        // without introducing a breaking change. Instead we construct this 
+        // We construct the queryManager manually here rather than using
+        // `mockWatchQuery` because we need to silence console warnings for
+        // unmatched variables since. This test checks for calls to
+        // `console.warn` and unfortunately `mockSingleLink` (used by
+        // `mockWatchQuery`) does not support the ability to disable warnings
+        // without introducing a breaking change. Instead we construct this
         // manually to be able to turn off warnings for this test.
         const mocks = [makeMock('a', 'b', 'c'), makeMock('d', 'e')];
         const firstRequest = mocks[0].request;

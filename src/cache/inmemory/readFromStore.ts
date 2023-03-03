@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from '../../utilities/globals';
+import { invariant, InvariantError } from '../../utilities/globals/index.js';
 
 import {
   DocumentNode,
@@ -29,20 +29,20 @@ import {
   canUseWeakMap,
   compact,
   FragmentMapFunction,
-} from '../../utilities';
-import { Cache } from '../core/types/Cache';
+} from '../../utilities/index.js';
+import { Cache } from '../core/types/Cache.js';
 import {
   DiffQueryAgainstStoreOptions,
   InMemoryCacheConfig,
   NormalizedCache,
   ReadMergeModifyContext,
-} from './types';
-import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
-import { isArray, extractFragmentContext, getTypenameFromStoreObject, shouldCanonizeResults } from './helpers';
-import { Policies } from './policies';
-import { InMemoryCache } from './inMemoryCache';
-import { MissingFieldError, MissingTree } from '../core/types/common';
-import { canonicalStringify, ObjectCanon } from './object-canon';
+} from './types.js';
+import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore.js';
+import { isArray, extractFragmentContext, getTypenameFromStoreObject, shouldCanonizeResults } from './helpers.js';
+import { Policies } from './policies.js';
+import { InMemoryCache } from './inMemoryCache.js';
+import { MissingFieldError, MissingTree } from '../core/types/common.js';
+import { canonicalStringify, ObjectCanon } from './object-canon.js';
 
 export type VariableMap = { [name: string]: any };
 

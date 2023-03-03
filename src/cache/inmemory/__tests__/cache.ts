@@ -1,17 +1,17 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
-import { Cache } from '../../../cache';
-import { InMemoryCache } from '../inMemoryCache';
-import { InMemoryCacheConfig } from '../types';
+import { cloneDeep } from '../../../utilities/common/cloneDeep.js';
+import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core/index.js';
+import { Cache } from '../../../cache/index.js';
+import { InMemoryCache } from '../inMemoryCache.js';
+import { InMemoryCacheConfig } from '../types.js';
 
 jest.mock('optimism');
 import { wrap } from 'optimism';
-import { StoreReader } from '../readFromStore';
-import { StoreWriter } from '../writeToStore';
-import { ObjectCanon } from '../object-canon';
-import { TypePolicies } from '../policies';
+import { StoreReader } from '../readFromStore.js';
+import { StoreWriter } from '../writeToStore.js';
+import { ObjectCanon } from '../object-canon.js';
+import { TypePolicies } from '../policies.js';
 
 disableFragmentWarnings();
 

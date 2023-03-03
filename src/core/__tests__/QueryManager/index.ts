@@ -6,37 +6,37 @@ import gql from 'graphql-tag';
 import { DocumentNode, GraphQLError } from 'graphql';
 import { setVerbosity } from 'ts-invariant';
 
-import { Observable, Observer } from '../../../utilities/observables/Observable';
-import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core';
-import { InMemoryCache, InMemoryCacheConfig } from '../../../cache';
+import { Observable, Observer } from '../../../utilities/observables/Observable.js';
+import { ApolloLink, GraphQLRequest, FetchResult } from '../../../link/core/index.js';
+import { InMemoryCache, InMemoryCacheConfig } from '../../../cache/index.js';
 import {
   ApolloReducerConfig,
   NormalizedCacheObject
-} from '../../../cache/inmemory/types';
+} from '../../../cache/inmemory/types.js';
 
 // mocks
-import mockQueryManager from '../../../testing/core/mocking/mockQueryManager';
-import mockWatchQuery from '../../../testing/core/mocking/mockWatchQuery';
-import { MockApolloLink, mockSingleLink } from '../../../testing/core/mocking/mockLink';
+import mockQueryManager from '../../../testing/core/mocking/mockQueryManager.js';
+import mockWatchQuery from '../../../testing/core/mocking/mockWatchQuery.js';
+import { MockApolloLink, mockSingleLink } from '../../../testing/core/mocking/mockLink.js';
 
 // core
-import { ApolloQueryResult } from '../../types';
-import { NetworkStatus } from '../../networkStatus';
-import { ObservableQuery } from '../../ObservableQuery';
-import { MutationBaseOptions, MutationOptions, WatchQueryOptions } from '../../watchQueryOptions';
-import { QueryManager } from '../../QueryManager';
+import { ApolloQueryResult } from '../../types.js';
+import { NetworkStatus } from '../../networkStatus.js';
+import { ObservableQuery } from '../../ObservableQuery.js';
+import { MutationBaseOptions, MutationOptions, WatchQueryOptions } from '../../watchQueryOptions.js';
+import { QueryManager } from '../../QueryManager.js';
 
-import { ApolloError } from '../../../errors';
+import { ApolloError } from '../../../errors/index.js';
 
 // testing utils
 import { waitFor } from '@testing-library/react';
-import wrap from '../../../testing/core/wrap';
+import wrap from '../../../testing/core/wrap.js';
 import observableToPromise, {
   observableToPromiseAndSubscription,
-} from '../../../testing/core/observableToPromise';
-import { itAsync, subscribeAndCount } from '../../../testing/core';
-import { ApolloClient } from '../../../core'
-import { mockFetchQuery } from '../ObservableQuery';
+} from '../../../testing/core/observableToPromise.js';
+import { itAsync, subscribeAndCount } from '../../../testing/core/index.js';
+import { ApolloClient } from '../../../core/index.js'
+import { mockFetchQuery } from '../ObservableQuery.js';
 
 interface MockedMutation {
   reject: (reason: any) => any;

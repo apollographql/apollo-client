@@ -11,13 +11,13 @@ import {
 } from 'graphql';
 import gql from 'graphql-tag';
 
-import { ApolloClient } from '../../../../core';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { ApolloProvider } from '../../../context';
-import { ApolloLink } from '../../../../link/core';
-import { Observable } from '../../../../utilities';
-import { renderToStringWithData } from '../../../ssr';
-import { Query } from '../../Query';
+import { ApolloClient } from '../../../../core/index.js';
+import { InMemoryCache as Cache } from '../../../../cache/index.js';
+import { ApolloProvider } from '../../../context/index.js';
+import { ApolloLink } from '../../../../link/core/index.js';
+import { Observable } from '../../../../utilities/index.js';
+import { renderToStringWithData } from '../../../ssr/index.js';
+import { Query } from '../../Query.js';
 
 const planetMap = new Map([['Planet:1', { id: 'Planet:1', name: 'Tatooine' }]]);
 

@@ -1,4 +1,4 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 
 import { print } from 'graphql';
 import {
@@ -7,16 +7,16 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import { ApolloLink, Operation } from '../core';
+import { ApolloLink, Operation } from '../core/index.js';
 import {
   Observable,
   Observer,
   ObservableSubscription,
   compact,
   isNonEmptyArray,
-} from '../../utilities';
-import { NetworkError } from '../../errors';
-import { ServerError } from '../utils';
+} from '../../utilities/index.js';
+import { NetworkError } from '../../errors/index.js';
+import { ServerError } from '../utils/index.js';
 
 export const VERSION = 1;
 

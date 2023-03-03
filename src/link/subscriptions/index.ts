@@ -31,9 +31,9 @@
 import { print } from "graphql";
 import type { Client } from "graphql-ws";
 
-import { ApolloLink, Operation, FetchResult } from "../core";
-import { isNonNullObject, Observable } from "../../utilities";
-import { ApolloError } from "../../errors";
+import { ApolloLink, Operation, FetchResult } from "../core/index.js";
+import { isNonNullObject, Observable } from "../../utilities/index.js";
+import { ApolloError } from "../../errors/index.js";
 
 interface LikeCloseEvent {
   /** Returns the WebSocket connection close code provided by the server. */

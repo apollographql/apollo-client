@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from '../../utilities/globals';
+import { invariant, InvariantError } from '../../utilities/globals/index.js';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 import {
@@ -26,17 +26,17 @@ import {
   addTypenameToDocument,
   isNonEmptyArray,
   argumentsObjectFromField,
-} from '../../utilities';
+} from '../../utilities/index.js';
 
-import { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types';
-import { isArray, makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, extractFragmentContext } from './helpers';
-import { StoreReader } from './readFromStore';
-import { InMemoryCache } from './inMemoryCache';
-import { EntityStore } from './entityStore';
-import { Cache } from '../../core';
-import { canonicalStringify } from './object-canon';
-import { normalizeReadFieldOptions } from './policies';
-import { ReadFieldFunction } from '../core/types/common';
+import { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types.js';
+import { isArray, makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, extractFragmentContext } from './helpers.js';
+import { StoreReader } from './readFromStore.js';
+import { InMemoryCache } from './inMemoryCache.js';
+import { EntityStore } from './entityStore.js';
+import { Cache } from '../../core/index.js';
+import { canonicalStringify } from './object-canon.js';
+import { normalizeReadFieldOptions } from './policies.js';
+import { ReadFieldFunction } from '../core/types/common.js';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {

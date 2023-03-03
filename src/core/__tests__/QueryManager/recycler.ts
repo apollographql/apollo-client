@@ -8,14 +8,14 @@
 import gql from 'graphql-tag';
 
 // core
-import { QueryManager } from '../../QueryManager';
-import { ObservableQuery } from '../../ObservableQuery';
-import { ObservableSubscription } from '../../../utilities';
-import { itAsync } from '../../../testing';
-import { InMemoryCache } from '../../../cache';
+import { QueryManager } from '../../QueryManager.js';
+import { ObservableQuery } from '../../ObservableQuery.js';
+import { ObservableSubscription } from '../../../utilities/index.js';
+import { itAsync } from '../../../testing/index.js';
+import { InMemoryCache } from '../../../cache/index.js';
 
 // mocks
-import { MockSubscriptionLink } from '../../../testing/core';
+import { MockSubscriptionLink } from '../../../testing/core/index.js';
 
 describe('Subscription lifecycles', () => {
   itAsync('cleans up and reuses data like QueryRecycler wants', (resolve, reject) => {

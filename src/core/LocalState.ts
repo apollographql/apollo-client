@@ -1,4 +1,4 @@
-import { invariant } from '../utilities/globals';
+import { invariant } from '../utilities/globals/index.js';
 
 import {
   DocumentNode,
@@ -17,7 +17,7 @@ import {
   ExecutableDefinitionNode,
 } from 'graphql';
 
-import { ApolloCache } from '../cache';
+import { ApolloCache } from '../cache/index.js';
 import {
   FragmentMap,
   StoreObject,
@@ -34,11 +34,11 @@ import {
   removeClientSetsFromDocument,
   resultKeyNameFromField,
   shouldInclude,
-} from '../utilities';
-import { ApolloClient } from './ApolloClient';
-import { Resolvers, OperationVariables } from './types';
-import { FetchResult } from '../link/core';
-import { cacheSlot } from '../cache';
+} from '../utilities/index.js';
+import { ApolloClient } from './ApolloClient.js';
+import { Resolvers, OperationVariables } from './types.js';
+import { FetchResult } from '../link/core/index.js';
+import { cacheSlot } from '../cache/index.js';
 
 export type Resolver = (
   rootValue?: any,

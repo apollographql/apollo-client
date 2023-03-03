@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "removeComments": true,
+    "declaration": true,
+    "declarationMap": true,
+    "target": "es5",
+    "experimentalDecorators": true,
+    "outDir": "./dist",
+    "lib": ["es2015", "esnext.asynciterable", "dom"],
+    "jsx": "react"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "src/**/__tests__/**/*"
+  ]
+}

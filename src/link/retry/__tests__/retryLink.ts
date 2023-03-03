@@ -1,11 +1,11 @@
 import gql from 'graphql-tag';
 import waitFor from 'wait-for-observables';
 
-import { ApolloLink } from '../../core/ApolloLink';
-import { execute } from '../../core/execute';
-import { Observable } from '../../../utilities/observables/Observable';
-import { fromError } from '../../utils/fromError';
-import { RetryLink } from '../retryLink';
+import { ApolloLink } from '../../core/ApolloLink.js';
+import { execute } from '../../core/execute.js';
+import { Observable } from '../../../utilities/observables/Observable.js';
+import { fromError } from '../../utils/fromError.js';
+import { RetryLink } from '../retryLink.js';
 
 const query = gql`
   {

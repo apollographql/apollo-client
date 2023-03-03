@@ -3,16 +3,16 @@ import { act, render, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
-import { ApolloClient, MutationUpdaterFunction, ApolloCache } from '../../../../core';
-import { ApolloProvider } from '../../../context';
-import { InMemoryCache as Cache } from '../../../../cache';
+import { ApolloClient, MutationUpdaterFunction, ApolloCache } from '../../../../core/index.js';
+import { ApolloProvider } from '../../../context/index.js';
+import { InMemoryCache as Cache } from '../../../../cache/index.js';
 import {
   itAsync,
   createMockClient,
   mockSingleLink,
-} from '../../../../testing';
-import { graphql } from '../../graphql';
-import { ChildProps } from '../../types';
+} from '../../../../testing/index.js';
+import { graphql } from '../../graphql.js';
+import { ChildProps } from '../../types.js';
 
 describe('graphql(mutation) query integration', () => {
   itAsync('allows for passing optimisticResponse for a mutation', (resolve, reject) => {

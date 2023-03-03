@@ -1,6 +1,6 @@
 import { Subscription } from "zen-observable-ts";
 
-import { itAsync } from '../testing';
+import { itAsync } from '../testing/index.js';
 import {
   ApolloClient,
   ApolloLink,
@@ -9,7 +9,7 @@ import {
   Observable,
   TypedDocumentNode,
   ObservableQuery,
-} from "../core";
+} from "../core/index.js";
 
 describe("client.refetchQueries", () => {
   itAsync("is public and callable", (resolve, reject) => {

@@ -1,6 +1,10 @@
-const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
+import assert from "assert";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const distRoot = path.join(__dirname, "..", "dist");
 const versionPath = path.join(distRoot, "version.js");
 const pkgJsonPath = path.join(__dirname, "..", "package.json");
@@ -31,7 +35,7 @@ switch (process.argv[2]) {
     const {
       ApolloClient,
       InMemoryCache,
-    } = require(path.join(distRoot, "core", "core.cjs"));
+    } = await import(path.join(distRoot, "core", "core.cjs"));
 
     // Though this may seem like overkill, verifying that ApolloClient is
     // constructible in Node.js is actually pretty useful, too!

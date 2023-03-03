@@ -1,4 +1,4 @@
-import { GraphQLRequest, Operation } from '../core';
+import { GraphQLRequest, Operation } from '../core/index.js';
 
 export function createOperation(
   starting: any,

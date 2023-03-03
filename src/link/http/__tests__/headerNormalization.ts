@@ -1,10 +1,10 @@
 import gql from 'graphql-tag';
 
-import { createOperation } from '../../utils/createOperation';
+import { createOperation } from '../../utils/createOperation.js';
 import {
   selectHttpOptionsAndBody,
   fallbackHttpConfig,
-} from '../selectHttpOptionsAndBody';
+} from '../selectHttpOptionsAndBody.js';
 
 const query = gql`
   query SampleQuery {
@@ -16,7 +16,7 @@ const query = gql`
 
 describe('headerNormalization', () => {
   it('normalizes HTTP header names to lower case by default', () => {
-    const config = { 
+    const config = {
       headers: {
         accept: 'text/html',
         ACCEPT: 'text/html',
@@ -48,7 +48,7 @@ describe('headerNormalization', () => {
         'content-type': 'application/graphql',
         'CONTENT-TYPE': 'application/graphql',
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase:true }
     };
 
     const { options } = selectHttpOptionsAndBody(
@@ -69,14 +69,14 @@ describe('headerNormalization', () => {
         accept: 'text/html',
         ACCEPT: 'text/html',
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase:true }
     };
     const contextConfig = {
       headers: {
         'content-type': 'application/graphql',
         'CONTENT-TYPE': 'application/graphql',
       },
-      http: { preserveHeaderCase:false } 
+      http: { preserveHeaderCase:false }
     };
     const { options } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
@@ -97,14 +97,14 @@ describe('headerNormalization', () => {
         accept: 'text/html',
         ACCEPT: 'text/html',
       },
-      http: { preserveHeaderCase:false } 
+      http: { preserveHeaderCase:false }
     };
     const contextConfig = {
       headers: {
         'content-type': 'application/graphql',
         'CONTENT-TYPE': 'application/graphql',
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase:true }
     };
     const { options } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
@@ -118,22 +118,22 @@ describe('headerNormalization', () => {
       'CONTENT-TYPE': 'application/graphql',
     });
   });
-  
+
   it('ensures link headerNormalization affects context headers', () => {
     const linkConfig = {
       headers: {
         accept: 'text/html',
         ACCEPT: 'text/html',
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase:true }
     };
-    const contextConfig = { 
+    const contextConfig = {
       headers: {
         'content-type': 'application/graphql',
         'CONTENT-TYPE': 'application/graphql',
       }
     };
-  
+
     const { options } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
       fallbackHttpConfig,

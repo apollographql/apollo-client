@@ -1,9 +1,9 @@
 /** @jest-environment node */
 import React from 'react';
-import { makeVar } from '../../../core';
-import { useReactiveVar } from '../../hooks';
-import { itAsync } from "../../../testing";
-import { renderToStringWithData } from '../';
+import { makeVar } from '../../../core/index.js';
+import { useReactiveVar } from '../../hooks/index.js';
+import { itAsync } from "../../../testing/index.js";
+import { renderToStringWithData } from '../index.js';
 
 describe('useReactiveVar Hook SSR', () => {
   itAsync("does not cause warnings", (resolve, reject) => {

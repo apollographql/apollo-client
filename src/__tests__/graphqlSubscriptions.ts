@@ -1,9 +1,9 @@
 import gql from 'graphql-tag';
 
-import { ApolloClient } from '../core';
-import { InMemoryCache } from '../cache';
-import { QueryManager } from '../core/QueryManager';
-import { itAsync, mockObservableLink } from '../testing';
+import { ApolloClient } from '../core/index.js';
+import { InMemoryCache } from '../cache/index.js';
+import { QueryManager } from '../core/QueryManager.js';
+import { itAsync, mockObservableLink } from '../testing/index.js';
 
 describe('GraphQL Subscriptions', () => {
   const results = [

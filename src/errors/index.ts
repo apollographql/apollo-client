@@ -1,10 +1,10 @@
-import '../utilities/globals';
+import '../utilities/globals/index.js';
 
 import { GraphQLError } from 'graphql';
 
-import { isNonEmptyArray } from '../utilities';
-import { ServerParseError } from '../link/http';
-import { ServerError } from '../link/utils';
+import { isNonEmptyArray } from '../utilities/index.js';
+import { ServerParseError } from '../link/http/index.js';
+import { ServerError } from '../link/utils/index.js';
 
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty('graphQLErrors');

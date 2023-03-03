@@ -1,8 +1,8 @@
-import { invariant } from '../utilities/globals';
+import { invariant } from '../utilities/globals/index.js';
 import { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus.js';
 import {
   Concast,
   cloneDeep,
@@ -15,23 +15,23 @@ import {
   isNonEmptyArray,
   fixObservableSubclass,
   getQueryDefinition,
-} from '../utilities';
-import { ApolloError } from '../errors';
-import { QueryManager } from './QueryManager';
+} from '../utilities/index.js';
+import { ApolloError } from '../errors/index.js';
+import { QueryManager } from './QueryManager.js';
 import {
   ApolloQueryResult,
   OperationVariables,
   TypedDocumentNode,
-} from './types';
+} from './types.js';
 import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
-} from './watchQueryOptions';
-import { QueryInfo } from './QueryInfo';
-import { MissingFieldError } from '../cache';
-import { MissingTree } from '../cache/core/types/common';
+} from './watchQueryOptions.js';
+import { QueryInfo } from './QueryInfo.js';
+import { MissingFieldError } from '../cache/index.js';
+import { MissingTree } from '../cache/core/types/common.js';
 
 const {
   assign,

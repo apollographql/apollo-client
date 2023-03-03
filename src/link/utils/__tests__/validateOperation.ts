@@ -1,4 +1,4 @@
-import { validateOperation, } from '../validateOperation';
+import { validateOperation, } from '../validateOperation.js';
 import gql from "graphql-tag";
 
 describe('validateOperation', () => {

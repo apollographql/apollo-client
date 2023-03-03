@@ -18,14 +18,14 @@ import {
   addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
-} from '../../../utilities';
-import { itAsync } from '../../../testing/core';
-import { StoreWriter } from '../writeToStore';
-import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
-import { InMemoryCache } from '../inMemoryCache';
-import { withErrorSpy, withWarningSpy } from '../../../testing';
-import { TypedDocumentNode } from '../../../core'
-import { extractFragmentContext } from '../helpers';
+} from '../../../utilities/index.js';
+import { itAsync } from '../../../testing/core/index.js';
+import { StoreWriter } from '../writeToStore.js';
+import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers.js';
+import { InMemoryCache } from '../inMemoryCache.js';
+import { withErrorSpy, withWarningSpy } from '../../../testing/index.js';
+import { TypedDocumentNode } from '../../../core/index.js'
+import { extractFragmentContext } from '../helpers.js';
 
 const getIdField = ({ id }: { id: string }) => id;
 

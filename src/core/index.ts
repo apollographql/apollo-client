@@ -1,18 +1,18 @@
 /* Core */
 
-import { DEV } from '../utilities/globals';
+import { DEV } from '../utilities/globals/index.js';
 
 export {
   ApolloClient,
   ApolloClientOptions,
   DefaultOptions,
   mergeOptions,
-} from './ApolloClient';
+} from './ApolloClient.js';
 export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
-} from './ObservableQuery';
+} from './ObservableQuery.js';
 export {
   QueryOptions,
   WatchQueryOptions,
@@ -23,14 +23,14 @@ export {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-} from './watchQueryOptions';
-export { NetworkStatus } from './networkStatus';
-export * from './types';
+} from './watchQueryOptions.js';
+export { NetworkStatus } from './networkStatus.js';
+export * from './types.js';
 export {
   Resolver,
   FragmentMatcher,
-} from './LocalState';
-export { isApolloError, ApolloError } from '../errors';
+} from './LocalState.js';
+export { isApolloError, ApolloError } from '../errors/index.js';
 
 /* Cache */
 
@@ -54,21 +54,21 @@ export {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
-} from '../cache';
+} from '../cache/index.js';
 
-export * from '../cache/inmemory/types';
+export * from '../cache/inmemory/types.js';
 
 /* Link */
 
-export * from '../link/core';
-export * from '../link/http';
+export * from '../link/core/index.js';
+export * from '../link/http/index.js';
 export {
   fromError,
   toPromise,
   fromPromise,
   ServerError,
   throwServerError,
-} from '../link/utils';
+} from '../link/utils/index.js';
 
 /* Utilities */
 
@@ -80,7 +80,7 @@ export {
   isReference,
   makeReference,
   StoreObject,
-} from '../utilities';
+} from '../utilities/index.js';
 
 /* Supporting */
 

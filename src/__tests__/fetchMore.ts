@@ -7,26 +7,26 @@ import {
   NetworkStatus,
   ObservableQuery,
   TypedDocumentNode,
-} from '../core';
+} from '../core/index.js';
 
 import {
   Observable,
   offsetLimitPagination,
   concatPagination,
-} from '../utilities';
+} from '../utilities/index.js';
 
 import {
   ApolloCache,
   InMemoryCache,
   InMemoryCacheConfig,
   FieldMergeFunction,
-} from '../cache';
+} from '../cache/index.js';
 
 import {
   itAsync,
   mockSingleLink,
   subscribeAndCount,
-} from '../testing';
+} from '../testing/index.js';
 
 describe('updateQuery on a simple query', () => {
   const query = gql`

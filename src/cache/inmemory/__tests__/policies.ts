@@ -1,18 +1,18 @@
 import gql from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
-import { ReactiveVar, makeVar } from "../reactiveVars";
-import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
-import { MissingFieldError } from "../..";
-import { relayStylePagination } from "../../../utilities";
-import { FieldPolicy, StorageType } from "../policies";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { ReactiveVar, makeVar } from "../reactiveVars.js";
+import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core/index.js";
+import { MissingFieldError } from "../../index.js";
+import { relayStylePagination } from "../../../utilities/index.js";
+import { FieldPolicy, StorageType } from "../policies.js";
 import {
   itAsync,
   withErrorSpy,
   withWarningSpy,
   subscribeAndCount,
   MockLink,
-} from "../../../testing/core";
+} from "../../../testing/core/index.js";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");

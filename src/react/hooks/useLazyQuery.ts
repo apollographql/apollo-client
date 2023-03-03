@@ -2,15 +2,15 @@ import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { OperationVariables } from '../../core';
-import { mergeOptions } from '../../utilities';
+import { OperationVariables } from '../../core/index.js';
+import { mergeOptions } from '../../utilities/index.js';
 import {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
   QueryResult,
-} from '../types/types';
-import { useInternalState } from './useQuery';
-import { useApolloClient } from './useApolloClient';
+} from '../types/types.js';
+import { useInternalState } from './useQuery.js';
+import { useApolloClient } from './useApolloClient.js';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.

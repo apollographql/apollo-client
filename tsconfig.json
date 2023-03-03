@@ -5,22 +5,26 @@
     "noUnusedParameters": false,
     "noUnusedLocals": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "importHelpers": true,
-    "removeComments": true,
     "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "target": "es5",
-    "module": "es2015",
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable", "dom"],
-    "jsx": "react"
+
+    "noEmit": true,
+    "target": "ESNext",
+    "inlineSourceMap": false,
+    "resolveJsonModule": true,
+    // This option should cause sourcesContent to be included in the
+    // source map JSON, so we don't have to rely on the (nonexistent)
+    // relative paths in the sources array, but it appears tsc does not
+    // respect this option unless the source maps are inlined into the
+    // source files, which we definitely do not want. Instead, we use the
+    // config/rewriteSourceMaps.ts script to add sourcesContent.
+    "inlineSources": true,
   },
-  "include": ["src/**/*.ts"],
-  "exclude": [
-    "src/**/__tests__/**/*"
-  ]
+  "include": ["config/**/*.ts"],
+  "ts-node": {
+      "esm": true
+  },
 }

@@ -75,7 +75,7 @@ Below we use the `gql` function to define our query, which automatically generat
 import React from 'react';
 import { useQuery } from '@apollo/client';
 
-import { gql } from '../src/__generated__/gql';
+import { gql } from '../src/__generated__/gql.js';
 
 const GET_ROCKET_INVENTORY = gql(/* GraphQL */ `
   query GetRocketInventory($year: Int!) {
@@ -194,7 +194,7 @@ We can type `useMutation` hooks the same way we type `useQuery` hooks. Using the
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 
-import { gql } from '../src/__generated__/gql';
+import { gql } from '../src/__generated__/gql.js';
 
 const SAVE_ROCKET = gql(/* GraphQL */ `
   mutation saveRocket($rocket: RocketInput!) {
@@ -256,13 +256,13 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-We can type our `useSubscription` hooks the same way we typed our `useQuery` and ` useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscription variables and return data:
+We can type our `useSubscription` hooks the same way we typed our `useQuery` and `useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscription variables and return data:
 
 ```tsx
 import React from 'react';
 import { useSubscription } from '@apollo/client';
 
-import { gql } from '../src/gql';
+import { gql } from '../src/gql.js';
 
 const LATEST_NEWS = gql(/* GraphQL */ `
   subscription getLatestNews {
@@ -293,7 +293,7 @@ To type render prop components, you'll first define a GraphQL query using the ge
 This creates a type for that query and its variables, which you can then pass to your `Query` component:
 
 ```tsx
-import { gql, AllPeopleQuery, AllPeopleQueryVariables } from '../src/__generated__/gql';
+import { gql, AllPeopleQuery, AllPeopleQueryVariables } from '../src/__generated__/gql.js';
 
 const ALL_PEOPLE_QUERY = gql(/* GraphQL */ `
   query All_People {
@@ -304,7 +304,7 @@ const ALL_PEOPLE_QUERY = gql(/* GraphQL */ `
       }
     }
   }
-`;
+`);
 
 
 const AllPeopleComponent = <Query<AllPeopleQuery, AllPeopleQueryVariables> query={ALL_PEOPLE_QUERY}>
@@ -348,7 +348,7 @@ Below is an example of setting types for an operation using the `graphql` higher
 import React from "react";
 import { ChildDataProps, graphql } from "@apollo/react-hoc";
 
-import { gql, GetCharacterQuery, GetCharacterQueryVariables } from '../src/gql';
+import { gql, GetCharacterQuery, GetCharacterQueryVariables } from '../src/gql.js';
 
 const HERO_QUERY = gql(/* GraphQL */ `
   query GetCharacter($episode: Episode!) {
@@ -395,7 +395,7 @@ Below is an example of setting a type for a component's props:
 import React from "react";
 import { ChildDataProps, graphql } from "@apollo/react-hoc";
 
-import { gql, GetCharacterQuery, GetCharacterQueryVariables } from '../src/gql';
+import { gql, GetCharacterQuery, GetCharacterQueryVariables } from '../src/gql.js';
 
 const HERO_QUERY = gql(/* GraphQL */ `
   query GetCharacter($episode: Episode!) {
@@ -444,7 +444,7 @@ import {
   ApolloProvider
 } from "@apollo/client";
 
-import Character from "./Character";
+import Character from "./Character.js";
 
 export const link = createHttpLink({
   uri: "https://mpjk0plp9.lp.gql.zone/graphql"
@@ -470,7 +470,7 @@ The `props` function enables you to manually reshape an operation result's data 
 import React from "react";
 import { graphql, ChildDataProps } from "@apollo/react-hoc";
 
-import { gql, GetCharacterQuery, GetCharacterQueryVariables } from '../src/gql';
+import { gql, GetCharacterQuery, GetCharacterQueryVariables } from '../src/gql.js';
 
 const HERO_QUERY = gql(/* GraphQL */ `
   query GetCharacter($episode: Episode!) {

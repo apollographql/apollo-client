@@ -1,4 +1,4 @@
-import { maybe } from "./maybe";
+import { maybe } from "./maybe.js";
 
 declare global {
   // Despite our attempts to reuse the React Native __DEV__ constant instead of

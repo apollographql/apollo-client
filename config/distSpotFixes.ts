@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { EOL } from "os";
-import { distDir } from './helpers';
+import { distDir } from './helpers.js';
 
 export function applyDistSpotFixes() {
   sanitizeDEV();

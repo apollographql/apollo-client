@@ -1,5 +1,5 @@
-import { FieldFunctionOptions, InMemoryCache, isReference, makeReference, StoreObject } from '../../../cache';
-import { relayStylePagination, TRelayPageInfo } from '../pagination';
+import { FieldFunctionOptions, InMemoryCache, isReference, makeReference, StoreObject } from '../../../cache/index.js';
+import { relayStylePagination, TRelayPageInfo } from '../pagination.js';
 
 describe('relayStylePagination', () => {
   const policy = relayStylePagination();

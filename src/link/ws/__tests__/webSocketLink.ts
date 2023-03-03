@@ -2,10 +2,10 @@ import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { ExecutionResult } from 'graphql';
 import gql from 'graphql-tag';
 
-import { Observable } from '../../../utilities';
-import { execute } from '../../core';
-import { WebSocketLink } from '..';
-import { itAsync } from '../../../testing';
+import { Observable } from '../../../utilities/index.js';
+import { execute } from '../../core/index.js';
+import { WebSocketLink } from '../index.js';
+import { itAsync } from '../../../testing/index.js';
 
 const query = gql`
   query SampleQuery {

@@ -1,4 +1,4 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 
 import {
   useCallback,
@@ -7,12 +7,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useSyncExternalStore } from './useSyncExternalStore';
+import { useSyncExternalStore } from './useSyncExternalStore.js';
 import { equal } from '@wry/equality';
 
-import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';
-import { ApolloContextValue, getApolloContext } from '../context';
-import { ApolloError } from '../../errors';
+import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core/index.js';
+import { ApolloContextValue, getApolloContext } from '../context/index.js';
+import { ApolloError } from '../../errors/index.js';
 import {
   ApolloClient,
   ApolloQueryResult,
@@ -21,16 +21,16 @@ import {
   DocumentNode,
   TypedDocumentNode,
   WatchQueryOptions,
-} from '../../core';
+} from '../../core/index.js';
 import {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
-} from '../types/types';
+} from '../types/types.js';
 
-import { DocumentType, verifyDocumentType } from '../parser';
-import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, canUseWeakSet, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { DocumentType, verifyDocumentType } from '../parser/index.js';
+import { useApolloClient } from './useApolloClient.js';
+import { canUseWeakMap, canUseWeakSet, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities/index.js';
 
 const {
   prototype: {

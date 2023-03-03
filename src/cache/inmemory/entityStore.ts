@@ -1,4 +1,4 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 import { dep, OptimisticDependencyFunction } from 'optimism';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
@@ -13,11 +13,11 @@ import {
   maybeDeepFreeze,
   canUseWeakMap,
   isNonNullObject,
-} from '../../utilities';
-import { NormalizedCache, NormalizedCacheObject } from './types';
-import { hasOwn, fieldNameFromStoreName } from './helpers';
-import { Policies, StorageType } from './policies';
-import { Cache } from '../core/types/Cache';
+} from '../../utilities/index.js';
+import { NormalizedCache, NormalizedCacheObject } from './types.js';
+import { hasOwn, fieldNameFromStoreName } from './helpers.js';
+import { Policies, StorageType } from './policies.js';
+import { Cache } from '../core/types/Cache.js';
 import {
   SafeReadonly,
   Modifier,
@@ -25,7 +25,7 @@ import {
   ReadFieldOptions,
   ToReferenceFunction,
   CanReadFunction,
-} from '../core/types/common';
+} from '../core/types/common.js';
 
 const DELETE: any = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;

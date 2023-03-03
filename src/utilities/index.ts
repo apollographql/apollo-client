@@ -1,4 +1,4 @@
-export { DEV, maybe } from './globals';
+export { DEV, maybe } from './globals/index.js';
 
 export {
   DirectiveInfo,
@@ -10,7 +10,7 @@ export {
   hasClientExports,
   getDirectiveNames,
   getInclusionDirectives,
-} from './graphql/directives';
+} from './graphql/directives.js';
 
 export {
   FragmentMap,
@@ -18,7 +18,7 @@ export {
   createFragmentMap,
   getFragmentQueryDocument,
   getFragmentFromSelection,
-} from './graphql/fragments';
+} from './graphql/fragments.js';
 
 export {
   checkDocument,
@@ -29,7 +29,7 @@ export {
   getFragmentDefinition,
   getMainDefinition,
   getDefaultValues,
-} from './graphql/getFromAST';
+} from './graphql/getFromAST.js';
 
 export {
   StoreObject,
@@ -48,7 +48,7 @@ export {
   resultKeyNameFromField,
   getStoreKeyName,
   getTypenameFromResult,
-} from './graphql/storeUtils';
+} from './graphql/storeUtils.js';
 
 export {
   RemoveNodeConfig,
@@ -67,34 +67,34 @@ export {
   removeArgumentsFromDocument,
   removeFragmentSpreadFromDocument,
   removeClientSetsFromDocument,
-} from './graphql/transform';
+} from './graphql/transform.js';
 
 export {
   concatPagination,
   offsetLimitPagination,
   relayStylePagination,
-} from './policies/pagination';
+} from './policies/pagination.js';
 
 export {
   Observable,
   Observer,
   ObservableSubscription
-} from './observables/Observable';
+} from './observables/Observable.js';
 
-export * from './common/mergeDeep';
-export * from './common/cloneDeep';
-export * from './common/maybeDeepFreeze';
-export * from './observables/iteration';
-export * from './observables/asyncMap';
-export * from './observables/Concast';
-export * from './observables/subclassing';
-export * from './common/arrays';
-export * from './common/objects';
-export * from './common/errorHandling';
-export * from './common/canUse';
-export * from './common/compact';
-export * from './common/makeUniqueId';
-export * from './common/stringifyForDisplay';
-export * from './common/mergeOptions';
+export * from './common/mergeDeep.js';
+export * from './common/cloneDeep.js';
+export * from './common/maybeDeepFreeze.js';
+export * from './observables/iteration.js';
+export * from './observables/asyncMap.js';
+export * from './observables/Concast.js';
+export * from './observables/subclassing.js';
+export * from './common/arrays.js';
+export * from './common/objects.js';
+export * from './common/errorHandling.js';
+export * from './common/canUse.js';
+export * from './common/compact.js';
+export * from './common/makeUniqueId.js';
+export * from './common/stringifyForDisplay.js';
+export * from './common/mergeOptions.js';
 
-export * from './types/IsStrictlyAny';
+export * from './types/IsStrictlyAny.js';

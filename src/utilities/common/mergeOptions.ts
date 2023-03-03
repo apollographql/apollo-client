@@ -3,9 +3,9 @@ import type {
   WatchQueryOptions,
   MutationOptions,
   OperationVariables,
-} from "../../core";
+} from "../../core/index.js";
 
-import { compact } from "./compact";
+import { compact } from "./compact.js";
 
 type OptionsUnion<TData, TVariables extends OperationVariables, TContext> =
   | WatchQueryOptions<TVariables, TData>

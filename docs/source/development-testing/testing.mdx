@@ -56,7 +56,7 @@ A basic rendering test for the component looks like this (minus mocked responses
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
-import { GET_DOG_QUERY, Dog } from "./dog";
+import { GET_DOG_QUERY, Dog } from "./dog.js";
 
 const mocks = []; // We'll fill this in next
 
@@ -120,7 +120,7 @@ Combining our code above, we get the following complete test:
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
-import { GET_DOG_QUERY, Dog } from "./dog";
+import { GET_DOG_QUERY, Dog } from "./dog.js";
 
 const mocks = [
   {
@@ -277,7 +277,7 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
 import { MockedProvider } from "@apollo/client/testing";
-import { DeleteButton, DELETE_DOG_MUTATION } from "./delete-dog";
+import { DeleteButton, DELETE_DOG_MUTATION } from "./delete-dog.js";
 
 it("should render without error", () => {
   render(
@@ -394,7 +394,7 @@ In order to properly test local state using `MockedProvider`, you'll need to pas
 `MockedProvider` creates its own ApolloClient instance behind the scenes like this:
 
 ```jsx
-const { 
+const {
   mocks,
   addTypename,
   defaultOptions,

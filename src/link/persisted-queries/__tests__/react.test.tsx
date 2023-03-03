@@ -5,14 +5,14 @@ import gql from 'graphql-tag';
 import { print } from 'graphql';
 import fetchMock from 'fetch-mock';
 
-import { ApolloProvider } from '../../../react/context';
-import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloClient } from '../../../core/ApolloClient';
-import { createHttpLink } from '../../http/createHttpLink';
-import { graphql } from '../../../react/hoc/graphql';
-import { getDataFromTree } from '../../../react/ssr/getDataFromTree';
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
-import { sha256 } from './persisted-queries.test';
+import { ApolloProvider } from '../../../react/context/index.js';
+import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache.js';
+import { ApolloClient } from '../../../core/ApolloClient.js';
+import { createHttpLink } from '../../http/createHttpLink.js';
+import { graphql } from '../../../react/hoc/graphql.js';
+import { getDataFromTree } from '../../../react/ssr/getDataFromTree.js';
+import { createPersistedQueryLink as createPersistedQuery, VERSION } from '../index.js';
+import { sha256 } from './persisted-queries.test.js';
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint

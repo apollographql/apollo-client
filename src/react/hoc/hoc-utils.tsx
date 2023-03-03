@@ -1,7 +1,7 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 import * as React from 'react';
-import { OperationVariables } from '../../core';
-import { IDocumentDefinition } from '../parser';
+import { OperationVariables } from '../../core/index.js';
+import { IDocumentDefinition } from '../parser/index.js';
 
 export const defaultMapPropsToOptions = () => ({});
 export const defaultMapResultToProps: <P>(props: P) => P = props => props;

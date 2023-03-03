@@ -1,5 +1,5 @@
-import global from "./global";
-import { maybe } from "./maybe";
+import global from "./global.js";
+import { maybe } from "./maybe.js";
 
 // To keep string-based find/replace minifiers from messing with __DEV__ inside
 // string literals or properties like global.__DEV__, we construct the "__DEV__"

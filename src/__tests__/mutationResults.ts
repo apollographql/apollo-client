@@ -2,11 +2,11 @@ import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 
-import { ApolloClient } from '../core';
-import { InMemoryCache } from '../cache';
-import { ApolloLink } from '../link/core';
-import { Observable, ObservableSubscription as Subscription } from '../utilities';
-import { itAsync, subscribeAndCount, mockSingleLink, withErrorSpy } from '../testing';
+import { ApolloClient } from '../core/index.js';
+import { InMemoryCache } from '../cache/index.js';
+import { ApolloLink } from '../link/core/index.js';
+import { Observable, ObservableSubscription as Subscription } from '../utilities/index.js';
+import { itAsync, subscribeAndCount, mockSingleLink, withErrorSpy } from '../testing/index.js';
 
 describe('mutation results', () => {
   const query = gql`

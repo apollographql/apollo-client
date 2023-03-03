@@ -27,7 +27,7 @@ Direct writes to the cache do not require a GraphQL mutation or a resolver funct
 import React from "react";
 import { useApolloClient } from "@apollo/client";
 
-import Link from "./Link";
+import Link from "./Link.js";
 
 function FilterLink({ filter, children }) {
   const client = useApolloClient();
@@ -52,7 +52,7 @@ What if we want to immediately subscribe to the data we just wrote to the cache?
 import React from "react";
 import { gql, useQuery } from "@apollo/client";
 
-import Link from "./Link";
+import Link from "./Link.js";
 
 const GET_VISIBILITY_FILTER = gql`
   query GetVisibilityFilter {
@@ -163,7 +163,7 @@ Querying for local data is very similar to querying your GraphQL server. The onl
 import React from "react";
 import { gql, useQuery } from "@apollo/client";
 
-import Todo from "./Todo";
+import Todo from "./Todo.js";
 
 const GET_TODOS = gql`
   query GetTodos {
@@ -518,8 +518,8 @@ import {
   gql
 } from "@apollo/client";
 
-import Pages from "./pages";
-import Login from "./pages/login";
+import Pages from "./pages.js";
+import Login from "./pages/login.js";
 
 const cache = new InMemoryCache();
 const client = new ApolloClient({
@@ -568,8 +568,8 @@ Before Apollo Client executes a query, one of the first things it does is check 
 import React, { Fragment } from "react";
 import { useQuery, gql } from "@apollo/client";
 
-import { Loading, Header, LaunchDetail } from "../components";
-import { ActionButton } from "../containers";
+import { Loading, Header, LaunchDetail } from "../components.js";
+import { ActionButton } from "../containers.js";
 
 export const GET_LAUNCH_DETAILS = gql`
   query LaunchDetails($launchId: ID!) {
@@ -607,7 +607,7 @@ export default function Launch({ launchId }) {
 In the above example we're using an Apollo Client `useQuery` hook to run the `GET_LAUNCH_DETAILS` query. The `@client` based `isInCart` field is configured to pull its data from the following resolver:
 
 ```js
-import { GET_CART_ITEMS } from './pages/cart';
+import { GET_CART_ITEMS } from './pages/cart.js';
 
 export const resolvers = {
   Launch: {
@@ -935,10 +935,10 @@ Let's say we're building a messaging app and have a `/stats` route that is used 
 ```js
 import Loadable from 'react-loadable';
 
-import Loading from './components/Loading';
+import Loading from './components/Loading.js';
 
 export const Stats = Loadable({
-  loader: () => import('./components/stats/Stats'),
+  loader: () => import('./components/stats/Stats.js'),
   loading: Loading,
 });
 ```

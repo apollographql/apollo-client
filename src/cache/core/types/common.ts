@@ -5,9 +5,9 @@ import {
   StoreObject,
   StoreValue,
   isReference,
-} from '../../../utilities';
+} from '../../../utilities/index.js';
 
-import { StorageType } from '../../inmemory/policies';
+import { StorageType } from '../../inmemory/policies.js';
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when

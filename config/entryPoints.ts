@@ -1,3 +1,12 @@
+import { posix as path } from "path";
+
+export interface EntryPoint {
+  dirs: string[],
+  bundleName?: string,
+  extensions?: string[],
+  sideEffects?: boolean,
+}
+
 const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ['cache'] },
@@ -38,23 +47,25 @@ entryPoints.forEach(info => {
   node.isEntry = true;
 });
 
-exports.forEach = function(callback, context) {
+export function forEach(callback: (value: EntryPoint, index: number, array: EntryPoint[]) => void, context?: any) {
   entryPoints.forEach(callback, context);
-};
+}
 
-exports.map = function map(callback, context) {
+export function map<U>(callback: (value: EntryPoint, index: number, array: EntryPoint[]) => U, context?: any) {
   return entryPoints.map(callback, context);
-};
+}
 
-const path = require("path").posix;
-
-exports.check = function (id, parentId) {
+export function check(id: string, parentId: string) {
   const resolved = path.resolve(path.dirname(parentId), id);
   const importedParts = partsAfterDist(resolved);
 
   if (importedParts) {
     const entryPointIndex = lengthOfLongestEntryPoint(importedParts);
-    if (entryPointIndex === importedParts.length) {
+    // if the import includes an index file, don't count it towards the entry point length
+    const importPathLength = importedParts[importedParts.length - 1] === 'index.js'
+      ? importedParts.length - 1
+      : importedParts.length
+    if (entryPointIndex === importPathLength) {
       return true;
     }
 
@@ -81,23 +92,21 @@ exports.check = function (id, parentId) {
   }
 
   return false;
-};
-
-function partsAfterDist(id) {
-  const parts = id.split(path.sep);
-  const distIndex = parts.lastIndexOf("dist");
-  if (distIndex >= 0) {
-    return parts.slice(distIndex + 1);
-  }
 }
 
-exports.getEntryPointDirectory = function (file) {
+function partsAfterDist(id: string) {
+  const parts = id.split(path.sep);
+  const distIndex = parts.lastIndexOf("dist");
+  return distIndex >= 0 ? parts.slice(distIndex + 1) : []
+}
+
+export function getEntryPointDirectory(file: string) {
   const parts = partsAfterDist(file) || file.split(path.sep);
   const len = lengthOfLongestEntryPoint(parts);
   if (len >= 0) return parts.slice(0, len).join(path.sep);
-};
+}
 
-function lengthOfLongestEntryPoint(parts) {
+function lengthOfLongestEntryPoint(parts: string[]) {
   let node = lookupTrie;
   let longest = -1;
   for (let i = 0; node && i < parts.length; ++i) {
@@ -110,7 +119,7 @@ function lengthOfLongestEntryPoint(parts) {
   return longest;
 }
 
-function arraysEqualUpTo(a, b, end) {
+function arraysEqualUpTo(a: string[], b: string[], end: number) {
   for (let i = 0; i < end; ++i) {
     if (a[i] !== b[i]) return false;
   }

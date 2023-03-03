@@ -2,12 +2,12 @@
 import React from 'react';
 import { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
-import { MockedProvider, mockSingleLink } from '../../../testing';
-import { ApolloClient } from '../../../core';
-import { InMemoryCache } from '../../../cache';
-import { ApolloProvider } from '../../context';
-import { useApolloClient, useQuery } from '../../hooks';
-import { renderToStringWithData } from '..';
+import { MockedProvider, mockSingleLink } from '../../../testing/index.js';
+import { ApolloClient } from '../../../core/index.js';
+import { InMemoryCache } from '../../../cache/index.js';
+import { ApolloProvider } from '../../context/index.js';
+import { useApolloClient, useQuery } from '../../hooks/index.js';
+import { renderToStringWithData } from '../index.js';
 
 describe('useQuery Hook SSR', () => {
   const CAR_QUERY: DocumentNode = gql`

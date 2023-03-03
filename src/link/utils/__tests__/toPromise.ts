@@ -1,7 +1,7 @@
-import { Observable } from '../../../utilities/observables/Observable';
-import { itAsync } from '../../../testing';
-import { toPromise } from '../toPromise';
-import { fromError } from '../fromError';
+import { Observable } from '../../../utilities/observables/Observable.js';
+import { itAsync } from '../../../testing/index.js';
+import { toPromise } from '../toPromise.js';
+import { fromError } from '../fromError.js';
 
 describe('toPromise', () => {
   const data = {

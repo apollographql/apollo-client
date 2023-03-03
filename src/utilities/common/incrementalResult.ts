@@ -3,9 +3,9 @@ import {
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
   FetchResult,
-} from "../../link/core";
-import { isNonEmptyArray } from "./arrays";
-import { DeepMerger } from "./mergeDeep";
+} from "../../link/core/index.js";
+import { isNonEmptyArray } from "./arrays.js";
+import { DeepMerger } from "./mergeDeep.js";
 
 export function isExecutionPatchIncrementalResult<T>(
   value: FetchResult<T>

@@ -3,9 +3,9 @@ import { render, waitFor, screen, renderHook } from "@testing-library/react";
 import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
-import { useFragment_experimental as useFragment } from "../useFragment";
-import { MockedProvider } from "../../../testing";
-import { ApolloProvider } from "../../context";
+import { useFragment_experimental as useFragment } from "../useFragment.js";
+import { MockedProvider } from "../../../testing/index.js";
+import { ApolloProvider } from "../../context/index.js";
 import {
   InMemoryCache,
   gql,
@@ -14,8 +14,8 @@ import {
   ApolloClient,
   Observable,
   ApolloLink,
-} from "../../../core";
-import { useQuery } from "../useQuery";
+} from "../../../core/index.js";
+import { useQuery } from "../useQuery.js";
 
 describe("useFragment", () => {
   beforeEach(() => {

@@ -9,8 +9,8 @@ import {
   getFragmentQueryDocument,
   createFragmentMap,
   FragmentMap
-} from '../fragments';
-import { getFragmentDefinitions } from '../getFromAST';
+} from '../fragments.js';
+import { getFragmentDefinitions } from '../getFromAST.js';
 
 describe('getFragmentQueryDocument', () => {
   it('will throw an error if there is an operation', () => {

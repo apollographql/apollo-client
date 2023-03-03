@@ -1,6 +1,6 @@
-import { MockedResponse } from './mockLink';
-import mockQueryManager from './mockQueryManager';
-import { ObservableQuery } from '../../../core';
+import { MockedResponse } from './mockLink.js';
+import mockQueryManager from './mockQueryManager.js';
+import { ObservableQuery } from '../../../core/index.js';
 
 export default (...mockedResponses: MockedResponse[]): ObservableQuery<any> => {
   const queryManager = mockQueryManager(...mockedResponses);

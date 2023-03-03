@@ -1,12 +1,12 @@
 import gql from 'graphql-tag';
-import { EntityStore, supportsResultCaching } from '../entityStore';
-import { InMemoryCache } from '../inMemoryCache';
+import { EntityStore, supportsResultCaching } from '../entityStore.js';
+import { InMemoryCache } from '../inMemoryCache.js';
 import { DocumentNode } from 'graphql';
-import { StoreObject } from '../types';
-import { ApolloCache } from '../../core/cache';
-import { Cache } from '../../core/types/Cache';
-import { Reference, makeReference, isReference, StoreValue } from '../../../utilities/graphql/storeUtils';
-import { MissingFieldError } from '../..';
+import { StoreObject } from '../types.js';
+import { ApolloCache } from '../../core/cache.js';
+import { Cache } from '../../core/types/Cache.js';
+import { Reference, makeReference, isReference, StoreValue } from '../../../utilities/graphql/storeUtils.js';
+import { MissingFieldError } from '../../index.js';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 describe('EntityStore', () => {

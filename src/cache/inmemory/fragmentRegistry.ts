@@ -8,7 +8,7 @@ import {
 
 import { wrap } from "optimism";
 
-import { FragmentMap, getFragmentDefinitions } from "../../utilities";
+import { FragmentMap, getFragmentDefinitions } from "../../utilities/index.js";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;

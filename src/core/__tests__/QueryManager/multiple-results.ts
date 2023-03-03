@@ -1,12 +1,12 @@
 // externals
 import gql from 'graphql-tag';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
+import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache.js';
 
 // mocks
-import { itAsync, MockSubscriptionLink } from '../../../testing/core';
+import { itAsync, MockSubscriptionLink } from '../../../testing/core/index.js';
 
 // core
-import { QueryManager } from '../../QueryManager';
+import { QueryManager } from '../../QueryManager.js';
 import { GraphQLError } from 'graphql';
 
 describe('mutiple results', () => {

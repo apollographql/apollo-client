@@ -1,4 +1,4 @@
-import { Operation } from '../core';
+import { Operation } from '../core/index.js';
 
 export const selectURI = (
   operation: Operation,

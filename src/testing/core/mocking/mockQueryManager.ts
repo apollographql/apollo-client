@@ -1,6 +1,6 @@
-import { QueryManager } from '../../../core/QueryManager';
-import { mockSingleLink, MockedResponse } from './mockLink';
-import { InMemoryCache } from '../../../cache';
+import { QueryManager } from '../../../core/QueryManager.js';
+import { mockSingleLink, MockedResponse } from './mockLink.js';
+import { InMemoryCache } from '../../../cache/index.js';
 
 // Helper method for the tests that construct a query manager out of a
 // a list of mocked responses for a mocked network interface.

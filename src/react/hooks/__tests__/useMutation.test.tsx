@@ -6,14 +6,14 @@ import { render, waitFor, screen, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import fetchMock from "fetch-mock";
 
-import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
-import { InMemoryCache } from '../../../cache';
-import { itAsync, MockedProvider, MockSubscriptionLink, mockSingleLink, subscribeAndCount } from '../../../testing';
-import { ApolloProvider, resetApolloContext } from '../../context';
-import { useQuery } from '../useQuery';
-import { useMutation } from '../useMutation';
-import { BatchHttpLink } from '../../../link/batch-http';
-import { FetchResult } from '../../../link/core';
+import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core/index.js';
+import { InMemoryCache } from '../../../cache/index.js';
+import { itAsync, MockedProvider, MockSubscriptionLink, mockSingleLink, subscribeAndCount } from '../../../testing/index.js';
+import { ApolloProvider, resetApolloContext } from '../../context/index.js';
+import { useQuery } from '../useQuery.js';
+import { useMutation } from '../useMutation.js';
+import { BatchHttpLink } from '../../../link/batch-http/index.js';
+import { FetchResult } from '../../../link/core/index.js';
 
 describe('useMutation Hook', () => {
   beforeEach(() => {

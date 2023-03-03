@@ -4,18 +4,18 @@ import { ExecutionResult, GraphQLError } from 'graphql';
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor, act } from '@testing-library/react';
 
-import { ApolloClient } from '../../../../core';
-import { ApolloError } from '../../../../errors';
-import { DataProxy, InMemoryCache as Cache } from '../../../../cache';
-import { ApolloProvider } from '../../../context';
+import { ApolloClient } from '../../../../core/index.js';
+import { ApolloError } from '../../../../errors/index.js';
+import { DataProxy, InMemoryCache as Cache } from '../../../../cache/index.js';
+import { ApolloProvider } from '../../../context/index.js';
 import {
   itAsync,
   MockedProvider,
   MockLink,
   mockSingleLink,
-} from '../../../../testing';
-import { Query } from '../../Query';
-import { Mutation } from '../../Mutation';
+} from '../../../../testing/index.js';
+import { Query } from '../../Query.js';
+import { Mutation } from '../../Mutation.js';
 
 const IS_REACT_18 = React.version.startsWith('18');
 

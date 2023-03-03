@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { ApolloClient } from '../../core';
-import { canUseSymbol } from '../../utilities';
-import type { RenderPromises } from '../ssr';
+import { ApolloClient } from '../../core/index.js';
+import { canUseSymbol } from '../../utilities/index.js';
+import type { RenderPromises } from '../ssr/index.js';
 
 export interface ApolloContextValue {
   client?: ApolloClient<object>;

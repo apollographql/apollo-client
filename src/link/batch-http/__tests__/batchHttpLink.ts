@@ -2,11 +2,11 @@ import fetchMock from 'fetch-mock';
 import gql from 'graphql-tag';
 import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 
-import { ApolloLink } from '../../core/ApolloLink';
-import { execute } from '../../core/execute';
-import { Observable } from '../../../utilities/observables/Observable';
-import { BatchHttpLink } from '../batchHttpLink';
-import { itAsync } from '../../../testing';
+import { ApolloLink } from '../../core/ApolloLink.js';
+import { execute } from '../../core/execute.js';
+import { Observable } from '../../../utilities/observables/Observable.js';
+import { BatchHttpLink } from '../batchHttpLink.js';
+import { itAsync } from '../../../testing/index.js';
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -582,7 +582,7 @@ describe('SharedHttpTest', () => {
     const variables = { params: 'stub' };
     const link = createHttpLink({
       uri: '/data',
-      headers: { 
+      headers: {
         authorization: '1234',
         AUTHORIZATION: '1234',
         'CONTENT-TYPE': 'application/json',

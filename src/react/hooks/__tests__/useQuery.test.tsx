@@ -11,21 +11,21 @@ import {
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-} from '../../../core';
-import { InMemoryCache } from '../../../cache';
-import { ApolloProvider, resetApolloContext } from '../../context';
-import { Observable, Reference, concatPagination } from '../../../utilities';
-import { ApolloLink } from '../../../link/core';
+} from '../../../core/index.js';
+import { InMemoryCache } from '../../../cache/index.js';
+import { ApolloProvider, resetApolloContext } from '../../context/index.js';
+import { Observable, Reference, concatPagination } from '../../../utilities/index.js';
+import { ApolloLink } from '../../../link/core/index.js';
 import {
   MockLink,
   MockedProvider,
   MockSubscriptionLink,
   mockSingleLink,
   tick,
-} from '../../../testing';
-import { QueryResult } from "../../types/types";
-import { useQuery } from '../useQuery';
-import { useMutation } from '../useMutation';
+} from '../../../testing/index.js';
+import { QueryResult } from "../../types/types.js";
+import { useQuery } from '../useQuery.js';
+import { useMutation } from '../useMutation.js';
 
 describe('useQuery Hook', () => {
   beforeEach(() => {

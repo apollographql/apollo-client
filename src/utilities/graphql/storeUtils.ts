@@ -1,4 +1,4 @@
-import { InvariantError } from '../globals';
+import { InvariantError } from '../globals/index.js';
 
 import {
   DirectiveNode,
@@ -20,8 +20,8 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import { isNonNullObject } from '../common/objects';
-import { FragmentMap, getFragmentFromSelection } from './fragments';
+import { isNonNullObject } from '../common/objects.js';
+import { FragmentMap, getFragmentFromSelection } from './fragments.js';
 
 export interface Reference {
   readonly __ref: string;

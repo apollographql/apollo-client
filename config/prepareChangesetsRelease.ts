@@ -14,10 +14,12 @@
 // - Add both .changeset and CHANGELOG.md to an .npmignore so they are not
 //   included in the published package.
 
-const fs = require("fs");
-const path = require("path");
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const distRoot = `${__dirname}/../dist`;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const srcDir = `${__dirname}/..`;
 const destDir = `${srcDir}/dist`;
 

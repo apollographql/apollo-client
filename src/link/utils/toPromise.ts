@@ -1,5 +1,5 @@
-import { invariant } from '../../utilities/globals';
-import { Observable } from '../../utilities';
+import { invariant } from '../../utilities/globals/index.js';
+import { Observable } from '../../utilities/index.js';
 
 export function toPromise<R>(observable: Observable<R>): Promise<R> {
   let completed = false;

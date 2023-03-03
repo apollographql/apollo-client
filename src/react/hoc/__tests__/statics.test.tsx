@@ -1,7 +1,7 @@
 import React from 'react';
 import gql from 'graphql-tag';
 
-import { graphql } from '../graphql';
+import { graphql } from '../graphql.js';
 
 let sampleOperation = gql`
   {

@@ -1,11 +1,11 @@
 import gql from 'graphql-tag';
 
-import { ApolloLink } from '../../core/ApolloLink';
-import { execute } from '../../core/execute';
-import { ServerError, throwServerError } from '../../utils/throwServerError';
-import { Observable } from '../../../utilities/observables/Observable';
-import { onError, ErrorLink } from '../';
-import { itAsync } from '../../../testing';
+import { ApolloLink } from '../../core/ApolloLink.js';
+import { execute } from '../../core/execute.js';
+import { ServerError, throwServerError } from '../../utils/throwServerError.js';
+import { Observable } from '../../../utilities/observables/Observable.js';
+import { onError, ErrorLink } from '../index.js';
+import { itAsync } from '../../../testing/index.js';
 
 describe('error handling', () => {
   itAsync('has an easy way to handle GraphQL errors', (resolve, reject) => {

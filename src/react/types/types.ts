@@ -2,9 +2,9 @@ import { ReactNode } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { Observable, ObservableSubscription } from '../../utilities';
-import { FetchResult } from '../../link/core';
-import { ApolloError } from '../../errors';
+import { Observable, ObservableSubscription } from '../../utilities/index.js';
+import { FetchResult } from '../../link/core/index.js';
+import { ApolloError } from '../../errors/index.js';
 import {
   ApolloCache,
   ApolloClient,
@@ -16,11 +16,11 @@ import {
   OperationVariables,
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
-} from '../../core';
+} from '../../core/index.js';
 
 /* Common types */
 
-export type { DefaultContext as Context } from "../../core";
+export type { DefaultContext as Context } from "../../core/index.js";
 
 export type CommonOptions<TOptions> = TOptions & {
   client?: ApolloClient<object>;

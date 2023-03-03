@@ -91,7 +91,7 @@ In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest put
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
-import App from './App';
+import App from './App.js';
 
 const client = new ApolloClient({
   uri: 'https://flyby-router-demo.herokuapp.com/',

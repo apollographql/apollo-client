@@ -1,9 +1,9 @@
 import React, { StrictMode, useEffect } from "react";
 import { screen, render, waitFor, act } from "@testing-library/react";
 
-import { itAsync } from "../../../testing";
-import { makeVar } from "../../../core";
-import { useReactiveVar } from "../useReactiveVar";
+import { itAsync } from "../../../testing/index.js";
+import { makeVar } from "../../../core/index.js";
+import { useReactiveVar } from "../useReactiveVar.js";
 
 const IS_REACT_18 = React.version.startsWith('18');
 

@@ -2,23 +2,23 @@ import * as React from 'react';
 import { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
-import { parser } from '../parser';
-import { DefaultContext, OperationVariables } from '../../core/types';
+import { parser } from '../parser/index.js';
+import { DefaultContext, OperationVariables } from '../../core/types.js';
 import {
   BaseMutationOptions,
   MutationFunction,
   MutationResult
-} from '../types/types';
-import { Mutation } from '../components';
+} from '../types/types.js';
+import { Mutation } from '../components/index.js';
 
 import {
   defaultMapPropsToOptions,
   getDisplayName,
   calculateVariablesFromProps,
   GraphQLBase
-} from './hoc-utils';
-import { OperationOption, OptionProps, MutateProps } from './types';
-import { ApolloCache } from '../../core';
+} from './hoc-utils.js';
+import { OperationOption, OptionProps, MutateProps } from './types.js';
+import { ApolloCache } from '../../core/index.js';
 
 export function withMutation<
   TProps extends TGraphQLVariables | {} = {},

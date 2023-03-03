@@ -9,19 +9,19 @@ import {
   QueryOptions,
   ObservableQuery,
   TypedDocumentNode,
-} from '../core';
+} from '../core/index.js';
 
-import { Observable, ObservableSubscription } from '../utilities';
-import { ApolloLink } from '../link/core';
-import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
-import { ApolloError } from '../errors';
+import { Observable, ObservableSubscription } from '../utilities/index.js';
+import { ApolloLink } from '../link/core/index.js';
+import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache/index.js';
+import { ApolloError } from '../errors/index.js';
 
 import {
   itAsync,
   subscribeAndCount,
   mockSingleLink,
   withErrorSpy,
-} from '../testing';
+} from '../testing/index.js';
 
 describe('client', () => {
   it('can be loaded via require', () => {

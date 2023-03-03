@@ -6,14 +6,14 @@ import {
   FetchPolicy,
   QueryOptions,
   makeReference,
-} from '../core';
+} from '../core/index.js';
 import { Kind } from "graphql";
 
-import { Observable } from '../utilities';
-import { ApolloLink } from '../link/core';
-import { HttpLink } from '../link/http';
-import { InMemoryCache } from '../cache';
-import { itAsync, withErrorSpy } from '../testing';
+import { Observable } from '../utilities/index.js';
+import { ApolloLink } from '../link/core/index.js';
+import { HttpLink } from '../link/http/index.js';
+import { InMemoryCache } from '../cache/index.js';
+import { itAsync, withErrorSpy } from '../testing/index.js';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { invariant } from 'ts-invariant';
 
@@ -2329,7 +2329,7 @@ describe('ApolloClient', () => {
     })
 
     itAsync('should catch refetchQueries error when not caught explicitly', (resolve, reject) => {
-      const linkFn = jest.fn(() => 
+      const linkFn = jest.fn(() =>
         new Observable<any>(observer => {
           setTimeout(() => {
             observer.error(new Error('refetch failed'));

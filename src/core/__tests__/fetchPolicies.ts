@@ -1,18 +1,18 @@
 import gql from 'graphql-tag';
 
-import { ApolloClient, NetworkStatus } from '../../core';
-import { ApolloLink } from '../../link/core';
-import { InMemoryCache } from '../../cache';
-import { Observable } from '../../utilities';
+import { ApolloClient, NetworkStatus } from '../../core/index.js';
+import { ApolloLink } from '../../link/core/index.js';
+import { InMemoryCache } from '../../cache/index.js';
+import { Observable } from '../../utilities/index.js';
 import {
   subscribeAndCount,
   itAsync,
   mockSingleLink,
-} from '../../testing';
+} from '../../testing/index.js';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { WatchQueryFetchPolicy, WatchQueryOptions } from '../watchQueryOptions';
-import { ApolloQueryResult } from '../types';
-import { ObservableQuery } from '../ObservableQuery';
+import { WatchQueryFetchPolicy, WatchQueryOptions } from '../watchQueryOptions.js';
+import { ApolloQueryResult } from '../types.js';
+import { ObservableQuery } from '../ObservableQuery.js';
 
 const query = gql`
   query {

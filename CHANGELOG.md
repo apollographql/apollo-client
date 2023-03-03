@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.7.10
+
+### Patch Changes
+
+- [#9438](https://github.com/apollographql/apollo-client/pull/9438) [`52a9c8ea1`](https://github.com/apollographql/apollo-client/commit/52a9c8ea1ac08ee53fe1ddbd4ded899ea00a1f9f) Thanks [@dciesielkiewicz](https://github.com/dciesielkiewicz)! - Ensure the `client` option passed to `useMutation`'s execute function is used when provided. Previously this option was ignored.
+
+- [#9124](https://github.com/apollographql/apollo-client/pull/9124) [`975b923c0`](https://github.com/apollographql/apollo-client/commit/975b923c0c0e7ddc8553917a91981e9f41713bc1) Thanks [@andrebrantom](https://github.com/andrebrantom)! - Make `ApolloClient.writeQuery` and `ApolloClient.writeFragment` behave more like `cache.writeQuery` and `cache.writeFragment` by returning the reference returned by the cache.
+
 ## 3.7.9
 
 ### Patch Changes

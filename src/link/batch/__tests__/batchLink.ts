@@ -26,6 +26,8 @@ function getKey(operation: GraphQLRequest) {
   return JSON.stringify([operationName, query, variables]);
 }
 
+const delay = (time: number) => new Promise(r => setTimeout(r, time));
+
 function createOperation(
   starting: any,
   operation: GraphQLRequest,
@@ -881,14 +883,7 @@ describe('BatchLink', () => {
   });
 
   itAsync('correctly follows batch interval', (resolve, reject) => {
-    // For some reason, when using fake timers in this test, the
-    // calls to the `next` and `comlete` functions passed to `subsribe`
-    // are not called until after running all timers. Attempts to run
-    // all microtasks did not manage to change this behavior. Thus, we
-    // are sticking with real timers for this test.
-    jest.useRealTimers()
-    const TIME_SCALE = 100;
-    const intervals = [1*TIME_SCALE, 2*TIME_SCALE, 3*TIME_SCALE];
+    const intervals = [10, 20, 30];
 
     const runBatchInterval = () => {
       const mock = jest.fn();
@@ -937,7 +932,9 @@ describe('BatchLink', () => {
         },
       });
 
-      setTimeout(() => {
+      const delayedBatchInterval = async () => {
+        await delay(batchInterval);
+
         const checkCalls = mock.mock.calls.slice(0, -1);
         try {
           expect(checkCalls.length).toBe(2);
@@ -949,10 +946,14 @@ describe('BatchLink', () => {
         }
 
         runBatchInterval();
-      }, batchInterval + (.5*TIME_SCALE));
+      };
 
-      setTimeout(() => mock(batchHandler.mock.calls.length), batchInterval - (.5*TIME_SCALE));
-      setTimeout(() => mock(batchHandler.mock.calls.length), batchInterval / 2);
+      delayedBatchInterval();
+
+      mock(batchHandler.mock.calls.length);
+      mock(batchHandler.mock.calls.length);
+
+      jest.runOnlyPendingTimers();
     };
     runBatchInterval();
   });

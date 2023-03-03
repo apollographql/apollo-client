@@ -9,6 +9,10 @@ import {
 
 import { valueToObjectRepresentation } from './storeUtils';
 
+type OperationDefinitionWithName = OperationDefinitionNode & {
+  name: NonNullable<OperationDefinitionNode['name']>;
+};
+
 // Checks the document for errors and throws an exception if there is an error.
 export function checkDocument(doc: DocumentNode) {
   invariant(
@@ -43,18 +47,19 @@ export function getOperationDefinition(
 ): OperationDefinitionNode | undefined {
   checkDocument(doc);
   return doc.definitions.filter(
-    definition => definition.kind === 'OperationDefinition',
-  )[0] as OperationDefinitionNode;
+    (definition): definition is OperationDefinitionNode =>
+      definition.kind === 'OperationDefinition',
+  )[0];
 }
 
 export function getOperationName(doc: DocumentNode): string | null {
   return (
     doc.definitions
       .filter(
-        definition =>
-          definition.kind === 'OperationDefinition' && definition.name,
+        (definition): definition is OperationDefinitionWithName =>
+          definition.kind === 'OperationDefinition' && !!definition.name,
       )
-      .map((x: OperationDefinitionNode) => x!.name!.value)[0] || null
+      .map((x) => x.name.value)[0] || null
   );
 }
 
@@ -63,12 +68,13 @@ export function getFragmentDefinitions(
   doc: DocumentNode,
 ): FragmentDefinitionNode[] {
   return doc.definitions.filter(
-    definition => definition.kind === 'FragmentDefinition',
-  ) as FragmentDefinitionNode[];
+    (definition): definition is FragmentDefinitionNode =>
+      definition.kind === 'FragmentDefinition',
+  );
 }
 
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
-  const queryDef = getOperationDefinition(doc) as OperationDefinitionNode;
+  const queryDef = getOperationDefinition(doc)!;
 
   invariant(
     queryDef && queryDef.operation === 'query',

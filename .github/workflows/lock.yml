@@ -2,7 +2,7 @@ name: 'Lock Threads'
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 0 * * *'
 
 permissions:
   issues: write
@@ -20,17 +20,12 @@ jobs:
         with:
           github-token: ${{ github.token }}
           log-output: true
-
           issue-inactive-days: '30'
           exclude-any-issue-labels: 'discussion'
-          # issue-comment: >
-          #   This issue has been automatically locked since there has not been any recent activity after it was closed. Please open a new issue for related bugs.
+          issue-comment: >
+            This issue has been automatically locked since there has not been any recent activity after it was closed. Please open a new issue for related bugs.
 
-          #   Please note this issue tracker is not a help forum. We recommend using [StackOverflow](https://stackoverflow.com/questions/tagged/apollo-client) or our [discord server](https://discord.gg/graphos) for questions.
+            For general questions, we recommend using [StackOverflow](https://stackoverflow.com/questions/tagged/apollo-client) or our [discord server](https://discord.gg/graphos).
 
           pr-inactive-days: '30'
           exclude-any-pr-labels: 'discussion'
-          # pr-comment: >
-          #   This pull request has been automatically locked since there has not been any recent activity after it was closed. Please open a new issue for related bugs.
-
-          #   Please note this issue tracker is not a help forum. We recommend using [StackOverflow](https://stackoverflow.com/questions/tagged/apollo-client) or our [discord server](https://discord.gg/graphos) for questions.

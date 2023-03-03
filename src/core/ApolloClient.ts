@@ -3,7 +3,7 @@ import { invariant, InvariantError, __DEV__ } from '../utilities/globals';
 import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
-import { ApolloCache, DataProxy } from '../cache';
+import { ApolloCache, DataProxy, Reference } from '../cache';
 import { Observable } from '../utilities';
 import { version } from '../version';
 import { HttpLink, UriFunction } from '../link/http';
@@ -410,9 +410,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public writeQuery<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void {
-    this.cache.writeQuery<TData, TVariables>(options);
-    this.queryManager.broadcastQueries();
+  ): Reference | undefined {
+    const ref = this.cache.writeQuery<TData, TVariables>(options);
+
+    if (options.broadcast !== false) {
+      this.queryManager.broadcastQueries();
+    }
+
+    return ref;
   }
 
   /**
@@ -428,9 +433,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public writeFragment<TData = any, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void {
-    this.cache.writeFragment<TData, TVariables>(options);
-    this.queryManager.broadcastQueries();
+  ): Reference | undefined {
+    const ref = this.cache.writeFragment<TData, TVariables>(options);
+
+    if (options.broadcast !== false) {
+      this.queryManager.broadcastQueries();
+    }
+
+    return ref;
   }
 
   public __actionHookForDevTools(cb: () => any) {

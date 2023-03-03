@@ -60,8 +60,10 @@ export function useMutation<
       TCache
     > = {}
   ) => {
-    const {client, options, mutation} = ref.current;
+    const {options, mutation} = ref.current;
     const baseOptions = { ...options, mutation };
+    const client = executeOptions.client || ref.current.client;
+
     if (!ref.current.result.loading && !baseOptions.ignoreResults && ref.current.isMounted) {
       setResult(ref.current.result = {
         loading: true,

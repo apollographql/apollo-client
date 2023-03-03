@@ -1730,7 +1730,7 @@ describe('useSuspenseQuery', () => {
     'network-only',
     'cache-and-network',
   ])(
-    'response to cache updates in strict mode while using a "%s" fetch policy',
+    'responds to cache updates in strict mode while using a "%s" fetch policy',
     async (fetchPolicy) => {
       const { query, mocks } = useSimpleQueryCase();
 

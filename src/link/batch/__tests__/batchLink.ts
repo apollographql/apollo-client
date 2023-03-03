@@ -26,6 +26,8 @@ function getKey(operation: GraphQLRequest) {
   return JSON.stringify([operationName, query, variables]);
 }
 
+const delay = (time: number) => new Promise(r => setTimeout(r, time));
+
 function createOperation(
   starting: any,
   operation: GraphQLRequest,
@@ -135,8 +137,10 @@ function createMockBatchHandler(...mockedResponses: MockedResponse[]) {
   return mockBatchHandler;
 }
 
+beforeEach(() => jest.useFakeTimers());
+afterEach(() => jest.useRealTimers());
+
 describe('OperationBatcher', () => {
-  afterEach(() => jest.useRealTimers());
 
   it('should construct', () => {
     expect(() => {
@@ -151,9 +155,7 @@ describe('OperationBatcher', () => {
   it('should not do anything when faced with an empty queue', () => {
     const batcher = new OperationBatcher({
       batchInterval: 10,
-      batchHandler: () => {
-        return null;
-      },
+      batchHandler: () => null,
       batchKey: () => 'yo',
     });
 
@@ -167,9 +169,7 @@ describe('OperationBatcher', () => {
   it('should be able to add to the queue', () => {
     const batcher = new OperationBatcher({
       batchInterval: 10,
-      batchHandler: () => {
-        return null;
-      },
+      batchHandler: () => null,
     });
 
     const query = gql`
@@ -380,6 +380,8 @@ describe('OperationBatcher', () => {
           notify = true;
         }
       });
+
+      jest.runAllTimers()
     });
 
     itAsync('should return a promise when we enqueue a request and resolve it with a result', (resolve, reject) => {
@@ -401,7 +403,6 @@ describe('OperationBatcher', () => {
     });
 
     itAsync('should be able to debounce requests', (resolve, reject) => {
-      jest.useFakeTimers();
       const batchInterval = 10;
       const myBatcher = new OperationBatcher({
         batchDebounce: true,
@@ -474,6 +475,8 @@ describe('OperationBatcher', () => {
       }),
       20,
     );
+
+    jest.runAllTimers();
   });
 
   itAsync('should cancel single query in queue when unsubscribing', (resolve, reject) => {
@@ -585,6 +588,8 @@ describe('OperationBatcher', () => {
     const subscription = batcher.enqueueRequest({
       operation: createOperation({}, { query }),
     }).subscribe(() => reject('next should never be called'));
+
+    jest.runAllTimers();
   });
 
   itAsync('should correctly batch multiple queries', (resolve, reject) => {
@@ -641,6 +646,8 @@ describe('OperationBatcher', () => {
       }),
       20,
     );
+
+    jest.runAllTimers();
   });
 
   itAsync('should cancel multiple queries in queue when unsubscribing and let pass still subscribed one', (resolve, reject) => {
@@ -694,6 +701,8 @@ describe('OperationBatcher', () => {
       sub3.unsubscribe();
       expect(batcher["batchesByKey"].get('')!.size).toBe(1);
     }, 5);
+
+    jest.runAllTimers();
   });
 
   itAsync('should reject the promise if there is a network error', (resolve, reject) => {
@@ -874,8 +883,7 @@ describe('BatchLink', () => {
   });
 
   itAsync('correctly follows batch interval', (resolve, reject) => {
-    const TIME_SCALE = 100;
-    const intervals = [1*TIME_SCALE, 2*TIME_SCALE, 3*TIME_SCALE];
+    const intervals = [10, 20, 30];
 
     const runBatchInterval = () => {
       const mock = jest.fn();
@@ -924,7 +932,9 @@ describe('BatchLink', () => {
         },
       });
 
-      setTimeout(() => {
+      const delayedBatchInterval = async () => {
+        await delay(batchInterval);
+
         const checkCalls = mock.mock.calls.slice(0, -1);
         try {
           expect(checkCalls.length).toBe(2);
@@ -936,10 +946,14 @@ describe('BatchLink', () => {
         }
 
         runBatchInterval();
-      }, batchInterval + (.5*TIME_SCALE));
+      };
 
-      setTimeout(() => mock(batchHandler.mock.calls.length), batchInterval - (.5*TIME_SCALE));
-      setTimeout(() => mock(batchHandler.mock.calls.length), batchInterval / 2);
+      delayedBatchInterval();
+
+      mock(batchHandler.mock.calls.length);
+      mock(batchHandler.mock.calls.length);
+
+      jest.runOnlyPendingTimers();
     };
     runBatchInterval();
   });

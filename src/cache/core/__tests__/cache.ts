@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { ApolloCache } from '../cache.js';
 import { Cache, DataProxy } from '../../index.js';
 import { Reference } from '../../../utilities/graphql/storeUtils.js';

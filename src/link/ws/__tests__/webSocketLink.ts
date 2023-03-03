@@ -1,6 +1,6 @@
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { ExecutionResult } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { Observable } from '../../../utilities/index.js';
 import { execute } from '../../core/index.js';

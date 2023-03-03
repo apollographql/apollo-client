@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient, NetworkStatus, WatchQueryFetchPolicy } from '../../../../core/index.js';

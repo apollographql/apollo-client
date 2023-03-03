@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor, renderHook } from '@testing-library/react';

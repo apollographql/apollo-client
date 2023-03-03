@@ -5,7 +5,7 @@
  */
 
 // externals
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 // core
 import { QueryManager } from '../../QueryManager.js';

@@ -9,7 +9,7 @@ import {
   GraphQLString,
   GraphQLID
 } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { ApolloClient } from '../../../../core/index.js';
 import { InMemoryCache as Cache } from '../../../../cache/index.js';

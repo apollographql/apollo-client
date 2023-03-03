@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { Observable } from '../../utilities/index.js';
 import { ApolloLink } from '../../link/core/index.js';

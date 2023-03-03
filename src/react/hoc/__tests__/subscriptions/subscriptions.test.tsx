@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, render } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core/index.js';

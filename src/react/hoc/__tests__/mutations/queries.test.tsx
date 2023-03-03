@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, render, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient, MutationUpdaterFunction, ApolloCache } from '../../../../core/index.js';

@@ -47,7 +47,7 @@ Why would you prefer this approach? Mainly because it requires less configuratio
 To use it, provided that you [already have babel-macros installed](https://github.com/kentcdodds/babel-macros#installation) and [configured](https://github.com/kentcdodds/babel-macros/blob/master/other/docs/user.md), you just need to change this:
 
 ```js
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 const query = gql`
   query HelloWorld {
@@ -134,7 +134,7 @@ All of these approaches support the use of fragments.
 For the first two approaches, you can have fragments defined in a different call to `gql` (either in the same file or in a different one). You can then include them into the main query using interpolation, like this:
 
 ```js
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 // or import gql from 'graphql-tag.macro';
 
 const fragments = {

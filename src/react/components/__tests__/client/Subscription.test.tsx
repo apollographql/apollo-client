@@ -1,5 +1,5 @@
 import React from 'react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { render, waitFor } from '@testing-library/react';
 
 import { ApolloClient } from '../../../../core/index.js';

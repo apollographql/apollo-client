@@ -1,5 +1,5 @@
 import fetchMock from 'fetch-mock';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 
 import { ApolloLink } from '../../core/ApolloLink.js';

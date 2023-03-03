@@ -1,5 +1,5 @@
 import { print } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { FragmentDefinitionNode, OperationDefinitionNode } from 'graphql';
 
 import {

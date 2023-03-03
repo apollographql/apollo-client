@@ -1,5 +1,5 @@
 import { assign, cloneDeep } from 'lodash';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import {
   ApolloClient,

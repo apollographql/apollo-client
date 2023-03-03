@@ -1,7 +1,7 @@
 import React from 'react';
 import userEvent from '@testing-library/user-event';
 import { render, waitFor, screen } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { DocumentNode } from 'graphql';
 
 import { ApolloClient } from '../../../../core/index.js';

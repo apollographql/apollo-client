@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core/index.js';
 import { InMemoryCache as Cache } from '../../../cache/index.js';

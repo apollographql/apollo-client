@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { ApolloLink } from '../../core/ApolloLink.js';
 import { execute } from '../../core/execute.js';

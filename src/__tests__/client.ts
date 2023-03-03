@@ -1,6 +1,6 @@
 import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import {
   ApolloClient,

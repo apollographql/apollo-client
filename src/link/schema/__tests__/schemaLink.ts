@@ -1,5 +1,5 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { execute } from '../../core/execute.js';
 import { SchemaLink } from '../index.js';

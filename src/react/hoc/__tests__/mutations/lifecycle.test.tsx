@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { ApolloProvider } from '../../../context/ApolloProvider.js';
 import { itAsync, createMockClient } from '../../../../testing/core/index.js';

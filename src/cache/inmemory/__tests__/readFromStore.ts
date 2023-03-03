@@ -1,5 +1,5 @@
 import { assign, omit } from 'lodash';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { InMemoryCache } from '../inMemoryCache.js';
 import { StoreObject } from '../types.js';

@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import fetchMock from 'fetch-mock';
 
 import { createOperation } from '../../utils/createOperation.js';

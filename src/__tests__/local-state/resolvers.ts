@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { assign } from 'lodash';
 

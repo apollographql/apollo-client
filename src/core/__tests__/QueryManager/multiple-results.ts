@@ -1,5 +1,5 @@
 // externals
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache.js';
 
 // mocks

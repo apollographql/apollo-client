@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import fetchMock from 'fetch-mock';
 import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 import { TextDecoder } from 'util';

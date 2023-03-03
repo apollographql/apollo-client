@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { ApolloClient } from '../core/index.js';
 import { InMemoryCache } from '../cache/index.js';

@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import waitFor from 'wait-for-observables';
 
 import { ApolloLink } from '../../core/ApolloLink.js';

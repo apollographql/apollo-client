@@ -10,7 +10,7 @@ import {
   GraphQLID,
   DocumentNode
 } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { ApolloClient } from '../../../../core/index.js';
 import { ApolloProvider } from '../../../context/index.js';

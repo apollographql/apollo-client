@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { itAsync } from '../../../testing/index.js';
 import { InMemoryCache } from '../inMemoryCache.js';

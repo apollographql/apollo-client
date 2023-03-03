@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { cloneDeep } from 'lodash';
 
 import { getQueryDefinition } from '../getFromAST.js';

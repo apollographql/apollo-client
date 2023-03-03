@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { print } from 'graphql';
 
 import { Observable } from '../../../utilities/observables/Observable.js';

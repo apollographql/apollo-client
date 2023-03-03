@@ -7,7 +7,7 @@ import {
   ASTNode,
   DocumentNode,
 } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import {
   storeKeyNameFromField,

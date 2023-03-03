@@ -1,5 +1,5 @@
 import React, { useState, PropsWithChildren } from 'react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { ExecutionResult, GraphQLError } from 'graphql';
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor, act } from '@testing-library/react';

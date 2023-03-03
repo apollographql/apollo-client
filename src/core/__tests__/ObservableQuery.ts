@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { GraphQLError } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 

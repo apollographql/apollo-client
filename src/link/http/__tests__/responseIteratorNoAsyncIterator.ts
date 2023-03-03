@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from 'graphql-tag';
 import { execute } from "../../core/execute.js";
 import { HttpLink } from "../HttpLink.js";
 import { itAsync, subscribeAndCount } from "../../../testing/index.js";

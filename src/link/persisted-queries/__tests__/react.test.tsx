@@ -1,7 +1,7 @@
 /** @jest-environment node */
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/server';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { print } from 'graphql';
 import fetchMock from 'fetch-mock';
 

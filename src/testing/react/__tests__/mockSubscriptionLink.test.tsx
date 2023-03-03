@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { MockSubscriptionLink } from '../../core/index.js';
 import { ApolloClient } from '../../../core/index.js';

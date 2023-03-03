@@ -1,7 +1,7 @@
 import React from 'react';
 import { DocumentNode } from 'graphql';
 import { render, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { itAsync, MockedResponse, MockLink } from '../../core/index.js';
 import { MockedProvider } from '../MockedProvider.js';

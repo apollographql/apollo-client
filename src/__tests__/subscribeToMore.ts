@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
 import { ApolloClient } from '../core/index.js';

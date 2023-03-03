@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { EntityStore, supportsResultCaching } from '../entityStore.js';
 import { InMemoryCache } from '../inMemoryCache.js';
 import { DocumentNode } from 'graphql';

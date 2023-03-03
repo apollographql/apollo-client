@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from 'graphql-tag';
 
 import { InMemoryCache } from "../inMemoryCache.js";
 import { ReactiveVar, makeVar } from "../reactiveVars.js";

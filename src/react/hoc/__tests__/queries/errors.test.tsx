@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import { withState } from './recomposeWithState.js';
 import { DocumentNode } from 'graphql';
 

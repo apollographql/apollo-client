@@ -223,7 +223,9 @@ const additiveLink = from([
 
 ### Directional composition
 
-You might want your link chain's execution to branch, depending on the details of the operation being performed. You can define this logic with the `split` method of an `ApolloLink` instance. This method takes three parameters:
+You might want your link chain's execution to branch, depending on the details of the operation being performed.
+
+To support this, the `@apollo/client` library provides a `split` function that lets you use one of two different `Link`s, according to the result of a boolean check. You can also use the `split` method of an `ApolloLink` instance.
 
 | Name  | Description  |
 |---|---|
@@ -239,8 +241,8 @@ import { RetryLink } from '@apollo/client/link/retry';
 
 const directionalLink = new RetryLink().split(
   (operation) => operation.getContext().version === 1,
-  new HttpLink({ uri: "http://localhost:4000/v1/graphql" }),
-  new HttpLink({ uri: "http://localhost:4000/v2/graphql" })
+  new HttpLink({ uri: 'http://localhost:4000/v1/graphql' }),
+  new HttpLink({ uri: 'http://localhost:4000/v2/graphql' })
 );
 ```
 
@@ -249,6 +251,27 @@ Other uses for the `split` method include:
 * Customizing the number of allowed retry attempts depending on the operation type
 * Using different transport methods depending on the operation type (such as HTTP for queries and WebSocket for subscriptions)
 * Customizing logic depending on whether a user is logged in
+
+In the following example, all subscription operations are sent to `GraphQLWsLink`, with all other operations sent to `HttpLink`:
+
+```js
+import { split, HttpLink } from '@apollo/client';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+
+export const link = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
+  },
+  new GraphQLWsLink(createClient({ url: 'ws://localhost:3000/subscriptions' })),
+  new HttpLink({ uri: 'http://localhost:4000/graphql' })
+);
+```
 
 ### Providing to Apollo Client
 

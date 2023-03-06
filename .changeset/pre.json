@@ -5,8 +5,8 @@
     "@apollo/client": "3.7.2"
   },
   "changesets": [
+    "curvy-dragons-talk",
     "early-pens-retire",
-    "gorgeous-buses-laugh",
     "heavy-ties-sneeze",
     "hungry-eagles-kick",
     "lazy-teachers-sell",

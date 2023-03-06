@@ -5,6 +5,7 @@ import {
   renderHook,
   waitFor,
   RenderHookOptions,
+  RenderHookResult,
 } from '@testing-library/react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GraphQLError } from 'graphql';
@@ -315,21 +316,31 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it('does not throw when provided a `suspenseCache` option', () => {
-    const { query } = useSimpleQueryCase();
+  it('does not throw when provided a `suspenseCache` option', async () => {
+    const { query, mocks } = useSimpleQueryCase();
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
     const suspenseCache = new SuspenseCache();
 
+    let hook: RenderHookResult<unknown, unknown>;
+
     expect(() => {
-      renderHook(() => useSuspenseQuery(query, { suspenseCache }), {
+      hook = renderHook(() => useSuspenseQuery(query, { suspenseCache }), {
         wrapper: ({ children }) => (
           <ApolloProvider client={client} suspenseCache={undefined}>
-            {children}
+            <Suspense fallback="Loading">{children}</Suspense>
           </ApolloProvider>
         ),
       });
     }).not.toThrow();
+
+    // Avoid `act` warnings by waiting for the hook to finish suspending.
+    await waitFor(() => {
+      expect(hook.result.current).toBeDefined();
+    });
   });
 
   it('prioritizes the `suspenseCache` option over the context value', () => {
@@ -342,7 +353,10 @@ describe('useSuspenseQuery', () => {
       () => useSuspenseQuery(query, { suspenseCache: directSuspenseCache }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider suspenseCache={contextSuspenseCache}>
+          <MockedProvider
+            suspenseCache={contextSuspenseCache}
+            showWarnings={false}
+          >
             {children}
           </MockedProvider>
         ),
@@ -3891,6 +3905,9 @@ describe('useSuspenseQuery', () => {
     const link = new MockSubscriptionLink();
     const cache = new InMemoryCache();
 
+    // We are intentionally writing partial data to the cache. Supress console
+    // warnings to avoid unnecessary noise in the test.
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     cache.writeQuery({
       query,
       data: {
@@ -3900,6 +3917,7 @@ describe('useSuspenseQuery', () => {
         },
       },
     });
+    consoleSpy.mockRestore();
 
     const { result, renders } = renderSuspenseHook(
       () =>

@@ -6952,7 +6952,6 @@ describe('useQuery Hook', () => {
       [`standby`, emptyData, false, false],
       [`standby`, cacheData, false, false],
     ])(
-      //"%s, %p, %s, %s",
       "fetchPolicy %s, cache: %p should fetch during `disableNetworkFetches`: %p and after `disableNetworkFetches` has been disabled: %p",
       async (policy, initialQueryValue, shouldFetchOnFirstRender, shouldFetchOnSecondRender) => {
         const query: TypedDocumentNode<TestQueryValue> = gql`

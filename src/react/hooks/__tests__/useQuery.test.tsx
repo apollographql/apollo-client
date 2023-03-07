@@ -6904,4 +6904,77 @@ describe('useQuery Hook', () => {
       }, { interval: 1 });
     });
   });
+
+  describe("interaction with `disableNetworkFetches`", () => {
+    const cacheData = { something: "foo" };
+    const emptyData = undefined;
+    type TestQueryValue = typeof cacheData;
+
+    test.each<
+      [
+        fetchPolicy: WatchQueryFetchPolicy,
+        initialQueryValue: TestQueryValue | undefined,
+        shouldFetchOnFirstRender: boolean,
+        shouldFetchOnSecondRender: boolean
+      ]
+    >([
+      [`cache-first`, emptyData, true, false],
+      [`cache-first`, cacheData, false, false],
+      [`cache-only`, emptyData, false, false],
+      [`cache-only`, cacheData, false, false],
+      [`cache-and-network`, emptyData, true, true],
+      [`cache-and-network`, cacheData, false, true],
+      [`network-only`, emptyData, true, true],
+      [`network-only`, cacheData, false, true],
+      [`no-cache`, emptyData, true, true],
+      [`no-cache`, cacheData, true, true],
+      [`standby`, emptyData, false, false],
+      [`standby`, cacheData, false, false],
+    ])(
+      //"%s, %p, %s, %s",
+      "fetchPolicy %s, cache: %p should fetch during `disableNetworkFetches`: %p and after `disableNetworkFetches` has been disabled: %p",
+      async (policy, initialQueryValue, shouldFetchOnFirstRender, shouldFetchOnSecondRender) => {
+        const query: TypedDocumentNode<TestQueryValue> = gql`
+          query CallMe {
+            something
+          }
+        `;
+
+        const link = new MockLink([
+          {request: {query}, result: {data: { something: "bar" }}},
+          {request: {query}, result: {data: { something: "baz" }}},
+        ]);
+        const requestSpy = jest.spyOn(link, 'request');
+
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link,
+        });
+        if (initialQueryValue) {
+          client.writeQuery({ query, data: initialQueryValue });
+        }
+        client.disableNetworkFetches = true;
+
+        const { rerender } = renderHook(
+          () => useQuery(query, { fetchPolicy: policy, nextFetchPolicy: policy }),
+          {
+            wrapper: ({ children }) => <ApolloProvider client={client}>{children}</ApolloProvider>,
+          }
+        );
+
+        expect(requestSpy).toHaveBeenCalledTimes(shouldFetchOnFirstRender ? 1 : 0);
+
+        // We need to wait a moment before the rerender for everything to settle down.
+        // This part is unfortunately bound to be flaky - but in some cases there is 
+        // just nothing to "wait for", except "a moment".
+        await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
+
+        requestSpy.mockClear();
+        client.disableNetworkFetches = false;
+
+        rerender();
+        expect(requestSpy).toHaveBeenCalledTimes(shouldFetchOnSecondRender ? 1 : 0);
+      }
+    );
+  });
 });

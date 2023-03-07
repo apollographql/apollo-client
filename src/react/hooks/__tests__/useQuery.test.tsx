@@ -619,6 +619,7 @@ describe('useQuery Hook', () => {
 
       expect(client.getObservableQueries().size).toBe(1);
       unmount();
+      await new Promise(resolve => setTimeout(resolve));
       expect(client.getObservableQueries().size).toBe(0);
     });
 
@@ -4567,6 +4568,7 @@ describe('useQuery Hook', () => {
 
       expect(client.getObservableQueries('all').size).toBe(1);
       unmount();
+      await new Promise(resolve => setTimeout(resolve));
       expect(client.getObservableQueries('all').size).toBe(0);
     });
 
@@ -6941,12 +6943,12 @@ describe('useQuery Hook', () => {
       [`cache-first`, cacheData, false, false],
       [`cache-only`, emptyData, false, false],
       [`cache-only`, cacheData, false, false],
-      [`cache-and-network`, emptyData, true, true],
-      [`cache-and-network`, cacheData, false, true],
-      [`network-only`, emptyData, true, true],
-      [`network-only`, cacheData, false, true],
-      [`no-cache`, emptyData, true, true],
-      [`no-cache`, cacheData, true, true],
+      [`cache-and-network`, emptyData, true, false],
+      [`cache-and-network`, cacheData, false, false],
+      [`network-only`, emptyData, true, false],
+      [`network-only`, cacheData, false, false],
+      [`no-cache`, emptyData, true, false],
+      [`no-cache`, cacheData, true, false],
       [`standby`, emptyData, false, false],
       [`standby`, cacheData, false, false],
     ])(

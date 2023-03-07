@@ -1724,6 +1724,14 @@ describe('useQuery Hook', () => {
           request: { query },
           result: { data: { hello: "world 2" } },
         },
+        {
+          request: { query },
+          result: { data: { hello: "world 3" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 4" } },
+        },
       ];
 
       const cache = new InMemoryCache();
@@ -1746,26 +1754,37 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toEqual({ hello: "world 1" });
       }, { interval: 1 });
-      expect(result.current.data).toEqual({ hello: "world 1" });
-
-      result.current.stopPolling();
-
-      await expect(waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world 2" });
-      }, { interval: 1, timeout: 20 })).rejects.toThrow();
-      result.current.startPolling(20);
-
-      expect(requestSpy).toHaveBeenCalledTimes(1);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
+      expect(result.current.loading).toBe(false);
+      
 
       await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 2" });
       }, { interval: 1 });
-
       expect(result.current.loading).toBe(false);
+      
+      
+      result.current.stopPolling();
+
+      await expect(waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 3" });
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
+      result.current.startPolling(20);
+
       expect(requestSpy).toHaveBeenCalledTimes(2);
+      expect(onErrorFn).toHaveBeenCalledTimes(0);
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 3" });
+      }, { interval: 1 });
+      expect(result.current.loading).toBe(false);
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 4" });
+      }, { interval: 1 });
+      expect(result.current.loading).toBe(false);
+      expect(requestSpy).toHaveBeenCalledTimes(4);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
       requestSpy.mockRestore();
     });

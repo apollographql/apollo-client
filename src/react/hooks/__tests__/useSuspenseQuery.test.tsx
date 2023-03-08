@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Fragment, StrictMode, Suspense } from 'react';
 import {
   act,
   screen,
@@ -7,7 +7,7 @@ import {
   RenderHookOptions,
   RenderHookResult,
 } from '@testing-library/react';
-import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
+import { ErrorBoundary } from 'react-error-boundary';
 import { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
@@ -42,15 +42,16 @@ import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
 import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
 
-type RenderSuspenseHookOptions<
-  Props,
-  TSerializedCache = {}
-> = RenderHookOptions<Props> & {
+type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
+  RenderHookOptions<Props>,
+  'wrapper'
+> & {
   client?: ApolloClient<TSerializedCache>;
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
   mocks?: MockedResponse[];
   suspenseCache?: SuspenseCache;
+  strictMode?: boolean;
 };
 
 interface Renders<Result> {
@@ -85,34 +86,7 @@ function renderSuspenseHook<Result, Props>(
     link,
     mocks = [],
     suspenseCache = new SuspenseCache(),
-    wrapper = ({ children }) => {
-      const errorBoundaryProps: ErrorBoundaryProps = {
-        fallback: <div>Error</div>,
-        onError: (error) => {
-          renders.errorCount++;
-          renders.errors.push(error);
-        },
-      };
-
-      return client ? (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
-          <ErrorBoundary {...errorBoundaryProps}>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </ErrorBoundary>
-        </ApolloProvider>
-      ) : (
-        <MockedProvider
-          cache={cache}
-          mocks={mocks}
-          link={link}
-          suspenseCache={suspenseCache}
-        >
-          <ErrorBoundary {...errorBoundaryProps}>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </ErrorBoundary>
-        </MockedProvider>
-      );
-    },
+    strictMode,
     ...renderHookOptions
   } = options;
 
@@ -126,7 +100,41 @@ function renderSuspenseHook<Result, Props>(
 
       return view;
     },
-    { ...renderHookOptions, wrapper }
+    {
+      ...renderHookOptions,
+      wrapper: ({ children }) => {
+        const Wrapper = strictMode ? StrictMode : Fragment;
+
+        return (
+          <Wrapper>
+            <Suspense fallback={<SuspenseFallback />}>
+              <ErrorBoundary
+                fallback={<div>Error</div>}
+                onError={(error) => {
+                  renders.errorCount++;
+                  renders.errors.push(error);
+                }}
+              >
+                {client ? (
+                  <ApolloProvider client={client} suspenseCache={suspenseCache}>
+                    {children}
+                  </ApolloProvider>
+                ) : (
+                  <MockedProvider
+                    cache={cache}
+                    mocks={mocks}
+                    link={link}
+                    suspenseCache={suspenseCache}
+                  >
+                    {children}
+                  </MockedProvider>
+                )}
+              </ErrorBoundary>
+            </Suspense>
+          </Wrapper>
+        );
+      },
+    }
   );
 
   return { ...view, renders };
@@ -628,15 +636,14 @@ describe('useSuspenseQuery', () => {
       </ApolloProvider>
     );
 
-    const { result: result1, unmount } = renderSuspenseHook(
+    const { result: result1, unmount } = renderHook(
       () => useSuspenseQuery(query),
       { wrapper }
     );
 
-    const { result: result2 } = renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { wrapper }
-    );
+    const { result: result2 } = renderHook(() => useSuspenseQuery(query), {
+      wrapper,
+    });
 
     // We don't subscribe to the observable until after the component has been
     // unsuspended, so we need to wait for the results of all queries
@@ -685,6 +692,40 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(renders.frames).toMatchObject([
+      { data: { greeting: 'local hello' }, error: undefined },
+    ]);
+  });
+
+  it('allows the client to be overridden in strict mode', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const globalClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'global hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const localClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'local hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { client: localClient }),
+      { strictMode: true, client: globalClient }
+    );
+
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ greeting: 'local hello' })
+    );
+
+    // React double invokes the render function in strict mode so we expect
+    // to render 2 frames after the initial suspense.
+    expect(renders.frames).toMatchObject([
+      { data: { greeting: 'local hello' }, error: undefined },
       { data: { greeting: 'local hello' }, error: undefined },
     ]);
   });
@@ -1685,6 +1726,90 @@ describe('useSuspenseQuery', () => {
     }
   );
 
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ])(
+    'ensures data is fetched and suspended the correct amount of times in strict mode while using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useVariablesQueryCase();
+
+      let fetchCount = 0;
+
+      const link = new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          fetchCount++;
+
+          const mock = mocks.find(({ request }) =>
+            equal(request.variables, operation.variables)
+          );
+
+          if (!mock) {
+            throw new Error('Could not find mock for operation');
+          }
+
+          observer.next(mock.result);
+          observer.complete();
+        });
+      });
+
+      const { result, renders } = renderSuspenseHook(
+        ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
+        { strictMode: true, link, initialProps: { id: '1' } }
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[0].result.data);
+      });
+
+      expect(fetchCount).toBe(1);
+
+      // React double invokes the render function in strict mode so the suspense
+      // fallback is rendered twice before the promise is resolved
+      // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
+      expect(renders.suspenseCount).toBe(2);
+    }
+  );
+
+  it.each<SuspenseQueryHookFetchPolicy>([
+    'cache-first',
+    'network-only',
+    'cache-and-network',
+  ])(
+    'responds to cache updates in strict mode while using a "%s" fetch policy',
+    async (fetchPolicy) => {
+      const { query, mocks } = useSimpleQueryCase();
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const { result } = renderSuspenseHook(
+        () => useSuspenseQuery(query, { fetchPolicy }),
+        { strictMode: true, client }
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mocks[0].result.data);
+      });
+
+      client.writeQuery({
+        query,
+        data: { greeting: 'Updated hello' },
+      });
+
+      await waitFor(() => {
+        expect(result.current).toMatchObject({
+          data: { greeting: 'Updated hello' },
+          error: undefined,
+        });
+      });
+    }
+  );
+
   it('uses the default fetch policy from the client when none provided in options', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
@@ -1744,6 +1869,39 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(renders.frames).toMatchObject([
+      { ...mocks[1].result, error: undefined },
+    ]);
+  });
+
+  it('uses default variables from the client when none provided in options in strict mode', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+      defaultOptions: {
+        watchQuery: {
+          variables: { id: '2' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { strictMode: true, client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+      });
+    });
+
+    // React double invokes the render function in strict mode so we expect 2
+    // frames to be rendered here.
+    expect(renders.frames).toMatchObject([
+      { ...mocks[1].result, error: undefined },
       { ...mocks[1].result, error: undefined },
     ]);
   });

@@ -619,6 +619,7 @@ describe('useQuery Hook', () => {
 
       expect(client.getObservableQueries().size).toBe(1);
       unmount();
+      await new Promise(resolve => setTimeout(resolve));
       expect(client.getObservableQueries().size).toBe(0);
     });
 
@@ -1724,6 +1725,14 @@ describe('useQuery Hook', () => {
           request: { query },
           result: { data: { hello: "world 2" } },
         },
+        {
+          request: { query },
+          result: { data: { hello: "world 3" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 4" } },
+        },
       ];
 
       const cache = new InMemoryCache();
@@ -1746,26 +1755,37 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
 
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toEqual({ hello: "world 1" });
       }, { interval: 1 });
-      expect(result.current.data).toEqual({ hello: "world 1" });
-
-      result.current.stopPolling();
-
-      await expect(waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world 2" });
-      }, { interval: 1, timeout: 20 })).rejects.toThrow();
-      result.current.startPolling(20);
-
-      expect(requestSpy).toHaveBeenCalledTimes(1);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
+      expect(result.current.loading).toBe(false);
+      
 
       await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 2" });
       }, { interval: 1 });
-
       expect(result.current.loading).toBe(false);
+      
+      
+      result.current.stopPolling();
+
+      await expect(waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 3" });
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
+      result.current.startPolling(20);
+
       expect(requestSpy).toHaveBeenCalledTimes(2);
+      expect(onErrorFn).toHaveBeenCalledTimes(0);
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 3" });
+      }, { interval: 1 });
+      expect(result.current.loading).toBe(false);
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 4" });
+      }, { interval: 1 });
+      expect(result.current.loading).toBe(false);
+      expect(requestSpy).toHaveBeenCalledTimes(4);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
       requestSpy.mockRestore();
     });
@@ -4548,6 +4568,7 @@ describe('useQuery Hook', () => {
 
       expect(client.getObservableQueries('all').size).toBe(1);
       unmount();
+      await new Promise(resolve => setTimeout(resolve));
       expect(client.getObservableQueries('all').size).toBe(0);
     });
 
@@ -6903,5 +6924,77 @@ describe('useQuery Hook', () => {
         });
       }, { interval: 1 });
     });
+  });
+
+  describe("interaction with `disableNetworkFetches`", () => {
+    const cacheData = { something: "foo" };
+    const emptyData = undefined;
+    type TestQueryValue = typeof cacheData;
+
+    test.each<
+      [
+        fetchPolicy: WatchQueryFetchPolicy,
+        initialQueryValue: TestQueryValue | undefined,
+        shouldFetchOnFirstRender: boolean,
+        shouldFetchOnSecondRender: boolean
+      ]
+    >([
+      [`cache-first`, emptyData, true, false],
+      [`cache-first`, cacheData, false, false],
+      [`cache-only`, emptyData, false, false],
+      [`cache-only`, cacheData, false, false],
+      [`cache-and-network`, emptyData, true, false],
+      [`cache-and-network`, cacheData, false, false],
+      [`network-only`, emptyData, true, false],
+      [`network-only`, cacheData, false, false],
+      [`no-cache`, emptyData, true, false],
+      [`no-cache`, cacheData, true, false],
+      [`standby`, emptyData, false, false],
+      [`standby`, cacheData, false, false],
+    ])(
+      "fetchPolicy %s, cache: %p should fetch during `disableNetworkFetches`: %p and after `disableNetworkFetches` has been disabled: %p",
+      async (policy, initialQueryValue, shouldFetchOnFirstRender, shouldFetchOnSecondRender) => {
+        const query: TypedDocumentNode<TestQueryValue> = gql`
+          query CallMe {
+            something
+          }
+        `;
+
+        const link = new MockLink([
+          {request: {query}, result: {data: { something: "bar" }}},
+          {request: {query}, result: {data: { something: "baz" }}},
+        ]);
+        const requestSpy = jest.spyOn(link, 'request');
+
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link,
+        });
+        if (initialQueryValue) {
+          client.writeQuery({ query, data: initialQueryValue });
+        }
+        client.disableNetworkFetches = true;
+
+        const { rerender } = renderHook(
+          () => useQuery(query, { fetchPolicy: policy, nextFetchPolicy: policy }),
+          {
+            wrapper: ({ children }) => <ApolloProvider client={client}>{children}</ApolloProvider>,
+          }
+        );
+
+        expect(requestSpy).toHaveBeenCalledTimes(shouldFetchOnFirstRender ? 1 : 0);
+
+        // We need to wait a moment before the rerender for everything to settle down.
+        // This part is unfortunately bound to be flaky - but in some cases there is 
+        // just nothing to "wait for", except "a moment".
+        await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
+
+        requestSpy.mockClear();
+        client.disableNetworkFetches = false;
+
+        rerender();
+        expect(requestSpy).toHaveBeenCalledTimes(shouldFetchOnSecondRender ? 1 : 0);
+      }
+    );
   });
 });

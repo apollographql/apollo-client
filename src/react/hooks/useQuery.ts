@@ -208,7 +208,11 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
         let subscription = obsQuery.subscribe(onNext, onError);
 
-        return () => subscription.unsubscribe();
+        // Do the "unsubscribe" with a short delay.
+        // This way, an existing subscription can be reused without an additional
+        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery 
+        // happen in very fast succession.
+        return () => setTimeout(() => subscription.unsubscribe());
       }, [
         // We memoize the subscribe function using useCallback and the following
         // dependency keys, because the subscribe function reference is all that

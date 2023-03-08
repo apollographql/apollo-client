@@ -757,6 +757,50 @@ describe("type policies", function () {
         { __typename: "ManagerEntity", uid: "vbnm", name: "Hugh" },
       ],
     });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        coworkers: [
+          { __ref: 'CoworkerEntity:{"uid":"qwer"}' },
+          { __ref: 'CoworkerEntity:{"uid":"asdf"}' },
+          { __ref: 'CoworkerEntity:{"uid":"zxcv"}' },
+          { __ref: 'ManagerEntity:{"uid":"uiop"}' },
+          { __ref: 'CoworkerEntity:{"uid":"hjkl"}' },
+          { __ref: 'ManagerEntity:{"uid":"vbnm"}' },
+        ],
+      },
+      'CoworkerEntity:{"uid":"qwer"}': {
+        __typename: "CoworkerEntity",
+        uid: "qwer",
+        name: "Alessia",
+      },
+      'CoworkerEntity:{"uid":"asdf"}': {
+        __typename: "CoworkerEntity",
+        uid: "asdf",
+        name: "Jerel",
+      },
+      'CoworkerEntity:{"uid":"zxcv"}': {
+        __typename: "CoworkerEntity",
+        uid: "zxcv",
+        name: "Lenz",
+      },
+      'ManagerEntity:{"uid":"uiop"}': {
+        __typename: "ManagerEntity",
+        uid: "uiop",
+        name: "Jeff",
+      },
+      'CoworkerEntity:{"uid":"hjkl"}': {
+        __typename: "CoworkerEntity",
+        uid: "hjkl",
+        name: "Martijn",
+      },
+      'ManagerEntity:{"uid":"vbnm"}': {
+        __typename: "ManagerEntity",
+        uid: "vbnm",
+        name: "Hugh",
+      },
+    });
   });
 
   describe("field policies", function () {

@@ -696,6 +696,40 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('allows the client to be overridden in strict mode', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const globalClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'global hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const localClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'local hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { client: localClient }),
+      { strictMode: true, client: globalClient }
+    );
+
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ greeting: 'local hello' })
+    );
+
+    // React double invokes the render function in strict mode so we expect
+    // to render 2 frames after the initial suspense.
+    expect(renders.frames).toMatchObject([
+      { data: { greeting: 'local hello' }, error: undefined },
+      { data: { greeting: 'local hello' }, error: undefined },
+    ]);
+  });
+
   it('returns the client used in the result', async () => {
     const { query } = useSimpleQueryCase();
 

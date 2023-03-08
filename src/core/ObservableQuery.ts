@@ -28,6 +28,7 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
+  WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
@@ -86,6 +87,7 @@ export class ObservableQuery<
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
   private subscriptions = new Set<ObservableSubscription>();
 
+  private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
 
   private queryInfo: QueryInfo;
@@ -152,6 +154,7 @@ export class ObservableQuery<
     this.queryManager = queryManager;
 
     // active state
+    this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
     this.isTornDown = false;
 
     const {
@@ -240,9 +243,8 @@ export class ObservableQuery<
     if (
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.
-      fetchPolicy === 'network-only' ||
-      fetchPolicy === 'no-cache' ||
-      fetchPolicy === 'standby' ||
+      skipCacheDataFor(fetchPolicy) ||
+      this.waitForOwnResult ||
       // If this.options.query has @client(always: true) fields, we cannot
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
@@ -834,13 +836,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       }
     }
 
+    this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy)
+    const finishWaitingForOwnResult = () => {
+      if (this.concast === concast) {
+        this.waitForOwnResult = false
+      }
+    }
+
     const variables = options.variables && { ...options.variables };
     const concast = this.fetch(options, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
+        finishWaitingForOwnResult();
         this.reportResult(result, variables);
       },
       error: error => {
+        finishWaitingForOwnResult();
         this.reportError(error, variables);
       },
     };
@@ -983,4 +994,8 @@ export function logMissingFieldErrors(
       JSON.stringify(missing)
     }`, missing);
   }
+}
+
+function skipCacheDataFor(fetchPolicy?: WatchQueryFetchPolicy) {
+  return fetchPolicy === "network-only" || fetchPolicy === "no-cache" || fetchPolicy === "standby";
 }

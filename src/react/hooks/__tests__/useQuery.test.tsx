@@ -1758,14 +1758,14 @@ describe('useQuery Hook', () => {
         expect(result.current.data).toEqual({ hello: "world 1" });
       }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      
+
 
       await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 2" });
       }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      
-      
+
+
       result.current.stopPolling();
 
       await expect(waitFor(() => {
@@ -5949,7 +5949,6 @@ describe('useQuery Hook', () => {
       const link = new ApolloLink(() => {
         return new Observable(observer => {
           const timer = setTimeout(() => {
-            console.log('test observer.next', helloCount)
             observer.next({ data: { hello: `hello ${helloCount++}` } });
             observer.complete();
           }, 50);
@@ -5975,25 +5974,11 @@ describe('useQuery Hook', () => {
         return show ? <>{children}</> : null;
       }
 
-      const counts = { mount: 0, unmount: 0 };
-
-      const { result, waitForNextUpdate } = renderHook(
-        () => {
-          useEffect(() => {
-            counts.mount++;
-
-            return () => {
-              counts.unmount++;
-            }
-          }, []);
-
-          const result = useQuery(query, {
+      const { result } = renderHook(
+        () => useQuery(query, {
             fetchPolicy: 'network-only',
             nextFetchPolicy: 'cache-first'
-          });
-
-          return result
-        },
+          }),
         {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>
@@ -6003,7 +5988,6 @@ describe('useQuery Hook', () => {
         },
       );
 
-      expect(counts).toEqual({ mount: 1, unmount: 0 });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
 
@@ -6018,13 +6002,9 @@ describe('useQuery Hook', () => {
         setShow(false);
       });
 
-      expect(counts).toEqual({ mount: 1, unmount: 1 });
-
       act(() => {
         setShow(true);
       });
-
-      expect(counts).toEqual({ mount: 2, unmount: 1 });
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
@@ -7083,7 +7063,7 @@ describe('useQuery Hook', () => {
         expect(requestSpy).toHaveBeenCalledTimes(shouldFetchOnFirstRender ? 1 : 0);
 
         // We need to wait a moment before the rerender for everything to settle down.
-        // This part is unfortunately bound to be flaky - but in some cases there is 
+        // This part is unfortunately bound to be flaky - but in some cases there is
         // just nothing to "wait for", except "a moment".
         await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
 

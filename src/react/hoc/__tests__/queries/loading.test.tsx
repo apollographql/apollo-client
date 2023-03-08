@@ -421,7 +421,7 @@ describe('[queries] loading', () => {
       ]);
     }, { interval: 1 });
     await waitFor(() => {
-      expect(count).toBe(6);
+      expect(count).toBe(5);
     }, { interval: 1 });
   });
 

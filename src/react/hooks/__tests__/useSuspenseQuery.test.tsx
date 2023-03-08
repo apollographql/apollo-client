@@ -1873,6 +1873,39 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('uses default variables from the client when none provided in options in strict mode', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+      defaultOptions: {
+        watchQuery: {
+          variables: { id: '2' },
+        },
+      },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { strictMode: true, client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        error: undefined,
+      });
+    });
+
+    // React double invokes the render function in strict mode so we expect 2
+    // frames to be rendered here.
+    expect(renders.frames).toMatchObject([
+      { ...mocks[1].result, error: undefined },
+      { ...mocks[1].result, error: undefined },
+    ]);
+  });
+
   it('merges global default variables with local variables', async () => {
     const query = gql`
       query MergedVariablesQuery {

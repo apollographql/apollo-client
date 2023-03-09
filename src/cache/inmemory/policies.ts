@@ -565,11 +565,33 @@ export class Policies {
       // and merge functions often need to cooperate, so changing only one
       // of them would be a recipe for inconsistency.
       //
-      // Once the TypePolicy for typename has been accessed, its
-      // properties can still be updated directly using addTypePolicies,
-      // but future changes to supertype policies will not be reflected in
-      // this policy, because this code runs at most once per typename.
-      const supertypes = this.supertypeMap.get(typename);
+      // Once the TypePolicy for typename has been accessed, its properties can
+      // still be updated directly using addTypePolicies, but future changes to
+      // inherited supertype policies will not be reflected in this subtype
+      // policy, because this code runs at most once per typename.
+      let supertypes = this.supertypeMap.get(typename);
+      if (!supertypes && this.fuzzySubtypes.size) {
+        // To make the inheritance logic work for unknown typename strings that
+        // may have fuzzy supertypes, we give this typename an empty supertype
+        // set and then populate it with any fuzzy supertypes that match.
+        supertypes = this.getSupertypeSet(typename, true)!;
+        // This only works for typenames that are directly matched by a fuzzy
+        // supertype. What if there is an intermediate chain of supertypes?
+        // While possible, that situation can only be solved effectively by
+        // specifying the intermediate relationships via possibleTypes, manually
+        // and in a non-fuzzy way.
+        this.fuzzySubtypes.forEach((regExp, fuzzy) => {
+          if (regExp.test(typename)) {
+            // The fuzzy parameter is just the original string version of regExp
+            // (not a valid __typename string), but we can look up the
+            // associated supertype(s) in this.supertypeMap.
+            const fuzzySupertypes = this.supertypeMap.get(fuzzy);
+            if (fuzzySupertypes) {
+              fuzzySupertypes.forEach(supertype => supertypes!.add(supertype));
+            }
+          }
+        });
+      }
       if (supertypes && supertypes.size) {
         supertypes.forEach(supertype => {
           const { fields, ...rest } = this.getTypePolicy(supertype);

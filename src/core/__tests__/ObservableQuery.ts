@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import { ApolloClient, NetworkStatus, WatchQueryFetchPolicy } from "../../core";
+import { ApolloClient, ApolloQueryResult, NetworkStatus, WatchQueryFetchPolicy } from "../../core";
 import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
@@ -2192,6 +2192,164 @@ describe("ObservableQuery", () => {
         });
       }
     );
+
+    {
+      type Result = Partial<ApolloQueryResult<{ hello: string }>>;
+
+      const cacheValues = {
+        initial: { hello: "world (initial)" },
+        link: { hello: "world (from link)" },
+        refetch: { hello: "world (from link again)" },
+        update1: { hello: "world (from cache again, 1)" },
+        update2: { hello: "world (from cache again, 2)" },
+        update3: { hello: "world (from cache again, 3)" },
+        update4: { hello: "world (from cache again, 4)" },
+      } as const;
+
+      const loadingStates = {
+        loading: {
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+        },
+        done: {
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        },
+        refetching: {
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        },
+      } as const;
+
+      it.each<
+        [
+          initialFetchPolicy: WatchQueryFetchPolicy,
+          nextFetchPolicy: WatchQueryFetchPolicy,
+          // writeCache: cacheValues.initial
+          resultBeforeSubscribe: Result,
+          // observableQuery.subscribe
+          resultAfterSubscribe: Result,
+          // writeCache:  cacheValues.update1
+          resultAfterCacheUpdate1: Result,
+          // incoming result: cacheValues.link
+          resultAfterLinkNext: Result,
+          // writeCache:  cacheValues.update2
+          resultAfterCacheUpdate2: Result,
+          // observableQuery.refetch
+          // writeCache:  cacheValues.update3
+          resultAfterCacheUpdate3: Result,
+          // incoming result:  cacheValues.refetch
+          resultAfterRefetchNext: Result,
+          // writeCache:  cacheValues.update4
+          resultAfterCacheUpdate4: Result
+        ]
+      >([
+        [
+          "cache-and-network",
+          "cache-and-network",
+          { ...loadingStates.loading, data: cacheValues.initial },
+          { ...loadingStates.loading, data: cacheValues.initial },
+          { ...loadingStates.loading, data: cacheValues.update1 },
+          { ...loadingStates.done, data: cacheValues.link },
+          { ...loadingStates.done, data: cacheValues.update2 },
+          { ...loadingStates.refetching, data: cacheValues.update3 },
+          { ...loadingStates.done, data: cacheValues.refetch },
+          { ...loadingStates.done, data: cacheValues.update4 },
+        ],
+        [
+          "no-cache",
+          "no-cache",
+          { ...loadingStates.loading },
+          { ...loadingStates.loading },
+          { ...loadingStates.loading },
+          { ...loadingStates.done, data: cacheValues.link },
+          { ...loadingStates.done, data: cacheValues.link },
+          { ...loadingStates.refetching, data: cacheValues.link },
+          { ...loadingStates.done, data: cacheValues.refetch },
+          { ...loadingStates.done, data: cacheValues.refetch },
+        ],
+        [
+          "no-cache",
+          "cache-and-network",
+          { ...loadingStates.loading },
+          { ...loadingStates.loading },
+          { ...loadingStates.loading },
+          { ...loadingStates.done, data: cacheValues.link },
+          { ...loadingStates.done, data: cacheValues.link },
+          { ...loadingStates.refetching, data: cacheValues.link },
+          { ...loadingStates.done, data: cacheValues.refetch },
+          { ...loadingStates.done, data: cacheValues.update4 },
+        ],
+      ])(
+        "fetchPolicy %s -> %s",
+        async (
+          fetchPolicy,
+          nextFetchPolicy,
+          resultBeforeSubscribe,
+          resultAfterSubscribe,
+          resultAfterCacheUpdate1,
+          resultAfterLinkNext,
+          resultAfterCacheUpdate2,
+          resultAfterCacheUpdate3,
+          resultAfterRefetchNext,
+          resultAfterCacheUpdate4
+        ) => {
+          const query = gql`
+            {
+              hello
+            }
+          `;
+          let observer!: SubscriptionObserver<FetchResult>;
+          const link = new ApolloLink(() => {
+            return new Observable((o) => {
+              observer = o;
+            });
+          });
+          const cache = new InMemoryCache({});
+          cache.writeQuery({ query, data: cacheValues.initial });
+
+          const queryManager = new QueryManager({ link, cache });
+          const observableQuery = queryManager.watchQuery({ query, fetchPolicy, nextFetchPolicy });
+
+          expect(observer).toBeUndefined();
+          expect(observableQuery.getCurrentResult()).toStrictEqual(resultBeforeSubscribe);
+
+          observableQuery.subscribe({});
+          expect(observer).not.toBeUndefined();
+          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterSubscribe);
+
+          cache.writeQuery({ query, data: cacheValues.update1 });
+          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate1);
+
+          observer.next({ data: cacheValues.link });
+          observer.complete();
+          await waitFor(
+            () =>
+              void expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterLinkNext),
+            { interval: 1 }
+          );
+
+          cache.writeQuery({ query, data: cacheValues.update2 });
+          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate2);
+
+          observableQuery.refetch();
+
+          cache.writeQuery({ query, data: cacheValues.update3 });
+          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate3);
+
+          observer.next({ data: cacheValues.refetch });
+          observer.complete();
+          await waitFor(
+            () =>
+              void expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterRefetchNext),
+            { interval: 1 }
+          );
+
+          cache.writeQuery({ query, data: cacheValues.update4 });
+          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate4);
+        }
+      );
+    }
 
     describe("mutations", () => {
       const mutation = gql`

@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2023-01-30**
+**Last updated: 2023-03-07**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -15,7 +15,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ## [3.8.0](https://github.com/apollographql/apollo-client/milestone/30)
 
-_Approximate Date: 2023-03-31_
+_Approximate Date: 2023-04-14_
 
 Currently in active development and being shipped in a series alpha releases.  React 18 users will get a lot out of this release since it introduces support for Suspense and (for you server-side rendering enthusiasts) `renderToPipeableStream`.  There are also new features added to the core as well.  Here's a brief overview:
 
@@ -24,7 +24,7 @@ Currently in active development and being shipped in a series alpha releases.  R
 - Introduce another new hook `useBackgroundQuery` with `Suspense` support
 - Ability to use `Suspense` with  `useFragment`
 - Server-side rendering (SSR) upgrade: support `renderToPipeableStream` for streaming renders
-- Add the (opt-in) ability to access fields with the `@client` directive in the link chain
+- Support custom GraphQL document transforms
 
 As we release each new feature we'll be looking for feedback from the community on performance, usage and developer experience of adopting and implementing these new concepts in your applications.  Try it today: `npm i @apollo/client@alpha` and let us know what you think!  Once new feature development is complete we'll move this to beta and then GA once stable.
 
@@ -36,7 +36,7 @@ The 3.8 release is a major milestone for the project's React support.  Feedback 
 
 ## Demo app: Spotify clone
 
-_Approximate Date: 2023-02-23_
+_Approximate Date: 2023-03-08_
 
 We are working on a full-stack Spotify clone to showcase and test the capabilities of Apollo Client 3.8.  Right now it's a private repository that we're using to dogfood the alpha branch internally.  We will open-source it in the near future for use as a demonstration of how to use features like `useSuspenseQuery` and `useBackgroundQuery` in a nontrivial React app.  It may also be useful as a bug reproduction template in the future.
 

@@ -1137,7 +1137,7 @@ export class QueryManager<TStore> {
           networkStatus: NetworkStatus.ready,
         };
 
-        if (!diff.complete) {
+        if (result.data && !diff.complete) {
           aqr.partial = true;
         }
 

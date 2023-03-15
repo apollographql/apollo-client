@@ -28,9 +28,6 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });
@@ -1758,14 +1755,14 @@ describe('useQuery Hook', () => {
         expect(result.current.data).toEqual({ hello: "world 1" });
       }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      
+
 
       await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 2" });
       }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      
-      
+
+
       result.current.stopPolling();
 
       await expect(waitFor(() => {
@@ -6985,7 +6982,7 @@ describe('useQuery Hook', () => {
         expect(requestSpy).toHaveBeenCalledTimes(shouldFetchOnFirstRender ? 1 : 0);
 
         // We need to wait a moment before the rerender for everything to settle down.
-        // This part is unfortunately bound to be flaky - but in some cases there is 
+        // This part is unfortunately bound to be flaky - but in some cases there is
         // just nothing to "wait for", except "a moment".
         await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
 

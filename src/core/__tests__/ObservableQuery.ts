@@ -2179,11 +2179,11 @@ describe('ObservableQuery', () => {
               updateQueries,
             });
           } else if (count === 2) {
-            expect(result.data.people_one).toEqual(
+            expect(result.data!.people_one).toEqual(
               optimisticResponse,
             );
           } else if (count === 3) {
-            expect(result.data.people_one).toEqual(mutationData);
+            expect(result.data!.people_one).toEqual(mutationData);
             resolve();
           }
         });

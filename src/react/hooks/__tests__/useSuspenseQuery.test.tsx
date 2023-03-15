@@ -487,6 +487,43 @@ describe('useSuspenseQuery', () => {
     expect(result.current).toBe(previousResult);
   });
 
+  it('ensures refetch, fetchMore, and subscribeToMore are referentially stable even after result data has changed', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const { result } = renderSuspenseHook(() => useSuspenseQuery(query), {
+      client,
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        error: undefined,
+      });
+    });
+
+    const previousResult = result.current;
+
+    client.writeQuery({
+      query,
+      data: { greeting: 'Updated cache greeting' },
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        greeting: 'Updated cache greeting',
+      });
+    });
+
+    expect(result.current.fetchMore).toBe(previousResult.fetchMore);
+    expect(result.current.refetch).toBe(previousResult.refetch);
+    expect(result.current.subscribeToMore).toBe(previousResult.subscribeToMore);
+  });
+
   it('enables canonical results when canonizeResults is "true"', async () => {
     interface Result {
       __typename: string;

@@ -1445,7 +1445,7 @@ export class QueryManager<TStore> {
       }
 
       const fromData = (data: TData | undefined) => Observable.of({
-        data,
+        data: equal(data, {}) ? void 0 : data,
         loading: isNetworkRequestInFlight(networkStatus),
         networkStatus,
         ...(diff.complete ? null : { partial: true }),

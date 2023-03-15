@@ -11,6 +11,7 @@ import {
   TypedDocumentNode,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
+  NetworkStatus,
 } from '../../core';
 import {
   compact,
@@ -373,6 +374,43 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
             next: handleUpdate,
             error: handleUpdate,
           });
+
+          // Fixes an issue where mounting this hook with data already in the
+          // cache while using a cache-first fetch policy did not respond to
+          // cache updates.
+          //
+          // This is due to the fact that this hook manages the
+          // fetching lifecycle (via `reobserve`) rather than the subscription.
+          // We disable fetching when subscribing to the observable since we
+          // kick off the fetch in the first render. This however has some
+          // downstream issues, since `reobserve` is necessary to set some
+          // internal state updates on `ObservableQuery` and `QueryInfo`. In
+          // cases where we can fulfill the result via the cache immediately, we
+          // avoid calling `reobserve` by subscribing (via the
+          // `fetchOnFirstSubscribe` option) to avoid the network request, but
+          // this means the interal state updates do not happen.
+          //
+          // In this case, `QueryInfo`, is initialized with a `networkStatus` of
+          // 1, but because we don't call `reobserve`, this value never gets
+          // updated to 7 even though `observableQuery.getCurrentResult()` is
+          // able to correctly set this value to 7. This caused issues where
+          // `broadcastQueries` was not sending notifications since `queryInfo`
+          // avoids broadcasting to in-flight queries for fetch policies other
+          // than cache-only and cache-and-network.
+          //
+          // This attempts to patch the behavior expected from `reobserve` by
+          // marking the queryInfo as ready if we detect that the result is also
+          // ready.
+          //
+          // Related to https://github.com/apollographql/apollo-client/issues/10478
+          const result = resultRef.current!;
+
+          if (
+            result.networkStatus !== observable['queryInfo'].networkStatus &&
+            result.networkStatus === NetworkStatus.ready
+          ) {
+            observable['queryInfo'].markReady();
+          }
         });
 
         return () => {

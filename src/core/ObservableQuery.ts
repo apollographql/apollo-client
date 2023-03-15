@@ -280,7 +280,7 @@ export class ObservableQuery<
           result.networkStatus = NetworkStatus.ready;
           result.loading = false;
         }
-      } else {
+      } else if (result.data) {
         result.partial = true;
       }
 

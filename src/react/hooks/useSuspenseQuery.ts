@@ -11,6 +11,7 @@ import {
   TypedDocumentNode,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
+  NetworkStatus,
 } from '../../core';
 import {
   compact,
@@ -37,6 +38,7 @@ export interface UseSuspenseQueryResult<
   data: TData;
   error: ApolloError | undefined;
   fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
+  networkStatus: NetworkStatus;
   refetch: ObservableQueryFields<TData, TVariables>['refetch'];
   subscribeToMore: ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 }
@@ -151,6 +153,7 @@ export function useSuspenseQuery_experimental<
       client,
       data: result.data,
       error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
+      networkStatus: result.networkStatus,
       fetchMore: (options) => {
         const promise = observable.fetchMore(options);
 

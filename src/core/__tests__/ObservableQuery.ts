@@ -459,7 +459,7 @@ describe('ObservableQuery', () => {
           await observable.setOptions({ fetchPolicy: 'cache-only' });
           await resetStore(queryManager);
         } else if (handleCount === 2) {
-          expect(result.data).toEqual({});
+          expect(result.data).toBe(undefined);
           expect(result.loading).toBe(false);
           expect(result.networkStatus).toBe(NetworkStatus.ready);
           expect(timesFired).toBe(1);
@@ -506,7 +506,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(reject, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.loading).toBe(false);
-          expect(result.data).toEqual({});
+          expect(result.data).toBe(undefined);
           expect(timesFired).toBe(0);
           observable.setOptions({ fetchPolicy: 'cache-first' });
         } else if (handleCount === 2) {
@@ -1769,7 +1769,6 @@ describe('ObservableQuery', () => {
         loading: true,
         data: undefined,
         networkStatus: 1,
-        partial: true,
       });
 
       setTimeout(
@@ -1778,7 +1777,6 @@ describe('ObservableQuery', () => {
             loading: true,
             data: undefined,
             networkStatus: 1,
-            partial: true,
           });
         }),
         0,

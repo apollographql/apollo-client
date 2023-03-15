@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.8.0-alpha.9
+
+### Patch Changes
+
+- [#10635](https://github.com/apollographql/apollo-client/pull/10635) [`7df51ee19`](https://github.com/apollographql/apollo-client/commit/7df51ee19a49a92f48c0f58f91894d32091cb294) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where cache updates would not propagate to `useSuspenseQuery` while in strict mode.
+
+- [#10633](https://github.com/apollographql/apollo-client/pull/10633) [`90a06eeeb`](https://github.com/apollographql/apollo-client/commit/90a06eeeb5a50eb172f5c6211693ea051897d8f3) Thanks [@benjamn](https://github.com/benjamn)! - Fix type policy inheritance involving fuzzy `possibleTypes`
+
+- [#10629](https://github.com/apollographql/apollo-client/pull/10629) [`02605bb3c`](https://github.com/apollographql/apollo-client/commit/02605bb3c9e148bf87a6e52b4a9ecc7d523ef9f6) Thanks [@phryneas](https://github.com/phryneas)! - `useQuery`: delay unsubscribe to fix race conditions
+
 ## 3.8.0-alpha.8
 
 ### Patch Changes

@@ -2030,8 +2030,6 @@ describe('writing to the store', () => {
         }
       `;
 
-      const date = new Date(1601053713081);
-
       cache.writeQuery({
         query,
         data: {
@@ -2040,9 +2038,7 @@ describe('writing to the store', () => {
             foos: ["bar", "baz"],
           },
           currentTime: {
-            localeString: date.toLocaleString("en-US", {
-              timeZone: "America/New_York",
-            }),
+            localeString: '9/25/2020, 1:08:33 PM'
           },
         },
       });
@@ -2058,7 +2054,7 @@ describe('writing to the store', () => {
             zxcv: "lower",
           },
           currentTime: {
-            msSinceEpoch: date.getTime(),
+            msSinceEpoch: 1601053713081,
           },
         },
       });

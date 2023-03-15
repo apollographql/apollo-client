@@ -233,6 +233,7 @@ export class ObservableQuery<
       NetworkStatus.ready;
 
     const result = {
+      data: void 0,
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,

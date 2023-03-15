@@ -1129,11 +1129,17 @@ export class QueryManager<TStore> {
           queryInfo.markReady();
         }
 
+        const diff = queryInfo.getDiff(options.variables);
+
         const aqr: ApolloQueryResult<TData> = {
           data: result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
         };
+
+        if (!diff.complete) {
+          aqr.partial = true;
+        }
 
         if (hasErrors && options.errorPolicy !== "ignore") {
           aqr.errors = graphQLErrors;

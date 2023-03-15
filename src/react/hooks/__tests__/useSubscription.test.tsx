@@ -9,9 +9,6 @@ import { MockSubscriptionLink } from '../../../testing';
 import { useSubscription } from '../useSubscription';
 
 describe('useSubscription Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });

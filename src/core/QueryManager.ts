@@ -1444,12 +1444,20 @@ export class QueryManager<TStore> {
         logMissingFieldErrors(diff.missing);
       }
 
-      const fromData = (data: TData | undefined) => Observable.of({
-        data: equal(data, {}) ? void 0 : data,
-        loading: isNetworkRequestInFlight(networkStatus),
-        networkStatus,
-        ...(diff.complete ? null : { partial: true }),
-      } as ApolloQueryResult<TData>);
+      const fromData = (data: TData | undefined) => {
+        const result: ApolloQueryResult<TData> = {
+          data: equal(data, {}) ? void 0 : data,
+          loading: isNetworkRequestInFlight(networkStatus),
+          networkStatus,
+          ...(diff.complete ? null : { partial: true }),
+        }
+
+        if (result.partial && !returnPartialData) {
+          result.data = void 0;
+        }
+
+        return Observable.of(result);
+      }
 
       if (data && this.transform(query).hasForcedResolvers) {
         return this.localState.runResolvers({

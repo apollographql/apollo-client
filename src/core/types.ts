@@ -133,7 +133,7 @@ export type { QueryOptions as PureQueryOptions };
 export type OperationVariables = Record<string, any>;
 
 export type ApolloQueryResult<T> = {
-  data: T;
+  data: T | undefined;
   /**
   * A list of any errors that occurred during server-side execution of a GraphQL operation.
   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.

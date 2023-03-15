@@ -2129,9 +2129,9 @@ describe('useMutation Hook', () => {
 
         if (count === 1) {
           expect(result).toEqual({
+            data: undefined,
             loading: true,
             networkStatus: NetworkStatus.loading,
-            partial: true,
           });
 
         } else if (count === 2) {

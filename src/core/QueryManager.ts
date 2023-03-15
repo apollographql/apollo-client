@@ -1452,16 +1452,19 @@ export class QueryManager<TStore> {
 
       const fromData = (data: TData | undefined) => {
         const result: ApolloQueryResult<TData> = {
-          data: equal(data, {}) ? void 0 : data,
+          data: void 0,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
-          ...(diff.complete ? null : { partial: true }),
         }
 
-        if (result.partial && !returnPartialData) {
-          result.data = void 0;
-        }
 
+        if (diff.complete) {
+          result.data = data;
+        } else if (returnPartialData && !equal(data, {})) {
+          result.data = data;
+          result.partial = true;
+        }
+         
         return Observable.of(result);
       }
 

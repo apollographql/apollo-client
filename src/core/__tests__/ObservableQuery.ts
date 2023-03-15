@@ -70,7 +70,7 @@ describe('ObservableQuery', () => {
     },
   };
 
-  const error = new GraphQLError('is offline.', undefined, null, null, ['people_one']);
+  const error = new GraphQLError('is offline.', { path: ['people_one'] });
 
   const createQueryManager = ({ link }: { link: ApolloLink }) => {
     return new QueryManager({

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ReactiveVar } from '../../core';
+import { useEffect, useState } from "react";
+import { ReactiveVar } from "../../core";
 
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
   const value = rv();

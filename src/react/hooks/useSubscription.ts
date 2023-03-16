@@ -1,21 +1,24 @@
-import { invariant } from '../../utilities/globals';
-import { useState, useRef, useEffect } from 'react';
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { equal } from '@wry/equality';
+import { invariant } from "../../utilities/globals";
+import { useState, useRef, useEffect } from "react";
+import { DocumentNode } from "graphql";
+import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { equal } from "@wry/equality";
 
-import { DocumentType, verifyDocumentType } from '../parser';
+import { DocumentType, verifyDocumentType } from "../parser";
 import {
   NoInfer,
   SubscriptionHookOptions,
-  SubscriptionResult
-} from '../types/types';
-import { OperationVariables } from '../../core';
-import { useApolloClient } from './useApolloClient';
+  SubscriptionResult,
+} from "../types/types";
+import { OperationVariables } from "../../core";
+import { useApolloClient } from "./useApolloClient";
 
-export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
+export function useSubscription<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const hasIssuedDeprecationWarningRef = useRef(false);
   const client = useApolloClient(options?.client);
@@ -70,12 +73,15 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
   const ref = useRef({ client, subscription, options });
   useEffect(() => {
     let shouldResubscribe = options?.shouldResubscribe;
-    if (typeof shouldResubscribe === 'function') {
+    if (typeof shouldResubscribe === "function") {
       shouldResubscribe = !!shouldResubscribe(options!);
     }
 
     if (options?.skip) {
-      if (!options?.skip !== !ref.current.options?.skip || canResetObservableRef.current) {
+      if (
+        !options?.skip !== !ref.current.options?.skip ||
+        canResetObservableRef.current
+      ) {
         setResult({
           loading: false,
           data: void 0,
@@ -100,12 +106,14 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
         error: void 0,
         variables: options?.variables,
       });
-      setObservable(client.subscribe({
-        query: subscription,
-        variables: options?.variables,
-        fetchPolicy: options?.fetchPolicy,
-        context: options?.context,
-      }));
+      setObservable(
+        client.subscribe({
+          query: subscription,
+          variables: options?.variables,
+          fetchPolicy: options?.fetchPolicy,
+          context: options?.context,
+        })
+      );
       canResetObservableRef.current = false;
     }
 
@@ -132,12 +140,12 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
         if (ref.current.options?.onData) {
           ref.current.options.onData({
             client,
-            data: result
+            data: result,
           });
         } else if (ref.current.options?.onSubscriptionData) {
           ref.current.options.onSubscriptionData({
             client,
-            subscriptionData: result
+            subscriptionData: result,
           });
         }
       },

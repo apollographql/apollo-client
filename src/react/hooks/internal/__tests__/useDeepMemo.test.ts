@@ -1,8 +1,8 @@
-import { renderHook } from '@testing-library/react';
-import { useDeepMemo } from '../useDeepMemo';
+import { renderHook } from "@testing-library/react";
+import { useDeepMemo } from "../useDeepMemo";
 
-describe('useDeepMemo', () => {
-  it('ensures the value is initialized', () => {
+describe("useDeepMemo", () => {
+  it("ensures the value is initialized", () => {
     const { result } = renderHook(() =>
       useDeepMemo(() => ({ test: true }), [])
     );
@@ -10,7 +10,7 @@ describe('useDeepMemo', () => {
     expect(result.current).toEqual({ test: true });
   });
 
-  it('returns memoized value when its dependencies are deeply equal', () => {
+  it("returns memoized value when its dependencies are deeply equal", () => {
     const { result, rerender } = renderHook(
       ({ active, items, user }) => {
         useDeepMemo(() => ({ active, items, user }), [items, name, active]);
@@ -19,19 +19,19 @@ describe('useDeepMemo', () => {
         initialProps: {
           active: true,
           items: [1, 2],
-          user: { name: 'John Doe' },
+          user: { name: "John Doe" },
         },
       }
     );
 
     const previousResult = result.current;
 
-    rerender({ active: true, items: [1, 2], user: { name: 'John Doe' } });
+    rerender({ active: true, items: [1, 2], user: { name: "John Doe" } });
 
     expect(result.current).toBe(previousResult);
   });
 
-  it('returns updated value if a dependency changes', () => {
+  it("returns updated value if a dependency changes", () => {
     const { result, rerender } = renderHook(
       ({ items }) => useDeepMemo(() => ({ items }), [items]),
       { initialProps: { items: [1] } }

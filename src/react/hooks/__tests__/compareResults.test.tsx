@@ -1,7 +1,7 @@
 import { gql } from "../../../core";
 import { compareResultsUsingQuery } from "../compareResults";
 
-describe("compareResultsUsingQuery", () => {
+describe("compareResultsUsingQuery", () => /* prettier-ignore */ {
   it("is importable and a function", () => {
     expect(typeof compareResultsUsingQuery).toBe("function");
   });

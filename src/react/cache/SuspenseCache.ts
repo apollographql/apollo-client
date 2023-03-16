@@ -4,8 +4,8 @@ import {
   ObservableQuery,
   OperationVariables,
   TypedDocumentNode,
-} from '../../core';
-import { canonicalStringify } from '../../cache';
+} from "../../core";
+import { canonicalStringify } from "../../cache";
 
 interface CacheEntry<TData, TVariables extends OperationVariables> {
   observable: ObservableQuery<TData, TVariables>;

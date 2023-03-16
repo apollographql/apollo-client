@@ -1,5 +1,5 @@
-import { useRef, DependencyList } from 'react';
-import { equal } from '@wry/equality';
+import { useRef, DependencyList } from "react";
+import { equal } from "@wry/equality";
 
 export function useDeepMemo<TValue>(
   memoFn: () => TValue,

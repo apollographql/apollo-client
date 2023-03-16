@@ -28,14 +28,5 @@ src/react/*
 # Allow src/react/cache
 !src/react/cache/
 
-## Allowed React Hooks
+## Allow React Hooks
 !src/react/hooks/
-src/react/hooks/*
-!src/react/hooks/internal
-!src/react/hooks/useSuspenseCache.ts
-!src/react/hooks/useSuspenseQuery.ts
-
-## Allowed React hook tests
-!src/react/hooks/__tests__/
-src/react/hooks/__tests__/*
-!src/react/hooks/__tests__/useSuspenseQuery.test.tsx

@@ -1,18 +1,16 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from "../../utilities/globals";
+
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import { useSyncExternalStore } from "./useSyncExternalStore";
+import { equal } from "@wry/equality";
 
 import {
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { useSyncExternalStore } from './useSyncExternalStore';
-import { equal } from '@wry/equality';
-
-import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';
-import { ApolloContextValue, getApolloContext } from '../context';
-import { ApolloError } from '../../errors';
+  mergeOptions,
+  OperationVariables,
+  WatchQueryFetchPolicy,
+} from "../../core";
+import { ApolloContextValue, getApolloContext } from "../context";
+import { ApolloError } from "../../errors";
 import {
   ApolloClient,
   ApolloQueryResult,
@@ -21,40 +19,46 @@ import {
   DocumentNode,
   TypedDocumentNode,
   WatchQueryOptions,
-} from '../../core';
+} from "../../core";
 import {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
   NoInfer,
-} from '../types/types';
+} from "../types/types";
 
-import { DocumentType, verifyDocumentType } from '../parser';
-import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, canUseWeakSet, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { DocumentType, verifyDocumentType } from "../parser";
+import { useApolloClient } from "./useApolloClient";
+import {
+  canUseWeakMap,
+  canUseWeakSet,
+  compact,
+  isNonEmptyArray,
+  maybeDeepFreeze,
+} from "../../utilities";
 
 const {
-  prototype: {
-    hasOwnProperty,
-  },
+  prototype: { hasOwnProperty },
 } = Object;
 
 export function useQuery<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = Object.create(null),
+  options: QueryHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = Object.create(null)
 ): QueryResult<TData, TVariables> {
-  return useInternalState(
-    useApolloClient(options.client),
-    query,
-  ).useQuery(options);
+  return useInternalState(useApolloClient(options.client), query).useQuery(
+    options
+  );
 }
 
 export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>
 ): InternalState<TData, TVariables> {
   const stateRef = useRef<InternalState<TData, TVariables>>();
   if (
@@ -74,7 +78,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   // the InternalState class).
   const [_tick, setTick] = useState(0);
   state.forceUpdate = () => {
-    setTick(tick => tick + 1);
+    setTick((tick) => tick + 1);
   };
 
   return state;
@@ -84,7 +88,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
   constructor(
     public readonly client: ReturnType<typeof useApolloClient>,
     public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    previous?: InternalState<TData, TVariables>,
+    previous?: InternalState<TData, TVariables>
   ) {
     verifyDocumentType(query, DocumentType.Query);
 
@@ -99,7 +103,9 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
   forceUpdate() {
     // Replaced (in useInternalState) with a method that triggers an update.
-    invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
+    invariant.warn(
+      "Calling default no-op implementation of InternalState#forceUpdate"
+    );
   }
 
   asyncUpdate(signal: AbortSignal) {
@@ -107,15 +113,15 @@ class InternalState<TData, TVariables extends OperationVariables> {
       const watchQueryOptions = this.watchQueryOptions;
 
       const handleAborted = () => {
-        this.asyncResolveFns.delete(resolve)
+        this.asyncResolveFns.delete(resolve);
         this.optionsToIgnoreOnce.delete(watchQueryOptions);
-        signal.removeEventListener('abort', handleAborted)
+        signal.removeEventListener("abort", handleAborted);
         reject(signal.reason);
       };
 
       this.asyncResolveFns.add(resolve);
       this.optionsToIgnoreOnce.add(watchQueryOptions);
-      signal.addEventListener('abort', handleAborted)
+      signal.addEventListener("abort", handleAborted);
       this.forceUpdate();
     });
   }
@@ -187,7 +193,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
             obsQuery["last"] = last;
           }
 
-          if (!hasOwnProperty.call(error, 'graphQLErrors')) {
+          if (!hasOwnProperty.call(error, "graphQLErrors")) {
             // The error is not a GraphQL error
             throw error;
           }
@@ -211,7 +217,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional
-        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery 
+        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
         return () => setTimeout(() => subscription.unsubscribe());
       }, [
@@ -227,7 +233,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
       ]),
 
       () => this.getCurrentResult(),
-      () => this.getCurrentResult(),
+      () => this.getCurrentResult()
     );
 
     // TODO Remove this method when we remove support for options.partialRefetch.
@@ -236,7 +242,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     const queryResult = this.toQueryResult(result);
 
     if (!queryResult.loading && this.asyncResolveFns.size) {
-      this.asyncResolveFns.forEach(resolve => resolve(queryResult));
+      this.asyncResolveFns.forEach((resolve) => resolve(queryResult));
       this.asyncResolveFns.clear();
     }
 
@@ -251,11 +257,9 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private queryHookOptions: QueryHookOptions<TData, TVariables>;
   private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
 
-  private useOptions(
-    options: QueryHookOptions<TData, TVariables>,
-  ) {
+  private useOptions(options: QueryHookOptions<TData, TVariables>) {
     const watchQueryOptions = this.createWatchQueryOptions(
-      this.queryHookOptions = options,
+      (this.queryHookOptions = options)
     );
 
     // Update this.watchQueryOptions, but only when they have changed, which
@@ -307,7 +311,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
-    this.onCompleted = options.onCompleted || InternalState.prototype.onCompleted;
+    this.onCompleted =
+      options.onCompleted || InternalState.prototype.onCompleted;
     this.onError = options.onError || InternalState.prototype.onError;
 
     if (
@@ -320,7 +325,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
       this.result = this.ssrDisabledResult;
     } else if (
       this.queryHookOptions.skip ||
-      this.watchQueryOptions.fetchPolicy === 'standby'
+      this.watchQueryOptions.fetchPolicy === "standby"
     ) {
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is
@@ -342,9 +347,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
   }
 
   private getObsQueryOptions(): WatchQueryOptions<TVariables, TData> {
-    const toMerge: Array<
-      Partial<WatchQueryOptions<TVariables, TData>>
-    > = [];
+    const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
 
     const globalDefaults = this.client.defaultOptions.watchQuery;
     if (globalDefaults) toMerge.push(globalDefaults);
@@ -363,14 +366,14 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // (if provided) should be merged, to ensure individual defaulted
     // variables always have values, if not otherwise defined in
     // observable.options or watchQueryOptions.
-    toMerge.push(compact(
-      this.observable && this.observable.options,
-      this.watchQueryOptions,
-    ));
+    toMerge.push(
+      compact(
+        this.observable && this.observable.options,
+        this.watchQueryOptions
+      )
+    );
 
-    return toMerge.reduce(
-      mergeOptions
-    ) as WatchQueryOptions<TVariables, TData>;
+    return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
   }
 
   private ssrDisabledResult = maybeDeepFreeze({
@@ -398,7 +401,10 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // makes otherOptions almost a WatchQueryOptions object, except for the
     // query property that we add below.
     ...otherOptions
-  }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<TVariables, TData> {
+  }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<
+    TVariables,
+    TData
+  > {
     // This Object.assign is safe because otherOptions is a fresh ...rest object
     // that did not exist until just now, so modifications are still allowed.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
@@ -406,14 +412,12 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
     if (
       this.renderPromises &&
-      (
-        watchQueryOptions.fetchPolicy === 'network-only' ||
-        watchQueryOptions.fetchPolicy === 'cache-and-network'
-      )
+      (watchQueryOptions.fetchPolicy === "network-only" ||
+        watchQueryOptions.fetchPolicy === "cache-and-network")
     ) {
       // this behavior was added to react-apollo without explanation in this PR
       // https://github.com/apollographql/react-apollo/pull/1579
-      watchQueryOptions.fetchPolicy = 'cache-first';
+      watchQueryOptions.fetchPolicy = "cache-first";
     }
 
     if (!watchQueryOptions.variables) {
@@ -431,7 +435,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
       // fetchPolicy that would have been used if not skipping.
       Object.assign(watchQueryOptions, {
         initialFetchPolicy,
-        fetchPolicy: 'standby',
+        fetchPolicy: "standby",
       });
     } else if (!watchQueryOptions.fetchPolicy) {
       watchQueryOptions.fetchPolicy =
@@ -466,25 +470,27 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // See if there is an existing observable that was used to fetch the same
     // data and if so, use it instead since it will contain the proper queryId
     // to fetch the result set. This is used during SSR.
-    const obsQuery = this.observable =
-      this.renderPromises
-        && this.renderPromises.getSSRObservable(this.watchQueryOptions)
-        || this.observable // Reuse this.observable if possible (and not SSR)
-        || this.client.watchQuery(this.getObsQueryOptions());
+    const obsQuery = (this.observable =
+      (this.renderPromises &&
+        this.renderPromises.getSSRObservable(this.watchQueryOptions)) ||
+      this.observable || // Reuse this.observable if possible (and not SSR)
+      this.client.watchQuery(this.getObsQueryOptions()));
 
-    this.obsQueryFields = useMemo(() => ({
-      refetch: obsQuery.refetch.bind(obsQuery),
-      reobserve: obsQuery.reobserve.bind(obsQuery),
-      fetchMore: obsQuery.fetchMore.bind(obsQuery),
-      updateQuery: obsQuery.updateQuery.bind(obsQuery),
-      startPolling: obsQuery.startPolling.bind(obsQuery),
-      stopPolling: obsQuery.stopPolling.bind(obsQuery),
-      subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
-    }), [obsQuery]);
+    this.obsQueryFields = useMemo(
+      () => ({
+        refetch: obsQuery.refetch.bind(obsQuery),
+        reobserve: obsQuery.reobserve.bind(obsQuery),
+        fetchMore: obsQuery.fetchMore.bind(obsQuery),
+        updateQuery: obsQuery.updateQuery.bind(obsQuery),
+        startPolling: obsQuery.startPolling.bind(obsQuery),
+        stopPolling: obsQuery.stopPolling.bind(obsQuery),
+        subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
+      }),
+      [obsQuery]
+    );
 
     const ssrAllowed = !(
-      this.queryHookOptions.ssr === false ||
-      this.queryHookOptions.skip
+      this.queryHookOptions.ssr === false || this.queryHookOptions.skip
     );
 
     if (this.renderPromises && ssrAllowed) {
@@ -524,26 +530,30 @@ class InternalState<TData, TVariables extends OperationVariables> {
       const error = this.toApolloError(result);
 
       // wait a tick in case we are in the middle of rendering a component
-      Promise.resolve().then(() => {
-        if (error) {
-          this.onError(error);
-        } else if (
-          result.data &&
-          previousResult?.networkStatus !== result.networkStatus &&
-          result.networkStatus === NetworkStatus.ready
-        ) {
-          this.onCompleted(result.data);
-        }
-      }).catch(error => {
-        invariant.warn(error);
-      });
+      Promise.resolve()
+        .then(() => {
+          if (error) {
+            this.onError(error);
+          } else if (
+            result.data &&
+            previousResult?.networkStatus !== result.networkStatus &&
+            result.networkStatus === NetworkStatus.ready
+          ) {
+            this.onCompleted(result.data);
+          }
+        })
+        .catch((error) => {
+          invariant.warn(error);
+        });
     }
   }
 
-  private toApolloError(result: ApolloQueryResult<TData>): ApolloError | undefined {
+  private toApolloError(
+    result: ApolloQueryResult<TData>
+  ): ApolloError | undefined {
     return isNonEmptyArray(result.errors)
       ? new ApolloError({ graphQLErrors: result.errors })
-      : result.error
+      : result.error;
   }
 
   private getCurrentResult(): ApolloQueryResult<TData> {
@@ -552,7 +562,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // we're doing server rendering and therefore override the result below.
     if (!this.result) {
       this.handleErrorOrCompleted(
-        this.result = this.observable.getCurrentResult()
+        (this.result = this.observable.getCurrentResult())
       );
     }
     return this.result;
@@ -567,22 +577,25 @@ class InternalState<TData, TVariables extends OperationVariables> {
   >();
 
   toQueryResult(
-    result: ApolloQueryResult<TData>,
+    result: ApolloQueryResult<TData>
   ): QueryResult<TData, TVariables> {
     let queryResult = this.toQueryResultCache.get(result);
     if (queryResult) return queryResult;
 
     const { data, partial, ...resultWithoutPartial } = result;
-    this.toQueryResultCache.set(result, queryResult = {
-      data, // Ensure always defined, even if result.data is missing.
-      ...resultWithoutPartial,
-      ...this.obsQueryFields,
-      client: this.client,
-      observable: this.observable,
-      variables: this.observable.variables,
-      called: !this.queryHookOptions.skip,
-      previousData: this.previousData,
-    });
+    this.toQueryResultCache.set(
+      result,
+      (queryResult = {
+        data, // Ensure always defined, even if result.data is missing.
+        ...resultWithoutPartial,
+        ...this.obsQueryFields,
+        client: this.client,
+        observable: this.observable,
+        variables: this.observable.variables,
+        called: !this.queryHookOptions.skip,
+        previousData: this.previousData,
+      })
+    );
 
     if (!queryResult.error && isNonEmptyArray(result.errors)) {
       // Until a set naming convention for networkError and graphQLErrors is
@@ -606,7 +619,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
       this.queryHookOptions.partialRefetch &&
       !result.loading &&
       (!result.data || Object.keys(result.data).length === 0) &&
-      this.observable.options.fetchPolicy !== 'cache-only'
+      this.observable.options.fetchPolicy !== "cache-only"
     ) {
       Object.assign(result, {
         loading: true,

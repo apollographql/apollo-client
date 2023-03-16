@@ -1,6 +1,6 @@
-import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
-import { equal } from '@wry/equality';
+import { invariant, __DEV__ } from "../../utilities/globals";
+import { useRef, useEffect, useCallback, useMemo, useState } from "react";
+import { equal } from "@wry/equality";
 import {
   ApolloClient,
   ApolloError,
@@ -12,23 +12,23 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   NetworkStatus,
-} from '../../core';
+} from "../../core";
 import {
   compact,
   Concast,
   isNonEmptyArray,
   hasDirectives,
-} from '../../utilities';
-import { useApolloClient } from './useApolloClient';
-import { DocumentType, verifyDocumentType } from '../parser';
+} from "../../utilities";
+import { useApolloClient } from "./useApolloClient";
+import { DocumentType, verifyDocumentType } from "../parser";
 import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
-} from '../types/types';
-import { useDeepMemo, useIsomorphicLayoutEffect } from './internal';
-import { useSuspenseCache } from './useSuspenseCache';
-import { useSyncExternalStore } from './useSyncExternalStore';
-import { Subscription } from 'zen-observable-ts';
+} from "../types/types";
+import { useDeepMemo, useIsomorphicLayoutEffect } from "./internal";
+import { useSuspenseCache } from "./useSuspenseCache";
+import { useSyncExternalStore } from "./useSyncExternalStore";
+import { Subscription } from "zen-observable-ts";
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -37,21 +37,21 @@ export interface UseSuspenseQueryResult<
   client: ApolloClient<any>;
   data: TData;
   error: ApolloError | undefined;
-  fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
-  refetch: ObservableQueryFields<TData, TVariables>['refetch'];
-  subscribeToMore: ObservableQueryFields<TData, TVariables>['subscribeToMore'];
+  fetchMore: ObservableQueryFields<TData, TVariables>["fetchMore"];
+  refetch: ObservableQueryFields<TData, TVariables>["refetch"];
+  subscribeToMore: ObservableQueryFields<TData, TVariables>["subscribeToMore"];
 }
 
 const SUPPORTED_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
-  'cache-first',
-  'network-only',
-  'no-cache',
-  'cache-and-network',
+  "cache-first",
+  "network-only",
+  "no-cache",
+  "cache-and-network",
 ];
 
-const DEFAULT_FETCH_POLICY = 'cache-first';
-const DEFAULT_SUSPENSE_POLICY = 'always';
-const DEFAULT_ERROR_POLICY = 'none';
+const DEFAULT_FETCH_POLICY = "cache-first";
+const DEFAULT_SUSPENSE_POLICY = "always";
+const DEFAULT_ERROR_POLICY = "none";
 
 export function useSuspenseQuery_experimental<
   TData = any,
@@ -86,7 +86,7 @@ export function useSuspenseQuery_experimental<
     // will have a partial result before the error is collected. We do not want
     // to throw errors that have been returned from incremental chunks. Instead
     // we offload those errors to the `error` property.
-    errorPolicy === 'none' && (!deferred || !hasPartialResult);
+    errorPolicy === "none" && (!deferred || !hasPartialResult);
 
   if (
     result.error &&
@@ -118,7 +118,7 @@ export function useSuspenseQuery_experimental<
       // `cache-and-network` kicks off a network request even with a full set of
       // data in the cache, which means the loading state will be set to `true`.
       // Avoid suspending in this case.
-      (fetchPolicy === 'cache-and-network' && hasFullResult);
+      (fetchPolicy === "cache-and-network" && hasFullResult);
 
     if (!hasUsableResult && !cacheEntry.fulfilled) {
       throw cacheEntry.promise;
@@ -151,7 +151,7 @@ export function useSuspenseQuery_experimental<
     return {
       client,
       data: result.data,
-      error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
+      error: errorPolicy === "ignore" ? void 0 : toApolloError(result),
       fetchMore: (options) => {
         const promise = observable.fetchMore(options);
 
@@ -200,9 +200,9 @@ function validatePartialDataReturn(
   fetchPolicy: WatchQueryFetchPolicy,
   returnPartialData: boolean | undefined
 ) {
-  if (fetchPolicy === 'no-cache' && returnPartialData) {
+  if (fetchPolicy === "no-cache" && returnPartialData) {
     invariant.warn(
-      'Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy.'
+      "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
     );
   }
 }
@@ -273,7 +273,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
         errorPolicy || defaultOptions?.errorPolicy || DEFAULT_ERROR_POLICY,
       fetchPolicy:
         fetchPolicy || defaultOptions?.fetchPolicy || DEFAULT_FETCH_POLICY,
-      notifyOnNetworkStatusChange: suspensePolicy === 'always',
+      notifyOnNetworkStatusChange: suspensePolicy === "always",
       // By default, `ObservableQuery` will run `reobserve` the first time
       // something `subscribe`s to the observable, which kicks off a network
       // request. This creates a problem for suspense because we need to begin
@@ -295,7 +295,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
 }
 
 function useIsDeferred(query: DocumentNode) {
-  return useMemo(() => hasDirectives(['defer'], query), [query]);
+  return useMemo(() => hasDirectives(["defer"], query), [query]);
 }
 
 function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
@@ -406,10 +406,10 @@ function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
           const result = resultRef.current!;
 
           if (
-            result.networkStatus !== observable['queryInfo'].networkStatus &&
+            result.networkStatus !== observable["queryInfo"].networkStatus &&
             result.networkStatus === NetworkStatus.ready
           ) {
-            observable['queryInfo'].markReady();
+            observable["queryInfo"].markReady();
           }
         });
 

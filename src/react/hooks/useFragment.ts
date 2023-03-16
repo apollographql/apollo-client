@@ -2,12 +2,7 @@ import { useRef } from "react";
 import { equal } from "@wry/equality";
 
 import { mergeDeepArray } from "../../utilities";
-import {
-  Cache,
-  Reference,
-  StoreObject,
-  MissingTree,
-} from "../../cache";
+import { Cache, Reference, StoreObject, MissingTree } from "../../cache";
 
 import { useApolloClient } from "./useApolloClient";
 import { useSyncExternalStore } from "./useSyncExternalStore";
@@ -15,17 +10,11 @@ import { OperationVariables } from "../../core";
 import { NoInfer } from "../types/types";
 
 export interface UseFragmentOptions<TData, TVars>
-extends Omit<
-  Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
-  | "id"
-  | "query"
-  | "optimistic"
-  | "previousResult"
->, Omit<
-  Cache.ReadFragmentOptions<TData, TVars>,
-  | "id"
-  | "variables"
-> {
+  extends Omit<
+      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
+      "id" | "query" | "optimistic" | "previousResult"
+    >,
+    Omit<Cache.ReadFragmentOptions<TData, TVars>, "id" | "variables"> {
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
@@ -54,18 +43,10 @@ export interface UseFragmentResult<TData> {
 export function useFragment_experimental<
   TData = any,
   TVars = OperationVariables
->(
-  options: UseFragmentOptions<TData, TVars>,
-): UseFragmentResult<TData> {
+>(options: UseFragmentOptions<TData, TVars>): UseFragmentResult<TData> {
   const { cache } = useApolloClient();
 
-  const {
-    fragment,
-    fragmentName,
-    from,
-    optimistic = true,
-    ...rest
-  } = options;
+  const { fragment, fragmentName, from, optimistic = true, ...rest } = options;
 
   const diffOptions: Cache.DiffOptions<TData, TVars> = {
     ...rest,
@@ -105,7 +86,7 @@ export function useFragment_experimental<
 }
 
 function diffToResult<TData>(
-  diff: Cache.DiffResult<TData>,
+  diff: Cache.DiffResult<TData>
 ): UseFragmentResult<TData> {
   const result: UseFragmentResult<TData> = {
     data: diff.result,
@@ -113,9 +94,7 @@ function diffToResult<TData>(
   };
 
   if (diff.missing) {
-    result.missing = mergeDeepArray(
-      diff.missing.map(error => error.missing),
-    );
+    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));
   }
 
   return result;

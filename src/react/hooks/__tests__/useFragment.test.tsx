@@ -1,6 +1,6 @@
 import * as React from "react";
 import { render, waitFor, screen, renderHook } from "@testing-library/react";
-import userEvent from '@testing-library/user-event';
+import userEvent from "@testing-library/user-event";
 import { act } from "react-dom/test-utils";
 
 import { useFragment_experimental as useFragment } from "../useFragment";
@@ -83,7 +83,7 @@ describe("useFragment", () => {
           { __typename: "Item", id: 5 },
         ],
       },
-    })
+    });
 
     const renders: string[] = [];
 
@@ -93,7 +93,9 @@ describe("useFragment", () => {
       expect(loading).toBe(false);
       return (
         <ol>
-          {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+          {data!.list.map((item) => (
+            <Item key={item.id} id={item.id} />
+          ))}
         </ol>
       );
     }
@@ -120,24 +122,15 @@ describe("useFragment", () => {
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
         // eslint-disable-next-line testing-library/no-node-access
-        li => li.firstChild!.textContent
+        (li) => li.firstChild!.textContent
       );
     }
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2", "Item #5"]);
     });
 
-    expect(renders).toEqual([
-      "list",
-      "item 1",
-      "item 2",
-      "item 5",
-    ]);
+    expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
     act(() => {
       cache.writeFragment({
@@ -151,11 +144,7 @@ describe("useFragment", () => {
     });
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2 updated",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2 updated", "Item #5"]);
     });
 
     expect(renders).toEqual([
@@ -189,10 +178,11 @@ describe("useFragment", () => {
                   text: "Item #4 from cache.modify",
                 },
               })!,
-            ].sort((ref1, ref2) => (
-              readField<Item["id"]>("id", ref1)! -
-              readField<Item["id"]>("id", ref2)!
-            ));
+            ].sort(
+              (ref1, ref2) =>
+                readField<Item["id"]>("id", ref1)! -
+                readField<Item["id"]>("id", ref2)!
+            );
           },
         },
       });
@@ -295,11 +285,7 @@ describe("useFragment", () => {
         ],
       },
       __META: {
-        extraRootIds: [
-          "Item:2",
-          "Item:3",
-          "Item:4",
-        ],
+        extraRootIds: ["Item:2", "Item:3", "Item:4"],
       },
     });
   });
@@ -338,7 +324,7 @@ describe("useFragment", () => {
         ],
         extra: "from ListFragment",
       },
-    })
+    });
 
     const renders: string[] = [];
 
@@ -351,7 +337,9 @@ describe("useFragment", () => {
       expect(complete).toBe(true);
       return (
         <ol>
-          {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+          {data!.list.map((item) => (
+            <Item key={item.id} id={item.id} />
+          ))}
         </ol>
       );
     }
@@ -377,24 +365,15 @@ describe("useFragment", () => {
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
         // eslint-disable-next-line testing-library/no-node-access
-        li => li.firstChild!.textContent
+        (li) => li.firstChild!.textContent
       );
     }
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2", "Item #5"]);
     });
 
-    expect(renders).toEqual([
-      "list",
-      "item 1",
-      "item 2",
-      "item 5",
-    ]);
+    expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
     act(() => {
       cache.writeFragment({
@@ -408,11 +387,7 @@ describe("useFragment", () => {
     });
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2 updated",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2 updated", "Item #5"]);
     });
 
     expect(renders).toEqual([
@@ -444,10 +419,11 @@ describe("useFragment", () => {
                   id: 4,
                 },
               })!,
-            ].sort((ref1, ref2) => (
-              readField<Item["id"]>("id", ref1)! -
-              readField<Item["id"]>("id", ref2)!
-            ));
+            ].sort(
+              (ref1, ref2) =>
+                readField<Item["id"]>("id", ref1)! -
+                readField<Item["id"]>("id", ref2)!
+            );
           },
         },
       });
@@ -550,11 +526,7 @@ describe("useFragment", () => {
         extra: "from ListFragment",
       },
       __META: {
-        extraRootIds: [
-          "Item:2",
-          "Item:3",
-          "Item:4",
-        ],
+        extraRootIds: ["Item:2", "Item:3", "Item:4"],
       },
     });
   });
@@ -572,9 +544,9 @@ describe("useFragment", () => {
               // filtering explicitly here, so this test won't be broken.
               return items && items.filter(canRead);
             },
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     const wrapper = ({ children }: any) => (
@@ -609,19 +581,19 @@ describe("useFragment", () => {
     `;
 
     const { result: renderResult } = renderHook(
-      () => useFragment({
-        fragment: ListAndItemFragments,
-        fragmentName: "ListFragment",
-        from: { __typename: "Query" },
-        returnPartialData: true,
-      }),
-      { wrapper },
+      () =>
+        useFragment({
+          fragment: ListAndItemFragments,
+          fragmentName: "ListFragment",
+          from: { __typename: "Query" },
+          returnPartialData: true,
+        }),
+      { wrapper }
     );
 
     function checkHistory(expectedResultCount: number) {
       // Temporarily disabling this check until we can come up with a better
       // (more opt-in) system than result.previousResult.previousResult...
-
       // function historyToArray(
       //   result: UseFragmentResult<QueryData>,
       // ): UseFragmentResult<QueryData>[] {
@@ -634,7 +606,6 @@ describe("useFragment", () => {
       // const all = historyToArray(renderResult.current);
       // expect(all.length).toBe(expectedResultCount);
       // expect(all).toEqual(renderResult.all);
-
       // if (renderResult.current.complete) {
       //   expect(renderResult.current).toBe(
       //     renderResult.current.lastCompleteResult
@@ -710,24 +681,26 @@ describe("useFragment", () => {
 
     checkHistory(3);
 
-    await act(async () => cache.batch({
-      update(cache) {
-        cache.evict({
-          id: cache.identify({
-            __typename: "Item",
-            id: 8,
-          }),
-        });
+    await act(async () =>
+      cache.batch({
+        update(cache) {
+          cache.evict({
+            id: cache.identify({
+              __typename: "Item",
+              id: 8,
+            }),
+          });
 
-        cache.evict({
-          id: cache.identify({
-            __typename: "Item",
-            id: 2,
-          }),
-          fieldName: "text",
-        });
-      },
-    }));
+          cache.evict({
+            id: cache.identify({
+              __typename: "Item",
+              id: 2,
+            }),
+            fieldName: "text",
+          });
+        },
+      })
+    );
 
     expect(renderResult.current.complete).toBe(false);
     expect(renderResult.current.data).toEqual({
@@ -765,11 +738,7 @@ describe("useFragment", () => {
       },
       ROOT_QUERY: {
         __typename: "Query",
-        list: [
-          { __ref: "Item:1" },
-          { __ref: "Item:8" },
-          { __ref: "Item:2" },
-        ],
+        list: [{ __ref: "Item:1" }, { __ref: "Item:8" }, { __ref: "Item:2" }],
       },
     });
 
@@ -799,27 +768,29 @@ describe("useFragment", () => {
 
     const client = new ApolloClient({
       cache,
-      link: new ApolloLink(operation => new Observable(observer => {
-        if (operation.operationName === "ListQueryWithItemFragment") {
-          setTimeout(() => {
-            observer.next({
-              data: {
-                list: [
-                  { __typename: "Item", id: 1 },
-                  { __typename: "Item", id: 2 },
-                  { __typename: "Item", id: 5 },
-                ],
-              }
-            });
-            observer.complete();
-          }, 10);
-        } else {
-          observer.error(`unexpected query ${
-            operation.operationName ||
-            operation.query
-          }`);
-        }
-      })),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            if (operation.operationName === "ListQueryWithItemFragment") {
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    list: [
+                      { __typename: "Item", id: 1 },
+                      { __typename: "Item", id: 2 },
+                      { __typename: "Item", id: 5 },
+                    ],
+                  },
+                });
+                observer.complete();
+              }, 10);
+            } else {
+              observer.error(
+                `unexpected query ${operation.operationName || operation.query}`
+              );
+            }
+          })
+      ),
     });
 
     const listQuery: TypedDocumentNode<QueryData> = gql`
@@ -843,16 +814,24 @@ describe("useFragment", () => {
 
       return complete ? (
         <>
-          <select onChange={(e) => {
-            setCurrentItem(parseInt(e.currentTarget.value))
-          }}>
-            {data!.list.map(item => <option key={item.id} value={item.id}>Select item {item.id}</option>)}
+          <select
+            onChange={(e) => {
+              setCurrentItem(parseInt(e.currentTarget.value));
+            }}
+          >
+            {data!.list.map((item) => (
+              <option key={item.id} value={item.id}>
+                Select item {item.id}
+              </option>
+            ))}
           </select>
           <div>
             <Item id={currentItem} />
           </div>
           <ol>
-          {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+            {data!.list.map((item) => (
+              <Item key={item.id} id={item.id} />
+            ))}
           </ol>
         </>
       ) : null;
@@ -878,7 +857,7 @@ describe("useFragment", () => {
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
         // eslint-disable-next-line testing-library/no-node-access
-        li => li.firstChild!.textContent
+        (li) => li.firstChild!.textContent
       );
     }
 
@@ -896,8 +875,8 @@ describe("useFragment", () => {
     // Select "Item #2" via <select />
     const user = userEvent.setup();
     await user.selectOptions(
-      screen.getByRole('combobox'),
-      screen.getByRole('option', { name: 'Select item 2' })
+      screen.getByRole("combobox"),
+      screen.getByRole("option", { name: "Select item 2" })
     );
 
     await waitFor(() => {
@@ -914,16 +893,16 @@ describe("useFragment", () => {
 });
 
 describe.skip("Type Tests", () => {
-  test('NoInfer prevents adding arbitrary additional variables', () => {
-    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+  test("NoInfer prevents adding arbitrary additional variables", () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
     useFragment({
       fragment: typedNode,
       from: { __typename: "Query" },
       variables: {
         bar: 4,
         // @ts-expect-error
-        nonExistingVariable: "string"
-      }
+        nonExistingVariable: "string",
+      },
     });
-  })
-})
+  });
+});

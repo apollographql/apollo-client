@@ -1,37 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { DocumentNode } from "graphql";
+import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import {
   MutationFunctionOptions,
   MutationHookOptions,
   MutationResult,
   MutationTuple,
   NoInfer,
-} from '../types/types';
+} from "../types/types";
 
 import {
   ApolloCache,
   DefaultContext,
   mergeOptions,
   OperationVariables,
-} from '../../core';
-import { equal } from '@wry/equality';
-import { DocumentType, verifyDocumentType } from '../parser';
-import { ApolloError } from '../../errors';
-import { useApolloClient } from './useApolloClient';
+} from "../../core";
+import { equal } from "@wry/equality";
+import { DocumentType, verifyDocumentType } from "../parser";
+import { ApolloError } from "../../errors";
+import { useApolloClient } from "./useApolloClient";
 
 export function useMutation<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache<any> = ApolloCache<any>
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<NoInfer<TData>, NoInfer<TVariables>, TContext, TCache>,
+  options?: MutationHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>,
+    TContext,
+    TCache
+  >
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
-  const [result, setResult] = useState<Omit<MutationResult, 'reset'>>({
+  const [result, setResult] = useState<Omit<MutationResult, "reset">>({
     called: false,
     loading: false,
     client,
@@ -52,92 +57,100 @@ export function useMutation<
     Object.assign(ref.current, { client, options, mutation });
   }
 
-  const execute = useCallback((
-    executeOptions: MutationFunctionOptions<
-      TData,
-      TVariables,
-      TContext,
-      TCache
-    > = {}
-  ) => {
-    const {options, mutation} = ref.current;
-    const baseOptions = { ...options, mutation };
-    const client = executeOptions.client || ref.current.client;
-
-    if (!ref.current.result.loading && !baseOptions.ignoreResults && ref.current.isMounted) {
-      setResult(ref.current.result = {
-        loading: true,
-        error: void 0,
-        data: void 0,
-        called: true,
-        client,
-      });
-    }
-
-    const mutationId = ++ref.current.mutationId;
-    const clientOptions = mergeOptions(
-      baseOptions,
-      executeOptions as any,
-    );
-
-    return client.mutate(clientOptions).then((response) => {
-      const { data, errors } = response;
-      const error =
-        errors && errors.length > 0
-          ? new ApolloError({ graphQLErrors: errors })
-          : void 0;
+  const execute = useCallback(
+    (
+      executeOptions: MutationFunctionOptions<
+        TData,
+        TVariables,
+        TContext,
+        TCache
+      > = {}
+    ) => {
+      const { options, mutation } = ref.current;
+      const baseOptions = { ...options, mutation };
+      const client = executeOptions.client || ref.current.client;
 
       if (
-        mutationId === ref.current.mutationId &&
-        !clientOptions.ignoreResults
-      ) {
-        const result = {
-          called: true,
-          loading: false,
-          data,
-          error,
-          client,
-        };
-
-        if (ref.current.isMounted && !equal(ref.current.result, result)) {
-          setResult(ref.current.result = result);
-        }
-      }
-
-      const onCompleted = executeOptions.onCompleted || ref.current.options?.onCompleted
-      onCompleted?.(response.data!, clientOptions);
-
-      return response;
-    }).catch((error) => {
-      if (
-        mutationId === ref.current.mutationId &&
+        !ref.current.result.loading &&
+        !baseOptions.ignoreResults &&
         ref.current.isMounted
       ) {
-        const result = {
-          loading: false,
-          error,
-          data: void 0,
-          called: true,
-          client,
-        };
-
-        if (!equal(ref.current.result, result)) {
-          setResult(ref.current.result = result);
-        }
+        setResult(
+          (ref.current.result = {
+            loading: true,
+            error: void 0,
+            data: void 0,
+            called: true,
+            client,
+          })
+        );
       }
 
-      const onError = executeOptions.onError || ref.current.options?.onError
+      const mutationId = ++ref.current.mutationId;
+      const clientOptions = mergeOptions(baseOptions, executeOptions as any);
 
-      if (onError) {
-        onError(error, clientOptions);
+      return client
+        .mutate(clientOptions)
+        .then((response) => {
+          const { data, errors } = response;
+          const error =
+            errors && errors.length > 0
+              ? new ApolloError({ graphQLErrors: errors })
+              : void 0;
 
-        // TODO(brian): why are we returning this here???
-        return { data: void 0, errors: error };
-      }
+          if (
+            mutationId === ref.current.mutationId &&
+            !clientOptions.ignoreResults
+          ) {
+            const result = {
+              called: true,
+              loading: false,
+              data,
+              error,
+              client,
+            };
 
-      throw error;
-    });
-  }, []);
+            if (ref.current.isMounted && !equal(ref.current.result, result)) {
+              setResult((ref.current.result = result));
+            }
+          }
+
+          const onCompleted =
+            executeOptions.onCompleted || ref.current.options?.onCompleted;
+          onCompleted?.(response.data!, clientOptions);
+
+          return response;
+        })
+        .catch((error) => {
+          if (mutationId === ref.current.mutationId && ref.current.isMounted) {
+            const result = {
+              loading: false,
+              error,
+              data: void 0,
+              called: true,
+              client,
+            };
+
+            if (!equal(ref.current.result, result)) {
+              setResult((ref.current.result = result));
+            }
+          }
+
+          const onError =
+            executeOptions.onError || ref.current.options?.onError;
+
+          if (onError) {
+            onError(error, clientOptions);
+
+            // TODO(brian): why are we returning this here???
+            return { data: void 0, errors: error };
+          }
+
+          throw error;
+        });
+    },
+    []
+  );
 
   const reset = useCallback(() => {
     if (ref.current.isMounted) {

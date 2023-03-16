@@ -28,7 +28,7 @@ export function compareResultsUsingQuery(
   query: DocumentNode,
   aResult: any,
   bResult: any,
-  variables?: Record<string, any> | undefined,
+  variables?: Record<string, any> | undefined
 ): boolean {
   if (aResult === bResult) return true;
   return compareResultsUsingSelectionSet(
@@ -38,7 +38,7 @@ export function compareResultsUsingQuery(
     {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       variables,
-    },
+    }
   );
 }
 
@@ -53,14 +53,14 @@ function compareResultsUsingSelectionSet(
   selectionSet: SelectionSetNode,
   aResult: any,
   bResult: any,
-  context: CompareContext,
+  context: CompareContext
 ): boolean {
   const seenSelections = new Set<SelectionNode>();
 
   // Returning true from this Array.prototype.every callback function skips the
   // current field/subtree. Returning false aborts the entire traversal
   // immediately, causing compareResultsUsingSelectionSet to return false.
-  return selectionSet.selections.every(selection => {
+  return selectionSet.selections.every((selection) => {
     // Avoid re-processing the same selection at the same level of recursion, in
     // case the same field gets included via multiple indirect fragment spreads.
     if (seenSelections.has(selection)) return true;
@@ -94,12 +94,14 @@ function compareResultsUsingSelectionSet(
           return false;
         }
         for (let i = 0; i < length; ++i) {
-          if (!compareResultsUsingSelectionSet(
-            childSelectionSet,
-            aResultChild[i],
-            bResultChild[i],
-            context,
-          )) {
+          if (
+            !compareResultsUsingSelectionSet(
+              childSelectionSet,
+              aResultChild[i],
+              bResultChild[i],
+              context
+            )
+          ) {
             return false;
           }
         }
@@ -110,9 +112,8 @@ function compareResultsUsingSelectionSet(
         childSelectionSet,
         aResultChild,
         bResultChild,
-        context,
+        context
       );
-
     } else {
       const fragment = getFragmentFromSelection(selection, context.fragmentMap);
       if (fragment) {
@@ -128,20 +129,23 @@ function compareResultsUsingSelectionSet(
           // that should be applied to the current result value(s).
           aResult,
           bResult,
-          context,
+          context
         );
       }
     }
   });
 }
 
-function selectionHasNonreactiveDirective(selection:
-  | FieldNode
-  | InlineFragmentNode
-  | FragmentSpreadNode
-  | FragmentDefinitionNode,
+function selectionHasNonreactiveDirective(
+  selection:
+    | FieldNode
+    | InlineFragmentNode
+    | FragmentSpreadNode
+    | FragmentDefinitionNode
 ): boolean {
-  return !!selection.directives && selection.directives.some(directiveIsNonreactive);
+  return (
+    !!selection.directives && selection.directives.some(directiveIsNonreactive)
+  );
 }
 
 function directiveIsNonreactive(dir: DirectiveNode): boolean {

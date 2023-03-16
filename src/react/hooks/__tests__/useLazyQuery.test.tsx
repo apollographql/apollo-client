@@ -1,7 +1,7 @@
 import React from "react";
 import { GraphQLError } from "graphql";
 import gql from "graphql-tag";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor as _waitFor } from "@testing-library/react";
 
 import {
   ApolloClient,
@@ -18,6 +18,9 @@ import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
 
 const IS_REACT_18 = React.version.startsWith("18");
+
+const waitFor: typeof _waitFor = (callback, options) =>
+  _waitFor(callback, { interval: 1, ...options });
 
 describe("useLazyQuery Hook", () => {
   afterEach(() => {
@@ -50,19 +53,9 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "world" });
   });
 
@@ -105,20 +98,10 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].called).toBe(true);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].called).toBe(true);
   });
 
@@ -146,20 +129,10 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].called).toBe(true);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].called).toBe(true);
   });
 
@@ -193,19 +166,9 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
 
     expect(result.current[1].data).toEqual({ hello: "world 1" });
   });
@@ -245,19 +208,9 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute({ variables: { id: 2 } }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "world 2" });
   });
 
@@ -343,24 +296,9 @@ describe("useLazyQuery Hook", () => {
       }
     );
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.data).toBeUndefined();
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current.query.loading).toBe(false));
+    await waitFor(() => expect(result.current.query.called).toBe(false));
+    await waitFor(() => expect(result.current.query.data).toBeUndefined());
 
     const expectedFinalData = {
       counter: 1,
@@ -378,42 +316,16 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
-    await waitFor(
-      () => {
-        expect(execResult.loading).toBe(false);
-      },
-      { interval: 1 }
+    await waitFor(() => expect(execResult.loading).toBe(false));
+    await waitFor(() => expect(execResult.called).toBe(true));
+    await waitFor(() =>
+      expect(execResult.networkStatus).toBe(NetworkStatus.ready)
     );
-    await waitFor(
-      () => {
-        expect(execResult.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.networkStatus).toBe(NetworkStatus.ready);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.data).toEqual(expectedFinalData);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 10 }
-    );
+    await waitFor(() => expect(execResult.data).toEqual(expectedFinalData));
+    await waitFor(() => expect(result.current.query.called).toBe(true));
+    await waitFor(() => expect(result.current.query.loading).toBe(false), {
+      interval: 10,
+    });
 
     expect(result.current.query.called).toBe(true);
     expect(result.current.query.data).toEqual(expectedFinalData);
@@ -433,28 +345,15 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.data).toEqual({
-          counter: 2,
-          vars: {
-            execVar: false,
-          },
-        });
-      },
-      { interval: 1 }
+    await waitFor(() => expect(result.current.query.loading).toBe(false));
+    await waitFor(() => expect(result.current.query.called).toBe(true));
+    await waitFor(() =>
+      expect(result.current.query.data).toEqual({
+        counter: 2,
+        vars: {
+          execVar: false,
+        },
+      })
     );
 
     const execResult2 = await result.current.exec({
@@ -465,44 +364,23 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
-    await waitFor(
-      () => {
-        expect(execResult2.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult2.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult2.data).toEqual({
-          counter: 3,
-          vars: {
-            ...expectedFinalData.vars,
-            execVar: true,
-          },
-        });
-      },
-      { interval: 1 }
+    await waitFor(() => expect(execResult2.loading).toBe(false));
+    await waitFor(() => expect(execResult2.called).toBe(true));
+    await waitFor(() =>
+      expect(execResult2.data).toEqual({
+        counter: 3,
+        vars: {
+          ...expectedFinalData.vars,
+          execVar: true,
+        },
+      })
     );
 
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current.query.called).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 10 }
-    );
+    await waitFor(() => expect(result.current.query.loading).toBe(false), {
+      interval: 10,
+    });
     expect(result.current.query.called).toBe(true);
     expect(result.current.query.data).toEqual({
       counter: 3,
@@ -550,36 +428,18 @@ describe("useLazyQuery Hook", () => {
 
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "world" });
 
     setTimeout(() => execute({ query: query2 }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ name: "changed" });
   });
 
@@ -613,37 +473,17 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "world 1" });
 
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].data).toEqual({ hello: "world 1" });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "world 2" });
   });
 
@@ -679,42 +519,22 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].previousData).toBe(undefined);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "world 1" });
     expect(result.current[1].previousData).toBe(undefined);
 
     const refetch = result.current[1].refetch;
     setTimeout(() => refetch!());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].data).toEqual({ hello: "world 1" });
     expect(result.current[1].previousData).toEqual({ hello: "world 1" });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "world 2" });
     expect(result.current[1].previousData).toEqual({ hello: "world 1" });
   });
@@ -741,70 +561,36 @@ describe("useLazyQuery Hook", () => {
     );
 
     const { result } = renderHook(() => useLazyQuery(helloQuery), { wrapper });
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
 
     expect(result.current[1].data).toBe(undefined);
 
     await tick();
     result.current[1].startPolling(10);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        if (IS_REACT_18) {
-          expect(result.current[1].data).toEqual({ hello: "world 1" });
-        } else {
-          expect(result.current[1].data).toEqual({ hello: "world 3" });
-        }
-      },
-      { interval: 1 }
-    );
-
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        if (IS_REACT_18) {
-          expect(result.current[1].data).toEqual({ hello: "world 2" });
-        } else {
-          expect(result.current[1].data).toEqual({ hello: "world 3" });
-        }
-      },
-      { interval: 1 }
-    );
-
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
+    await waitFor(() => {
+      if (IS_REACT_18) {
+        expect(result.current[1].data).toEqual({ hello: "world 1" });
+      } else {
         expect(result.current[1].data).toEqual({ hello: "world 3" });
-      },
-      { interval: 1 }
+      }
+    });
+
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
+    await waitFor(() => {
+      if (IS_REACT_18) {
+        expect(result.current[1].data).toEqual({ hello: "world 2" });
+      } else {
+        expect(result.current[1].data).toEqual({ hello: "world 3" });
+      }
+    });
+
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
+    await waitFor(() =>
+      expect(result.current[1].data).toEqual({ hello: "world 3" })
     );
 
     result.current[1].stopPolling();
@@ -861,41 +647,21 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute({ variables: { id: 1 } }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].previousData).toBe(undefined);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual(data1);
     expect(result.current[1].previousData).toBe(undefined);
 
     setTimeout(() => execute({ variables: { id: 2 } }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].previousData).toEqual(data1);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual(data2);
     expect(result.current[1].previousData).toEqual(data1);
   });
@@ -929,22 +695,12 @@ describe("useLazyQuery Hook", () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
     // TODO: FIXME
     expect(result.current[1].data).toEqual({ hello: "from cache" });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({ hello: "from link" });
   });
 
@@ -970,22 +726,23 @@ describe("useLazyQuery Hook", () => {
       setTimeout(() => resolve(execute()));
     });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
     let latestRenderResult: QueryResult;
-    await waitFor(() => {
-      latestRenderResult = result.current[1];
-      expect(latestRenderResult.loading).toBe(false);
-    });
-    await waitFor(() => {
-      latestRenderResult = result.current[1];
-      expect(latestRenderResult.data).toEqual({ hello: "world" });
-    });
+    await waitFor(
+      () => {
+        latestRenderResult = result.current[1];
+        expect(latestRenderResult.loading).toBe(false);
+      },
+      { interval: 50 }
+    );
+    await waitFor(
+      () => {
+        latestRenderResult = result.current[1];
+        expect(latestRenderResult.data).toEqual({ hello: "world" });
+      },
+      { interval: 50 }
+    );
 
     return executeResult.then((finalResult) => {
       expect(finalResult).toEqual(latestRenderResult);
@@ -1053,19 +810,9 @@ describe("useLazyQuery Hook", () => {
       executeResult = execute({ variables: { filter: "PA" } });
     });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toEqual({
       countries: {
         code: "PA",
@@ -1085,22 +832,14 @@ describe("useLazyQuery Hook", () => {
       executeResult = execute({ variables: { filter: "BA" } });
     });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current[1].data).toEqual({
-          countries: {
-            code: "BA",
-            name: "Bahamas",
-          },
-        });
-      },
-      { interval: 1 }
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
+    await waitFor(() =>
+      expect(result.current[1].data).toEqual({
+        countries: {
+          code: "BA",
+          name: "Bahamas",
+        },
+      })
     );
 
     expect(executeResult).toBeInstanceOf(Promise);
@@ -1142,21 +881,11 @@ describe("useLazyQuery Hook", () => {
 
     const executePromise = Promise.resolve().then(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].data).toBeUndefined();
     expect(result.current[1].error).toBe(undefined);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toBeUndefined();
     expect(result.current[1].error).toEqual(new Error("error 1"));
 
@@ -1168,21 +897,11 @@ describe("useLazyQuery Hook", () => {
 
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(true));
     expect(result.current[1].data).toBeUndefined();
     expect(result.current[1].error).toEqual(new Error("error 1"));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current[1].loading).toBe(false));
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].error).toEqual(new Error("error 2"));
   });
@@ -1204,20 +923,14 @@ describe("useLazyQuery Hook", () => {
     });
 
     const execute = result.current[0];
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-        execute();
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current[1].data).toBe(undefined);
-        execute();
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+      execute();
+    });
+    await waitFor(() => {
+      expect(result.current[1].data).toBe(undefined);
+      execute();
+    });
 
     // Making sure the rejection triggers a test failure.
     await wait(50);
@@ -1331,52 +1044,23 @@ describe("useLazyQuery Hook", () => {
 
       setTimeout(execute);
 
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          if (IS_REACT_18) {
-            expect(result.current[1].networkStatus).toBe(NetworkStatus.loading);
-          } else {
-            expect(result.current[1].networkStatus).toBe(NetworkStatus.error);
-          }
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].data).toBeUndefined();
-        },
-        { interval: 1 }
-      );
-
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
+      await waitFor(() => expect(result.current[1].loading).toBe(true));
+      await waitFor(() => {
+        if (IS_REACT_18) {
+          expect(result.current[1].networkStatus).toBe(NetworkStatus.loading);
+        } else {
           expect(result.current[1].networkStatus).toBe(NetworkStatus.error);
-        },
-        { interval: 1 }
+        }
+      });
+      await waitFor(() => expect(result.current[1].data).toBeUndefined());
+
+      await waitFor(() => expect(result.current[1].loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current[1].networkStatus).toBe(NetworkStatus.error)
       );
-      await waitFor(
-        () => {
-          expect(result.current[1].data).toBeUndefined();
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].error!.message).toBe("from the network");
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current[1].data).toBeUndefined());
+      await waitFor(() =>
+        expect(result.current[1].error!.message).toBe("from the network")
       );
     }
 
@@ -1453,66 +1137,25 @@ describe("useLazyQuery Hook", () => {
         }
       );
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toBeUndefined();
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.query.loading).toBe(false));
+      await waitFor(() => expect(result.current.query.called).toBe(false));
+      await waitFor(() => expect(result.current.query.data).toBeUndefined());
 
       const execResult = await result.current.exec();
       expect(execResult.loading).toBe(false);
       expect(execResult.called).toBe(true);
       expect(execResult.data).toEqual({ counter: 1 });
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.query.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.query.data).toMatchObject({ counter: 1 })
       );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toMatchObject({ counter: 1 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.query.called).toBe(true));
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(true);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toEqual({ counter: 1 });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.query.loading).toBe(false));
+      await waitFor(() => expect(result.current.query.called).toBe(true));
+      await waitFor(() =>
+        expect(result.current.query.data).toEqual({ counter: 1 })
       );
 
       const { options } = result.current.query.observable;

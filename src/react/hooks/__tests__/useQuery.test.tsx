@@ -3,7 +3,12 @@ import { DocumentNode, GraphQLError } from "graphql";
 import gql from "graphql-tag";
 import { act } from "react-dom/test-utils";
 import userEvent from "@testing-library/user-event";
-import { render, screen, waitFor, renderHook } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor as _waitFor,
+  renderHook,
+} from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
@@ -26,6 +31,9 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
+
+const waitFor: typeof _waitFor = (callback, options) =>
+  _waitFor(callback, { interval: 1, ...options });
 
 describe("useQuery Hook", () => {
   afterEach(() => {
@@ -53,12 +61,7 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
@@ -82,19 +85,18 @@ describe("useQuery Hook", () => {
       });
       let oldResult: QueryResult<any, OperationVariables>;
 
-      await waitFor(() => {
-        result.current.loading === false;
-      });
+      await waitFor(() => result.current.loading === false, { interval: 50 });
 
       rerender({ children: null });
 
       await waitFor(() => {
         expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+        // TODO FIXME this could just as well be outside the `waitFor`
         oldResult = result.current;
       });
 
-      await waitFor(() => {
-        expect(oldResult === result.current).toBe(true);
+      await waitFor(() => expect(oldResult === result.current).toBe(true), {
+        interval: 50,
       });
     });
 
@@ -117,20 +119,24 @@ describe("useQuery Hook", () => {
         wrapper,
       });
 
-      await waitFor(() => result.current.loading === false);
+      await waitFor(
+        () =>
+          // TODO FIXME this doesn't belong into a `waitFor`
+          result.current.loading === false
+      );
 
       rerender({ children: null });
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+      await waitFor(() => expect(result.current.loading).toBe(false), {
+        interval: 50,
       });
       expect(result.current.data).toEqual({ hello: "world" });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: "world" });
 
       // Repeat frame because rerender forces useQuery to be called again
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+      await waitFor(() => expect(result.current.loading).toBe(false), {
+        interval: 50,
       });
       expect(result.current.data).toEqual({ hello: "world" });
     });
@@ -158,45 +164,57 @@ describe("useQuery Hook", () => {
         (options) => useQuery(query, options),
         { wrapper, initialProps: { variables: { id: 1 } } }
       );
-      await waitFor(() => result.current.loading === false);
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+      await waitFor(
+        () =>
+          // TODO FIXME this doesn't belong into a `waitFor`
+          result.current.loading === false
+      );
+      await waitFor(() => expect(result.current.loading).toBe(false), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world 1" });
+      await waitFor(
+        () => expect(result.current.data).toEqual({ hello: "world 1" }),
+        { interval: 50 }
+      );
+      await waitFor(
+        () => expect(result.current.networkStatus).toBe(NetworkStatus.ready),
+        { interval: 50 }
+      );
+      await waitFor(() => expect(result.current.loading).toBe(false), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      });
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-      await waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world 1" });
-      });
-      await waitFor(() => {
-        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      });
+      await waitFor(
+        () => expect(result.current.data).toEqual({ hello: "world 1" }),
+        { interval: 50 }
+      );
+      await waitFor(
+        () => expect(result.current.networkStatus).toBe(NetworkStatus.ready),
+        { interval: 50 }
+      );
 
       rerender({ variables: { id: 2 } });
-      await waitFor(() => {
-        expect(result.current.loading).toBe(true);
+      await waitFor(() => expect(result.current.loading).toBe(true), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world 2" });
+      await waitFor(
+        () => expect(result.current.data).toEqual({ hello: "world 2" }),
+        { interval: 50 }
+      );
+      await waitFor(
+        () => expect(result.current.networkStatus).toBe(NetworkStatus.ready),
+        { interval: 50 }
+      );
+      await waitFor(() => expect(result.current.loading).toBe(false), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      });
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-      await waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world 2" });
-      });
-      await waitFor(() => {
-        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      });
+      await waitFor(
+        () => expect(result.current.data).toEqual({ hello: "world 2" }),
+        { interval: 50 }
+      );
+      await waitFor(
+        () => expect(result.current.networkStatus).toBe(NetworkStatus.ready),
+        { interval: 50 }
+      );
     });
 
     it("should read and write results from the cache", async () => {
@@ -225,12 +243,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world" });
 
       rerender();
@@ -262,12 +275,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       const { refetch, fetchMore, startPolling, stopPolling, subscribeToMore } =
         result.current;
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(refetch).toBe(result.current.refetch);
       expect(fetchMore).toBe(result.current.fetchMore);
       expect(startPolling).toBe(result.current.startPolling);
@@ -364,24 +372,14 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       rerender({ id: 2 });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 2" });
     });
 
@@ -417,23 +415,13 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       rerender({ id: 2 });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 2" });
 
       rerender({ id: 2 });
@@ -477,36 +465,21 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ names: ["Alice", "Bob", "Eve"] });
 
       rerender({ name: "z" });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ names: [] });
 
       rerender({ name: "zz" });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ names: [] });
     });
 
@@ -569,12 +542,7 @@ describe("useQuery Hook", () => {
       expect(result.current[0].loading).toBe(true);
       expect(result.current[0].data).toBe(undefined);
       expect(result.current[0].variables).toEqual({ name: "world 1" });
-      await waitFor(
-        () => {
-          expect(result.current[0].loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current[0].loading).toBe(false));
 
       expect(result.current[0].data).toEqual({ hello: "world 1" });
       expect(result.current[0].variables).toEqual({ name: "world 1" });
@@ -589,15 +557,17 @@ describe("useQuery Hook", () => {
       expect(result.current[0].data).toBe(undefined);
       expect(result.current[0].variables).toEqual({ name: "world 2" });
 
-      await waitFor(() => {
-        expect(result.current[0].loading).toBe(false);
+      await waitFor(() => expect(result.current[0].loading).toBe(false), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(result.current[0].data).toEqual({ hello: "world 2" });
-      });
-      await waitFor(() => {
-        expect(result.current[0].variables).toEqual({ name: "world 2" });
-      });
+      await waitFor(
+        () => expect(result.current[0].data).toEqual({ hello: "world 2" }),
+        { interval: 50 }
+      );
+      await waitFor(
+        () => expect(result.current[0].variables).toEqual({ name: "world 2" }),
+        { interval: 50 }
+      );
     });
 
     // TODO: Rewrite this test
@@ -668,9 +638,7 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      await waitFor(() => {
-        expect(renderCount).toBe(6);
-      });
+      await waitFor(() => expect(renderCount).toBe(6), { interval: 50 });
       console.error = consoleError;
     });
 
@@ -718,12 +686,7 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
@@ -789,54 +752,20 @@ describe("useQuery Hook", () => {
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current[0].loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current[0].loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current[0].data).toEqual(allPeopleData)
       );
-      await waitFor(
-        () => {
-          expect(result.current[0].data).toEqual(allPeopleData);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].data).toBe(undefined);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current[1].loading).toBe(true));
+      await waitFor(() => expect(result.current[1].data).toBe(undefined));
 
-      await waitFor(
-        () => {
-          expect(result.current[0].loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current[0].loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current[0].data).toEqual(allPeopleData)
       );
-      await waitFor(
-        () => {
-          expect(result.current[0].data).toEqual(allPeopleData);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].data).toEqual(allThingsData);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current[1].loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current[1].data).toEqual(allThingsData)
       );
 
       rerender();
@@ -886,12 +815,7 @@ describe("useQuery Hook", () => {
       rerender({ query: query2 });
       expect(result.current.loading).toBe(true);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(mocks[1].result.data);
     });
 
@@ -929,12 +853,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toEqual({ hello: "from cache" });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "from link" });
     });
 
@@ -971,12 +890,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "from link" });
     });
 
@@ -1012,10 +926,8 @@ describe("useQuery Hook", () => {
 
       await expect(
         waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "from link" });
-          },
-          { interval: 1, timeout: 20 }
+          () => expect(result.current.data).toEqual({ hello: "from link" }),
+          { timeout: 20 }
         )
       ).rejects.toThrow();
     });
@@ -1046,12 +958,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "from link" });
     });
   });
@@ -1102,12 +1009,7 @@ describe("useQuery Hook", () => {
       // time useQuery is called.
       defaultFetchPolicy = "network-only";
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({ hello: "from link" });
       expect(fetchPolicyLog).toEqual([
@@ -1199,12 +1101,7 @@ describe("useQuery Hook", () => {
 
       expect(fetchPolicyLog).toEqual(["cache-and-network"]);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({
         vars: {
@@ -1390,10 +1287,8 @@ describe("useQuery Hook", () => {
 
       await expect(
         waitFor(
-          () => {
-            expect(result.current.query.data).toEqual({ counter: 1 });
-          },
-          { interval: 1, timeout: 20 }
+          () => expect(result.current.query.data).toEqual({ counter: 1 }),
+          { timeout: 20 }
         )
       ).rejects.toThrow();
 
@@ -1403,12 +1298,7 @@ describe("useQuery Hook", () => {
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.query.data).toBeUndefined();
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.query.loading).toBe(false));
       expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.query.data).toEqual({ counter: 1 });
 
@@ -1424,10 +1314,8 @@ describe("useQuery Hook", () => {
 
       await expect(
         waitFor(
-          () => {
-            expect(result.current.query.data).toEqual({ counter: 1 });
-          },
-          { interval: 1, timeout: 20 }
+          () => expect(result.current.query.data).toEqual({ counter: 1 }),
+          { timeout: 20 }
         )
       ).rejects.toThrow();
 
@@ -1437,12 +1325,7 @@ describe("useQuery Hook", () => {
       expect(result.current.query.loading).toBe(true);
       expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.query.data).toEqual({ counter: 1 });
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.query.loading).toBe(false));
       expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.query.data).toEqual({ counter: 2 });
 
@@ -1483,12 +1366,7 @@ describe("useQuery Hook", () => {
     expect(result.current.loading).toBe(true);
     expect(result.current.data).toBeUndefined();
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.data).toEqual({ hello: "from link" });
   });
@@ -1539,12 +1417,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({
         linkCount: 1,
@@ -1587,22 +1460,16 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+      await waitFor(() => expect(result.current.loading).toBe(false), {
+        interval: 50,
       });
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            linkCount: 2,
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          linkCount: 2,
+        })
       );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
 
       checkObservableQueries(2);
@@ -1646,29 +1513,20 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 1" })
       );
 
       expect(result.current.loading).toBe(false);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 2" })
       );
 
       expect(result.current.loading).toBe(false);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 3" })
       );
 
       expect(result.current.loading).toBe(false);
@@ -1676,12 +1534,9 @@ describe("useQuery Hook", () => {
       const { data: previousData } = result.current;
       result.current.stopPolling();
       await expect(
-        waitFor(
-          () => {
-            expect(result.current.data).not.toEqual(previousData);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(result.current.data).not.toEqual(previousData), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
     });
 
@@ -1725,12 +1580,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: "world 1" });
@@ -1741,10 +1591,8 @@ describe("useQuery Hook", () => {
 
       await expect(
         waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "world 1" });
-          },
-          { interval: 1, timeout: 20 }
+          () => expect(result.current.data).toEqual({ hello: "world 1" }),
+          { timeout: 20 }
         )
       ).rejects.toThrow();
 
@@ -1753,18 +1601,13 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
+        () => expect(result.current.data).toEqual({ hello: "world 2" }),
+        { timeout: 20 }
       );
       expect(result.current.loading).toBe(false);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 3" })
       );
       expect(result.current.loading).toBe(false);
     });
@@ -1804,12 +1647,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(data);
     });
 
@@ -1854,31 +1692,24 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
+      await waitFor(() => expect(result.current.loading).toBe(false));
       await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+        () => expect(result.current.data).toEqual({ hello: "world 1" }),
+        { interval: 50 }
       );
-      await waitFor(() => {
-        expect(result.current.data).toEqual({ hello: "world 1" });
-      });
-      await waitFor(() => {
-        expect(requestSpy).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(requestSpy).toHaveBeenCalledTimes(1), {
+        interval: 50,
       });
 
       unmount();
 
       await expect(
-        waitFor(
-          () => {
-            expect(requestSpy).not.toHaveBeenCalledTimes(1);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(requestSpy).not.toHaveBeenCalledTimes(1), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
-      await waitFor(() => {
-        expect(onErrorFn).toHaveBeenCalledTimes(0);
+      await waitFor(() => expect(onErrorFn).toHaveBeenCalledTimes(0), {
+        interval: 50,
       });
       requestSpy.mockRestore();
     });
@@ -1928,24 +1759,16 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 1" });
       expect(requestSpy).toHaveBeenCalledTimes(1);
 
       unmount();
 
       await expect(
-        waitFor(
-          () => {
-            expect(requestSpy).not.toHaveBeenCalledTimes(1);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(requestSpy).not.toHaveBeenCalledTimes(1), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
       expect(onErrorFn).toHaveBeenCalledTimes(0);
       requestSpy.mockRestore();
@@ -1997,19 +1820,25 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.data).toEqual({ hello: "world 1" });
+
+      result.current.stopPolling();
+
+      await expect(
+        waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { timeout: 20 }
+        )
+      ).rejects.toThrow();
+      result.current.startPolling(20);
+
+      expect(requestSpy).toHaveBeenCalledTimes(1);
+      expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
+        () => expect(result.current.data).toEqual({ hello: "world 2" }),
+        { timeout: 20 }
       );
       expect(result.current.loading).toBe(false);
 
@@ -2028,19 +1857,13 @@ describe("useQuery Hook", () => {
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 3" })
       );
       expect(result.current.loading).toBe(false);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 4" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 4" })
       );
       expect(result.current.loading).toBe(false);
       expect(requestSpy).toHaveBeenCalledTimes(4);
@@ -2077,12 +1900,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({ hello: "world" });
 
@@ -2121,12 +1939,7 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe("error");
     });
@@ -2161,25 +1974,22 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe("error");
 
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onError).toHaveBeenCalledTimes(1), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
-        );
-      });
+      await waitFor(
+        () =>
+          expect(onError).toHaveBeenCalledWith(
+            new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
+          ),
+        { interval: 50 }
+      );
     });
 
     it("calls `onError` when a network error has occured", async () => {
@@ -2211,12 +2021,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -2225,14 +2030,16 @@ describe("useQuery Hook", () => {
         new Error("Could not fetch")
       );
 
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onError).toHaveBeenCalledTimes(1), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({ networkError: new Error("Could not fetch") })
-        );
-      });
+      await waitFor(
+        () =>
+          expect(onError).toHaveBeenCalledWith(
+            new ApolloError({ networkError: new Error("Could not fetch") })
+          ),
+        { interval: 50 }
+      );
     });
 
     it("removes partial data from result when response has errors", async () => {
@@ -2267,12 +2074,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -2314,12 +2116,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeUndefined();
@@ -2359,12 +2156,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -2373,14 +2165,16 @@ describe("useQuery Hook", () => {
         new Error("Could not fetch")
       );
 
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onError).toHaveBeenCalledTimes(1), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({ networkError: new Error("Could not fetch") })
-        );
-      });
+      await waitFor(
+        () =>
+          expect(onError).toHaveBeenCalledWith(
+            new ApolloError({ networkError: new Error("Could not fetch") })
+          ),
+        { interval: 50 }
+      );
     });
 
     it('returns partial data and discards GraphQL errors when using an `errorPolicy` set to "ignore"', async () => {
@@ -2414,12 +2208,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({ hello: null });
       expect(result.current.error).toBeUndefined();
@@ -2458,24 +2247,20 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({ hello: null });
       expect(result.current.error).toBeUndefined();
 
-      await waitFor(() => {
-        expect(onCompleted).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(onCompleted).toHaveBeenCalledWith({ hello: null });
-      });
-      await waitFor(() => {
-        expect(onError).not.toHaveBeenCalled();
+      await waitFor(
+        () => expect(onCompleted).toHaveBeenCalledWith({ hello: null }),
+        { interval: 50 }
+      );
+      await waitFor(() => expect(onError).not.toHaveBeenCalled(), {
+        interval: 50,
       });
     });
 
@@ -2510,12 +2295,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -2524,14 +2304,16 @@ describe("useQuery Hook", () => {
         new GraphQLError("error"),
       ]);
 
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onError).toHaveBeenCalledTimes(1), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
-        );
-      });
+      await waitFor(
+        () =>
+          expect(onError).toHaveBeenCalledWith(
+            new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
+          ),
+        { interval: 50 }
+      );
     });
 
     it('returns partial data when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
@@ -2566,12 +2348,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({ hello: null });
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -2614,12 +2391,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({ hello: null });
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -2628,18 +2400,20 @@ describe("useQuery Hook", () => {
         new GraphQLError('Could not fetch "hello"'),
       ]);
 
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onError).toHaveBeenCalledTimes(1), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({
-            graphQLErrors: [new GraphQLError('Could not fetch "hello"')],
-          })
-        );
-      });
-      await waitFor(() => {
-        expect(onCompleted).not.toHaveBeenCalled();
+      await waitFor(
+        () =>
+          expect(onError).toHaveBeenCalledWith(
+            new ApolloError({
+              graphQLErrors: [new GraphQLError('Could not fetch "hello"')],
+            })
+          ),
+        { interval: 50 }
+      );
+      await waitFor(() => expect(onCompleted).not.toHaveBeenCalled(), {
+        interval: 50,
       });
     });
 
@@ -2685,12 +2459,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe("error");
@@ -2699,20 +2468,10 @@ describe("useQuery Hook", () => {
       expect(onError).toHaveBeenCalledTimes(1);
 
       result.current.refetch();
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world" });
       expect(onError).toHaveBeenCalledTimes(1);
     });
@@ -2750,12 +2509,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
@@ -2771,12 +2525,9 @@ describe("useQuery Hook", () => {
 
       let previousUpdates = updates;
       await expect(
-        waitFor(
-          () => {
-            expect(updates).not.toEqual(previousUpdates);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(updates).not.toEqual(previousUpdates), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
     });
 
@@ -2980,18 +2731,14 @@ describe("useQuery Hook", () => {
 
       const user = userEvent.setup();
 
-      await waitFor(
-        () => {
-          expect(screen.getByText("Loading!")).toBeTruthy();
-        },
-        { interval: 1 }
-      );
+      // TODO replace with `findByText`
+      // eslint-disable-next-line testing-library/prefer-find-by
+      await waitFor(() => expect(screen.getByText("Loading!")).toBeTruthy());
 
-      await waitFor(
-        () => {
-          expect(screen.getByText("Data rendered")).toBeTruthy();
-        },
-        { interval: 1 }
+      // TODO replace with `findByText`
+      // eslint-disable-next-line testing-library/prefer-find-by
+      await waitFor(() =>
+        expect(screen.getByText("Data rendered")).toBeTruthy()
       );
 
       // When we call refetch...
@@ -3040,12 +2787,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
@@ -3062,12 +2804,9 @@ describe("useQuery Hook", () => {
       expect(onErrorFn).toHaveBeenCalledTimes(0);
       let previousUpdates = updates;
       await expect(
-        waitFor(
-          () => {
-            expect(updates).not.toEqual(previousUpdates);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(updates).not.toEqual(previousUpdates), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
     });
 
@@ -3122,12 +2861,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -3138,12 +2872,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 2" });
       expect(result.current.error).toBe(undefined);
 
@@ -3152,12 +2881,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 1" });
       expect(result.current.error).toBe(undefined);
     });
@@ -3200,12 +2924,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe("error 1");
@@ -3213,21 +2932,11 @@ describe("useQuery Hook", () => {
       const catchFn = jest.fn();
 
       result.current.refetch().catch(catchFn);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe("error 2");
@@ -3276,12 +2985,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -3348,12 +3052,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -3361,42 +3060,22 @@ describe("useQuery Hook", () => {
 
       result.current.refetch();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world" });
       expect(result.current.error).toBe(undefined);
 
       const catchFn = jest.fn();
       result.current.refetch().catch(catchFn);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.data).toEqual({ hello: "world" });
       expect(result.current.error).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       // TODO: Is this correct behavior here?
       expect(result.current.data).toEqual({ hello: "world" });
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -3448,36 +3127,21 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(data1);
       expect(onCompleted).toHaveBeenLastCalledWith(data1);
 
       rerender({ variables: { first: 2 } });
       expect(result.current.loading).toBe(true);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(data2);
       expect(onCompleted).toHaveBeenLastCalledWith(data2);
 
       rerender({ variables: { first: 1 } });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
-      await waitFor(
-        () => {
-          expect(onCompleted).toHaveBeenLastCalledWith(data1);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(onCompleted).toHaveBeenLastCalledWith(data1));
 
       expect(onCompleted).toHaveBeenCalledTimes(3);
     });
@@ -3540,27 +3204,24 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+      await waitFor(() => expect(result.current.loading).toBe(false), {
+        interval: 50,
       });
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
 
-      await waitFor(
-        () =>
-          void result.current.fetchMore({
-            variables: { limit: 2 },
-            updateQuery: (prev, { fetchMoreResult }) => ({
-              letters: prev.letters.concat(fetchMoreResult.letters),
-            }),
-          })
+      await waitFor(() =>
+        // TODO FIXME this doesn't belong into a `waitFor`
+        result.current.fetchMore({
+          variables: { limit: 2 },
+          updateQuery: (prev, { fetchMoreResult }) => ({
+            letters: prev.letters.concat(fetchMoreResult.letters),
+          }),
+        })
       );
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ letters: ab.concat(cd) });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ letters: ab.concat(cd) })
       );
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
@@ -3589,12 +3250,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
@@ -3613,12 +3269,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
       expect(result.current.data).toEqual({ letters: ab });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
 
@@ -3651,22 +3302,14 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
       result.current.fetchMore({ variables: { limit: 2 } });
 
       expect(result.current.loading).toBe(false);
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ letters: ab.concat(cd) });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ letters: ab.concat(cd) })
       );
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
     });
@@ -3701,12 +3344,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
 
@@ -3715,12 +3353,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
       expect(result.current.data).toEqual({ letters: ab });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
     });
@@ -3814,12 +3447,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ countries });
     });
   });
@@ -3863,29 +3491,14 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       result.current.refetch({ id: 2 });
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world 2" });
     });
 
@@ -3931,50 +3544,25 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       result.current.refetch();
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: "world 1" });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       result.current.refetch();
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: "world 1" });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: "world 2" });
     });
@@ -4052,12 +3640,7 @@ describe("useQuery Hook", () => {
         expect(result.current.data).toBe(undefined);
         expect(typeof result.current.refetch).toBe("function");
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(false));
         expect(result.current.error).toBeUndefined();
         expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
         expect(mergeParams).toEqual([[void 0, [2, 3, 5, 7, 11]]]);
@@ -4065,12 +3648,7 @@ describe("useQuery Hook", () => {
         const thenFn = jest.fn();
         result.current.refetch({ min: 12, max: 30 }).then(thenFn);
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(true);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(true));
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({
           // We get the stale data because we configured keyArgs: false.
@@ -4081,12 +3659,7 @@ describe("useQuery Hook", () => {
         // called refetch with new variables.
         expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(false));
 
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({ primes: [13, 17, 19, 23, 29] });
@@ -4145,12 +3718,7 @@ describe("useQuery Hook", () => {
         expect(result.current.data).toBe(undefined);
         expect(typeof result.current.refetch).toBe("function");
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(false));
         expect(result.current.error).toBeUndefined();
         expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
         expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
@@ -4158,12 +3726,7 @@ describe("useQuery Hook", () => {
         const thenFn = jest.fn();
         result.current.refetch({ min: 12, max: 30 }).then(thenFn);
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(true);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(true));
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({
           // We get the stale data because we configured keyArgs: false.
@@ -4172,12 +3735,7 @@ describe("useQuery Hook", () => {
         // This networkStatus is setVariables instead of refetch because we
         // called refetch with new variables.
         expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(false));
 
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({
@@ -4248,12 +3806,7 @@ describe("useQuery Hook", () => {
         expect(result.current.data).toBe(undefined);
         expect(typeof result.current.refetch).toBe("function");
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(false));
         expect(result.current.error).toBeUndefined();
         expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
         expect(mergeParams).toEqual([[void 0, [2, 3, 5, 7, 11]]]);
@@ -4261,12 +3814,7 @@ describe("useQuery Hook", () => {
         const thenFn = jest.fn();
         result.current.refetch({ min: 12, max: 30 }).then(thenFn);
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(true);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(true));
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({
           // We get the stale data because we configured keyArgs: false.
@@ -4277,12 +3825,7 @@ describe("useQuery Hook", () => {
         // called refetch with new variables.
         expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
+        await waitFor(() => expect(result.current.loading).toBe(false));
 
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({ primes: [13, 17, 19, 23, 29] });
@@ -4333,29 +3876,13 @@ describe("useQuery Hook", () => {
         { wrapper }
       );
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world" })
       );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world" });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(onCompleted).toHaveBeenCalledTimes(1);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
+      await waitFor(() =>
+        expect(onCompleted).toHaveBeenCalledWith({ hello: "world" })
       );
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
@@ -4392,12 +3919,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({ hello: "world" });
       expect(onCompleted).toHaveBeenCalledTimes(1);
@@ -4445,12 +3967,9 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
 
       await expect(
-        waitFor(
-          () => {
-            expect(onCompleted).not.toHaveBeenCalledTimes(0);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(onCompleted).not.toHaveBeenCalledTimes(0), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
       expect(onCompleted).toHaveBeenCalledTimes(0);
     });
@@ -4492,21 +4011,13 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world" });
       const previousUpdates = updates;
       await expect(
-        waitFor(
-          () => {
-            expect(updates).not.toEqual(previousUpdates);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(updates).not.toEqual(previousUpdates), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
@@ -4551,29 +4062,20 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 1" })
       );
       expect(result.current.loading).toBe(false);
       expect(onCompleted).toHaveBeenCalledTimes(1);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 2" })
       );
       expect(result.current.loading).toBe(false);
       expect(onCompleted).toHaveBeenCalledTimes(1);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 3" })
       );
       expect(result.current.loading).toBe(false);
       expect(onCompleted).toHaveBeenCalledTimes(1);
@@ -4620,29 +4122,20 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 1" })
       );
       expect(result.current.loading).toBe(false);
       expect(onCompleted).toHaveBeenCalledTimes(1);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 2" })
       );
       expect(result.current.loading).toBe(false);
       expect(onCompleted).toHaveBeenCalledTimes(2);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 3" })
       );
       expect(result.current.loading).toBe(false);
       expect(onCompleted).toHaveBeenCalledTimes(3);
@@ -4934,12 +4427,7 @@ describe("useQuery Hook", () => {
       expect(result.current.query.loading).toBe(true);
       const mutate = result.current.mutation[0];
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.query.loading).toBe(false));
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(carsData);
 
@@ -4959,9 +4447,10 @@ describe("useQuery Hook", () => {
       expect(result.current.mutation[1].loading).toBe(true);
       expect(result.current.query.loading).toBe(false);
 
-      await waitFor(() => {
-        expect(result.current.mutation[1].loading).toBe(false);
-      });
+      await waitFor(
+        () => expect(result.current.mutation[1].loading).toBe(false),
+        { interval: 50 }
+      );
 
       // The mutation has completely finished, leaving the query with access to
       // the original cache data.
@@ -5021,11 +4510,8 @@ describe("useQuery Hook", () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.refetch)
       );
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
@@ -5035,11 +4521,8 @@ describe("useQuery Hook", () => {
       expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
       errorSpy.mockRestore();
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
 
       expect(result.current.loading).toBe(false);
@@ -5093,11 +4576,8 @@ describe("useQuery Hook", () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.refetch)
       );
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
@@ -5107,11 +4587,8 @@ describe("useQuery Hook", () => {
       expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
       errorSpy.mockRestore();
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data);
@@ -5165,11 +4642,8 @@ describe("useQuery Hook", () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.refetch)
       );
       expect(result.current.loading).toBe(true);
       expect(result.current.error).toBe(undefined);
@@ -5179,11 +4653,8 @@ describe("useQuery Hook", () => {
       expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
       errorSpy.mockRestore();
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
 
       expect(result.current.loading).toBe(false);
@@ -5268,12 +4739,7 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({
         clientEntity: {
@@ -5294,18 +4760,15 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            clientEntity: {
-              id: entityId,
-              title: longerTitle,
-              titleLength: longerTitle.length,
-              __typename: "ClientData",
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          clientEntity: {
+            id: entityId,
+            title: longerTitle,
+            titleLength: longerTitle.length,
+            __typename: "ClientData",
+          },
+        })
       );
     });
   });
@@ -5362,12 +4825,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBeFalsy();
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBeFalsy());
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
@@ -5394,12 +4852,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({ hello: "world" });
 
       rerender({ skip: true, variables: { someVar: true } });
@@ -5454,23 +4907,15 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
 
       await expect(
-        waitFor(
-          () => {
-            expect(result.current.loading).toBe(true);
-          },
-          { interval: 1, timeout: 20 }
-        )
+        waitFor(() => expect(result.current.loading).toBe(true), {
+          timeout: 20,
+        })
       ).rejects.toThrow();
 
       rerender({ fetchPolicy: "cache-first" });
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBeFalsy();
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBeFalsy());
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
@@ -5501,24 +4946,15 @@ describe("useQuery Hook", () => {
 
       let promise;
       await waitFor(async () => {
+        // TODO FIXME this doesn't belong into a `waitFor`
         promise = result.current.refetch();
       });
 
       expect(result.current.loading).toBe(false);
-      await waitFor(
-        () => {
-          expect(result.current.data).toBe(undefined);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.data).toBe(undefined));
 
       expect(result.current.loading).toBe(false);
-      await waitFor(
-        () => {
-          expect(result.current.data).toBe(undefined);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.data).toBe(undefined));
       expect(requestSpy).toHaveBeenCalledTimes(1);
       requestSpy.mockRestore();
       expect(promise).resolves.toEqual({
@@ -5593,12 +5029,7 @@ describe("useQuery Hook", () => {
         skip: false,
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.data).toEqual({
         hello: 1,
@@ -5627,13 +5058,10 @@ describe("useQuery Hook", () => {
 
       expect(result.current.loading).toBe(false);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            hello: 2,
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          hello: 2,
+        })
       );
 
       await reobservePromise;
@@ -5694,12 +5122,7 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(carData);
       expect(result.current.error).toBeUndefined();
 
@@ -5946,12 +5369,7 @@ describe("useQuery Hook", () => {
         setId(1);
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
 
       expect(result.current.data).toBe(undefined);
     });
@@ -6005,31 +5423,16 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.previousData).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toBe(undefined);
 
       setTimeout(() => result.current.refetch());
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(data2);
       expect(result.current.previousData).toEqual(data1);
     });
@@ -6106,22 +5509,12 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.previousData).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toBe(undefined);
 
       setTimeout(() => result.current.refetch());
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(true));
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
 
@@ -6130,12 +5523,7 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual(data3);
       expect(result.current.previousData).toEqual(data1);
     });
@@ -6227,184 +5615,110 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await waitFor(
-        () => {
-          const { loading } = result.current.useQueryResult;
-          expect(loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { data } = result.current.useQueryResult;
-          expect(data).toEqual({ a: "a" });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { previousData } = result.current.useQueryResult;
-          expect(previousData).toBeUndefined();
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
+        expect(loading).toBe(true);
+      });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        expect(data).toEqual({ a: "a" });
+      });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        expect(previousData).toBeUndefined();
+      });
 
-      await waitFor(
-        () => {
-          const { loading } = result.current.useQueryResult;
-          expect(loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { data } = result.current.useQueryResult;
-          expect(data).toEqual({ a: "a" });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { previousData } = result.current.useQueryResult;
-          expect(previousData).toBe(undefined);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+      });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        expect(data).toEqual({ a: "a" });
+      });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        expect(previousData).toBe(undefined);
+      });
 
       await expect(
-        await waitFor(
-          () => {
-            result.current.setQuery(abQuery);
-          },
-          { interval: 1 }
-        )
+        await waitFor(() => {
+          result.current.setQuery(abQuery);
+        })
       );
 
-      await waitFor(
-        () => {
-          const { loading } = result.current.useQueryResult;
-          expect(loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { data } = result.current.useQueryResult;
-          expect(data).toEqual({ a: "aa", b: 1 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { previousData } = result.current.useQueryResult;
-          expect(previousData).toEqual({ a: "a" });
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+      });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        expect(data).toEqual({ a: "aa", b: 1 });
+      });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        expect(previousData).toEqual({ a: "a" });
+      });
 
-      await waitFor(
-        () => {
-          const { loading } = result.current.useQueryResult;
-          expect(loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { data } = result.current.useQueryResult;
-          expect(data).toEqual({ a: "aa", b: 1 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { previousData } = result.current.useQueryResult;
-          expect(previousData).toEqual({ a: "a" });
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+      });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        expect(data).toEqual({ a: "aa", b: 1 });
+      });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        expect(previousData).toEqual({ a: "a" });
+      });
 
-      await waitFor(
-        () => {
-          result.current.useQueryResult.reobserve().then((result) => {
-            expect(result.loading).toBe(false);
-            expect(result.data).toEqual({ a: "aaa", b: 2 });
-          });
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => {
+        result.current.useQueryResult.reobserve().then((result) => {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ a: "aaa", b: 2 });
+        });
+      });
 
-      await waitFor(
-        () => {
-          const { loading } = result.current.useQueryResult;
-          expect(loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { data } = result.current.useQueryResult;
-          expect(data).toEqual({ a: "aaa", b: 2 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { previousData } = result.current.useQueryResult;
-          expect(previousData).toEqual({ a: "aa", b: 1 });
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+      });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        expect(data).toEqual({ a: "aaa", b: 2 });
+      });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        expect(previousData).toEqual({ a: "aa", b: 1 });
+      });
 
-      await waitFor(
-        () => {
-          result.current.setQuery(bQuery);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => result.current.setQuery(bQuery));
 
-      await waitFor(
-        () => {
-          const { loading } = result.current.useQueryResult;
-          expect(loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { data } = result.current.useQueryResult;
-          expect(data).toEqual({ b: 3 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { previousData } = result.current.useQueryResult;
-          expect(previousData).toEqual({ b: 2 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { loading } = result.current.useQueryResult;
-          expect(loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { data } = result.current.useQueryResult;
-          expect(data).toEqual({ b: 3 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          const { previousData } = result.current.useQueryResult;
-          expect(previousData).toEqual({ b: 2 });
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+      });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        expect(data).toEqual({ b: 3 });
+      });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        expect(previousData).toEqual({ b: 2 });
+      });
+      await waitFor(() => {
+        const { loading } = result.current.useQueryResult;
+        expect(loading).toBe(false);
+      });
+      await waitFor(() => {
+        const { data } = result.current.useQueryResult;
+        expect(data).toEqual({ b: 3 });
+      });
+      await waitFor(() => {
+        const { previousData } = result.current.useQueryResult;
+        expect(previousData).toEqual({ b: 2 });
+      });
     });
 
     it("should be cleared when variables change causes cache miss", async () => {
@@ -6472,12 +5786,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({
@@ -6489,12 +5798,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({
         people: peopleData
@@ -6507,12 +5811,7 @@ describe("useQuery Hook", () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({
         people: peopleData
@@ -6564,43 +5863,19 @@ describe("useQuery Hook", () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 1" })
       );
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 2" })
       );
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({ hello: "world 3" })
       );
     });
   });
@@ -6662,32 +5937,26 @@ describe("useQuery Hook", () => {
       resultSet.forEach((result: any) => values.push(result.value));
       expect(values).toEqual([0, 1, 1, 2, 3, 5]);
       rerender({ canonizeResults: true });
-      await waitFor(() => {
-        results.push({
-          __typename: "Result",
-          value: 8,
-        });
-        // Append another element to the results array, invalidating the
-        // array itself, triggering another render (below).
-        cache.writeQuery({
-          query,
-          overwrite: true,
-          data: { results },
-        });
-      });
+      await waitFor(
+        // TODO FIXME this doesn't belong into a `waitFor`
+        () => {
+          results.push({
+            __typename: "Result",
+            value: 8,
+          });
+          // Append another element to the results array, invalidating the
+          // array itself, triggering another render (below).
+          cache.writeQuery({
+            query,
+            overwrite: true,
+            data: { results },
+          });
+        },
+        { interval: 50 }
+      );
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ results });
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() => expect(result.current.data).toEqual({ results }));
       expect(result.current.data.results.length).toBe(7);
       resultSet = new Set(result.current.data.results);
       // Since canonization is happening now, the duplicate 1 results are
@@ -6756,32 +6025,26 @@ describe("useQuery Hook", () => {
       resultSet.forEach((result: any) => values.push(result.value));
       expect(values).toEqual([0, 1, 1, 2, 3, 5]);
       rerender({ canonizeResults: true });
-      await waitFor(() => {
-        results.push({
-          __typename: "Result",
-          value: 8,
-        });
-        // Append another element to the results array, invalidating the
-        // array itself, triggering another render (below).
-        cache.writeQuery({
-          query,
-          overwrite: true,
-          data: { results },
-        });
-      });
+      await waitFor(
+        // TODO FIXME this doesn't belong into a `waitFor`
+        () => {
+          results.push({
+            __typename: "Result",
+            value: 8,
+          });
+          // Append another element to the results array, invalidating the
+          // array itself, triggering another render (below).
+          cache.writeQuery({
+            query,
+            overwrite: true,
+            data: { results },
+          });
+        },
+        { interval: 50 }
+      );
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ results });
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() => expect(result.current.data).toEqual({ results }));
       expect(result.current.data.results.length).toBe(7);
       resultSet = new Set(result.current.data.results);
       // Since canonization is happening now, the duplicate 1 results are
@@ -6884,11 +6147,11 @@ describe("useQuery Hook", () => {
       expect(result.current.a.data).toBe(undefined);
       expect(result.current.b.data).toBe(undefined);
 
-      await waitFor(() => {
-        expect(result.current.a.loading).toBe(false);
+      await waitFor(() => expect(result.current.a.loading).toBe(false), {
+        interval: 50,
       });
-      await waitFor(() => {
-        expect(result.current.b.loading).toBe(false);
+      await waitFor(() => expect(result.current.b.loading).toBe(false), {
+        interval: 50,
       });
       expect(result.current.a.data).toEqual(aData);
       expect(result.current.b.data).toEqual(bData);
@@ -6966,8 +6229,10 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      await waitFor(() => {
-        expect(screen.getByText("world2")).toBeTruthy();
+      // TODO replace with `findByText`
+      // eslint-disable-next-line testing-library/prefer-find-by
+      await waitFor(() => expect(screen.getByText("world2")).toBeTruthy(), {
+        interval: 50,
       });
     });
   });
@@ -7016,12 +6281,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({
         greeting: {
           message: "Hello world",
@@ -7049,26 +6309,18 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              message: "Hello world",
-              __typename: "Greeting",
-              recipient: {
-                name: "Alice",
-                __typename: "Person",
-              },
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
             },
-          });
-        },
-        { interval: 1 }
+          },
+        })
       );
     });
 
@@ -7115,12 +6367,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.data).toEqual({
         greetings: [
           { message: "Hello world", __typename: "Greeting" },
@@ -7148,26 +6395,18 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greetings: [
-              {
-                message: "Hello world",
-                __typename: "Greeting",
-                recipient: { name: "Alice", __typename: "Person" },
-              },
-              { message: "Hello again", __typename: "Greeting" },
-            ],
-          });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greetings: [
+            {
+              message: "Hello world",
+              __typename: "Greeting",
+              recipient: { name: "Alice", __typename: "Person" },
+            },
+            { message: "Hello again", __typename: "Greeting" },
+          ],
+        })
       );
 
       setTimeout(() => {
@@ -7190,30 +6429,22 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greetings: [
-              {
-                message: "Hello world",
-                __typename: "Greeting",
-                recipient: { name: "Alice", __typename: "Person" },
-              },
-              {
-                message: "Hello again",
-                __typename: "Greeting",
-                recipient: { name: "Bob", __typename: "Person" },
-              },
-            ],
-          });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greetings: [
+            {
+              message: "Hello world",
+              __typename: "Greeting",
+              recipient: { name: "Alice", __typename: "Person" },
+            },
+            {
+              message: "Hello again",
+              __typename: "Greeting",
+              recipient: { name: "Bob", __typename: "Person" },
+            },
+          ],
+        })
       );
     });
 
@@ -7277,36 +6508,28 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            allProducts: [
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                },
-                id: "apollo-federation",
-                sku: "federation",
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          allProducts: [
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
               },
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                },
-                id: "apollo-studio",
-                sku: "studio",
+              id: "apollo-federation",
+              sku: "federation",
+            },
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
               },
-            ],
-          });
-        },
-        { interval: 1 }
+              id: "apollo-studio",
+              sku: "studio",
+            },
+          ],
+        })
       );
 
       setTimeout(() => {
@@ -7335,40 +6558,32 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            allProducts: [
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                  estimatedDelivery: "6/25/2021",
-                  fastestDelivery: "6/24/2021",
-                },
-                id: "apollo-federation",
-                sku: "federation",
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          allProducts: [
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
+                estimatedDelivery: "6/25/2021",
+                fastestDelivery: "6/24/2021",
               },
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                  estimatedDelivery: "6/25/2021",
-                  fastestDelivery: "6/24/2021",
-                },
-                id: "apollo-studio",
-                sku: "studio",
+              id: "apollo-federation",
+              sku: "federation",
+            },
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
+                estimatedDelivery: "6/25/2021",
+                fastestDelivery: "6/24/2021",
               },
-            ],
-          });
-        },
-        { interval: 1 }
+              id: "apollo-studio",
+              sku: "studio",
+            },
+          ],
+        })
       );
     });
 
@@ -7418,22 +6633,14 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              message: "Hello world",
-              __typename: "Greeting",
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+          },
+        })
       );
 
       setTimeout(() => {
@@ -7456,26 +6663,18 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              message: "Hello world",
-              __typename: "Greeting",
-              recipient: {
-                name: "Alice",
-                __typename: "Person",
-              },
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
             },
-          });
-        },
-        { interval: 1 }
+          },
+        })
       );
     });
 
@@ -7533,31 +6732,23 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            hero: {
-              heroFriends: [
-                {
-                  id: "1000",
-                  name: "Luke Skywalker",
-                },
-                {
-                  id: "1003",
-                  name: "Leia Organa",
-                },
-              ],
-              name: "R2-D2",
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          hero: {
+            heroFriends: [
+              {
+                id: "1000",
+                name: "Luke Skywalker",
+              },
+              {
+                id: "1003",
+                name: "Leia Organa",
+              },
+            ],
+            name: "R2-D2",
+          },
+        })
       );
 
       setTimeout(() => {
@@ -7588,46 +6779,32 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.error).toBeInstanceOf(ApolloError)
       );
-      await waitFor(
-        () => {
-          expect(result.current.error).toBeInstanceOf(ApolloError);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.error!.message).toBe(
+          "homeWorld for character with ID 1000 could not be fetched."
+        )
       );
-      await waitFor(
-        () => {
-          expect(result.current.error!.message).toBe(
-            "homeWorld for character with ID 1000 could not be fetched."
-          );
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          // since default error policy is "none", we do *not* return partial results
-          expect(result.current.data).toEqual({
-            hero: {
-              heroFriends: [
-                {
-                  id: "1000",
-                  name: "Luke Skywalker",
-                },
-                {
-                  id: "1003",
-                  name: "Leia Organa",
-                },
-              ],
-              name: "R2-D2",
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        // since default error policy is "none", we do *not* return partial results
+        expect(result.current.data).toEqual({
+          hero: {
+            heroFriends: [
+              {
+                id: "1000",
+                name: "Luke Skywalker",
+              },
+              {
+                id: "1003",
+                name: "Leia Organa",
+              },
+            ],
+            name: "R2-D2",
+          },
+        })
       );
     });
 
@@ -7688,31 +6865,23 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            hero: {
-              heroFriends: [
-                {
-                  id: "1000",
-                  name: "Luke Skywalker",
-                },
-                {
-                  id: "1003",
-                  name: "Leia Organa",
-                },
-              ],
-              name: "R2-D2",
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          hero: {
+            heroFriends: [
+              {
+                id: "1000",
+                name: "Luke Skywalker",
+              },
+              {
+                id: "1003",
+                name: "Leia Organa",
+              },
+            ],
+            name: "R2-D2",
+          },
+        })
       );
 
       setTimeout(() => {
@@ -7747,66 +6916,46 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        // @ts-ignore
+        expect(result.current.label).toBe(undefined)
       );
-      await waitFor(
-        () => {
-          // @ts-ignore
-          expect(result.current.label).toBe(undefined);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        // @ts-ignore
+        expect(result.current.extensions).toBe(undefined)
       );
-      await waitFor(
-        () => {
-          // @ts-ignore
-          expect(result.current.extensions).toBe(undefined);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.error).toBeInstanceOf(ApolloError)
       );
-      await waitFor(
-        () => {
-          expect(result.current.error).toBeInstanceOf(ApolloError);
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.error!.message).toBe(
+          "homeWorld for character with ID 1000 could not be fetched."
+        )
       );
-      await waitFor(
-        () => {
-          expect(result.current.error!.message).toBe(
-            "homeWorld for character with ID 1000 could not be fetched."
-          );
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          // since default error policy is "all", we *do* return partial results
-          expect(result.current.data).toEqual({
-            hero: {
-              heroFriends: [
-                {
-                  // the only difference with the previous test
-                  // is that homeWorld is populated since errorPolicy: all
-                  // populates both partial data and error.graphQLErrors
-                  homeWorld: null,
-                  id: "1000",
-                  name: "Luke Skywalker",
-                },
-                {
-                  // homeWorld is populated due to errorPolicy: all
-                  homeWorld: "Alderaan",
-                  id: "1003",
-                  name: "Leia Organa",
-                },
-              ],
-              name: "R2-D2",
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        // since default error policy is "all", we *do* return partial results
+        expect(result.current.data).toEqual({
+          hero: {
+            heroFriends: [
+              {
+                // the only difference with the previous test
+                // is that homeWorld is populated since errorPolicy: all
+                // populates both partial data and error.graphQLErrors
+                homeWorld: null,
+                id: "1000",
+                name: "Luke Skywalker",
+              },
+              {
+                // homeWorld is populated due to errorPolicy: all
+                homeWorld: "Alderaan",
+                id: "1003",
+                name: "Leia Organa",
+              },
+            ],
+            name: "R2-D2",
+          },
+        })
       );
     });
 
@@ -7867,29 +7016,18 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Cached Alice" },
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "Person", name: "Cached Alice" },
+          },
+        })
       );
 
       link.simulateResult({
@@ -7907,29 +7045,18 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "Person", name: "Alice" },
+          },
+        })
       );
     });
 
@@ -7996,29 +7123,18 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Cached Alice" },
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "Person", name: "Cached Alice" },
+          },
+        })
       );
 
       link.simulateResult({
@@ -8036,29 +7152,18 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitFor(() =>
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready)
       );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-          });
-        },
-        { interval: 1 }
+      await waitFor(() =>
+        expect(result.current.data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "Person", name: "Alice" },
+          },
+        })
       );
     });
   });

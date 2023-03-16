@@ -9,9 +9,6 @@ import { InMemoryCache } from '../../../cache';
 import { useApolloClient } from '../useApolloClient';
 
 describe('useApolloClient Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });

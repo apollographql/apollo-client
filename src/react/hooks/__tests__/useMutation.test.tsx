@@ -16,9 +16,6 @@ import { BatchHttpLink } from '../../../link/batch-http';
 import { FetchResult } from '../../../link/core';
 
 describe('useMutation Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });

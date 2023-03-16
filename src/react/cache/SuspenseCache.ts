@@ -1,3 +1,4 @@
+import { Trie } from '@wry/trie';
 import {
   ApolloQueryResult,
   DocumentNode,
@@ -6,6 +7,7 @@ import {
   TypedDocumentNode,
 } from '../../core';
 import { canonicalStringify } from '../../cache';
+import { canUseWeakMap } from '../../utilities';
 
 interface CacheEntry<TData, TVariables extends OperationVariables> {
   observable: ObservableQuery<TData, TVariables>;
@@ -13,11 +15,21 @@ interface CacheEntry<TData, TVariables extends OperationVariables> {
   promise: Promise<ApolloQueryResult<TData>>;
 }
 
+type CacheKey = [DocumentNode, string];
+
+const EMPTY_VARIABLES = Object.create(null);
+
+function makeCacheKey(cacheKey: CacheKey) {
+  return cacheKey;
+}
+
 export class SuspenseCache {
   private queries = new Map<
-    DocumentNode,
-    Map<string, CacheEntry<unknown, any>>
+    CacheKey,
+    CacheEntry<unknown, OperationVariables>
   >();
+
+  private cacheKeys = new Trie<CacheKey>(canUseWeakMap, makeCacheKey);
 
   add<TData = any, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -27,8 +39,7 @@ export class SuspenseCache {
       observable,
     }: { promise: Promise<any>; observable: ObservableQuery<TData, TVariables> }
   ) {
-    const variablesKey = this.getVariablesKey(variables);
-    const map = this.queries.get(query) || new Map();
+    const cacheKey = this.getCacheKey(query, variables);
 
     const entry: CacheEntry<TData, TVariables> = {
       observable,
@@ -43,9 +54,7 @@ export class SuspenseCache {
         }),
     };
 
-    map.set(variablesKey, entry);
-
-    this.queries.set(query, map);
+    this.queries.set(cacheKey, entry);
 
     return entry;
   }
@@ -57,31 +66,27 @@ export class SuspenseCache {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     variables: TVariables | undefined
   ): CacheEntry<TData, TVariables> | undefined {
-    return this.queries
-      .get(query)
-      ?.get(this.getVariablesKey(variables)) as CacheEntry<TData, TVariables>;
+    const cacheKey = this.getCacheKey(query, variables);
+
+    return this.queries.get(cacheKey) as CacheEntry<TData, TVariables>;
   }
 
   remove(query: DocumentNode, variables: OperationVariables | undefined) {
-    const map = this.queries.get(query);
-
-    if (!map) {
-      return;
-    }
-
-    const key = this.getVariablesKey(variables);
-    const entry = map.get(key);
+    const cacheKey = this.getCacheKey(query, variables);
+    const entry = this.queries.get(cacheKey);
 
     if (entry && !entry.observable.hasObservers()) {
-      map.delete(key);
-    }
-
-    if (map.size === 0) {
-      this.queries.delete(query);
+      this.queries.delete(cacheKey);
     }
   }
 
-  private getVariablesKey(variables: OperationVariables | undefined) {
-    return canonicalStringify(variables || Object.create(null));
+  private getCacheKey(
+    document: DocumentNode,
+    variables: OperationVariables | undefined
+  ) {
+    return this.cacheKeys.lookup(
+      document,
+      canonicalStringify(variables || EMPTY_VARIABLES)
+    );
   }
 }

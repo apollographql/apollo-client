@@ -2,11 +2,13 @@ import React, { Fragment, StrictMode, Suspense } from 'react';
 import {
   act,
   screen,
+  render,
   renderHook,
   waitFor,
   RenderHookOptions,
   RenderHookResult,
 } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
@@ -5754,5 +5756,105 @@ describe('useSuspenseQuery', () => {
         networkStatus: NetworkStatus.ready,
       },
     ]);
+  });
+
+  it('works with useDeferredValue', async () => {
+    const user = userEvent.setup();
+
+    interface Variables {
+      query: string;
+    }
+
+    interface Data {
+      search: { query: string };
+    }
+
+    const QUERY: TypedDocumentNode<Data, Variables> = gql`
+      query SearchQuery($query: String!) {
+        search(query: $query) {
+          query
+        }
+      }
+    `;
+
+    const link = new ApolloLink(({ variables }) => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { search: { query: variables.query } },
+          });
+          observer.complete();
+        }, 10);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      const [query, setValue] = React.useState('');
+      const deferredQuery = React.useDeferredValue(query);
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <label htmlFor="searchInput">Search</label>
+          <input
+            id="searchInput"
+            type="text"
+            value={query}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <Suspense fallback={<SuspenseFallback />}>
+            <Results query={deferredQuery} />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Results({ query }: { query: string }) {
+      const { data } = useSuspenseQuery(QUERY, { variables: { query } });
+
+      return <div data-testid="result">{data.search.query}</div>;
+    }
+
+    render(<App />);
+
+    const input = screen.getByLabelText('Search');
+
+    expect(screen.getByText('Loading')).toBeInTheDocument();
+
+    expect(await screen.findByTestId('result')).toBeInTheDocument();
+
+    await user.type(input, 'ab');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('ab');
+    });
+
+    await user.type(input, 'c');
+
+    // useDeferredValue will try rerendering the component with the new value
+    // in the background. If it suspends with the new value, React will show the
+    // stale UI until the component is done suspending.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the search finishes loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+    expect(screen.getByTestId('result')).toHaveTextContent('ab');
+
+    // Eventually we should see the updated text content once its done
+    // suspending.
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('abc');
+    });
   });
 });

@@ -2004,6 +2004,47 @@ describe('useSuspenseQuery', () => {
     }
   );
 
+  // https://github.com/apollographql/apollo-client/issues/10478
+  it('responds to cache updates when data is already in the cache while using a cache-first fetch policy', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    client.writeQuery({
+      query,
+      data: { greeting: 'Hello from cache' },
+    });
+
+    const { result } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { fetchPolicy: 'cache-first' }),
+      { client }
+    );
+
+    expect(result.current.data).toEqual({ greeting: 'Hello from cache' });
+
+    // Allow time for the subscription in the hook to set itself up since it is
+    // wrapped in a setTimeout (to handle Strict mode bugs). Without this
+    // `wait`, `subscribe` isn't called until after our test updates the cache
+    // via `writeQuery`, which then emits the most recent result, which is the
+    // updated value.
+    await wait(0);
+
+    client.writeQuery({
+      query,
+      data: { greeting: 'Updated hello' },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Updated hello' },
+        error: undefined,
+      });
+    });
+  });
+
   it('uses the default fetch policy from the client when none provided in options', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

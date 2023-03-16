@@ -11,9 +11,15 @@ import { canUseWeakMap } from '../../utilities';
 
 interface CacheEntry<TData, TVariables extends OperationVariables> {
   observable: ObservableQuery<TData, TVariables>;
-  fulfilled: boolean;
-  promise: Promise<ApolloQueryResult<TData>>;
+  promise: DecoratedPromise<ApolloQueryResult<TData>>;
 }
+
+type PromiseState<TValue> =
+  | { status: 'pending'; value?: never; reason?: never }
+  | { status: 'fulfilled'; value: TValue; reason?: never }
+  | { status: 'rejected'; value?: never; reason: unknown };
+
+type DecoratedPromise<TValue> = Promise<TValue> & PromiseState<TValue>;
 
 type CacheKey = [DocumentNode, string];
 
@@ -21,6 +27,38 @@ const EMPTY_VARIABLES = Object.create(null);
 
 function makeCacheKey(cacheKey: CacheKey) {
   return cacheKey;
+}
+
+function isDecoratedPromise<TValue>(
+  promise: Promise<TValue>
+): promise is DecoratedPromise<TValue> {
+  return 'status' in promise;
+}
+
+function decoratePromise<TValue>(
+  promise: Promise<TValue>
+): DecoratedPromise<TValue> {
+  if (isDecoratedPromise(promise)) {
+    return promise;
+  }
+
+  const decoratedPromise = promise as DecoratedPromise<TValue>;
+
+  decoratedPromise.status = 'pending';
+  decoratedPromise.value = void 0;
+  decoratedPromise.reason = void 0;
+
+  decoratedPromise
+    .then((value) => {
+      decoratedPromise.status = 'fulfilled';
+      decoratedPromise.value = value;
+    })
+    .catch((reason) => {
+      decoratedPromise.status = 'rejected';
+      decoratedPromise.reason = reason;
+    });
+
+  return decoratedPromise;
 }
 
 export class SuspenseCache {
@@ -43,15 +81,7 @@ export class SuspenseCache {
 
     const entry: CacheEntry<TData, TVariables> = {
       observable,
-      fulfilled: false,
-      promise: promise
-        .catch(() => {
-          // Throw away the error as we only care to track when the promise has
-          // been fulfilled
-        })
-        .finally(() => {
-          entry.fulfilled = true;
-        }),
+      promise: decoratePromise(promise),
     };
 
     this.queries.set(cacheKey, entry);

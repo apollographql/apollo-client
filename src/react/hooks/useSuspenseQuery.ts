@@ -136,8 +136,10 @@ export function useSuspenseQuery_experimental<
       // Avoid suspending in this case.
       (fetchPolicy === 'cache-and-network' && hasFullResult);
 
-    if (!hasUsableResult && !cacheEntry.fulfilled) {
-      throw cacheEntry.promise;
+    const promise = cacheEntry.promise;
+
+    if (!hasUsableResult && promise.status === 'pending') {
+      throw promise;
     }
   }
 

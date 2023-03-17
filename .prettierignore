@@ -28,6 +28,11 @@ src/react/*
 # Allow src/react/cache
 !src/react/cache/
 
+# Allowed utilities
+!src/utilities/
+src/utilities/*
+!src/utilities/promises/
+
 ## Allowed React Hooks
 !src/react/hooks/
 src/react/hooks/*

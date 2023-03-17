@@ -4,15 +4,16 @@ import {
   DocumentNode,
   ObservableQuery,
   OperationVariables,
+  TypedDocumentNode,
 } from '../../core';
 import { canonicalStringify } from '../../cache';
 import { PromiseWithState, canUseWeakMap } from '../../utilities';
 
-interface CacheEntry {
-  query: DocumentNode;
-  variables: OperationVariables | undefined;
-  observable: ObservableQuery<unknown, OperationVariables>;
-  promise: PromiseWithState<ApolloQueryResult<unknown>>;
+interface CacheEntry<TData, TVariables extends OperationVariables> {
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  variables: TVariables | undefined;
+  observable: ObservableQuery<TData, TVariables>;
+  promise: PromiseWithState<ApolloQueryResult<TData>>;
 }
 
 type CacheKey = [DocumentNode, string];
@@ -20,27 +21,30 @@ type CacheKey = [DocumentNode, string];
 const EMPTY_VARIABLES = Object.create(null);
 
 export class SuspenseCache {
-  private queries = new Map<CacheKey, CacheEntry>();
+  private queries = new Map<
+    CacheKey,
+    CacheEntry<unknown, OperationVariables>
+  >();
 
   private cacheKeys = new Trie<CacheKey>(
     canUseWeakMap,
     (cacheKey: CacheKey) => cacheKey
   );
 
-  add({
+  add<TData = any, TVariables extends OperationVariables = OperationVariables>({
     query,
     variables,
     promise,
     observable,
   }: {
-    query: DocumentNode;
-    variables: OperationVariables | undefined;
-    promise: PromiseWithState<ApolloQueryResult<unknown>>;
-    observable: ObservableQuery<unknown, OperationVariables>;
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    variables: TVariables | undefined;
+    promise: PromiseWithState<ApolloQueryResult<TData>>;
+    observable: ObservableQuery<TData, TVariables>;
   }) {
     const cacheKey = this.getCacheKey(query, variables);
 
-    const entry: CacheEntry = {
+    const entry: CacheEntry<TData, TVariables> = {
       query,
       variables,
       observable,
@@ -52,10 +56,16 @@ export class SuspenseCache {
     return entry;
   }
 
-  lookup(query: DocumentNode, variables: OperationVariables | undefined) {
+  lookup<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    variables: TVariables | undefined
+  ): CacheEntry<TData, TVariables> | undefined {
     const cacheKey = this.getCacheKey(query, variables);
 
-    return this.queries.get(cacheKey);
+    return this.queries.get(cacheKey) as CacheEntry<TData, TVariables>;
   }
 
   remove(query: DocumentNode, variables: OperationVariables | undefined) {

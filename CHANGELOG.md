@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.8.0-alpha.10
+
+### Patch Changes
+
+- [#10657](https://github.com/apollographql/apollo-client/pull/10657) [`db305a800`](https://github.com/apollographql/apollo-client/commit/db305a8005664e9b6ec64046da230f41d293104d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Return `networkStatus` in the `useSuspenseQuery` result.
+
+- [#10651](https://github.com/apollographql/apollo-client/pull/10651) [`8355d0e1e`](https://github.com/apollographql/apollo-client/commit/8355d0e1e9c1cee58cabd7df68d3ba09a3afaf6c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where `useSuspenseQuery` would not respond to cache updates when using a cache-first `fetchPolicy` after the hook was mounted with data already in the cache.
+
+- [#10656](https://github.com/apollographql/apollo-client/pull/10656) [`54c4d2f3c`](https://github.com/apollographql/apollo-client/commit/54c4d2f3c719654e38e537ec38f1cb415c7c3f58) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `refetch`, `fetchMore`, and `subscribeToMore` functions returned by `useSuspenseQuery` are referentially stable between renders, even as `data` is updated.
+
 ## 3.8.0-alpha.9
 
 ### Patch Changes

@@ -9,17 +9,19 @@ import {
 import { canonicalStringify } from '../../cache';
 import { canUseWeakMap } from '../../utilities';
 
-interface CacheEntry<TData, TVariables extends OperationVariables> {
-  observable: ObservableQuery<TData, TVariables>;
-  promise: DecoratedPromise<ApolloQueryResult<TData>>;
-}
-
 type PromiseState<TValue> =
   | { status: 'pending'; value?: never; reason?: never }
   | { status: 'fulfilled'; value: TValue; reason?: never }
   | { status: 'rejected'; value?: never; reason: unknown };
 
 type DecoratedPromise<TValue> = Promise<TValue> & PromiseState<TValue>;
+
+interface CacheEntry<TData, TVariables extends OperationVariables> {
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  variables: TVariables | undefined;
+  observable: ObservableQuery<TData, TVariables>;
+  promise: DecoratedPromise<ApolloQueryResult<TData>>;
+}
 
 type CacheKey = [DocumentNode, string];
 
@@ -67,6 +69,16 @@ export class SuspenseCache {
     CacheEntry<unknown, OperationVariables>
   >();
 
+  private queriesByPromise = canUseWeakMap
+    ? new WeakMap<
+        DecoratedPromise<ApolloQueryResult<unknown>>,
+        OperationVariables
+      >()
+    : new Map<
+        DecoratedPromise<ApolloQueryResult<unknown>>,
+        OperationVariables
+      >();
+
   private cacheKeys = new Trie<CacheKey>(canUseWeakMap, makeCacheKey);
 
   add<TData = any, TVariables extends OperationVariables = OperationVariables>(
@@ -80,11 +92,14 @@ export class SuspenseCache {
     const cacheKey = this.getCacheKey(query, variables);
 
     const entry: CacheEntry<TData, TVariables> = {
+      query,
+      variables,
       observable,
       promise: decoratePromise(promise),
     };
 
     this.queries.set(cacheKey, entry);
+    this.queriesByPromise.set(entry.promise, entry);
 
     return entry;
   }
@@ -99,6 +114,10 @@ export class SuspenseCache {
     const cacheKey = this.getCacheKey(query, variables);
 
     return this.queries.get(cacheKey) as CacheEntry<TData, TVariables>;
+  }
+
+  reverseLookup(promise: DecoratedPromise<ApolloQueryResult<unknown>>) {
+    return this.queriesByPromise.get(promise);
   }
 
   remove(query: DocumentNode, variables: OperationVariables | undefined) {

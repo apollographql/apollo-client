@@ -1,5 +1,5 @@
 import '../../utilities/globals';
-import { invariant } from '../../utilities/globals';
+// import { invariant } from '../../utilities/globals';
 
 import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 

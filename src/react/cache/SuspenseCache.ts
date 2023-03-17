@@ -19,14 +19,13 @@ type CacheKey = [DocumentNode, string];
 
 const EMPTY_VARIABLES = Object.create(null);
 
-function makeCacheKey(cacheKey: CacheKey) {
-  return cacheKey;
-}
-
 export class SuspenseCache {
   private queries = new Map<CacheKey, CacheEntry>();
 
-  private cacheKeys = new Trie<CacheKey>(canUseWeakMap, makeCacheKey);
+  private cacheKeys = new Trie<CacheKey>(
+    canUseWeakMap,
+    (cacheKey: CacheKey) => cacheKey
+  );
 
   add({
     query,

@@ -31,6 +31,7 @@ import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { SuspenseCache } from '../cache';
 import { Subscription } from 'zen-observable-ts';
+import { CacheEntry } from '../cache/SuspenseCache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -83,7 +84,7 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
   const deferred = useIsDeferred(query);
-  const observable = useObservable(client, suspenseCache, watchQueryOptions);
+  const observable = useObservable(client, cacheEntry, watchQueryOptions);
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
@@ -347,14 +348,15 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
 
 function useObservable<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
-  suspenseCache: SuspenseCache,
+  cacheEntry: CacheEntry<TData, TVariables> | undefined,
   watchQueryOptions: WatchQueryOptions<TVariables, TData>
 ) {
-  const { query, variables } = watchQueryOptions;
-
-  const cacheEntry = suspenseCache.lookup(query, variables);
+  // If we have a cache entry that means we previously suspended and are reading
+  // the observable back from the suspense cache.
   const ref = useRef(cacheEntry?.observable);
 
+  // If we do not have a ref set, we are executing this hook for the first time
+  // and have not yet suspended.
   if (!ref.current) {
     ref.current = client.watchQuery(watchQueryOptions);
   }

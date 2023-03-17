@@ -4,7 +4,6 @@ import {
   DocumentNode,
   ObservableQuery,
   OperationVariables,
-  TypedDocumentNode,
 } from '../../core';
 import { canonicalStringify } from '../../cache';
 import { canUseWeakMap } from '../../utilities';
@@ -16,11 +15,11 @@ type PromiseState<TValue> =
 
 type PromiseWithState<TValue> = Promise<TValue> & PromiseState<TValue>;
 
-interface CacheEntry<TData, TVariables extends OperationVariables> {
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  variables: TVariables | undefined;
-  observable: ObservableQuery<TData, TVariables>;
-  promise: PromiseWithState<ApolloQueryResult<TData>>;
+interface CacheEntry {
+  query: DocumentNode;
+  variables: OperationVariables | undefined;
+  observable: ObservableQuery<unknown, OperationVariables>;
+  promise: PromiseWithState<ApolloQueryResult<unknown>>;
 }
 
 type CacheKey = [DocumentNode, string];
@@ -64,10 +63,7 @@ function addStateToPromise<TValue>(
 }
 
 export class SuspenseCache {
-  private queries = new Map<
-    CacheKey,
-    CacheEntry<unknown, OperationVariables>
-  >();
+  private queries = new Map<CacheKey, CacheEntry>();
 
   private queriesByPromise = canUseWeakMap
     ? new WeakMap<
@@ -81,20 +77,20 @@ export class SuspenseCache {
 
   private cacheKeys = new Trie<CacheKey>(canUseWeakMap, makeCacheKey);
 
-  add<TData = any, TVariables extends OperationVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    variables: TVariables | undefined,
+  add(
+    query: DocumentNode,
+    variables: OperationVariables | undefined,
     {
       promise,
       observable,
     }: {
-      promise: Promise<ApolloQueryResult<TData>>;
-      observable: ObservableQuery<TData, TVariables>;
+      promise: Promise<ApolloQueryResult<unknown>>;
+      observable: ObservableQuery<unknown, OperationVariables>;
     }
   ) {
     const cacheKey = this.getCacheKey(query, variables);
 
-    const entry: CacheEntry<TData, TVariables> = {
+    const entry: CacheEntry = {
       query,
       variables,
       observable,
@@ -107,16 +103,10 @@ export class SuspenseCache {
     return entry;
   }
 
-  lookup<
-    TData = any,
-    TVariables extends OperationVariables = OperationVariables
-  >(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    variables: TVariables | undefined
-  ): CacheEntry<TData, TVariables> | undefined {
+  lookup(query: DocumentNode, variables: OperationVariables | undefined) {
     const cacheKey = this.getCacheKey(query, variables);
 
-    return this.queries.get(cacheKey) as CacheEntry<TData, TVariables>;
+    return this.queries.get(cacheKey);
   }
 
   reverseLookup(promise: PromiseWithState<ApolloQueryResult<unknown>>) {
@@ -129,6 +119,7 @@ export class SuspenseCache {
 
     if (entry && !entry.observable.hasObservers()) {
       this.queries.delete(cacheKey);
+      this.queriesByPromise.delete(entry.promise);
     }
   }
 

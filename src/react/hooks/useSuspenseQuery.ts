@@ -26,7 +26,7 @@ import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
-import { useDeepMemo, useIsomorphicLayoutEffect } from './internal';
+import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { SuspenseCache } from '../cache';
@@ -140,10 +140,8 @@ export function useSuspenseQuery_experimental<
       // Avoid suspending in this case.
       (fetchPolicy === 'cache-and-network' && hasFullResult);
 
-    const promise = cacheEntry.promise;
-
-    if (!hasUsableResult && promise.status === 'pending') {
-      throw promise;
+    if (!hasUsableResult) {
+      __use(cacheEntry.promise);
     }
   }
 

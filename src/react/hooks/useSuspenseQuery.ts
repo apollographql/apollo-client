@@ -18,6 +18,7 @@ import {
   Concast,
   isNonEmptyArray,
   hasDirectives,
+  wrapPromiseWithState,
 } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -123,9 +124,11 @@ export function useSuspenseQuery_experimental<
       cacheEntry = suspenseCache.add({
         query,
         variables,
-        promise: maybeWrapConcastWithCustomPromise(
-          observable.reobserveAsConcast(watchQueryOptions),
-          { deferred }
+        promise: wrapPromiseWithState(
+          maybeWrapConcastWithCustomPromise(
+            observable.reobserveAsConcast(watchQueryOptions),
+            { deferred }
+          )
         ),
         observable,
       });
@@ -158,7 +161,9 @@ export function useSuspenseQuery_experimental<
       suspenseCache.add({
         query,
         variables,
-        promise: observable.reobserve({ query, variables }),
+        promise: wrapPromiseWithState(
+          observable.reobserve({ query, variables })
+        ),
         observable,
       });
 
@@ -174,7 +179,7 @@ export function useSuspenseQuery_experimental<
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      const promise = observable.fetchMore(options);
+      const promise = wrapPromiseWithState(observable.fetchMore(options));
 
       suspenseCache.add({
         query,
@@ -190,7 +195,7 @@ export function useSuspenseQuery_experimental<
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      const promise = observable.refetch(variables);
+      const promise = wrapPromiseWithState(observable.refetch(variables));
 
       suspenseCache.add({
         query,

@@ -37,10 +37,25 @@ export interface UseSuspenseQueryResult<
   client: ApolloClient<any>;
   data: TData;
   error: ApolloError | undefined;
-  fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
-  refetch: ObservableQueryFields<TData, TVariables>['refetch'];
-  subscribeToMore: ObservableQueryFields<TData, TVariables>['subscribeToMore'];
+  fetchMore: FetchMoreFunction<TData, TVariables>;
+  refetch: RefetchFunction<TData, TVariables>;
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
+
+type FetchMoreFunction<
+  TData,
+  TVariables extends OperationVariables
+> = ObservableQueryFields<TData, TVariables>['fetchMore'];
+
+type RefetchFunction<
+  TData,
+  TVariables extends OperationVariables
+> = ObservableQueryFields<TData, TVariables>['refetch'];
+
+type SubscribeToMoreFunction<
+  TData,
+  TVariables extends OperationVariables
+> = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
 const SUPPORTED_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
   'cache-first',
@@ -147,34 +162,55 @@ export function useSuspenseQuery_experimental<
     };
   }, []);
 
+  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
+    (options) => {
+      const promise = observable.fetchMore(options);
+
+      suspenseCache.add(query, watchQueryOptions.variables, {
+        promise,
+        observable,
+      });
+
+      return promise;
+    },
+    [observable]
+  );
+
+  const refetch: RefetchFunction<TData, TVariables> = useCallback(
+    (variables) => {
+      const promise = observable.refetch(variables);
+
+      suspenseCache.add(query, watchQueryOptions.variables, {
+        promise,
+        observable,
+      });
+
+      return promise;
+    },
+    [observable]
+  );
+
+  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
+    useCallback((options) => observable.subscribeToMore(options), [observable]);
+
   return useMemo(() => {
     return {
       client,
       data: result.data,
       error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
-      fetchMore: (options) => {
-        const promise = observable.fetchMore(options);
-
-        suspenseCache.add(query, watchQueryOptions.variables, {
-          promise,
-          observable,
-        });
-
-        return promise;
-      },
-      refetch: (variables?: Partial<TVariables>) => {
-        const promise = observable.refetch(variables);
-
-        suspenseCache.add(query, watchQueryOptions.variables, {
-          promise,
-          observable,
-        });
-
-        return promise;
-      },
-      subscribeToMore: (options) => observable.subscribeToMore(options),
+      fetchMore,
+      refetch,
+      subscribeToMore,
     };
-  }, [client, result, observable, errorPolicy]);
+  }, [
+    client,
+    fetchMore,
+    refetch,
+    result,
+    observable,
+    errorPolicy,
+    subscribeToMore,
+  ]);
 }
 
 function validateOptions(options: WatchQueryOptions) {

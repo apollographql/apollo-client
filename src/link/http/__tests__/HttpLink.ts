@@ -65,19 +65,19 @@ const sampleSubscription = gql`
     }
   }
 `
-const sampleSubscriptionWithDefer = gql`
-  subscription MySubscription {
-    aNewDieWasCreated {
-      die {
-        roll
-        sides
-        ... on Stub @defer {
-          color
-        }
-      }
-    }
-  }
-`
+// const sampleSubscriptionWithDefer = gql`
+//   subscription MySubscription {
+//     aNewDieWasCreated {
+//       die {
+//         roll
+//         sides
+//         ... on Stub @defer {
+//           color
+//         }
+//       }
+//     }
+//   }
+// `
 
 function makeCallback<TArgs extends any[]>(
   resolve: () => void,

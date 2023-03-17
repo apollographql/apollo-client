@@ -72,7 +72,7 @@ export async function readMultipartBody<
           if (
             Object.keys(result).length > 1 ||
             ["data", "incremental", "payload", "errors"].some(
-              (val) => val in result
+              (key) => key in result
             )
           ) {
             // Here we detect done instead of errors since errors can exist
@@ -82,12 +82,12 @@ export async function readMultipartBody<
             if ("payload" in result || "done" in result) {
               let next = {};
               if ("payload" in result) {
-                next = { ...result.payload as T };
+                next = { ...(result.payload as T) };
               }
               if ("errors" in result) {
                 // TODO: should we pass `data: null` here? In keeping with
                 // other fetch results with top-level errors.
-                next = { errors: result.errors, data: null }
+                next = { errors: result.errors, data: null };
               }
               observer.next?.(next as T);
             } else {

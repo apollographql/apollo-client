@@ -30,17 +30,29 @@ export function wrapPromiseWithState<TValue>(
     return promise;
   }
 
-  (promise as PendingPromise<TValue>).status = 'pending';
+  const pendingPromise = promise as PendingPromise<TValue>;
+  pendingPromise.status = 'pending';
 
-  promise
-    .then((value) => {
-      (promise as FulfilledPromise<TValue>).status = 'fulfilled';
-      (promise as FulfilledPromise<TValue>).value = value;
-    })
-    .catch((reason) => {
-      (promise as RejectedPromise<TValue>).status = 'rejected';
-      (promise as RejectedPromise<TValue>).reason = reason;
-    });
+  pendingPromise.then(
+    (value) => {
+      if (pendingPromise.status === 'pending') {
+        const fulfilledPromise =
+          pendingPromise as unknown as FulfilledPromise<TValue>;
+
+        fulfilledPromise.status = 'fulfilled';
+        fulfilledPromise.value = value;
+      }
+    },
+    (reason: unknown) => {
+      if (pendingPromise.status === 'pending') {
+        const rejectedPromise =
+          pendingPromise as unknown as RejectedPromise<TValue>;
+
+        rejectedPromise.status = 'rejected';
+        rejectedPromise.reason = reason;
+      }
+    }
+  );
 
   return promise as PromiseWithState<TValue>;
 }

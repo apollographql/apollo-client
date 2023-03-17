@@ -77,17 +77,17 @@ export class SuspenseCache {
 
   private cacheKeys = new Trie<CacheKey>(canUseWeakMap, makeCacheKey);
 
-  add(
-    query: DocumentNode,
-    variables: OperationVariables | undefined,
-    {
-      promise,
-      observable,
-    }: {
-      promise: Promise<ApolloQueryResult<unknown>>;
-      observable: ObservableQuery<unknown, OperationVariables>;
-    }
-  ) {
+  add({
+    query,
+    variables,
+    promise,
+    observable,
+  }: {
+    query: DocumentNode;
+    variables: OperationVariables | undefined;
+    promise: Promise<ApolloQueryResult<unknown>>;
+    observable: ObservableQuery<unknown, OperationVariables>;
+  }) {
     const cacheKey = this.getCacheKey(query, variables);
 
     const entry: CacheEntry = {

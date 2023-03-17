@@ -1,5 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { equal } from '@wry/equality';
 import {
   ApolloClient,
@@ -29,6 +29,7 @@ import {
 import { useDeepMemo, useIsomorphicLayoutEffect } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
+import { SuspenseCache } from '../cache';
 import { Subscription } from 'zen-observable-ts';
 
 export interface UseSuspenseQueryResult<
@@ -82,18 +83,12 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
   const deferred = useIsDeferred(query);
+  const observable = useObservable(client, suspenseCache, watchQueryOptions);
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
 
   let cacheEntry = suspenseCache.lookup(query, variables);
-
-  const [observable] = useState(() => {
-    return (
-      (cacheEntry?.observable as ObservableQuery<TData, TVariables>) ||
-      client.watchQuery(watchQueryOptions)
-    );
-  });
 
   const result = useObservableQueryResult(observable);
 
@@ -348,6 +343,23 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   }
 
   return watchQueryOptions;
+}
+
+function useObservable<TData, TVariables extends OperationVariables>(
+  client: ApolloClient<any>,
+  suspenseCache: SuspenseCache,
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>
+) {
+  const { query, variables } = watchQueryOptions;
+
+  const cacheEntry = suspenseCache.lookup(query, variables);
+  const ref = useRef(cacheEntry?.observable);
+
+  if (!ref.current) {
+    ref.current = client.watchQuery(watchQueryOptions);
+  }
+
+  return ref.current! as ObservableQuery<TData, TVariables>;
 }
 
 function useIsDeferred(query: DocumentNode) {

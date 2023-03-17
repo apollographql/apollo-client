@@ -38,6 +38,7 @@ export interface UseSuspenseQueryResult<
   data: TData;
   error: ApolloError | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  networkStatus: NetworkStatus;
   refetch: RefetchFunction<TData, TVariables>;
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
@@ -198,6 +199,7 @@ export function useSuspenseQuery_experimental<
       client,
       data: result.data,
       error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
+      networkStatus: result.networkStatus,
       fetchMore,
       refetch,
       subscribeToMore,

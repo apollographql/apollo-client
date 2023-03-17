@@ -25,6 +25,7 @@ import {
   SubscribeToMoreOptions,
   TypedDocumentNode,
   split,
+  NetworkStatus,
 } from '../../../core';
 import {
   compact,
@@ -409,7 +410,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -431,7 +436,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -458,8 +467,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -729,7 +746,11 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'local hello' }, error: undefined },
+      {
+        data: { greeting: 'local hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -762,8 +783,16 @@ describe('useSuspenseQuery', () => {
     // React double invokes the render function in strict mode so we expect
     // to render 2 frames after the initial suspense.
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'local hello' }, error: undefined },
-      { data: { greeting: 'local hello' }, error: undefined },
+      {
+        data: { greeting: 'local hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'local hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -806,13 +835,18 @@ describe('useSuspenseQuery', () => {
 
     expect(result.current).toMatchObject({
       data: { greeting: 'hello from cache' },
+      networkStatus: NetworkStatus.ready,
       error: undefined,
     });
 
     expect(renders.count).toBe(1);
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'hello from cache' }, error: undefined },
+      {
+        data: { greeting: 'hello from cache' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -886,6 +920,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -893,7 +928,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -941,12 +980,14 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(0);
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
+      networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -954,8 +995,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
-      { data: { character: { id: '1' } }, error: undefined },
-      { ...mocks[0].result, error: undefined },
+      {
+        data: { character: { id: '1' } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -991,12 +1040,14 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(0);
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
+      networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1006,6 +1057,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1013,10 +1065,26 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { character: { id: '1' } }, error: undefined },
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[1].result, error: undefined },
+      {
+        data: { character: { id: '1' } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1038,6 +1106,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1045,7 +1114,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1095,6 +1168,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1102,7 +1176,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1124,6 +1202,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1133,7 +1212,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
     expect(cachedData).toEqual({ greeting: 'hello from cache' });
   });
@@ -1151,6 +1234,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1158,20 +1242,33 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
 
     rerender();
 
     expect(result.current).toMatchObject({
       ...mocks[0].result,
+      networkStatus: NetworkStatus.ready,
       error: undefined,
     });
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' }, error: undefined },
-      { data: { greeting: 'Hello' }, error: undefined },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1223,6 +1320,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1230,7 +1328,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
 
     consoleSpy.mockRestore();
@@ -1275,12 +1377,14 @@ describe('useSuspenseQuery', () => {
 
     expect(result.current).toMatchObject({
       data: { greeting: 'hello from cache' },
+      networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1290,9 +1394,14 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: { greeting: 'hello from cache' },
+        networkStatus: NetworkStatus.loading,
         error: undefined,
       },
-      { data: { greeting: 'Hello' }, error: undefined },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1340,12 +1449,14 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(0);
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
+      networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1353,8 +1464,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
-      { data: { character: { id: '1' } }, error: undefined },
-      { ...mocks[0].result, error: undefined },
+      {
+        data: { character: { id: '1' } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1390,12 +1509,14 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(0);
     expect(result.current).toMatchObject({
       data: { character: { id: '1' } },
+      networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1405,6 +1526,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1412,10 +1534,26 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(5);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { character: { id: '1' } }, error: undefined },
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[1].result, error: undefined },
+      {
+        data: { character: { id: '1' } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1443,6 +1581,7 @@ describe('useSuspenseQuery', () => {
       await waitFor(() => {
         expect(result.current).toMatchObject({
           ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -1452,6 +1591,7 @@ describe('useSuspenseQuery', () => {
       await waitFor(() => {
         expect(result.current).toMatchObject({
           ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -1464,9 +1604,21 @@ describe('useSuspenseQuery', () => {
       expect(renders.count).toBe(4);
       expect(renders.suspenseCount).toBe(1);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined },
-        { ...mocks[0].result, error: undefined },
-        { ...mocks[1].result, error: undefined },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
       ]);
     }
   );
@@ -1548,14 +1700,23 @@ describe('useSuspenseQuery', () => {
       await waitFor(() => {
         expect(result.current).toMatchObject({
           data: { greeting: 'Updated hello' },
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
       expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(3);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined },
-        { data: { greeting: 'Updated hello' }, error: undefined },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          data: { greeting: 'Updated hello' },
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
       ]);
     }
   );
@@ -1587,12 +1748,17 @@ describe('useSuspenseQuery', () => {
 
     expect(result.current).toMatchObject({
       ...mocks[0].result,
+      networkStatus: NetworkStatus.ready,
       error: undefined,
     });
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1624,6 +1790,7 @@ describe('useSuspenseQuery', () => {
       await waitFor(() => {
         expect(result.current).toMatchObject({
           ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -1637,9 +1804,21 @@ describe('useSuspenseQuery', () => {
       expect(renders.count).toBe(5);
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined },
-        { ...mocks[0].result, error: undefined },
-        { ...mocks[1].result, error: undefined },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
       ]);
     }
   );
@@ -1684,6 +1863,7 @@ describe('useSuspenseQuery', () => {
       await waitFor(() => {
         expect(result.current).toMatchObject({
           ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -1693,6 +1873,7 @@ describe('useSuspenseQuery', () => {
       await waitFor(() => {
         expect(result.current).toMatchObject({
           ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -1706,9 +1887,21 @@ describe('useSuspenseQuery', () => {
       expect(renders.count).toBe(5);
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
-        { ...mocks[0].result, error: undefined },
-        { ...mocks[0].result, error: undefined },
-        { ...mocks[1].result, error: undefined },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
       ]);
     }
   );
@@ -1841,6 +2034,7 @@ describe('useSuspenseQuery', () => {
       await waitFor(() => {
         expect(result.current).toMatchObject({
           data: { greeting: 'Updated hello' },
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -1917,7 +2111,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1942,12 +2140,17 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
     expect(renders.frames).toMatchObject([
-      { ...mocks[1].result, error: undefined },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -1972,6 +2175,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -1979,8 +2183,16 @@ describe('useSuspenseQuery', () => {
     // React double invokes the render function in strict mode so we expect 2
     // frames to be rendered here.
     expect(renders.frames).toMatchObject([
-      { ...mocks[1].result, error: undefined },
-      { ...mocks[1].result, error: undefined },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -2020,6 +2232,7 @@ describe('useSuspenseQuery', () => {
         data: {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2031,6 +2244,7 @@ describe('useSuspenseQuery', () => {
         data: {
           vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2040,18 +2254,21 @@ describe('useSuspenseQuery', () => {
         data: {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
         data: {
           vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
         data: {
           vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -2090,6 +2307,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { vars: { source: 'local' } },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2101,7 +2319,11 @@ describe('useSuspenseQuery', () => {
     expect(result.current.data.vars).not.toHaveProperty('globalOnlyVar');
 
     expect(renders.frames).toMatchObject([
-      { data: { vars: { source: 'local' } }, error: undefined },
+      {
+        data: { vars: { source: 'local' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -2135,6 +2357,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { context: { valueA: 'A', valueB: 'B' } },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2257,6 +2480,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2316,6 +2540,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2458,6 +2683,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2467,7 +2693,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: undefined },
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
     ]);
   });
 
@@ -2485,6 +2711,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2492,6 +2719,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: { currentUser: { id: '1', name: null } },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -2513,12 +2741,13 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: undefined },
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
     ]);
   });
 
@@ -2575,6 +2804,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
+        networkStatus: NetworkStatus.ready,
         error: new ApolloError({ graphQLErrors: [graphQLError] }),
       },
     ]);
@@ -2613,7 +2843,11 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: expectedError },
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: expectedError,
+      },
     ]);
 
     const { error } = result.current;
@@ -2641,6 +2875,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
+        networkStatus: NetworkStatus.ready,
         error: expectedError,
       });
     });
@@ -2648,6 +2883,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: { currentUser: { id: '1', name: null } },
+        networkStatus: NetworkStatus.ready,
         error: expectedError,
       },
     ]);
@@ -2714,6 +2950,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
+        networkStatus: NetworkStatus.ready,
         error: expectedError,
       });
     });
@@ -2723,6 +2960,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2732,9 +2970,21 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: expectedError },
-      { data: undefined, error: expectedError },
-      { ...mocks[1].result, error: undefined },
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: expectedError,
+      },
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: expectedError,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -2780,6 +3030,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
+        networkStatus: NetworkStatus.ready,
         error: expectedError,
       });
     });
@@ -2789,6 +3040,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2798,9 +3050,21 @@ describe('useSuspenseQuery', () => {
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: undefined, error: expectedError },
-      { data: undefined, error: expectedError },
-      { ...mocks[1].result, error: undefined },
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: expectedError,
+      },
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: expectedError,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -2837,6 +3101,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2848,6 +3113,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2855,8 +3121,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[1].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -2893,6 +3167,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2904,14 +3179,23 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
     expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[1].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -2965,6 +3249,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2976,6 +3261,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2983,9 +3269,21 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(6);
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[1].result, error: undefined },
-      { ...mocks[2].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -3026,6 +3324,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3037,6 +3336,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3044,8 +3344,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[1].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -3084,6 +3392,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3102,7 +3411,11 @@ describe('useSuspenseQuery', () => {
       }),
     ]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
 
     consoleSpy.mockRestore();
@@ -3145,6 +3458,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3156,8 +3470,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[0].result, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -3202,6 +3524,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3213,6 +3536,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: expectedError,
       });
     });
@@ -3220,8 +3544,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { ...mocks[0].result, error: expectedError },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: expectedError,
+      },
     ]);
   });
 
@@ -3278,6 +3610,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: mocks[1].result.data,
+        networkStatus: NetworkStatus.ready,
         error: expectedError,
       });
     });
@@ -3285,8 +3618,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toMatchObject([
-      { ...mocks[0].result, error: undefined },
-      { data: mocks[1].result.data, error: expectedError },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: mocks[1].result.data,
+        networkStatus: NetworkStatus.ready,
+        error: expectedError,
+      },
     ]);
   });
 
@@ -3301,6 +3642,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3312,6 +3654,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(2, 4) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3319,8 +3662,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
-      { data: { letters: data.slice(0, 2) }, error: undefined },
-      { data: { letters: data.slice(2, 4) }, error: undefined },
+      {
+        data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { letters: data.slice(2, 4) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -3339,6 +3690,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3350,6 +3702,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(2, 4) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3357,8 +3710,16 @@ describe('useSuspenseQuery', () => {
     expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
-      { data: { letters: data.slice(0, 2) }, error: undefined },
-      { data: { letters: data.slice(2, 4) }, error: undefined },
+      {
+        data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { letters: data.slice(2, 4) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -3394,8 +3755,16 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(renders.frames).toMatchObject([
-      { data: { letters: data.slice(0, 2) }, error: undefined },
-      { data: { letters: data.slice(0, 4) }, error: undefined },
+      {
+        data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { letters: data.slice(0, 4) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -3420,6 +3789,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3431,13 +3801,22 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { letters: data.slice(0, 4) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
     expect(renders.frames).toMatchObject([
-      { data: { letters: data.slice(0, 2) }, error: undefined },
-      { data: { letters: data.slice(0, 4) }, error: undefined },
+      {
+        data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { letters: data.slice(0, 4) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 
@@ -3481,6 +3860,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3490,6 +3870,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { character: { id: '2', name: 'Cached Black Widow' } },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3548,6 +3929,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3561,6 +3943,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3622,6 +4005,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3635,6 +4019,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3695,6 +4080,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3708,6 +4094,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3762,6 +4149,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3773,6 +4161,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3784,6 +4173,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3824,6 +4214,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3852,6 +4243,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3861,6 +4253,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: { greeting: { message: 'Hello world', __typename: 'Greeting' } },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -3871,6 +4264,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -3920,6 +4314,7 @@ describe('useSuspenseQuery', () => {
           data: {
             greeting: { message: 'Hello world', __typename: 'Greeting' },
           },
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -3948,6 +4343,7 @@ describe('useSuspenseQuery', () => {
               recipient: { __typename: 'Person', name: 'Alice' },
             },
           },
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -3959,6 +4355,7 @@ describe('useSuspenseQuery', () => {
           data: {
             greeting: { message: 'Hello world', __typename: 'Greeting' },
           },
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         },
         {
@@ -3969,6 +4366,7 @@ describe('useSuspenseQuery', () => {
               recipient: { __typename: 'Person', name: 'Alice' },
             },
           },
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         },
       ]);
@@ -4015,6 +4413,7 @@ describe('useSuspenseQuery', () => {
           recipient: { __typename: 'Person', name: 'Alice' },
         },
       },
+      networkStatus: NetworkStatus.ready,
       error: undefined,
     });
 
@@ -4028,6 +4427,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -4080,6 +4480,7 @@ describe('useSuspenseQuery', () => {
           recipient: { __typename: 'Person', name: 'Cached Alice' },
         },
       },
+      networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
@@ -4099,6 +4500,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Cached Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4127,6 +4529,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4141,6 +4544,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Cached Alice' },
           },
         },
+        networkStatus: NetworkStatus.loading,
         error: undefined,
       },
       {
@@ -4151,6 +4555,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Cached Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -4161,6 +4566,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -4208,6 +4614,7 @@ describe('useSuspenseQuery', () => {
           recipient: { __typename: 'Person', name: 'Cached Alice' },
         },
       },
+      networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
@@ -4227,6 +4634,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Cached Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4255,6 +4663,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4270,6 +4679,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Cached Alice' },
           },
         },
+        networkStatus: NetworkStatus.loading,
         error: undefined,
       },
       {
@@ -4280,6 +4690,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Cached Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -4290,6 +4701,7 @@ describe('useSuspenseQuery', () => {
             recipient: { __typename: 'Person', name: 'Alice' },
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -4338,6 +4750,7 @@ describe('useSuspenseQuery', () => {
             { __typename: 'Greeting', message: 'Hello again' },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4372,6 +4785,7 @@ describe('useSuspenseQuery', () => {
             },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4407,6 +4821,7 @@ describe('useSuspenseQuery', () => {
             },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4421,6 +4836,7 @@ describe('useSuspenseQuery', () => {
             { __typename: 'Greeting', message: 'Hello again' },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -4437,6 +4853,7 @@ describe('useSuspenseQuery', () => {
             },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -4454,6 +4871,7 @@ describe('useSuspenseQuery', () => {
             },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -4534,6 +4952,7 @@ describe('useSuspenseQuery', () => {
             },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4588,6 +5007,7 @@ describe('useSuspenseQuery', () => {
             },
           ],
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4786,6 +5206,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4835,6 +5256,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(
@@ -4867,6 +5289,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -4885,6 +5308,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(
@@ -4958,6 +5382,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -5009,6 +5434,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(
@@ -5039,6 +5465,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -5059,6 +5486,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(
@@ -5132,6 +5560,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -5181,6 +5610,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -5204,6 +5634,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -5224,6 +5655,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
     ]);
@@ -5316,8 +5748,11 @@ describe('useSuspenseQuery', () => {
 
     expect(renders.count).toBe(3);
     expect(renders.frames).toMatchObject([
-      { data: { greeting: 'Hello' } },
-      { data: { greeting: 'Subscription hello' } },
+      { data: { greeting: 'Hello' }, networkStatus: NetworkStatus.ready },
+      {
+        data: { greeting: 'Subscription hello' },
+        networkStatus: NetworkStatus.ready,
+      },
     ]);
   });
 });

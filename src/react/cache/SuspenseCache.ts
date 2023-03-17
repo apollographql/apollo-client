@@ -7,13 +7,13 @@ import {
   TypedDocumentNode,
 } from '../../core';
 import { canonicalStringify } from '../../cache';
-import { PromiseWithState, canUseWeakMap } from '../../utilities';
+import { canUseWeakMap } from '../../utilities';
 
-interface CacheEntry<TData, TVariables extends OperationVariables> {
+export interface CacheEntry<TData, TVariables extends OperationVariables> {
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   variables: TVariables | undefined;
   observable: ObservableQuery<TData, TVariables>;
-  promise: PromiseWithState<ApolloQueryResult<TData>>;
+  promise: Promise<ApolloQueryResult<TData>>;
 }
 
 type CacheKey = [DocumentNode, string];
@@ -39,7 +39,7 @@ export class SuspenseCache {
   }: {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables: TVariables | undefined;
-    promise: PromiseWithState<ApolloQueryResult<TData>>;
+    promise: Promise<ApolloQueryResult<TData>>;
     observable: ObservableQuery<TData, TVariables>;
   }) {
     const cacheKey = this.getCacheKey(query, variables);

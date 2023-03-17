@@ -29,7 +29,7 @@ import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { Subscription } from 'zen-observable-ts';
-import { CacheEntry } from '../cache/SuspenseCache';
+import { CacheEntry, SuspenseCache } from '../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -70,6 +70,14 @@ const DEFAULT_FETCH_POLICY = 'cache-first';
 const DEFAULT_SUSPENSE_POLICY = 'always';
 const DEFAULT_ERROR_POLICY = 'none';
 
+interface HookContext<TData, TVariables extends OperationVariables> {
+  client: ApolloClient<any>;
+  cacheEntry: CacheEntry<TData, TVariables> | undefined;
+  deferred: boolean;
+  suspenseCache: SuspenseCache;
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>;
+}
+
 export function useSuspenseQuery_experimental<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
@@ -77,13 +85,21 @@ export function useSuspenseQuery_experimental<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
-  const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
+  const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
-  const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
-  const deferred = useIsDeferred(query);
   let cacheEntry = suspenseCache.lookup(query, watchQueryOptions.variables);
-  const observable = useObservable(client, cacheEntry, watchQueryOptions);
+
+  const context: HookContext<TData, TVariables> = {
+    client,
+    cacheEntry,
+    deferred: useIsDeferred(query),
+    suspenseCache,
+    watchQueryOptions: useWatchQueryOptions({ query, options, client }),
+  };
+
+  const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
+  const observable = useObservable(context);
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
@@ -99,7 +115,7 @@ export function useSuspenseQuery_experimental<
     // will have a partial result before the error is collected. We do not want
     // to throw errors that have been returned from incremental chunks. Instead
     // we offload those errors to the `error` property.
-    errorPolicy === 'none' && (!deferred || !hasPartialResult);
+    errorPolicy === 'none' && (!context.deferred || !hasPartialResult);
 
   if (
     result.error &&
@@ -119,7 +135,7 @@ export function useSuspenseQuery_experimental<
         variables,
         promise: maybeWrapConcastWithCustomPromise(
           observable.reobserveAsConcast(watchQueryOptions),
-          { deferred }
+          { deferred: context.deferred }
         ),
         observable,
       });
@@ -338,10 +354,9 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
 }
 
 function useObservable<TData, TVariables extends OperationVariables>(
-  client: ApolloClient<any>,
-  cacheEntry: CacheEntry<TData, TVariables> | undefined,
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>
+  context: HookContext<TData, TVariables>
 ) {
+  const { client, cacheEntry, watchQueryOptions } = context;
   // If we have a cache entry that means we previously suspended and are reading
   // the observable back from the suspense cache.
   const ref = useRef(cacheEntry?.observable);

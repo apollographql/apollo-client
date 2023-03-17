@@ -120,7 +120,9 @@ export function useSuspenseQuery_experimental<
     // the first run of the hook. Kick off a network request so we can suspend
     // immediately
     if (!cacheEntry) {
-      cacheEntry = suspenseCache.add(query, variables, {
+      cacheEntry = suspenseCache.add({
+        query,
+        variables,
         promise: maybeWrapConcastWithCustomPromise(
           observable.reobserveAsConcast(watchQueryOptions),
           { deferred }
@@ -153,7 +155,9 @@ export function useSuspenseQuery_experimental<
     if (variables !== previousOpts.variables || query !== previousOpts.query) {
       suspenseCache.remove(previousOpts.query, previousOpts.variables);
 
-      suspenseCache.add(query, variables, {
+      suspenseCache.add({
+        query,
+        variables,
         promise: observable.reobserve({ query, variables }),
         observable,
       });
@@ -172,7 +176,9 @@ export function useSuspenseQuery_experimental<
     (options) => {
       const promise = observable.fetchMore(options);
 
-      suspenseCache.add(query, watchQueryOptions.variables, {
+      suspenseCache.add({
+        query,
+        variables: watchQueryOptions.variables,
         promise,
         observable,
       });
@@ -186,7 +192,9 @@ export function useSuspenseQuery_experimental<
     (variables) => {
       const promise = observable.refetch(variables);
 
-      suspenseCache.add(query, watchQueryOptions.variables, {
+      suspenseCache.add({
+        query,
+        variables: watchQueryOptions.variables,
         promise,
         observable,
       });

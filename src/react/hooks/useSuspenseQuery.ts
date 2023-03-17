@@ -88,7 +88,10 @@ export function useSuspenseQuery_experimental<
   let cacheEntry = suspenseCache.lookup(query, variables);
 
   const [observable] = useState(() => {
-    return cacheEntry?.observable || client.watchQuery(watchQueryOptions);
+    return (
+      (cacheEntry?.observable as ObservableQuery<TData, TVariables>) ||
+      client.watchQuery(watchQueryOptions)
+    );
   });
 
   const result = useObservableQueryResult(observable);

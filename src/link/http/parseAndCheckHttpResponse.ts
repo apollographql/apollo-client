@@ -75,11 +75,14 @@ export async function readMultipartBody<
               (key) => key in result
             )
           ) {
-            // Here we detect done instead of errors since errors can exist
+            // Here we detect `done` and `errors` keys since errors can exist
             // on other incremental payloads, but we're only interested in
             // transport errors on subscriptions which are accompanied by
             // "done": true.
-            if ("payload" in result || "done" in result) {
+            if (
+              "payload" in result ||
+              ("errors" in result && "done" in result)
+            ) {
               let next = {};
               if ("payload" in result) {
                 next = { ...(result.payload as T) };

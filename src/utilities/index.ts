@@ -86,8 +86,6 @@ export {
   PendingPromise,
   PromiseWithState,
   RejectedPromise,
-  createFulfilledPromise,
-  createRejectedPromise,
   wrapPromiseWithState,
 } from './promises/decoration';
 

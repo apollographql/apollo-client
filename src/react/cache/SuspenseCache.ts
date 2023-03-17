@@ -14,13 +14,13 @@ type PromiseState<TValue> =
   | { status: 'fulfilled'; value: TValue; reason?: never }
   | { status: 'rejected'; value?: never; reason: unknown };
 
-type DecoratedPromise<TValue> = Promise<TValue> & PromiseState<TValue>;
+type PromiseWithState<TValue> = Promise<TValue> & PromiseState<TValue>;
 
 interface CacheEntry<TData, TVariables extends OperationVariables> {
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   variables: TVariables | undefined;
   observable: ObservableQuery<TData, TVariables>;
-  promise: DecoratedPromise<ApolloQueryResult<TData>>;
+  promise: PromiseWithState<ApolloQueryResult<TData>>;
 }
 
 type CacheKey = [DocumentNode, string];
@@ -31,36 +31,36 @@ function makeCacheKey(cacheKey: CacheKey) {
   return cacheKey;
 }
 
-function isDecoratedPromise<TValue>(
+function isStatefulPromise<TValue>(
   promise: Promise<TValue>
-): promise is DecoratedPromise<TValue> {
+): promise is PromiseWithState<TValue> {
   return 'status' in promise;
 }
 
-function decoratePromise<TValue>(
+function addStateToPromise<TValue>(
   promise: Promise<TValue>
-): DecoratedPromise<TValue> {
-  if (isDecoratedPromise(promise)) {
+): PromiseWithState<TValue> {
+  if (isStatefulPromise(promise)) {
     return promise;
   }
 
-  const decoratedPromise = promise as DecoratedPromise<TValue>;
+  const statefulPromise = promise as PromiseWithState<TValue>;
 
-  decoratedPromise.status = 'pending';
-  decoratedPromise.value = void 0;
-  decoratedPromise.reason = void 0;
+  statefulPromise.status = 'pending';
+  statefulPromise.value = void 0;
+  statefulPromise.reason = void 0;
 
-  decoratedPromise
+  statefulPromise
     .then((value) => {
-      decoratedPromise.status = 'fulfilled';
-      decoratedPromise.value = value;
+      statefulPromise.status = 'fulfilled';
+      statefulPromise.value = value;
     })
     .catch((reason) => {
-      decoratedPromise.status = 'rejected';
-      decoratedPromise.reason = reason;
+      statefulPromise.status = 'rejected';
+      statefulPromise.reason = reason;
     });
 
-  return decoratedPromise;
+  return statefulPromise;
 }
 
 export class SuspenseCache {
@@ -71,11 +71,11 @@ export class SuspenseCache {
 
   private queriesByPromise = canUseWeakMap
     ? new WeakMap<
-        DecoratedPromise<ApolloQueryResult<unknown>>,
+        PromiseWithState<ApolloQueryResult<unknown>>,
         OperationVariables
       >()
     : new Map<
-        DecoratedPromise<ApolloQueryResult<unknown>>,
+        PromiseWithState<ApolloQueryResult<unknown>>,
         OperationVariables
       >();
 
@@ -87,7 +87,10 @@ export class SuspenseCache {
     {
       promise,
       observable,
-    }: { promise: Promise<any>; observable: ObservableQuery<TData, TVariables> }
+    }: {
+      promise: Promise<ApolloQueryResult<TData>>;
+      observable: ObservableQuery<TData, TVariables>;
+    }
   ) {
     const cacheKey = this.getCacheKey(query, variables);
 
@@ -95,7 +98,7 @@ export class SuspenseCache {
       query,
       variables,
       observable,
-      promise: decoratePromise(promise),
+      promise: addStateToPromise(promise),
     };
 
     this.queries.set(cacheKey, entry);
@@ -116,7 +119,7 @@ export class SuspenseCache {
     return this.queries.get(cacheKey) as CacheEntry<TData, TVariables>;
   }
 
-  reverseLookup(promise: DecoratedPromise<ApolloQueryResult<unknown>>) {
+  reverseLookup(promise: PromiseWithState<ApolloQueryResult<unknown>>) {
     return this.queriesByPromise.get(promise);
   }
 

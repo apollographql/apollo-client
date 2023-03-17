@@ -84,12 +84,11 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
   const deferred = useIsDeferred(query);
+  let cacheEntry = suspenseCache.lookup(query, watchQueryOptions.variables);
   const observable = useObservable(client, cacheEntry, watchQueryOptions);
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
-
-  let cacheEntry = suspenseCache.lookup(query, variables);
 
   const result = useObservableQueryResult(observable);
 

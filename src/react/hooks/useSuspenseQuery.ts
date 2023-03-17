@@ -28,7 +28,6 @@ import {
 import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
-import { SuspenseCache } from '../cache';
 import { Subscription } from 'zen-observable-ts';
 import { CacheEntry } from '../cache/SuspenseCache';
 

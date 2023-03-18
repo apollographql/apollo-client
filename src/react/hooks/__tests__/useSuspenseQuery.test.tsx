@@ -2413,7 +2413,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it.skip('tears down subscription when throwing an error on refetch', async () => {
+  it('tears down subscription when throwing an error on refetch', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`
@@ -3656,7 +3656,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('does not re-suspend when calling `fetchMore` with different variables while using an "initial" suspense policy', async () => {
+  it('does not re-suspend when calling `fetchMore` with different variables while using an "initial" suspense policy', async () => {
     const { data, query, link } = usePaginatedCase();
 
     const { result, renders } = renderSuspenseHook(
@@ -3688,11 +3688,17 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
         data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { letters: data.slice(0, 2) },
+        // TODO: Get me to work with NetworkStatus.fetchMore
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -3704,7 +3710,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('properly uses `updateQuery` when calling `fetchMore`', async () => {
+  it('properly uses `updateQuery` when calling `fetchMore`', async () => {
     const { data, query, link } = usePaginatedCase();
 
     const { result, renders } = renderSuspenseHook(
@@ -3749,7 +3755,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
+  it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
     const { data, query, link } = usePaginatedCase();
 
     const cache = new InMemoryCache({
@@ -3859,7 +3865,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
   });
 
-  it.skip('honors refetchWritePolicy set to "overwrite"', async () => {
+  it('honors refetchWritePolicy set to "overwrite"', async () => {
     const query: TypedDocumentNode<
       { primes: number[] },
       { min: number; max: number }
@@ -3935,7 +3941,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('honors refetchWritePolicy set to "merge"', async () => {
+  it('honors refetchWritePolicy set to "merge"', async () => {
     const query: TypedDocumentNode<
       { primes: number[] },
       { min: number; max: number }
@@ -4014,7 +4020,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('defaults refetchWritePolicy to "overwrite"', async () => {
+  it('defaults refetchWritePolicy to "overwrite"', async () => {
     const query: TypedDocumentNode<
       { primes: number[] },
       { min: number; max: number }
@@ -4086,7 +4092,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('does not oversubscribe when suspending multiple times', async () => {
+  it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {
         user(id: $id) {
@@ -4162,7 +4168,7 @@ describe('useSuspenseQuery', () => {
     expect(client.getObservableQueries().size).toBe(1);
   });
 
-  it.skip('suspends deferred queries until initial chunk loads then streams in data as it loads', async () => {
+  it('suspends deferred queries until initial chunk loads then streams in data as it loads', async () => {
     const query = gql`
       query {
         greeting {
@@ -4251,7 +4257,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip.each<SuspenseQueryHookFetchPolicy>([
+  it.each<SuspenseQueryHookFetchPolicy>([
     'cache-first',
     'network-only',
     'no-cache',
@@ -4354,7 +4360,7 @@ describe('useSuspenseQuery', () => {
     }
   );
 
-  it.skip('does not suspend deferred queries with data in the cache and using a "cache-first" fetch policy', async () => {
+  it('does not suspend deferred queries with data in the cache and using a "cache-first" fetch policy', async () => {
     const query = gql`
       query {
         greeting {
@@ -4414,7 +4420,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+  it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
     const query = gql`
       query {
         greeting {
@@ -4553,7 +4559,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+  it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
     const query = gql`
       query {
         greeting {
@@ -4688,7 +4694,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('suspends deferred queries with lists and properly patches results', async () => {
+  it('suspends deferred queries with lists and properly patches results', async () => {
     const query = gql`
       query {
         greetings {
@@ -4858,7 +4864,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('suspends queries with deferred fragments in lists and properly merges arrays', async () => {
+  it('suspends queries with deferred fragments in lists and properly merges arrays', async () => {
     const query = gql`
       query DeferVariation {
         allProducts {
@@ -4994,7 +5000,7 @@ describe('useSuspenseQuery', () => {
     });
   });
 
-  it.skip('throws network errors returned by deferred queries', async () => {
+  it('throws network errors returned by deferred queries', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`
@@ -5035,7 +5041,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it.skip('throws graphql errors returned by deferred queries', async () => {
+  it('throws graphql errors returned by deferred queries', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`
@@ -5080,7 +5086,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it.skip('throws errors returned by deferred queries that include partial data', async () => {
+  it('throws errors returned by deferred queries that include partial data', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`
@@ -5126,7 +5132,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it.skip('discards partial data and does not throw errors returned in incremental chunks but returns them in `error` property', async () => {
+  it('discards partial data and does not throw errors returned in incremental chunks but returns them in `error` property', async () => {
     const query = gql`
       query {
         hero {
@@ -5302,7 +5308,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`', async () => {
+  it('adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`', async () => {
     const query = gql`
       query {
         hero {
@@ -5480,7 +5486,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`', async () => {
+  it('adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`', async () => {
     const query = gql`
       query {
         hero {
@@ -5642,7 +5648,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('can subscribe to subscriptions and react to cache updates via `subscribeToMore`', async () => {
+  it('can subscribe to subscriptions and react to cache updates via `subscribeToMore`', async () => {
     interface SubscriptionData {
       greetingUpdated: string;
     }

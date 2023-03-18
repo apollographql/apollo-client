@@ -24,6 +24,8 @@ import { DocumentType, verifyDocumentType } from '../parser';
 import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
+  SuspensePolicy,
+  SuspenseQueryHookFetchPolicy,
 } from '../types/types';
 import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
@@ -75,6 +77,7 @@ interface HookContext<TData, TVariables extends OperationVariables> {
   cacheEntry: CacheEntry<TData, TVariables> | undefined;
   deferred: boolean;
   suspenseCache: SuspenseCache;
+  suspensePolicy: SuspensePolicy;
   watchQueryOptions: WatchQueryOptions<TVariables, TData>;
 }
 
@@ -95,84 +98,88 @@ export function useSuspenseQuery_experimental<
     cacheEntry,
     deferred: useIsDeferred(query),
     suspenseCache,
-    watchQueryOptions: useWatchQueryOptions({ query, options, client }),
+    suspensePolicy: options.suspensePolicy || DEFAULT_SUSPENSE_POLICY,
+    watchQueryOptions,
   };
 
-  const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
+  // const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
   const observable = useObservable(context);
+  const promise = usePromise(observable, context);
 
   const { fetchPolicy, errorPolicy, returnPartialData, variables } =
     watchQueryOptions;
 
   const result = useObservableQueryResult(observable);
 
-  const hasFullResult = result.data && !result.partial;
-  const hasPartialResult = result.data && result.partial;
-  const usePartialResult = returnPartialData && hasPartialResult;
+  __use(promise);
 
-  const allowsThrownErrors =
-    // If we've got a deferred query that errors on an incremental chunk, we
-    // will have a partial result before the error is collected. We do not want
-    // to throw errors that have been returned from incremental chunks. Instead
-    // we offload those errors to the `error` property.
-    errorPolicy === 'none' && (!context.deferred || !hasPartialResult);
+  // const hasFullResult = result.data && !result.partial;
+  // const hasPartialResult = result.data && result.partial;
+  // const usePartialResult = returnPartialData && hasPartialResult;
 
-  if (
-    result.error &&
-    // Always throw network errors regardless of the error policy
-    (result.error.networkError || allowsThrownErrors)
-  ) {
-    throw result.error;
-  }
+  // const allowsThrownErrors =
+  //   // If we've got a deferred query that errors on an incremental chunk, we
+  //   // will have a partial result before the error is collected. We do not want
+  //   // to throw errors that have been returned from incremental chunks. Instead
+  //   // we offload those errors to the `error` property.
+  //   errorPolicy === 'none' && (!context.deferred || !hasPartialResult);
 
-  if (result.loading) {
-    // If we don't have a cache entry, but we are in a loading state, we are on
-    // the first run of the hook. Kick off a network request so we can suspend
-    // immediately
-    if (!cacheEntry) {
-      cacheEntry = suspenseCache.add({
-        query,
-        variables,
-        promise: maybeWrapConcastWithCustomPromise(
-          observable.reobserveAsConcast(watchQueryOptions),
-          { deferred: context.deferred }
-        ),
-        observable,
-      });
-    }
+  // if (
+  //   result.error &&
+  //   // Always throw network errors regardless of the error policy
+  //   (result.error.networkError || allowsThrownErrors)
+  // ) {
+  //   throw result.error;
+  // }
 
-    const hasUsableResult =
-      // When we have partial data in the cache, a network request will be kicked
-      // off to load the full set of data. Avoid suspending when the request is
-      // in flight to return the partial data immediately.
-      usePartialResult ||
-      // `cache-and-network` kicks off a network request even with a full set of
-      // data in the cache, which means the loading state will be set to `true`.
-      // Avoid suspending in this case.
-      (fetchPolicy === 'cache-and-network' && hasFullResult);
+  // if (result.loading) {
+  //   // If we don't have a cache entry, but we are in a loading state, we are on
+  //   // the first run of the hook. Kick off a network request so we can suspend
+  //   // immediately
+  //   // if (!cacheEntry) {
+  //   //   cacheEntry = suspenseCache.add({
+  //   //     query,
+  //   //     variables,
+  //   //     promise: maybeWrapConcastWithCustomPromise(
+  //   //       observable.reobserveAsConcast(watchQueryOptions),
+  //   //       { deferred: context.deferred }
+  //   //     ),
+  //   //     observable,
+  //   //   });
+  //   // }
 
-    if (!hasUsableResult) {
-      __use(cacheEntry.promise);
-    }
-  }
+  //   const hasUsableResult =
+  //     // When we have partial data in the cache, a network request will be kicked
+  //     // off to load the full set of data. Avoid suspending when the request is
+  //     // in flight to return the partial data immediately.
+  //     usePartialResult ||
+  //     // `cache-and-network` kicks off a network request even with a full set of
+  //     // data in the cache, which means the loading state will be set to `true`.
+  //     // Avoid suspending in this case.
+  //     (fetchPolicy === 'cache-and-network' && hasFullResult);
 
-  useEffect(() => {
-    const { variables, query } = watchQueryOptions;
-    const previousOpts = previousWatchQueryOptionsRef.current;
+  //   if (!hasUsableResult) {
+  //     __use(promise);
+  //   }
+  // }
 
-    if (variables !== previousOpts.variables || query !== previousOpts.query) {
-      suspenseCache.remove(previousOpts.query, previousOpts.variables);
+  // useEffect(() => {
+  //   const { variables, query } = watchQueryOptions;
+  //   const previousOpts = previousWatchQueryOptionsRef.current;
 
-      suspenseCache.add({
-        query,
-        variables,
-        promise: observable.reobserve({ query, variables }),
-        observable,
-      });
+  //   if (variables !== previousOpts.variables || query !== previousOpts.query) {
+  //     suspenseCache.remove(previousOpts.query, previousOpts.variables);
 
-      previousWatchQueryOptionsRef.current = watchQueryOptions;
-    }
-  }, [watchQueryOptions]);
+  //     suspenseCache.add({
+  //       query,
+  //       variables,
+  //       promise: observable.reobserve({ query, variables }),
+  //       observable,
+  //     });
+
+  //     previousWatchQueryOptionsRef.current = watchQueryOptions;
+  //   }
+  // }, [watchQueryOptions]);
 
   useEffect(() => {
     return () => {
@@ -368,6 +375,132 @@ function useObservable<TData, TVariables extends OperationVariables>(
   }
 
   return ref.current as ObservableQuery<TData, TVariables>;
+}
+
+function shouldAttachPromise(
+  result: Pick<ApolloQueryResult<unknown>, 'data' | 'partial'>,
+  watchQueryOptions: WatchQueryOptions<OperationVariables, unknown>
+) {
+  const hasFullResult = result.data && !result.partial;
+  const hasPartialResult = result.data && result.partial;
+  const usePartialResult =
+    watchQueryOptions.returnPartialData && hasPartialResult;
+
+  return !hasFullResult && !usePartialResult;
+}
+
+function shouldReadFromCache(fetchPolicy: SuspenseQueryHookFetchPolicy) {
+  return fetchPolicy === 'cache-first' || fetchPolicy === 'cache-and-network';
+}
+
+function usePromise<TData, TVariables extends OperationVariables>(
+  observable: ObservableQuery<TData, TVariables>,
+  context: HookContext<TData, TVariables>
+) {
+  const {
+    client,
+    cacheEntry,
+    watchQueryOptions,
+    suspenseCache,
+    suspensePolicy,
+  } = context;
+  const { variables, query } = watchQueryOptions;
+  const previousVariablesRef = useRef(variables);
+  const previousQueryRef = useRef(query);
+
+  const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>(
+    cacheEntry?.promise
+  );
+
+  // If the ref value is `undefined`, we are running the hook for the first time
+  if (ref.current === void 0) {
+    ref.current = null;
+
+    const result = observable.getCurrentResult();
+
+    // If we are running the hook for the first time and are in a loading state,
+    // we are unable to pull results from the cache, so we need to kick off the
+    // query.
+    if (result.networkStatus === NetworkStatus.loading) {
+      const promise = maybeWrapConcastWithCustomPromise(
+        observable.reobserveAsConcast(watchQueryOptions),
+        { deferred: context.deferred }
+      );
+
+      if (shouldAttachPromise(result, watchQueryOptions)) {
+        ref.current = promise;
+      }
+    }
+  }
+
+  if (!equal(variables, previousVariablesRef.current)) {
+    const promise = maybeWrapConcastWithCustomPromise(
+      observable.reobserveAsConcast(watchQueryOptions),
+      { deferred: context.deferred }
+    );
+
+    const result = observable.getCurrentResult();
+
+    if (
+      shouldAttachPromise(result, watchQueryOptions) &&
+      suspensePolicy === 'always'
+    ) {
+      ref.current = promise;
+    }
+
+    previousVariablesRef.current = variables;
+  }
+
+  if (!equal(query, previousQueryRef.current)) {
+    const promise = maybeWrapConcastWithCustomPromise(
+      observable.reobserveAsConcast(watchQueryOptions),
+      { deferred: context.deferred }
+    );
+
+    const result: Pick<ApolloQueryResult<TData>, 'data' | 'partial'> = {
+      data: void 0 as TData,
+    };
+
+    // We need to read from the cache directly because
+    // observable.getCurrentResult() returns the data from the
+    // previous query. We are unable to detect if we have a proper cached result
+    // for the new query.
+    if (
+      shouldReadFromCache(
+        watchQueryOptions.fetchPolicy as SuspenseQueryHookFetchPolicy
+      )
+    ) {
+      const diff = client.cache.diff<TData>({
+        query,
+        variables,
+        optimistic: true,
+        returnPartialData: true,
+      });
+
+      if (!equal(diff.result, {})) {
+        result.data = diff.result as TData;
+      }
+
+      result.partial = !diff.complete;
+    }
+
+    if (
+      shouldAttachPromise(result, watchQueryOptions) &&
+      suspensePolicy === 'always'
+    ) {
+      ref.current = promise;
+    }
+
+    previousQueryRef.current = query;
+  }
+
+  if (ref.current) {
+    const { query, variables } = watchQueryOptions;
+
+    suspenseCache.add({ query, variables, promise: ref.current, observable });
+  }
+
+  return ref.current;
 }
 
 function useIsDeferred(query: DocumentNode) {

@@ -1,1 +1,1 @@
-export { SuspenseCache } from './SuspenseCache';
+export { CacheEntry, SuspenseCache } from './SuspenseCache';

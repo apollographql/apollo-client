@@ -101,7 +101,6 @@ export function useSuspenseQuery_experimental<
     watchQueryOptions,
   };
 
-  // const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
   const observable = useObservable(context);
   const result = useObservableQueryResult(observable);
   const [promise, setPromise] = usePromise(observable, context);
@@ -109,74 +108,6 @@ export function useSuspenseQuery_experimental<
   const { errorPolicy, variables } = watchQueryOptions;
 
   __use(promise);
-
-  // const hasFullResult = result.data && !result.partial;
-  // const hasPartialResult = result.data && result.partial;
-  // const usePartialResult = returnPartialData && hasPartialResult;
-
-  // const allowsThrownErrors =
-  //   // If we've got a deferred query that errors on an incremental chunk, we
-  //   // will have a partial result before the error is collected. We do not want
-  //   // to throw errors that have been returned from incremental chunks. Instead
-  //   // we offload those errors to the `error` property.
-  //   errorPolicy === 'none' && (!context.deferred || !hasPartialResult);
-
-  // if (
-  //   result.error &&
-  //   // Always throw network errors regardless of the error policy
-  //   (result.error.networkError || allowsThrownErrors)
-  // ) {
-  //   throw result.error;
-  // }
-
-  // if (result.loading) {
-  //   // If we don't have a cache entry, but we are in a loading state, we are on
-  //   // the first run of the hook. Kick off a network request so we can suspend
-  //   // immediately
-  //   // if (!cacheEntry) {
-  //   //   cacheEntry = suspenseCache.add({
-  //   //     query,
-  //   //     variables,
-  //   //     promise: maybeWrapConcastWithCustomPromise(
-  //   //       observable.reobserveAsConcast(watchQueryOptions),
-  //   //       { deferred: context.deferred }
-  //   //     ),
-  //   //     observable,
-  //   //   });
-  //   // }
-
-  //   const hasUsableResult =
-  //     // When we have partial data in the cache, a network request will be kicked
-  //     // off to load the full set of data. Avoid suspending when the request is
-  //     // in flight to return the partial data immediately.
-  //     usePartialResult ||
-  //     // `cache-and-network` kicks off a network request even with a full set of
-  //     // data in the cache, which means the loading state will be set to `true`.
-  //     // Avoid suspending in this case.
-  //     (fetchPolicy === 'cache-and-network' && hasFullResult);
-
-  //   if (!hasUsableResult) {
-  //     __use(promise);
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   const { variables, query } = watchQueryOptions;
-  //   const previousOpts = previousWatchQueryOptionsRef.current;
-
-  //   if (variables !== previousOpts.variables || query !== previousOpts.query) {
-  //     suspenseCache.remove(previousOpts.query, previousOpts.variables);
-
-  //     suspenseCache.add({
-  //       query,
-  //       variables,
-  //       promise: observable.reobserve({ query, variables }),
-  //       observable,
-  //     });
-
-  //     previousWatchQueryOptionsRef.current = watchQueryOptions;
-  //   }
-  // }, [watchQueryOptions]);
 
   useEffect(() => {
     return () => {

@@ -190,12 +190,7 @@ export function useSuspenseQuery_experimental<
     (options) => {
       const promise = observable.fetchMore(options);
 
-      suspenseCache.add({
-        query,
-        variables: watchQueryOptions.variables,
-        promise,
-        observable,
-      });
+      setPromise(promise);
 
       return promise;
     },

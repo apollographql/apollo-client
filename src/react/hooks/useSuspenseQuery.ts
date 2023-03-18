@@ -1,5 +1,12 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
+import {
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useState,
+  MutableRefObject,
+} from 'react';
 import { equal } from '@wry/equality';
 import {
   ApolloClient,
@@ -102,12 +109,22 @@ export function useSuspenseQuery_experimental<
   };
 
   const observable = useObservable(context);
-  const result = useObservableQueryResult(observable);
+
+  const resultRef = useRef<ApolloQueryResult<TData>>();
+
+  if (!resultRef.current) {
+    resultRef.current = observable.getCurrentResult();
+  }
+
   const [promise, setPromise] = usePromise(observable, context);
 
   const { errorPolicy, variables } = watchQueryOptions;
 
+  // Intentionally ignore the result returned from __use since we want to
+  // observe results from the observable instead of the the promise.
   __use(promise);
+
+  const result = useObservableQueryResult(resultRef, observable);
 
   useEffect(() => {
     return () => {
@@ -446,14 +463,12 @@ function useIsDeferred(query: DocumentNode) {
   return useMemo(() => hasDirectives(['defer'], query), [query]);
 }
 
-function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
-  const resultRef = useRef<ApolloQueryResult<TData>>();
+function useObservableQueryResult<TData>(
+  resultRef: MutableRefObject<ApolloQueryResult<TData>>,
+  observable: ObservableQuery<TData>
+) {
   const isMountedRef = useRef(false);
   const subscribeTimeoutRef = useRef<NodeJS.Timeout>();
-
-  if (!resultRef.current) {
-    resultRef.current = observable.getCurrentResult();
-  }
 
   // React keeps refs and effects from useSyncExternalStore around after the
   // component initially mounts even if the component re-suspends. We need to

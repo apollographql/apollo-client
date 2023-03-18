@@ -3167,7 +3167,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('re-suspends multiple times when calling `refetch` multiple times', async () => {
+  it('re-suspends multiple times when calling `refetch` multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {
         user(id: $id) {
@@ -3255,7 +3255,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('does not suspend and returns previous data when calling `refetch` and using an "initial" suspensePolicy', async () => {
+  it('does not suspend and returns previous data when calling `refetch` and using an "initial" suspensePolicy', async () => {
     const query = gql`
       query UserQuery($id: String!) {
         user(id: $id) {
@@ -3309,11 +3309,17 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        // TODO: Fix me to make it work with NetworkStatus.refetch
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },

@@ -497,7 +497,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
   const [, forceUpdate] = useState(0);
 
   function setPromise(promise: Promise<ApolloQueryResult<TData>> | null) {
-    ref.current = promise;
+    ref.current = suspensePolicy === 'always' ? promise : null;
     forceUpdate((c) => c + 1);
   }
 

@@ -1,12 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import {
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  useState,
-  MutableRefObject,
-} from 'react';
+import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { equal } from '@wry/equality';
 import {
   ApolloClient,
@@ -33,7 +26,12 @@ import {
   ObservableQueryFields,
   SuspensePolicy,
 } from '../types/types';
-import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
+import {
+  useDeepMemo,
+  useLazyRef,
+  useIsomorphicLayoutEffect,
+  __use,
+} from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { Subscription } from 'zen-observable-ts';
@@ -109,13 +107,6 @@ export function useSuspenseQuery_experimental<
   };
 
   const observable = useObservable(context);
-
-  const resultRef = useRef<ApolloQueryResult<TData>>();
-
-  if (!resultRef.current) {
-    resultRef.current = observable.getCurrentResult();
-  }
-
   const [promise, setPromise] = usePromise(observable, context);
 
   const { errorPolicy, variables } = watchQueryOptions;
@@ -123,8 +114,7 @@ export function useSuspenseQuery_experimental<
   // Intentionally ignore the result returned from __use since we want to
   // observe results from the observable instead of the the promise.
   __use(promise);
-
-  const result = useObservableQueryResult(resultRef, observable);
+  const result = useObservableQueryResult(observable);
 
   useEffect(() => {
     return () => {
@@ -463,10 +453,8 @@ function useIsDeferred(query: DocumentNode) {
   return useMemo(() => hasDirectives(['defer'], query), [query]);
 }
 
-function useObservableQueryResult<TData>(
-  resultRef: MutableRefObject<ApolloQueryResult<TData>>,
-  observable: ObservableQuery<TData>
-) {
+function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {
+  const resultRef = useLazyRef(() => observable.getCurrentResult());
   const isMountedRef = useRef(false);
   const subscribeTimeoutRef = useRef<NodeJS.Timeout>();
 

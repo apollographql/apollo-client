@@ -194,7 +194,12 @@ function usePaginatedCase() {
     const { offset = 0, limit = 2 } = operation.variables;
     const letters = data.slice(offset, offset + limit);
 
-    return Observable.of({ data: { letters } });
+    return new Observable((observer) => {
+      setTimeout(() => {
+        observer.next({ data: { letters } });
+        observer.complete();
+      }, 10);
+    });
   });
 
   return { query, link, data };

@@ -3036,7 +3036,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('re-suspends when calling `refetch`', async () => {
+  it('re-suspends when calling `refetch`', async () => {
     const query = gql`
       query UserQuery($id: String!) {
         user(id: $id) {
@@ -3102,7 +3102,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('re-suspends when calling `refetch` with new variables', async () => {
+  it('re-suspends when calling `refetch` with new variables', async () => {
     const query = gql`
       query UserQuery($id: String!) {
         user(id: $id) {

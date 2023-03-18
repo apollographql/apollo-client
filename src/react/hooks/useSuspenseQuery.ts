@@ -1,5 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { equal } from '@wry/equality';
 import {
   ApolloClient,
@@ -104,10 +104,9 @@ export function useSuspenseQuery_experimental<
 
   // const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
   const observable = useObservable(context);
-  const promise = usePromise(observable, context);
+  const [promise, setPromise] = usePromise(observable, context);
 
-  const { fetchPolicy, errorPolicy, returnPartialData, variables } =
-    watchQueryOptions;
+  const { errorPolicy, variables } = watchQueryOptions;
 
   const result = useObservableQueryResult(observable);
 
@@ -207,12 +206,7 @@ export function useSuspenseQuery_experimental<
     (variables) => {
       const promise = observable.refetch(variables);
 
-      suspenseCache.add({
-        query,
-        variables: watchQueryOptions.variables,
-        promise,
-        observable,
-      });
+      setPromise(promise);
 
       return promise;
     },
@@ -500,7 +494,14 @@ function usePromise<TData, TVariables extends OperationVariables>(
     suspenseCache.add({ query, variables, promise: ref.current, observable });
   }
 
-  return ref.current;
+  const [, forceUpdate] = useState(0);
+
+  function setPromise(promise: Promise<ApolloQueryResult<TData>> | null) {
+    ref.current = promise;
+    forceUpdate((c) => c + 1);
+  }
+
+  return [ref.current, setPromise] as const;
 }
 
 function useIsDeferred(query: DocumentNode) {

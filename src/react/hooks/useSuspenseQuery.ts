@@ -25,7 +25,6 @@ import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   SuspensePolicy,
-  SuspenseQueryHookFetchPolicy,
 } from '../types/types';
 import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
@@ -104,11 +103,10 @@ export function useSuspenseQuery_experimental<
 
   // const previousWatchQueryOptionsRef = useRef(watchQueryOptions);
   const observable = useObservable(context);
+  const result = useObservableQueryResult(observable);
   const [promise, setPromise] = usePromise(observable, context);
 
   const { errorPolicy, variables } = watchQueryOptions;
-
-  const result = useObservableQueryResult(observable);
 
   __use(promise);
 
@@ -378,7 +376,7 @@ function shouldAttachPromise(
   return !hasFullResult && !usePartialResult;
 }
 
-function shouldReadFromCache(fetchPolicy: SuspenseQueryHookFetchPolicy) {
+function shouldReadFromCache(fetchPolicy: WatchQueryFetchPolicy) {
   return fetchPolicy === 'cache-first' || fetchPolicy === 'cache-and-network';
 }
 
@@ -389,6 +387,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
   const {
     client,
     cacheEntry,
+    deferred,
     watchQueryOptions,
     suspenseCache,
     suspensePolicy,
@@ -411,10 +410,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
     // we are unable to pull results from the cache, so we need to kick off the
     // query.
     if (result.networkStatus === NetworkStatus.loading) {
-      const promise = maybeWrapConcastWithCustomPromise(
-        observable.reobserveAsConcast(watchQueryOptions),
-        { deferred: context.deferred }
-      );
+      const promise = reobserve(observable, watchQueryOptions, { deferred });
 
       if (shouldAttachPromise(result, watchQueryOptions)) {
         ref.current = promise;
@@ -423,11 +419,8 @@ function usePromise<TData, TVariables extends OperationVariables>(
   }
 
   if (!equal(variables, previousVariablesRef.current)) {
-    const promise = maybeWrapConcastWithCustomPromise(
-      observable.reobserveAsConcast(watchQueryOptions),
-      { deferred: context.deferred }
-    );
-
+    ref.current = null;
+    const promise = reobserve(observable, watchQueryOptions, { deferred });
     const result = observable.getCurrentResult();
 
     if (
@@ -441,10 +434,8 @@ function usePromise<TData, TVariables extends OperationVariables>(
   }
 
   if (!equal(query, previousQueryRef.current)) {
-    const promise = maybeWrapConcastWithCustomPromise(
-      observable.reobserveAsConcast(watchQueryOptions),
-      { deferred: context.deferred }
-    );
+    ref.current = null;
+    const promise = reobserve(observable, watchQueryOptions, { deferred });
 
     const result: Pick<ApolloQueryResult<TData>, 'data' | 'partial'> = {
       data: void 0 as TData,
@@ -456,7 +447,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
     // for the new query.
     if (
       shouldReadFromCache(
-        watchQueryOptions.fetchPolicy as SuspenseQueryHookFetchPolicy
+        observable.options.fetchPolicy || DEFAULT_FETCH_POLICY
       )
     ) {
       const diff = client.cache.diff<TData>({
@@ -497,6 +488,27 @@ function usePromise<TData, TVariables extends OperationVariables>(
   }
 
   return [ref.current, setPromise] as const;
+}
+
+function reobserve<TData, TVariables extends OperationVariables>(
+  observable: ObservableQuery<TData, TVariables>,
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>,
+  { deferred }: { deferred: boolean }
+) {
+  return maybeWrapConcastWithCustomPromise(
+    observable.reobserveAsConcast(getReobserveOptions(watchQueryOptions)),
+    { deferred }
+  );
+}
+
+// omit fetch policy and nextFetchPolicy to prevent from overwriting them
+// after we initialize the observable
+function getReobserveOptions<TData, TVariables extends OperationVariables>({
+  fetchPolicy,
+  nextFetchPolicy,
+  ...options
+}: WatchQueryOptions<TVariables, TData>) {
+  return options;
 }
 
 function useIsDeferred(query: DocumentNode) {

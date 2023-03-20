@@ -6,7 +6,7 @@ export class SuspenseCache {
 
   forClient(client: ApolloClient<unknown>) {
     if (!this.caches.has(client)) {
-      this.caches.set(client, new SuspenseQueryCache());
+      this.caches.set(client, new SuspenseQueryCache(client));
     }
 
     return this.caches.get(client)!;

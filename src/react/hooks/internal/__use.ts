@@ -5,15 +5,12 @@ import { wrapPromiseWithState } from '../../../utilities';
 // properties to the promise and reading them synchronously. This is named with
 // two underscores to allow this hook to evade typical rules of hooks (i.e. its
 // can be used conditionally)
-export function __use<TValue>(promise: Promise<TValue> | null) {
-  if (promise === null) {
-    return null;
-  }
-
+export function __use<TValue>(promise: Promise<TValue>) {
   const statefulPromise = wrapPromiseWithState(promise);
 
   switch (statefulPromise.status) {
     case 'pending':
+      console.log('suspend!');
       throw statefulPromise;
     case 'rejected':
       throw statefulPromise.reason;

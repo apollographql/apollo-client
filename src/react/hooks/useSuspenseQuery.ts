@@ -35,7 +35,7 @@ import {
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { Subscription } from 'zen-observable-ts';
-import { CacheEntry, SuspenseCache } from '../cache';
+import { CacheEntry, SuspenseQueryCache } from '../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -80,7 +80,7 @@ interface HookContext<TData, TVariables extends OperationVariables> {
   client: ApolloClient<any>;
   cacheEntry: CacheEntry<TData, TVariables> | undefined;
   deferred: boolean;
-  suspenseCache: SuspenseCache;
+  queryCache: SuspenseQueryCache;
   suspensePolicy: SuspensePolicy;
   watchQueryOptions: WatchQueryOptions<TVariables, TData>;
 }
@@ -95,13 +95,14 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
-  let cacheEntry = suspenseCache.lookup(query, watchQueryOptions.variables);
+  const queryCache = suspenseCache.forClient(client);
+  const cacheEntry = queryCache.lookup(query, watchQueryOptions.variables);
 
   const context: HookContext<TData, TVariables> = {
     client,
     cacheEntry,
     deferred: useIsDeferred(query),
-    suspenseCache,
+    queryCache,
     suspensePolicy: options.suspensePolicy || DEFAULT_SUSPENSE_POLICY,
     watchQueryOptions,
   };
@@ -118,7 +119,7 @@ export function useSuspenseQuery_experimental<
 
   useEffect(() => {
     return () => {
-      suspenseCache.remove(query, variables);
+      queryCache.remove(query, variables);
     };
   }, []);
 
@@ -327,7 +328,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
     cacheEntry,
     deferred,
     watchQueryOptions,
-    suspenseCache,
+    queryCache,
     suspensePolicy,
   } = context;
   const { variables, query } = watchQueryOptions;
@@ -415,7 +416,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
   if (ref.current) {
     const { query, variables } = watchQueryOptions;
 
-    suspenseCache.add({ query, variables, promise: ref.current, observable });
+    queryCache.add({ query, variables, promise: ref.current, observable });
   }
 
   const [, forceUpdate] = useState(0);

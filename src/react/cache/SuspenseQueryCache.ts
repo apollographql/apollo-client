@@ -1,10 +1,12 @@
 import { Trie } from '@wry/trie';
 import {
+  ApolloClient,
   ApolloQueryResult,
   DocumentNode,
   ObservableQuery,
   OperationVariables,
   TypedDocumentNode,
+  WatchQueryOptions,
 } from '../../core';
 
 import { canonicalStringify } from '../../cache';
@@ -21,6 +23,7 @@ export interface CacheEntry<TData, TVariables extends OperationVariables> {
 }
 
 export class SuspenseQueryCache {
+  private client: ApolloClient<unknown>;
   private queries = new Map<
     CacheKey,
     CacheEntry<unknown, OperationVariables>
@@ -30,6 +33,16 @@ export class SuspenseQueryCache {
     canUseWeakMap,
     (cacheKey: CacheKey) => cacheKey
   );
+
+  private observables = new Map<CacheKey, ObservableQuery>();
+  private queriesByObservable = new WeakMap<
+    ObservableQuery,
+    Promise<ApolloQueryResult<unknown>>
+  >();
+
+  constructor(client: ApolloClient<unknown>) {
+    this.client = client;
+  }
 
   add<TData = any, TVariables extends OperationVariables = OperationVariables>({
     query,
@@ -54,6 +67,44 @@ export class SuspenseQueryCache {
     this.queries.set(cacheKey, entry);
 
     return entry;
+  }
+
+  getObservable<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(
+    watchQueryOptions: WatchQueryOptions<TVariables, TData>
+  ): ObservableQuery<TData, TVariables> {
+    const { query, variables } = watchQueryOptions;
+
+    const cacheKey = this.getCacheKey(query, variables);
+
+    if (!this.observables.has(cacheKey)) {
+      this.observables.set(cacheKey, this.client.watchQuery(watchQueryOptions));
+    }
+
+    return this.observables.get(cacheKey)! as ObservableQuery<
+      TData,
+      TVariables
+    >;
+  }
+
+  getPromise<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(
+    observable: ObservableQuery<TData, TVariables>
+  ): Promise<ApolloQueryResult<TData>> | undefined {
+    return this.queriesByObservable.get(observable) as Promise<
+      ApolloQueryResult<TData>
+    >;
+  }
+
+  setPromise(
+    observable: ObservableQuery,
+    promise: Promise<ApolloQueryResult<unknown>>
+  ) {
+    this.queriesByObservable.set(observable, promise);
   }
 
   lookup<

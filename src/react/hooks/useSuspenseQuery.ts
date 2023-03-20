@@ -96,6 +96,7 @@ export function useSuspenseQuery_experimental<
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const queryCache = suspenseCache.forClient(client);
+  const observable = queryCache.getObservable(watchQueryOptions);
   const cacheEntry = queryCache.lookup(query, watchQueryOptions.variables);
 
   const context: HookContext<TData, TVariables> = {
@@ -107,7 +108,6 @@ export function useSuspenseQuery_experimental<
     watchQueryOptions,
   };
 
-  const observable = useObservable(context);
   const [promise, setPromise] = usePromise(observable, context);
 
   const { errorPolicy, variables } = watchQueryOptions;

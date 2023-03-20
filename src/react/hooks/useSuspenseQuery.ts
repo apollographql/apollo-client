@@ -35,7 +35,7 @@ import {
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { Subscription } from 'zen-observable-ts';
-import { CacheEntry, SuspenseQueryCache } from '../cache';
+import { SuspenseQueryCache } from '../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -78,7 +78,6 @@ const DEFAULT_ERROR_POLICY = 'none';
 
 interface HookContext<TData, TVariables extends OperationVariables> {
   client: ApolloClient<any>;
-  cacheEntry: CacheEntry<TData, TVariables> | undefined;
   deferred: boolean;
   queryCache: SuspenseQueryCache;
   suspensePolicy: SuspensePolicy;
@@ -97,11 +96,9 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const queryCache = suspenseCache.forClient(client);
   const observable = queryCache.getObservable(watchQueryOptions);
-  const cacheEntry = queryCache.lookup(query, watchQueryOptions.variables);
 
   const context: HookContext<TData, TVariables> = {
     client,
-    cacheEntry,
     deferred: useIsDeferred(query),
     queryCache,
     suspensePolicy: options.suspensePolicy || DEFAULT_SUSPENSE_POLICY,
@@ -112,9 +109,11 @@ export function useSuspenseQuery_experimental<
 
   const { errorPolicy, variables } = watchQueryOptions;
 
-  // Intentionally ignore the result returned from __use since we want to
-  // observe results from the observable instead of the the promise.
-  __use(promise);
+  if (promise) {
+    // Intentionally ignore the result returned from __use since we want to
+    // observe results from the observable instead of the the promise.
+    __use(promise);
+  }
   const result = useObservableQueryResult(observable);
 
   useEffect(() => {
@@ -286,31 +285,30 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   return watchQueryOptions;
 }
 
-function useObservable<TData, TVariables extends OperationVariables>(
-  context: HookContext<TData, TVariables>
-) {
-  const { client, cacheEntry, watchQueryOptions } = context;
-  // If we have a cache entry that means we previously suspended and are reading
-  // the observable back from the suspense cache.
-  const ref = useRef(cacheEntry?.observable);
+// function useObservable<TData, TVariables extends OperationVariables>(
+//   context: HookContext<TData, TVariables>
+// ) {
+//   const { client, cacheEntry, watchQueryOptions } = context;
+//   // If we have a cache entry that means we previously suspended and are reading
+//   // the observable back from the suspense cache.
+//   const ref = useRef(cacheEntry?.observable);
 
-  // If we do not have a ref set, we are executing this hook for the first time
-  // and have not yet suspended.
-  if (!ref.current) {
-    ref.current = client.watchQuery(watchQueryOptions);
-  }
+//   // If we do not have a ref set, we are executing this hook for the first time
+//   // and have not yet suspended.
+//   if (!ref.current) {
+//     ref.current = client.watchQuery(watchQueryOptions);
+//   }
 
-  return ref.current as ObservableQuery<TData, TVariables>;
-}
+//   return ref.current as ObservableQuery<TData, TVariables>;
+// }
 
 function shouldAttachPromise(
   result: Pick<ApolloQueryResult<unknown>, 'data' | 'partial'>,
-  watchQueryOptions: WatchQueryOptions<OperationVariables, unknown>
+  { returnPartialData }: WatchQueryOptions<OperationVariables, unknown>
 ) {
   const hasFullResult = result.data && !result.partial;
   const hasPartialResult = result.data && result.partial;
-  const usePartialResult =
-    watchQueryOptions.returnPartialData && hasPartialResult;
+  const usePartialResult = returnPartialData && hasPartialResult;
 
   return !hasFullResult && !usePartialResult;
 }
@@ -323,23 +321,17 @@ function usePromise<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>,
   context: HookContext<TData, TVariables>
 ) {
-  const {
-    client,
-    cacheEntry,
-    deferred,
-    watchQueryOptions,
-    queryCache,
-    suspensePolicy,
-  } = context;
+  const { client, deferred, watchQueryOptions, queryCache, suspensePolicy } =
+    context;
   const { variables, query } = watchQueryOptions;
   const previousVariablesRef = useRef(variables);
   const previousQueryRef = useRef(query);
 
   const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>(
-    cacheEntry?.promise
+    queryCache.getPromise(observable)
   );
 
-  // If the ref value is `undefined`, we are running the hook for the first time
+  // If the promise is `undefined`, we are running the hook for the first time
   if (ref.current === void 0) {
     ref.current = null;
 
@@ -349,7 +341,10 @@ function usePromise<TData, TVariables extends OperationVariables>(
     // we are unable to pull results from the cache, so we need to kick off the
     // query.
     if (result.networkStatus === NetworkStatus.loading) {
-      const promise = reobserve(observable, watchQueryOptions, { deferred });
+      const promise = reobserve(observable, watchQueryOptions, {
+        deferred,
+        queryCache,
+      });
 
       if (shouldAttachPromise(result, watchQueryOptions)) {
         ref.current = promise;
@@ -359,7 +354,10 @@ function usePromise<TData, TVariables extends OperationVariables>(
 
   if (!equal(variables, previousVariablesRef.current)) {
     ref.current = null;
-    const promise = reobserve(observable, watchQueryOptions, { deferred });
+    const promise = reobserve(observable, watchQueryOptions, {
+      deferred,
+      queryCache,
+    });
     const result = observable.getCurrentResult();
 
     if (
@@ -374,7 +372,10 @@ function usePromise<TData, TVariables extends OperationVariables>(
 
   if (!equal(query, previousQueryRef.current)) {
     ref.current = null;
-    const promise = reobserve(observable, watchQueryOptions, { deferred });
+    const promise = reobserve(observable, watchQueryOptions, {
+      deferred,
+      queryCache,
+    });
 
     const result: Pick<ApolloQueryResult<TData>, 'data' | 'partial'> = {
       data: void 0 as TData,
@@ -414,9 +415,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
   }
 
   if (ref.current) {
-    const { query, variables } = watchQueryOptions;
-
-    queryCache.add({ query, variables, promise: ref.current, observable });
+    queryCache.setPromise(observable, ref.current);
   }
 
   const [, forceUpdate] = useState(0);
@@ -432,12 +431,19 @@ function usePromise<TData, TVariables extends OperationVariables>(
 function reobserve<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>,
   watchQueryOptions: WatchQueryOptions<TVariables, TData>,
-  { deferred }: { deferred: boolean }
+  {
+    deferred,
+    queryCache,
+  }: { deferred: boolean; queryCache: SuspenseQueryCache }
 ) {
-  return maybeWrapConcastWithCustomPromise(
+  const promise = maybeWrapConcastWithCustomPromise(
     observable.reobserveAsConcast(getReobserveOptions(watchQueryOptions)),
     { deferred }
   );
+
+  queryCache.setPromise(observable, promise);
+
+  return promise;
 }
 
 // omit fetch policy and nextFetchPolicy to prevent from overwriting them

@@ -84,14 +84,18 @@ function renderSuspenseHook<Result, Props>(
   };
 
   const {
-    cache,
-    client,
-    link,
     mocks = [],
     suspenseCache = new SuspenseCache(),
     strictMode,
     ...renderHookOptions
   } = options;
+
+  const client =
+    options.client ||
+    new ApolloClient({
+      cache: options.cache || new InMemoryCache(),
+      link: options.link || new MockLink(mocks),
+    });
 
   const view = renderHook(
     (props) => {
@@ -118,20 +122,9 @@ function renderSuspenseHook<Result, Props>(
                   renders.errors.push(error);
                 }}
               >
-                {client ? (
-                  <ApolloProvider client={client} suspenseCache={suspenseCache}>
-                    {children}
-                  </ApolloProvider>
-                ) : (
-                  <MockedProvider
-                    cache={cache}
-                    mocks={mocks}
-                    link={link}
-                    suspenseCache={suspenseCache}
-                  >
-                    {children}
-                  </MockedProvider>
-                )}
+                <ApolloProvider client={client} suspenseCache={suspenseCache}>
+                  {children}
+                </ApolloProvider>
               </ErrorBoundary>
             </Suspense>
           </Wrapper>

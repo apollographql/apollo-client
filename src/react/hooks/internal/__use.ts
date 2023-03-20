@@ -10,7 +10,6 @@ export function __use<TValue>(promise: Promise<TValue>) {
 
   switch (statefulPromise.status) {
     case 'pending':
-      console.log('suspend!');
       throw statefulPromise;
     case 'rejected':
       throw statefulPromise.reason;

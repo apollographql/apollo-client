@@ -352,27 +352,34 @@ describe('useSuspenseQuery', () => {
   });
 
   it('prioritizes the `suspenseCache` option over the context value', () => {
-    const { query } = useSimpleQueryCase();
+    const { query, mocks } = useSimpleQueryCase();
 
     const directSuspenseCache = new SuspenseCache();
     const contextSuspenseCache = new SuspenseCache();
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
 
     renderHook(
       () => useSuspenseQuery(query, { suspenseCache: directSuspenseCache }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider
-            suspenseCache={contextSuspenseCache}
-            showWarnings={false}
-          >
+          <ApolloProvider client={client} suspenseCache={contextSuspenseCache}>
             {children}
-          </MockedProvider>
+          </ApolloProvider>
         ),
       }
     );
 
-    expect(directSuspenseCache.lookup(query, {})).toBeTruthy();
-    expect(contextSuspenseCache.lookup(query, {})).not.toBeTruthy();
+    expect(
+      directSuspenseCache.forClient(client).lookup(query, {})
+    ).toBeTruthy();
+
+    expect(
+      contextSuspenseCache.forClient(client).lookup(query, {})
+    ).not.toBeTruthy();
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -673,12 +680,16 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
+    expect(
+      suspenseCache.forClient(client).lookup(query, undefined)
+    ).toBeDefined();
 
     unmount();
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache.lookup(query, undefined)).toBeUndefined();
+    expect(
+      suspenseCache.forClient(client).lookup(query, undefined)
+    ).toBeUndefined();
   });
 
   it('does not remove query from suspense cache if other queries are using it', async () => {
@@ -718,12 +729,16 @@ describe('useSuspenseQuery', () => {
     // Because they are the same query, the 2 components use the same observable
     // in the suspense cache
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
+    expect(
+      suspenseCache.forClient(client).lookup(query, undefined)
+    ).toBeDefined();
 
     unmount();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
+    expect(
+      suspenseCache.forClient(client).lookup(query, undefined)
+    ).toBeDefined();
   });
 
   it('allows the client to be overridden', async () => {

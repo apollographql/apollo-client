@@ -13,7 +13,30 @@ interface Subscription {
   unsubscribe: () => void;
 }
 
-class VariablesDataSource<
+function maybeWrapConcastWithCustomPromise<TData>(
+  concast: Concast<ApolloQueryResult<TData>>,
+  { deferred }: { deferred: boolean }
+) {
+  if (deferred) {
+    return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+      // Unlike `concast.promise`, we want to resolve the promise on the initial
+      // chunk of the deferred query. This allows the component to unsuspend
+      // when we get the initial set of data, rather than waiting until all
+      // chunks have been loaded.
+      const subscription = concast.subscribe({
+        next: (value) => {
+          resolve(value);
+          subscription.unsubscribe();
+        },
+        error: reject,
+      });
+    });
+  }
+
+  return concast.promise;
+}
+
+class VariablesSubscription<
   TData,
   TVariables extends OperationVariables = OperationVariables
 > {
@@ -33,7 +56,7 @@ class VariablesDataSource<
 
     this.observable = observable;
     this.variables = variables;
-    this.promise = this.maybeWrapConcastWithCustomPromise(concast, {
+    this.promise = maybeWrapConcastWithCustomPromise(concast, {
       deferred: hasDirectives(['defer'], observable.query),
     });
 
@@ -87,29 +110,6 @@ class VariablesDataSource<
       next: () => this.setResult(this.observable.getCurrentResult()),
     });
   }
-
-  private maybeWrapConcastWithCustomPromise(
-    concast: Concast<ApolloQueryResult<TData>>,
-    { deferred }: { deferred: boolean }
-  ) {
-    if (deferred) {
-      return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
-        // Unlike `concast.promise`, we want to resolve the promise on the initial
-        // chunk of the deferred query. This allows the component to unsuspend
-        // when we get the initial set of data, rather than waiting until all
-        // chunks have been loaded.
-        const subscription = concast.subscribe({
-          next: (value) => {
-            resolve(value);
-            subscription.unsubscribe();
-          },
-          error: reject,
-        });
-      });
-    }
-
-    return concast.promise;
-  }
 }
 
 export class ObservableQuerySubscription<TData = any> {
@@ -117,9 +117,9 @@ export class ObservableQuerySubscription<TData = any> {
   public promise: Promise<ApolloQueryResult<TData>>;
   public readonly observable: ObservableQuery<TData>;
 
-  private dataSources = new Map<string, VariablesDataSource<TData>>();
+  private subscriptions = new Map<string, VariablesSubscription<TData>>();
   private listeners = new Set<Listener<TData>>();
-  private subscription: Subscription;
+  private currentSubscription: Subscription;
 
   constructor(observable: ObservableQuery<TData>) {
     this.observable = observable;
@@ -132,14 +132,14 @@ export class ObservableQuerySubscription<TData = any> {
   ) {
     const key = canonicalStringify(variables);
 
-    if (!this.dataSources.has(key)) {
-      this.dataSources.set(
+    if (!this.subscriptions.has(key)) {
+      this.subscriptions.set(
         key,
-        new VariablesDataSource(this.observable, variables)
+        new VariablesSubscription(this.observable, variables)
       );
     }
 
-    const dataSource = this.dataSources.get(key)!;
+    const dataSource = this.subscriptions.get(key)!;
 
     this.streamResultsFrom(dataSource);
     this.promise = dataSource.promise;
@@ -155,19 +155,19 @@ export class ObservableQuerySubscription<TData = any> {
     };
   }
 
-  streamResultsFrom(dataSource: VariablesDataSource<TData>) {
-    this.subscription?.unsubscribe();
+  streamResultsFrom(subscription: VariablesSubscription<TData>) {
+    this.currentSubscription?.unsubscribe();
 
-    this.setResult(dataSource.result);
+    this.setResult(subscription.result);
 
-    this.subscription = dataSource.subscribe((result) => {
+    this.currentSubscription = subscription.subscribe((result) => {
       this.setResult(result);
     });
   }
 
   dispose() {
     this.listeners.clear();
-    this.dataSources.forEach((source) => source.dispose());
+    this.subscriptions.forEach((source) => source.dispose());
   }
 
   setResult(result: ApolloQueryResult<TData>) {

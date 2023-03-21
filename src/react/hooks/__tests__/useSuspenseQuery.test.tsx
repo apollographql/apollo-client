@@ -996,6 +996,87 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('responds to cache updates after changing back to already fetched variables', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { client, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    client.writeQuery({
+      query,
+      variables: { id: '1' },
+      data: { character: { id: '1', name: 'Cached hero' } },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { character: { id: '1', name: 'Cached hero' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.count).toBe(6);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { character: { id: '1', name: 'Cached hero' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

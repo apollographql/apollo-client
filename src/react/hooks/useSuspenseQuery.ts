@@ -96,8 +96,17 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
 
   const queryCache = suspenseCache.forClient(client);
-  const observable = queryCache.getObservable(watchQueryOptions);
-  const subscription = queryCache.getSubscription(observable);
+  // While the query and variables can change over time, we can use the same
+  // cache key for the lifecycle of this hook so we only need to find it either
+  // the first run of this hook or after this hook has suspended for the first
+  // time.
+  const [cacheKey] = useState(() => queryCache.getCacheKey(query, variables));
+  const subscription = queryCache.getSubscription(
+    cacheKey,
+    () => new ObservableQuerySubscription(client.watchQuery(watchQueryOptions))
+  );
+
+  const observable = subscription.observable;
   const result = useSubscriptionResult(subscription);
 
   const context: HookContext<TData, TVariables> = {

@@ -5,7 +5,6 @@ import {
   DocumentNode,
   ObservableQuery,
   OperationVariables,
-  WatchQueryOptions,
 } from '../../core';
 import { ObservableQuerySubscription } from './ObservableQuerySubscription';
 
@@ -23,11 +22,7 @@ export class SuspenseQueryCache {
     (cacheKey: CacheKey) => cacheKey
   );
 
-  private observables = new Map<CacheKey, ObservableQuery>();
-  private subscriptions = new Map<
-    ObservableQuery,
-    ObservableQuerySubscription
-  >();
+  private subscriptions = new Map<CacheKey, ObservableQuerySubscription>();
   private queriesByObservable = new WeakMap<
     ObservableQuery,
     Promise<ApolloQueryResult<unknown>>
@@ -37,36 +32,18 @@ export class SuspenseQueryCache {
     this.client = client;
   }
 
-  getObservable<
-    TData = any,
-    TVariables extends OperationVariables = OperationVariables
-  >(
-    watchQueryOptions: WatchQueryOptions<TVariables, TData>
-  ): ObservableQuery<TData, TVariables> {
-    const { query, variables } = watchQueryOptions;
-
-    const cacheKey = this.getCacheKey(query, variables);
-
-    if (!this.observables.has(cacheKey)) {
-      this.observables.set(cacheKey, this.client.watchQuery(watchQueryOptions));
-    }
-
-    return this.observables.get(cacheKey)! as ObservableQuery<
-      TData,
-      TVariables
-    >;
-  }
-
-  getSubscription<TData = any>(observable: ObservableQuery<TData>) {
-    if (!this.subscriptions.has(observable)) {
-      this.subscriptions.set(
-        observable,
-        new ObservableQuerySubscription(observable)
-      );
+  getSubscription<TData = any>(
+    cacheKey: CacheKey,
+    createSubscription: (
+      client: ApolloClient<unknown>
+    ) => ObservableQuerySubscription<TData>
+  ) {
+    if (!this.subscriptions.has(cacheKey)) {
+      this.subscriptions.set(cacheKey, createSubscription(this.client));
     }
 
     return this.subscriptions.get(
-      observable
+      cacheKey
     )! as ObservableQuerySubscription<TData>;
   }
 
@@ -88,7 +65,7 @@ export class SuspenseQueryCache {
     this.queriesByObservable.set(observable, promise);
   }
 
-  private getCacheKey(
+  getCacheKey(
     document: DocumentNode,
     variables: OperationVariables | undefined
   ) {

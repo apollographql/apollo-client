@@ -116,6 +116,7 @@ export function useSuspenseQuery_experimental<
   // };
 
   const [promise, setPromise] = usePromise(subscription, {
+    query,
     returnPartialData: watchQueryOptions.returnPartialData ?? false,
     suspensePolicy: options.suspensePolicy ?? DEFAULT_SUSPENSE_POLICY,
     variables: watchQueryOptions.variables,
@@ -345,6 +346,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
   {
     returnPartialData,
     suspensePolicy,
+    query,
     variables,
   }: UsePromiseOptions<TVariables>
 ) {
@@ -352,7 +354,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
   //   context;
   // const { variables, query } = watchQueryOptions;
   const previousVariablesRef = useRef(variables);
-  // const previousQueryRef = useRef(query);
+  const previousQueryRef = useRef(query);
 
   const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>();
 
@@ -388,49 +390,61 @@ function usePromise<TData, TVariables extends OperationVariables>(
     previousVariablesRef.current = variables;
   }
 
-  // if (!equal(query, previousQueryRef.current)) {
-  //   ref.current = null;
-  //   const promise = reobserve(observable, watchQueryOptions, {
-  //     deferred,
-  //     queryCache,
-  //   });
+  if (!equal(query, previousQueryRef.current)) {
+    ref.current = null;
 
-  //   const result: Pick<ApolloQueryResult<TData>, 'data' | 'partial'> = {
-  //     data: void 0 as TData,
-  //   };
+    const promise = subscription.promise;
+    const result = subscription.result;
 
-  //   // We need to read from the cache directly because
-  //   // observable.getCurrentResult() returns the data from the
-  //   // previous query. We are unable to detect if we have a proper cached result
-  //   // for the new query.
-  //   if (
-  //     shouldReadFromCache(
-  //       observable.options.fetchPolicy || DEFAULT_FETCH_POLICY
-  //     )
-  //   ) {
-  //     const diff = client.cache.diff<TData>({
-  //       query,
-  //       variables,
-  //       optimistic: true,
-  //       returnPartialData: true,
-  //     });
+    if (
+      shouldAttachPromise(result, { returnPartialData }) &&
+      suspensePolicy === 'always'
+    ) {
+      ref.current = promise;
+    }
 
-  //     if (!equal(diff.result, {})) {
-  //       result.data = diff.result as TData;
-  //     }
+    previousQueryRef.current = query;
+    //   const promise = reobserve(observable, watchQueryOptions, {
+    //     deferred,
+    //     queryCache,
+    //   });
 
-  //     result.partial = !diff.complete;
-  //   }
+    //   const result: Pick<ApolloQueryResult<TData>, 'data' | 'partial'> = {
+    //     data: void 0 as TData,
+    //   };
 
-  //   if (
-  //     shouldAttachPromise(result, watchQueryOptions) &&
-  //     suspensePolicy === 'always'
-  //   ) {
-  //     ref.current = promise;
-  //   }
+    //   // We need to read from the cache directly because
+    //   // observable.getCurrentResult() returns the data from the
+    //   // previous query. We are unable to detect if we have a proper cached result
+    //   // for the new query.
+    //   if (
+    //     shouldReadFromCache(
+    //       observable.options.fetchPolicy || DEFAULT_FETCH_POLICY
+    //     )
+    //   ) {
+    //     const diff = client.cache.diff<TData>({
+    //       query,
+    //       variables,
+    //       optimistic: true,
+    //       returnPartialData: true,
+    //     });
 
-  //   previousQueryRef.current = query;
-  // }
+    //     if (!equal(diff.result, {})) {
+    //       result.data = diff.result as TData;
+    //     }
+
+    //     result.partial = !diff.complete;
+    //   }
+
+    //   if (
+    //     shouldAttachPromise(result, watchQueryOptions) &&
+    //     suspensePolicy === 'always'
+    //   ) {
+    //     ref.current = promise;
+    //   }
+
+    //   previousQueryRef.current = query;
+  }
 
   // if (ref.current) {
   //   queryCache.setPromise(observable, ref.current);

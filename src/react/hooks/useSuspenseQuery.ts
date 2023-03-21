@@ -35,7 +35,7 @@ import {
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { Subscription } from 'zen-observable-ts';
-import { SuspenseQueryCache } from '../cache';
+import { ObservableQuerySubscription, SuspenseQueryCache } from '../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -96,6 +96,8 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const queryCache = suspenseCache.forClient(client);
   const observable = queryCache.getObservable(watchQueryOptions);
+  const subscription = queryCache.getSubscription(observable);
+  const result = useSubscriptionResult(subscription);
 
   const context: HookContext<TData, TVariables> = {
     client,
@@ -109,12 +111,15 @@ export function useSuspenseQuery_experimental<
 
   const { errorPolicy, variables } = watchQueryOptions;
 
+  // const result = useObservableQueryResult(observable);
+
+  console.dir({ render: { result, promise, variables } }, { depth: null });
+
   if (promise) {
     // Intentionally ignore the result returned from __use since we want to
     // observe results from the observable instead of the the promise.
     __use(promise);
   }
-  const result = useObservableQueryResult(observable);
 
   useEffect(() => {
     return () => {
@@ -458,6 +463,21 @@ function getReobserveOptions<TData, TVariables extends OperationVariables>({
 
 function useIsDeferred(query: DocumentNode) {
   return useMemo(() => hasDirectives(['defer'], query), [query]);
+}
+
+function useSubscriptionResult<TData>(
+  subscription: ObservableQuerySubscription<TData>
+) {
+  return useSyncExternalStore(
+    useCallback(
+      (forceUpdate) => {
+        return subscription.subscribe(() => forceUpdate());
+      },
+      [subscription]
+    ),
+    () => subscription.result,
+    () => subscription.result
+  );
 }
 
 function useObservableQueryResult<TData>(observable: ObservableQuery<TData>) {

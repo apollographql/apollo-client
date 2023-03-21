@@ -81,6 +81,7 @@ interface HookContext<TData, TVariables extends OperationVariables> {
   deferred: boolean;
   queryCache: SuspenseQueryCache;
   suspensePolicy: SuspensePolicy;
+  subscription: ObservableQuerySubscription<TData>;
   watchQueryOptions: WatchQueryOptions<TVariables, TData>;
 }
 
@@ -113,11 +114,14 @@ export function useSuspenseQuery_experimental<
     client,
     deferred: useIsDeferred(query),
     queryCache,
+    subscription,
     suspensePolicy: options.suspensePolicy || DEFAULT_SUSPENSE_POLICY,
     watchQueryOptions,
   };
 
-  const [promise, setPromise] = usePromise(observable, context);
+  const promise = subscription.promise;
+
+  const [, setPromise] = usePromise(observable, context);
 
   const { errorPolicy, variables } = watchQueryOptions;
 
@@ -125,11 +129,9 @@ export function useSuspenseQuery_experimental<
 
   console.dir({ render: { result, promise, variables } }, { depth: null });
 
-  if (promise) {
-    // Intentionally ignore the result returned from __use since we want to
-    // observe results from the observable instead of the the promise.
-    __use(promise);
-  }
+  // Intentionally ignore the result returned from __use since we want to
+  // observe results from the observable instead of the the promise.
+  __use(subscription.promise);
 
   // useEffect(() => {
   //   return () => {
@@ -336,14 +338,20 @@ function usePromise<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>,
   context: HookContext<TData, TVariables>
 ) {
-  const { client, deferred, watchQueryOptions, queryCache, suspensePolicy } =
-    context;
+  const {
+    client,
+    deferred,
+    watchQueryOptions,
+    queryCache,
+    suspensePolicy,
+    subscription,
+  } = context;
   const { variables, query } = watchQueryOptions;
   const previousVariablesRef = useRef(variables);
   const previousQueryRef = useRef(query);
 
   const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>(
-    queryCache.getPromise(observable)
+    subscription.promise
   );
 
   // If the promise is `undefined`, we are running the hook for the first time

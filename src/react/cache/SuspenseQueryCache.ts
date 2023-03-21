@@ -94,10 +94,7 @@ export class SuspenseQueryCache {
     >;
   }
 
-  getSubscription<
-    TData = any,
-    TVariables extends OperationVariables = OperationVariables
-  >(observable: ObservableQuery<TData, TVariables>) {
+  getSubscription<TData = any>(observable: ObservableQuery<TData>) {
     if (!this.subscriptions.has(observable)) {
       this.subscriptions.set(
         observable,
@@ -105,10 +102,9 @@ export class SuspenseQueryCache {
       );
     }
 
-    return this.subscriptions.get(observable)! as ObservableQuerySubscription<
-      TData,
-      TVariables
-    >;
+    return this.subscriptions.get(
+      observable
+    )! as ObservableQuerySubscription<TData>;
   }
 
   getPromise<

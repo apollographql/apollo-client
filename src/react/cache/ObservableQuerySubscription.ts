@@ -1,23 +1,16 @@
 import equal from '@wry/equality';
 import { Subscription } from 'zen-observable-ts';
-import {
-  ApolloQueryResult,
-  ObservableQuery,
-  OperationVariables,
-} from '../../core';
+import { ApolloQueryResult, ObservableQuery } from '../../core';
 
 type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
 
-export class ObservableQuerySubscription<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables
-> {
+export class ObservableQuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
   private listeners = new Set<Listener<TData>>();
   private subscription: Subscription;
-  private observable: ObservableQuery<TData, TVariables>;
+  private observable: ObservableQuery<TData>;
 
-  constructor(observable: ObservableQuery<TData, TVariables>) {
+  constructor(observable: ObservableQuery<TData>) {
     this.handleNext = this.handleNext.bind(this);
 
     this.observable = observable;

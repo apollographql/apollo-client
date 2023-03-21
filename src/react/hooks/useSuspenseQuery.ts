@@ -119,9 +119,9 @@ export function useSuspenseQuery_experimental<
   //   watchQueryOptions,
   // };
 
-  const promise = subscription.promise;
-
-  // const [, setPromise] = usePromise(observable, context);
+  const [promise, setPromise] = usePromise(subscription, {
+    returnPartialData: watchQueryOptions.returnPartialData ?? false,
+  });
 
   const { errorPolicy, variables } = watchQueryOptions;
 
@@ -131,7 +131,9 @@ export function useSuspenseQuery_experimental<
 
   // Intentionally ignore the result returned from __use since we want to
   // observe results from the observable instead of the the promise.
-  __use(subscription.promise);
+  if (promise) {
+    __use(subscription.promise);
+  }
 
   // useEffect(() => {
   //   return () => {
@@ -143,7 +145,7 @@ export function useSuspenseQuery_experimental<
     (options) => {
       const promise = observable.fetchMore(options);
 
-      // setPromise(promise);
+      setPromise(promise);
 
       return promise;
     },
@@ -154,7 +156,7 @@ export function useSuspenseQuery_experimental<
     (variables) => {
       const promise = observable.refetch(variables);
 
-      // setPromise(promise);
+      setPromise(promise);
 
       return promise;
     },
@@ -321,7 +323,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
 
 function shouldAttachPromise(
   result: Pick<ApolloQueryResult<unknown>, 'data' | 'partial'>,
-  { returnPartialData }: WatchQueryOptions<OperationVariables, unknown>
+  { returnPartialData }: { returnPartialData: boolean }
 ) {
   const hasFullResult = result.data && !result.partial;
   const hasPartialResult = result.data && result.partial;
@@ -330,154 +332,145 @@ function shouldAttachPromise(
   return !hasFullResult && !usePartialResult;
 }
 
-function shouldReadFromCache(fetchPolicy: WatchQueryFetchPolicy) {
-  return fetchPolicy === 'cache-first' || fetchPolicy === 'cache-and-network';
+// function shouldReadFromCache(fetchPolicy: WatchQueryFetchPolicy) {
+//   return fetchPolicy === 'cache-first' || fetchPolicy === 'cache-and-network';
+// }
+
+interface UsePromiseOptions {
+  returnPartialData: boolean;
 }
 
 function usePromise<TData, TVariables extends OperationVariables>(
-  observable: ObservableQuery<TData, TVariables>,
-  context: HookContext<TData, TVariables>
+  subscription: ObservableQuerySubscription<TData>,
+  { returnPartialData }: UsePromiseOptions
 ) {
-  const {
-    client,
-    deferred,
-    watchQueryOptions,
-    queryCache,
-    suspensePolicy,
-    subscription,
-  } = context;
-  const { variables, query } = watchQueryOptions;
-  const previousVariablesRef = useRef(variables);
-  const previousQueryRef = useRef(query);
+  // const { client, deferred, watchQueryOptions, queryCache, suspensePolicy } =
+  //   context;
+  // const { variables, query } = watchQueryOptions;
+  // const previousVariablesRef = useRef(variables);
+  // const previousQueryRef = useRef(query);
 
-  const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>(
-    subscription.promise
-  );
+  const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>();
 
-  // If the promise is `undefined`, we are running the hook for the first time
+  // If the ref is `undefined`, we are running the hook for the first time
   if (ref.current === void 0) {
     ref.current = null;
 
-    const result = observable.getCurrentResult();
+    const result = subscription.result;
 
     // If we are running the hook for the first time and are in a loading state,
     // we are unable to pull results from the cache, so we need to kick off the
     // query.
     if (result.networkStatus === NetworkStatus.loading) {
-      const promise = reobserve(observable, watchQueryOptions, {
-        deferred,
-        queryCache,
-      });
-
-      if (shouldAttachPromise(result, watchQueryOptions)) {
-        ref.current = promise;
+      if (shouldAttachPromise(result, { returnPartialData })) {
+        ref.current = subscription.promise;
       }
     }
   }
 
-  if (!equal(variables, previousVariablesRef.current)) {
-    ref.current = null;
-    const promise = reobserve(observable, watchQueryOptions, {
-      deferred,
-      queryCache,
-    });
-    const result = observable.getCurrentResult();
+  // if (!equal(variables, previousVariablesRef.current)) {
+  //   ref.current = null;
+  //   const promise = reobserve(observable, watchQueryOptions, {
+  //     deferred,
+  //     queryCache,
+  //   });
+  //   const result = observable.getCurrentResult();
 
-    if (
-      shouldAttachPromise(result, watchQueryOptions) &&
-      suspensePolicy === 'always'
-    ) {
-      ref.current = promise;
-    }
+  //   if (
+  //     shouldAttachPromise(result, watchQueryOptions) &&
+  //     suspensePolicy === 'always'
+  //   ) {
+  //     ref.current = promise;
+  //   }
 
-    previousVariablesRef.current = variables;
-  }
+  //   previousVariablesRef.current = variables;
+  // }
 
-  if (!equal(query, previousQueryRef.current)) {
-    ref.current = null;
-    const promise = reobserve(observable, watchQueryOptions, {
-      deferred,
-      queryCache,
-    });
+  // if (!equal(query, previousQueryRef.current)) {
+  //   ref.current = null;
+  //   const promise = reobserve(observable, watchQueryOptions, {
+  //     deferred,
+  //     queryCache,
+  //   });
 
-    const result: Pick<ApolloQueryResult<TData>, 'data' | 'partial'> = {
-      data: void 0 as TData,
-    };
+  //   const result: Pick<ApolloQueryResult<TData>, 'data' | 'partial'> = {
+  //     data: void 0 as TData,
+  //   };
 
-    // We need to read from the cache directly because
-    // observable.getCurrentResult() returns the data from the
-    // previous query. We are unable to detect if we have a proper cached result
-    // for the new query.
-    if (
-      shouldReadFromCache(
-        observable.options.fetchPolicy || DEFAULT_FETCH_POLICY
-      )
-    ) {
-      const diff = client.cache.diff<TData>({
-        query,
-        variables,
-        optimistic: true,
-        returnPartialData: true,
-      });
+  //   // We need to read from the cache directly because
+  //   // observable.getCurrentResult() returns the data from the
+  //   // previous query. We are unable to detect if we have a proper cached result
+  //   // for the new query.
+  //   if (
+  //     shouldReadFromCache(
+  //       observable.options.fetchPolicy || DEFAULT_FETCH_POLICY
+  //     )
+  //   ) {
+  //     const diff = client.cache.diff<TData>({
+  //       query,
+  //       variables,
+  //       optimistic: true,
+  //       returnPartialData: true,
+  //     });
 
-      if (!equal(diff.result, {})) {
-        result.data = diff.result as TData;
-      }
+  //     if (!equal(diff.result, {})) {
+  //       result.data = diff.result as TData;
+  //     }
 
-      result.partial = !diff.complete;
-    }
+  //     result.partial = !diff.complete;
+  //   }
 
-    if (
-      shouldAttachPromise(result, watchQueryOptions) &&
-      suspensePolicy === 'always'
-    ) {
-      ref.current = promise;
-    }
+  //   if (
+  //     shouldAttachPromise(result, watchQueryOptions) &&
+  //     suspensePolicy === 'always'
+  //   ) {
+  //     ref.current = promise;
+  //   }
 
-    previousQueryRef.current = query;
-  }
+  //   previousQueryRef.current = query;
+  // }
 
-  if (ref.current) {
-    queryCache.setPromise(observable, ref.current);
-  }
+  // if (ref.current) {
+  //   queryCache.setPromise(observable, ref.current);
+  // }
 
-  const [, forceUpdate] = useState(0);
+  // const [, forceUpdate] = useState(0);
 
   function setPromise(promise: Promise<ApolloQueryResult<TData>> | null) {
-    ref.current = suspensePolicy === 'always' ? promise : null;
-    forceUpdate((c) => c + 1);
+    // ref.current = suspensePolicy === 'always' ? promise : null;
+    // forceUpdate((c) => c + 1);
   }
 
   return [ref.current, setPromise] as const;
 }
 
-function reobserve<TData, TVariables extends OperationVariables>(
-  observable: ObservableQuery<TData, TVariables>,
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>,
-  {
-    deferred,
-    queryCache,
-  }: { deferred: boolean; queryCache: SuspenseQueryCache }
-) {
-  const promise = maybeWrapConcastWithCustomPromise(
-    observable.reobserveAsConcast(getReobserveOptions(watchQueryOptions)),
-    { deferred }
-  );
+// function reobserve<TData, TVariables extends OperationVariables>(
+//   observable: ObservableQuery<TData, TVariables>,
+//   watchQueryOptions: WatchQueryOptions<TVariables, TData>,
+//   {
+//     deferred,
+//     queryCache,
+//   }: { deferred: boolean; queryCache: SuspenseQueryCache }
+// ) {
+//   const promise = maybeWrapConcastWithCustomPromise(
+//     observable.reobserveAsConcast(getReobserveOptions(watchQueryOptions)),
+//     { deferred }
+//   );
 
-  queryCache.setPromise(observable, promise);
+//   queryCache.setPromise(observable, promise);
 
-  return promise;
-}
+//   return promise;
+// }
 
 // omit fetch policy and nextFetchPolicy to prevent from overwriting them
 // after we initialize the observable
-function getReobserveOptions<TData, TVariables extends OperationVariables>({
-  fetchPolicy,
-  nextFetchPolicy,
-  ...options
-}: WatchQueryOptions<TVariables, TData>) {
-  return options;
-}
+// function getReobserveOptions<TData, TVariables extends OperationVariables>({
+//   fetchPolicy,
+//   nextFetchPolicy,
+//   ...options
+// }: WatchQueryOptions<TVariables, TData>) {
+//   return options;
+// }
 
 function useIsDeferred(query: DocumentNode) {
   return useMemo(() => hasDirectives(['defer'], query), [query]);
@@ -489,7 +482,10 @@ function useSubscriptionResult<TData>(
   return useSyncExternalStore(
     useCallback(
       (forceUpdate) => {
-        return subscription.subscribe(() => forceUpdate());
+        return subscription.subscribe((result) => {
+          console.log({ result });
+          forceUpdate();
+        });
       },
       [subscription]
     ),

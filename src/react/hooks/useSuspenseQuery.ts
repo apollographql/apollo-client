@@ -75,8 +75,9 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
 
   const queryCache = suspenseCache.forClient(client);
+  const cacheKey = queryCache.getCacheKey(query, watchQueryOptions.variables);
   const subscription = queryCache.getSubscription(
-    queryCache.getCacheKey(query, watchQueryOptions.variables),
+    cacheKey,
     () => new ObservableQuerySubscription(client.watchQuery(watchQueryOptions))
   );
 
@@ -93,11 +94,11 @@ export function useSuspenseQuery_experimental<
     __use(subscription.promise);
   }
 
-  // useEffect(() => {
-  //   return () => {
-  //     queryCache.remove(query, variables);
-  //   };
-  // }, []);
+  useEffect(() => {
+    return () => {
+      queryCache.dispose(cacheKey);
+    };
+  }, []);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => subscription.fetchMore(options),

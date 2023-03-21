@@ -110,8 +110,6 @@ export class ObservableQuery<
     options: WatchQueryOptions<TVariables, TData>;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) => {
-      const { fetchOnFirstSubscribe = true } = options
-
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {
@@ -134,7 +132,7 @@ export class ObservableQuery<
 
       // Initiate observation of this query if it hasn't been reported to
       // the QueryManager yet.
-      if (first && fetchOnFirstSubscribe) {
+      if (first) {
         // Blindly catching here prevents unhandled promise rejections,
         // and is safe because the ObservableQuery handles this error with
         // this.observer.error, so we're not just swallowing the error by

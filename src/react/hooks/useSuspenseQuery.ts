@@ -226,15 +226,6 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
       fetchPolicy:
         fetchPolicy || defaultOptions?.fetchPolicy || DEFAULT_FETCH_POLICY,
       notifyOnNetworkStatusChange: true, // suspensePolicy === 'always',
-      // By default, `ObservableQuery` will run `reobserve` the first time
-      // something `subscribe`s to the observable, which kicks off a network
-      // request. This creates a problem for suspense because we need to begin
-      // fetching the data immediately so we can throw the promise on the first
-      // render. Since we don't subscribe until after we've unsuspended, we need
-      // to avoid kicking off another network request for the same data we just
-      // fetched. This option toggles that behavior off to avoid the `reobserve`
-      // when the observable is first subscribed to.
-      fetchOnFirstSubscribe: false,
       variables: compact({ ...defaultOptions?.variables, ...variables }),
     };
   }, [options, query, defaultOptions]);

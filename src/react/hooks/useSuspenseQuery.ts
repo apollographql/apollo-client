@@ -121,6 +121,8 @@ export function useSuspenseQuery_experimental<
 
   const [promise, setPromise] = usePromise(subscription, {
     returnPartialData: watchQueryOptions.returnPartialData ?? false,
+    suspensePolicy: options.suspensePolicy ?? DEFAULT_SUSPENSE_POLICY,
+    variables: watchQueryOptions.variables,
   });
 
   const { errorPolicy, variables } = watchQueryOptions;
@@ -336,18 +338,24 @@ function shouldAttachPromise(
 //   return fetchPolicy === 'cache-first' || fetchPolicy === 'cache-and-network';
 // }
 
-interface UsePromiseOptions {
+interface UsePromiseOptions<TVariables extends OperationVariables> {
   returnPartialData: boolean;
+  suspensePolicy: SuspensePolicy;
+  variables: TVariables | undefined;
 }
 
 function usePromise<TData, TVariables extends OperationVariables>(
   subscription: ObservableQuerySubscription<TData>,
-  { returnPartialData }: UsePromiseOptions
+  {
+    returnPartialData,
+    suspensePolicy,
+    variables,
+  }: UsePromiseOptions<TVariables>
 ) {
   // const { client, deferred, watchQueryOptions, queryCache, suspensePolicy } =
   //   context;
   // const { variables, query } = watchQueryOptions;
-  // const previousVariablesRef = useRef(variables);
+  const previousVariablesRef = useRef(variables);
   // const previousQueryRef = useRef(query);
 
   const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>();
@@ -368,23 +376,21 @@ function usePromise<TData, TVariables extends OperationVariables>(
     }
   }
 
-  // if (!equal(variables, previousVariablesRef.current)) {
-  //   ref.current = null;
-  //   const promise = reobserve(observable, watchQueryOptions, {
-  //     deferred,
-  //     queryCache,
-  //   });
-  //   const result = observable.getCurrentResult();
+  if (!equal(variables, previousVariablesRef.current)) {
+    ref.current = null;
 
-  //   if (
-  //     shouldAttachPromise(result, watchQueryOptions) &&
-  //     suspensePolicy === 'always'
-  //   ) {
-  //     ref.current = promise;
-  //   }
+    const promise = subscription.fetch(variables);
+    const result = subscription.result;
 
-  //   previousVariablesRef.current = variables;
-  // }
+    if (
+      shouldAttachPromise(result, { returnPartialData }) &&
+      suspensePolicy === 'always'
+    ) {
+      ref.current = promise;
+    }
+
+    previousVariablesRef.current = variables;
+  }
 
   // if (!equal(query, previousQueryRef.current)) {
   //   ref.current = null;

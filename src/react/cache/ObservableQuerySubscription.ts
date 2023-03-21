@@ -2,6 +2,7 @@ import equal from '@wry/equality';
 import { canonicalStringify } from '../../cache';
 import {
   ApolloQueryResult,
+  NetworkStatus,
   ObservableQuery,
   OperationVariables,
 } from '../../core';
@@ -118,6 +119,7 @@ export class ObservableQuerySubscription<TData = any> {
   public promise: Promise<ApolloQueryResult<TData>>;
   public readonly observable: ObservableQuery<TData>;
 
+  private previousResult: ApolloQueryResult<TData>;
   private subscriptions = new Map<string, VariablesSubscription<TData>>();
   private listeners = new Set<Listener<TData>>();
   private currentSubscription: Subscription;
@@ -125,6 +127,7 @@ export class ObservableQuerySubscription<TData = any> {
   constructor(observable: ObservableQuery<TData>) {
     this.observable = observable;
     this.result = observable.getCurrentResult();
+    this.previousResult = this.result;
     this.fetch(observable.options.variables);
   }
 
@@ -176,7 +179,13 @@ export class ObservableQuerySubscription<TData = any> {
     { silent = false }: { silent: boolean } = Object.create(null)
   ) {
     if (!equal(this.result, result)) {
+      this.previousResult = this.result;
       this.result = result;
+
+      // Retain data from the previous result when changing variables
+      if (this.result.networkStatus === NetworkStatus.setVariables) {
+        this.result.data = this.previousResult.data;
+      }
 
       if (!silent) {
         this.deliver(result);

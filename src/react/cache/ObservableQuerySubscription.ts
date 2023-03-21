@@ -6,9 +6,10 @@ type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
 
 export class ObservableQuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
+  public readonly observable: ObservableQuery<TData>;
+
   private listeners = new Set<Listener<TData>>();
   private subscription: Subscription;
-  private observable: ObservableQuery<TData>;
 
   constructor(observable: ObservableQuery<TData>) {
     this.handleNext = this.handleNext.bind(this);

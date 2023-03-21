@@ -15,6 +15,7 @@ import { compact, isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import {
+  SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
@@ -83,18 +84,19 @@ export function useSuspenseQuery_experimental<
   const observable = subscription.observable;
   const result = useSubscriptionResult(subscription);
 
-  console.dir(
-    { render: { result, promise: subscription.promise, variables } },
-    { depth: null }
-  );
+  // console.dir(
+  //   { render: { result, promise: subscription.promise, variables } },
+  //   { depth: null }
+  // );
 
-  // Intentionally ignore the result returned from __use since we want to
-  // observe results from the observable instead of the the promise.
   if (
-    shouldAttachPromise(subscription.result, {
+    !useCachedResult(subscription.result, {
       returnPartialData: watchQueryOptions.returnPartialData ?? false,
+      fetchPolicy: options.fetchPolicy,
     })
   ) {
+    // Intentionally ignore the result returned from __use since we want to
+    // observe results from the observable instead of the the promise.
     __use(subscription.promise);
   }
 
@@ -235,15 +237,27 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   return watchQueryOptions;
 }
 
-function shouldAttachPromise(
-  result: Pick<ApolloQueryResult<unknown>, 'data' | 'partial'>,
-  { returnPartialData }: { returnPartialData: boolean }
+function useCachedResult(
+  result: ApolloQueryResult<unknown>,
+  {
+    returnPartialData = false,
+    fetchPolicy = DEFAULT_FETCH_POLICY,
+  }: {
+    returnPartialData: boolean | undefined;
+    fetchPolicy: SuspenseQueryHookFetchPolicy | undefined;
+  }
 ) {
   const hasFullResult = result.data && !result.partial;
   const hasPartialResult = result.data && result.partial;
   const usePartialResult = returnPartialData && hasPartialResult;
 
-  return !hasFullResult && !usePartialResult;
+  switch (fetchPolicy) {
+    case 'cache-first':
+    case 'cache-and-network':
+      return hasFullResult || usePartialResult;
+    default:
+      return false;
+  }
 }
 
 function useSubscriptionResult<TData>(

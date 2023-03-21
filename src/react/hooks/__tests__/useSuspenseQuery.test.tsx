@@ -3896,8 +3896,7 @@ describe('useSuspenseQuery', () => {
       error: frame.error,
     }));
 
-    // TODO: Figure out why this increased from 4 to 5
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
     expect(frames).toMatchObject([
       {

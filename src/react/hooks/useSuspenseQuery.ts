@@ -110,18 +110,18 @@ export function useSuspenseQuery_experimental<
   const observable = subscription.observable;
   const result = useSubscriptionResult(subscription);
 
-  const context: HookContext<TData, TVariables> = {
-    client,
-    deferred: useIsDeferred(query),
-    queryCache,
-    subscription,
-    suspensePolicy: options.suspensePolicy || DEFAULT_SUSPENSE_POLICY,
-    watchQueryOptions,
-  };
+  // const context: HookContext<TData, TVariables> = {
+  //   client,
+  //   deferred: useIsDeferred(query),
+  //   queryCache,
+  //   subscription,
+  //   suspensePolicy: options.suspensePolicy || DEFAULT_SUSPENSE_POLICY,
+  //   watchQueryOptions,
+  // };
 
   const promise = subscription.promise;
 
-  const [, setPromise] = usePromise(observable, context);
+  // const [, setPromise] = usePromise(observable, context);
 
   const { errorPolicy, variables } = watchQueryOptions;
 
@@ -143,7 +143,7 @@ export function useSuspenseQuery_experimental<
     (options) => {
       const promise = observable.fetchMore(options);
 
-      setPromise(promise);
+      // setPromise(promise);
 
       return promise;
     },
@@ -154,7 +154,7 @@ export function useSuspenseQuery_experimental<
     (variables) => {
       const promise = observable.refetch(variables);
 
-      setPromise(promise);
+      // setPromise(promise);
 
       return promise;
     },

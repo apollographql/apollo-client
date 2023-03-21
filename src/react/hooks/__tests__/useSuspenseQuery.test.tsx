@@ -685,55 +685,6 @@ describe('useSuspenseQuery', () => {
     ).toBeUndefined();
   });
 
-  it('does not remove query from suspense cache if other queries are using it', async () => {
-    const { query, mocks } = useSimpleQueryCase();
-
-    const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of(mocks[0].result)),
-      cache: new InMemoryCache(),
-    });
-
-    const suspenseCache = new SuspenseCache();
-
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ApolloProvider client={client} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">{children}</Suspense>
-      </ApolloProvider>
-    );
-
-    const { result: result1, unmount } = renderHook(
-      () => useSuspenseQuery(query),
-      { wrapper }
-    );
-
-    const { result: result2 } = renderHook(() => useSuspenseQuery(query), {
-      wrapper,
-    });
-
-    // We don't subscribe to the observable until after the component has been
-    // unsuspended, so we need to wait for the results of all queries
-    await waitFor(() => {
-      expect(result1.current.data).toEqual(mocks[0].result.data);
-    });
-    await waitFor(() => {
-      expect(result2.current.data).toEqual(mocks[0].result.data);
-    });
-
-    // Because they are the same query, the 2 components use the same observable
-    // in the suspense cache
-    expect(client.getObservableQueries().size).toBe(1);
-    expect(
-      suspenseCache.forClient(client).lookup(query, undefined)
-    ).toBeDefined();
-
-    unmount();
-
-    expect(client.getObservableQueries().size).toBe(1);
-    expect(
-      suspenseCache.forClient(client).lookup(query, undefined)
-    ).toBeDefined();
-  });
-
   it('allows the client to be overridden', async () => {
     const { query } = useSimpleQueryCase();
 

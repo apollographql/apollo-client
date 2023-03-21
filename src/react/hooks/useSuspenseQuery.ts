@@ -1,6 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
-import { equal } from '@wry/equality';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   ApolloClient,
   ApolloError,
@@ -18,7 +17,6 @@ import { DocumentType, verifyDocumentType } from '../parser';
 import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
-  SuspensePolicy,
 } from '../types/types';
 import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
@@ -85,18 +83,18 @@ export function useSuspenseQuery_experimental<
   const observable = subscription.observable;
   const result = useSubscriptionResult(subscription);
 
-  const [promise, setPromise] = usePromise(subscription, {
-    query,
-    returnPartialData: watchQueryOptions.returnPartialData ?? false,
-    suspensePolicy: options.suspensePolicy ?? DEFAULT_SUSPENSE_POLICY,
-    variables: watchQueryOptions.variables,
-  });
-
-  console.dir({ render: { result, promise, variables } }, { depth: null });
+  console.dir(
+    { render: { result, promise: subscription.promise, variables } },
+    { depth: null }
+  );
 
   // Intentionally ignore the result returned from __use since we want to
   // observe results from the observable instead of the the promise.
-  if (promise) {
+  if (
+    shouldAttachPromise(subscription.result, {
+      returnPartialData: watchQueryOptions.returnPartialData ?? false,
+    })
+  ) {
     __use(subscription.promise);
   }
 
@@ -110,7 +108,7 @@ export function useSuspenseQuery_experimental<
     (options) => {
       const promise = observable.fetchMore(options);
 
-      setPromise(promise);
+      // setPromise(promise);
 
       return promise;
     },
@@ -121,7 +119,7 @@ export function useSuspenseQuery_experimental<
     (variables) => {
       const promise = observable.refetch(variables);
 
-      setPromise(promise);
+      // setPromise(promise);
 
       return promise;
     },
@@ -246,89 +244,6 @@ function shouldAttachPromise(
   const usePartialResult = returnPartialData && hasPartialResult;
 
   return !hasFullResult && !usePartialResult;
-}
-
-// function shouldReadFromCache(fetchPolicy: WatchQueryFetchPolicy) {
-//   return fetchPolicy === 'cache-first' || fetchPolicy === 'cache-and-network';
-// }
-
-interface UsePromiseOptions<TVariables extends OperationVariables> {
-  returnPartialData: boolean;
-  suspensePolicy: SuspensePolicy;
-  variables: TVariables | undefined;
-  query: DocumentNode;
-}
-
-function usePromise<TData, TVariables extends OperationVariables>(
-  subscription: ObservableQuerySubscription<TData>,
-  {
-    returnPartialData,
-    suspensePolicy,
-    query,
-    variables,
-  }: UsePromiseOptions<TVariables>
-) {
-  const previousVariablesRef = useRef(variables);
-  const previousQueryRef = useRef(query);
-
-  const ref = useRef<Promise<ApolloQueryResult<TData>> | null | undefined>();
-
-  // If the ref is `undefined`, we are running the hook for the first time
-  if (ref.current === void 0) {
-    ref.current = null;
-
-    const result = subscription.result;
-
-    // If we are running the hook for the first time and are in a loading state,
-    // we are unable to pull results from the cache, so we need to kick off the
-    // query.
-    if (result.networkStatus === NetworkStatus.loading) {
-      if (shouldAttachPromise(result, { returnPartialData })) {
-        ref.current = subscription.promise;
-      }
-    }
-  }
-
-  if (!equal(variables, previousVariablesRef.current)) {
-    ref.current = null;
-
-    const promise = subscription.promise;
-    const result = subscription.result;
-
-    if (
-      shouldAttachPromise(result, { returnPartialData }) &&
-      suspensePolicy === 'always'
-    ) {
-      ref.current = promise;
-    }
-
-    previousVariablesRef.current = variables;
-  }
-
-  if (!equal(query, previousQueryRef.current)) {
-    ref.current = null;
-
-    const promise = subscription.promise;
-    const result = subscription.result;
-
-    if (
-      shouldAttachPromise(result, { returnPartialData }) &&
-      suspensePolicy === 'always'
-    ) {
-      ref.current = promise;
-    }
-
-    previousQueryRef.current = query;
-  }
-
-  // const [, forceUpdate] = useState(0);
-
-  function setPromise(promise: Promise<ApolloQueryResult<TData>> | null) {
-    // ref.current = suspensePolicy === 'always' ? promise : null;
-    // forceUpdate((c) => c + 1);
-  }
-
-  return [ref.current, setPromise] as const;
 }
 
 function useSubscriptionResult<TData>(

@@ -1,4 +1,5 @@
 import equal from '@wry/equality';
+import invariant from 'ts-invariant';
 import { ApolloQueryResult, ObservableQuery } from '../../core';
 import { Concast, hasDirectives } from '../../utilities';
 
@@ -49,10 +50,19 @@ export class ObservableQuerySubscription<TData = any> {
       error: this.handleNext,
     });
 
-    this.promise = maybeWrapConcastWithCustomPromise(
-      observable.reobserveAsConcast(),
-      { deferred: hasDirectives(['defer'], observable.query) }
+    // This error should never happen since the `.subscribe` call above
+    // will ensure a concast is set on the observable via the `reobserve`
+    // call. Unless something is going horribly wrong and completely messing
+    // around with the internals of the observable, there should always be a
+    // concast after subscribing.
+    invariant(
+      observable['concast'],
+      'Unexpected error: A concast was not found on the observable.'
     );
+
+    this.promise = maybeWrapConcastWithCustomPromise(observable['concast'], {
+      deferred: hasDirectives(['defer'], observable.query),
+    });
   }
 
   subscribe(listener: Listener<TData>) {

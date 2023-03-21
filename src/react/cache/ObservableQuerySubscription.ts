@@ -1,6 +1,10 @@
 import equal from '@wry/equality';
 import invariant from 'ts-invariant';
-import { ApolloQueryResult, ObservableQuery } from '../../core';
+import {
+  ApolloQueryResult,
+  ObservableQuery,
+  OperationVariables,
+} from '../../core';
 import { Concast, hasDirectives } from '../../utilities';
 
 type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
@@ -71,6 +75,12 @@ export class ObservableQuerySubscription<TData = any> {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  refetch(variables: OperationVariables | undefined) {
+    this.promise = this.observable.refetch(variables);
+
+    return this.promise;
   }
 
   dispose() {

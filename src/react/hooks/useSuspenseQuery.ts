@@ -84,13 +84,13 @@ export function useSuspenseQuery_experimental<
   const observable = subscription.observable;
   const result = useSubscriptionResult(subscription);
 
-  // console.dir(
-  //   { render: { result, promise: subscription.promise, variables } },
-  //   { depth: null }
-  // );
+  console.dir(
+    { render: { result, promise: subscription.promise, variables } },
+    { depth: null }
+  );
 
   if (
-    !useCachedResult(subscription.result, {
+    shouldSuspend(subscription.result, {
       returnPartialData: watchQueryOptions.returnPartialData ?? false,
       fetchPolicy: options.fetchPolicy,
     })
@@ -118,14 +118,8 @@ export function useSuspenseQuery_experimental<
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
-    (variables) => {
-      const promise = observable.refetch(variables);
-
-      // setPromise(promise);
-
-      return promise;
-    },
-    [observable]
+    (variables) => subscription.refetch(variables),
+    [subscription]
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
@@ -237,7 +231,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   return watchQueryOptions;
 }
 
-function useCachedResult(
+function shouldSuspend(
   result: ApolloQueryResult<unknown>,
   {
     returnPartialData = false,
@@ -247,6 +241,13 @@ function useCachedResult(
     fetchPolicy: SuspenseQueryHookFetchPolicy | undefined;
   }
 ) {
+  if (
+    result.networkStatus === NetworkStatus.refetch ||
+    result.networkStatus === NetworkStatus.fetchMore
+  ) {
+    return true;
+  }
+
   const hasFullResult = result.data && !result.partial;
   const hasPartialResult = result.data && result.partial;
   const usePartialResult = returnPartialData && hasPartialResult;
@@ -254,9 +255,9 @@ function useCachedResult(
   switch (fetchPolicy) {
     case 'cache-first':
     case 'cache-and-network':
-      return hasFullResult || usePartialResult;
+      return !hasFullResult && !usePartialResult;
     default:
-      return false;
+      return true;
   }
 }
 

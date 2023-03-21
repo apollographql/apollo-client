@@ -81,7 +81,6 @@ export function useSuspenseQuery_experimental<
     () => new ObservableQuerySubscription(client.watchQuery(watchQueryOptions))
   );
 
-  const observable = subscription.observable;
   const result = useSubscriptionResult(subscription);
 
   console.dir(
@@ -132,15 +131,7 @@ export function useSuspenseQuery_experimental<
       refetch,
       subscribeToMore,
     };
-  }, [
-    client,
-    fetchMore,
-    refetch,
-    result,
-    observable,
-    errorPolicy,
-    subscribeToMore,
-  ]);
+  }, [client, fetchMore, refetch, result, errorPolicy, subscribeToMore]);
 }
 
 function validateOptions(options: WatchQueryOptions) {

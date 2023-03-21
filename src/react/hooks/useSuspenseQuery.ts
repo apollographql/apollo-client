@@ -94,6 +94,7 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
+
   const queryCache = suspenseCache.forClient(client);
   const observable = queryCache.getObservable(watchQueryOptions);
   const subscription = queryCache.getSubscription(observable);
@@ -121,11 +122,11 @@ export function useSuspenseQuery_experimental<
     __use(promise);
   }
 
-  useEffect(() => {
-    return () => {
-      queryCache.remove(query, variables);
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     queryCache.remove(query, variables);
+  //   };
+  // }, []);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {

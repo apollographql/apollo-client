@@ -283,7 +283,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
         errorPolicy || defaultOptions?.errorPolicy || DEFAULT_ERROR_POLICY,
       fetchPolicy:
         fetchPolicy || defaultOptions?.fetchPolicy || DEFAULT_FETCH_POLICY,
-      notifyOnNetworkStatusChange: suspensePolicy === 'always',
+      notifyOnNetworkStatusChange: true, // suspensePolicy === 'always',
       // By default, `ObservableQuery` will run `reobserve` the first time
       // something `subscribe`s to the observable, which kicks off a network
       // request. This creates a problem for suspense because we need to begin

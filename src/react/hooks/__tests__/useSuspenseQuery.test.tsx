@@ -875,6 +875,61 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('uses previously fetched result and does not suspend when switching back to already fetched variables', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    expect(result.current).toMatchObject({
+      ...mocks[0].result,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

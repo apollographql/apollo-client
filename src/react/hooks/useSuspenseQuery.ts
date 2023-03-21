@@ -95,15 +95,11 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
+  const { errorPolicy, variables } = watchQueryOptions;
 
   const queryCache = suspenseCache.forClient(client);
-  // While the query and variables can change over time, we can use the same
-  // cache key for the lifecycle of this hook so we only need to find it either
-  // the first run of this hook or after this hook has suspended for the first
-  // time.
-  const [cacheKey] = useState(() => queryCache.getCacheKey(query, variables));
   const subscription = queryCache.getSubscription(
-    cacheKey,
+    queryCache.getCacheKey(query, variables),
     () => new ObservableQuerySubscription(client.watchQuery(watchQueryOptions))
   );
 
@@ -379,7 +375,7 @@ function usePromise<TData, TVariables extends OperationVariables>(
   if (!equal(variables, previousVariablesRef.current)) {
     ref.current = null;
 
-    const promise = subscription.fetch(variables);
+    const promise = subscription.promise;
     const result = subscription.result;
 
     if (

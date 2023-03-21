@@ -6,7 +6,7 @@ import { DeepMerger } from "../utilities"
 import { mergeIncrementalData } from '../utilities';
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
-import { QueryListener } from './types';
+import { QueryListener, MethodKeys } from './types';
 import { FetchResult } from '../link/core';
 import {
   ObservableSubscription,
@@ -38,13 +38,9 @@ const destructiveMethodCounts = new (
   canUseWeakMap ? WeakMap : Map
 )<ApolloCache<any>, number>();
 
-type KeyOfType<T, U> = {
-  [P in keyof T]: T[P] extends U ? P : never
-}[keyof T]
-
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: KeyOfType<ApolloCache<any>, Function>,
+  methodName: MethodKeys<ApolloCache<any>>,
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {

@@ -54,6 +54,7 @@ class VariablesSubscription<
   ) {
     const concast = observable.reobserveAsConcast({ variables });
 
+    this._result = observable.getCurrentResult();
     this.observable = observable;
     this.variables = variables;
     this.promise = maybeWrapConcastWithCustomPromise(concast, {

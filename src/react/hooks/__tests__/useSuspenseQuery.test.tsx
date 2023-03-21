@@ -5831,13 +5831,13 @@ describe('useSuspenseQuery', () => {
 
     expect(await screen.findByTestId('result')).toBeInTheDocument();
 
-    await user.type(input, 'ab');
+    await act(() => user.type(input, 'ab'));
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent('ab');
     });
 
-    await user.type(input, 'c');
+    await act(() => user.type(input, 'c'));
 
     // useDeferredValue will try rerendering the component with the new value
     // in the background. If it suspends with the new value, React will show the

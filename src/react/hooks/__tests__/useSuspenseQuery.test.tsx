@@ -672,17 +672,15 @@ describe('useSuspenseQuery', () => {
       expect(result.current.data).toEqual(mocks[0].result.data)
     );
 
+    const queryCache = suspenseCache.forClient(client);
+
     expect(client.getObservableQueries().size).toBe(1);
-    expect(
-      suspenseCache.forClient(client).lookup(query, undefined)
-    ).toBeDefined();
+    expect(queryCache['subscriptions'].size).toBe(1);
 
     unmount();
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(
-      suspenseCache.forClient(client).lookup(query, undefined)
-    ).toBeUndefined();
+    expect(queryCache['subscriptions'].size).toBe(0);
   });
 
   it('allows the client to be overridden', async () => {

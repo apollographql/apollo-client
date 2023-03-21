@@ -1,14 +1,13 @@
 import { ApolloClient } from '../../core';
 import { SuspenseQueryCache } from './SuspenseQueryCache';
+import { dep, wrap } from 'optimism';
 
 export class SuspenseCache {
-  private queryCaches = new Map<ApolloClient<unknown>, SuspenseQueryCache>();
+  public readonly clientDep = dep<ApolloClient<unknown>>();
 
-  forClient(client: ApolloClient<unknown>) {
-    if (!this.queryCaches.has(client)) {
-      this.queryCaches.set(client, new SuspenseQueryCache(client));
-    }
+  forClient = wrap((client: ApolloClient<unknown>) => {
+    this.clientDep(client);
 
-    return this.queryCaches.get(client)!;
-  }
+    return new SuspenseQueryCache(client);
+  });
 }

@@ -875,62 +875,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('uses previously fetched result and does not suspend when switching back to already fetched variables', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    rerender({ id: '1' });
-
-    expect(result.current).toMatchObject({
-      ...mocks[0].result,
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-
-    expect(renders.count).toBe(5);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it('responds to cache for updates after changing variables', async () => {
+  it('responds to cache updates after changing variables', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const client = new ApolloClient({
@@ -990,6 +935,61 @@ describe('useSuspenseQuery', () => {
       },
       {
         data: { character: { id: '2', name: 'Cached hero' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('uses previously fetched result and does not suspend when switching back to already fetched variables', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    expect(result.current).toMatchObject({
+      ...mocks[0].result,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },

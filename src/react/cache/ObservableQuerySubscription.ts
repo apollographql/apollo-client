@@ -68,15 +68,13 @@ export class ObservableQuerySubscription<TData = any> {
     this.subscription.unsubscribe();
   }
 
-  setResult(result: ApolloQueryResult<TData>) {
+  private handleNext() {
+    const result = this.observable.getCurrentResult();
+
     if (!equal(this.result, result)) {
       this.result = result;
       this.deliver(result);
     }
-  }
-
-  private handleNext() {
-    this.setResult(this.observable.getCurrentResult());
   }
 
   private deliver(result: ApolloQueryResult<TData>) {

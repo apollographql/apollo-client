@@ -73,20 +73,14 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
-  const { errorPolicy, variables } = watchQueryOptions;
 
   const queryCache = suspenseCache.forClient(client);
   const subscription = queryCache.getSubscription(
-    queryCache.getCacheKey(query, variables),
+    queryCache.getCacheKey(query, watchQueryOptions.variables),
     () => new ObservableQuerySubscription(client.watchQuery(watchQueryOptions))
   );
 
   const result = useSubscriptionResult(subscription);
-
-  console.dir(
-    { render: { result, promise: subscription.promise, variables } },
-    { depth: null }
-  );
 
   if (
     shouldSuspend(subscription.result, {
@@ -125,13 +119,13 @@ export function useSuspenseQuery_experimental<
     return {
       client,
       data: result.data,
-      error: errorPolicy === 'ignore' ? void 0 : toApolloError(result),
+      error: toApolloError(result),
       networkStatus: result.networkStatus,
       fetchMore,
       refetch,
       subscribeToMore,
     };
-  }, [client, fetchMore, refetch, result, errorPolicy, subscribeToMore]);
+  }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
 
 function validateOptions(options: WatchQueryOptions) {

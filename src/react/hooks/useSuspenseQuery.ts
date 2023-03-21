@@ -123,7 +123,10 @@ export function useSuspenseQuery_experimental<
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    useCallback((options) => observable.subscribeToMore(options), [observable]);
+    useCallback(
+      (options) => subscription.observable.subscribeToMore(options),
+      [subscription]
+    );
 
   return useMemo(() => {
     return {

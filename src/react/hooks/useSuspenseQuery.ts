@@ -485,12 +485,31 @@ function useIsDeferred(query: DocumentNode) {
 function useSubscriptionResult<TData>(
   subscription: ObservableQuerySubscription<TData>
 ) {
+  const isMountedRef = useRef(false);
+
+  // React keeps refs and effects from useSyncExternalStore around after the
+  // component initially mounts even if the component re-suspends. We need to
+  // track when the component suspends/unsuspends to ensure we don't try and
+  // update the component while its suspended since the observable's
+  // `next` function is called before the promise resolved.
+  //
+  // Unlike useEffect, useLayoutEffect will run its cleanup and initialization
+  // functions each time a component is suspended.
+  useIsomorphicLayoutEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   return useSyncExternalStore(
     useCallback(
       (forceUpdate) => {
-        return subscription.subscribe((result) => {
-          console.log({ result });
-          forceUpdate();
+        return subscription.subscribe(() => {
+          if (isMountedRef.current) {
+            forceUpdate();
+          }
         });
       },
       [subscription]

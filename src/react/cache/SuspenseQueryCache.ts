@@ -8,6 +8,7 @@ import {
   TypedDocumentNode,
   WatchQueryOptions,
 } from '../../core';
+import { ObservableQuerySubscription } from './ObservableQuerySubscription';
 
 import { canonicalStringify } from '../../cache';
 import { canUseWeakMap } from '../../utilities';
@@ -35,6 +36,10 @@ export class SuspenseQueryCache {
   );
 
   private observables = new Map<CacheKey, ObservableQuery>();
+  private subscriptions = new Map<
+    ObservableQuery,
+    ObservableQuerySubscription
+  >();
   private queriesByObservable = new WeakMap<
     ObservableQuery,
     Promise<ApolloQueryResult<unknown>>
@@ -84,6 +89,23 @@ export class SuspenseQueryCache {
     }
 
     return this.observables.get(cacheKey)! as ObservableQuery<
+      TData,
+      TVariables
+    >;
+  }
+
+  getSubscription<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables
+  >(observable: ObservableQuery<TData, TVariables>) {
+    if (!this.subscriptions.has(observable)) {
+      this.subscriptions.set(
+        observable,
+        new ObservableQuerySubscription(observable)
+      );
+    }
+
+    return this.subscriptions.get(observable)! as ObservableQuerySubscription<
       TData,
       TVariables
     >;

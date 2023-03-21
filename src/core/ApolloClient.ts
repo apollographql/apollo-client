@@ -127,6 +127,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *                you are using.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
+    if (!options.cache) {
+      throw new InvariantError(
+        "To initialize Apollo Client, you must specify a 'cache' property " +
+        "in the options object. \n" +
+        "For more information, please visit: https://go.apollo.dev/c/docs"
+      );
+    }
+
     const {
       uri,
       credentials,
@@ -143,7 +151,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         __DEV__,
       queryDeduplication = true,
       defaultOptions,
-      assumeImmutableResults = false,
+      assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
       typeDefs,
       fragmentMatcher,
@@ -157,14 +165,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       link = uri
         ? new HttpLink({ uri, credentials, headers })
         : ApolloLink.empty();
-    }
-
-    if (!cache) {
-      throw new InvariantError(
-        "To initialize Apollo Client, you must specify a 'cache' property " +
-        "in the options object. \n" +
-        "For more information, please visit: https://go.apollo.dev/c/docs"
-      );
     }
 
     this.link = link;

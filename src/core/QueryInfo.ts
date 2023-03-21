@@ -6,7 +6,7 @@ import { DeepMerger } from "../utilities"
 import { mergeIncrementalData } from '../utilities';
 import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
 import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
-import { QueryListener } from './types';
+import { QueryListener, MethodKeys } from './types';
 import { FetchResult } from '../link/core';
 import {
   ObservableSubscription,
@@ -40,7 +40,7 @@ const destructiveMethodCounts = new (
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: keyof ApolloCache<any>,
+  methodName: MethodKeys<ApolloCache<any>>,
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {

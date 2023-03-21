@@ -49,6 +49,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     any,
     [Cache.WatchOptions]>;
 
+  // Override the default value, since InMemoryCache result objects are frozen
+  // in development and expected to remain logically immutable in production.
+  public readonly assumeImmutableResults = true;
+
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or
   // cache.policies.addPossibletypes.

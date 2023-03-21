@@ -6,8 +6,6 @@ import { Cache } from '../../../cache';
 import { InMemoryCache } from '../inMemoryCache';
 import { InMemoryCacheConfig } from '../types';
 
-jest.mock('optimism');
-import { wrap } from 'optimism';
 import { StoreReader } from '../readFromStore';
 import { StoreWriter } from '../writeToStore';
 import { ObjectCanon } from '../object-canon';
@@ -2011,32 +2009,21 @@ describe('Cache', () => {
 });
 
 describe('resultCacheMaxSize', () => {
-  let wrapSpy: jest.Mock = wrap as jest.Mock;
-  beforeEach(() => {
-    wrapSpy.mockClear();
-  });
+  const defaultMaxSize = Math.pow(2, 16);
 
-  it("does not set max size on caches if resultCacheMaxSize is not configured", () => {
-    new InMemoryCache();
-    expect(wrapSpy).toHaveBeenCalled();
-
-    // The first wrap call is for getFragmentQueryDocument which intentionally
-    // does not have a max set since it's not expected to grow.
-    wrapSpy.mock.calls.splice(1).forEach(([, { max }]) => {
-      expect(max).toBeUndefined();
-    })
+  it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
+    const cache = new InMemoryCache();
+    expect(cache["maybeBroadcastWatch"].options.max).toBe(defaultMaxSize);
+    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(defaultMaxSize);
+    expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {
     const resultCacheMaxSize = 12345;
-    new InMemoryCache({ resultCacheMaxSize });
-    expect(wrapSpy).toHaveBeenCalled();
-
-    // The first wrap call is for getFragmentQueryDocument which intentionally
-    // does not have a max set since it's not expected to grow.
-    wrapSpy.mock.calls.splice(1).forEach(([, { max }]) => {
-      expect(max).toBe(resultCacheMaxSize);
-    })
+    const cache = new InMemoryCache({ resultCacheMaxSize });
+    expect(cache["maybeBroadcastWatch"].options.max).toBe(resultCacheMaxSize);
+    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(resultCacheMaxSize);
+    expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
   });
 });
 

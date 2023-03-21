@@ -107,14 +107,8 @@ export function useSuspenseQuery_experimental<
   // }, []);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => {
-      const promise = observable.fetchMore(options);
-
-      // setPromise(promise);
-
-      return promise;
-    },
-    [observable]
+    (options) => subscription.fetchMore(options),
+    [subscription]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(

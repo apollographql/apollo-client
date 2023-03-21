@@ -9,6 +9,10 @@ import { Concast, hasDirectives } from '../../utilities';
 
 type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
 
+type FetchMoreOptions<TData> = Parameters<
+  ObservableQuery<TData>['fetchMore']
+>[0];
+
 interface Subscription {
   unsubscribe: () => void;
 }
@@ -79,6 +83,12 @@ export class ObservableQuerySubscription<TData = any> {
 
   refetch(variables: OperationVariables | undefined) {
     this.promise = this.observable.refetch(variables);
+
+    return this.promise;
+  }
+
+  fetchMore(options: FetchMoreOptions<TData>) {
+    this.promise = this.observable.fetchMore<TData>(options);
 
     return this.promise;
   }

@@ -1,11 +1,5 @@
 import { Trie } from '@wry/trie';
-import {
-  ApolloClient,
-  ApolloQueryResult,
-  DocumentNode,
-  ObservableQuery,
-  OperationVariables,
-} from '../../core';
+import { ApolloClient, DocumentNode, OperationVariables } from '../../core';
 import { ObservableQuerySubscription } from './ObservableQuerySubscription';
 
 import { canonicalStringify } from '../../cache';
@@ -23,10 +17,6 @@ export class SuspenseQueryCache {
   );
 
   private subscriptions = new Map<CacheKey, ObservableQuerySubscription>();
-  private queriesByObservable = new WeakMap<
-    ObservableQuery,
-    Promise<ApolloQueryResult<unknown>>
-  >();
 
   constructor(client: ApolloClient<unknown>) {
     this.client = client;
@@ -45,24 +35,6 @@ export class SuspenseQueryCache {
     return this.subscriptions.get(
       cacheKey
     )! as ObservableQuerySubscription<TData>;
-  }
-
-  getPromise<
-    TData = any,
-    TVariables extends OperationVariables = OperationVariables
-  >(
-    observable: ObservableQuery<TData, TVariables>
-  ): Promise<ApolloQueryResult<TData>> | undefined {
-    return this.queriesByObservable.get(observable) as Promise<
-      ApolloQueryResult<TData>
-    >;
-  }
-
-  setPromise(
-    observable: ObservableQuery,
-    promise: Promise<ApolloQueryResult<unknown>>
-  ) {
-    this.queriesByObservable.set(observable, promise);
   }
 
   getCacheKey(

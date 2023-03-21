@@ -159,7 +159,7 @@ export class ObservableQuerySubscription<TData = any> {
   streamResultsFrom(subscription: VariablesSubscription<TData>) {
     this.currentSubscription?.unsubscribe();
 
-    this.setResult(subscription.result);
+    this.setResult(subscription.result, { silent: true });
 
     this.currentSubscription = subscription.subscribe((result) => {
       this.setResult(result);
@@ -171,10 +171,16 @@ export class ObservableQuerySubscription<TData = any> {
     this.subscriptions.forEach((source) => source.dispose());
   }
 
-  setResult(result: ApolloQueryResult<TData>) {
+  setResult(
+    result: ApolloQueryResult<TData>,
+    { silent = false }: { silent: boolean } = Object.create(null)
+  ) {
     if (!equal(this.result, result)) {
       this.result = result;
-      this.deliver(result);
+
+      if (!silent) {
+        this.deliver(result);
+      }
     }
   }
 

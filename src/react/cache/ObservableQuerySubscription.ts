@@ -139,12 +139,12 @@ export class ObservableQuerySubscription<TData = any> {
       );
     }
 
-    const dataSource = this.subscriptions.get(key)!;
+    const subscription = this.subscriptions.get(key)!;
 
-    this.streamResultsFrom(dataSource);
-    this.promise = dataSource.promise;
+    this.streamResultsFrom(subscription);
+    this.promise = subscription.promise;
 
-    return dataSource.promise;
+    return subscription.promise;
   }
 
   subscribe(listener: Listener<TData>) {

@@ -182,11 +182,6 @@ export class ObservableQuerySubscription<TData = any> {
       this.previousResult = this.result;
       this.result = result;
 
-      // Retain data from the previous result when changing variables
-      if (this.result.networkStatus === NetworkStatus.setVariables) {
-        this.result.data = this.previousResult.data;
-      }
-
       if (!silent) {
         this.deliver(result);
       }

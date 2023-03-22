@@ -253,7 +253,8 @@ function useCachedResult(
 ) {
   if (
     result.networkStatus === NetworkStatus.refetch ||
-    result.networkStatus === NetworkStatus.fetchMore
+    result.networkStatus === NetworkStatus.fetchMore ||
+    result.networkStatus === NetworkStatus.error
   ) {
     return false;
   }

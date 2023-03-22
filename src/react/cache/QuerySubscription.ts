@@ -1,11 +1,11 @@
 import equal from '@wry/equality';
-import invariant from 'ts-invariant';
 import {
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
 } from '../../core';
 import { Concast, hasDirectives } from '../../utilities';
+import { invariant } from '../../utilities/globals';
 
 type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
 
@@ -44,7 +44,7 @@ interface Options {
   onDispose?: () => void;
 }
 
-export class ObservableQuerySubscription<TData = any> {
+export class QuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
   public promise: Promise<ApolloQueryResult<TData>>;
   public readonly observable: ObservableQuery<TData>;

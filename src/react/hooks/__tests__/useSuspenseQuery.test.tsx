@@ -1914,7 +1914,7 @@ describe('useSuspenseQuery', () => {
         },
         {
           ...mocks[0].result,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.setVariables,
           error: undefined,
         },
         {

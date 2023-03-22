@@ -4,6 +4,7 @@ import {
   DocumentNode,
   ObservableQuery,
   OperationVariables,
+  TypedDocumentNode,
 } from '../../core';
 import { ObservableQuerySubscription } from './ObservableQuerySubscription';
 
@@ -29,9 +30,12 @@ export class SuspenseQueryCache {
   }
 
   getSubscription<TData = any>(
-    cacheKey: CacheKey,
+    query: DocumentNode | TypedDocumentNode<TData>,
+    variables: OperationVariables | undefined,
     createObservable: (client: ApolloClient<unknown>) => ObservableQuery<TData>
   ) {
+    const cacheKey = this.getCacheKey(query, variables);
+
     if (!this.subscriptions.has(cacheKey)) {
       this.subscriptions.set(
         cacheKey,
@@ -46,12 +50,12 @@ export class SuspenseQueryCache {
     )! as ObservableQuerySubscription<TData>;
   }
 
-  getCacheKey(
-    document: DocumentNode,
+  private getCacheKey(
+    query: DocumentNode,
     variables: OperationVariables | undefined
   ) {
     return this.cacheKeys.lookup(
-      document,
+      query,
       canonicalStringify(variables || EMPTY_VARIABLES)
     );
   }

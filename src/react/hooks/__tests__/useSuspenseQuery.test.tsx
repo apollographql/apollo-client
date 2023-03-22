@@ -1868,7 +1868,7 @@ describe('useSuspenseQuery', () => {
     'no-cache',
     'cache-and-network',
   ])(
-    'returns previous data on refetch when changing variables and using a "%s" with an "initial" suspense policy',
+    'returns previous data when changing variables and using a "%s" with an "initial" suspense policy',
     async (fetchPolicy) => {
       const { query, mocks } = useVariablesQueryCase();
 

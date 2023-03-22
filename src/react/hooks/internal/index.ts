@@ -2,4 +2,5 @@
 export { useDeepMemo } from './useDeepMemo';
 export { useLazyRef } from './useLazyRef';
 export { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
+export { useStrictModeSafeCleanupEffect } from './useStrictModeSafeCleanupEffect';
 export { __use } from './__use';

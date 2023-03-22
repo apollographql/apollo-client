@@ -3336,8 +3336,8 @@ describe('useSuspenseQuery', () => {
       },
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
-        error: expectedError,
+        networkStatus: NetworkStatus.setVariables,
+        error: undefined,
       },
       {
         ...mocks[1].result,

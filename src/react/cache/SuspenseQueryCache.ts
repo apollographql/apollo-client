@@ -28,15 +28,6 @@ export class SuspenseQueryCache {
     this.client = client;
   }
 
-  dispose(cacheKey: CacheKey) {
-    const subscription = this.subscriptions.get(cacheKey);
-
-    if (subscription) {
-      subscription.dispose();
-      this.subscriptions.delete(cacheKey);
-    }
-  }
-
   getSubscription<TData = any>(
     cacheKey: CacheKey,
     createObservable: (client: ApolloClient<unknown>) => ObservableQuery<TData>

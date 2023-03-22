@@ -19,12 +19,7 @@ import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
-import {
-  useDeepMemo,
-  useIsomorphicLayoutEffect,
-  useStrictModeSafeCleanupEffect,
-  __use,
-} from './internal';
+import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { ObservableQuerySubscription } from '../cache';
@@ -90,7 +85,11 @@ export function useSuspenseQuery_experimental<
 
   useStrictModeSafeCleanupEffect(dispose);
 
-  const result = useSubscriptionResult(subscription);
+  const result = useSyncExternalStore(
+    subscription.subscribe,
+    () => subscription.result,
+    () => subscription.result
+  );
 
   if (
     shouldSuspend(subscription.result, {
@@ -253,41 +252,4 @@ function shouldSuspend(
     default:
       return true;
   }
-}
-
-function useSubscriptionResult<TData>(
-  subscription: ObservableQuerySubscription<TData>
-) {
-  const isMountedRef = useRef(false);
-
-  // React keeps refs and effects from useSyncExternalStore around after the
-  // component initially mounts even if the component re-suspends. We need to
-  // track when the component suspends/unsuspends to ensure we don't try and
-  // update the component while its suspended since the observable's
-  // `next` function is called before the promise resolved.
-  //
-  // Unlike useEffect, useLayoutEffect will run its cleanup and initialization
-  // functions each time a component is suspended.
-  useIsomorphicLayoutEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  return useSyncExternalStore(
-    useCallback(
-      (forceUpdate) => {
-        return subscription.subscribe(() => {
-          if (isMountedRef.current) {
-            forceUpdate();
-          }
-        });
-      },
-      [subscription]
-    ),
-    () => subscription.result,
-    () => subscription.result
-  );
 }

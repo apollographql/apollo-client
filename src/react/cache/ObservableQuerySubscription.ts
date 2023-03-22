@@ -56,6 +56,7 @@ export class ObservableQuerySubscription<TData = any> {
     observable: ObservableQuery<TData>,
     options: Options = Object.create(null)
   ) {
+    this.subscribe = this.subscribe.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult();

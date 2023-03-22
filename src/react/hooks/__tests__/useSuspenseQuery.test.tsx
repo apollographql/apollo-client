@@ -6055,7 +6055,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('works with useDeferredValue', async () => {
+  it('works with useDeferredValue', async () => {
     const user = userEvent.setup();
 
     interface Variables {

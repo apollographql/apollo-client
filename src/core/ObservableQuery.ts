@@ -785,7 +785,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Concast<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;
 
     const useDisposableConcast =

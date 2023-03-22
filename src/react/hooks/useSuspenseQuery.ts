@@ -1,4 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
+import { equal } from '@wry/equality';
 import { useRef, useCallback, useMemo } from 'react';
 import {
   ApolloClient,
@@ -79,6 +80,8 @@ export function useSuspenseQuery_experimental<
   const shouldSuspend =
     suspensePolicy === 'always' || !didPreviouslySuspend.current;
 
+  const previousVariables = useRef(variables);
+
   const subscription = suspenseCache
     .forClient(client)
     .getSubscription(query, variables, (client) =>
@@ -89,11 +92,16 @@ export function useSuspenseQuery_experimental<
 
   useStrictModeSafeCleanupEffect(dispose);
 
-  const result = useSyncExternalStore(
+  let result = useSyncExternalStore(
     subscription.listen,
     () => subscription.result,
     () => subscription.result
   );
+
+  if (!equal(variables, previousVariables.current)) {
+    result = { ...result, networkStatus: NetworkStatus.setVariables };
+    previousVariables.current = variables;
+  }
 
   if (
     shouldSuspend &&

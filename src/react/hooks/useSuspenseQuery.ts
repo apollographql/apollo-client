@@ -100,11 +100,13 @@ export function useSuspenseQuery_experimental<
   const previousData = useRef(result.data);
 
   if (!equal(variables, previousVariables.current)) {
-    result = {
-      ...result,
-      data: previousData.current,
-      networkStatus: NetworkStatus.setVariables,
-    };
+    if (result.networkStatus !== NetworkStatus.ready) {
+      result = {
+        ...result,
+        data: previousData.current,
+        networkStatus: NetworkStatus.setVariables,
+      };
+    }
 
     previousVariables.current = variables;
     previousData.current = result.data;

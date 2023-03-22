@@ -27,7 +27,7 @@ import {
 } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
-import { ObservableQuerySubscription, CacheKey } from '../cache';
+import { ObservableQuerySubscription } from '../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,

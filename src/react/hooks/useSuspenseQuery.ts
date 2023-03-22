@@ -73,9 +73,10 @@ export function useSuspenseQuery_experimental<
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
+  const { returnPartialData = false, variables } = watchQueryOptions;
 
   const queryCache = suspenseCache.forClient(client);
-  const cacheKey = queryCache.getCacheKey(query, watchQueryOptions.variables);
+  const cacheKey = queryCache.getCacheKey(query, variables);
   const subscription = queryCache.getSubscription(
     cacheKey,
     () => new ObservableQuerySubscription(client.watchQuery(watchQueryOptions))
@@ -85,7 +86,7 @@ export function useSuspenseQuery_experimental<
 
   if (
     shouldSuspend(subscription.result, {
-      returnPartialData: watchQueryOptions.returnPartialData ?? false,
+      returnPartialData,
       fetchPolicy: options.fetchPolicy,
     })
   ) {

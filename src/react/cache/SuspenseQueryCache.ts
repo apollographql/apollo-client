@@ -7,6 +7,7 @@ import {
   TypedDocumentNode,
 } from '../../core';
 import { QuerySubscription } from './QuerySubscription';
+import { wrap } from 'optimism';
 
 import { canonicalStringify } from '../../cache';
 import { canUseWeakMap } from '../../utilities';
@@ -19,42 +20,39 @@ export class SuspenseQueryCache {
   private client: ApolloClient<unknown>;
 
   private cacheKeys = new Trie<CacheKey>(
-    canUseWeakMap,
+    false,
     (cacheKey: CacheKey) => cacheKey
   );
 
-  private subscriptions = new Map<CacheKey, QuerySubscription>();
+  // private subscriptions = new Map<CacheKey, QuerySubscription>();
 
   constructor(client: ApolloClient<unknown>) {
     this.client = client;
   }
 
-  getSubscription<TData = any>(
-    query: DocumentNode | TypedDocumentNode<TData>,
-    variables: OperationVariables | undefined,
-    createObservable: (client: ApolloClient<unknown>) => ObservableQuery<TData>
-  ) {
-    const cacheKey = this.getCacheKey(query, variables);
-
-    if (!this.subscriptions.has(cacheKey)) {
-      this.subscriptions.set(
-        cacheKey,
-        new QuerySubscription(createObservable(this.client), {
-          onDispose: () => this.subscriptions.delete(cacheKey),
-        })
-      );
+  getSubscription = wrap(
+    <TData = any>(
+      query: DocumentNode | TypedDocumentNode<TData>,
+      variables: OperationVariables | undefined,
+      createObservable: (
+        client: ApolloClient<unknown>
+      ) => ObservableQuery<TData>
+    ) => {
+      console.log('create subscription', variables);
+      return new QuerySubscription(createObservable(this.client), {
+        // onDispose: () => {
+        //   console.log('on dispose');
+        //   this.getSubscription.forget(query, variables);
+        // },
+      });
+    },
+    {
+      makeCacheKey: (query, variables) => {
+        return this.cacheKeys.lookup(
+          query,
+          canonicalStringify(variables || EMPTY_VARIABLES)
+        );
+      },
     }
-
-    return this.subscriptions.get(cacheKey)! as QuerySubscription<TData>;
-  }
-
-  private getCacheKey(
-    query: DocumentNode,
-    variables: OperationVariables | undefined
-  ) {
-    return this.cacheKeys.lookup(
-      query,
-      canonicalStringify(variables || EMPTY_VARIABLES)
-    );
-  }
+  );
 }

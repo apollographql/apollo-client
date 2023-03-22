@@ -22,7 +22,7 @@ import {
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
-import { ObservableQuerySubscription } from '../cache';
+import { QuerySubscription } from '../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -103,7 +103,7 @@ export function useSuspenseQuery_experimental<
   }
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => subscription.fetchMore(options),
+    (options) => subscription.fetchMore(options) as any,
     [subscription]
   );
 
@@ -167,8 +167,8 @@ function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
-function useTrackedSubscriptions(subscription: ObservableQuerySubscription) {
-  const trackedSubscriptions = useRef(new Set<ObservableQuerySubscription>());
+function useTrackedSubscriptions(subscription: QuerySubscription) {
+  const trackedSubscriptions = useRef(new Set<QuerySubscription>());
 
   trackedSubscriptions.current.add(subscription);
 

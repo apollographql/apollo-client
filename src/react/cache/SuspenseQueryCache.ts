@@ -6,7 +6,7 @@ import {
   OperationVariables,
   TypedDocumentNode,
 } from '../../core';
-import { ObservableQuerySubscription } from './ObservableQuerySubscription';
+import { QuerySubscription } from './QuerySubscription';
 
 import { canonicalStringify } from '../../cache';
 import { canUseWeakMap } from '../../utilities';
@@ -23,7 +23,7 @@ export class SuspenseQueryCache {
     (cacheKey: CacheKey) => cacheKey
   );
 
-  private subscriptions = new Map<CacheKey, ObservableQuerySubscription>();
+  private subscriptions = new Map<CacheKey, QuerySubscription>();
 
   constructor(client: ApolloClient<unknown>) {
     this.client = client;
@@ -39,15 +39,13 @@ export class SuspenseQueryCache {
     if (!this.subscriptions.has(cacheKey)) {
       this.subscriptions.set(
         cacheKey,
-        new ObservableQuerySubscription(createObservable(this.client), {
+        new QuerySubscription(createObservable(this.client), {
           onDispose: () => this.subscriptions.delete(cacheKey),
         })
       );
     }
 
-    return this.subscriptions.get(
-      cacheKey
-    )! as ObservableQuerySubscription<TData>;
+    return this.subscriptions.get(cacheKey)! as QuerySubscription<TData>;
   }
 
   private getCacheKey(

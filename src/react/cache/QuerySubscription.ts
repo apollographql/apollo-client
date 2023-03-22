@@ -56,7 +56,7 @@ export class QuerySubscription<TData = any> {
     observable: ObservableQuery<TData>,
     options: Options = Object.create(null)
   ) {
-    this.subscribe = this.subscribe.bind(this);
+    this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult();
@@ -89,7 +89,7 @@ export class QuerySubscription<TData = any> {
     // noop. overridable by options
   }
 
-  subscribe(listener: Listener<TData>) {
+  listen(listener: Listener<TData>) {
     this.listeners.add(listener);
 
     return () => {

@@ -86,7 +86,7 @@ export function useSuspenseQuery_experimental<
   useStrictModeSafeCleanupEffect(dispose);
 
   const result = useSyncExternalStore(
-    subscription.subscribe,
+    subscription.listen,
     () => subscription.result,
     () => subscription.result
   );

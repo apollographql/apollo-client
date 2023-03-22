@@ -100,7 +100,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@babel/parser": "7.21.2",
+    "@babel/parser": "7.21.3",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.0",
     "@graphql-tools/schema": "9.0.17",
@@ -112,9 +112,9 @@
     "@types/fetch-mock": "7.3.5",
     "@types/glob": "8.1.0",
     "@types/hoist-non-react-statics": "3.3.1",
-    "@types/jest": "29.4.0",
+    "@types/jest": "29.5.0",
     "@types/lodash": "4.14.191",
-    "@types/node": "18.15.1",
+    "@types/node": "18.15.3",
     "@types/node-fetch": "2.6.2",
     "@types/react": "18.0.28",
     "@types/react-dom": "18.0.11",

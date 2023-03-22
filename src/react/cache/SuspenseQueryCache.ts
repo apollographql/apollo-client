@@ -4,7 +4,8 @@ import { ObservableQuerySubscription } from './ObservableQuerySubscription';
 
 import { canonicalStringify } from '../../cache';
 import { canUseWeakMap } from '../../utilities';
-type CacheKey = [DocumentNode, string];
+
+export type CacheKey = [DocumentNode, string];
 
 const EMPTY_VARIABLES = Object.create(null);
 

@@ -44,7 +44,9 @@ export class SuspenseQueryCache {
     if (!this.subscriptions.has(cacheKey)) {
       this.subscriptions.set(
         cacheKey,
-        new ObservableQuerySubscription(createObservable(this.client))
+        new ObservableQuerySubscription(createObservable(this.client), {
+          onDispose: () => this.subscriptions.delete(cacheKey),
+        })
       );
     }
 

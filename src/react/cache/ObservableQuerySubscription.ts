@@ -40,6 +40,10 @@ function maybeWrapConcastWithCustomPromise<TData>(
   return concast.promise;
 }
 
+interface Options {
+  onDispose?: () => void;
+}
+
 export class ObservableQuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
   public promise: Promise<ApolloQueryResult<TData>>;
@@ -48,10 +52,17 @@ export class ObservableQuerySubscription<TData = any> {
   private subscription: Subscription;
   private listeners = new Set<Listener<TData>>();
 
-  constructor(observable: ObservableQuery<TData>) {
+  constructor(
+    observable: ObservableQuery<TData>,
+    options: Options = Object.create(null)
+  ) {
     this.handleNext = this.handleNext.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult();
+
+    if (options.onDispose) {
+      this.onDispose = options.onDispose;
+    }
 
     this.subscription = observable.subscribe({
       next: this.handleNext,
@@ -71,6 +82,10 @@ export class ObservableQuerySubscription<TData = any> {
     this.promise = maybeWrapConcastWithCustomPromise(observable['concast'], {
       deferred: hasDirectives(['defer'], observable.query),
     });
+  }
+
+  onDispose() {
+    // noop. overridable by options
   }
 
   subscribe(listener: Listener<TData>) {
@@ -96,6 +111,7 @@ export class ObservableQuerySubscription<TData = any> {
   dispose() {
     this.listeners.clear();
     this.subscription.unsubscribe();
+    this.onDispose();
   }
 
   private handleNext() {

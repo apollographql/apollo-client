@@ -1494,7 +1494,7 @@ describe('HttpLink', () => {
               expect.objectContaining({
                 headers: {
                   "content-type": "application/json",
-                  accept: "multipart/mixed; deferSpec=20220824, application/json"
+                  accept: "multipart/mixed;deferSpec=20220824,application/json"
                 }
               })
             )

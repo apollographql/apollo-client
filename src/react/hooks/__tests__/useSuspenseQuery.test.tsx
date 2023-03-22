@@ -3630,8 +3630,7 @@ describe('useSuspenseQuery', () => {
       },
       {
         ...mocks[0].result,
-        // TODO: Fix me to make it work with NetworkStatus.refetch
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.refetch,
         error: undefined,
       },
       {
@@ -4008,8 +4007,7 @@ describe('useSuspenseQuery', () => {
       },
       {
         data: { letters: data.slice(0, 2) },
-        // TODO: Get me to work with NetworkStatus.fetchMore
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.fetchMore,
         error: undefined,
       },
       {

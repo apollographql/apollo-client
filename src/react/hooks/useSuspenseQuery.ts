@@ -75,7 +75,6 @@ export function useSuspenseQuery_experimental<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
-  const subscriptions = useRef(new Set<ObservableQuerySubscription>());
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
@@ -87,9 +86,11 @@ export function useSuspenseQuery_experimental<
     return client.watchQuery(watchQueryOptions);
   });
 
-  const result = useSubscriptionResult(subscription);
+  const dispose = useTrackedSubscriptions(subscription);
 
-  subscriptions.current.add(subscription);
+  useStrictModeSafeCleanupEffect(dispose);
+
+  const result = useSubscriptionResult(subscription);
 
   if (
     shouldSuspend(subscription.result, {
@@ -101,10 +102,6 @@ export function useSuspenseQuery_experimental<
     // observe results from the observable instead of the the promise.
     __use(subscription.promise);
   }
-
-  useStrictModeSafeCleanupEffect(() => {
-    subscriptions.current.forEach((subscription) => subscription.dispose());
-  });
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => subscription.fetchMore(options),
@@ -178,6 +175,14 @@ interface UseWatchQueryOptionsHookOptions<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SuspenseQueryHookOptions<TData, TVariables>;
   client: ApolloClient<any>;
+}
+
+function useTrackedSubscriptions(subscription: ObservableQuerySubscription) {
+  const trackedSubscriptions = useRef(new Set<ObservableQuerySubscription>());
+
+  trackedSubscriptions.current.add(subscription);
+
+  return () => trackedSubscriptions.current.forEach((sub) => sub.dispose());
 }
 
 function useWatchQueryOptions<TData, TVariables extends OperationVariables>({

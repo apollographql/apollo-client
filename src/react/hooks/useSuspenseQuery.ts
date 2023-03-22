@@ -80,10 +80,11 @@ export function useSuspenseQuery_experimental<
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const { returnPartialData = false, variables } = watchQueryOptions;
 
-  const queryCache = suspenseCache.forClient(client);
-  const subscription = queryCache.getSubscription(query, variables, (client) =>
-    client.watchQuery(watchQueryOptions)
-  );
+  const subscription = suspenseCache
+    .forClient(client)
+    .getSubscription(query, variables, (client) =>
+      client.watchQuery(watchQueryOptions)
+    );
 
   const dispose = useTrackedSubscriptions(subscription);
 

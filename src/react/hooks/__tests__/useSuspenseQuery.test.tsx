@@ -727,6 +727,71 @@ describe('useSuspenseQuery', () => {
     expect(queryCache['subscriptions'].size).toBe(0);
   });
 
+  it('tears down all queries when multiple clients are used', async () => {
+    const { query } = useVariablesQueryCase();
+
+    const client1 = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query, variables: { id: '1' } },
+          result: { data: { character: { id: '1', name: 'Client 1' } } },
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    const client2 = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query, variables: { id: '1' } },
+          result: { data: { character: { id: '1', name: 'Client 2' } } },
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { rerender, result, unmount } = renderSuspenseHook(
+      ({ client }) =>
+        useSuspenseQuery(query, { client, variables: { id: '1' } }),
+      { suspenseCache, initialProps: { client: client1 } }
+    );
+
+    await waitFor(() =>
+      expect(result.current.data).toEqual({
+        character: { id: '1', name: 'Client 1' },
+      })
+    );
+
+    rerender({ client: client2 });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        character: { id: '1', name: 'Client 2' },
+      });
+    });
+
+    const queryCache1 = suspenseCache.forClient(client1);
+    const queryCache2 = suspenseCache.forClient(client2);
+
+    expect(client1.getObservableQueries().size).toBe(1);
+    expect(client2.getObservableQueries().size).toBe(1);
+    expect(queryCache1['subscriptions'].size).toBe(1);
+    expect(queryCache2['subscriptions'].size).toBe(1);
+
+    unmount();
+
+    // We need to wait a tick since the cleanup is run in a setTimeout to
+    // prevent strict mode bugs.
+    await wait(0);
+
+    expect(client1.getObservableQueries().size).toBe(0);
+    expect(client2.getObservableQueries().size).toBe(0);
+    expect(queryCache1['subscriptions'].size).toBe(0);
+    expect(queryCache2['subscriptions'].size).toBe(0);
+  });
+
   it('allows the client to be overridden', async () => {
     const { query } = useSimpleQueryCase();
 

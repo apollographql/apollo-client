@@ -5996,6 +5996,7 @@ describe('useQuery Hook', () => {
           __typename: 'Greeting',
         },
       });
+      expect(result.current).not.toContain({ hasNext: true });
 
       setTimeout(() => {
         link.simulateResult({

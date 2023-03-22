@@ -1,5 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import {
   ApolloClient,
   ApolloError,
@@ -83,10 +83,9 @@ export function useSuspenseQuery_experimental<
 
   const queryCache = suspenseCache.forClient(client);
   const cacheKey = queryCache.getCacheKey(query, variables);
-  const subscription = queryCache.getSubscription(
-    cacheKey,
-    () => new ObservableQuerySubscription(client.watchQuery(watchQueryOptions))
-  );
+  const subscription = queryCache.getSubscription(cacheKey, (client) => {
+    return client.watchQuery(watchQueryOptions);
+  });
 
   const result = useSubscriptionResult(subscription);
 

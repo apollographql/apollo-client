@@ -80,8 +80,6 @@ export function useSuspenseQuery_experimental<
   const shouldSuspend =
     suspensePolicy === 'always' || !didPreviouslySuspend.current;
 
-  const previousVariables = useRef(variables);
-
   const subscription = suspenseCache
     .forClient(client)
     .getSubscription(query, variables, (client) =>
@@ -98,9 +96,18 @@ export function useSuspenseQuery_experimental<
     () => subscription.result
   );
 
+  const previousVariables = useRef(variables);
+  const previousData = useRef(result.data);
+
   if (!equal(variables, previousVariables.current)) {
-    result = { ...result, networkStatus: NetworkStatus.setVariables };
+    result = {
+      ...result,
+      data: previousData.current,
+      networkStatus: NetworkStatus.setVariables,
+    };
+
     previousVariables.current = variables;
+    previousData.current = result.data;
   }
 
   if (

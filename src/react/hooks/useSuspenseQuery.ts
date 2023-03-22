@@ -12,7 +12,7 @@ import {
   WatchQueryFetchPolicy,
   NetworkStatus,
 } from '../../core';
-import { compact, isNonEmptyArray } from '../../utilities';
+import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import {
@@ -239,7 +239,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
       fetchPolicy:
         fetchPolicy || defaultOptions?.fetchPolicy || DEFAULT_FETCH_POLICY,
       notifyOnNetworkStatusChange: true,
-      variables: compact({ ...defaultOptions?.variables, ...variables }),
+      variables: { ...defaultOptions?.variables, ...variables },
     };
   }, [options, query, defaultOptions]);
 

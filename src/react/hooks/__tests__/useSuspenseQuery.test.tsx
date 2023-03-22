@@ -687,6 +687,46 @@ describe('useSuspenseQuery', () => {
     expect(queryCache['subscriptions'].size).toBe(0);
   });
 
+  it('tears down all queries used when variables hvae been changed', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { rerender, result, unmount } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { client, suspenseCache, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() =>
+      expect(result.current.data).toEqual(mocks[0].result.data)
+    );
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[1].result.data);
+    });
+
+    const queryCache = suspenseCache.forClient(client);
+
+    expect(client.getObservableQueries().size).toBe(2);
+    expect(queryCache['subscriptions'].size).toBe(2);
+
+    unmount();
+
+    // We need to wait a tick since the cleanup is run in a setTimeout to
+    // prevent strict mode bugs.
+    await wait(0);
+
+    expect(client.getObservableQueries().size).toBe(0);
+    expect(queryCache['subscriptions'].size).toBe(0);
+  });
+
   it('allows the client to be overridden', async () => {
     const { query } = useSimpleQueryCase();
 

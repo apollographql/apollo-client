@@ -75,7 +75,7 @@ export function useSuspenseQuery_experimental<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
-  const cacheKeys = useRef(new Set<CacheKey>());
+  const subscriptions = useRef(new Set<ObservableQuerySubscription>());
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
@@ -89,7 +89,7 @@ export function useSuspenseQuery_experimental<
 
   const result = useSubscriptionResult(subscription);
 
-  cacheKeys.current.add(cacheKey);
+  subscriptions.current.add(subscription);
 
   if (
     shouldSuspend(subscription.result, {
@@ -103,7 +103,7 @@ export function useSuspenseQuery_experimental<
   }
 
   useStrictModeSafeCleanupEffect(() => {
-    cacheKeys.current.forEach((key) => queryCache.dispose(key));
+    subscriptions.current.forEach((subscription) => subscription.dispose());
   });
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(

@@ -366,13 +366,11 @@ describe('useSuspenseQuery', () => {
       }
     );
 
-    expect(
-      directSuspenseCache.forClient(client).lookup(query, {})
-    ).toBeTruthy();
+    const directQueryCache = directSuspenseCache.forClient(client);
+    const contextQueryCache = contextSuspenseCache.forClient(client);
 
-    expect(
-      contextSuspenseCache.forClient(client).lookup(query, {})
-    ).not.toBeTruthy();
+    expect(directQueryCache['subscriptions'].size).toBe(1);
+    expect(contextQueryCache['subscriptions'].size).toBe(0);
   });
 
   it('ensures a valid fetch policy is used', () => {

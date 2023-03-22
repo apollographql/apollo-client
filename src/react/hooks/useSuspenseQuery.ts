@@ -172,7 +172,9 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
 
   trackedSubscriptions.current.add(subscription);
 
-  return () => trackedSubscriptions.current.forEach((sub) => sub.dispose());
+  return function dispose() {
+    trackedSubscriptions.current.forEach((sub) => sub.dispose());
+  };
 }
 
 interface UseWatchQueryOptionsHookOptions<

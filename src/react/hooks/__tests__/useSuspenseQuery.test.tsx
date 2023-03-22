@@ -666,8 +666,6 @@ describe('useSuspenseQuery', () => {
       { client, suspenseCache }
     );
 
-    // We don't subscribe to the observable until after the component has been
-    // unsuspended, so we need to wait for the result
     await waitFor(() =>
       expect(result.current.data).toEqual(mocks[0].result.data)
     );
@@ -687,7 +685,7 @@ describe('useSuspenseQuery', () => {
     expect(queryCache['subscriptions'].size).toBe(0);
   });
 
-  it('tears down all queries used when variables hvae been changed', async () => {
+  it('tears down all queries when rendering with multiple variable sets', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const client = new ApolloClient({

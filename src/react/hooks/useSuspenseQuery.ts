@@ -70,10 +70,14 @@ export function useSuspenseQuery_experimental<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
+  const didPreviouslySuspend = useRef(false);
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const { returnPartialData = false, variables } = watchQueryOptions;
+  const { suspensePolicy = DEFAULT_SUSPENSE_POLICY } = options;
+  const shouldSuspend =
+    suspensePolicy === 'always' || !didPreviouslySuspend.current;
 
   const subscription = suspenseCache
     .forClient(client)
@@ -92,7 +96,8 @@ export function useSuspenseQuery_experimental<
   );
 
   if (
-    shouldSuspend(subscription.result, {
+    shouldSuspend &&
+    renameMe(subscription.result, {
       returnPartialData,
       fetchPolicy: options.fetchPolicy,
     })
@@ -101,6 +106,8 @@ export function useSuspenseQuery_experimental<
     // observe results from the observable instead of the the promise.
     __use(subscription.promise);
   }
+
+  didPreviouslySuspend.current = true;
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => subscription.fetchMore(options) as any,
@@ -214,7 +221,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
         errorPolicy || defaultOptions?.errorPolicy || DEFAULT_ERROR_POLICY,
       fetchPolicy:
         fetchPolicy || defaultOptions?.fetchPolicy || DEFAULT_FETCH_POLICY,
-      notifyOnNetworkStatusChange: true, // suspensePolicy === 'always',
+      notifyOnNetworkStatusChange: true,
       variables: compact({ ...defaultOptions?.variables, ...variables }),
     };
   }, [options, query, defaultOptions]);
@@ -226,7 +233,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   return watchQueryOptions;
 }
 
-function shouldSuspend(
+function renameMe(
   result: ApolloQueryResult<unknown>,
   {
     returnPartialData = false,

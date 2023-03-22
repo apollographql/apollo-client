@@ -1,5 +1,10 @@
 import { Trie } from '@wry/trie';
-import { ApolloClient, DocumentNode, OperationVariables } from '../../core';
+import {
+  ApolloClient,
+  DocumentNode,
+  ObservableQuery,
+  OperationVariables,
+} from '../../core';
 import { ObservableQuerySubscription } from './ObservableQuerySubscription';
 
 import { canonicalStringify } from '../../cache';
@@ -34,12 +39,13 @@ export class SuspenseQueryCache {
 
   getSubscription<TData = any>(
     cacheKey: CacheKey,
-    createSubscription: (
-      client: ApolloClient<unknown>
-    ) => ObservableQuerySubscription<TData>
+    createObservable: (client: ApolloClient<unknown>) => ObservableQuery<TData>
   ) {
     if (!this.subscriptions.has(cacheKey)) {
-      this.subscriptions.set(cacheKey, createSubscription(this.client));
+      this.subscriptions.set(
+        cacheKey,
+        new ObservableQuerySubscription(createObservable(this.client))
+      );
     }
 
     return this.subscriptions.get(

@@ -679,6 +679,10 @@ describe('useSuspenseQuery', () => {
 
     unmount();
 
+    // We need to wait a tick since the cleanup is run in a setTimeout to
+    // prevent strict mode bugs.
+    await wait(0);
+
     expect(client.getObservableQueries().size).toBe(0);
     expect(queryCache['subscriptions'].size).toBe(0);
   });

@@ -19,10 +19,15 @@ import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
-import { useDeepMemo, useIsomorphicLayoutEffect, __use } from './internal';
+import {
+  useDeepMemo,
+  useIsomorphicLayoutEffect,
+  useStrictModeSafeCleanupEffect,
+  __use,
+} from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
-import { ObservableQuerySubscription } from '../cache';
+import { ObservableQuerySubscription, CacheKey } from '../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -70,6 +75,7 @@ export function useSuspenseQuery_experimental<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
+  const cacheKeys = useRef(new Set<CacheKey>());
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
@@ -84,6 +90,8 @@ export function useSuspenseQuery_experimental<
 
   const result = useSubscriptionResult(subscription);
 
+  cacheKeys.current.add(cacheKey);
+
   if (
     shouldSuspend(subscription.result, {
       returnPartialData,
@@ -95,11 +103,9 @@ export function useSuspenseQuery_experimental<
     __use(subscription.promise);
   }
 
-  useEffect(() => {
-    return () => {
-      queryCache.dispose(cacheKey);
-    };
-  }, []);
+  useStrictModeSafeCleanupEffect(() => {
+    cacheKeys.current.forEach((key) => queryCache.dispose(key));
+  });
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => subscription.fetchMore(options),

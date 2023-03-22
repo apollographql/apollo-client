@@ -167,6 +167,14 @@ function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
+function useTrackedSubscriptions(subscription: ObservableQuerySubscription) {
+  const trackedSubscriptions = useRef(new Set<ObservableQuerySubscription>());
+
+  trackedSubscriptions.current.add(subscription);
+
+  return () => trackedSubscriptions.current.forEach((sub) => sub.dispose());
+}
+
 interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables
@@ -174,14 +182,6 @@ interface UseWatchQueryOptionsHookOptions<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SuspenseQueryHookOptions<TData, TVariables>;
   client: ApolloClient<any>;
-}
-
-function useTrackedSubscriptions(subscription: ObservableQuerySubscription) {
-  const trackedSubscriptions = useRef(new Set<ObservableQuerySubscription>());
-
-  trackedSubscriptions.current.add(subscription);
-
-  return () => trackedSubscriptions.current.forEach((sub) => sub.dispose());
 }
 
 function useWatchQueryOptions<TData, TVariables extends OperationVariables>({

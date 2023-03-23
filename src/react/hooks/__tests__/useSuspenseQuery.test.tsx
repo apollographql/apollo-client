@@ -929,6 +929,68 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('suspends and fetches data from new client when changing clients', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const client1 = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello client 1' } },
+        },
+      ]),
+    });
+
+    const client2 = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello client 2' } },
+        },
+      ]),
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ client }) => useSuspenseQuery(query, { client }),
+      { initialProps: { client: client1 } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello client 1' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ client: client2 });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello client 2' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'Hello client 1' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello client 2' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('responds to cache updates after changing variables', async () => {
     const { query, mocks } = useVariablesQueryCase();
 

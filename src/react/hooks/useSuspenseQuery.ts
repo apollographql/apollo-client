@@ -105,7 +105,7 @@ export function useSuspenseQuery_experimental<
   if (
     result.networkStatus === NetworkStatus.error ||
     (shouldSuspend &&
-      !useCachedResult(subscription.result, {
+      !shouldUseCachedResult(subscription.result, {
         returnPartialData,
         fetchPolicy: options.fetchPolicy,
       }))
@@ -224,10 +224,10 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   return watchQueryOptions;
 }
 
-function useCachedResult(
+function shouldUseCachedResult(
   result: ApolloQueryResult<unknown>,
   {
-    returnPartialData = false,
+    returnPartialData,
     fetchPolicy,
   }: {
     returnPartialData: boolean | undefined;
@@ -248,7 +248,7 @@ function useCachedResult(
     case void 0:
     case 'cache-first':
     case 'cache-and-network': {
-      return result.data && (!result.partial || returnPartialData);
+      return Boolean(result.data && (!result.partial || returnPartialData));
     }
     default:
       return false;

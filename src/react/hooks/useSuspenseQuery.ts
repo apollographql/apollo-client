@@ -69,11 +69,12 @@ export function useSuspenseQuery_experimental<
   const shouldSuspend =
     suspensePolicy === 'always' || !didPreviouslySuspend.current;
 
-  const subscription = suspenseCache
-    .forClient(client)
-    .getSubscription(query, variables, (client) =>
-      client.watchQuery(watchQueryOptions)
-    );
+  const subscription = suspenseCache.getSubscription(
+    client,
+    query,
+    variables,
+    () => client.watchQuery(watchQueryOptions)
+  );
 
   const dispose = useTrackedSubscriptions(subscription);
 

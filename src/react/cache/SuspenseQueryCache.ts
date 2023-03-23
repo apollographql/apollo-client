@@ -13,8 +13,6 @@ import { canUseWeakMap } from '../../utilities';
 
 export type CacheKey = [DocumentNode, string];
 
-const EMPTY_VARIABLES = Object.create(null);
-
 export class SuspenseQueryCache {
   private client: ApolloClient<unknown>;
 
@@ -36,7 +34,7 @@ export class SuspenseQueryCache {
   ) {
     const cacheKey = this.cacheKeys.lookup(
       query,
-      canonicalStringify(variables || EMPTY_VARIABLES)
+      canonicalStringify(variables)
     );
 
     if (!this.subscriptions.has(cacheKey)) {

@@ -2807,7 +2807,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it.skip('tears down subscription when throwing an error on refetch when suspensePolicy is "initial"', async () => {
+  it('tears down subscription when throwing an error on refetch when suspensePolicy is "initial"', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`

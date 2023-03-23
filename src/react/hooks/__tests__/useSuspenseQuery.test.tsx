@@ -147,7 +147,7 @@ function useSimpleQueryCase() {
     }
   `;
 
-  const mocks: MockedResponse<SimpleQueryData>[] = [
+  const mocks = [
     {
       request: { query },
       result: { data: { greeting: 'Hello' } },
@@ -366,11 +366,8 @@ describe('useSuspenseQuery', () => {
       }
     );
 
-    const directQueryCache = directSuspenseCache.forClient(client);
-    const contextQueryCache = contextSuspenseCache.forClient(client);
-
-    expect(directQueryCache['subscriptions'].size).toBe(1);
-    expect(contextQueryCache['subscriptions'].size).toBe(0);
+    expect(directSuspenseCache['subscriptions'].size).toBe(1);
+    expect(contextSuspenseCache['subscriptions'].size).toBe(0);
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -668,10 +665,8 @@ describe('useSuspenseQuery', () => {
       expect(result.current.data).toEqual(mocks[0].result.data)
     );
 
-    const queryCache = suspenseCache.forClient(client);
-
     expect(client.getObservableQueries().size).toBe(1);
-    expect(queryCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(1);
 
     unmount();
 
@@ -680,7 +675,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(queryCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
   });
 
   it('tears down all queries when rendering with multiple variable sets', async () => {
@@ -708,10 +703,8 @@ describe('useSuspenseQuery', () => {
       expect(result.current.data).toEqual(mocks[1].result.data);
     });
 
-    const queryCache = suspenseCache.forClient(client);
-
     expect(client.getObservableQueries().size).toBe(2);
-    expect(queryCache['subscriptions'].size).toBe(2);
+    expect(suspenseCache['subscriptions'].size).toBe(2);
 
     unmount();
 
@@ -720,7 +713,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(queryCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
   });
 
   it('tears down all queries when multiple clients are used', async () => {
@@ -768,13 +761,10 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    const queryCache1 = suspenseCache.forClient(client1);
-    const queryCache2 = suspenseCache.forClient(client2);
 
     expect(client1.getObservableQueries().size).toBe(1);
     expect(client2.getObservableQueries().size).toBe(1);
-    expect(queryCache1['subscriptions'].size).toBe(1);
-    expect(queryCache2['subscriptions'].size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(2);
 
     unmount();
 
@@ -784,8 +774,7 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(0);
     expect(client2.getObservableQueries().size).toBe(0);
-    expect(queryCache1['subscriptions'].size).toBe(0);
-    expect(queryCache2['subscriptions'].size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
   });
 
   it('allows the client to be overridden', async () => {

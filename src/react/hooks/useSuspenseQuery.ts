@@ -241,17 +241,15 @@ function useCachedResult(
     return false;
   }
 
-  const hasFullResult = result.data && !result.partial;
-  const hasPartialResult = result.data && result.partial;
-  const usePartialResult = returnPartialData && hasPartialResult;
-
   switch (fetchPolicy) {
     // The default fetch policy is cache-first, so we can treat undefined as
     // such.
     case void 0:
     case 'cache-first':
-    case 'cache-and-network':
-      return hasFullResult || usePartialResult;
+    case 'cache-and-network': {
+      return result.data && (!result.partial || returnPartialData);
+      // return hasFullResult || usePartialResult;
+    }
     default:
       return false;
   }

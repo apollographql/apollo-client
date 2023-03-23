@@ -91,6 +91,11 @@ export function useSuspenseQuery_experimental<
 
   if (!equal(variables, previousVariables.current)) {
     if (result.networkStatus !== NetworkStatus.ready) {
+      // Since we now create separate ObservableQuery instances per unique
+      // query + variables combination, we need to manually insert the previous
+      // data into the returned result to mimic the behavior when changing
+      // variables from a single ObservableQuery, where the previous result was
+      // held onto until the request was finished.
       result = {
         ...result,
         data: previousData.current,

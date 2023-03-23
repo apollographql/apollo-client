@@ -53,17 +53,6 @@ type SubscribeToMoreFunction<
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
-const SUPPORTED_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
-  'cache-first',
-  'network-only',
-  'no-cache',
-  'cache-and-network',
-];
-
-const DEFAULT_FETCH_POLICY = 'cache-first';
-const DEFAULT_SUSPENSE_POLICY = 'always';
-const DEFAULT_ERROR_POLICY = 'none';
-
 export function useSuspenseQuery_experimental<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
@@ -76,7 +65,7 @@ export function useSuspenseQuery_experimental<
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const { returnPartialData = false, variables } = watchQueryOptions;
-  const { suspensePolicy = DEFAULT_SUSPENSE_POLICY } = options;
+  const { suspensePolicy = 'always' } = options;
   const shouldSuspend =
     suspensePolicy === 'always' || !didPreviouslySuspend.current;
 
@@ -157,26 +146,31 @@ export function useSuspenseQuery_experimental<
 }
 
 function validateOptions(options: WatchQueryOptions) {
-  const {
-    query,
-    fetchPolicy = DEFAULT_FETCH_POLICY,
-    returnPartialData,
-  } = options;
+  const { query, fetchPolicy, returnPartialData } = options;
 
   verifyDocumentType(query, DocumentType.Query);
   validateFetchPolicy(fetchPolicy);
   validatePartialDataReturn(fetchPolicy, returnPartialData);
 }
 
-function validateFetchPolicy(fetchPolicy: WatchQueryFetchPolicy) {
+function validateFetchPolicy(
+  fetchPolicy: WatchQueryFetchPolicy = 'cache-first'
+) {
+  const supportedFetchPolicies: WatchQueryFetchPolicy[] = [
+    'cache-first',
+    'network-only',
+    'no-cache',
+    'cache-and-network',
+  ];
+
   invariant(
-    SUPPORTED_FETCH_POLICIES.includes(fetchPolicy),
+    supportedFetchPolicies.includes(fetchPolicy),
     `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
   );
 }
 
 function validatePartialDataReturn(
-  fetchPolicy: WatchQueryFetchPolicy,
+  fetchPolicy: WatchQueryFetchPolicy | undefined,
   returnPartialData: boolean | undefined
 ) {
   if (fetchPolicy === 'no-cache' && returnPartialData) {
@@ -224,21 +218,14 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   const watchQueryOptions = useDeepMemo<
     WatchQueryOptions<TVariables, TData>
   >(() => {
-    const {
-      errorPolicy,
-      fetchPolicy,
-      suspensePolicy = DEFAULT_SUSPENSE_POLICY,
-      variables,
-      ...watchQueryOptions
-    } = options;
+    const { errorPolicy, fetchPolicy, variables, ...watchQueryOptions } =
+      options;
 
     return {
       ...watchQueryOptions,
       query,
-      errorPolicy:
-        errorPolicy || defaultOptions?.errorPolicy || DEFAULT_ERROR_POLICY,
-      fetchPolicy:
-        fetchPolicy || defaultOptions?.fetchPolicy || DEFAULT_FETCH_POLICY,
+      errorPolicy,
+      fetchPolicy,
       notifyOnNetworkStatusChange: true,
       variables: { ...defaultOptions?.variables, ...variables },
     };
@@ -255,7 +242,7 @@ function useCachedResult(
   result: ApolloQueryResult<unknown>,
   {
     returnPartialData = false,
-    fetchPolicy = DEFAULT_FETCH_POLICY,
+    fetchPolicy,
   }: {
     returnPartialData: boolean | undefined;
     fetchPolicy: SuspenseQueryHookFetchPolicy | undefined;
@@ -274,6 +261,9 @@ function useCachedResult(
   const usePartialResult = returnPartialData && hasPartialResult;
 
   switch (fetchPolicy) {
+    // The default fetch policy is cache-first, so we can treat undefined as
+    // such.
+    case void 0:
     case 'cache-first':
     case 'cache-and-network':
       return hasFullResult || usePartialResult;

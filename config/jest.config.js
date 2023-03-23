@@ -29,7 +29,8 @@ const react17TestFileIgnoreList = [
   ignoreTSFiles,
   // For now, we only support useSuspenseQuery with React 18, so no need to test
   // it with React 17
-  'src/react/hooks/__tests__/useSuspenseQuery.test.tsx'
+  'src/react/hooks/__tests__/useSuspenseQuery.test.tsx',
+  'src/react/hooks/__tests__/useBackgroundQuery.test.tsx'
 ]
 
 const react18TestFileIgnoreList = [

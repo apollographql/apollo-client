@@ -39,8 +39,10 @@ src/react/hooks/*
 !src/react/hooks/internal
 !src/react/hooks/useSuspenseCache.ts
 !src/react/hooks/useSuspenseQuery.ts
+!src/react/hooks/useBackgroundQuery.ts
 
 ## Allowed React hook tests
 !src/react/hooks/__tests__/
 src/react/hooks/__tests__/*
 !src/react/hooks/__tests__/useSuspenseQuery.test.tsx
+!src/react/hooks/__tests__/useBackgroundQuery.test.tsx

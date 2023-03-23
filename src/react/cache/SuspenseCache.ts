@@ -5,6 +5,7 @@ import {
   ObservableQuery,
   OperationVariables,
   TypedDocumentNode,
+  ApolloQueryResult,
 } from '../../core';
 import { canonicalStringify } from '../../cache';
 import { canUseWeakMap } from '../../utilities';
@@ -42,5 +43,13 @@ export class SuspenseCache {
     }
 
     return this.subscriptions.get(cacheKey)! as QuerySubscription<TData>;
+  }
+
+  getSubscriptionFromPromise<TData>(
+    promise: Promise<ApolloQueryResult<TData>>
+  ) {
+    return Array.from(this.subscriptions.values()).find(
+      (subscription) => subscription.promise === promise
+    );
   }
 }

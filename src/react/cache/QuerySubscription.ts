@@ -110,7 +110,6 @@ export class QuerySubscription<TData = any> {
   }
 
   dispose() {
-    this.listeners.clear();
     this.subscription.unsubscribe();
     this.onDispose();
   }

@@ -65,6 +65,10 @@ interface Renders<Result> {
   frames: Result[];
 }
 
+interface SimpleQueryData {
+  greeting: string;
+}
+
 function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = Object.create(null)
@@ -137,17 +141,13 @@ function renderSuspenseHook<Result, Props>(
 }
 
 function useSimpleQueryCase() {
-  interface QueryData {
-    greeting: string;
-  }
-
-  const query: TypedDocumentNode<QueryData> = gql`
+  const query: TypedDocumentNode<SimpleQueryData> = gql`
     query UserQuery {
       greeting
     }
   `;
 
-  const mocks = [
+  const mocks: MockedResponse<SimpleQueryData>[] = [
     {
       request: { query },
       result: { data: { greeting: 'Hello' } },

@@ -4115,7 +4115,16 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('applies nextFetchPolicy after initial suspense', async () => {
+  // Jerel: I cannot figure out how to properly show the functionality of
+  // nextFetchPolicy. Executing refetch/fetchMore/etc will force set the
+  // fetchPolicy to something that will execute a network request, thereby
+  // negating the value. The default behavior when changing variables is to
+  // set the fetchPolicy back to the initial fetch policy, which also negates
+  // the next fetch policy.
+  //
+  // Perhaps this is a sign that we should consider removing support for
+  // nextFetchPolicy in the context of the suspense hook.
+  it.failing('applies nextFetchPolicy after initial suspense', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const cache = new InMemoryCache();

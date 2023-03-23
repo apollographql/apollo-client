@@ -17,27 +17,22 @@ interface Subscription {
   unsubscribe: () => void;
 }
 
-function maybeWrapConcastWithCustomPromise<TData>(
-  concast: Concast<ApolloQueryResult<TData>>,
-  { deferred }: { deferred: boolean }
+function wrapWithCustomPromise<TData>(
+  concast: Concast<ApolloQueryResult<TData>>
 ) {
-  if (deferred) {
-    return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
-      // Unlike `concast.promise`, we want to resolve the promise on the initial
-      // chunk of the deferred query. This allows the component to unsuspend
-      // when we get the initial set of data, rather than waiting until all
-      // chunks have been loaded.
-      const subscription = concast.subscribe({
-        next: (value) => {
-          resolve(value);
-          subscription.unsubscribe();
-        },
-        error: reject,
-      });
+  return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+    // Unlike `concast.promise`, we want to resolve the promise on the initial
+    // chunk of the deferred query. This allows the component to unsuspend
+    // when we get the initial set of data, rather than waiting until all
+    // chunks have been loaded.
+    const subscription = concast.subscribe({
+      next: (value) => {
+        resolve(value);
+        subscription.unsubscribe();
+      },
+      error: reject,
     });
-  }
-
-  return concast.promise;
+  });
 }
 
 interface Options {
@@ -80,9 +75,11 @@ export class QuerySubscription<TData = any> {
       'Unexpected error: A concast was not found on the observable.'
     );
 
-    this.promise = maybeWrapConcastWithCustomPromise(observable['concast'], {
-      deferred: hasDirectives(['defer'], observable.query),
-    });
+    const concast = observable['concast'];
+
+    this.promise = hasDirectives(['defer'], observable.query)
+      ? wrapWithCustomPromise(concast)
+      : concast.promise;
   }
 
   onDispose() {

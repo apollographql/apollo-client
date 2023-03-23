@@ -218,14 +218,11 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   const watchQueryOptions = useDeepMemo<
     WatchQueryOptions<TVariables, TData>
   >(() => {
-    const { errorPolicy, fetchPolicy, variables, ...watchQueryOptions } =
-      options;
+    const { variables, ...watchQueryOptions } = options;
 
     return {
       ...watchQueryOptions,
       query,
-      errorPolicy,
-      fetchPolicy,
       notifyOnNetworkStatusChange: true,
       variables: { ...defaultOptions?.variables, ...variables },
     };

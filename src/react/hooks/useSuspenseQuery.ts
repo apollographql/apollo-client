@@ -23,7 +23,7 @@ import {
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
-import { QuerySubscription } from '../cache';
+import { QuerySubscription } from '../cache/QuerySubscription';
 
 export interface UseSuspenseQueryResult<
   TData = any,

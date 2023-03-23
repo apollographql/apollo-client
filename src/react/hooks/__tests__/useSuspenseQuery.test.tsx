@@ -4044,15 +4044,9 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    const frames = renders.frames.map((frame) => ({
-      data: frame.data,
-      networkStatus: frame.networkStatus,
-      error: frame.error,
-    }));
-
     expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(2);
-    expect(frames).toMatchObject([
+    expect(renders.frames).toMatchObject([
       {
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,

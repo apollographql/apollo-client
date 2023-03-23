@@ -113,11 +113,12 @@ export function useSuspenseQuery_experimental<
   }
 
   if (
-    shouldSuspend &&
-    !useCachedResult(subscription.result, {
-      returnPartialData,
-      fetchPolicy: options.fetchPolicy,
-    })
+    result.networkStatus === NetworkStatus.error ||
+    (shouldSuspend &&
+      !useCachedResult(subscription.result, {
+        returnPartialData,
+        fetchPolicy: options.fetchPolicy,
+      }))
   ) {
     // Intentionally ignore the result returned from __use since we want to
     // observe results from the observable instead of the the promise.

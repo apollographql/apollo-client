@@ -82,10 +82,6 @@ export class QuerySubscription<TData = any> {
       : concast.promise;
   }
 
-  onDispose() {
-    // noop. overridable by options
-  }
-
   listen(listener: Listener<TData>) {
     this.listeners.add(listener);
 
@@ -109,6 +105,10 @@ export class QuerySubscription<TData = any> {
   dispose() {
     this.subscription.unsubscribe();
     this.onDispose();
+  }
+
+  private onDispose() {
+    // noop. overridable by options
   }
 
   private handleNext() {

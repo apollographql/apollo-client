@@ -63,7 +63,7 @@ export function useSuspenseQuery_experimental<
   const didPreviouslySuspend = useRef(false);
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
-  const watchQueryOptions = useWatchQueryOptions({ query, options, client });
+  const watchQueryOptions = useWatchQueryOptions({ query, options });
   const { returnPartialData = false, variables } = watchQueryOptions;
   const { suspensePolicy = 'always' } = options;
   const shouldSuspend =
@@ -202,31 +202,19 @@ interface UseWatchQueryOptionsHookOptions<
 > {
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SuspenseQueryHookOptions<TData, TVariables>;
-  client: ApolloClient<any>;
 }
 
 function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   query,
   options,
-  client,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
   TVariables,
   TData
 > {
-  const { watchQuery: defaultOptions } = client.defaultOptions;
-
-  const watchQueryOptions = useDeepMemo<
-    WatchQueryOptions<TVariables, TData>
-  >(() => {
-    const { variables, ...watchQueryOptions } = options;
-
-    return {
-      ...watchQueryOptions,
-      query,
-      notifyOnNetworkStatusChange: true,
-      variables: { ...defaultOptions?.variables, ...variables },
-    };
-  }, [options, query, defaultOptions]);
+  const watchQueryOptions = useDeepMemo<WatchQueryOptions<TVariables, TData>>(
+    () => ({ ...options, query, notifyOnNetworkStatusChange: true }),
+    [options, query]
+  );
 
   if (__DEV__) {
     validateOptions(watchQueryOptions);

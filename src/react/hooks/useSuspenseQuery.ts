@@ -248,7 +248,6 @@ function useCachedResult(
     case 'cache-first':
     case 'cache-and-network': {
       return result.data && (!result.partial || returnPartialData);
-      // return hasFullResult || usePartialResult;
     }
     default:
       return false;

@@ -2701,6 +2701,33 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
+  it('throws errors when suspensePolicy is set to initial', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { query, mocks } = useErrorCase({
+      networkError: new Error('Could not fetch'),
+    });
+
+    const { renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { suspensePolicy: 'initial' }),
+      { mocks }
+    );
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toEqual(new Error('Could not fetch'));
+    expect(error.graphQLErrors).toEqual([]);
+
+    consoleSpy.mockRestore();
+  });
+
   it('tears down subscription when throwing an error', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 

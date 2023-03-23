@@ -81,14 +81,6 @@ export {
   ObservableSubscription
 } from './observables/Observable';
 
-export {
-  FulfilledPromise,
-  PendingPromise,
-  PromiseWithState,
-  RejectedPromise,
-  wrapPromiseWithState,
-} from './promises/decoration';
-
 export * from './common/mergeDeep';
 export * from './common/cloneDeep';
 export * from './common/maybeDeepFreeze';

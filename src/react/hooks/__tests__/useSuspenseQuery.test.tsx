@@ -3112,6 +3112,67 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "ignore"', async () => {
+    const graphQLError = new GraphQLError('`id` should not be null');
+
+    const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          id: '1',
+          name: 'Cache User',
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          currentUser: {
+            id: '1',
+            name: 'Cache User',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toMatchObject([
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { currentUser: { id: '1', name: 'Cache User' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('throws network errors when errorPolicy is set to "all"', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -3175,6 +3236,67 @@ describe('useSuspenseQuery', () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toBeNull();
     expect(error!.graphQLErrors).toEqual([graphQLError]);
+  });
+
+  it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "all"', async () => {
+    const graphQLError = new GraphQLError('`id` should not be null');
+
+    const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      });
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          id: '1',
+          name: 'Cache User',
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          currentUser: {
+            id: '1',
+            name: 'Cache User',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toMatchObject([
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      },
+      {
+        data: { currentUser: { id: '1', name: 'Cache User' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
   });
 
   it('handles multiple graphql errors when errorPolicy is set to "all"', async () => {

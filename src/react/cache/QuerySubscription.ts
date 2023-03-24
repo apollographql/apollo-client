@@ -1,4 +1,3 @@
-import equal from '@wry/equality';
 import {
   ApolloError,
   ApolloQueryResult,
@@ -127,10 +126,8 @@ export class QuerySubscription<TData = any> {
       result.data = this.result.data;
     }
 
-    if (!equal(this.result, result)) {
-      this.result = result;
-      this.deliver(result);
-    }
+    this.result = result;
+    this.deliver(result);
   }
 
   private handleError(error: ApolloError) {

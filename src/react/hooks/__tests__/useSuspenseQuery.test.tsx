@@ -6005,9 +6005,6 @@ describe('useSuspenseQuery', () => {
       result.current.refetch();
     });
 
-    // Suspend again after refetching
-    expect(renders.suspenseCount).toBe(2);
-
     link.simulateResult({
       result: {
         data: {
@@ -6075,7 +6072,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(6);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {

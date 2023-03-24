@@ -11,6 +11,7 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   NetworkStatus,
+  FetchMoreQueryOptions,
 } from '../../core';
 import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
@@ -41,7 +42,15 @@ export interface UseSuspenseQueryResult<
 type FetchMoreFunction<
   TData,
   TVariables extends OperationVariables
-> = ObservableQueryFields<TData, TVariables>['fetchMore'];
+> = (fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
+  updateQuery?: (
+    previousQueryResult: TData,
+    options: {
+      fetchMoreResult: TData;
+      variables: TVariables;
+    },
+  ) => TData;
+}) => Promise<ApolloQueryResult<TData>>;
 
 type RefetchFunction<
   TData,
@@ -123,7 +132,7 @@ export function useSuspenseQuery_experimental<
   didPreviouslySuspend.current = true;
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => subscription.fetchMore(options) as any,
+    (options) => subscription.fetchMore(options),
     [subscription]
   );
 

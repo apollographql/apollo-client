@@ -5892,6 +5892,241 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it.only('can refetch after encountering an error in an incremental chunk for a deferred query', async () => {
+    const query = gql`
+      query {
+        hero {
+          name
+          heroFriends {
+            id
+            name
+            ... @defer {
+              homeWorld
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { client }
+    );
+
+    link.simulateResult({
+      result: {
+        data: {
+          hero: {
+            name: 'R2-D2',
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker' },
+              { id: '1003', name: 'Leia Organa' },
+            ],
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker' },
+              { id: '1003', name: 'Leia Organa' },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            path: ['hero', 'heroFriends', 0],
+            errors: [
+              new GraphQLError(
+                'homeWorld for character with ID 1000 could not be fetched.',
+                { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+              ),
+            ],
+            data: {
+              homeWorld: null,
+            },
+          },
+          // This chunk is ignored since errorPolicy `none` throws away partial
+          // data
+          {
+            path: ['hero', 'heroFriends', 1],
+            data: {
+              homeWorld: 'Alderaan',
+            },
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker' },
+              { id: '1003', name: 'Leia Organa' },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({
+          graphQLErrors: [
+            new GraphQLError(
+              'homeWorld for character with ID 1000 could not be fetched.',
+              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+            ),
+          ],
+        }),
+      });
+    });
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    // Suspend again after refetching
+    expect(renders.suspenseCount).toBe(2);
+
+    link.simulateResult({
+      result: {
+        data: {
+          hero: {
+            name: 'R2-D2',
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker' },
+              { id: '1003', name: 'Leia Organa' },
+            ],
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker' },
+              { id: '1003', name: 'Leia Organa' },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            path: ['hero', 'heroFriends', 0],
+            data: {
+              homeWorld: 'Alderaan',
+            },
+          },
+          {
+            path: ['hero', 'heroFriends', 1],
+            data: {
+              homeWorld: 'Alderaan',
+            },
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          hero: {
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker', homeWorld: 'Alderaan' },
+              { id: '1003', name: 'Leia Organa', homeWorld: 'Alderaan' },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker' },
+              { id: '1003', name: 'Leia Organa' },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker' },
+              { id: '1003', name: 'Leia Organa' },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({
+          graphQLErrors: [
+            new GraphQLError(
+              'homeWorld for character with ID 1000 could not be fetched.',
+              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+            ),
+          ],
+        }),
+      },
+      {
+        data: {
+          hero: {
+            heroFriends: [
+              { id: '1000', name: 'Luke Skywalker', homeWorld: 'Alderaan' },
+              { id: '1003', name: 'Leia Organa', homeWorld: 'Alderaan' },
+            ],
+            name: 'R2-D2',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`', async () => {
     const query = gql`
       query {

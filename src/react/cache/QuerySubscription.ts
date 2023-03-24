@@ -6,7 +6,11 @@ import {
   OperationVariables,
 } from '../../core';
 import { isNetworkRequestSettled } from '../../core/networkStatus';
-import { Concast, hasDirectives } from '../../utilities';
+import {
+  Concast,
+  ObservableSubscription,
+  hasDirectives,
+} from '../../utilities';
 import { invariant } from '../../utilities/globals';
 
 type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
@@ -14,10 +18,6 @@ type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
-
-interface Subscription {
-  unsubscribe: () => void;
-}
 
 function wrapWithCustomPromise<TData>(
   concast: Concast<ApolloQueryResult<TData>>
@@ -46,7 +46,7 @@ export class QuerySubscription<TData = any> {
   public promise: Promise<ApolloQueryResult<TData>>;
   public readonly observable: ObservableQuery<TData>;
 
-  private subscription: Subscription;
+  private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
 
   constructor(

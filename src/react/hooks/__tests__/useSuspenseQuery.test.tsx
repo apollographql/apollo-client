@@ -761,7 +761,6 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-
     expect(client1.getObservableQueries().size).toBe(1);
     expect(client2.getObservableQueries().size).toBe(1);
     expect(suspenseCache['subscriptions'].size).toBe(2);
@@ -3166,7 +3165,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({ graphQLErrors: [graphQLError] }),
       },
     ]);
@@ -3207,7 +3206,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -3237,7 +3236,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -3245,7 +3244,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: { currentUser: { id: '1', name: null } },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -3312,7 +3311,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -3334,7 +3333,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
       {
@@ -3387,7 +3386,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -3409,7 +3408,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
       {
@@ -3972,7 +3971,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -3987,7 +3986,7 @@ describe('useSuspenseQuery', () => {
       },
       {
         ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -4046,7 +4045,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: mocks[1].result.data,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -4061,7 +4060,7 @@ describe('useSuspenseQuery', () => {
       },
       {
         data: mocks[1].result.data,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -5884,7 +5883,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(
@@ -5936,7 +5935,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(

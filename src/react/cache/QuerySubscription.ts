@@ -1,9 +1,12 @@
 import equal from '@wry/equality';
 import {
+  ApolloError,
   ApolloQueryResult,
+  NetworkStatus,
   ObservableQuery,
   OperationVariables,
 } from '../../core';
+import { isNetworkRequestSettled } from '../../core/networkStatus';
 import { Concast, hasDirectives } from '../../utilities';
 import { invariant } from '../../utilities/globals';
 
@@ -53,6 +56,7 @@ export class QuerySubscription<TData = any> {
   ) {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
+    this.handleError = this.handleError.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult();
 
@@ -62,7 +66,7 @@ export class QuerySubscription<TData = any> {
 
     this.subscription = observable.subscribe({
       next: this.handleNext,
-      error: this.handleNext,
+      error: this.handleError,
     });
 
     // This error should never happen since the `.subscribe` call above
@@ -111,13 +115,33 @@ export class QuerySubscription<TData = any> {
     // noop. overridable by options
   }
 
-  private handleNext() {
-    const result = this.observable.getCurrentResult();
+  private handleNext(result: ApolloQueryResult<TData>) {
+    // If we encounter an error with the new result after we have successfully
+    // fetched a previous result, we should set the new result data to the last
+    // successful result.
+    if (
+      isNetworkRequestSettled(result.networkStatus) &&
+      this.result.data &&
+      result.data === void 0
+    ) {
+      result.data = this.result.data;
+    }
 
     if (!equal(this.result, result)) {
       this.result = result;
       this.deliver(result);
     }
+  }
+
+  private handleError(error: ApolloError) {
+    const result = {
+      ...this.result,
+      error,
+      networkStatus: NetworkStatus.error,
+    };
+
+    this.result = result;
+    this.deliver(result);
   }
 
   private deliver(result: ApolloQueryResult<TData>) {

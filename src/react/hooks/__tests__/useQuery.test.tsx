@@ -1644,16 +1644,25 @@ describe('useQuery Hook', () => {
       });
       await waitFor(() => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
-      })
+      });
+
+      const requestSpyCallCount = requestSpy.mock.calls.length;
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
 
       unmount();
 
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
+
       await expect(waitFor(() => {
-        expect(requestSpy).not.toHaveBeenCalledTimes(1);
+        expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount + 1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
+
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
+
       await waitFor(() => {
         expect(onErrorFn).toHaveBeenCalledTimes(0);
       });
+
       requestSpy.mockRestore();
     });
 
@@ -1700,14 +1709,19 @@ describe('useQuery Hook', () => {
         expect(result.current.loading).toBe(false);
       }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
-      expect(requestSpy).toHaveBeenCalledTimes(1);
+
+      const requestSpyCallCount = requestSpy.mock.calls.length;
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
 
       unmount();
 
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
       await expect(waitFor(() => {
-        expect(requestSpy).not.toHaveBeenCalledTimes(1);
+        expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount + 1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+
       requestSpy.mockRestore();
     });
 
@@ -3861,9 +3875,12 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
 
+      expect(onCompleted).toHaveBeenCalledTimes(0)
+
       await expect(waitFor(() => {
-        expect(onCompleted).not.toHaveBeenCalledTimes(0);
+        expect(onCompleted).toHaveBeenCalledTimes(1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
+
       expect(onCompleted).toHaveBeenCalledTimes(0);
     });
 

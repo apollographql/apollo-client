@@ -1,6 +1,7 @@
 import {
   ApolloError,
   ApolloQueryResult,
+  DocumentNode,
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
@@ -9,9 +10,10 @@ import { isNetworkRequestSettled } from '../../core/networkStatus';
 import {
   Concast,
   ObservableSubscription,
-  hasDirectives,
+  hasAnyDirectives,
 } from '../../utilities';
 import { invariant } from '../../utilities/globals';
+import { wrap } from 'optimism';
 
 type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
 
@@ -36,6 +38,10 @@ function wrapWithCustomPromise<TData>(
     });
   });
 }
+
+const isMultipartQuery = wrap((query: DocumentNode) => {
+  return hasAnyDirectives(['defer', 'stream'], query);
+});
 
 interface Options {
   onDispose?: () => void;
@@ -80,7 +86,7 @@ export class QuerySubscription<TData = any> {
 
     const concast = observable['concast'];
 
-    this.promise = hasDirectives(['defer'], observable.query)
+    this.promise = isMultipartQuery(observable.query)
       ? wrapWithCustomPromise(concast)
       : concast.promise;
   }

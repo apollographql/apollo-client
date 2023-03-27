@@ -64,20 +64,21 @@ const sampleSubscription = gql`
       }
     }
   }
-`
-// const sampleSubscriptionWithDefer = gql`
-//   subscription MySubscription {
-//     aNewDieWasCreated {
-//       die {
-//         roll
-//         sides
-//         ... on Stub @defer {
-//           color
-//         }
-//       }
-//     }
-//   }
-// `
+`;
+
+const sampleSubscriptionWithDefer = gql`
+  subscription MySubscription {
+    aNewDieWasCreated {
+      die {
+        roll
+        sides
+        ... on Stub @defer {
+          color
+        }
+      }
+    }
+  }
+`;
 
 function makeCallback<TArgs extends any[]>(
   resolve: () => void,
@@ -1599,7 +1600,7 @@ describe('HttpLink', () => {
         });
 
         let i = 0;
-        execute(link, { query: sampleDeferredQuery }).subscribe(
+        execute(link, { query: sampleSubscription }).subscribe(
           result => {
             try {
               if (i === 0) {
@@ -1643,6 +1644,38 @@ describe('HttpLink', () => {
             done();
           },
         );
+      });
+
+      test('whatwg stream bodies, warns if combined with @defer', () => {
+        const stream = new ReadableStream({
+          async start(controller) {
+            const lines = subscriptionsBody.split("\r\n");
+            try {
+              for (const line of lines) {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                controller.enqueue(line + "\r\n");
+              }
+            } finally {
+              controller.close();
+            }
+          },
+        });
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        execute(link, { query: sampleSubscriptionWithDefer });
+        expect(warningSpy).toHaveBeenCalledTimes(1);
+        expect(warningSpy).toHaveBeenCalledWith("Multipart-subscriptions do not support @defer");
+        warningSpy.mockRestore();
       });
 
       it('node stream bodies', (done) => {

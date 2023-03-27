@@ -1,5 +1,5 @@
 import '../../utilities/globals';
-// import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals';
 
 import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
@@ -148,9 +148,9 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       let acceptHeader = "multipart/mixed;";
       // Omit defer-specific headers if the user attempts to defer a selection
       // set on a subscription and log a warning.
-
-      // For some reason this is firing even if one or the other is false.
-      // invariant(isSubscription && hasDefer, "Multipart-subscriptions do not support @defer.");
+      if (isSubscription && hasDefer) {
+        invariant.warn("Multipart-subscriptions do not support @defer");
+      }
 
       if (isSubscription) acceptHeader += 'boundary=graphql;subscriptionSpec=1.0,application/json';
       if (!isSubscription && hasDefer) acceptHeader += 'deferSpec=20220824,application/json';

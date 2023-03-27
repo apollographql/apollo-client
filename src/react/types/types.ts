@@ -132,12 +132,6 @@ export interface SuspenseQueryHookOptions<
   | 'refetchWritePolicy'
 > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  nextFetchPolicy?:
-    | SuspenseQueryHookFetchPolicy
-    | ((
-        currentFetchPolicy: SuspenseQueryHookFetchPolicy,
-        context: NextFetchPolicyContext<TData, TVariables>
-      ) => SuspenseQueryHookFetchPolicy);
   suspensePolicy?: SuspensePolicy;
   suspenseCache?: SuspenseCache;
 }

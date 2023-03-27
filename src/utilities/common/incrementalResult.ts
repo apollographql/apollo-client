@@ -2,8 +2,10 @@ import {
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
+  ApolloPayloadResult,
   FetchResult,
 } from "../../link/core";
+import { isNonNullObject } from "./objects";
 import { isNonEmptyArray } from "./arrays";
 import { DeepMerger } from "./mergeDeep";
 
@@ -25,6 +27,15 @@ export function isExecutionPatchResult<T>(
   return (
     isExecutionPatchIncrementalResult(value) ||
     isExecutionPatchInitialResult(value)
+  );
+}
+
+export function isApolloPayloadResult<T>(
+  value: FetchResult<T>
+): value is ApolloPayloadResult {
+  return (
+    isNonNullObject(value) &&
+    ("payload" in value || ("done" in value && typeof value.done === "boolean"))
   );
 }
 

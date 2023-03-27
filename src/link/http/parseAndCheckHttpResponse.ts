@@ -2,6 +2,9 @@ import { responseIterator } from "./responseIterator";
 import { Operation } from "../core";
 import { throwServerError } from "../utils";
 import { Observer } from "../../utilities";
+import {
+  isApolloPayloadResult
+} from '../../utilities/common/incrementalResult';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -75,21 +78,12 @@ export async function readMultipartBody<
               (key) => key in result
             )
           ) {
-            // Here we detect `done` and `errors` keys since errors can exist
-            // on other incremental payloads, but we're only interested in
-            // transport errors on subscriptions which are accompanied by
-            // "done": true.
-            if (
-              "payload" in result ||
-              ("errors" in result && "done" in result)
-            ) {
+            if (isApolloPayloadResult(result)) {
               let next = {};
               if ("payload" in result) {
                 next = { ...(result.payload as T) };
               }
               if ("errors" in result) {
-                // TODO: should we pass `data: null` here? In keeping with
-                // other fetch results with top-level errors.
                 next = { errors: result.errors, data: null };
               }
               observer.next?.(next as T);

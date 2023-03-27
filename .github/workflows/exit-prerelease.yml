@@ -37,7 +37,7 @@ jobs:
         uses: WyriHaximus/github-action-get-previous-tag@v1
 
       - name: Remove 'v' prefix from version number (e.g. v1.0.0)
-        uses: mad9000/actions-find-and-replace-string@3
+        uses: mad9000/actions-find-and-replace-string@4
         id: formatversion
         with:
           source: ${{ steps.previoustag.outputs.tag }}

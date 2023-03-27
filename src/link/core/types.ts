@@ -45,7 +45,7 @@ export interface ExecutionPatchIncrementalResult<
   extensions?: never;
 }
 
-export interface ExecutionPayloadPatchResult<
+export interface ApolloPayloadResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>
 > {
@@ -103,7 +103,7 @@ export type FetchResult<
 > =
   | SingleExecutionResult<TData, TContext, TExtensions>
   | ExecutionPatchResult<TData, TExtensions>
-  | ExecutionPayloadPatchResult<TData, TExtensions>;
+  | ApolloPayloadResult<TData, TExtensions>;
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 

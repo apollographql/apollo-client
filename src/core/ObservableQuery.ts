@@ -12,7 +12,6 @@ import {
   Observer,
   ObservableSubscription,
   iterateObserversSafely,
-  isNonEmptyArray,
   fixObservableSubclass,
   getQueryDefinition,
 } from '../utilities';
@@ -784,17 +783,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     newResult: ApolloQueryResult<TData>,
     variables = this.variables,
   ) {
-    this.last = {
-      ...this.last,
+    let error: ApolloError | undefined = this.getLastError();
+    // Preserve this.last.error unless the variables have changed.
+    if (error && this.last && !equal(variables, this.last.variables)) {
+      error = void 0;
+    }
+    return this.last = {
       result: this.queryManager.assumeImmutableResults
         ? newResult
         : cloneDeep(newResult),
       variables,
+      ...(error ? { error } : null),
     };
-    if (!isNonEmptyArray(newResult.errors)) {
-      delete this.last.error;
-    }
-    return this.last;
   }
 
   public reobserve(
@@ -894,12 +894,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     variables: TVariables | undefined,
   ) {
     const lastError = this.getLastError();
-    if (lastError || this.isDifferentFromLastResult(result, variables)) {
-      if (lastError || !result.partial || this.options.returnPartialData) {
-        this.updateLastResult(result, variables);
-      }
-
-      iterateObserversSafely(this.observers, 'next', result);
+    const isDifferent = this.isDifferentFromLastResult(result, variables);
+    // Update the last result even when isDifferentFromLastResult returns false,
+    // because the query may be using the @nonreactive directive, and we want to
+    // save the the latest version of any nonreactive subtrees (in case
+    // getCurrentResult is called), even though we skip broadcasting changes.
+    if (lastError || !result.partial || this.options.returnPartialData) {
+      this.updateLastResult(result, variables);
+    }
+    if (lastError || isDifferent) {
+      iterateObserversSafely(this.observers, "next", result);
     }
   }
 

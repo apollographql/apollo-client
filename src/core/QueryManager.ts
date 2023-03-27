@@ -10,6 +10,7 @@ import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
+  removeDirectivesFromDocument,
 } from '../utilities';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
@@ -20,7 +21,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  removeConnectionDirectiveFromDocument,
   canUseWeakMap,
   ObservableSubscription,
   Observable,
@@ -618,11 +618,12 @@ export class QueryManager<TStore> {
 
     if (!transformCache.has(document)) {
       const transformed = this.cache.transformDocument(document);
-      const noConnection = removeConnectionDirectiveFromDocument(transformed);
+      const serverQuery = removeDirectivesFromDocument([
+        removeClientFields ? { name: 'client', remove: true } : {},
+        { name: 'connection' },
+        { name: 'nonreactive' },
+      ], transformed);
       const clientQuery = this.localState.clientQuery(transformed);
-      const serverQuery =
-        noConnection &&
-          this.localState.serverQuery(noConnection, { removeClientFields });
 
       const cacheEntry: TransformCacheEntry = {
         document: transformed,

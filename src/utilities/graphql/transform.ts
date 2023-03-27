@@ -155,6 +155,8 @@ export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
 ): DocumentNode | null {
+  checkDocument(doc);
+
   // Passing empty strings to makeInUseGetterFunction means we handle anonymous
   // operations as if their names were "". Anonymous fragment definitions are
   // not supposed to be possible, but the same default naming strategy seems

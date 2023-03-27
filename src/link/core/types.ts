@@ -56,8 +56,8 @@ export interface ApolloPayloadResult<
   data?: never;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
   // these are fatal errors that will include done: true.
-  // TODO: is GraphQLError[] appropriate here?
-  errors?: ReadonlyArray<GraphQLError>;
+  // These protocol-level errors might not be shaped like GraphQLError objects
+  errors?: ReadonlyArray<Error | string>;
   // Done can be true or false and is present as `done: true` on the final
   // chunk, or when fatal errors occur.
   done?: boolean;

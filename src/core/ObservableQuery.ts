@@ -32,6 +32,7 @@ import {
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
 import { MissingTree } from '../cache/core/types/common';
+import { compareResultsUsingQuery } from './compareResults';
 
 const {
   assign,
@@ -307,9 +308,23 @@ export class ObservableQuery<
     newResult: ApolloQueryResult<TData>,
     variables?: TVariables
   ) {
+    if (!this.last) {
+      return true;
+    }
+
+    const { query } = this.options;
+    const resultIsDifferent =
+      this.queryManager.transform(query).hasNonreactiveDirective
+        ? !compareResultsUsingQuery(
+            query,
+            this.last.result,
+            newResult,
+            this.variables,
+          )
+        : !equal(this.last.result, newResult);
+
     return (
-      !this.last ||
-      !equal(this.last.result, newResult) ||
+      resultIsDifferent ||
       (variables && !equal(this.last.variables, variables))
     );
   }

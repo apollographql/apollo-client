@@ -1,87 +1,66 @@
+import { Trie } from '@wry/trie';
 import {
-  ApolloQueryResult,
+  ApolloClient,
   DocumentNode,
   ObservableQuery,
   OperationVariables,
   TypedDocumentNode,
 } from '../../core';
 import { canonicalStringify } from '../../cache';
+import { canUseWeakMap } from '../../utilities';
+import { QuerySubscription } from './QuerySubscription';
 
-interface CacheEntry<TData, TVariables extends OperationVariables> {
-  observable: ObservableQuery<TData, TVariables>;
-  fulfilled: boolean;
-  promise: Promise<ApolloQueryResult<TData>>;
+type CacheKey = [ApolloClient<unknown>, DocumentNode, string];
+
+interface SuspenseCacheOptions {
+  /**
+   * Specifies the amount of time, in milliseconds, the suspense cache will wait
+   * for a suspended component to read from the suspense cache before it
+   * automatically disposes of the query. This prevents memory leaks when a
+   * component unmounts before a suspended resource finishes loading. Increase
+   * the timeout if your queries take longer than than the specified time to
+   * prevent your queries from suspending over and over.
+   *
+   * Defaults to 30 seconds.
+   */
+  autoDisposeTimeoutMs?: number;
 }
 
 export class SuspenseCache {
-  private queries = new Map<
-    DocumentNode,
-    Map<string, CacheEntry<unknown, any>>
-  >();
+  private cacheKeys = new Trie<CacheKey>(
+    canUseWeakMap,
+    (cacheKey: CacheKey) => cacheKey
+  );
 
-  add<TData = any, TVariables extends OperationVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    variables: TVariables | undefined,
-    {
-      promise,
-      observable,
-    }: { promise: Promise<any>; observable: ObservableQuery<TData, TVariables> }
+  private subscriptions = new Map<CacheKey, QuerySubscription>();
+  private options: SuspenseCacheOptions;
+
+  constructor(options: SuspenseCacheOptions = Object.create(null)) {
+    this.options = options;
+  }
+
+  getSubscription<TData = any>(
+    client: ApolloClient<unknown>,
+    query: DocumentNode | TypedDocumentNode<TData>,
+    variables: OperationVariables | undefined,
+    createObservable: () => ObservableQuery<TData>
   ) {
-    const variablesKey = this.getVariablesKey(variables);
-    const map = this.queries.get(query) || new Map();
+    const cacheKey = this.cacheKeys.lookup(
+      client,
+      query,
+      canonicalStringify(variables)
+    );
 
-    const entry: CacheEntry<TData, TVariables> = {
-      observable,
-      fulfilled: false,
-      promise: promise
-        .catch(() => {
-          // Throw away the error as we only care to track when the promise has
-          // been fulfilled
+    if (!this.subscriptions.has(cacheKey)) {
+      this.subscriptions.set(
+        cacheKey,
+        new QuerySubscription(createObservable(), {
+          autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
+          onDispose: () => this.subscriptions.delete(cacheKey),
         })
-        .finally(() => {
-          entry.fulfilled = true;
-        }),
-    };
-
-    map.set(variablesKey, entry);
-
-    this.queries.set(query, map);
-
-    return entry;
-  }
-
-  lookup<
-    TData = any,
-    TVariables extends OperationVariables = OperationVariables
-  >(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    variables: TVariables | undefined
-  ): CacheEntry<TData, TVariables> | undefined {
-    return this.queries
-      .get(query)
-      ?.get(this.getVariablesKey(variables)) as CacheEntry<TData, TVariables>;
-  }
-
-  remove(query: DocumentNode, variables: OperationVariables | undefined) {
-    const map = this.queries.get(query);
-
-    if (!map) {
-      return;
+      );
     }
 
-    const key = this.getVariablesKey(variables);
-    const entry = map.get(key);
-
-    if (entry && !entry.observable.hasObservers()) {
-      map.delete(key);
-    }
-
-    if (map.size === 0) {
-      this.queries.delete(query);
-    }
-  }
-
-  private getVariablesKey(variables: OperationVariables | undefined) {
-    return canonicalStringify(variables || Object.create(null));
+    return this.subscriptions.get(cacheKey)! as QuerySubscription<TData>;
   }
 }

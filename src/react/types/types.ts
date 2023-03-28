@@ -18,7 +18,6 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from '../../core';
-import { NextFetchPolicyContext } from '../../core/watchQueryOptions';
 import { SuspenseCache } from '../cache';
 
 /* Common types */
@@ -132,12 +131,6 @@ export interface SuspenseQueryHookOptions<
   | 'refetchWritePolicy'
 > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  nextFetchPolicy?:
-    | SuspenseQueryHookFetchPolicy
-    | ((
-        currentFetchPolicy: SuspenseQueryHookFetchPolicy,
-        context: NextFetchPolicyContext<TData, TVariables>
-      ) => SuspenseQueryHookFetchPolicy);
   suspensePolicy?: SuspensePolicy;
   suspenseCache?: SuspenseCache;
 }

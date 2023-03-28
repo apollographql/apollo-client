@@ -2,11 +2,13 @@ import React, { Fragment, StrictMode, Suspense } from 'react';
 import {
   act,
   screen,
+  render,
   renderHook,
   waitFor,
   RenderHookOptions,
   RenderHookResult,
 } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
@@ -63,6 +65,10 @@ interface Renders<Result> {
   frames: Result[];
 }
 
+interface SimpleQueryData {
+  greeting: string;
+}
+
 function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = Object.create(null)
@@ -82,14 +88,18 @@ function renderSuspenseHook<Result, Props>(
   };
 
   const {
-    cache,
-    client,
-    link,
     mocks = [],
     suspenseCache = new SuspenseCache(),
     strictMode,
     ...renderHookOptions
   } = options;
+
+  const client =
+    options.client ||
+    new ApolloClient({
+      cache: options.cache || new InMemoryCache(),
+      link: options.link || new MockLink(mocks),
+    });
 
   const view = renderHook(
     (props) => {
@@ -116,20 +126,9 @@ function renderSuspenseHook<Result, Props>(
                   renders.errors.push(error);
                 }}
               >
-                {client ? (
-                  <ApolloProvider client={client} suspenseCache={suspenseCache}>
-                    {children}
-                  </ApolloProvider>
-                ) : (
-                  <MockedProvider
-                    cache={cache}
-                    mocks={mocks}
-                    link={link}
-                    suspenseCache={suspenseCache}
-                  >
-                    {children}
-                  </MockedProvider>
-                )}
+                <ApolloProvider client={client} suspenseCache={suspenseCache}>
+                  {children}
+                </ApolloProvider>
               </ErrorBoundary>
             </Suspense>
           </Wrapper>
@@ -142,11 +141,7 @@ function renderSuspenseHook<Result, Props>(
 }
 
 function useSimpleQueryCase() {
-  interface QueryData {
-    greeting: string;
-  }
-
-  const query: TypedDocumentNode<QueryData> = gql`
+  const query: TypedDocumentNode<SimpleQueryData> = gql`
     query UserQuery {
       greeting
     }
@@ -192,7 +187,12 @@ function usePaginatedCase() {
     const { offset = 0, limit = 2 } = operation.variables;
     const letters = data.slice(offset, offset + limit);
 
-    return Observable.of({ data: { letters } });
+    return new Observable((observer) => {
+      setTimeout(() => {
+        observer.next({ data: { letters } });
+        observer.complete();
+      }, 10);
+    });
   });
 
   return { query, link, data };
@@ -345,27 +345,29 @@ describe('useSuspenseQuery', () => {
   });
 
   it('prioritizes the `suspenseCache` option over the context value', () => {
-    const { query } = useSimpleQueryCase();
+    const { query, mocks } = useSimpleQueryCase();
 
     const directSuspenseCache = new SuspenseCache();
     const contextSuspenseCache = new SuspenseCache();
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
 
     renderHook(
       () => useSuspenseQuery(query, { suspenseCache: directSuspenseCache }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider
-            suspenseCache={contextSuspenseCache}
-            showWarnings={false}
-          >
+          <ApolloProvider client={client} suspenseCache={contextSuspenseCache}>
             {children}
-          </MockedProvider>
+          </ApolloProvider>
         ),
       }
     );
 
-    expect(directSuspenseCache.lookup(query, {})).toBeTruthy();
-    expect(contextSuspenseCache.lookup(query, {})).not.toBeTruthy();
+    expect(directSuspenseCache['subscriptions'].size).toBe(1);
+    expect(contextSuspenseCache['subscriptions'].size).toBe(0);
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -659,64 +661,293 @@ describe('useSuspenseQuery', () => {
       { client, suspenseCache }
     );
 
-    // We don't subscribe to the observable until after the component has been
-    // unsuspended, so we need to wait for the result
     await waitFor(() =>
       expect(result.current.data).toEqual(mocks[0].result.data)
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
+    expect(suspenseCache['subscriptions'].size).toBe(1);
 
     unmount();
 
+    // We need to wait a tick since the cleanup is run in a setTimeout to
+    // prevent strict mode bugs.
+    await wait(0);
+
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache.lookup(query, undefined)).toBeUndefined();
+    expect(suspenseCache['subscriptions'].size).toBe(0);
   });
 
-  it('does not remove query from suspense cache if other queries are using it', async () => {
-    const { query, mocks } = useSimpleQueryCase();
+  it('tears down all queries when rendering with multiple variable sets', async () => {
+    const { query, mocks } = useVariablesQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of(mocks[0].result)),
+      link: new MockLink(mocks),
       cache: new InMemoryCache(),
     });
 
     const suspenseCache = new SuspenseCache();
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ApolloProvider client={client} suspenseCache={suspenseCache}>
-        <Suspense fallback="loading">{children}</Suspense>
-      </ApolloProvider>
+    const { rerender, result, unmount } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { client, suspenseCache, initialProps: { id: '1' } }
     );
 
-    const { result: result1, unmount } = renderHook(
-      () => useSuspenseQuery(query),
-      { wrapper }
+    await waitFor(() =>
+      expect(result.current.data).toEqual(mocks[0].result.data)
     );
 
-    const { result: result2 } = renderHook(() => useSuspenseQuery(query), {
-      wrapper,
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[1].result.data);
     });
 
-    // We don't subscribe to the observable until after the component has been
-    // unsuspended, so we need to wait for the results of all queries
-    await waitFor(() => {
-      expect(result1.current.data).toEqual(mocks[0].result.data);
-    });
-    await waitFor(() => {
-      expect(result2.current.data).toEqual(mocks[0].result.data);
-    });
-
-    // Because they are the same query, the 2 components use the same observable
-    // in the suspense cache
-    expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
+    expect(client.getObservableQueries().size).toBe(2);
+    expect(suspenseCache['subscriptions'].size).toBe(2);
 
     unmount();
 
+    // We need to wait a tick since the cleanup is run in a setTimeout to
+    // prevent strict mode bugs.
+    await wait(0);
+
+    expect(client.getObservableQueries().size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
+  });
+
+  it('tears down all queries when multiple clients are used', async () => {
+    const { query } = useVariablesQueryCase();
+
+    const client1 = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query, variables: { id: '1' } },
+          result: { data: { character: { id: '1', name: 'Client 1' } } },
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    const client2 = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query, variables: { id: '1' } },
+          result: { data: { character: { id: '1', name: 'Client 2' } } },
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { rerender, result, unmount } = renderSuspenseHook(
+      ({ client }) =>
+        useSuspenseQuery(query, { client, variables: { id: '1' } }),
+      { suspenseCache, initialProps: { client: client1 } }
+    );
+
+    await waitFor(() =>
+      expect(result.current.data).toEqual({
+        character: { id: '1', name: 'Client 1' },
+      })
+    );
+
+    rerender({ client: client2 });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        character: { id: '1', name: 'Client 2' },
+      });
+    });
+
+    expect(client1.getObservableQueries().size).toBe(1);
+    expect(client2.getObservableQueries().size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(2);
+
+    unmount();
+
+    // We need to wait a tick since the cleanup is run in a setTimeout to
+    // prevent strict mode bugs.
+    await wait(0);
+
+    expect(client1.getObservableQueries().size).toBe(0);
+    expect(client2.getObservableQueries().size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
+  });
+
+  it('tears down the query if the component never renders again after suspending', async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      const [showGreeting, setShowGreeting] = React.useState(true);
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <button onClick={() => setShowGreeting(false)}>Hide greeting</button>
+          {showGreeting && (
+            <Suspense fallback="Loading greeting...">
+              <Greeting />
+            </Suspense>
+          )}
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText('Loading greeting...')).toBeInTheDocument();
+
+    // Hide the greeting before it finishes loading data
+    await act(() => user.click(screen.getByText('Hide greeting')));
+
+    expect(screen.queryByText('Loading greeting...')).not.toBeInTheDocument();
+
+    link.simulateResult({ result: { data: { greeting: 'Hello' } } });
+    link.simulateComplete();
+
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache.lookup(query, undefined)).toBeDefined();
+    expect(suspenseCache['subscriptions'].size).toBe(1);
+
+    jest.advanceTimersByTime(30_000);
+
+    expect(client.getObservableQueries().size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
+
+    jest.useRealTimers();
+
+    // Avoid act warnings for a suspended resource
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    await act(() => wait(0));
+  });
+
+  it('has configurable auto dispose timer if the component never renders again after suspending', async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache({ autoDisposeTimeoutMs: 5000 });
+
+    function App() {
+      const [showGreeting, setShowGreeting] = React.useState(true);
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <button onClick={() => setShowGreeting(false)}>Hide greeting</button>
+          {showGreeting && (
+            <Suspense fallback="Loading greeting...">
+              <Greeting />
+            </Suspense>
+          )}
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText('Loading greeting...')).toBeInTheDocument();
+
+    // Hide the greeting before it finishes loading data
+    await act(() => user.click(screen.getByText('Hide greeting')));
+
+    expect(screen.queryByText('Loading greeting...')).not.toBeInTheDocument();
+
+    link.simulateResult({ result: { data: { greeting: 'Hello' } } });
+    link.simulateComplete();
+
+    expect(client.getObservableQueries().size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(1);
+
+    jest.advanceTimersByTime(5_000);
+
+    expect(client.getObservableQueries().size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
+
+    jest.useRealTimers();
+
+    // Avoid act warnings for a suspended resource
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    await act(() => wait(0));
+  });
+
+  it('cancels auto dispose if the component renders before timer finishes', async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: 'Hello' } });
+          observer.complete();
+        }, 10);
+      });
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Suspense fallback="Loading greeting...">
+            <Greeting />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText('Loading greeting...')).toBeInTheDocument();
+
+    jest.advanceTimersByTime(10);
+
+    await waitFor(() => {
+      expect(screen.getByText('Hello')).toBeInTheDocument();
+    });
+
+    jest.advanceTimersByTime(30_000);
+
+    expect(client.getObservableQueries().size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(1);
+
+    jest.useRealTimers();
   });
 
   it('allows the client to be overridden', async () => {
@@ -816,6 +1047,312 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(result.current.client).toBe(client);
+  });
+
+  it('suspends when changing variables', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('suspends and fetches data from new client when changing clients', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const client1 = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello client 1' } },
+        },
+      ]),
+    });
+
+    const client2 = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello client 2' } },
+        },
+      ]),
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ client }) => useSuspenseQuery(query, { client }),
+      { initialProps: { client: client1 } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello client 1' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ client: client2 });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello client 2' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'Hello client 1' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello client 2' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('responds to cache updates after changing variables', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { client, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    client.writeQuery({
+      query,
+      variables: { id: '2' },
+      data: { character: { id: '2', name: 'Cached hero' } },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { character: { id: '2', name: 'Cached hero' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.count).toBe(5);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { character: { id: '2', name: 'Cached hero' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('uses previously fetched result and does not suspend when switching back to already fetched variables', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    expect(result.current).toMatchObject({
+      ...mocks[0].result,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('responds to cache updates after changing back to already fetched variables', async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { client, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    client.writeQuery({
+      query,
+      variables: { id: '1' },
+      data: { character: { id: '1', name: 'Cached hero' } },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { character: { id: '1', name: 'Cached hero' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.count).toBe(6);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { character: { id: '1', name: 'Cached hero' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
   });
 
   it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
@@ -1062,17 +1599,12 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
         data: { character: { id: '1' } },
         networkStatus: NetworkStatus.loading,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -1531,17 +2063,12 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
         data: { character: { id: '1' } },
         networkStatus: NetworkStatus.loading,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
@@ -1563,7 +2090,7 @@ describe('useSuspenseQuery', () => {
     'no-cache',
     'cache-and-network',
   ])(
-    'returns previous data on refetch when changing variables and using a "%s" with an "initial" suspense policy',
+    'returns previous data when changing variables and using a "%s" with an "initial" suspense policy',
     async (fetchPolicy) => {
       const { query, mocks } = useVariablesQueryCase();
 
@@ -1611,7 +2138,7 @@ describe('useSuspenseQuery', () => {
         },
         {
           ...mocks[0].result,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.setVariables,
           error: undefined,
         },
         {
@@ -1798,17 +2325,11 @@ describe('useSuspenseQuery', () => {
       // Renders:
       // 1. Initiate fetch and suspend
       // 2. Unsuspend and return results from initial fetch
-      // 3. Change variables
-      // 4. Initiate refetch and suspend
+      // 3. Change variables and suspend
       // 5. Unsuspend and return results from refetch
-      expect(renders.count).toBe(5);
+      expect(renders.count).toBe(4);
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
-        {
-          ...mocks[0].result,
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
         {
           ...mocks[0].result,
           networkStatus: NetworkStatus.ready,
@@ -1881,17 +2402,11 @@ describe('useSuspenseQuery', () => {
       // Renders:
       // 1. Initiate fetch and suspend
       // 2. Unsuspend and return results from initial fetch
-      // 3. Change queries
-      // 4. Initiate refetch and suspend
+      // 3. Change queries and suspend
       // 5. Unsuspend and return results from refetch
-      expect(renders.count).toBe(5);
+      expect(renders.count).toBe(4);
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
-        {
-          ...mocks[0].result,
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
         {
           ...mocks[0].result,
           networkStatus: NetworkStatus.ready,
@@ -2259,13 +2774,6 @@ describe('useSuspenseQuery', () => {
       },
       {
         data: {
-          vars: { source: 'local', globalOnlyVar: true, localOnlyVar: true },
-        },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: {
           vars: { source: 'rerender', globalOnlyVar: true, localOnlyVar: true },
         },
         networkStatus: NetworkStatus.ready,
@@ -2413,6 +2921,33 @@ describe('useSuspenseQuery', () => {
     expect(error.graphQLErrors).toEqual([
       new GraphQLError('`id` should not be null'),
     ]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('throws errors when suspensePolicy is set to initial', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const { query, mocks } = useErrorCase({
+      networkError: new Error('Could not fetch'),
+    });
+
+    const { renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { suspensePolicy: 'initial' }),
+      { mocks }
+    );
+
+    await waitFor(() => expect(renders.errorCount).toBe(1));
+
+    expect(renders.errors.length).toBe(1);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toEqual([]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toEqual(new Error('Could not fetch'));
+    expect(error.graphQLErrors).toEqual([]);
 
     consoleSpy.mockRestore();
   });
@@ -2751,6 +3286,67 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "ignore"', async () => {
+    const graphQLError = new GraphQLError('`id` should not be null');
+
+    const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'ignore' }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          id: '1',
+          name: 'Cache User',
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          currentUser: {
+            id: '1',
+            name: 'Cache User',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toMatchObject([
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { currentUser: { id: '1', name: 'Cache User' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('throws network errors when errorPolicy is set to "all"', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -2804,7 +3400,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({ graphQLErrors: [graphQLError] }),
       },
     ]);
@@ -2814,6 +3410,67 @@ describe('useSuspenseQuery', () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toBeNull();
     expect(error!.graphQLErrors).toEqual([graphQLError]);
+  });
+
+  it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "all"', async () => {
+    const graphQLError = new GraphQLError('`id` should not be null');
+
+    const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
+      { client }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      });
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          id: '1',
+          name: 'Cache User',
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          currentUser: {
+            id: '1',
+            name: 'Cache User',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.frames).toMatchObject([
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      },
+      {
+        data: { currentUser: { id: '1', name: 'Cache User' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
   });
 
   it('handles multiple graphql errors when errorPolicy is set to "all"', async () => {
@@ -2845,7 +3502,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -2875,7 +3532,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: { currentUser: { id: '1', name: null } },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -2883,7 +3540,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: { currentUser: { id: '1', name: null } },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -2950,7 +3607,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -2965,19 +3622,14 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(4);
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
-        error: expectedError,
-      },
-      {
-        data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
       {
@@ -3030,7 +3682,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -3052,13 +3704,13 @@ describe('useSuspenseQuery', () => {
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
       {
         data: undefined,
-        networkStatus: NetworkStatus.ready,
-        error: expectedError,
+        networkStatus: NetworkStatus.setVariables,
+        error: undefined,
       },
       {
         ...mocks[1].result,
@@ -3341,12 +3993,17 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.refetch,
         error: undefined,
       },
       {
@@ -3414,6 +4071,80 @@ describe('useSuspenseQuery', () => {
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('throws errors when errors are returned after calling `refetch` with suspensePolicy set to "initial"', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    const query = gql`
+      query UserQuery($id: String!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { user: { id: '1', name: 'Captain Marvel' } },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('Something went wrong')],
+        },
+      },
+    ];
+
+    const { result, renders } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          suspensePolicy: 'initial',
+          variables: { id: '1' },
+        }),
+      { mocks }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    await waitFor(() => {
+      expect(renders.errorCount).toBe(1);
+    });
+
+    expect(renders.errors).toEqual([
+      new ApolloError({
+        graphQLErrors: [new GraphQLError('Something went wrong')],
+      }),
+    ]);
+
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.refetch,
         error: undefined,
       },
     ]);
@@ -3536,7 +4267,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -3551,7 +4282,7 @@ describe('useSuspenseQuery', () => {
       },
       {
         ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -3610,7 +4341,7 @@ describe('useSuspenseQuery', () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: mocks[1].result.data,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -3625,7 +4356,7 @@ describe('useSuspenseQuery', () => {
       },
       {
         data: mocks[1].result.data,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       },
     ]);
@@ -3707,12 +4438,17 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(4);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.fetchMore,
         error: undefined,
       },
       {
@@ -3818,64 +4554,6 @@ describe('useSuspenseQuery', () => {
         error: undefined,
       },
     ]);
-  });
-
-  it('applies nextFetchPolicy after initial suspense', async () => {
-    const { query, mocks } = useVariablesQueryCase();
-
-    const cache = new InMemoryCache();
-
-    // network-only should bypass this cached result and suspend the component
-    cache.writeQuery({
-      query,
-      data: { character: { id: '1', name: 'Cached Hulk' } },
-      variables: { id: '1' },
-    });
-
-    // cache-first should read from this result on the rerender
-    cache.writeQuery({
-      query,
-      data: { character: { id: '2', name: 'Cached Black Widow' } },
-      variables: { id: '2' },
-    });
-
-    const { result, renders, rerender } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          fetchPolicy: 'network-only',
-          // There is no way to trigger a followup query using nextFetchPolicy
-          // when this is a string vs a function. When changing variables,
-          // the `fetchPolicy` is reset back to `initialFetchPolicy` before the
-          // request is sent, negating the `nextFetchPolicy`. Using `refetch` or
-          // `fetchMore` sets the `fetchPolicy` to `network-only`, which negates
-          // the value. Using a function seems to be the only way to force a
-          // `nextFetchPolicy` without resorting to lower-level methods
-          // (i.e. `observable.reobserve`)
-          nextFetchPolicy: () => 'cache-first',
-          variables: { id },
-        }),
-      { cache, mocks, initialProps: { id: '1' } }
-    );
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        data: { character: { id: '2', name: 'Cached Black Widow' } },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.suspenseCount).toBe(1);
   });
 
   it('honors refetchWritePolicy set to "overwrite"', async () => {
@@ -5434,7 +6112,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(
@@ -5486,7 +6164,7 @@ describe('useSuspenseQuery', () => {
             name: 'R2-D2',
           },
         },
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         error: new ApolloError({
           graphQLErrors: [
             new GraphQLError(
@@ -5754,5 +6432,234 @@ describe('useSuspenseQuery', () => {
         networkStatus: NetworkStatus.ready,
       },
     ]);
+  });
+
+  it('works with useDeferredValue', async () => {
+    const user = userEvent.setup();
+
+    interface Variables {
+      query: string;
+    }
+
+    interface Data {
+      search: { query: string };
+    }
+
+    const QUERY: TypedDocumentNode<Data, Variables> = gql`
+      query SearchQuery($query: String!) {
+        search(query: $query) {
+          query
+        }
+      }
+    `;
+
+    const link = new ApolloLink(({ variables }) => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { search: { query: variables.query } },
+          });
+          observer.complete();
+        }, 10);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      const [query, setValue] = React.useState('');
+      const deferredQuery = React.useDeferredValue(query);
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <label htmlFor="searchInput">Search</label>
+          <input
+            id="searchInput"
+            type="text"
+            value={query}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <Suspense fallback={<SuspenseFallback />}>
+            <Results query={deferredQuery} />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Results({ query }: { query: string }) {
+      const { data } = useSuspenseQuery(QUERY, { variables: { query } });
+
+      return <div data-testid="result">{data.search.query}</div>;
+    }
+
+    render(<App />);
+
+    const input = screen.getByLabelText('Search');
+
+    expect(screen.getByText('Loading')).toBeInTheDocument();
+
+    expect(await screen.findByTestId('result')).toBeInTheDocument();
+
+    await act(() => user.type(input, 'ab'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('ab');
+    });
+
+    await act(() => user.type(input, 'c'));
+
+    // useDeferredValue will try rerendering the component with the new value
+    // in the background. If it suspends with the new value, React will show the
+    // stale UI until the component is done suspending.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the search finishes loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+    expect(screen.getByTestId('result')).toHaveTextContent('ab');
+
+    // Eventually we should see the updated text content once its done
+    // suspending.
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('abc');
+    });
+  });
+
+  it('works with startTransition to change variables', async () => {
+    type Variables = {
+      id: string;
+    };
+
+    interface Data {
+      todo: {
+        id: string;
+        name: string;
+        completed: boolean;
+      };
+    }
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodoItemQuery($id: ID!) {
+        todo(id: $id) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { todo: { id: '1', name: 'Clean room', completed: false } },
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: { todo: { id: '2', name: 'Take out trash', completed: true } },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      const [id, setId] = React.useState('1');
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Todo id={id} onChange={setId} />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Todo({
+      id,
+      onChange,
+    }: {
+      id: string;
+      onChange: (id: string) => void;
+    }) {
+      const { data } = useSuspenseQuery(query, { variables: { id } });
+      const [isPending, startTransition] = React.useTransition();
+      const { todo } = data;
+
+      return (
+        <>
+          <button
+            onClick={() => {
+              startTransition(() => {
+                onChange('2');
+              });
+            }}
+          >
+            Refresh
+          </button>
+          <div data-testid="todo" aria-busy={isPending}>
+            {todo.name}
+            {todo.completed && ' (completed)'}
+          </div>
+        </>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByText('Loading')).toBeInTheDocument();
+
+    expect(await screen.findByTestId('todo')).toBeInTheDocument();
+
+    const todo = screen.getByTestId('todo');
+    const button = screen.getByText('Refresh');
+
+    expect(todo).toHaveTextContent('Clean room');
+
+    await act(() => user.click(button));
+
+    // startTransition will avoid rendering the suspense fallback for already
+    // revealed content if the state update inside the transition causes the
+    // component to suspend.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the todo is finished loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+
+    // We can ensure this works with isPending from useTransition in the process
+    expect(todo).toHaveAttribute('aria-busy', 'true');
+
+    // Ensure we are showing the stale UI until the new todo has loaded
+    expect(todo).toHaveTextContent('Clean room');
+
+    // Eventually we should see the updated todo content once its done
+    // suspending.
+    await waitFor(() => {
+      expect(todo).toHaveTextContent('Take out trash (completed)');
+    });
   });
 });

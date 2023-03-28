@@ -19,9 +19,9 @@ export function mergeOptions<
   options: TOptions | Partial<TOptions>,
 ): TOptions {
   return compact(defaults, options, options.variables && {
-    variables: {
+    variables: compact({
       ...(defaults && defaults.variables),
       ...options.variables,
-    },
+    }),
   });
 }

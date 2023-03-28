@@ -110,8 +110,6 @@ export class ObservableQuery<
     options: WatchQueryOptions<TVariables, TData>;
   }) {
     super((observer: Observer<ApolloQueryResult<TData>>) => {
-      const { fetchOnFirstSubscribe = true } = options
-
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {
@@ -134,7 +132,7 @@ export class ObservableQuery<
 
       // Initiate observation of this query if it hasn't been reported to
       // the QueryManager yet.
-      if (first && fetchOnFirstSubscribe) {
+      if (first) {
         // Blindly catching here prevents unhandled promise rejections,
         // and is safe because the ObservableQuery handles this error with
         // this.observer.error, so we're not just swallowing the error by
@@ -784,15 +782,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     return this.last;
   }
 
-  // For cases like suspense with a deferred query where we need a custom
-  // promise wrapped around the concast, we need access to the raw concast
-  // created from `reobserve`. This function provides the original `reobserve`
-  // functionality, but returns a concast instead of a promise. Most consumers
-  // should prefer `reobserve` instead of this function.
-  public reobserveAsConcast(
+  public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Concast<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<TData>> {
     this.isTornDown = false;
 
     const useDisposableConcast =
@@ -865,17 +858,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     concast.addObserver(observer);
 
-    return concast;
-  }
-
-  public reobserve(
-    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-    newNetworkStatus?: NetworkStatus,
-  ): Promise<ApolloQueryResult<TData>> {
-    return this.reobserveAsConcast(
-      newOptions,
-      newNetworkStatus
-    ).promise
+    return concast.promise;
   }
 
   // (Re)deliver the current result to this.observers without applying fetch

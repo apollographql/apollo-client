@@ -22,16 +22,18 @@ import { waitFor } from "@testing-library/react";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchQueryObservable = queryManager.fetchQueryObservable;
+  const fetchConcastWithInfo = queryManager['fetchConcastWithInfo'];
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (queryManager as any)
     .fetchQueryByPolicy;
 
-  const mock = <T extends typeof fetchQueryObservable | typeof fetchQueryByPolicy>(original: T) =>
+  const mock = <T extends typeof fetchQueryObservable | typeof fetchConcastWithInfo | typeof fetchQueryByPolicy>(original: T) =>
     jest.fn<ReturnType<T>, Parameters<T>>(function () {
       return original.apply(queryManager, arguments);
     });
 
   const mocks = {
     fetchQueryObservable: mock(fetchQueryObservable),
+    fetchConcastWithInfo: mock(fetchConcastWithInfo),
     fetchQueryByPolicy: mock(fetchQueryByPolicy),
   };
 
@@ -1000,7 +1002,7 @@ describe("ObservableQuery", () => {
             expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
             expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
 
-            const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+            const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
             expect(fqoCalls.length).toBe(2);
             expect(fqoCalls[0][1].fetchPolicy).toEqual("cache-first");
             expect(fqoCalls[1][1].fetchPolicy).toEqual("network-only");
@@ -1056,7 +1058,7 @@ describe("ObservableQuery", () => {
             // FetchPolicy does not switch to cache-first after the first
             // network request.
             expect(observable.options.fetchPolicy).toBe("no-cache");
-            const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+            const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
             expect(fqoCalls.length).toBe(2);
             expect(fqoCalls[1][1].fetchPolicy).toBe("no-cache");
 
@@ -2503,4 +2505,150 @@ describe("ObservableQuery", () => {
       error: reject,
     });
   });
+});
+
+test("regression test for #10587", async () => {
+  let observers: Record<string, SubscriptionObserver<FetchResult>> = {};
+  const link = new ApolloLink((operation) => {
+    return new Observable((observer) => {
+      observers[operation.operationName] = observer;
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        SchemaType: {
+          merge: true,
+        },
+      },
+    }).restore({
+      ROOT_QUERY: {
+        __typename: "Query",
+        schemaType: { __typename: "SchemaType", a: "", b: "" },
+      },
+    }),
+    defaultOptions: {
+      watchQuery: {
+        fetchPolicy: "cache-and-network",
+        nextFetchPolicy: "cache-and-network",
+      },
+    },
+    link,
+  });
+
+  const query1 = client.watchQuery({
+    query: gql`
+      query query1 {
+        schemaType {
+          a
+        }
+      }
+    `,
+  });
+  const query2 = client.watchQuery({
+    query: gql`
+      query query2 {
+        schemaType {
+          a
+          b
+        }
+      }
+    `,
+  });
+  const query1Spy = jest.fn();
+  const query2Spy = jest.fn();
+
+  query1.subscribe(query1Spy);
+  query2.subscribe(query2Spy);
+
+  const finalExpectedCalls = {
+    query1: [
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "",
+            },
+          },
+          loading: true,
+          networkStatus: 1,
+        },
+      ],
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "a",
+            },
+          },
+          loading: false,
+          networkStatus: 7,
+        },
+      ],
+    ],
+    query2: [
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "",
+              b: "",
+            },
+          },
+          loading: true,
+          networkStatus: 1,
+        },
+      ],
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "a",
+              b: "",
+            },
+          },
+          // TODO: this should be `true`, but that seems to be a separate bug!
+          loading: false,
+          networkStatus: 7,
+        },
+      ],
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "a",
+              b: "b",
+            },
+          },
+          loading: false,
+          networkStatus: 7,
+        },
+      ],
+    ],
+  } as const;
+
+  await waitFor(() => expect(query1Spy.mock.calls).toEqual(finalExpectedCalls.query1.slice(0, 1)));
+  expect(query2Spy.mock.calls).toEqual(finalExpectedCalls.query2.slice(0, 1));
+
+  observers.query1.next({
+    data: { schemaType: { __typename: "SchemaType", a: "a" } },
+  });
+  observers.query1.complete();
+
+  await waitFor(() => expect(query1Spy.mock.calls).toEqual(finalExpectedCalls.query1));
+  expect(query2Spy.mock.calls).toEqual(finalExpectedCalls.query2.slice(0, 2));
+
+  observers.query2.next({
+    data: { schemaType: { __typename: "SchemaType", a: "a", b: "b" } },
+  });
+  observers.query2.complete();
+
+  await waitFor(() => expect(query2Spy.mock.calls).toEqual(finalExpectedCalls.query2));
+  expect(query1Spy.mock.calls).toEqual(finalExpectedCalls.query1);
 });

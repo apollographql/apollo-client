@@ -43,8 +43,9 @@ const isMultipartQuery = wrap((query: DocumentNode) => {
   return hasAnyDirectives(['defer', 'stream'], query);
 });
 
-interface Options {
+interface QuerySubscriptionOptions {
   onDispose?: () => void;
+  autoDisposeTimeoutMs?: number;
 }
 
 export class QuerySubscription<TData = any> {
@@ -54,14 +55,16 @@ export class QuerySubscription<TData = any> {
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
+  private autoDisposeTimeoutId: NodeJS.Timeout;
 
   constructor(
     observable: ObservableQuery<TData>,
-    options: Options = Object.create(null)
+    options: QuerySubscriptionOptions = Object.create(null)
   ) {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
+    this.dispose = this.dispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult();
 
@@ -89,9 +92,23 @@ export class QuerySubscription<TData = any> {
     this.promise = isMultipartQuery(observable.query)
       ? wrapWithCustomPromise(concast)
       : concast.promise;
+
+    // Start a timer that will automatically dispose of the query if the
+    // suspended resource does not use this subscription in the given time. This
+    // helps prevent memory leaks when a component has unmounted before the
+    // query has finished loading.
+    this.autoDisposeTimeoutId = setTimeout(
+      this.dispose,
+      options.autoDisposeTimeoutMs ?? 30_000
+    );
   }
 
   listen(listener: Listener<TData>) {
+    // As soon as the component listens for updates, we know it has finished
+    // suspending and is ready to receive updates, so we can remove the auto
+    // dispose timer.
+    clearTimeout(this.autoDisposeTimeoutId);
+
     this.listeners.add(listener);
 
     return () => {

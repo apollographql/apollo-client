@@ -12,6 +12,20 @@ import { QuerySubscription } from './QuerySubscription';
 
 type CacheKey = [ApolloClient<unknown>, DocumentNode, string];
 
+interface SuspenseCacheOptions {
+  /**
+   * Specifies the amount of time, in milliseconds, the suspense cache will wait
+   * for a suspended component to read from the suspense cache before it
+   * automatically disposes of the query. This prevents memory leaks when a
+   * component unmounts before a suspended resource finishes loading. Increase
+   * the timeout if your queries take longer than than the specified time to
+   * prevent your queries from suspending over and over.
+   *
+   * Defaults to 30 seconds.
+   */
+  autoDisposeTimeoutMs?: number;
+}
+
 export class SuspenseCache {
   private cacheKeys = new Trie<CacheKey>(
     canUseWeakMap,
@@ -19,6 +33,11 @@ export class SuspenseCache {
   );
 
   private subscriptions = new Map<CacheKey, QuerySubscription>();
+  private options: SuspenseCacheOptions;
+
+  constructor(options: SuspenseCacheOptions = Object.create(null)) {
+    this.options = options;
+  }
 
   getSubscription<TData = any>(
     client: ApolloClient<unknown>,
@@ -36,6 +55,7 @@ export class SuspenseCache {
       this.subscriptions.set(
         cacheKey,
         new QuerySubscription(createObservable(), {
+          autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
           onDispose: () => this.subscriptions.delete(cacheKey),
         })
       );

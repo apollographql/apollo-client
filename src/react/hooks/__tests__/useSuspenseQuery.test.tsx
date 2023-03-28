@@ -776,6 +776,180 @@ describe('useSuspenseQuery', () => {
     expect(suspenseCache['subscriptions'].size).toBe(0);
   });
 
+  it('tears down the query if the component never renders again after suspending', async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      const [showGreeting, setShowGreeting] = React.useState(true);
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <button onClick={() => setShowGreeting(false)}>Hide greeting</button>
+          {showGreeting && (
+            <Suspense fallback="Loading greeting...">
+              <Greeting />
+            </Suspense>
+          )}
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText('Loading greeting...')).toBeInTheDocument();
+
+    // Hide the greeting before it finishes loading data
+    await act(() => user.click(screen.getByText('Hide greeting')));
+
+    expect(screen.queryByText('Loading greeting...')).not.toBeInTheDocument();
+
+    link.simulateResult({ result: { data: { greeting: 'Hello' } } });
+    link.simulateComplete();
+
+    expect(client.getObservableQueries().size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(1);
+
+    jest.advanceTimersByTime(30_000);
+
+    expect(client.getObservableQueries().size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
+
+    jest.useRealTimers();
+
+    // Avoid act warnings for a suspended resource
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    await act(() => wait(0));
+  });
+
+  it('has configurable auto dispose timer if the component never renders again after suspending', async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache({ autoDisposeTimeoutMs: 5000 });
+
+    function App() {
+      const [showGreeting, setShowGreeting] = React.useState(true);
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <button onClick={() => setShowGreeting(false)}>Hide greeting</button>
+          {showGreeting && (
+            <Suspense fallback="Loading greeting...">
+              <Greeting />
+            </Suspense>
+          )}
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText('Loading greeting...')).toBeInTheDocument();
+
+    // Hide the greeting before it finishes loading data
+    await act(() => user.click(screen.getByText('Hide greeting')));
+
+    expect(screen.queryByText('Loading greeting...')).not.toBeInTheDocument();
+
+    link.simulateResult({ result: { data: { greeting: 'Hello' } } });
+    link.simulateComplete();
+
+    expect(client.getObservableQueries().size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(1);
+
+    jest.advanceTimersByTime(5_000);
+
+    expect(client.getObservableQueries().size).toBe(0);
+    expect(suspenseCache['subscriptions'].size).toBe(0);
+
+    jest.useRealTimers();
+
+    // Avoid act warnings for a suspended resource
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    await act(() => wait(0));
+  });
+
+  it('cancels auto dispose if the component renders before timer finishes', async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: 'Hello' } });
+          observer.complete();
+        }, 10);
+      });
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Suspense fallback="Loading greeting...">
+            <Greeting />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText('Loading greeting...')).toBeInTheDocument();
+
+    jest.advanceTimersByTime(10);
+
+    await waitFor(() => {
+      expect(screen.getByText('Hello')).toBeInTheDocument();
+    });
+
+    jest.advanceTimersByTime(30_000);
+
+    expect(client.getObservableQueries().size).toBe(1);
+    expect(suspenseCache['subscriptions'].size).toBe(1);
+
+    jest.useRealTimers();
+  });
+
   it('allows the client to be overridden', async () => {
     const { query } = useSimpleQueryCase();
 

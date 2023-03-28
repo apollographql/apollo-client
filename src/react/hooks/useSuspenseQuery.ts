@@ -39,18 +39,17 @@ export interface UseSuspenseQueryResult<
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-type FetchMoreFunction<
-  TData,
-  TVariables extends OperationVariables
-> = (fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
-  updateQuery?: (
-    previousQueryResult: TData,
-    options: {
-      fetchMoreResult: TData;
-      variables: TVariables;
-    },
-  ) => TData;
-}) => Promise<ApolloQueryResult<TData>>;
+type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
+  fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
+    updateQuery?: (
+      previousQueryResult: TData,
+      options: {
+        fetchMoreResult: TData;
+        variables: TVariables;
+      }
+    ) => TData;
+  }
+) => Promise<ApolloQueryResult<TData>>;
 
 type RefetchFunction<
   TData,
@@ -227,7 +226,12 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   TData
 > {
   const watchQueryOptions = useDeepMemo<WatchQueryOptions<TVariables, TData>>(
-    () => ({ ...options, query, notifyOnNetworkStatusChange: true }),
+    () => ({
+      ...options,
+      query,
+      notifyOnNetworkStatusChange: true,
+      nextFetchPolicy: void 0,
+    }),
     [options, query]
   );
 

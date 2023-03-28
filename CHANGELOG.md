@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 3.8.0-alpha.11
+
+### Minor Changes
+
+- [#10567](https://github.com/apollographql/apollo-client/pull/10567) [`c2ce6496c`](https://github.com/apollographql/apollo-client/commit/c2ce6496c10e7ae7e29d25161c2d3cef3e2c6144) Thanks [@benjamn](https://github.com/benjamn)! - Allow `ApolloCache` implementations to specify default value for `assumeImmutableResults` client option, improving performance for applications currently using `InMemoryCache` without configuring `new ApolloClient({ assumeImmutableResults: true })`
+
+### Patch Changes
+
+- [#10672](https://github.com/apollographql/apollo-client/pull/10672) [`932252b0c`](https://github.com/apollographql/apollo-client/commit/932252b0c54792ec8c5095de1b42c005a91ffe6d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the compatibility between `useSuspenseQuery` and React's `useDeferredValue` and `startTransition` APIs to allow React to show stale UI while the changes to the variable cause the component to suspend.
+
+  # Breaking change
+
+  `nextFetchPolicy` support has been removed from `useSuspenseQuery`. If you are using this option, remove it, otherwise it will be ignored.
+
 ## 3.8.0-alpha.10
 
 ### Patch Changes

@@ -7,14 +7,26 @@ describe('ApolloError', () => {
       new GraphQLError('Something went wrong with GraphQL'),
       new GraphQLError('Something else went wrong with GraphQL'),
     ];
+    const protocolErrors = [
+      {
+        message: "cannot read message from websocket",
+        extensions: [
+          {
+            code: "WEBSOCKET_MESSAGE_ERROR",
+          },
+        ],
+      }
+    ];
     const networkError = new Error('Network error');
     const errorMessage = 'this is an error message';
     const apolloError = new ApolloError({
       graphQLErrors: graphQLErrors,
+      protocolErrors: protocolErrors,
       networkError: networkError,
       errorMessage: errorMessage,
     });
     expect(apolloError.graphQLErrors).toEqual(graphQLErrors);
+    expect(apolloError.protocolErrors).toEqual(protocolErrors);
     expect(apolloError.networkError).toEqual(networkError);
     expect(apolloError.message).toBe(errorMessage);
   });

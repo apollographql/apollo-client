@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Adds support for multipart subscriptions in `HTTPLink`.
+Adds support for multipart subscriptions in `HttpLink`.

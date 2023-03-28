@@ -1768,14 +1768,16 @@ describe('HttpLink', () => {
               } else if (i === 1) {
                 expect(result).toEqual({
                   data: null,
-                  errors: [
-                    {
-                      extensions: {
-                        code: "INTERNAL_SERVER_ERROR",
-                      },
-                      message: "Error field"
-                    }
-                  ]
+                  extensions: {
+                    protocolErrors: [
+                      {
+                        extensions: {
+                          code: "INTERNAL_SERVER_ERROR",
+                        },
+                        message: "Error field"
+                      }
+                    ]
+                  }
                 });
               }
             } catch (err) {

@@ -382,6 +382,7 @@ Array [
   "getStoreKeyName",
   "getTypenameFromResult",
   "graphQLResultHasError",
+  "graphQLResultHasProtocolError",
   "hasAllDirectives",
   "hasAnyDirectives",
   "hasClientExports",

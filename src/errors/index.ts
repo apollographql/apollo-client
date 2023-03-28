@@ -47,7 +47,7 @@ export class ApolloError extends Error {
   public graphQLErrors: GraphQLErrors;
   public protocolErrors: ReadonlyArray<{
     message: string;
-    extensions?: GraphQLErrorExtensions;
+    extensions?: GraphQLErrorExtensions[];
   }>;
   public clientErrors: ReadonlyArray<Error>;
   public networkError: Error | ServerParseError | ServerError | null;
@@ -71,13 +71,13 @@ export class ApolloError extends Error {
     graphQLErrors?: ReadonlyArray<GraphQLError>;
     protocolErrors?: ReadonlyArray<{
       message: string;
-      extensions?: GraphQLErrorExtensions;
+      extensions?: GraphQLErrorExtensions[];
     }>;
     clientErrors?: ReadonlyArray<Error>;
     networkError?: Error | ServerParseError | ServerError | null;
     errorMessage?: string;
     extraInfo?: any;
-    }) {
+  }) {
     super(errorMessage);
     this.name = 'ApolloError';
     this.graphQLErrors = graphQLErrors || [];

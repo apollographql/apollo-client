@@ -18,7 +18,6 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from '../../core';
-import { NextFetchPolicyContext } from '../../core/watchQueryOptions';
 import { SuspenseCache } from '../cache';
 
 /* Common types */

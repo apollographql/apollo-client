@@ -84,7 +84,12 @@ export async function readMultipartBody<
                 next = { ...(result.payload as T) };
               }
               if ("errors" in result) {
-                next = { errors: result.errors, data: null };
+                next = {
+                  data: null,
+                  extensions: {
+                    protocolErrors: result.errors
+                  },
+                };
               }
               observer.next?.(next as T);
             } else {

@@ -3,3 +3,7 @@
 exports[`GraphQL Subscriptions should throw an error if the result has errors on it 1`] = `[ApolloError: This is an error]`;
 
 exports[`GraphQL Subscriptions should throw an error if the result has errors on it 2`] = `[ApolloError: This is an error]`;
+
+exports[`GraphQL Subscriptions should throw an error if the result has protocolErrors on it 1`] = `[ApolloError]`;
+
+exports[`GraphQL Subscriptions should throw an error if the result has protocolErrors on it 2`] = `[ApolloError]`;

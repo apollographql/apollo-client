@@ -24,3 +24,14 @@ export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>) {
   }
   return graphQLErrors;
 }
+
+export function graphQLResultHasProtocolError<T>(
+  result: FetchResult<T>
+): boolean {
+  const errors = getProtocolErrorsFromResult(result);
+  return isNonEmptyArray(errors);
+}
+
+export function getProtocolErrorsFromResult<T>(result: FetchResult<T>): (Error | string)[] {
+  return result.extensions?.protocolErrors || [];
+}

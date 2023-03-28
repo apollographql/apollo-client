@@ -261,4 +261,52 @@ describe('GraphQL Subscriptions', () => {
 
     link.simulateResult(results[0]);
   });
+
+  it('should throw an error if the result has protocolErrors on it', () => {
+    const link = mockObservableLink();
+    const queryManager = new QueryManager({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const obs = queryManager.startGraphQLSubscription(options);
+
+    const promises = [];
+    for (let i = 0; i < 2; i += 1) {
+      promises.push(
+        new Promise<void>((resolve, reject) => {
+          obs.subscribe({
+            next(result) {
+              reject('Should have hit the error block');
+            },
+            error(error) {
+              expect(error).toMatchSnapshot();
+              resolve();
+            },
+          });
+        }),
+      );
+    }
+
+    const errorResult = {
+      result: {
+        data: null,
+        extensions: {
+          protocolErrors: [
+            {
+              message: 'cannot read message from websocket',
+              extensions: [
+                {
+                  code: "WEBSOCKET_MESSAGE_ERROR"
+                }
+              ],
+            } as any,
+          ],
+        }
+      },
+    };
+
+    link.simulateResult(errorResult);
+    return Promise.all(promises);
+  });
 });

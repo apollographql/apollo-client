@@ -30,8 +30,11 @@ export function isExecutionPatchResult<T>(
   );
 }
 
+// This function detects an Apollo payload result before it is transformed
+// into a FetchResult via HttpLink; it cannot detect an ApolloPayloadResult
+// once it leaves the link chain.
 export function isApolloPayloadResult<T>(
-  value: FetchResult<T>
+  value: unknown
 ): value is ApolloPayloadResult {
   return (
     isNonNullObject(value) &&

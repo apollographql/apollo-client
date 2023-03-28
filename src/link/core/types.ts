@@ -50,14 +50,9 @@ export interface ApolloPayloadResult<
   TExtensions = Record<string, any>
 > {
   payload: SingleExecutionResult | ExecutionPatchResult;
-  // Data is never present at the top level here, but a significant refactoring
-  // would be needed to omit it here, since FetchResult assumes at least an
-  // optional data key.
-  data?: never;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
   // these are fatal errors that will include done: true.
-  // TODO: is GraphQLError[] appropriate here?
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: ReadonlyArray<Error | string>;
   // Done can be true or false and is present as `done: true` on the final
   // chunk, or when fatal errors occur.
   done?: boolean;
@@ -102,8 +97,7 @@ export type FetchResult<
   TExtensions = Record<string, any>
 > =
   | SingleExecutionResult<TData, TContext, TExtensions>
-  | ExecutionPatchResult<TData, TExtensions>
-  | ApolloPayloadResult<TData, TExtensions>;
+  | ExecutionPatchResult<TData, TExtensions>;
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 

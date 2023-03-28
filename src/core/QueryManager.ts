@@ -18,6 +18,7 @@ import {
   getOperationName,
   hasClientExports,
   graphQLResultHasError,
+  graphQLResultHasProtocolError,
   getGraphQLErrorsFromResult,
   removeConnectionDirectiveFromDocument,
   canUseWeakMap,
@@ -940,6 +941,12 @@ export class QueryManager<TStore> {
           throw new ApolloError({
             graphQLErrors: result.errors,
           });
+        }
+
+        if (graphQLResultHasProtocolError(result)) {
+          throw new ApolloError({
+            protocolErrors: result.extensions?.protocolErrors
+          })
         }
 
         return result;

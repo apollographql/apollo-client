@@ -1,6 +1,6 @@
 import '../utilities/globals';
 
-import { GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLErrorExtensions } from 'graphql';
 
 import { isNonEmptyArray } from '../utilities';
 import { ServerParseError } from '../link/http';
@@ -45,6 +45,10 @@ export class ApolloError extends Error {
   public name: string;
   public message: string;
   public graphQLErrors: GraphQLErrors;
+  public protocolErrors: ReadonlyArray<{
+    message: string;
+    extensions?: GraphQLErrorExtensions;
+  }>;
   public clientErrors: ReadonlyArray<Error>;
   public networkError: Error | ServerParseError | ServerError | null;
 
@@ -58,20 +62,26 @@ export class ApolloError extends Error {
   // value or the constructed error will be meaningless.
   constructor({
     graphQLErrors,
+    protocolErrors,
     clientErrors,
     networkError,
     errorMessage,
     extraInfo,
   }: {
     graphQLErrors?: ReadonlyArray<GraphQLError>;
+    protocolErrors?: ReadonlyArray<{
+      message: string;
+      extensions?: GraphQLErrorExtensions;
+    }>;
     clientErrors?: ReadonlyArray<Error>;
     networkError?: Error | ServerParseError | ServerError | null;
     errorMessage?: string;
     extraInfo?: any;
-  }) {
+    }) {
     super(errorMessage);
     this.name = 'ApolloError';
     this.graphQLErrors = graphQLErrors || [];
+    this.protocolErrors = protocolErrors || [];
     this.clientErrors = clientErrors || [];
     this.networkError = networkError || null;
     this.message = errorMessage || generateErrorMessage(this);

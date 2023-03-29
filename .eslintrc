@@ -14,7 +14,8 @@
       "files": ["**/__tests__/**/*.[jt]sx", "**/?(*.)+(test).[jt]sx"],
       "extends": ["plugin:testing-library/react"],
       "rules": {
-        "testing-library/prefer-user-event": "error"
+        "testing-library/prefer-user-event": "error",
+        "testing-library/no-wait-for-multiple-assertions": "off"
       }
     }
   ]

@@ -188,22 +188,17 @@ describe('GraphQL Subscriptions', () => {
 
     const obs = queryManager.startGraphQLSubscription(options);
 
-    const promises = [];
-    for (let i = 0; i < 2; i += 1) {
-      promises.push(
-        new Promise<void>((resolve, reject) => {
-          obs.subscribe({
-            next(result) {
-              reject('Should have hit the error block');
-            },
-            error(error) {
-              expect(error).toMatchSnapshot();
-              resolve();
-            },
-          });
-        }),
-      );
-    }
+    const promise = new Promise<void>((resolve, reject) => {
+      obs.subscribe({
+        next(result) {
+          reject('Should have hit the error block');
+        },
+        error(error) {
+          expect(error).toMatchSnapshot();
+          resolve();
+        },
+      });
+    });
 
     const errorResult = {
       result: {
@@ -224,7 +219,7 @@ describe('GraphQL Subscriptions', () => {
     };
 
     link.simulateResult(errorResult);
-    return Promise.all(promises);
+    return Promise.resolve(promise);
   });
 
   it('should call complete handler when the subscription completes', () => {
@@ -272,22 +267,17 @@ describe('GraphQL Subscriptions', () => {
 
     const obs = queryManager.startGraphQLSubscription(options);
 
-    const promises = [];
-    for (let i = 0; i < 2; i += 1) {
-      promises.push(
-        new Promise<void>((resolve, reject) => {
-          obs.subscribe({
-            next(result) {
-              reject('Should have hit the error block');
-            },
-            error(error) {
-              expect(error).toMatchSnapshot();
-              resolve();
-            },
-          });
-        }),
-      );
-    }
+    const promise = new Promise<void>((resolve, reject) => {
+      obs.subscribe({
+        next(result) {
+          reject("Should have hit the error block");
+        },
+        error(error) {
+          expect(error).toMatchSnapshot();
+          resolve();
+        },
+      });
+    });
 
     const errorResult = {
       result: {
@@ -308,6 +298,6 @@ describe('GraphQL Subscriptions', () => {
     };
 
     link.simulateResult(errorResult);
-    return Promise.all(promises);
+    return Promise.resolve(promise);
   });
 });

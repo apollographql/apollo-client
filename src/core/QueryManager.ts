@@ -937,16 +937,18 @@ export class QueryManager<TStore> {
           this.broadcastQueries();
         }
 
-        if (graphQLResultHasError(result)) {
-          throw new ApolloError({
-            graphQLErrors: result.errors,
-          });
-        }
-
-        if (graphQLResultHasProtocolError(result)) {
-          throw new ApolloError({
-            protocolErrors: result.extensions?.[PROTOCOL_ERRORS_SYMBOL]
-          })
+        if (
+          graphQLResultHasError(result) ||
+          graphQLResultHasProtocolError(result)
+        ) {
+          let errors = {
+            graphQLErrors: result.errors || undefined,
+            protocolErrors: undefined,
+          };
+          if (graphQLResultHasProtocolError(result)) {
+            errors.protocolErrors = result.extensions?.[PROTOCOL_ERRORS_SYMBOL];
+          }
+          throw new ApolloError(errors);
         }
 
         return result;
@@ -1242,7 +1244,7 @@ export class QueryManager<TStore> {
       setTimeout(() => concast.cancel(reason));
     });
 
-    let concast: Concast<ApolloQueryResult<TData>>, 
+    let concast: Concast<ApolloQueryResult<TData>>,
         containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no

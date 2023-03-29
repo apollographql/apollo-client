@@ -73,6 +73,28 @@ describe('ApolloError', () => {
     expect(messages[1]).toMatch('network error message');
   });
 
+  it('should add both protocol and graphql errors to the message', () => {
+    const graphQLErrors = [new GraphQLError('graphql error message')];
+    const protocolErrors = [
+      {
+        message: "cannot read message from websocket",
+        extensions: [
+          {
+            code: "WEBSOCKET_MESSAGE_ERROR",
+          },
+        ],
+      }
+    ];
+    const apolloError = new ApolloError({
+      graphQLErrors,
+      protocolErrors,
+    });
+    const messages = apolloError.message.split('\n');
+    expect(messages.length).toBe(2);
+    expect(messages[0]).toMatch('graphql error message');
+    expect(messages[1]).toMatch('cannot read message from websocket');
+  });
+
   it('should contain a stack trace', () => {
     const graphQLErrors = [new GraphQLError('graphql error message')];
     const networkError = new Error('network error message');

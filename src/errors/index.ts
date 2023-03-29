@@ -39,9 +39,14 @@ export function isApolloError(err: Error): err is ApolloError {
 const generateErrorMessage = (err: ApolloError) => {
   let message = '';
   // If we have GraphQL errors present, add that to the error message.
-  if (isNonEmptyArray(err.graphQLErrors) || isNonEmptyArray(err.clientErrors)) {
+  if (
+    isNonEmptyArray(err.graphQLErrors) ||
+    isNonEmptyArray(err.clientErrors) ||
+    isNonEmptyArray(err.protocolErrors)
+  ) {
     const errors = ((err.graphQLErrors || []) as readonly Error[])
-      .concat(err.clientErrors || []);
+      .concat(err.clientErrors || [])
+      .concat((err.protocolErrors || []) as readonly Error[]);
     errors.forEach((error: Error) => {
       const errorMessage = error
         ? error.message

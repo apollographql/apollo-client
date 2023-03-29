@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
+import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider, resetApolloContext } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
@@ -948,7 +949,7 @@ describe('useSubscription Hook', () => {
           result: {
             data: null,
             extensions: {
-              protocolErrors: [
+              [PROTOCOL_ERRORS_SYMBOL]: [
                 {
                   message: 'cannot read message from websocket',
                   extensions: [
@@ -985,7 +986,7 @@ describe('useSubscription Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toBe(undefined);
-      setTimeout(() => link.simulateResult(results[0]));
+      link.simulateResult(results[0]);
       expect(renderCount).toBe(1);
       await waitFor(() => {
         expect(result.current.error).toBeInstanceOf(ApolloError);

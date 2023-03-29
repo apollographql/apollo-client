@@ -5,6 +5,28 @@ import { GraphQLError, GraphQLErrorExtensions } from 'graphql';
 import { isNonEmptyArray } from '../utilities';
 import { ServerParseError } from '../link/http';
 import { ServerError } from '../link/utils';
+import { FetchResult } from "../link/core";
+
+// TODO: add comment
+export const PROTOCOL_ERRORS_SYMBOL: unique symbol = Symbol();
+
+type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
+  extensions: Record<string | symbol, any>
+};
+
+export function graphQLResultHasProtocolError<T>(
+  result: FetchResult<T>
+): result is FetchResultWithSymbolExtensions<T> {
+  if (result.extensions) {
+    return Array.isArray(
+      (result as FetchResultWithSymbolExtensions<T>).extensions[
+        PROTOCOL_ERRORS_SYMBOL
+      ]
+    );
+  }
+  return false;
+}
+
 
 export function isApolloError(err: Error): err is ApolloError {
   return err.hasOwnProperty('graphQLErrors');

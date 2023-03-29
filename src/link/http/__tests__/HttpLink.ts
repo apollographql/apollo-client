@@ -8,6 +8,7 @@ import { Readable } from 'stream';
 import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
+import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
 import { ClientParseError } from '../serializeFetchParameter';
@@ -1767,9 +1768,8 @@ describe('HttpLink', () => {
                 });
               } else if (i === 1) {
                 expect(result).toEqual({
-                  data: null,
                   extensions: {
-                    protocolErrors: [
+                    [PROTOCOL_ERRORS_SYMBOL]: [
                       {
                         extensions: {
                           code: "INTERNAL_SERVER_ERROR",

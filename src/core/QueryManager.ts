@@ -18,7 +18,6 @@ import {
   getOperationName,
   hasClientExports,
   graphQLResultHasError,
-  graphQLResultHasProtocolError,
   getGraphQLErrorsFromResult,
   removeConnectionDirectiveFromDocument,
   canUseWeakMap,
@@ -33,7 +32,7 @@ import {
   isNonNullObject,
 } from '../utilities';
 import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError } from '../errors';
+import { ApolloError, isApolloError, graphQLResultHasProtocolError } from '../errors';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -62,6 +61,7 @@ import {
   shouldWriteResult,
   CacheWriteBehavior,
 } from './QueryInfo';
+import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -945,7 +945,7 @@ export class QueryManager<TStore> {
 
         if (graphQLResultHasProtocolError(result)) {
           throw new ApolloError({
-            protocolErrors: result.extensions?.protocolErrors
+            protocolErrors: result.extensions?.[PROTOCOL_ERRORS_SYMBOL]
           })
         }
 

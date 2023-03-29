@@ -1,6 +1,7 @@
 import { responseIterator } from "./responseIterator";
 import { Operation } from "../core";
 import { throwServerError } from "../utils";
+import { PROTOCOL_ERRORS_SYMBOL } from '../../errors';
 import { Observer } from "../../utilities";
 import {
   isApolloPayloadResult
@@ -85,9 +86,10 @@ export async function readMultipartBody<
               }
               if ("errors" in result) {
                 next = {
-                  data: null,
+                  ...next,
                   extensions: {
-                    protocolErrors: result.errors
+                    ...("extensions" in next ? next.extensions : null as any),
+                    [PROTOCOL_ERRORS_SYMBOL]: result.errors
                   },
                 };
               }

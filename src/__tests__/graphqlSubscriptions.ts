@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 
 import { ApolloClient } from '../core';
 import { InMemoryCache } from '../cache';
+import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
 import { QueryManager } from '../core/QueryManager';
 import { itAsync, mockObservableLink } from '../testing';
 
@@ -292,7 +293,7 @@ describe('GraphQL Subscriptions', () => {
       result: {
         data: null,
         extensions: {
-          protocolErrors: [
+          [PROTOCOL_ERRORS_SYMBOL]: [
             {
               message: 'cannot read message from websocket',
               extensions: [

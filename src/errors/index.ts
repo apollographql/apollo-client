@@ -7,7 +7,9 @@ import { ServerParseError } from '../link/http';
 import { ServerError } from '../link/utils';
 import { FetchResult } from "../link/core";
 
-// TODO: add comment
+// This Symbol allows us to pass transport-specific errors from the link chain
+// into QueryManager/client internals without risking a naming collision within
+// extensions (which implementers can use as they see fit).
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol = Symbol();
 
 type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {

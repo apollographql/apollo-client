@@ -152,8 +152,11 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
         invariant.warn("Multipart-subscriptions do not support @defer");
       }
 
-      if (isSubscription) acceptHeader += 'boundary=graphql;subscriptionSpec=1.0,application/json';
-      if (!isSubscription && hasDefer) acceptHeader += 'deferSpec=20220824,application/json';
+      if (isSubscription) {
+        acceptHeader += 'boundary=graphql;subscriptionSpec=1.0,application/json';
+      } else if (hasDefer) {
+        acceptHeader += 'deferSpec=20220824,application/json';
+      }
       options.headers.accept = acceptHeader;
     }
 

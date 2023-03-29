@@ -161,6 +161,23 @@ export class Concast<T> extends Observable<T> {
   // to deliver latest results immediately to new observers.
   private latest?: ["next", T] | ["error", any];
 
+  // Delay unsubscribing from the underlying subscription slightly,
+  // so that immediately subscribing another observer can keep the
+  // subscription active.
+  private nullifySub() {
+    const { sub } = this;
+    if (sub) {
+      setTimeout(() => {
+        if (this.observers.size > 0) {
+          this.sub = sub;
+        } else {
+          sub.unsubscribe();
+        }
+      });
+    }
+    this.sub = null;
+  }
+
   // Bound handler functions that can be reused for every internal
   // subscription.
   private handlers = {
@@ -175,11 +192,7 @@ export class Concast<T> extends Observable<T> {
     error: (error: any) => {
       const { sub } = this;
       if (sub !== null) {
-        // Delay unsubscribing from the underlying subscription slightly,
-        // so that immediately subscribing another observer can keep the
-        // subscription active.
-        if (sub) setTimeout(() => sub.unsubscribe());
-        this.sub = null;
+        this.nullifySub();
         this.latest = ["error", error];
         this.reject(error);
         this.notify("error", error);
@@ -197,8 +210,7 @@ export class Concast<T> extends Observable<T> {
         // eventually have been initialized to a non-empty array.
         const value = sources.shift();
         if (!value) {
-          if (sub) setTimeout(() => sub.unsubscribe());
-          this.sub = null;
+          this.nullifySub();
           if (this.latest &&
               this.latest[0] === "next") {
             this.resolve(this.latest[1]);

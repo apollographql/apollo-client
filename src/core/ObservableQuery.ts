@@ -692,11 +692,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
     newNetworkStatus?: NetworkStatus,
-  ): Concast<ApolloQueryResult<TData>> {
+  ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
-    return this.queryManager.fetchQueryObservable(
+    return this.queryManager['fetchConcastWithInfo'](
       this.queryId,
       options,
       newNetworkStatus,
@@ -835,7 +835,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     }
 
     const variables = options.variables && { ...options.variables };
-    const concast = this.fetch(options, newNetworkStatus);
+    const { concast, fromLink } = this.fetch(options, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
         this.reportResult(result, variables);
@@ -845,7 +845,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       },
     };
 
-    if (!useDisposableConcast) {
+    if (!useDisposableConcast && fromLink) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
       // observer with an unnecessary SubscriptionObserver object.
       if (this.concast && this.observer) {

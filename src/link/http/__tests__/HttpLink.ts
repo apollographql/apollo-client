@@ -1543,7 +1543,7 @@ describe('HttpLink', () => {
         '---',
         'Content-Type: application/json',
         '',
-        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}},"done":false}',
+        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}}}',
         '---',
         'Content-Type: application/json',
         '',
@@ -1551,11 +1551,7 @@ describe('HttpLink', () => {
         '---',
         'Content-Type: application/json',
         '',
-        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"blue","roll":2,"sides":5}}}},"done":false}',
-        '---',
-        'Content-Type: application/json',
-        '',
-        '{"done": true}',
+        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"blue","roll":2,"sides":5}}}}}',
         '-----',
       ].join("\r\n");
 
@@ -1567,11 +1563,11 @@ describe('HttpLink', () => {
         '---',
         'Content-Type: application/json',
         '',
-        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}},"done":false}',
+        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}}}',
         '---',
         'Content-Type: application/json',
         '',
-        '{"done": true, "errors": [{"message":"Error field","extensions":{"code":"INTERNAL_SERVER_ERROR"}}]}',
+        '{"payload": null, "errors": [{"message":"Error field","extensions":{"code":"INTERNAL_SERVER_ERROR"}}]}',
         '-----',
       ].join("\r\n");
 

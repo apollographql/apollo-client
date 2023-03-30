@@ -83,7 +83,7 @@ export async function readMultipartBody<
             if (isApolloPayloadResult(result)) {
               let next = {};
               if ("payload" in result) {
-                next = { ...(result.payload as T) };
+                next = { ...result.payload };
               }
               if ("errors" in result) {
                 next = {

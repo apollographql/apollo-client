@@ -1638,6 +1638,8 @@ describe('useQuery Hook', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 1" });
       }, { interval: 1 });
 
@@ -1654,7 +1656,6 @@ describe('useQuery Hook', () => {
 
       await expect(waitFor(() => {
         const newRequestCount = requestSpy.mock.calls.length;
-        expect(requestSpy).toHaveBeenCalledTimes(newRequestCount);
         expect(newRequestCount).toBeGreaterThan(requestCount);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
 

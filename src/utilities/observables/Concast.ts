@@ -167,7 +167,7 @@ export class Concast<T> extends Observable<T> {
   // Delay unsubscribing from the underlying subscription slightly,
   // so that immediately subscribing another observer can keep the
   // subscription active.
-  private deferredUnsubscribe(callback?: () => void) {
+  private deferredUnsubscribe() {
     const { sub } = this;
     this.sub = null;
     if (sub) {
@@ -180,7 +180,6 @@ export class Concast<T> extends Observable<T> {
           });
         } else {
           sub.unsubscribe();
-          callback?.();
         }
       });
     }

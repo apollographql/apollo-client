@@ -28,7 +28,10 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   options?: LazyQueryHookOptions<TData, TVariables>
 ): LazyQueryResultTuple<TData, TVariables> {
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
+  const optionsRef = useRef<LazyQueryHookOptions<TData, TVariables>>();
   const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
+
+  optionsRef.current = options;
 
   const internalState = useInternalState<TData, TVariables>(
     useApolloClient(options && options.client),
@@ -80,8 +83,11 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
     };
 
     const promise = internalState
-      .asyncUpdate() // Like internalState.forceUpdate, but returns a Promise.
-      .then(queryResult => Object.assign(queryResult, eagerMethods));
+      .executeQuery({
+        ...mergeOptions(optionsRef.current, execOptionsRef.current),
+        skip: false,
+      }) 
+      .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
     // Because the return value of `useLazyQuery` is usually floated, we need
     // to catch the promise to prevent unhandled rejections.

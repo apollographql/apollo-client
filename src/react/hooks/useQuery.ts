@@ -30,7 +30,7 @@ import {
 
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, canUseWeakSet, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { canUseWeakMap, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
   prototype: {
@@ -101,21 +101,44 @@ class InternalState<TData, TVariables extends OperationVariables> {
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
 
-  asyncUpdate() {
+  executeQuery(options: QueryHookOptions<TData, TVariables>) {
+    const watchQueryOptions = this.createWatchQueryOptions(
+      this.queryHookOptions = options,
+    );
+
+    this.watchQueryOptions = watchQueryOptions;
+
+    const concast = this.observable.reobserveAsConcast(
+      this.getObsQueryOptions()
+    );
+
+    // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+    // but save the current data as this.previousData, just like setResult
+    // usually does.
+    this.previousData = this.result?.data || this.previousData;
+    this.result = void 0;
+    this.forceUpdate();
+
     return new Promise<QueryResult<TData, TVariables>>((resolve) => {
-      this.asyncResolveFns.add(resolve);
-      this.optionsToIgnoreOnce.add(this.watchQueryOptions);
-      this.forceUpdate();
+      let result: ApolloQueryResult<TData>;
+
+      // Subscribe to the concast independently of the ObservableQuery in case 
+      // the component gets unmounted before the promise resolves. This prevents
+      // the concast from terminating early and resolving with `undefined` when
+      // there are no more subscribers for the concast.
+      concast.subscribe({
+        next: (value) => {
+          result = value;
+        },
+        error: () => {
+          resolve(this.toQueryResult(this.observable.getCurrentResult()));
+        },
+        complete: () => {
+          resolve(this.toQueryResult(result));
+        }
+      });
     });
   }
-
-  private asyncResolveFns = new Set<
-    (result: QueryResult<TData, TVariables>) => void
-  >();
-
-  private optionsToIgnoreOnce = new (canUseWeakSet ? WeakSet : Set)<
-    WatchQueryOptions<TVariables, TData>
-  >();
 
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
@@ -222,14 +245,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // TODO Remove this method when we remove support for options.partialRefetch.
     this.unsafeHandlePartialRefetch(result);
 
-    const queryResult = this.toQueryResult(result);
-
-    if (!queryResult.loading && this.asyncResolveFns.size) {
-      this.asyncResolveFns.forEach(resolve => resolve(queryResult));
-      this.asyncResolveFns.clear();
-    }
-
-    return queryResult;
+    return this.toQueryResult(result);
   }
 
   // These members (except for renderPromises) are all populated by the
@@ -258,20 +274,10 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // achieved by nullifying this.watchQueryOptions so the equality test
     // immediately fails because currentWatchQueryOptions is null, but this way
     // we can promise a truthy this.watchQueryOptions at all times.
-    if (
-      this.optionsToIgnoreOnce.has(currentWatchQueryOptions) ||
-      !equal(watchQueryOptions, currentWatchQueryOptions)
-    ) {
+    if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
       this.watchQueryOptions = watchQueryOptions;
 
       if (currentWatchQueryOptions && this.observable) {
-        // As advertised in the -Once of this.optionsToIgnoreOnce, this trick is
-        // only good for one forced execution of observable.reobserve per
-        // ignored WatchQueryOptions object, though it is unlikely we will ever
-        // see this exact currentWatchQueryOptions object again here, since we
-        // just replaced this.watchQueryOptions with watchQueryOptions.
-        this.optionsToIgnoreOnce.delete(currentWatchQueryOptions);
-
         // Though it might be tempting to postpone this reobserve call to the
         // useEffect block, we need getCurrentResult to return an appropriate
         // loading:true result synchronously (later within the same call to

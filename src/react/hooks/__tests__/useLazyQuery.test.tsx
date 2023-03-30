@@ -3,10 +3,23 @@ import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
+import { 
+  ApolloClient,
+  ApolloLink,
+  ErrorPolicy,
+  InMemoryCache,
+  NetworkStatus,
+  TypedDocumentNode 
+} from '../../../core';
 import { Observable } from '../../../utilities';
 import { ApolloProvider, resetApolloContext } from '../../../react';
-import { MockedProvider, mockSingleLink, wait, tick } from '../../../testing';
+import { 
+  MockedProvider,
+  mockSingleLink,
+  wait,
+  tick,
+  MockSubscriptionLink 
+} from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
 
@@ -452,10 +465,12 @@ describe('useLazyQuery Hook', () => {
       {
         request: { query: query1 },
         result: { data: { hello: "world" } },
+        delay: 20
       },
       {
         request: { query: query2 },
         result: { data: { name: "changed" } },
+        delay: 20
       },
     ];
 
@@ -1082,21 +1097,11 @@ describe('useLazyQuery Hook', () => {
     await wait(50);
   });
 
-  it('aborts in-flight requests when component unmounts', async () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
-
-    const link = new ApolloLink(() => {
-      // Do nothing to prevent
-      return null
-    });
-
+  it('allows in-flight requests to resolve when component unmounts', async () => {
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() })
 
-    const { result, unmount } = renderHook(() => useLazyQuery(query), {
+    const { result, unmount } = renderHook(() => useLazyQuery(helloQuery), {
       wrapper: ({ children }) =>
         <ApolloProvider client={client}>
           {children}
@@ -1105,32 +1110,27 @@ describe('useLazyQuery Hook', () => {
 
     const [execute] = result.current;
 
-    let promise: Promise<any>
+    let promise: Promise<QueryResult<{ hello: string }>>
     act(() => {
-      promise = execute()
+      promise = execute();
     })
 
     unmount();
 
-    await expect(promise!).rejects.toEqual(
-      new DOMException('The operation was aborted.', 'AbortError')
-    );
+    link.simulateResult({ result: { data: { hello: 'Greetings' }}}, true);
+
+    const queryResult = await promise!;
+
+    expect(queryResult.data).toEqual({ hello: 'Greetings' });
+    expect(queryResult.loading).toBe(false);
+    expect(queryResult.networkStatus).toBe(NetworkStatus.ready);
   });
 
-  it('handles aborting multiple in-flight requests when component unmounts', async () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
-
-    const link = new ApolloLink(() => {
-      return null
-    });
-
+  it('handles resolving multiple in-flight requests when component unmounts', async () => {
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() })
 
-    const { result, unmount } = renderHook(() => useLazyQuery(query), {
+    const { result, unmount } = renderHook(() => useLazyQuery(helloQuery), {
       wrapper: ({ children }) =>
         <ApolloProvider client={client}>
           {children}
@@ -1139,8 +1139,8 @@ describe('useLazyQuery Hook', () => {
 
     const [execute] = result.current;
 
-    let promise1: Promise<any>
-    let promise2: Promise<any>
+    let promise1: Promise<QueryResult<{ hello: string }>>
+    let promise2: Promise<QueryResult<{ hello: string }>>
     act(() => {
       promise1 = execute();
       promise2 = execute();
@@ -1148,10 +1148,16 @@ describe('useLazyQuery Hook', () => {
 
     unmount();
 
-    const expectedError = new DOMException('The operation was aborted.', 'AbortError');
+    link.simulateResult({ result: { data: { hello: 'Greetings' }}}, true);
 
-    await expect(promise1!).rejects.toEqual(expectedError);
-    await expect(promise2!).rejects.toEqual(expectedError);
+    const expectedResult = {
+      data: { hello: 'Greetings' },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    };
+
+    await expect(promise1!).resolves.toMatchObject(expectedResult);
+    await expect(promise2!).resolves.toMatchObject(expectedResult);
   });
 
   describe("network errors", () => {
@@ -1163,7 +1169,7 @@ describe('useLazyQuery Hook', () => {
         link: new ApolloLink(request => new Observable(observer => {
           setTimeout(() => {
             observer.error(networkError);
-          });
+          }, 20);
         })),
       });
 

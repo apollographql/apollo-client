@@ -172,7 +172,7 @@ export class Concast<T> extends Observable<T> {
     this.sub = null;
     if (sub) {
       setTimeout(() => {
-        if (this.observers.size > 0) {
+        if (this.observers.size > 0 && !sub.closed) {
           this.sub = sub;
           this.internalPromise = new Promise<T>((resolve, reject) => {
             this.resolve = resolve;
@@ -201,9 +201,9 @@ export class Concast<T> extends Observable<T> {
       if (sub !== null) {
         this.deferredUnsubscribe();
         this.latest = ["error", error];
+        this.reject(error);
         this.notify("error", error);
         iterateObserversSafely(this.observers, "error", error);
-        this.reject(error);
       }
     },
 
@@ -219,7 +219,7 @@ export class Concast<T> extends Observable<T> {
         if (!value) {
           this.deferredUnsubscribe();
           if (this.latest &&
-            this.latest[0] === "next") {
+              this.latest[0] === "next") {
             this.resolve(this.latest[1]);
           } else {
             this.resolve();

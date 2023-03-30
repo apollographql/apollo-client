@@ -32,7 +32,7 @@ import {
   isNonNullObject,
 } from '../utilities';
 import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError, graphQLResultHasProtocolError } from '../errors';
+import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -939,13 +939,13 @@ export class QueryManager<TStore> {
 
         if (
           graphQLResultHasError(result) ||
-          graphQLResultHasProtocolError(result)
+          graphQLResultHasProtocolErrors(result)
         ) {
           let errors = {
             graphQLErrors: result.errors || undefined,
             protocolErrors: undefined,
           };
-          if (graphQLResultHasProtocolError(result)) {
+          if (graphQLResultHasProtocolErrors(result)) {
             errors.protocolErrors = result.extensions?.[PROTOCOL_ERRORS_SYMBOL];
           }
           throw new ApolloError(errors);

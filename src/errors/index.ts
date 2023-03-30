@@ -16,7 +16,7 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
   extensions: Record<string | symbol, any>
 };
 
-export function graphQLResultHasProtocolError<T>(
+export function graphQLResultHasProtocolErrors<T>(
   result: FetchResult<T>
 ): result is FetchResultWithSymbolExtensions<T> {
   if (result.extensions) {

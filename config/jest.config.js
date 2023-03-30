@@ -68,6 +68,7 @@ const standardReact17Config = {
 };
 
 module.exports = {
+  workerIdleMemoryLimit: 0.5,
   projects: [
     tsStandardConfig,
     standardReact17Config,

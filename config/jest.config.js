@@ -37,7 +37,7 @@ const react18TestFileIgnoreList = [
   // to avoid running them twice with both react versions
   // since they do not import react
   ignoreTSFiles,
-  // failing hoc tests (8)
+  // failing hoc tests (7)
   'src/react/hoc/__tests__/mutations/queries.test.tsx',
   'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',
   'src/react/hoc/__tests__/queries/errors.test.tsx',
@@ -45,7 +45,6 @@ const react18TestFileIgnoreList = [
   'src/react/hoc/__tests__/queries/loading.test.tsx',
   'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
   'src/react/hoc/__tests__/queries/skip.test.tsx',
-  'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
   // failing components tests (1)
   'src/react/components/__tests__/client/Query.test.tsx',
 ];

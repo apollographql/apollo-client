@@ -134,6 +134,8 @@ Array [
 exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
   "ApolloError",
+  "PROTOCOL_ERRORS_SYMBOL",
+  "graphQLResultHasProtocolErrors",
   "isApolloError",
 ]
 `;
@@ -391,6 +393,7 @@ Array [
   "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
+  "isApolloPayloadResult",
   "isArray",
   "isAsyncIterableIterator",
   "isBlob",

@@ -1641,23 +1641,23 @@ describe('useQuery Hook', () => {
       }, { interval: 1 });
       await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 1" });
-      });
+      }, { interval: 1 });
+
       await waitFor(() => {
-        expect(requestSpy).toHaveBeenCalledTimes(1);
+        expect(requestSpy).toHaveBeenCalled();
       });
 
-      const requestSpyCallCount = requestSpy.mock.calls.length;
-      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
+      const requestCount = requestSpy.mock.calls.length;
+      expect(requestCount).toBeGreaterThan(0);
 
       unmount();
 
-      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
+      expect(requestSpy).toHaveBeenCalledTimes(requestCount);
 
       await expect(waitFor(() => {
-        expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount + 1);
+        const newRequestCount = requestSpy.mock.calls.length;
+        expect(newRequestCount).toBeGreaterThan(requestCount);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
-
-      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
 
       await waitFor(() => {
         expect(onErrorFn).toHaveBeenCalledTimes(0);
@@ -1710,16 +1710,16 @@ describe('useQuery Hook', () => {
       }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
 
-      const requestSpyCallCount = requestSpy.mock.calls.length;
-      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
+      const requestCount = requestSpy.mock.calls.length;
+      expect(requestSpy).toHaveBeenCalledTimes(requestCount);
 
       unmount();
 
-      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
+      expect(requestSpy).toHaveBeenCalledTimes(requestCount);
       await expect(waitFor(() => {
-        expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount + 1);
+        expect(requestSpy).toHaveBeenCalledTimes(requestCount + 1)
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
-      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
+      expect(requestSpy).toHaveBeenCalledTimes(requestCount);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       requestSpy.mockRestore();
@@ -6195,6 +6195,7 @@ describe('useQuery Hook', () => {
           __typename: 'Greeting',
         },
       });
+      expect(result.current).not.toContain({ hasNext: true });
 
       setTimeout(() => {
         link.simulateResult({

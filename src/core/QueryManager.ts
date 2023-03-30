@@ -61,7 +61,7 @@ import {
   shouldWriteResult,
   CacheWriteBehavior,
 } from './QueryInfo';
-import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
+import { PROTOCOL_ERRORS_SYMBOL, ApolloErrorOptions } from '../errors';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -937,16 +937,15 @@ export class QueryManager<TStore> {
           this.broadcastQueries();
         }
 
-        if (
-          graphQLResultHasError(result) ||
-          graphQLResultHasProtocolErrors(result)
-        ) {
-          let errors = {
-            graphQLErrors: result.errors || undefined,
-            protocolErrors: undefined,
-          };
-          if (graphQLResultHasProtocolErrors(result)) {
-            errors.protocolErrors = result.extensions?.[PROTOCOL_ERRORS_SYMBOL];
+        const hasErrors = graphQLResultHasError(result);
+        const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
+        if (hasErrors || hasProtocolErrors) {
+          const errors: ApolloErrorOptions = {};
+          if (hasErrors) {
+            errors.graphQLErrors = result.errors;
+          }
+          if (hasProtocolErrors) {
+            errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
           }
           throw new ApolloError(errors);
         }

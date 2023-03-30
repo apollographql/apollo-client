@@ -16,6 +16,18 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
   extensions: Record<string | symbol, any>
 };
 
+export interface ApolloErrorOptions {
+  graphQLErrors?: ReadonlyArray<GraphQLError>;
+  protocolErrors?: ReadonlyArray<{
+    message: string;
+    extensions?: GraphQLErrorExtensions[];
+  }>;
+  clientErrors?: ReadonlyArray<Error>;
+  networkError?: Error | ServerParseError | ServerError | null;
+  errorMessage?: string;
+  extraInfo?: any;
+}
+
 export function graphQLResultHasProtocolErrors<T>(
   result: FetchResult<T>
 ): result is FetchResultWithSymbolExtensions<T> {
@@ -96,17 +108,7 @@ export class ApolloError extends Error {
     networkError,
     errorMessage,
     extraInfo,
-  }: {
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
-    protocolErrors?: ReadonlyArray<{
-      message: string;
-      extensions?: GraphQLErrorExtensions[];
-    }>;
-    clientErrors?: ReadonlyArray<Error>;
-    networkError?: Error | ServerParseError | ServerError | null;
-    errorMessage?: string;
-    extraInfo?: any;
-  }) {
+  }: ApolloErrorOptions) {
     super(errorMessage);
     this.name = 'ApolloError';
     this.graphQLErrors = graphQLErrors || [];

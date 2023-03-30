@@ -152,10 +152,13 @@ export class Concast<T> extends Observable<T> {
   // easy way to observe the final state of the Concast.
   private resolve: (result?: T | PromiseLike<T>) => void;
   private reject: (reason: any) => void;
-  public readonly promise = new Promise<T>((resolve, reject) => {
+  private internalPromise = new Promise<T>((resolve, reject) => {
     this.resolve = resolve;
     this.reject = reject;
   });
+  public get promise() {
+    return this.internalPromise;
+  }
 
   // Name and argument of the most recently invoked observer method, used
   // to deliver latest results immediately to new observers.
@@ -166,17 +169,21 @@ export class Concast<T> extends Observable<T> {
   // subscription active.
   private deferredUnsubscribe(callback?: () => void) {
     const { sub } = this;
+    this.sub = null;
     if (sub) {
       setTimeout(() => {
         if (this.observers.size > 0) {
           this.sub = sub;
+          this.internalPromise = new Promise<T>((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+          });
         } else {
           sub.unsubscribe();
           callback?.();
         }
       });
     }
-    this.sub = null;
   }
 
   // Bound handler functions that can be reused for every internal
@@ -193,12 +200,11 @@ export class Concast<T> extends Observable<T> {
     error: (error: any) => {
       const { sub } = this;
       if (sub !== null) {
+        this.deferredUnsubscribe();
         this.latest = ["error", error];
         this.notify("error", error);
         iterateObserversSafely(this.observers, "error", error);
-        this.deferredUnsubscribe(() => {
-          this.reject(error);
-        });
+        this.reject(error);
       }
     },
 
@@ -212,14 +218,13 @@ export class Concast<T> extends Observable<T> {
         // eventually have been initialized to a non-empty array.
         const value = sources.shift();
         if (!value) {
-          this.deferredUnsubscribe(() => {
-            if (this.latest &&
-              this.latest[0] === "next") {
-              this.resolve(this.latest[1]);
-            } else {
-              this.resolve();
-            }
-          });
+          this.deferredUnsubscribe();
+          if (this.latest &&
+            this.latest[0] === "next") {
+            this.resolve(this.latest[1]);
+          } else {
+            this.resolve();
+          }
           this.notify("complete");
           // We do not store this.latest = ["complete"], because doing so
           // discards useful information about the previous next (or

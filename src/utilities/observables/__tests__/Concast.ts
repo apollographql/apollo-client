@@ -213,7 +213,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
             concast.promise.then(() => false, () => false)
           ]).then(isPending => {
             if (!isPending) {
-              reject("should not have resolved or rejected concast.promise by first next");
+              reject("should not have resolved or rejected concast.promise by first observer.next");
             }
           });
         }

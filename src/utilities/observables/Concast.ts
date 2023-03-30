@@ -164,7 +164,7 @@ export class Concast<T> extends Observable<T> {
   // Delay unsubscribing from the underlying subscription slightly,
   // so that immediately subscribing another observer can keep the
   // subscription active.
-  private nullifySub() {
+  private deferredUnsubscribe(callback?: () => void) {
     const { sub } = this;
     if (sub) {
       setTimeout(() => {
@@ -172,6 +172,7 @@ export class Concast<T> extends Observable<T> {
           this.sub = sub;
         } else {
           sub.unsubscribe();
+          callback?.();
         }
       });
     }
@@ -192,11 +193,12 @@ export class Concast<T> extends Observable<T> {
     error: (error: any) => {
       const { sub } = this;
       if (sub !== null) {
-        this.nullifySub();
         this.latest = ["error", error];
-        this.reject(error);
         this.notify("error", error);
         iterateObserversSafely(this.observers, "error", error);
+        this.deferredUnsubscribe(() => {
+          this.reject(error);
+        });
       }
     },
 
@@ -210,13 +212,14 @@ export class Concast<T> extends Observable<T> {
         // eventually have been initialized to a non-empty array.
         const value = sources.shift();
         if (!value) {
-          this.nullifySub();
-          if (this.latest &&
+          this.deferredUnsubscribe(() => {
+            if (this.latest &&
               this.latest[0] === "next") {
-            this.resolve(this.latest[1]);
-          } else {
-            this.resolve();
-          }
+              this.resolve(this.latest[1]);
+            } else {
+              this.resolve();
+            }
+          });
           this.notify("complete");
           // We do not store this.latest = ["complete"], because doing so
           // discards useful information about the previous next (or

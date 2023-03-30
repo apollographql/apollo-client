@@ -8,6 +8,7 @@ import { Readable } from 'stream';
 import { Observable, Observer, ObservableSubscription } from '../../../utilities/observables/Observable';
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
+import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
 import { ClientParseError } from '../serializeFetchParameter';
@@ -49,6 +50,32 @@ const sampleQueryCustomDirective = gql`
       id
       ... on Stub @deferCustomDirective {
         name
+      }
+    }
+  }
+`;
+
+const sampleSubscription = gql`
+  subscription MySubscription {
+    aNewDieWasCreated {
+      die {
+        roll
+        sides
+        color
+      }
+    }
+  }
+`;
+
+const sampleSubscriptionWithDefer = gql`
+  subscription MySubscription {
+    aNewDieWasCreated {
+      die {
+        roll
+        sides
+        ... on Stub @defer {
+          color
+        }
       }
     }
   }
@@ -1304,205 +1331,495 @@ describe('HttpLink', () => {
       globalThis.TextDecoder = originalTextDecoder;
     });
 
-    const body = [
-      '---',
-      'Content-Type: application/json; charset=utf-8',
-      'Content-Length: 43',
-      '',
-      '{"data":{"stub":{"id":"0"}},"hasNext":true}',
-      '---',
-      'Content-Type: application/json; charset=utf-8',
-      'Content-Length: 58',
-      '',
-      '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"],"extensions":{"timestamp":1633038919}}]}',
-      '-----',
-    ].join("\r\n");
+    describe('@defer', () => {
+      const body = [
+        '---',
+        'Content-Type: application/json; charset=utf-8',
+        'Content-Length: 43',
+        '',
+        '{"data":{"stub":{"id":"0"}},"hasNext":true}',
+        '---',
+        'Content-Type: application/json; charset=utf-8',
+        'Content-Length: 58',
+        '',
+        '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"],"extensions":{"timestamp":1633038919}}]}',
+        '-----',
+      ].join("\r\n");
 
-    it('can handle whatwg stream bodies', (done) => {
-      const stream = new ReadableStream({
-        async start(controller) {
-          const lines = body.split("\r\n");
-          try {
-            for (const line of lines) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
-              controller.enqueue(line + "\r\n");
-            }
-          } finally {
-            controller.close();
-          }
-        },
-      });
-
-      const fetch = jest.fn(async () => ({
-        status: 200,
-        body: stream,
-        headers: new Headers({ 'content-type': 'multipart/mixed' }),
-      }));
-
-      const link = new HttpLink({
-        fetch: fetch as any,
-      });
-
-      let i = 0;
-      execute(link, { query: sampleDeferredQuery }).subscribe(
-        result => {
-          try {
-            if (i === 0) {
-              expect(result).toEqual({
-                data: {
-                  stub: {
-                    id: "0",
-                  },
-                },
-                hasNext: true,
-              });
-            } else if (i === 1) {
-              expect(result).toEqual({
-                incremental: [{
-                  data: {
-                    name: 'stubby',
-                  },
-                  extensions: {
-                    timestamp: 1633038919,
-                  },
-                  path: ['stub'],
-                }],
-                hasNext: false,
-              });
-            }
-
-          } catch (err) {
-            done(err);
-          } finally {
-            i++;
-          }
-        },
-        err => {
-          done(err);
-        },
-        () => {
-          if (i !== 2) {
-            done(new Error("Unexpected end to observable"));
-          }
-
-          done();
-        },
-      );
-    });
-
-    it('can handle node stream bodies', (done) => {
-      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
-
-      const fetch = jest.fn(async () => ({
-        status: 200,
-        body: stream,
-        headers: new Headers({ 'Content-Type': 'multipart/mixed;boundary="-";deferSpec=20220824' }),
-      }));
-      const link = new HttpLink({
-        fetch: fetch as any,
-      });
-
-      let i = 0;
-      execute(link, { query: sampleDeferredQuery }).subscribe(
-        result => {
-          try {
-            if (i === 0) {
-              expect(result).toEqual({
-                data: {
-                  stub: {
-                    id: "0",
-                  },
-                },
-                hasNext: true,
-              });
-            } else if (i === 1) {
-              expect(result).toEqual({
-                incremental: [{
-                  data: {
-                    name: 'stubby',
-                  },
-                  extensions: {
-                    timestamp: 1633038919,
-                  },
-                  path: ['stub'],
-                }],
-                hasNext: false,
-              });
-            }
-
-          } catch (err) {
-            done(err);
-          } finally {
-            i++;
-          }
-        },
-        err => {
-          done(err);
-        },
-        () => {
-          if (i !== 2) {
-            done(new Error("Unexpected end to observable"));
-          }
-
-          done();
-        },
-      );
-    });
-
-    itAsync('sets correct accept header on request with deferred query', (resolve, reject) => {
-      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
-      const fetch = jest.fn(async () => ({
-        status: 200,
-        body: stream,
-        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
-      }));
-      const link = new HttpLink({
-        fetch: fetch as any,
-      });
-      execute(link, {
-        query: sampleDeferredQuery
-      }).subscribe(
-        makeCallback(resolve, reject, () => {
-          expect(fetch).toHaveBeenCalledWith(
-            '/graphql',
-            expect.objectContaining({
-              headers: {
-                "content-type": "application/json",
-                accept: "multipart/mixed; deferSpec=20220824, application/json"
+      it('whatwg stream bodies', (done) => {
+        const stream = new ReadableStream({
+          async start(controller) {
+            const lines = body.split("\r\n");
+            try {
+              for (const line of lines) {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                controller.enqueue(line + "\r\n");
               }
-            })
-          )
-        }),
-      );
+            } finally {
+              controller.close();
+            }
+          },
+        });
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'content-type': 'multipart/mixed' }),
+        }));
+
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleDeferredQuery }).subscribe(
+          result => {
+            try {
+              if (i === 0) {
+                expect(result).toEqual({
+                  data: {
+                    stub: {
+                      id: "0",
+                    },
+                  },
+                  hasNext: true,
+                });
+              } else if (i === 1) {
+                expect(result).toEqual({
+                  incremental: [{
+                    data: {
+                      name: 'stubby',
+                    },
+                    extensions: {
+                      timestamp: 1633038919,
+                    },
+                    path: ['stub'],
+                  }],
+                  hasNext: false,
+                });
+              }
+
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          err => {
+            done(err);
+          },
+          () => {
+            if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+
+            done();
+          },
+        );
+      });
+
+      it('node stream bodies', (done) => {
+        const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed;boundary="-";deferSpec=20220824' }),
+        }));
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleDeferredQuery }).subscribe(
+          result => {
+            try {
+              if (i === 0) {
+                expect(result).toEqual({
+                  data: {
+                    stub: {
+                      id: "0",
+                    },
+                  },
+                  hasNext: true,
+                });
+              } else if (i === 1) {
+                expect(result).toEqual({
+                  incremental: [{
+                    data: {
+                      name: 'stubby',
+                    },
+                    extensions: {
+                      timestamp: 1633038919,
+                    },
+                    path: ['stub'],
+                  }],
+                  hasNext: false,
+                });
+              }
+
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          err => {
+            done(err);
+          },
+          () => {
+            if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+
+            done();
+          },
+        );
+      });
+
+      itAsync('sets correct accept header on request with deferred query', (resolve, reject) => {
+        const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+        execute(link, {
+          query: sampleDeferredQuery
+        }).subscribe(
+          makeCallback(resolve, reject, () => {
+            expect(fetch).toHaveBeenCalledWith(
+              '/graphql',
+              expect.objectContaining({
+                headers: {
+                  "content-type": "application/json",
+                  accept: "multipart/mixed;deferSpec=20220824,application/json"
+                }
+              })
+            )
+          }),
+        );
+      });
+
+      // ensure that custom directives beginning with '@defer..' do not trigger
+      // custom accept header for multipart responses
+      itAsync('sets does not set accept header on query with custom directive begging with @defer', (resolve, reject) => {
+        const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+        execute(link, {
+          query: sampleQueryCustomDirective
+        }).subscribe(
+          makeCallback(resolve, reject, () => {
+            expect(fetch).toHaveBeenCalledWith(
+              '/graphql',
+              expect.objectContaining({
+                headers: {
+                  accept: "*/*",
+                  "content-type": "application/json",
+                }
+              })
+            )
+          }),
+        );
+      });
     });
 
-    // ensure that custom directives beginning with '@defer..' do not trigger
-    // custom accept header for multipart responses
-    itAsync('sets does not set accept header on query with custom directive begging with @defer', (resolve, reject) => {
-      const stream = Readable.from(body.split("\r\n").map((line) => line + "\r\n"));
-      const fetch = jest.fn(async () => ({
-        status: 200,
-        body: stream,
-        headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
-      }));
-      const link = new HttpLink({
-        fetch: fetch as any,
-      });
-      execute(link, {
-        query: sampleQueryCustomDirective
-      }).subscribe(
-        makeCallback(resolve, reject, () => {
-          expect(fetch).toHaveBeenCalledWith(
-            '/graphql',
-            expect.objectContaining({
-              headers: {
-                accept: "*/*",
-                "content-type": "application/json",
+    describe('subscriptions', () => {
+      const subscriptionsBody = [
+        '---',
+        'Content-Type: application/json',
+        '',
+        '{}',
+        '---',
+        'Content-Type: application/json',
+        '',
+        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}}}',
+        '---',
+        'Content-Type: application/json',
+        '',
+        '{}',
+        '---',
+        'Content-Type: application/json',
+        '',
+        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"blue","roll":2,"sides":5}}}}}',
+        '-----',
+      ].join("\r\n");
+
+      const subscriptionsBodyError = [
+        '---',
+        'Content-Type: application/json',
+        '',
+        '{}',
+        '---',
+        'Content-Type: application/json',
+        '',
+        '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}}}',
+        '---',
+        'Content-Type: application/json',
+        '',
+        '{"payload": null, "errors": [{"message":"Error field","extensions":{"code":"INTERNAL_SERVER_ERROR"}}]}',
+        '-----',
+      ].join("\r\n");
+
+      it('whatwg stream bodies', (done) => {
+        const stream = new ReadableStream({
+          async start(controller) {
+            const lines = subscriptionsBody.split("\r\n");
+            try {
+              for (const line of lines) {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                controller.enqueue(line + "\r\n");
               }
-            })
-          )
-        }),
-      );
+            } finally {
+              controller.close();
+            }
+          },
+        });
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleSubscription }).subscribe(
+          result => {
+            try {
+              if (i === 0) {
+                expect(result).toEqual({
+                  data: {
+                    aNewDieWasCreated: {
+                      die: {
+                        color: "red",
+                        roll: 1,
+                        sides: 4
+                      }
+                    }
+                  }
+                });
+              } else if (i === 1) {
+                expect(result).toEqual({
+                  data: {
+                    aNewDieWasCreated: {
+                      die: {
+                        color: 'blue',
+                        roll: 2,
+                        sides: 5
+                      }
+                    }
+                  }
+                });
+              }
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          err => {
+            done(err);
+          },
+          () => {
+            if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+            done();
+          },
+        );
+      });
+
+      test('whatwg stream bodies, warns if combined with @defer', () => {
+        const stream = new ReadableStream({
+          async start(controller) {
+            const lines = subscriptionsBody.split("\r\n");
+            try {
+              for (const line of lines) {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                controller.enqueue(line + "\r\n");
+              }
+            } finally {
+              controller.close();
+            }
+          },
+        });
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        const warningSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        execute(link, { query: sampleSubscriptionWithDefer });
+        expect(warningSpy).toHaveBeenCalledTimes(1);
+        expect(warningSpy).toHaveBeenCalledWith("Multipart-subscriptions do not support @defer");
+        warningSpy.mockRestore();
+      });
+
+      it('node stream bodies', (done) => {
+        const stream = Readable.from(subscriptionsBody.split("\r\n").map((line) => line + "\r\n"));
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleSubscription }).subscribe(
+          result => {
+            try {
+              if (i === 0) {
+                expect(result).toEqual({
+                  data: {
+                    aNewDieWasCreated: {
+                      die: {
+                        color: "red",
+                        roll: 1,
+                        sides: 4
+                      }
+                    }
+                  }
+                });
+              } else if (i === 1) {
+                expect(result).toEqual({
+                  data: {
+                    aNewDieWasCreated: {
+                      die: {
+                        color: 'blue',
+                        roll: 2,
+                        sides: 5
+                      }
+                    }
+                  }
+                });
+              }
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          err => {
+            done(err);
+          },
+          () => {
+            if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+            done();
+          },
+        );
+      });
+
+      it('node stream bodies, with errors', (done) => {
+        const stream = Readable.from(subscriptionsBodyError.split("\r\n").map((line) => line + "\r\n"));
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleSubscription }).subscribe(
+          result => {
+            try {
+              if (i === 0) {
+                expect(result).toEqual({
+                  data: {
+                    aNewDieWasCreated: {
+                      die: {
+                        color: "red",
+                        roll: 1,
+                        sides: 4
+                      }
+                    }
+                  }
+                });
+              } else if (i === 1) {
+                expect(result).toEqual({
+                  extensions: {
+                    [PROTOCOL_ERRORS_SYMBOL]: [
+                      {
+                        extensions: {
+                          code: "INTERNAL_SERVER_ERROR",
+                        },
+                        message: "Error field"
+                      }
+                    ]
+                  }
+                });
+              }
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          err => {
+            done(err);
+          },
+          () => {
+            if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+            done();
+          },
+        );
+      });
+
+      itAsync('sets correct accept header on request with subscription', (resolve, reject) => {
+        const stream = Readable.from(subscriptionsBody.split("\r\n").map((line) => line + "\r\n"));
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed' }),
+        }));
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+        execute(link, {
+          query: sampleSubscription
+        }).subscribe(
+          makeCallback(resolve, reject, () => {
+            expect(fetch).toHaveBeenCalledWith(
+              '/graphql',
+              expect.objectContaining({
+                headers: {
+                  "content-type": "application/json",
+                  accept: "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json"
+                }
+              })
+            )
+          }),
+        );
+      });
     });
   });
 });

@@ -36,10 +36,7 @@ export function isExecutionPatchResult<T>(
 export function isApolloPayloadResult(
   value: unknown
 ): value is ApolloPayloadResult {
-  return (
-    isNonNullObject(value) &&
-    ("payload" in value || ("done" in value && typeof value.done === "boolean"))
-  );
+  return isNonNullObject(value) && "payload" in value;
 }
 
 export function mergeIncrementalData<TData extends object>(

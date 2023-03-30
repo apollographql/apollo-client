@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
+import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider, resetApolloContext } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
@@ -928,5 +929,71 @@ describe('useSubscription Hook', () => {
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     warningSpy.mockRestore();
+  });
+
+  describe('multipart subscriptions', () => {
+    it('should handle a simple subscription properly', async () => {
+      const subscription = gql`
+        subscription ANewDieWasCreated {
+          aNewDieWasCreated {
+            die {
+              color
+              roll
+              sides
+            }
+          }
+        }
+      `;
+      const results = [
+        {
+          result: {
+            data: null,
+            extensions: {
+              [PROTOCOL_ERRORS_SYMBOL]: [
+                {
+                  message: 'cannot read message from websocket',
+                  extensions: [
+                    {
+                      code: "WEBSOCKET_MESSAGE_ERROR"
+                    }
+                  ],
+                },
+              ],
+            }
+          },
+        },
+      ]
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link,
+        cache: new Cache({ addTypename: false })
+      });
+      let renderCount = 0;
+
+      const { result } = renderHook(
+        () => {
+          renderCount++;
+          return useSubscription(subscription)
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+      expect(result.current.loading).toBe(true);
+      expect(result.current.error).toBe(undefined);
+      expect(result.current.data).toBe(undefined);
+      link.simulateResult(results[0]);
+      expect(renderCount).toBe(1);
+      await waitFor(() => {
+        expect(result.current.error).toBeInstanceOf(ApolloError);
+      }, { interval: 1 });
+      expect(result.current.error!.protocolErrors[0].message).toBe(
+        "cannot read message from websocket"
+      );
+    });
   });
 });

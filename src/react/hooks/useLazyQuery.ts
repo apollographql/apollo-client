@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { OperationVariables } from '../../core';
 import { mergeOptions } from '../../utilities';
@@ -27,8 +27,6 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<TData, TVariables>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const abortControllersRef = useRef(new Set<AbortController>());
-
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
   const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
 
@@ -71,20 +69,9 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
 
   Object.assign(result, eagerMethods);
 
-  useEffect(() => {
-    return () => {
-      abortControllersRef.current.forEach((controller) => {
-        controller.abort();
-      });
-    }
-  }, [])
-
   const execute = useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
-    const controller = new AbortController();
-    abortControllersRef.current.add(controller);
-
     execOptionsRef.current = executeOptions ? {
       ...executeOptions,
       fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
@@ -93,16 +80,12 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
     };
 
     const promise = internalState
-      .asyncUpdate(controller.signal) // Like internalState.forceUpdate, but returns a Promise.
-      .then(queryResult => {
-        abortControllersRef.current.delete(controller);
+      .asyncUpdate() // Like internalState.forceUpdate, but returns a Promise.
+      .then(queryResult => Object.assign(queryResult, eagerMethods));
 
-        return Object.assign(queryResult, eagerMethods);
-      });
-
-    promise.catch(() => {
-      abortControllersRef.current.delete(controller);
-    });
+    // Because the return value of `useLazyQuery` is usually floated, we need
+    // to catch the promise to prevent unhandled rejections.
+    promise.catch(() => {});
 
     return promise;
   }, []);

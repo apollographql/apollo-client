@@ -1272,6 +1272,66 @@ describe('useLazyQuery Hook', () => {
     })
   });
 
+  it('uses the most recent options when the hook rerenders before execution', async () => {
+    interface Data {
+      user: { id: string, name: string }
+    }
+
+    interface Variables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { user: { id: '1', name: 'John Doe' }}},
+        delay: 30
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { user: { id: '2', name: 'Jane Doe' }}},
+        delay: 20
+      },
+    ]
+
+    const { result, rerender } = renderHook(
+      ({ id }) => useLazyQuery(query, { variables: { id } }), 
+      {
+        initialProps: { id: '1' },
+        wrapper: ({ children }) =>
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+      }
+    );
+
+    rerender({ id: '2' });
+
+    const [execute] = result.current;
+
+    let promise: Promise<QueryResult<Data, Variables>>;
+    act(() => {
+      promise = execute();
+    });
+
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual(mocks[1].result.data);
+    })
+
+    await expect(promise!).resolves.toMatchObject(
+      { data: mocks[1].result.data }
+    );
+  });
+
   describe("network errors", () => {
     async function check(errorPolicy: ErrorPolicy) {
       const networkError = new Error("from the network");

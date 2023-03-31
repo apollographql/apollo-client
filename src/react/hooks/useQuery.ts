@@ -106,11 +106,9 @@ class InternalState<TData, TVariables extends OperationVariables> {
       Object.assign(this, { query: options.query })
     }
 
-    const watchQueryOptions = this.createWatchQueryOptions(
+    this.watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options,
     );
-
-    this.watchQueryOptions = watchQueryOptions;
 
     const concast = this.observable.reobserveAsConcast(
       this.getObsQueryOptions()

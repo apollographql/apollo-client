@@ -1160,6 +1160,118 @@ describe('useLazyQuery Hook', () => {
     await expect(promise2!).resolves.toMatchObject(expectedResult);
   });
 
+  it('resolves each execution of the query with the appropriate result', async () => {
+    interface Data {
+      user: { id: string, name: string }
+    }
+
+    interface Variables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { user: { id: '1', name: 'John Doe' }}},
+        delay: 20
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { user: { id: '2', name: 'Jane Doe' }}},
+        delay: 20
+      },
+    ]
+
+    const { result } = renderHook(() => useLazyQuery(query), {
+      wrapper: ({ children }) =>
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+    });
+
+    const [execute] = result.current;
+
+    await act(async () => {
+      const result1 = await execute({ variables: { id: '1' }});
+      const result2 = await execute({ variables: { id: '2' }});
+
+      expect(result1).toMatchObject({
+        ...mocks[0].result,
+        loading: false ,
+        called: true,
+      });
+
+      expect(result2).toMatchObject({
+        ...mocks[1].result,
+        loading: false ,
+        called: true,
+      });
+    });
+  });
+
+  it('renders hook with most recent execution result when called multiple times', async () => {
+    interface Data {
+      user: { id: string, name: string }
+    }
+
+    interface Variables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { user: { id: '1', name: 'John Doe' }}},
+        delay: 30
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { user: { id: '2', name: 'Jane Doe' }}},
+        delay: 20
+      },
+    ]
+
+    const { result } = renderHook(() => useLazyQuery(query), {
+      wrapper: ({ children }) =>
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+    });
+
+    const [execute] = result.current;
+
+    act(() => {
+      execute({ variables: { id: '1' }});
+      execute({ variables: { id: '2' }});
+    });
+
+    await waitFor(() => {
+      expect(result.current[1]).toMatchObject({
+        ...mocks[1].result,
+        loading: false,
+        called: true,
+      })
+    })
+  });
+
   describe("network errors", () => {
     async function check(errorPolicy: ErrorPolicy) {
       const networkError = new Error("from the network");

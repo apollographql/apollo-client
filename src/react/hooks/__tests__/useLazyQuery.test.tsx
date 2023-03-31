@@ -1285,6 +1285,7 @@ describe('useLazyQuery Hook', () => {
     );
   });
 
+  // https://github.com/apollographql/apollo-client/issues/10198
   it('uses the most recent query document when the hook rerenders before execution', async () => {
     const query = gql`
       query DummyQuery {

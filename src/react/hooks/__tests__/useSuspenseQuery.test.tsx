@@ -1289,7 +1289,7 @@ describe('useSuspenseQuery', () => {
 
     const { result, rerender, renders } = renderSuspenseHook(
       ({ queryKey }) =>
-        // itentionally use a fetch policy that will execute a network request
+        // intentionally use a fetch policy that will execute a network request
         useSuspenseQuery(query, { queryKey, fetchPolicy: 'network-only' }),
       { mocks, initialProps: { queryKey: ['first'] } }
     );
@@ -1346,7 +1346,7 @@ describe('useSuspenseQuery', () => {
 
     const { result, rerender, renders } = renderSuspenseHook(
       ({ queryKey }) =>
-        // itentionally use a fetch policy that will execute a network request
+        // intentionally use a fetch policy that will execute a network request
         useSuspenseQuery(query, { queryKey, fetchPolicy: 'network-only' }),
       { mocks, initialProps: { queryKey: ['greeting', 1] } }
     );

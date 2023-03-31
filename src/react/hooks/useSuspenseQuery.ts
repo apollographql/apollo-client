@@ -25,6 +25,7 @@ import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { QuerySubscription } from '../cache/QuerySubscription';
+import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
   TData = any,
@@ -73,14 +74,12 @@ export function useSuspenseQuery_experimental<
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options });
   const { returnPartialData = false, variables } = watchQueryOptions;
-  const { suspensePolicy = 'always' } = options;
+  const { suspensePolicy = 'always', queryKey = [] } = options;
   const shouldSuspend =
     suspensePolicy === 'always' || !didPreviouslySuspend.current;
 
   const subscription = suspenseCache.getSubscription(
-    client,
-    query,
-    variables,
+    [client, query, canonicalStringify(variables)].concat(queryKey),
     () => client.watchQuery(watchQueryOptions)
   );
 

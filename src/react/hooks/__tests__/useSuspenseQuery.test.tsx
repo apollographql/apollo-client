@@ -1153,6 +1153,238 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('allows custom query so two components that share same query and variables do not interfere with each other', async () => {
+    interface Data {
+      todo: {
+        id: number;
+        name: string;
+        completed: boolean;
+      };
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query GetTodo($id: ID!) {
+        todo(id: $id) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: 1 } },
+        result: {
+          data: { todo: { id: 1, name: 'Take out trash', completed: false } },
+        },
+        delay: 20,
+      },
+      // refetch
+      {
+        request: { query, variables: { id: 1 } },
+        result: {
+          data: { todo: { id: 1, name: 'Take out trash', completed: true } },
+        },
+        delay: 20,
+      },
+    ];
+
+    const user = userEvent.setup();
+    const suspenseCache = new SuspenseCache();
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function Spinner({ name }: { name: string }) {
+      return <span>Loading {name}</span>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Suspense fallback={<Spinner name="first" />}>
+            <Todo name="first" />
+          </Suspense>
+          <Suspense fallback={<Spinner name="second" />}>
+            <Todo name="second" />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function Todo({ name }: { name: string }) {
+      const { data, refetch } = useSuspenseQuery(query, {
+        // intentionally use no-cache to allow us to verify each suspense
+        // component is independent of each other
+        fetchPolicy: 'no-cache',
+        variables: { id: 1 },
+        queryKey: [name],
+      });
+
+      return (
+        <div>
+          <button onClick={() => refetch()}>Refetch {name}</button>
+          <span data-testid={[name, 'data'].join('.')}>
+            {data.todo.name} {data.todo.completed && '(completed)'}
+          </span>
+        </div>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByText('Loading first')).toBeInTheDocument();
+    expect(screen.getByText('Loading second')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('first.data')).toHaveTextContent(
+        'Take out trash'
+      );
+    });
+
+    expect(screen.getByTestId('second.data')).toHaveTextContent(
+      'Take out trash'
+    );
+
+    await act(() => user.click(screen.getByText('Refetch first')));
+
+    // Ensure that refetching the first todo does not update the second todo
+    // as well
+    expect(screen.getByText('Loading first')).toBeInTheDocument();
+    expect(screen.queryByText('Loading second')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('first.data')).toHaveTextContent(
+        'Take out trash (completed)'
+      );
+    });
+
+    // Ensure that refetching the first todo did not affect the second
+    expect(screen.getByTestId('second.data')).toHaveTextContent(
+      'Take out trash'
+    );
+  });
+
+  it('suspends and refetches data when changing query keys', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello first fetch' } },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello second fetch' } },
+        delay: 20,
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ queryKey }) =>
+        // itentionally use a fetch policy that will execute a network request
+        useSuspenseQuery(query, { queryKey, fetchPolicy: 'network-only' }),
+      { mocks, initialProps: { queryKey: ['first'] } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ queryKey: ['second'] });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('suspends and refetches data when part of the query key changes', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello first fetch' } },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello second fetch' } },
+        delay: 20,
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ queryKey }) =>
+        // itentionally use a fetch policy that will execute a network request
+        useSuspenseQuery(query, { queryKey, fetchPolicy: 'network-only' }),
+      { mocks, initialProps: { queryKey: ['greeting', 1] } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ queryKey: ['greeting', 2] });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('responds to cache updates after changing variables', async () => {
     const { query, mocks } = useVariablesQueryCase();
 

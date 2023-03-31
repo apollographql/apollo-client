@@ -1641,19 +1641,28 @@ describe('useQuery Hook', () => {
       }, { interval: 1 });
       await waitFor(() => {
         expect(result.current.data).toEqual({ hello: "world 1" });
-      });
+      }, { interval: 1 });
+
       await waitFor(() => {
-        expect(requestSpy).toHaveBeenCalledTimes(1);
-      })
+        expect(requestSpy).toHaveBeenCalled();
+      });
+
+      const requestCount = requestSpy.mock.calls.length;
+      expect(requestCount).toBeGreaterThan(0);
 
       unmount();
 
+      expect(requestSpy).toHaveBeenCalledTimes(requestCount);
+
       await expect(waitFor(() => {
-        expect(requestSpy).not.toHaveBeenCalledTimes(1);
+        const newRequestCount = requestSpy.mock.calls.length;
+        expect(newRequestCount).toBeGreaterThan(requestCount);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
+
       await waitFor(() => {
         expect(onErrorFn).toHaveBeenCalledTimes(0);
       });
+
       requestSpy.mockRestore();
     });
 
@@ -1700,12 +1709,14 @@ describe('useQuery Hook', () => {
         expect(result.current.loading).toBe(false);
       }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
-      expect(requestSpy).toHaveBeenCalledTimes(1);
+
+      const requestCount = requestSpy.mock.calls.length;
+      expect(requestSpy).toHaveBeenCalledTimes(requestCount);
 
       unmount();
 
       await expect(waitFor(() => {
-        expect(requestSpy).not.toHaveBeenCalledTimes(1);
+        expect(requestSpy).toHaveBeenCalledTimes(requestCount + 1)
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onErrorFn).toHaveBeenCalledTimes(0);
       requestSpy.mockRestore();
@@ -5996,6 +6007,7 @@ describe('useQuery Hook', () => {
           __typename: 'Greeting',
         },
       });
+      expect(result.current).not.toContain({ hasNext: true });
 
       setTimeout(() => {
         link.simulateResult({

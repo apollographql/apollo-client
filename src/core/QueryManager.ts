@@ -32,7 +32,7 @@ import {
   isNonNullObject,
 } from '../utilities';
 import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError } from '../errors';
+import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -61,6 +61,7 @@ import {
   shouldWriteResult,
   CacheWriteBehavior,
 } from './QueryInfo';
+import { PROTOCOL_ERRORS_SYMBOL, ApolloErrorOptions } from '../errors';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -936,10 +937,17 @@ export class QueryManager<TStore> {
           this.broadcastQueries();
         }
 
-        if (graphQLResultHasError(result)) {
-          throw new ApolloError({
-            graphQLErrors: result.errors,
-          });
+        const hasErrors = graphQLResultHasError(result);
+        const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
+        if (hasErrors || hasProtocolErrors) {
+          const errors: ApolloErrorOptions = {};
+          if (hasErrors) {
+            errors.graphQLErrors = result.errors;
+          }
+          if (hasProtocolErrors) {
+            errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
+          }
+          throw new ApolloError(errors);
         }
 
         return result;
@@ -1235,7 +1243,7 @@ export class QueryManager<TStore> {
       setTimeout(() => concast.cancel(reason));
     });
 
-    let concast: Concast<ApolloQueryResult<TData>>, 
+    let concast: Concast<ApolloQueryResult<TData>>,
         containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no

@@ -1201,16 +1201,16 @@ describe('useLazyQuery Hook', () => {
     const [execute] = result.current;
 
     await act(async () => {
-      const result1 = await execute({ variables: { id: '1' }});
-      const result2 = await execute({ variables: { id: '2' }});
+      const promise1 = execute({ variables: { id: '1' }});
+      const promise2 = execute({ variables: { id: '2' }});
 
-      expect(result1).toMatchObject({
+      await expect(promise1).resolves.toMatchObject({
         ...mocks[0].result,
         loading: false ,
         called: true,
       });
 
-      expect(result2).toMatchObject({
+      await expect(promise2).resolves.toMatchObject({
         ...mocks[1].result,
         loading: false ,
         called: true,

@@ -51,7 +51,11 @@ export function isApolloError(err: Error): err is ApolloError {
 // If the error message has already been set through the
 // constructor or otherwise, this function is a nop.
 const generateErrorMessage = (err: ApolloError) => {
-  const errors = [...err.graphQLErrors, ...err.clientErrors];
+  const errors = [
+    ...err.graphQLErrors,
+    ...err.clientErrors,
+    ...err.protocolErrors
+  ];
   if (err.networkError) errors.push(err.networkError);
   return errors
     // The rest of the code sometimes unsafely types non-Error objects as GraphQLErrors

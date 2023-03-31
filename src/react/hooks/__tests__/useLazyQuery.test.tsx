@@ -1332,6 +1332,50 @@ describe('useLazyQuery Hook', () => {
     );
   });
 
+  it('uses the most recent query document when the hook rerenders before execution', async () => {
+    const query = gql`
+      query DummyQuery {
+        shouldNotBeUsed
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: 'Greetings' } },
+        delay: 20
+      },
+    ]
+
+    const { result, rerender } = renderHook(
+      ({ query }) => useLazyQuery(query), 
+      {
+        initialProps: { query },
+        wrapper: ({ children }) =>
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+      }
+    );
+
+    rerender({ query: helloQuery });
+
+    const [execute] = result.current;
+
+    let promise: Promise<QueryResult<{ hello: string }>>;
+    act(() => {
+      promise = execute();
+    });
+
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({ hello: 'Greetings' });
+    })
+
+    await expect(promise!).resolves.toMatchObject(
+      { data: { hello: 'Greetings' } }
+    );
+  });
+
   describe("network errors", () => {
     async function check(errorPolicy: ErrorPolicy) {
       const networkError = new Error("from the network");

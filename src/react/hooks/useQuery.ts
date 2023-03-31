@@ -102,6 +102,10 @@ class InternalState<TData, TVariables extends OperationVariables> {
   }
 
   executeQuery(options: QueryHookOptions<TData, TVariables>) {
+    if (options.query) {
+      Object.assign(this, { query: options.query })
+    }
+
     const watchQueryOptions = this.createWatchQueryOptions(
       this.queryHookOptions = options,
     );

@@ -29,13 +29,16 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
 ): LazyQueryResultTuple<TData, TVariables> {
   const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
   const optionsRef = useRef<LazyQueryHookOptions<TData, TVariables>>();
+  const queryRef = useRef<DocumentNode | TypedDocumentNode<TData, TVariables>>();
   const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
+  const document = merged?.query ?? query;
 
   optionsRef.current = options;
+  queryRef.current = document;
 
   const internalState = useInternalState<TData, TVariables>(
     useApolloClient(options && options.client),
-    merged?.query ?? query
+    document
   );
 
   const useQueryResult = internalState.useQuery({
@@ -82,11 +85,13 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
       fetchPolicy: initialFetchPolicy,
     };
 
+    const options = mergeOptions(optionsRef.current, {
+      query: queryRef.current,
+      ...execOptionsRef.current,
+    })
+
     const promise = internalState
-      .executeQuery({
-        ...mergeOptions(optionsRef.current, execOptionsRef.current),
-        skip: false,
-      }) 
+      .executeQuery({ ...options, skip: false }) 
       .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
     // Because the return value of `useLazyQuery` is usually floated, we need

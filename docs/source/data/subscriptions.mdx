@@ -37,7 +37,7 @@ You must use the same protocol as the GraphQL endpoint you're communicating with
 
 ### WebSocket subprotocols
 
-The first popular JavaScript library to implement subscriptions over WebSocket is called `subscriptions-transport-ws`. **This library is no longer actively maintained.** Its successor is a library called `graphql-ws`. The two libraries _do not use the same WebSocket subprotocol_, so you need to make sure that your server and clients all use the same library.
+The first popular JavaScript library to implement subscriptions over WebSocket is called `subscriptions-transport-ws`. **This library is no longer actively maintained.** Its successor is a library called `graphql-ws`. These two libraries _do not use the same WebSocket subprotocol_, so you need to use the same subprotocol that your GraphQL endpoint uses.
 
 The [WebSocket setup](#websocket-setup) section below uses `graphql-ws`. If your endpoint uses `subscriptions-transport-ws`, see [this section](#the-older-subscriptions-transport-ws-library) for differences in configuration.
 

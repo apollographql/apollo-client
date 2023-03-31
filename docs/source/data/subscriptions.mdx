@@ -45,7 +45,9 @@ Apollo Client supports both `graphql-ws` and `subscriptions-transport-ws`. We re
 
 ### HTTP
 
-To use Apollo Client with a backend that supports multipart subscriptions over HTTP, no additional client configuration is required. Apollo Client automatically sends the required headers with the request if the terminating `HTTPLink` is passed a subscription operation.
+To use Apollo Client with a GraphQL endpoint that supports [multipart subscriptions over HTTP](https://github.com/graphql/graphql-over-http/blob/main/rfcs/IncrementalDelivery.md), make sure you're using version `3.7.11` or later.
+
+Aside from updating your client version, no additional configuration is required! Apollo Client automatically sends the required headers with the request if the terminating `HTTPLink` is passed a subscription operation.
 
 ## Defining a subscription
 

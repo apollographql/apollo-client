@@ -1160,7 +1160,8 @@ describe('useLazyQuery Hook', () => {
     await expect(promise2!).resolves.toMatchObject(expectedResult);
   });
 
-  it('resolves each execution of the query with the appropriate result', async () => {
+  // https://github.com/apollographql/apollo-client/issues/9755
+  it('resolves each execution of the query with the appropriate result and renders with the result from the latest execution', async () => {
     interface Data {
       user: { id: string, name: string }
     }
@@ -1216,60 +1217,12 @@ describe('useLazyQuery Hook', () => {
         called: true,
       });
     });
-  });
 
-  it('renders hook with most recent execution result when called multiple times', async () => {
-    interface Data {
-      user: { id: string, name: string }
-    }
-
-    interface Variables {
-      id: string
-    }
-
-    const query: TypedDocumentNode<Data, Variables> = gql`
-      query UserQuery($id: ID!) {
-        user(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: { data: { user: { id: '1', name: 'John Doe' }}},
-        delay: 30
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: { data: { user: { id: '2', name: 'Jane Doe' }}},
-        delay: 20
-      },
-    ]
-
-    const { result } = renderHook(() => useLazyQuery(query), {
-      wrapper: ({ children }) =>
-        <MockedProvider mocks={mocks}>
-          {children}
-        </MockedProvider>
+    expect(result.current[1]).toMatchObject({
+      ...mocks[1].result,
+      loading: false,
+      called: true,
     });
-
-    const [execute] = result.current;
-
-    act(() => {
-      execute({ variables: { id: '1' }});
-      execute({ variables: { id: '2' }});
-    });
-
-    await waitFor(() => {
-      expect(result.current[1]).toMatchObject({
-        ...mocks[1].result,
-        loading: false,
-        called: true,
-      })
-    })
   });
 
   it('uses the most recent options when the hook rerenders before execution', async () => {

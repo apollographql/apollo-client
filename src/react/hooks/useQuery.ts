@@ -270,12 +270,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // this.watchQueryOptions elsewhere.
     const currentWatchQueryOptions = this.watchQueryOptions;
 
-    // To force this equality test to "fail," thereby reliably triggering
-    // observable.reobserve, add any current WatchQueryOptions object(s) you
-    // want to be ignored to this.optionsToIgnoreOnce. A similar effect could be
-    // achieved by nullifying this.watchQueryOptions so the equality test
-    // immediately fails because currentWatchQueryOptions is null, but this way
-    // we can promise a truthy this.watchQueryOptions at all times.
     if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
       this.watchQueryOptions = watchQueryOptions;
 

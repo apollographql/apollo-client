@@ -1,5 +1,28 @@
 # @apollo/client
 
+## 3.7.11
+
+### Patch Changes
+
+- [#10586](https://github.com/apollographql/apollo-client/pull/10586) [`4175af594`](https://github.com/apollographql/apollo-client/commit/4175af59419dbb698c32c074f44229f3a5b3b83d) Thanks [@alessbell](https://github.com/alessbell)! - Improve WebSocket error handling for generic `Event` received on error. For more information see [https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/error_event](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/error_event).
+
+- [#10411](https://github.com/apollographql/apollo-client/pull/10411) [`152baac34`](https://github.com/apollographql/apollo-client/commit/152baac343b8b68c7a2d4691d5dc60d9e43e62bb) Thanks [@lovasoa](https://github.com/lovasoa)! - Simplify error message generation and make 'undefined' an impossible message string.
+
+- [#10592](https://github.com/apollographql/apollo-client/pull/10592) [`cdb98ae08`](https://github.com/apollographql/apollo-client/commit/cdb98ae082ae4c7da6cd6a0fd5ad8457810fceda) Thanks [@alessbell](https://github.com/alessbell)! - Adds support for multipart subscriptions in `HttpLink`.
+
+- [#10698](https://github.com/apollographql/apollo-client/pull/10698) [`38508a251`](https://github.com/apollographql/apollo-client/commit/38508a251423057fd8a0df50230f50e0a5dde5fd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Changes the behavior of `useLazyQuery` introduced in [#10427](https://github.com/apollographql/apollo-client/pull/10427) where unmounting a component before a query was resolved would reject the promise with an abort error. Instead, the promise will now resolve naturally with the result from the request.
+
+  Other notable fixes:
+
+  - Kicking off multiple requests in parallel with the execution function will now ensure each returned promise is resolved with the data from its request. Previously, each promise was resolved with data from the last execution.
+  - Re-rendering `useLazyQuery` with a different query document will now ensure the execution function uses the updated query document. Previously, only the query document rendered the first time would be used for the request.
+
+- [#10660](https://github.com/apollographql/apollo-client/pull/10660) [`364bee98f`](https://github.com/apollographql/apollo-client/commit/364bee98fe193a7915664c1a5b206fd52793f85a) Thanks [@alessbell](https://github.com/alessbell)! - Upgrades TypeScript to v5. This change is fully backward-compatible and transparent to users.
+
+- [#10597](https://github.com/apollographql/apollo-client/pull/10597) [`8fb9d190d`](https://github.com/apollographql/apollo-client/commit/8fb9d190dbf48147412517643e3e425a7d48c49c) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where an incoming cache update could prevent future updates from the active link.
+
+- [#10629](https://github.com/apollographql/apollo-client/pull/10629) [`02605bb3c`](https://github.com/apollographql/apollo-client/commit/02605bb3c9e148bf87a6e52b4a9ecc7d523ef9f6) Thanks [@phryneas](https://github.com/phryneas)! - `useQuery`: delay unsubscribe to fix race conditions
+
 ## 3.7.10
 
 ### Patch Changes

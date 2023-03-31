@@ -61,17 +61,15 @@ export class GraphQLWsLink extends ApolloLink {
             if (err instanceof Error) {
               return observer.error(err);
             }
-            if (isLikeCloseEvent(err) || isLikeErrorEvent(err)) {
-              let reason = '';
-              let code = '';
-
-              if (isLikeCloseEvent(err)) {
-                reason = ` ${err.reason}`;
-                code = ` with event ${err.code}`;
-              }
+            const likeClose = isLikeCloseEvent(err);
+            if (likeClose || isLikeErrorEvent(err)) {
               return observer.error(
                 // reason will be available on clean closes
-                new Error(`Socket closed${code}${reason}`)
+                new Error(`Socket closed${
+                  likeClose ? ` with event ${err.code}` : ""
+                }${
+                  likeClose ? ` ${err.reason}` : ""
+                }`)
               );
             }
 

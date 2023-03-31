@@ -33,6 +33,8 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
   const document = merged?.query ?? query;
 
+  // Use refs to track options and the used query to ensure the `execute` 
+  // function remains referentially stable between renders.
   optionsRef.current = merged;
   queryRef.current = document;
 

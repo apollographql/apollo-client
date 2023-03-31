@@ -33,7 +33,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
   const document = merged?.query ?? query;
 
-  optionsRef.current = options;
+  optionsRef.current = merged;
   queryRef.current = document;
 
   const internalState = useInternalState<TData, TVariables>(

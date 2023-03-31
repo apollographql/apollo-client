@@ -110,6 +110,23 @@ By default, the instance that's passed down via context is used, but you can pro
 </tr>
 
 <tr>
+<td>
+
+###### `queryKey`
+
+`any[]`
+</td>
+
+<td>
+
+A unique identifier for the query. Each item in the array must be a stable identifier to prevent infinite fetches.
+
+This is useful when using the same query and variables combination in more than one component, otherwise the components may clobber each other. This can also be used to force the query to re-evaluate fresh.
+
+</td>
+</tr>
+
+<tr>
 <td colspan="2">
 
 **Caching options**
@@ -135,23 +152,6 @@ the `cache-first`, `network-only`, `no-cache`, and `cache-and-network` fetch
 policies.
 
 The default value is `cache-first`.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `nextFetchPolicy`
-
-`SuspenseQueryHookFetchPolicy`
-</td>
-
-<td>
-
-Specifies the [`fetchPolicy`](#fetchpolicy) to use for all executions of this query _after_ this execution.
-
-For example, you can use this to switch back to a `cache-first` fetch policy after using `cache-and-network` or `network-only` for a single execution.
 
 </td>
 </tr>

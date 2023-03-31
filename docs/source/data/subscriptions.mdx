@@ -39,7 +39,7 @@ You must use the same protocol as the GraphQL endpoint you're communicating with
 
 The first popular JavaScript library to implement subscriptions over WebSocket is called `subscriptions-transport-ws`. **This library is no longer actively maintained.** Its successor is a library called `graphql-ws`. The two libraries _do not use the same WebSocket subprotocol_, so you need to make sure that your server and clients all use the same library.
 
-Apollo Client supports both `graphql-ws` and `subscriptions-transport-ws`. We recommend you use the newer library `graphql-ws`, and this page shows how to use it. If you need to use `subscriptions-transport-ws` because your server still uses that protocol, the differences are described [at the bottom of this page](#the-older-subscriptions-transport-ws-library).
+The [WebSocket setup](#websocket-setup) section below uses `graphql-ws`. If your endpoint uses `subscriptions-transport-ws`, see [this section](#the-older-subscriptions-transport-ws-library) for differences in configuration.
 
 > **Note**: Confusingly, the `subscriptions-transport-ws` library calls its _WebSocket subprotocol_ `graphql-ws`, and the `graphql-ws` _library_ calls its subprotocol `graphql-transport-ws`! In this article, we refer to the two _libraries_ (`subscriptions-transport-ws` and `graphql-ws`), _not_ the two subprotocols.
 

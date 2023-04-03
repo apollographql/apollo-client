@@ -11,6 +11,7 @@ import {
   SelectionSetNode,
 } from "graphql";
 
+import { ApolloQueryResult } from "./types";
 import {
   createFragmentMap,
   FragmentMap,
@@ -29,15 +30,14 @@ export function compareResultsUsingQuery<
   TVariables extends Record<string, any> = Record<string, any>
 >(
   query: DocumentNode,
-  aResult: TData,
-  bResult: TData,
-  variables?: TVariables | undefined,
+  { data: aData, ...aRest }: Partial<ApolloQueryResult<TData>>,
+  { data: bData, ...bRest }: Partial<ApolloQueryResult<TData>>,
+  variables?: TVariables,
 ): boolean {
-  if (aResult === bResult) return true;
-  return compareResultsUsingSelectionSet(
+  return equal(aRest, bRest) && compareResultsUsingSelectionSet(
     getMainDefinition(query).selectionSet,
-    aResult,
-    bResult,
+    aData,
+    bData,
     {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       variables,
@@ -58,6 +58,10 @@ function compareResultsUsingSelectionSet<TVariables extends Record<string, any>>
   bResult: any,
   context: CompareContext<TVariables>,
 ): boolean {
+  if (aResult === bResult) {
+    return true;
+  }
+
   const seenSelections = new Set<SelectionNode>();
 
   // Returning true from this Array.prototype.every callback function skips the

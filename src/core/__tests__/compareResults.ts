@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql";
 import { gql } from "../index";
 import { compareResultsUsingQuery } from "../compareResults";
 
@@ -15,62 +16,62 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { hello: "hi" },
-      { hello: "hi" },
+      { data: { hello: "hi" } },
+      { data: { hello: "hi" } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { hello: "hi", unrelated: 1 },
-      { hello: "hi", unrelated: 100 },
+      { data: { hello: "hi", unrelated: 1 } },
+      { data: { hello: "hi", unrelated: 100 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { hello: "hi" },
-      { hello: "hey" },
+      { data: { hello: "hi" } },
+      { data: { hello: "hey" } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      {},
-      { hello: "hi" },
+      { data: {} },
+      { data: { hello: "hi" } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { hello: "hi" },
-      {},
+      { data: { hello: "hi" } },
+      { data: {} },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { hello: "hi" },
-      null,
+      { data: { hello: "hi" } },
+      { data: null },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      null,
-      { hello: "hi" },
+      { data: null },
+      { data: { hello: "hi" } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      null,
-      null,
+      { data: null },
+      { data: null },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      {},
-      {},
+      { data: {} },
+      { data: {} },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { unrelated: "whatever" },
-      { unrelated: "no matter" },
+      { data: { unrelated: "whatever" } },
+      { data: { unrelated: "no matter" } },
     )).toBe(true);
   });
 
@@ -85,14 +86,14 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { b: 2, c: 3, a: 1 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { b: 2, c: 3, a: 1 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { d: "bogus", a: 1, b: 2, c: 3 },
-      { b: 2, c: 3, a: 1, d: "also bogus" },
+      { data: { d: "bogus", a: 1, b: 2, c: 3 } },
+      { data: { b: 2, c: 3, a: 1, d: "also bogus" } },
     )).toBe(true);
   });
 
@@ -107,15 +108,77 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 2, c: "different" },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 2, c: "different" } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: "different", b: 2, c: 4 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: "different", b: 2, c: 4 } },
     )).toBe(false);
+  });
+
+  it("considers errors as well as data", () => {
+    const query = gql`
+      query {
+        a
+        b @nonreactive
+        c
+      }
+    `;
+
+    const data123 = { a: 1, b: 2, c: 3 };
+    const oopsError = new GraphQLError("oops");
+    const differentError = new GraphQLError("different");
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123 },
+      { data: data123, errors: [oopsError] },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123, errors: [oopsError] },
+      { data: data123 },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123, errors: [oopsError] },
+      { data: data123, errors: [oopsError] },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123, errors: [oopsError] },
+      { data: data123, errors: [differentError] },
+    )).toBe(false);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123, errors: [oopsError] },
+      { data: data123, errors: [oopsError] },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123, errors: [oopsError] },
+      { data: { ...data123, b: 100 }, errors: [oopsError] },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123, errors: [] },
+      { data: data123, errors: [] },
+    )).toBe(true);
+
+    expect(compareResultsUsingQuery(
+      query,
+      { data: data123, errors: [] },
+      { data: { ...data123, b: 100 }, errors: [] },
+    )).toBe(true);
   });
 
   it("respects the @nonreactive directive on inline fragments", () => {
@@ -131,14 +194,14 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 20, c: 30 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 10, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 10, b: 20, c: 30 } },
     )).toBe(false);
   });
 
@@ -157,26 +220,26 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 2, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 2, c: 30 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 20, c: 3 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 20, c: 3 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 20, c: 30 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 10, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 10, b: 20, c: 30 } },
     )).toBe(false);
   });
 
@@ -195,26 +258,26 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 2, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 2, c: 30 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 20, c: 3 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 20, c: 3 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 20, c: 30 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 10, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 10, b: 20, c: 30 } },
     )).toBe(false);
   });
 
@@ -233,38 +296,38 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 2, c: 3 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 2, c: 3 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { c: 3, a: 1, b: 2 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { c: 3, a: 1, b: 2 } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 2, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 2, c: 30 } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 20, c: 3 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 20, c: 3 } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 1, b: 20, c: 30 } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { a: 1, b: 2, c: 3 },
-      { a: 10, b: 20, c: 30 },
+      { data: { a: 1, b: 2, c: 3 } },
+      { data: { a: 10, b: 20, c: 30 } },
     )).toBe(false);
   });
 
@@ -293,68 +356,68 @@ describe("compareResultsUsingQuery", () => {
 
     expect(compareResultsUsingQuery(
       query,
-      { things: "abc".split("").map(id => makeThing(id)) },
-      { things: [makeThing("a"), makeThing("b"), makeThing("c")] },
+      { data: { things: "abc".split("").map(id => makeThing(id)) } },
+      { data: { things: [makeThing("a"), makeThing("b"), makeThing("c")] } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: "abc".split("").map(id => makeThing(id)) },
-      { things: "not an array" },
+      { data: { things: "abc".split("").map(id => makeThing(id)) } },
+      { data: { things: "not an array" } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: {} },
-      { things: [] },
+      { data: { things: {} } },
+      { data: { things: [] } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: [] },
-      { things: {} },
+      { data: { things: [] } },
+      { data: { things: {} } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: [] },
-      { things: [] },
+      { data: { things: [] } },
+      { data: { things: [] } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: {} },
-      { things: {} },
+      { data: { things: {} } },
+      { data: { things: {} } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: "ab".split("").map(id => makeThing(id)) },
-      { things: [makeThing("a"), makeThing("b")] },
+      { data: { things: "ab".split("").map(id => makeThing(id)) } },
+      { data: { things: [makeThing("a"), makeThing("b")] } },
     )).toBe(true);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: "ab".split("").map(id => makeThing(id)) },
-      { things: [makeThing("b"), makeThing("a")] },
+      { data: { things: "ab".split("").map(id => makeThing(id)) } },
+      { data: { things: [makeThing("b"), makeThing("a")] } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: "ab".split("").map(id => makeThing(id)) },
-      { things: [makeThing("a"), makeThing("b", 2345)] },
+      { data: { things: "ab".split("").map(id => makeThing(id)) } },
+      { data: { things: [makeThing("a"), makeThing("b", 2345)] } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: "ab".split("").map(id => makeThing(id)) },
-      { things: [makeThing("a", 3456), makeThing("b")] },
+      { data: { things: "ab".split("").map(id => makeThing(id)) } },
+      { data: { things: [makeThing("a", 3456), makeThing("b")] } },
     )).toBe(false);
 
     expect(compareResultsUsingQuery(
       query,
-      { things: "ab".split("").map(id => makeThing(id)) },
-      { things: [makeThing("b"), makeThing("a")] },
+      { data: { things: "ab".split("").map(id => makeThing(id)) } },
+      { data: { things: [makeThing("b"), makeThing("a")] } },
     )).toBe(false);
   });
 });

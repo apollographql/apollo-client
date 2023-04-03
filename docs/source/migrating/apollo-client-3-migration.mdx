@@ -223,6 +223,8 @@ The following cache changes are **not** backward compatible. Take them into cons
       }
     });
   ```
+
+  For more details around why `writeData` has been removed, see [PR #5923](https://github.com/apollographql/apollo-client/pull/5923).
 * `cache-and-network` fetch policy now initiates a network request whenever there are cache updates that affect the query, and is no longer limited to the first time the query is run. In order to recreate the default behavior from `v2.x.x`, please configure a `nextFetchPolicy` (available in versions `>=3.1.0`). For example:
 
 ```js
@@ -231,5 +233,3 @@ const { loading, error, data } = useQuery(GET_ALL_TODOS, {
   nextFetchPolicy: "cache-first",
 });
 ```
-
-  For more details around why `writeData` has been removed, see [PR #5923](https://github.com/apollographql/apollo-client/pull/5923).

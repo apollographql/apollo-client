@@ -170,9 +170,10 @@ export class Concast<T> extends Observable<T> {
   private deferredUnsubscribe() {
     const { sub } = this;
     this.sub = null;
+    const isError = this.latest?.[0] === 'error';
     if (sub) {
       setTimeout(() => {
-        if (this.observers.size > 0 && !sub.closed) {
+        if (this.observers.size > 0 && !sub.closed && !isError) {
           this.sub = sub;
           this.internalPromise = new Promise<T>((resolve, reject) => {
             this.resolve = resolve;

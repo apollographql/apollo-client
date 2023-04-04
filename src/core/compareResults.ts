@@ -20,15 +20,18 @@ import {
   isField,
   resultKeyNameFromField,
   shouldInclude,
-} from "../../utilities";
+} from "../utilities";
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
-export function compareResultsUsingQuery(
+export function compareResultsUsingQuery<
+  TData,
+  TVariables extends Record<string, any> = Record<string, any>
+>(
   query: DocumentNode,
-  aResult: any,
-  bResult: any,
-  variables?: Record<string, any> | undefined,
+  aResult: TData,
+  bResult: TData,
+  variables?: TVariables | undefined,
 ): boolean {
   if (aResult === bResult) return true;
   return compareResultsUsingSelectionSet(
@@ -44,16 +47,16 @@ export function compareResultsUsingQuery(
 
 // Encapsulates the information used by compareResultsUsingSelectionSet that
 // does not change during the recursion.
-interface CompareContext {
+interface CompareContext<TVariables> {
   fragmentMap: FragmentMap;
-  variables: Record<string, any> | undefined;
+  variables: TVariables | undefined;
 }
 
-function compareResultsUsingSelectionSet(
+function compareResultsUsingSelectionSet<TVariables extends Record<string, any>>(
   selectionSet: SelectionSetNode,
   aResult: any,
   bResult: any,
-  context: CompareContext,
+  context: CompareContext<TVariables>,
 ): boolean {
   const seenSelections = new Set<SelectionNode>();
 

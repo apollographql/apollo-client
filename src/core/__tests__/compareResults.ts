@@ -1,4 +1,4 @@
-import { gql } from "../../../core";
+import { gql } from "../index";
 import { compareResultsUsingQuery } from "../compareResults";
 
 describe("compareResultsUsingQuery", () => {

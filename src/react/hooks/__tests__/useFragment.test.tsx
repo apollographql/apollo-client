@@ -305,18 +305,51 @@ describe("useFragment", () => {
     });
   });
 
-  it("Parent list component can use @nonreactive to avoid rerendering", async () => {
-    const query: TypedDocumentNode<{
-      list: Item[];
-    }> = gql`
+  it.each<TypedDocumentNode<{ list: Item[] }>>([
+    // This query uses a basic field-level @nonreactive directive.
+    gql`
       query GetItems {
         list {
           id
           text @nonreactive
         }
       }
-    `;
-
+    `,
+    // This query uses @nonreactive on an anonymous/inline ...spread directive.
+    gql`
+      query GetItems {
+        list {
+          id
+          ... @nonreactive {
+            text
+          }
+        }
+      }
+    `,
+    // This query uses @nonreactive on a ...spread with a type condition.
+    gql`
+      query GetItems {
+        list {
+          id
+          ... on Item @nonreactive {
+            text
+          }
+        }
+      }
+    `,
+    // This query uses @nonreactive directive on a named fragment ...spread.
+    gql`
+      query GetItems {
+        list {
+          id
+          ...ItemText @nonreactive
+        }
+      }
+      fragment ItemText on Item {
+        text
+      }
+    `,
+  ])("Parent list component can use @nonreactive to avoid rerendering", async (query) => {
     const cache = new InMemoryCache({
       typePolicies: {
         Query: {

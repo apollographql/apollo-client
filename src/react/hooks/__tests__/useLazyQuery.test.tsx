@@ -3,10 +3,23 @@ import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
+import { 
+  ApolloClient,
+  ApolloLink,
+  ErrorPolicy,
+  InMemoryCache,
+  NetworkStatus,
+  TypedDocumentNode 
+} from '../../../core';
 import { Observable } from '../../../utilities';
 import { ApolloProvider, resetApolloContext } from '../../../react';
-import { MockedProvider, mockSingleLink, wait, tick } from '../../../testing';
+import { 
+  MockedProvider,
+  mockSingleLink,
+  wait,
+  tick,
+  MockSubscriptionLink 
+} from '../../../testing';
 import { useLazyQuery } from '../useLazyQuery';
 import { QueryResult } from '../../types/types';
 
@@ -452,10 +465,12 @@ describe('useLazyQuery Hook', () => {
       {
         request: { query: query1 },
         result: { data: { hello: "world" } },
+        delay: 20
       },
       {
         request: { query: query2 },
         result: { data: { name: "changed" } },
+        delay: 20
       },
     ];
 
@@ -1082,21 +1097,11 @@ describe('useLazyQuery Hook', () => {
     await wait(50);
   });
 
-  it('aborts in-flight requests when component unmounts', async () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
-
-    const link = new ApolloLink(() => {
-      // Do nothing to prevent
-      return null
-    });
-
+  it('allows in-flight requests to resolve when component unmounts', async () => {
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() })
 
-    const { result, unmount } = renderHook(() => useLazyQuery(query), {
+    const { result, unmount } = renderHook(() => useLazyQuery(helloQuery), {
       wrapper: ({ children }) =>
         <ApolloProvider client={client}>
           {children}
@@ -1105,32 +1110,27 @@ describe('useLazyQuery Hook', () => {
 
     const [execute] = result.current;
 
-    let promise: Promise<any>
+    let promise: Promise<QueryResult<{ hello: string }>>
     act(() => {
-      promise = execute()
+      promise = execute();
     })
 
     unmount();
 
-    await expect(promise!).rejects.toEqual(
-      new DOMException('The operation was aborted.', 'AbortError')
-    );
+    link.simulateResult({ result: { data: { hello: 'Greetings' }}}, true);
+
+    const queryResult = await promise!;
+
+    expect(queryResult.data).toEqual({ hello: 'Greetings' });
+    expect(queryResult.loading).toBe(false);
+    expect(queryResult.networkStatus).toBe(NetworkStatus.ready);
   });
 
-  it('handles aborting multiple in-flight requests when component unmounts', async () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
-
-    const link = new ApolloLink(() => {
-      return null
-    });
-
+  it('handles resolving multiple in-flight requests when component unmounts', async () => {
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() })
 
-    const { result, unmount } = renderHook(() => useLazyQuery(query), {
+    const { result, unmount } = renderHook(() => useLazyQuery(helloQuery), {
       wrapper: ({ children }) =>
         <ApolloProvider client={client}>
           {children}
@@ -1139,8 +1139,8 @@ describe('useLazyQuery Hook', () => {
 
     const [execute] = result.current;
 
-    let promise1: Promise<any>
-    let promise2: Promise<any>
+    let promise1: Promise<QueryResult<{ hello: string }>>
+    let promise2: Promise<QueryResult<{ hello: string }>>
     act(() => {
       promise1 = execute();
       promise2 = execute();
@@ -1148,11 +1148,245 @@ describe('useLazyQuery Hook', () => {
 
     unmount();
 
-    const expectedError = new DOMException('The operation was aborted.', 'AbortError');
+    link.simulateResult({ result: { data: { hello: 'Greetings' }}}, true);
 
-    await expect(promise1!).rejects.toEqual(expectedError);
-    await expect(promise2!).rejects.toEqual(expectedError);
+    const expectedResult = {
+      data: { hello: 'Greetings' },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    };
+
+    await expect(promise1!).resolves.toMatchObject(expectedResult);
+    await expect(promise2!).resolves.toMatchObject(expectedResult);
   });
+
+  // https://github.com/apollographql/apollo-client/issues/9755
+  it('resolves each execution of the query with the appropriate result and renders with the result from the latest execution', async () => {
+    interface Data {
+      user: { id: string, name: string }
+    }
+
+    interface Variables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { user: { id: '1', name: 'John Doe' }}},
+        delay: 20
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { user: { id: '2', name: 'Jane Doe' }}},
+        delay: 20
+      },
+    ]
+
+    const { result } = renderHook(() => useLazyQuery(query), {
+      wrapper: ({ children }) =>
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+    });
+
+    const [execute] = result.current;
+
+    await act(async () => {
+      const promise1 = execute({ variables: { id: '1' }});
+      const promise2 = execute({ variables: { id: '2' }});
+
+      await expect(promise1).resolves.toMatchObject({
+        ...mocks[0].result,
+        loading: false ,
+        called: true,
+      });
+
+      await expect(promise2).resolves.toMatchObject({
+        ...mocks[1].result,
+        loading: false ,
+        called: true,
+      });
+    });
+
+    expect(result.current[1]).toMatchObject({
+      ...mocks[1].result,
+      loading: false,
+      called: true,
+    });
+  });
+
+  it('uses the most recent options when the hook rerenders before execution', async () => {
+    interface Data {
+      user: { id: string, name: string }
+    }
+
+    interface Variables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: { data: { user: { id: '1', name: 'John Doe' }}},
+        delay: 30
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: { data: { user: { id: '2', name: 'Jane Doe' }}},
+        delay: 20
+      },
+    ]
+
+    const { result, rerender } = renderHook(
+      ({ id }) => useLazyQuery(query, { variables: { id } }), 
+      {
+        initialProps: { id: '1' },
+        wrapper: ({ children }) =>
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+      }
+    );
+
+    rerender({ id: '2' });
+
+    const [execute] = result.current;
+
+    let promise: Promise<QueryResult<Data, Variables>>;
+    act(() => {
+      promise = execute();
+    });
+
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual(mocks[1].result.data);
+    })
+
+    await expect(promise!).resolves.toMatchObject(
+      { data: mocks[1].result.data }
+    );
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/10198
+  it('uses the most recent query document when the hook rerenders before execution', async () => {
+    const query = gql`
+      query DummyQuery {
+        shouldNotBeUsed
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: 'Greetings' } },
+        delay: 20
+      },
+    ]
+
+    const { result, rerender } = renderHook(
+      ({ query }) => useLazyQuery(query), 
+      {
+        initialProps: { query },
+        wrapper: ({ children }) =>
+          <MockedProvider mocks={mocks}>
+            {children}
+          </MockedProvider>
+      }
+    );
+
+    rerender({ query: helloQuery });
+
+    const [execute] = result.current;
+
+    let promise: Promise<QueryResult<{ hello: string }>>;
+    act(() => {
+      promise = execute();
+    });
+
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({ hello: 'Greetings' });
+    })
+
+    await expect(promise!).resolves.toMatchObject(
+      { data: { hello: 'Greetings' } }
+    );
+  });
+
+  it('does not refetch when rerendering after executing query', async () => {
+    interface Data {
+      user: { id: string, name: string }
+    }
+
+    interface Variables {
+      id: string
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      fetchCount++;
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ 
+            data: { user: { id: operation.variables.id, name: 'John Doe' } }
+          });
+          observer.complete();
+        }, 20)
+      });
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const { result, rerender } = renderHook(
+      () => useLazyQuery(query, { variables: { id: '1' }}), 
+      {
+        initialProps: { id: '1' },
+        wrapper: ({ children }) =>
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+      }
+    );
+
+    const [execute] = result.current;
+
+    await act(() => execute({ variables: { id: '2' }}));
+
+    expect(fetchCount).toBe(1);
+
+    rerender();
+
+    await wait(10);
+
+    expect(fetchCount).toBe(1);
+  })
 
   describe("network errors", () => {
     async function check(errorPolicy: ErrorPolicy) {
@@ -1163,7 +1397,7 @@ describe('useLazyQuery Hook', () => {
         link: new ApolloLink(request => new Observable(observer => {
           setTimeout(() => {
             observer.error(networkError);
-          });
+          }, 20);
         })),
       });
 

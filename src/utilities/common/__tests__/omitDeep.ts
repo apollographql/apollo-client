@@ -100,7 +100,6 @@ test('returns same object unmodified if key is not found', () => {
 
 test('returns unmodified subtrees for subtrees that do not contain the key', () => {
   const original = {
-    omit: 'true',
     a: 'a',
     foo: { bar: 'true' },
     baz: [{ foo: 'bar' }],

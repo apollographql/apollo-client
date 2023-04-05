@@ -30,17 +30,18 @@ function __omitDeep<T, K extends string>(
     if (modified) {
       return array as DeepOmit<T, K>;
     }
-  }
-
-  if (isNonNullObject(value)) {
+  } else if (isNonNullObject(value)) {
     const obj = Object.create(Object.getPrototypeOf(value));
     known.set(value, obj);
 
     Object.keys(value).forEach((k) => {
-      if (k !== key) {
-        obj[k] = __omitDeep(value[k], key, known);
-      } else {
+      if (k === key) {
         modified = true;
+      } else {
+        const result = __omitDeep(value[k], key, known);
+        modified ||= result !== value[k];
+
+        obj[k] = result;
       }
     });
 

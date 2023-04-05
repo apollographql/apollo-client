@@ -11,7 +11,11 @@ import {
   SelectionSetNode,
 } from "graphql";
 
-import { ApolloQueryResult } from "./types";
+import {
+  ApolloQueryResult,
+  OperationVariables,
+} from "./types";
+
 import {
   createFragmentMap,
   FragmentMap,
@@ -25,14 +29,11 @@ import {
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
-export function equalByQuery<
-  TData,
-  TVariables extends Record<string, any> = Record<string, any>
->(
+export function equalByQuery(
   query: DocumentNode,
-  { data: aData, ...aRest }: Partial<ApolloQueryResult<TData>>,
-  { data: bData, ...bRest }: Partial<ApolloQueryResult<TData>>,
-  variables?: TVariables,
+  { data: aData, ...aRest }: Partial<ApolloQueryResult<unknown>>,
+  { data: bData, ...bRest }: Partial<ApolloQueryResult<unknown>>,
+  variables?: OperationVariables,
 ): boolean {
   return equal(aRest, bRest) && equalBySelectionSet(
     getMainDefinition(query).selectionSet,
@@ -52,11 +53,11 @@ interface CompareContext<TVariables> {
   variables: TVariables | undefined;
 }
 
-function equalBySelectionSet<TVariables extends Record<string, any>>(
+function equalBySelectionSet(
   selectionSet: SelectionSetNode,
   aResult: any,
   bResult: any,
-  context: CompareContext<TVariables>,
+  context: CompareContext<OperationVariables>,
 ): boolean {
   if (aResult === bResult) {
     return true;

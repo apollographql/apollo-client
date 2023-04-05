@@ -1,5 +1,5 @@
 import { ASTNode, print } from 'graphql';
-import { stripTypename } from '../../utilities/common/stripTypename';
+import { stripTypename } from '../../utilities';
 
 import { Operation } from '../core';
 

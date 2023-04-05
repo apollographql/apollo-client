@@ -192,9 +192,7 @@ export function removeDirectivesFromDocument(
   }
 
   const directiveMatcher = getDirectiveMatcher(directives);
-  const shouldRemoveField = (
-    nodeDirectives: FieldNode["directives"]
-  ): boolean => (
+  const shouldRemoveField = (nodeDirectives: FieldNode["directives"]) => (
     isNonEmptyArray(nodeDirectives) &&
     nodeDirectives.map(directiveMatcher).some(
       (config: RemoveDirectiveConfig | undefined) => config && config.remove)

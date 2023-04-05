@@ -25,25 +25,18 @@ const defaults = {
 const ignoreTSFiles = '.ts$';
 const ignoreTSXFiles = '.tsx$';
 
-const react18TestFileIgnoreList = [
-  // ignore core tests (.ts files) as they are run separately
-  // to avoid running them twice with both react versions
-  // since they do not import react
-  ignoreTSFiles,
-  // failing components test
-  'src/react/components/__tests__/client/Query.test.tsx',
-];
-
 const tsStandardConfig = {
   ...defaults,
   displayName: 'Core Tests',
   testPathIgnorePatterns: [ignoreTSXFiles],
 }
 
+// For both React (Jest) "projects", ignore core tests (.ts files) as they
+// do not import React, to avoid running them twice.
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
-  testPathIgnorePatterns: react18TestFileIgnoreList
+  testPathIgnorePatterns: [ignoreTSFiles],
 };
 
 const standardReact17Config = {

@@ -69,3 +69,18 @@ test('returns primitives unchanged', () => {
   expect(omitDeep(undefined, 'ignored')).toBe(undefined);
   expect(omitDeep(Symbol.for('foo'), 'ignored')).toBe(Symbol.for('foo'));
 });
+
+test('handles circular references', () => {
+  let b: any;
+  const a = { omit: 'foo', b };
+  b = { a, omit: 'foo' };
+  a.b = b;
+
+  const variables = { a, b, omit: 'foo' };
+
+  const result = omitDeep(variables, 'omit');
+
+  expect(result).not.toHaveProperty('omit');
+  expect(result.a).not.toHaveProperty('omit');
+  expect(result.b).not.toHaveProperty('omit');
+});

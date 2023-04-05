@@ -47,6 +47,7 @@ src/utilities/common/*
 !src/utilities/common/__tests__/
 src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts
+!src/utilities/common/__tests__/stripTypename.ts
 
 ## Allowed React Hooks
 !src/react/hooks/

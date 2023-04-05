@@ -417,6 +417,7 @@ Array [
   "mergeIncrementalData",
   "mergeOptions",
   "offsetLimitPagination",
+  "omitDeep",
   "relayStylePagination",
   "removeArgumentsFromDocument",
   "removeClientSetsFromDocument",
@@ -427,6 +428,7 @@ Array [
   "shouldInclude",
   "storeKeyNameFromField",
   "stringifyForDisplay",
+  "stripTypename",
   "valueToObjectRepresentation",
 ]
 `;

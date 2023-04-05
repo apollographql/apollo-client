@@ -34,6 +34,7 @@ import type { Client } from "graphql-ws";
 import { ApolloLink, Operation, FetchResult } from "../core";
 import { isNonNullObject, Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
+import { stripTypename } from "../../utilities/common/stripTypename";
 
 interface LikeCloseEvent {
   /** Returns the WebSocket connection close code provided by the server. */
@@ -55,7 +56,11 @@ export class GraphQLWsLink extends ApolloLink {
   public request(operation: Operation): Observable<FetchResult> {
     return new Observable((observer) => {
       return this.client.subscribe<FetchResult>(
-        { ...operation, query: print(operation.query) },
+        { 
+          ...operation,
+          query: print(operation.query),
+          variables: stripTypename(operation.variables) 
+        },
         {
           next: observer.next.bind(observer),
           complete: observer.complete.bind(observer),

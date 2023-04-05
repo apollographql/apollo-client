@@ -95,16 +95,6 @@ Whenever your GraphQL server _does_ push data to a subscribing client, that data
 }
 ```
 
-## Setting up the transport
-
-Additional configuration is required if the back-end service your application uses communicates over the WebSocket protocol; in this case, Apollo Client subscriptions most commonly use the [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) library. If the back-end service supports multipart subscriptions via HTTP, however, _no additional configuration is required_.
-
-> As mentioned in [Supported subscription protocols](#supported-subscription-protocols), some GraphQL servers use an older WebSocket library called `subscriptions-transport-ws`. For necessary changes to use that library, see [below](#the-older-subscriptions-transport-ws-library).
-
-## Subscriptions via Multipart HTTP
-
-No additional libraries or configuration are required. Apollo Client adds the required headers to your request when the default terminating `HTTPLink` receives a subscription operation at the `uri` specified when initializing the link or Apollo Client instance.
-
 ## WebSocket setup
 
 ### 1. Install required libraries
@@ -208,6 +198,10 @@ const wsLink = new GraphQLWsLink(createClient({
 ```
 
 Your `GraphQLWsLink` passes the `connectionParams` object to your server whenever it connects. Your server receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
+
+## Subscriptions via Multipart HTTP
+
+No additional libraries or configuration are required. Apollo Client adds the required headers to your request when the default terminating `HTTPLink` receives a subscription operation at the `uri` specified when initializing the link or Apollo Client instance.
 
 ## Executing a subscription
 

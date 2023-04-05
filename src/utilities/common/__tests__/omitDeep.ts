@@ -84,3 +84,35 @@ test('handles circular references', () => {
   expect(result.a).not.toHaveProperty('omit');
   expect(result.b).not.toHaveProperty('omit');
 });
+
+test('returns same object unmodified if key is not found', () => {
+  const obj = {
+    a: 'a',
+    b: 'b',
+    c: { d: 'd', e: 'e' },
+  };
+
+  const arr = [{ a: 'a', b: 'b', c: 'c' }, { foo: 'bar' }];
+
+  expect(omitDeep(obj, 'omit')).toBe(obj);
+  expect(omitDeep(arr, 'omit')).toBe(arr);
+});
+
+test('returns unmodified subtrees for subtrees that do not contain the key', () => {
+  const original = {
+    omit: 'true',
+    a: 'a',
+    foo: { bar: 'true' },
+    baz: [{ foo: 'bar' }],
+    omitOne: [{ foo: 'bar', omit: true }, { foo: 'bar' }],
+  };
+
+  const result = omitDeep(original, 'omit');
+
+  expect(result).not.toBe(original);
+  expect(result.foo).toBe(original.foo);
+  expect(result.baz).toBe(original.baz);
+  expect(result.omitOne).not.toBe(original.omitOne);
+  expect(result.omitOne[0]).not.toBe(original.omitOne[0]);
+  expect(result.omitOne[1]).toBe(original.omitOne[1]);
+});

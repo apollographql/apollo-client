@@ -14,15 +14,22 @@ function __omitDeep<T, K extends string>(
     return known.get(value);
   }
 
+  let modified = false;
+
   if (Array.isArray(value)) {
     const array: any[] = [];
     known.set(value, array);
 
     value.forEach((value, index) => {
-      array[index] = __omitDeep(value, key, known);
+      const result = __omitDeep(value, key, known);
+      modified ||= result !== value;
+
+      array[index] = result;
     });
 
-    return array as DeepOmit<T, K>;
+    if (modified) {
+      return array as DeepOmit<T, K>;
+    }
   }
 
   if (isNonNullObject(value)) {
@@ -32,10 +39,14 @@ function __omitDeep<T, K extends string>(
     Object.keys(value).forEach((k) => {
       if (k !== key) {
         obj[k] = __omitDeep(value[k], key, known);
+      } else {
+        modified = true;
       }
     });
 
-    return obj;
+    if (modified) {
+      return obj;
+    }
   }
 
   return value as DeepOmit<T, K>;

@@ -11,6 +11,7 @@ export interface ApolloConsumerProps {
 
 export const ApolloConsumer: React.FC<ApolloConsumerProps> = props => {
   const ApolloContext = getApolloContext();
+  invariant(ApolloContext, 'Cannot use `ApolloConsumer` in an environment without Context.')
   return (
     <ApolloContext.Consumer>
       {(context: any) => {

@@ -139,6 +139,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // initialization, this.renderPromises is usually undefined (unless SSR is
     // happening), but that's fine as long as it has been initialized that way,
     // rather than left uninitialized.
+    // @ts-ignore TODO
     this.renderPromises = useContext(getApolloContext()).renderPromises;
 
     this.useOptions(options);

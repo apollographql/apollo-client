@@ -18,6 +18,10 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   children
 }) => {
   const ApolloContext = getApolloContext();
+  if (!ApolloContext) {
+    // in CSR env
+    return <>{children}</>;
+  }
   return (
     <ApolloContext.Consumer>
       {(context: any = {}) => {

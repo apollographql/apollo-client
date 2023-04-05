@@ -4,7 +4,14 @@ import { invariant } from '../../utilities/globals';
 import { SuspenseCache } from '../cache';
 
 export function useSuspenseCache(override?: SuspenseCache) {
-  const context = useContext(getApolloContext());
+  const apolloContext = getApolloContext()
+  if (!apolloContext) {
+    invariant(override, 
+      'Called `useSuspenseCache` in an environment where Context is not ' + 
+      'available without passing an override in.')
+    return override;
+  }
+  const context = useContext(apolloContext);
   const suspenseCache = override || context.suspenseCache;
 
   invariant(

@@ -6,7 +6,14 @@ import { getApolloContext } from '../context';
 export function useApolloClient(
   override?: ApolloClient<object>,
 ): ApolloClient<object> {
-  const context = useContext(getApolloContext());
+  const apolloContext = getApolloContext()
+  if (!apolloContext) {
+    invariant(override, 
+      'Called `useApolloClient` in an environment where Context is not ' + 
+      'available without passing an override in.')
+    return override;
+  }
+  const context = useContext(apolloContext);
   const client = override || context.client;
   invariant(
     !!client,

@@ -44,6 +44,7 @@ export function getMarkupFromTree({
 
     return new Promise<string>(resolve => {
       const element = React.createElement(
+        // @ts-ignore TODO
         ApolloContext.Provider,
         { value: { ...context, renderPromises }},
         tree,

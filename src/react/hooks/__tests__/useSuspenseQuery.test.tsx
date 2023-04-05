@@ -1153,7 +1153,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('allows custom query so two components that share same query and variables do not interfere with each other', async () => {
+  it('allows custom query key so two components that share same query and variables do not interfere with each other', async () => {
     interface Data {
       todo: {
         id: number;
@@ -1360,6 +1360,120 @@ describe('useSuspenseQuery', () => {
     });
 
     rerender({ queryKey: ['greeting', 2] });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('suspends and refetches when using plain string query keys', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello first fetch' } },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello second fetch' } },
+        delay: 20,
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ queryKey }) =>
+        // intentionally use a fetch policy that will execute a network request
+        useSuspenseQuery(query, { queryKey, fetchPolicy: 'network-only' }),
+      { mocks, initialProps: { queryKey: 'first' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ queryKey: 'second' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello second fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('suspends and refetches when using numeric query keys', async () => {
+    const { query } = useSimpleQueryCase();
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello first fetch' } },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello second fetch' } },
+        delay: 20,
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ queryKey }) =>
+        // intentionally use a fetch policy that will execute a network request
+        useSuspenseQuery(query, { queryKey, fetchPolicy: 'network-only' }),
+      { mocks, initialProps: { queryKey: 1 } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello first fetch' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ queryKey: 2 });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({

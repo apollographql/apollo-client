@@ -119,6 +119,132 @@ describe("equalByQuery", () => {
     )).toBe(false);
   });
 
+  describe("@skip and @include directives", () => {
+    // The @skip and @include directives use query variables to determine
+    // whether subtrees of the query should be executed at all, so they can
+    // influence the comparison of results in ways similar to @nonreactive. The
+    // key difference is that @skip and @include will be sent to the server,
+    // whereas @nonreactive is a client-only directive, and does not prevent
+    // execution of nonreactive fields/subtrees on the server.
+    it("respects @skip directive, depending on variables", () => {
+      const skipQuery = gql`
+        query SkipC ($condition: Boolean!) {
+          a
+          b
+          c @skip(if: $condition)
+        }
+      `;
+
+      expect(equalByQuery(
+        skipQuery,
+        { data: { a: 1, b: 2, c: 3 } },
+        { data: { a: 1, b: 2, c: 3 } },
+        { condition: false },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        skipQuery,
+        { data: { a: 1, b: 2, c: 3 } },
+        { data: { a: 1, b: 2 } },
+        { condition: false },
+      )).toBe(false);
+
+      expect(equalByQuery(
+        skipQuery,
+        { data: { a: 1, b: 2, c: 3 } },
+        { data: { a: 1, b: 2 } },
+        { condition: true },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        skipQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2, c: 3 } },
+        { condition: false },
+      )).toBe(false);
+
+      expect(equalByQuery(
+        skipQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2, c: 3 } },
+        { condition: true },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        skipQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2 } },
+        { condition: false },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        skipQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2 } },
+        { condition: true },
+      )).toBe(true);
+    });
+
+    it("respects @include directive, depending on variables", () => {
+      const includeQuery = gql`
+        query IncludeC ($condition: Boolean!) {
+          a
+          b
+          c @include(if: $condition)
+        }
+      `;
+
+      expect(equalByQuery(
+        includeQuery,
+        { data: { a: 1, b: 2, c: 3 } },
+        { data: { a: 1, b: 2, c: 3 } },
+        { condition: true },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        includeQuery,
+        { data: { a: 1, b: 2, c: 3 } },
+        { data: { a: 1, b: 2 } },
+        { condition: true },
+      )).toBe(false);
+
+      expect(equalByQuery(
+        includeQuery,
+        { data: { a: 1, b: 2, c: 3 } },
+        { data: { a: 1, b: 2 } },
+        { condition: false },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        includeQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2, c: 3 } },
+        { condition: true },
+      )).toBe(false);
+
+      expect(equalByQuery(
+        includeQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2, c: 3 } },
+        { condition: false },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        includeQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2 } },
+        { condition: true },
+      )).toBe(true);
+
+      expect(equalByQuery(
+        includeQuery,
+        { data: { a: 1, b: 2 } },
+        { data: { a: 1, b: 2 } },
+        { condition: false },
+      )).toBe(true);
+    });
+  });
+
   it("considers errors as well as data", () => {
     const query = gql`
       query {

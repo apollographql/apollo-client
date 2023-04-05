@@ -16,6 +16,7 @@ import {
   ApolloLink,
 } from "../../../core";
 import { useQuery } from "../useQuery";
+import { concatPagination } from "../../../utilities";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -301,6 +302,380 @@ describe("useFragment", () => {
           "Item:4",
         ],
       },
+    });
+  });
+
+  it.each<TypedDocumentNode<{ list: Item[] }>>([
+    // This query uses a basic field-level @nonreactive directive.
+    gql`
+      query GetItems {
+        list {
+          id
+          text @nonreactive
+        }
+      }
+    `,
+    // This query uses @nonreactive on an anonymous/inline ...spread directive.
+    gql`
+      query GetItems {
+        list {
+          id
+          ... @nonreactive {
+            text
+          }
+        }
+      }
+    `,
+    // This query uses @nonreactive on a ...spread with a type condition.
+    gql`
+      query GetItems {
+        list {
+          id
+          ... on Item @nonreactive {
+            text
+          }
+        }
+      }
+    `,
+    // This query uses @nonreactive directive on a named fragment ...spread.
+    gql`
+      query GetItems {
+        list {
+          id
+          ...ItemText @nonreactive
+        }
+      }
+      fragment ItemText on Item {
+        text
+      }
+    `,
+  ])("Parent list component can use @nonreactive to avoid rerendering", async (query) => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            list: concatPagination(),
+          },
+        },
+        Item: {
+          keyFields: ["id"],
+          // Configuring keyArgs:false for Item.text is one way to prevent field
+          // keys like text@nonreactive, but it's not the only way. Since
+          // @nonreactive is now in the KNOWN_DIRECTIVES array defined in
+          // utilities/graphql/storeUtils.ts, the '@nonreactive' suffix won't be
+          // automatically appended to field keys by default.
+          // fields: {
+          //   text: {
+          //     keyArgs: false,
+          //   },
+          // },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+    });
+
+    const renders: string[] = [];
+
+    function List() {
+      const { data } = useQuery(query);
+
+      renders.push("list");
+
+      return (
+        <ul>
+          {data?.list.map(item => <Item key={item.id} item={item} />)}
+        </ul>
+      );
+    }
+
+    function Item({ item }: { item: Item }) {
+      const { data } = useFragment({
+        fragment: ItemFragment,
+        fragmentName: "ItemFragment",
+        from: item,
+      });
+
+      renders.push(`item ${item.id}`);
+
+      if (!data) return null;
+
+      return <li>{`Item #${item.id}: ${data.text}`}</li>;
+    }
+
+    act(() => {
+      cache.writeQuery({
+        query,
+        data: {
+          list: [
+            { __typename: "Item", id: 1, text: "first" },
+            { __typename: "Item", id: 2, text: "second" },
+            { __typename: "Item", id: 3, text: "third" },
+          ],
+        },
+      });
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        list: [
+          { __ref: 'Item:{"id":1}' },
+          { __ref: 'Item:{"id":2}' },
+          { __ref: 'Item:{"id":3}' },
+        ],
+      },
+      'Item:{"id":1}': {
+        __typename: "Item",
+        id: 1,
+        text: "first",
+      },
+      'Item:{"id":2}': {
+        __typename: "Item",
+        id: 2,
+        text: "second",
+      },
+      'Item:{"id":3}': {
+        __typename: "Item",
+        id: 3,
+        text: "third",
+      },
+    });
+
+    render(
+      <ApolloProvider client={client}>
+        <List />
+      </ApolloProvider>,
+    );
+
+    function getItemTexts() {
+      return screen.getAllByText(/Item #\d+/).map(el => el.textContent);
+    }
+
+    await waitFor(() => {
+      expect(getItemTexts()).toEqual([
+        "Item #1: first",
+        "Item #2: second",
+        "Item #3: third",
+      ]);
+    });
+
+    expect(renders).toEqual([
+      "list",
+      "item 1",
+      "item 2",
+      "item 3",
+    ]);
+
+    function appendLyToText(id: number) {
+      act(() => {
+        cache.modify({
+          id: cache.identify({ __typename: "Item", id })!,
+          fields: {
+            text(existing) {
+              return existing + "ly";
+            },
+          },
+        });
+      });
+    }
+
+    appendLyToText(2);
+
+    await waitFor(() => {
+      expect(renders).toEqual([
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 2",
+      ]);
+
+      expect(getItemTexts()).toEqual([
+        "Item #1: first",
+        "Item #2: secondly",
+        "Item #3: third",
+      ]);
+    });
+
+    appendLyToText(1);
+
+    await waitFor(() => {
+      expect(renders).toEqual([
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 2",
+        "item 1",
+      ]);
+
+      expect(getItemTexts()).toEqual([
+        "Item #1: firstly",
+        "Item #2: secondly",
+        "Item #3: third",
+      ]);
+    });
+
+    appendLyToText(3);
+
+    await waitFor(() => {
+      expect(renders).toEqual([
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 2",
+        "item 1",
+        "item 3",
+      ]);
+
+      expect(getItemTexts()).toEqual([
+        "Item #1: firstly",
+        "Item #2: secondly",
+        "Item #3: thirdly",
+      ]);
+    });
+
+    act(() => {
+      cache.writeQuery({
+        query,
+        data: {
+          list: [
+            { __typename: "Item", id: 4, text: "fourth" },
+            { __typename: "Item", id: 5, text: "fifth" },
+          ],
+        },
+      });
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        list: [
+          { __ref: 'Item:{"id":1}' },
+          { __ref: 'Item:{"id":2}' },
+          { __ref: 'Item:{"id":3}' },
+          { __ref: 'Item:{"id":4}' },
+          { __ref: 'Item:{"id":5}' },
+        ],
+      },
+      'Item:{"id":1}': {
+        __typename: "Item",
+        id: 1,
+        text: "firstly",
+      },
+      'Item:{"id":2}': {
+        __typename: "Item",
+        id: 2,
+        text: "secondly",
+      },
+      'Item:{"id":3}': {
+        __typename: "Item",
+        id: 3,
+        text: "thirdly",
+      },
+      'Item:{"id":4}': {
+        __typename: "Item",
+        id: 4,
+        text: "fourth",
+      },
+      'Item:{"id":5}': {
+        __typename: "Item",
+        id: 5,
+        text: "fifth",
+      },
+    });
+
+    await waitFor(() => {
+      expect(renders).toEqual([
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 2",
+        "item 1",
+        "item 3",
+        // The whole list had to be rendered again to append 4 and 5
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 4",
+        "item 5",
+      ]);
+
+      expect(getItemTexts()).toEqual([
+        "Item #1: firstly",
+        "Item #2: secondly",
+        "Item #3: thirdly",
+        "Item #4: fourth",
+        "Item #5: fifth",
+      ]);
+    });
+
+    appendLyToText(5);
+
+    await waitFor(() => {
+      expect(renders).toEqual([
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 2",
+        "item 1",
+        "item 3",
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 4",
+        "item 5",
+        // A single new render:
+        "item 5",
+      ]);
+
+      expect(getItemTexts()).toEqual([
+        "Item #1: firstly",
+        "Item #2: secondly",
+        "Item #3: thirdly",
+        "Item #4: fourth",
+        "Item #5: fifthly",
+      ]);
+    });
+
+    appendLyToText(4);
+
+    await waitFor(() => {
+      expect(renders).toEqual([
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 2",
+        "item 1",
+        "item 3",
+        "list",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 4",
+        "item 5",
+        "item 5",
+        // A single new render:
+        "item 4",
+      ]);
+
+      expect(getItemTexts()).toEqual([
+        "Item #1: firstly",
+        "Item #2: secondly",
+        "Item #3: thirdly",
+        "Item #4: fourthly",
+        "Item #5: fifthly",
+      ]);
     });
   });
 

@@ -30,7 +30,7 @@ import {
   createFragmentMap,
   FragmentMap,
 } from './fragments';
-import { isArray } from '../common/arrays';
+import { isArray, isNonEmptyArray } from '../common/arrays';
 
 export type RemoveNodeConfig<N> = {
   name?: string;
@@ -83,22 +83,39 @@ function nullIfDocIsEmpty(doc: DocumentNode) {
 }
 
 function getDirectiveMatcher(
-  directives: (RemoveDirectiveConfig | GetDirectiveConfig)[],
+  configs: (RemoveDirectiveConfig | GetDirectiveConfig)[],
 ) {
-  const nameSet = new Set<string>();
-  const tests: Array<(directive: DirectiveNode) => boolean> = [];
-  directives.forEach(directive => {
-    if (directive.name) {
-      nameSet.add(directive.name);
-    } else if (directive.test) {
-      tests.push(directive.test);
+  const names = new Map<
+    string,
+    RemoveDirectiveConfig | GetDirectiveConfig
+  >();
+
+  const tests = new Map<
+    (directive: DirectiveNode) => boolean,
+    RemoveDirectiveConfig | GetDirectiveConfig
+  >();
+
+  configs.forEach(directive => {
+    if (directive) {
+      if (directive.name) {
+        names.set(directive.name, directive);
+      } else if (directive.test) {
+        tests.set(directive.test, directive);
+      }
     }
   });
 
-  return (directive: DirectiveNode) => (
-    nameSet.has(directive.name.value) ||
-    tests.some(test => test(directive))
-  );
+  return (directive: DirectiveNode) => {
+    let config = names.get(directive.name.value);
+    if (!config && tests.size) {
+      tests.forEach((testConfig, test) => {
+        if (test(directive)) {
+          config = testConfig;
+        }
+      });
+    }
+    return config;
+  };
 }
 
 // Helper interface and function used by removeDirectivesFromDocument to keep
@@ -138,6 +155,8 @@ export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
 ): DocumentNode | null {
+  checkDocument(doc);
+
   // Passing empty strings to makeInUseGetterFunction means we handle anonymous
   // operations as if their names were "". Anonymous fragment definitions are
   // not supposed to be possible, but the same default naming strategy seems
@@ -173,13 +192,10 @@ export function removeDirectivesFromDocument(
   }
 
   const directiveMatcher = getDirectiveMatcher(directives);
-  const hasRemoveDirective = directives.some(directive => directive.remove);
-  const shouldRemoveField = (
-    nodeDirectives: FieldNode["directives"]
-  ) => (
-    hasRemoveDirective &&
-    nodeDirectives &&
-    nodeDirectives.some(directiveMatcher)
+  const shouldRemoveField = (nodeDirectives: FieldNode["directives"]) => (
+    isNonEmptyArray(nodeDirectives) &&
+    nodeDirectives.map(directiveMatcher).some(
+      (config: RemoveDirectiveConfig | undefined) => config && config.remove)
   );
 
   const originalFragmentDefsByPath = new Map<string, FragmentDefinitionNode>();

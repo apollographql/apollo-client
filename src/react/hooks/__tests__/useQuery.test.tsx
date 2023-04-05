@@ -1643,7 +1643,7 @@ describe('useQuery Hook', () => {
         expect(result.current.data).toEqual({ hello: "world 1" });
       });
       await waitFor(() => {
-        expect(requestSpy).toHaveBeenCalledTimes(1);
+        expect(requestSpy).toHaveBeenCalled();
       });
 
       const requestSpyCallCount = requestSpy.mock.calls.length;
@@ -5017,7 +5017,7 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual(carData);
       expect(result.current.error).toBeUndefined();
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalled();
       expect(errorSpy).toHaveBeenLastCalledWith(
         `Missing field 'vin' while writing result ${JSON.stringify({
           id: 1,

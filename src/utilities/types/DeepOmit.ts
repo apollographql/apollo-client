@@ -1,4 +1,12 @@
-import { Primitive } from './Primitive';
+// DeepOmit primitives include functions and symbols since these are unmodified.
+type Primitive =
+  | string
+  | Function
+  | number
+  | boolean
+  | Symbol
+  | undefined
+  | null;
 
 export type DeepOmitArray<T extends any[], K> = {
   [P in keyof T]: DeepOmit<T[P], K>;

@@ -4,7 +4,6 @@ import { FragmentDefinitionNode, OperationDefinitionNode } from 'graphql';
 
 import {
   checkDocument,
-  isMutation,
   getFragmentDefinitions,
   getQueryDefinition,
   getDefaultValues,
@@ -246,47 +245,5 @@ describe('AST utility functions', () => {
         first: 1,
       });
     });
-  });
-});
-
-describe('isMutation', () => {
-  it('returns true when document is a mutation', () => {
-    const document = gql`
-      mutation {
-        updateSomething
-      }
-    `;
-
-    expect(isMutation(document)).toBe(true);
-  });
-
-  it('returns false when document is a subscription', () => {
-    const document = gql`
-      subscription {
-        count
-      }
-    `;
-
-    expect(isMutation(document)).toBe(false);
-  });
-
-  it('returns false when document is a query', () => {
-    const document = gql`
-      query {
-        count
-      }
-    `;
-
-    expect(isMutation(document)).toBe(false);
-  });
-
-  it('returns false when document is a fragment', () => {
-    const document = gql`
-      fragment Frag on Query {
-        count
-      }
-    `;
-
-    expect(isMutation(document)).toBe(false);
   });
 });

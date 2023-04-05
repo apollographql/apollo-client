@@ -2,9 +2,7 @@ import { invariant, InvariantError } from '../globals';
 
 import {
   DocumentNode,
-  Kind,
   OperationDefinitionNode,
-  OperationTypeNode,
   FragmentDefinitionNode,
   ValueNode,
 } from 'graphql';
@@ -166,13 +164,4 @@ export function getDefaultValues(
     });
   }
   return defaultValues;
-}
-
-export function isMutation(document: DocumentNode) {
-  const definition = getMainDefinition(document);
-
-  return (
-    definition.kind === Kind.OPERATION_DEFINITION && 
-    definition.operation === OperationTypeNode.MUTATION
-  );
 }

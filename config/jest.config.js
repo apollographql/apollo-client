@@ -30,8 +30,7 @@ const react18TestFileIgnoreList = [
   // to avoid running them twice with both react versions
   // since they do not import react
   ignoreTSFiles,
-  // failing hoc tests (5)
-  'src/react/hoc/__tests__/queries/errors.test.tsx',
+  // failing hoc tests (4)
   'src/react/hoc/__tests__/queries/lifecycle.test.tsx',
   'src/react/hoc/__tests__/queries/loading.test.tsx',
   'src/react/hoc/__tests__/queries/observableQuery.test.tsx',

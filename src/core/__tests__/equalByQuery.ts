@@ -1,5 +1,5 @@
 import { GraphQLError } from "graphql";
-import { gql } from "../index";
+import { TypedDocumentNode, gql } from "../index";
 import { equalByQuery } from "../equalByQuery";
 
 describe("equalByQuery", () => {
@@ -331,15 +331,25 @@ describe("equalByQuery", () => {
     )).toBe(false);
   });
 
-  it("iterates over array-valued result fields", () => {
-    type Thing = {
-      __typename: "Thing";
-      id: string;
-      stable: number;
-      volatile: number;
-    };
+  type Thing = {
+    __typename: "Thing";
+    id: string;
+    stable: number;
+    volatile: number;
+  };
 
-    const query = gql`
+  it.each<TypedDocumentNode<Thing>>([
+    gql`
+      query {
+        things {
+          __typename
+          id
+          stable
+          volatile @nonreactive
+        }
+      }
+    `,
+    gql`
       query {
         things {
           __typename
@@ -352,8 +362,58 @@ describe("equalByQuery", () => {
         stable
         volatile @nonreactive
       }
-    `;
+    `,
+    gql`
+      query {
+        things {
+          __typename
+          id
+          ... on Thing {
+            stable
+            volatile @nonreactive
+          }
+        }
+      }
+    `,
+    gql`
+      query {
+        things {
+          __typename
+          id
+          stable
+          ... on Thing @nonreactive {
+            volatile
+          }
+        }
+      }
+    `,
+    gql`
+      query {
+        things {
+          __typename
+          id
+          stable
+          ...Volatile @nonreactive
+        }
+      }
 
+      fragment Volatile on Thing {
+        volatile
+      }
+    `,
+    gql`
+      query {
+        things {
+          __typename
+          id
+          stable
+          ... @nonreactive {
+            volatile
+          }
+        }
+      }
+    `,
+  ])("iterates over array-valued result fields ignoring @nonreactive (%#)", query => {
     let nextVolatileIntegerPart = 0;
     const makeThing = (id: string, stable = 1): Thing => ({
       __typename: "Thing",

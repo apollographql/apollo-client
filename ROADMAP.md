@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2023-03-07**
+**Last updated: 2023-04-04**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -15,7 +15,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ## [3.8.0](https://github.com/apollographql/apollo-client/milestone/30)
 
-_Approximate Date: 2023-04-14_
+_Approximate Date: 2023-04-21 (Beta), GA TBD after user feedback_
 
 Currently in active development and being shipped in a series alpha releases.  React 18 users will get a lot out of this release since it introduces support for Suspense and (for you server-side rendering enthusiasts) `renderToPipeableStream`.  There are also new features added to the core as well.  Here's a brief overview:
 
@@ -33,12 +33,6 @@ As we release each new feature we'll be looking for feedback from the community 
 _Approximate Date: TBD_
 
 The 3.8 release is a major milestone for the project's React support.  Feedback from the community will have a big impact on where we go next, particularly as use cases for React Server Components and other React 18 features emerge.  In addition to new functionality, there is a significant backlog of questions and fixes that we want to categorize and thoughtfully address in upcoming releases.
-
-## Demo app: Spotify clone
-
-_Approximate Date: 2023-03-08_
-
-We are working on a full-stack Spotify clone to showcase and test the capabilities of Apollo Client 3.8.  Right now it's a private repository that we're using to dogfood the alpha branch internally.  We will open-source it in the near future for use as a demonstration of how to use features like `useSuspenseQuery` and `useBackgroundQuery` in a nontrivial React app.  It may also be useful as a bug reproduction template in the future.
 
 ## 4.0
 

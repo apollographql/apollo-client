@@ -332,6 +332,13 @@ describe("equalByQuery", () => {
   });
 
   it("iterates over array-valued result fields", () => {
+    type Thing = {
+      __typename: "Thing";
+      id: string;
+      stable: number;
+      volatile: number;
+    };
+
     const query = gql`
       query {
         things {
@@ -347,22 +354,67 @@ describe("equalByQuery", () => {
       }
     `;
 
-    const makeThing = (id: string, stable = 1234) => ({
+    let nextVolatileIntegerPart = 0;
+    const makeThing = (id: string, stable = 1): Thing => ({
       __typename: "Thing",
       id,
       stable,
-      volatile: Math.random(),
+      // Thing.volatile is always a different randomized number, which normally
+      // would threatens any deep comparison of Thing objects. These test cases
+      // demonstrate (among other things) that we can make the result comparison
+      // insensitive to this volatility by marking the volatile field with the
+      // @nonreactive directive.
+      volatile: (nextVolatileIntegerPart++) + Math.random(),
     });
+
+    const makeThings = (lettersToSplit: string, stable: number = 1): Thing[] =>
+      lettersToSplit.split("").map(id => makeThing(id, stable));
 
     expect(equalByQuery(
       query,
-      { data: { things: "abc".split("").map(id => makeThing(id)) } },
+      { data: { things: makeThings("abc") } },
       { data: { things: [makeThing("a"), makeThing("b"), makeThing("c")] } },
     )).toBe(true);
 
     expect(equalByQuery(
       query,
-      { data: { things: "abc".split("").map(id => makeThing(id)) } },
+      { data: { things: makeThings("abcdefg", 2) } },
+      { data: { things: makeThings("abcdefg") } },
+    )).toBe(false);
+
+    expect(equalByQuery(
+      query,
+      { data: { things: makeThings("abcdefg", 2) } },
+      { data: { things: makeThings("abcdefg", 3) } },
+    )).toBe(false);
+
+    expect(equalByQuery(
+      query,
+      { data: { things: makeThings("abcdefg", 3) } },
+      { data: { things: makeThings("abcdefg", 3) } },
+    )).toBe(true);
+
+    expect(equalByQuery(
+      query,
+      { data: { things: makeThings("ab", 2345) } },
+      { data: { things: [makeThing("a"), makeThing("b", 2345)] } },
+    )).toBe(false);
+
+    expect(equalByQuery(
+      query,
+      { data: { things: makeThings("ab", 3456) } },
+      { data: { things: [makeThing("a", 3456), makeThing("b")] } },
+    )).toBe(false);
+
+    expect(equalByQuery(
+      query,
+      { data: { things: makeThings("ab", 3456) } },
+      { data: { things: [makeThing("a", 3456), makeThing("b", 3456)] } },
+    )).toBe(true);
+
+    expect(equalByQuery(
+      query,
+      { data: { things: makeThings("abc") } },
       { data: { things: "not an array" } },
     )).toBe(false);
 
@@ -386,38 +438,14 @@ describe("equalByQuery", () => {
 
     expect(equalByQuery(
       query,
+      // There's nothing inherently array-like about the Query.things field as
+      // it's represented in query syntax, since `query { things { id } }` could
+      // (depending on the server/schema) return a single object for the things
+      // field, rather than an array. Although this might seem like a strange
+      // edge case to test, it demonstrates the equalByQuery function can handle
+      // any combination of array/non-array values.
       { data: { things: {} } },
       { data: { things: {} } },
     )).toBe(true);
-
-    expect(equalByQuery(
-      query,
-      { data: { things: "ab".split("").map(id => makeThing(id)) } },
-      { data: { things: [makeThing("a"), makeThing("b")] } },
-    )).toBe(true);
-
-    expect(equalByQuery(
-      query,
-      { data: { things: "ab".split("").map(id => makeThing(id)) } },
-      { data: { things: [makeThing("b"), makeThing("a")] } },
-    )).toBe(false);
-
-    expect(equalByQuery(
-      query,
-      { data: { things: "ab".split("").map(id => makeThing(id)) } },
-      { data: { things: [makeThing("a"), makeThing("b", 2345)] } },
-    )).toBe(false);
-
-    expect(equalByQuery(
-      query,
-      { data: { things: "ab".split("").map(id => makeThing(id)) } },
-      { data: { things: [makeThing("a", 3456), makeThing("b")] } },
-    )).toBe(false);
-
-    expect(equalByQuery(
-      query,
-      { data: { things: "ab".split("").map(id => makeThing(id)) } },
-      { data: { things: [makeThing("b"), makeThing("a")] } },
-    )).toBe(false);
   });
 });

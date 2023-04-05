@@ -1,10 +1,10 @@
 import { GraphQLError } from "graphql";
 import { gql } from "../index";
-import { compareResultsUsingQuery } from "../compareResults";
+import { equalByQuery } from "../equalByQuery";
 
-describe("compareResultsUsingQuery", () => {
+describe("equalByQuery", () => {
   it("is importable and a function", () => {
-    expect(typeof compareResultsUsingQuery).toBe("function");
+    expect(typeof equalByQuery).toBe("function");
   });
 
   it("works with a basic single-field query", () => {
@@ -14,61 +14,61 @@ describe("compareResultsUsingQuery", () => {
       }
     `;
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { hello: "hi" } },
       { data: { hello: "hi" } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { hello: "hi", unrelated: 1 } },
       { data: { hello: "hi", unrelated: 100 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { hello: "hi" } },
       { data: { hello: "hey" } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: {} },
       { data: { hello: "hi" } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { hello: "hi" } },
       { data: {} },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { hello: "hi" } },
       { data: null },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: null },
       { data: { hello: "hi" } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: null },
       { data: null },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: {} },
       { data: {} },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { unrelated: "whatever" } },
       { data: { unrelated: "no matter" } },
@@ -84,13 +84,13 @@ describe("compareResultsUsingQuery", () => {
       }
     `;
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { b: 2, c: 3, a: 1 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { d: "bogus", a: 1, b: 2, c: 3 } },
       { data: { b: 2, c: 3, a: 1, d: "also bogus" } },
@@ -106,13 +106,13 @@ describe("compareResultsUsingQuery", () => {
       }
     `;
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 2, c: "different" } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: "different", b: 2, c: 4 } },
@@ -132,49 +132,49 @@ describe("compareResultsUsingQuery", () => {
     const oopsError = new GraphQLError("oops");
     const differentError = new GraphQLError("different");
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123 },
       { data: data123, errors: [oopsError] },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123, errors: [oopsError] },
       { data: data123 },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123, errors: [oopsError] },
       { data: data123, errors: [oopsError] },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123, errors: [oopsError] },
       { data: data123, errors: [differentError] },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123, errors: [oopsError] },
       { data: data123, errors: [oopsError] },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123, errors: [oopsError] },
       { data: { ...data123, b: 100 }, errors: [oopsError] },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123, errors: [] },
       { data: data123, errors: [] },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: data123, errors: [] },
       { data: { ...data123, b: 100 }, errors: [] },
@@ -192,13 +192,13 @@ describe("compareResultsUsingQuery", () => {
       }
     `;
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 20, c: 30 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 10, b: 20, c: 30 } },
@@ -218,25 +218,25 @@ describe("compareResultsUsingQuery", () => {
       }
     `;
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 2, c: 30 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 20, c: 3 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 20, c: 30 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 10, b: 20, c: 30 } },
@@ -256,25 +256,25 @@ describe("compareResultsUsingQuery", () => {
       }
     `;
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 2, c: 30 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 20, c: 3 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 20, c: 30 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 10, b: 20, c: 30 } },
@@ -294,37 +294,37 @@ describe("compareResultsUsingQuery", () => {
       }
     `;
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 2, c: 3 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { c: 3, a: 1, b: 2 } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 2, c: 30 } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 20, c: 3 } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 1, b: 20, c: 30 } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { a: 1, b: 2, c: 3 } },
       { data: { a: 10, b: 20, c: 30 } },
@@ -354,67 +354,67 @@ describe("compareResultsUsingQuery", () => {
       volatile: Math.random(),
     });
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: "abc".split("").map(id => makeThing(id)) } },
       { data: { things: [makeThing("a"), makeThing("b"), makeThing("c")] } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: "abc".split("").map(id => makeThing(id)) } },
       { data: { things: "not an array" } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: {} } },
       { data: { things: [] } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: [] } },
       { data: { things: {} } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: [] } },
       { data: { things: [] } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: {} } },
       { data: { things: {} } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: "ab".split("").map(id => makeThing(id)) } },
       { data: { things: [makeThing("a"), makeThing("b")] } },
     )).toBe(true);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: "ab".split("").map(id => makeThing(id)) } },
       { data: { things: [makeThing("b"), makeThing("a")] } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: "ab".split("").map(id => makeThing(id)) } },
       { data: { things: [makeThing("a"), makeThing("b", 2345)] } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: "ab".split("").map(id => makeThing(id)) } },
       { data: { things: [makeThing("a", 3456), makeThing("b")] } },
     )).toBe(false);
 
-    expect(compareResultsUsingQuery(
+    expect(equalByQuery(
       query,
       { data: { things: "ab".split("").map(id => makeThing(id)) } },
       { data: { things: [makeThing("b"), makeThing("a")] } },

@@ -31,7 +31,7 @@ import {
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
 import { MissingTree } from '../cache/core/types/common';
-import { compareResultsUsingQuery } from './compareResults';
+import { equalByQuery } from './equalByQuery';
 
 const {
   assign,
@@ -314,7 +314,7 @@ export class ObservableQuery<
     const { query } = this.options;
     const resultIsDifferent =
       this.queryManager.transform(query).hasNonreactiveDirective
-        ? !compareResultsUsingQuery(
+        ? !equalByQuery(
             query,
             this.last.result,
             newResult,

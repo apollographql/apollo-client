@@ -25,7 +25,7 @@ import {
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
-export function compareResultsUsingQuery<
+export function equalByQuery<
   TData,
   TVariables extends Record<string, any> = Record<string, any>
 >(
@@ -34,7 +34,7 @@ export function compareResultsUsingQuery<
   { data: bData, ...bRest }: Partial<ApolloQueryResult<TData>>,
   variables?: TVariables,
 ): boolean {
-  return equal(aRest, bRest) && compareResultsUsingSelectionSet(
+  return equal(aRest, bRest) && equalBySelectionSet(
     getMainDefinition(query).selectionSet,
     aData,
     bData,
@@ -45,14 +45,14 @@ export function compareResultsUsingQuery<
   );
 }
 
-// Encapsulates the information used by compareResultsUsingSelectionSet that
-// does not change during the recursion.
+// Encapsulates the information used by equalBySelectionSet that does not change
+// during the recursion.
 interface CompareContext<TVariables> {
   fragmentMap: FragmentMap;
   variables: TVariables | undefined;
 }
 
-function compareResultsUsingSelectionSet<TVariables extends Record<string, any>>(
+function equalBySelectionSet<TVariables extends Record<string, any>>(
   selectionSet: SelectionSetNode,
   aResult: any,
   bResult: any,
@@ -66,7 +66,7 @@ function compareResultsUsingSelectionSet<TVariables extends Record<string, any>>
 
   // Returning true from this Array.prototype.every callback function skips the
   // current field/subtree. Returning false aborts the entire traversal
-  // immediately, causing compareResultsUsingSelectionSet to return false.
+  // immediately, causing equalBySelectionSet to return false.
   return selectionSet.selections.every(selection => {
     // Avoid re-processing the same selection at the same level of recursion, in
     // case the same field gets included via multiple indirect fragment spreads.
@@ -101,7 +101,7 @@ function compareResultsUsingSelectionSet<TVariables extends Record<string, any>>
           return false;
         }
         for (let i = 0; i < length; ++i) {
-          if (!compareResultsUsingSelectionSet(
+          if (!equalBySelectionSet(
             childSelectionSet,
             aResultChild[i],
             bResultChild[i],
@@ -113,7 +113,7 @@ function compareResultsUsingSelectionSet<TVariables extends Record<string, any>>
         return true;
       }
 
-      return compareResultsUsingSelectionSet(
+      return equalBySelectionSet(
         childSelectionSet,
         aResultChild,
         bResultChild,
@@ -127,7 +127,7 @@ function compareResultsUsingSelectionSet<TVariables extends Record<string, any>>
         // could be !== if it's a named fragment ...spread.
         if (selectionHasNonreactiveDirective(fragment)) return true;
 
-        return compareResultsUsingSelectionSet(
+        return equalBySelectionSet(
           fragment.selectionSet,
           // Notice that we reuse the same aResult and bResult values here,
           // since the fragment ...spread does not specify a field name, but

@@ -1346,7 +1346,7 @@ describe('HttpLink', () => {
         '-----',
       ].join("\r\n");
 
-      const nonNullErrorBody = [
+      const finalChunkOnlyHasNextFalse = [
         "--graphql",
         "content-type: application/json",
         "",
@@ -1430,10 +1430,12 @@ describe('HttpLink', () => {
         );
       });
 
-      it('whatwg stream bodies, non-null errors', (done) => {
+      // Verify that observable completes if final chunk does not contain
+      // incremental array.
+      it('whatwg stream bodies, final chunk of { hasNext: false }', (done) => {
         const stream = new ReadableStream({
           async start(controller) {
-            const lines = nonNullErrorBody.split("\r\n");
+            const lines = finalChunkOnlyHasNextFalse.split("\r\n");
             try {
               for (const line of lines) {
                 await new Promise((resolve) => setTimeout(resolve, 10));

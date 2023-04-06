@@ -1346,6 +1346,18 @@ describe('HttpLink', () => {
         '-----',
       ].join("\r\n");
 
+      const nonNullErrorBody = [
+        "--graphql",
+        "content-type: application/json",
+        "",
+        '{"data":{"allProducts":[null,null,null]},"errors":[{"message":"Cannot return null for non-nullable field Product.nonNullErrorField.","locations":[{"line":1,"column":53}],"path":["allProducts",0,"nonNullErrorField"],"extensions":{"code":"INTERNAL_SERVER_ERROR","exception":{"stacktrace":["Error: Cannot return null for non-nullable field Product.nonNullErrorField.","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:594:13)","    at executeField (/usr/src/app/node_modules/graphql/execution/execute.js:489:19)","    at executeFields (/usr/src/app/node_modules/graphql/execution/execute.js:413:20)","    at completeObjectValue (/usr/src/app/node_modules/graphql/execution/execute.js:914:10)","    at completeAbstractValue (/usr/src/app/node_modules/graphql/execution/execute.js:795:10)","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:624:12)","    at /usr/src/app/node_modules/graphql/execution/execute.js:696:25","    at Function.from (<anonymous>)","    at completeListValue (/usr/src/app/node_modules/graphql/execution/execute.js:676:34)","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:607:12)"]}}},{"message":"Cannot return null for non-nullable field Product.nonNullErrorField.","locations":[{"line":1,"column":53}],"path":["allProducts",1,"nonNullErrorField"],"extensions":{"code":"INTERNAL_SERVER_ERROR","exception":{"stacktrace":["Error: Cannot return null for non-nullable field Product.nonNullErrorField.","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:594:13)","    at executeField (/usr/src/app/node_modules/graphql/execution/execute.js:489:19)","    at executeFields (/usr/src/app/node_modules/graphql/execution/execute.js:413:20)","    at completeObjectValue (/usr/src/app/node_modules/graphql/execution/execute.js:914:10)","    at completeAbstractValue (/usr/src/app/node_modules/graphql/execution/execute.js:795:10)","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:624:12)","    at /usr/src/app/node_modules/graphql/execution/execute.js:696:25","    at Function.from (<anonymous>)","    at completeListValue (/usr/src/app/node_modules/graphql/execution/execute.js:676:34)","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:607:12)"]}}},{"message":"Cannot return null for non-nullable field Product.nonNullErrorField.","locations":[{"line":1,"column":53}],"path":["allProducts",2,"nonNullErrorField"],"extensions":{"code":"INTERNAL_SERVER_ERROR","exception":{"stacktrace":["Error: Cannot return null for non-nullable field Product.nonNullErrorField.","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:594:13)","    at executeField (/usr/src/app/node_modules/graphql/execution/execute.js:489:19)","    at executeFields (/usr/src/app/node_modules/graphql/execution/execute.js:413:20)","    at completeObjectValue (/usr/src/app/node_modules/graphql/execution/execute.js:914:10)","    at completeAbstractValue (/usr/src/app/node_modules/graphql/execution/execute.js:795:10)","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:624:12)","    at /usr/src/app/node_modules/graphql/execution/execute.js:696:25","    at Function.from (<anonymous>)","    at completeListValue (/usr/src/app/node_modules/graphql/execution/execute.js:676:34)","    at completeValue (/usr/src/app/node_modules/graphql/execution/execute.js:607:12)"]}}}],"hasNext":true}',
+        "--graphql",
+        "content-type: application/json",
+        "",
+        '{"hasNext":false}',
+        "--graphql--",
+      ].join("\r\n");
+
       it('whatwg stream bodies', (done) => {
         const stream = new ReadableStream({
           async start(controller) {
@@ -1410,6 +1422,71 @@ describe('HttpLink', () => {
           },
           () => {
             if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+
+            done();
+          },
+        );
+      });
+
+      it('whatwg stream bodies, non-null errors', (done) => {
+        const stream = new ReadableStream({
+          async start(controller) {
+            const lines = nonNullErrorBody.split("\r\n");
+            try {
+              for (const line of lines) {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                controller.enqueue(line + "\r\n");
+              }
+            } finally {
+              controller.close();
+            }
+          },
+        });
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed;boundary="graphql";deferSpec=20220824' }),
+        }));
+
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleDeferredQuery }).subscribe(
+          result => {
+            try {
+              if (i === 0) {
+                expect(result).toMatchObject({
+                  data: {
+                    allProducts: [
+                      null,
+                      null,
+                      null
+                    ]
+                  },
+                  // errors is also present, but for the purpose of this test
+                  // we're not interested in its (lengthy) content.
+                  // errors: [{...}],
+                  hasNext: true,
+                });
+              }
+              // Since the second chunk contains only hasNext: false,
+              // there is no next result to receive.
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          err => {
+            done(err);
+          },
+          () => {
+            if (i !== 1) {
               done(new Error("Unexpected end to observable"));
             }
 

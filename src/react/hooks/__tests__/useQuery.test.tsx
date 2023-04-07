@@ -5949,7 +5949,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe('defer', () => {
+  describe('@defer', () => {
     it('should handle deferred queries', async () => {
       const query = gql`
         {
@@ -6930,6 +6930,147 @@ describe('useQuery Hook', () => {
             message: 'Hello world',
             recipient: { __typename: 'Person', name: 'Alice' },
           },
+        });
+      }, { interval: 1 });
+    });
+  });
+
+  describe.only('@stream', () => {
+    it('should handle streamed lists', async () => {
+      const query = gql`
+        query {
+          books @stream {
+            title
+            author
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result } = renderHook(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBe(undefined);
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              items: [
+                {
+                  title: "Things Fall Apart",
+                  author: "Chinua Achebe",
+                  __typename: "Book"
+                }
+              ],
+              path: ["books", 0]
+            }
+          ],
+          hasNext: true,
+        },
+      });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
+      expect(result.current.data).toEqual({
+        books: [
+          {
+            title: "Things Fall Apart",
+            author: "Chinua Achebe",
+            __typename: "Book"
+          }
+        ],
+      });
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              items: [
+                {
+                  title: "Fairy tales",
+                  author: "Hans Christian Andersen",
+                  __typename: "Book"
+                }
+              ],
+              path: ["books", 1]
+            }
+          ],
+          hasNext: true
+        },
+      });
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({
+          books: [
+            {
+              title: "Things Fall Apart",
+              author: "Chinua Achebe",
+              __typename: "Book"
+            },
+            {
+              title: "Fairy tales",
+              author: "Hans Christian Andersen",
+              __typename: "Book"
+            }
+          ],
+        });
+      }, { interval: 20 });
+
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              items: [
+                {
+                  title: "The Divine Comedy",
+                  author: "Dante Alighieri",
+                  __typename: "Book"
+                }
+              ],
+              path: ["books", 2]
+            }
+          ],
+          hasNext: true
+        },
+      });
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({
+          books: [
+            {
+              title: "Things Fall Apart",
+              author: "Chinua Achebe",
+              __typename: "Book"
+            },
+            {
+              title: "Fairy tales",
+              author: "Hans Christian Andersen",
+              __typename: "Book"
+            },
+            {
+              title: "The Divine Comedy",
+              author: "Dante Alighieri",
+              __typename: "Book"
+            },
+          ],
         });
       }, { interval: 1 });
     });

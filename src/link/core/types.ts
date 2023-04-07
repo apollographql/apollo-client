@@ -24,7 +24,8 @@ export interface ExecutionPatchInitialResult<
 export interface IncrementalPayload<TData, TExtensions> {
   // data and path must both be present
   // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
-  data: TData | null;
+  data?: TData | null;
+  items?: TData[];
   label?: string;
   path: Path;
   errors?: ReadonlyArray<GraphQLError>;

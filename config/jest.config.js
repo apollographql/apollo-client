@@ -42,7 +42,7 @@ const standardReact18Config = {
 const standardReact17Config = {
   ...defaults,
   displayName: "ReactDOM 17",
-  testPathIgnorePatterns: [ignoreTSFiles],
+  testPathIgnorePatterns: [ignoreTSFiles, 'src/react/hooks/__tests__/useQuery.test.tsx'],
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",

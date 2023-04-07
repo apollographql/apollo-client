@@ -136,6 +136,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     const isSubscription = definitionIsSubscription(getMainDefinition(operation.query));
     // does not match custom directives beginning with @defer
     const hasDefer = hasDirectives(['defer'], operation.query);
+    const hasStream = hasDirectives(['stream'], operation.query);
     if (
       useGETForQueries &&
       !operation.query.definitions.some(definitionIsMutation)
@@ -148,13 +149,13 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       let acceptHeader = "multipart/mixed;";
       // Omit defer-specific headers if the user attempts to defer a selection
       // set on a subscription and log a warning.
-      if (isSubscription && hasDefer) {
-        invariant.warn("Multipart-subscriptions do not support @defer");
+      if (isSubscription && (hasDefer || hasStream)) {
+        invariant.warn("Multipart-subscriptions do not support @defer or @stream");
       }
 
       if (isSubscription) {
         acceptHeader += 'boundary=graphql;subscriptionSpec=1.0,application/json';
-      } else if (hasDefer) {
+      } else if (hasDefer || hasStream) {
         acceptHeader += 'deferSpec=20220824,application/json';
       }
       options.headers.accept = acceptHeader;

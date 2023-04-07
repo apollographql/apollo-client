@@ -1,4 +1,4 @@
-import { wrapPromiseWithState } from '../../../utilities/promises/decoration';
+import { wrapPromiseWithState } from '../../../utilities';
 
 // TODO: Replace the use of this with React's use once its available. For now,
 // this mimics its functionality for promises by adding

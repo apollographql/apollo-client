@@ -191,17 +191,19 @@ export function relayStylePagination<TNode extends Reference = Reference>(
       let prefix = existing.edges;
       let suffix: typeof prefix = [];
 
-      if (args && args.after) {
+      if (args && args.after || args && args.input && args.input.after) {
         // This comparison does not need to use readField("cursor", edge),
         // because we stored the cursor field of any Reference edges as an
         // extra property of the Reference object.
-        const index = prefix.findIndex(edge => edge.cursor === args.after);
+        const after = args.after || args.input.after;
+        const index = prefix.findIndex(edge => edge.cursor === after);
         if (index >= 0) {
           prefix = prefix.slice(0, index + 1);
           // suffix = []; // already true
         }
-      } else if (args && args.before) {
-        const index = prefix.findIndex(edge => edge.cursor === args.before);
+      } else if (args && args.before || args && args.input && args.input.before) {
+        const before = args.before || args.input.before;
+        const index = prefix.findIndex(edge => edge.cursor === before);
         suffix = index < 0 ? prefix : prefix.slice(index);
         prefix = [];
       } else if (incoming.edges) {

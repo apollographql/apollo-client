@@ -5984,18 +5984,17 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              greeting: {
-                message: 'Hello world',
-                __typename: 'Greeting',
-              },
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: {
+              message: 'Hello world',
+              __typename: 'Greeting',
             },
-            hasNext: true
           },
-        });
+          hasNext: true
+        },
       });
 
       await waitFor(() => {
@@ -6009,22 +6008,20 @@ describe('useQuery Hook', () => {
       });
       expect(result.current).not.toContain({ hasNext: true });
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [{
-              data: {
-                recipient: {
-                  name: 'Alice',
-                  __typename: 'Person',
-                },
-                __typename: 'Greeting',
+      link.simulateResult({
+        result: {
+          incremental: [{
+            data: {
+              recipient: {
+                name: 'Alice',
+                __typename: 'Person',
               },
-              path: ['greeting'],
-            }],
-            hasNext: false
-          },
-        });
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          }],
+          hasNext: false
+        },
       });
 
       await waitFor(() => {
@@ -6078,18 +6075,17 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              greetings: [
-                { message: 'Hello world', __typename: 'Greeting' },
-                { message: 'Hello again', __typename: 'Greeting' },
-              ],
-            },
-            hasNext: true
+
+      link.simulateResult({
+        result: {
+          data: {
+            greetings: [
+              { message: 'Hello world', __typename: 'Greeting' },
+              { message: 'Hello again', __typename: 'Greeting' },
+            ],
           },
-        });
+          hasNext: true
+        },
       });
 
       await waitFor(() => {
@@ -6102,22 +6098,20 @@ describe('useQuery Hook', () => {
         ],
       });
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [{
-              data: {
-                recipient: {
-                  name: 'Alice',
-                  __typename: 'Person',
-                },
-                __typename: 'Greeting',
+      link.simulateResult({
+        result: {
+          incremental: [{
+            data: {
+              recipient: {
+                name: 'Alice',
+                __typename: 'Person',
               },
-              path: ['greetings', 0],
-            }],
-            hasNext: true,
-          },
-        });
+              __typename: 'Greeting',
+            },
+            path: ['greetings', 0],
+          }],
+          hasNext: true,
+        },
       });
 
       await waitFor(() => {
@@ -6136,22 +6130,20 @@ describe('useQuery Hook', () => {
         });
       }, { interval: 1 });
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [{
-              data: {
-                recipient: {
-                  name: 'Bob',
-                  __typename: 'Person',
-                },
-                __typename: 'Greeting',
+      link.simulateResult({
+        result: {
+          incremental: [{
+            data: {
+              recipient: {
+                name: 'Bob',
+                __typename: 'Person',
               },
-              path: ['greetings', 1],
-            }],
-            hasNext: false
-          },
-        });
+              __typename: 'Greeting',
+            },
+            path: ['greetings', 1],
+          }],
+          hasNext: false
+        },
       });
 
       await waitFor(() => {
@@ -6212,32 +6204,31 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              allProducts: [
-                {
-                  __typename: "Product",
-                  delivery: {
-                    __typename: "DeliveryEstimates"
-                  },
-                  id: "apollo-federation",
-                  sku: "federation"
+
+      link.simulateResult({
+        result: {
+          data: {
+            allProducts: [
+              {
+                __typename: "Product",
+                delivery: {
+                  __typename: "DeliveryEstimates"
                 },
-                {
-                  __typename: "Product",
-                  delivery: {
-                    __typename: "DeliveryEstimates"
-                  },
-                  id: "apollo-studio",
-                  sku: "studio"
-                }
-              ]
-            },
-            hasNext: true
+                id: "apollo-federation",
+                sku: "federation"
+              },
+              {
+                __typename: "Product",
+                delivery: {
+                  __typename: "DeliveryEstimates"
+                },
+                id: "apollo-studio",
+                sku: "studio"
+              }
+            ]
           },
-        });
+          hasNext: true
+        },
       });
 
       await waitFor(() => {
@@ -6266,38 +6257,36 @@ describe('useQuery Hook', () => {
         });
       }, { interval: 1 });
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            hasNext: true,
-            incremental: [
-              {
-                data: {
-                  __typename: "DeliveryEstimates",
-                  estimatedDelivery: "6/25/2021",
-                  fastestDelivery: "6/24/2021",
-                },
-                path: [
-                  "allProducts",
-                  0,
-                  "delivery"
-                ]
+      link.simulateResult({
+        result: {
+          hasNext: true,
+          incremental: [
+            {
+              data: {
+                __typename: "DeliveryEstimates",
+                estimatedDelivery: "6/25/2021",
+                fastestDelivery: "6/24/2021",
               },
-              {
-                data: {
-                  __typename: "DeliveryEstimates",
-                  estimatedDelivery: "6/25/2021",
-                  fastestDelivery: "6/24/2021",
-                },
-                path: [
-                  "allProducts",
-                  1,
-                  "delivery"
-                ]
+              path: [
+                "allProducts",
+                0,
+                "delivery"
+              ]
+            },
+            {
+              data: {
+                __typename: "DeliveryEstimates",
+                estimatedDelivery: "6/25/2021",
+                fastestDelivery: "6/24/2021",
               },
-            ]
-          },
-        });
+              path: [
+                "allProducts",
+                1,
+                "delivery"
+              ]
+            },
+          ]
+        },
       });
 
       await waitFor(() => {
@@ -6365,18 +6354,17 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              greeting: {
-                message: 'Hello world',
-                __typename: 'Greeting',
-              },
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: {
+              message: 'Hello world',
+              __typename: 'Greeting',
             },
-            hasNext: true
           },
-        });
+          hasNext: true
+        },
       });
 
       await waitFor(() => {
@@ -6391,22 +6379,20 @@ describe('useQuery Hook', () => {
         });
       }, { interval: 1 });
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [{
-              data: {
-                recipient: {
-                  name: 'Alice',
-                  __typename: 'Person',
-                },
-                __typename: 'Greeting',
+      link.simulateResult({
+        result: {
+          incremental: [{
+            data: {
+              recipient: {
+                name: 'Alice',
+                __typename: 'Person',
               },
-              path: ['greeting'],
-            }],
-            hasNext: false
-          },
-        });
+              __typename: 'Greeting',
+            },
+            path: ['greeting'],
+          }],
+          hasNext: false
+        },
       });
 
       await waitFor(() => {
@@ -6462,27 +6448,26 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              hero: {
-                name: "R2-D2",
-                heroFriends: [
-                  {
-                    id: "1000",
-                    name: "Luke Skywalker"
-                  },
-                  {
-                    id: "1003",
-                    name: "Leia Organa"
-                  }
-                ]
-              }
-            },
-            hasNext: true
+
+      link.simulateResult({
+        result: {
+          data: {
+            hero: {
+              name: "R2-D2",
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker"
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa"
+                }
+              ]
+            }
           },
-        });
+          hasNext: true
+        },
       });
 
       await waitFor(() => {
@@ -6506,32 +6491,30 @@ describe('useQuery Hook', () => {
         });
       }, { interval: 1 });
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            incremental: [
-              {
-                path: ["hero", "heroFriends", 0],
-                errors: [
-                  new GraphQLError(
-                    "homeWorld for character with ID 1000 could not be fetched.",
-                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                  )
-                ],
-                data: {
-                  "homeWorld": null,
-                }
-              },
-              {
-                path: ["hero", "heroFriends", 1],
-                data: {
-                  "homeWorld": "Alderaan",
-                }
-              },
-            ],
-            "hasNext": false
-          }
-        });
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              path: ["hero", "heroFriends", 0],
+              errors: [
+                new GraphQLError(
+                  "homeWorld for character with ID 1000 could not be fetched.",
+                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                )
+              ],
+              data: {
+                "homeWorld": null,
+              }
+            },
+            {
+              path: ["hero", "heroFriends", 1],
+              data: {
+                "homeWorld": "Alderaan",
+              }
+            },
+          ],
+          "hasNext": false
+        }
       });
 
       await waitFor(() => {
@@ -6599,27 +6582,26 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              hero: {
-                name: "R2-D2",
-                heroFriends: [
-                  {
-                    id: "1000",
-                    name: "Luke Skywalker"
-                  },
-                  {
-                    id: "1003",
-                    name: "Leia Organa"
-                  }
-                ]
-              }
-            },
-            hasNext: true
+
+      link.simulateResult({
+        result: {
+          data: {
+            hero: {
+              name: "R2-D2",
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker"
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa"
+                }
+              ]
+            }
           },
-        });
+          hasNext: true
+        },
       });
 
       await waitFor(() => {
@@ -6643,36 +6625,34 @@ describe('useQuery Hook', () => {
         });
       }, { interval: 1 });
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            extensions: {
-              thing1: 'foo',
-              thing2: 'bar',
+      link.simulateResult({
+        result: {
+          extensions: {
+            thing1: 'foo',
+            thing2: 'bar',
+          },
+          incremental: [
+            {
+              path: ["hero", "heroFriends", 0],
+              errors: [
+                new GraphQLError(
+                  "homeWorld for character with ID 1000 could not be fetched.",
+                  { path: ["hero", "heroFriends", 0, "homeWorld"] }
+                )
+              ],
+              data: {
+                "homeWorld": null,
+              }
             },
-            incremental: [
-              {
-                path: ["hero", "heroFriends", 0],
-                errors: [
-                  new GraphQLError(
-                    "homeWorld for character with ID 1000 could not be fetched.",
-                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                  )
-                ],
-                data: {
-                  "homeWorld": null,
-                }
-              },
-              {
-                path: ["hero", "heroFriends", 1],
-                data: {
-                  "homeWorld": "Alderaan",
-                }
-              },
-            ],
-            "hasNext": false
-          }
-        });
+            {
+              path: ["hero", "heroFriends", 1],
+              data: {
+                "homeWorld": "Alderaan",
+              }
+            },
+          ],
+          "hasNext": false
+        }
       });
 
       await waitFor(() => {
@@ -6935,7 +6915,7 @@ describe('useQuery Hook', () => {
     });
   });
 
-  describe.only('@stream', () => {
+  describe('@stream', () => {
     it('should handle streamed lists', async () => {
       const query = gql`
         query {

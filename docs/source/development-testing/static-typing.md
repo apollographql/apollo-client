@@ -314,7 +314,7 @@ const AllPeopleComponent = <Query<AllPeopleQuery, AllPeopleQueryVariables> query
 
 Our `<Query />` component's function arguments are now typed. Since we aren't mapping any props coming into our component, nor are we rewriting the props passed down, we only need to provide the shape of our data and the variables for our typing to work!
 
-This approach works also works for `<Mutation />` and `<Subscription />` components.
+This approach also works for `<Mutation />` and `<Subscription />` components.
 
 ### Extending components
 

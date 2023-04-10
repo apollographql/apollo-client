@@ -27,6 +27,7 @@ export class QuerySubscription<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public readonly observable: ObservableQuery<TData>;
 
+  public version: 'main' | 'network' = 'main';
   public promises: {
     main: Promise<ApolloQueryResult<TData>>;
     network?: Promise<ApolloQueryResult<TData>>;

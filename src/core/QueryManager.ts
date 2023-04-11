@@ -7,8 +7,10 @@ import { equal } from '@wry/equality';
 
 import { ApolloLink, execute, FetchResult } from '../link/core';
 import {
+  hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
+  removeDirectivesFromDocument,
 } from '../utilities';
 import { Cache, ApolloCache, canonicalStringify } from '../cache';
 
@@ -19,7 +21,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  removeConnectionDirectiveFromDocument,
   canUseWeakMap,
   ObservableSubscription,
   Observable,
@@ -77,6 +78,7 @@ interface TransformCacheEntry {
   document: DocumentNode;
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
+  hasNonreactiveDirective: boolean;
   clientQuery: DocumentNode | null;
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
@@ -616,18 +618,23 @@ export class QueryManager<TStore> {
 
     if (!transformCache.has(document)) {
       const transformed = this.cache.transformDocument(document);
-      const noConnection = removeConnectionDirectiveFromDocument(transformed);
+      const serverQuery = removeDirectivesFromDocument([
+        removeClientFields ? { name: 'client', remove: true } : {},
+        { name: 'connection' },
+        { name: 'nonreactive' },
+      ], transformed);
       const clientQuery = this.localState.clientQuery(transformed);
-      const serverQuery =
-        noConnection &&
-          this.localState.serverQuery(noConnection, { removeClientFields });
 
       const cacheEntry: TransformCacheEntry = {
         document: transformed,
-        // TODO These two calls (hasClientExports and shouldForceResolvers)
-        // could probably be merged into a single traversal.
+        // TODO These three calls (hasClientExports, shouldForceResolvers, and
+        // usesNonreactiveDirective) are performing independent full traversals
+        // of the transformed document. We should consider merging these
+        // traversals into a single pass in the future, though the work is
+        // cached after the first time.
         hasClientExports: hasClientExports(transformed),
         hasForcedResolvers: this.localState.shouldForceResolvers(transformed),
+        hasNonreactiveDirective: hasDirectives(['nonreactive'], transformed),
         clientQuery,
         serverQuery,
         defaultVars: getDefaultValues(

@@ -35,6 +35,7 @@ Array [
   "getApolloContext",
   "gql",
   "isApolloError",
+  "isNetworkRequestSettled",
   "isReference",
   "makeReference",
   "makeVar",
@@ -113,6 +114,7 @@ Array [
   "fromPromise",
   "gql",
   "isApolloError",
+  "isNetworkRequestSettled",
   "isReference",
   "makeReference",
   "makeVar",
@@ -406,6 +408,7 @@ Array [
   "isNonNullObject",
   "isReadableStream",
   "isReference",
+  "isStatefulPromise",
   "isStreamableBlob",
   "iterateObserversSafely",
   "makeReference",
@@ -428,6 +431,7 @@ Array [
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "valueToObjectRepresentation",
+  "wrapPromiseWithState",
 ]
 `;
 

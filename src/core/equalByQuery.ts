@@ -12,6 +12,11 @@ import {
 } from "graphql";
 
 import {
+  ApolloQueryResult,
+  OperationVariables,
+} from "./types";
+
+import {
   createFragmentMap,
   FragmentMap,
   getFragmentDefinitions,
@@ -20,21 +25,20 @@ import {
   isField,
   resultKeyNameFromField,
   shouldInclude,
-} from "../../utilities";
+} from "../utilities";
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
-export function compareResultsUsingQuery(
+export function equalByQuery(
   query: DocumentNode,
-  aResult: any,
-  bResult: any,
-  variables?: Record<string, any> | undefined,
+  { data: aData, ...aRest }: Partial<ApolloQueryResult<unknown>>,
+  { data: bData, ...bRest }: Partial<ApolloQueryResult<unknown>>,
+  variables?: OperationVariables,
 ): boolean {
-  if (aResult === bResult) return true;
-  return compareResultsUsingSelectionSet(
+  return equal(aRest, bRest) && equalBySelectionSet(
     getMainDefinition(query).selectionSet,
-    aResult,
-    bResult,
+    aData,
+    bData,
     {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       variables,
@@ -42,24 +46,28 @@ export function compareResultsUsingQuery(
   );
 }
 
-// Encapsulates the information used by compareResultsUsingSelectionSet that
-// does not change during the recursion.
-interface CompareContext {
+// Encapsulates the information used by equalBySelectionSet that does not change
+// during the recursion.
+interface CompareContext<TVariables> {
   fragmentMap: FragmentMap;
-  variables: Record<string, any> | undefined;
+  variables: TVariables | undefined;
 }
 
-function compareResultsUsingSelectionSet(
+function equalBySelectionSet(
   selectionSet: SelectionSetNode,
   aResult: any,
   bResult: any,
-  context: CompareContext,
+  context: CompareContext<OperationVariables>,
 ): boolean {
+  if (aResult === bResult) {
+    return true;
+  }
+
   const seenSelections = new Set<SelectionNode>();
 
   // Returning true from this Array.prototype.every callback function skips the
   // current field/subtree. Returning false aborts the entire traversal
-  // immediately, causing compareResultsUsingSelectionSet to return false.
+  // immediately, causing equalBySelectionSet to return false.
   return selectionSet.selections.every(selection => {
     // Avoid re-processing the same selection at the same level of recursion, in
     // case the same field gets included via multiple indirect fragment spreads.
@@ -94,7 +102,7 @@ function compareResultsUsingSelectionSet(
           return false;
         }
         for (let i = 0; i < length; ++i) {
-          if (!compareResultsUsingSelectionSet(
+          if (!equalBySelectionSet(
             childSelectionSet,
             aResultChild[i],
             bResultChild[i],
@@ -106,7 +114,7 @@ function compareResultsUsingSelectionSet(
         return true;
       }
 
-      return compareResultsUsingSelectionSet(
+      return equalBySelectionSet(
         childSelectionSet,
         aResultChild,
         bResultChild,
@@ -120,7 +128,7 @@ function compareResultsUsingSelectionSet(
         // could be !== if it's a named fragment ...spread.
         if (selectionHasNonreactiveDirective(fragment)) return true;
 
-        return compareResultsUsingSelectionSet(
+        return equalBySelectionSet(
           fragment.selectionSet,
           // Notice that we reuse the same aResult and bResult values here,
           // since the fragment ...spread does not specify a field name, but

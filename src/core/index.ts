@@ -24,7 +24,7 @@ export {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
 } from './watchQueryOptions';
-export { NetworkStatus } from './networkStatus';
+export { NetworkStatus, isNetworkRequestSettled } from './networkStatus';
 export * from './types';
 export {
   Resolver,

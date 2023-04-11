@@ -57,6 +57,8 @@ export class QuerySubscription<TData = any> {
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
 
+  private promisesByKey = new Map<number, Promise<ApolloQueryResult<TData>>>();
+
   constructor(
     observable: ObservableQuery<TData>,
     options: QuerySubscriptionOptions = Object.create(null)
@@ -103,6 +105,10 @@ export class QuerySubscription<TData = any> {
     );
   }
 
+  getPromise(key: number) {
+    return this.promisesByKey.get(key) || this.promise;
+  }
+
   listen(listener: Listener<TData>) {
     // As soon as the component listens for updates, we know it has finished
     // suspending and is ready to receive updates, so we can remove the auto
@@ -116,10 +122,12 @@ export class QuerySubscription<TData = any> {
     };
   }
 
-  refetch(variables: OperationVariables | undefined) {
-    this.promise = this.observable.refetch(variables);
+  refetch(variables: OperationVariables | undefined, key: number) {
+    const promise = this.observable.refetch(variables);
 
-    return this.promise;
+    this.promisesByKey.set(key, promise);
+
+    return promise;
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {

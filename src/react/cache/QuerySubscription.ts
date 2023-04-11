@@ -14,8 +14,9 @@ import {
 } from '../../utilities';
 import { invariant } from '../../utilities/globals';
 import { wrap } from 'optimism';
+import { createFulfilledPromise } from '../../utilities/promises/decoration';
 
-type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
+type Listener = () => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
@@ -48,16 +49,22 @@ interface QuerySubscriptionOptions {
   autoDisposeTimeoutMs?: number;
 }
 
+interface PromiseChannel<TData> {
+  main: Promise<ApolloQueryResult<TData>>;
+  refetch?: Promise<ApolloQueryResult<TData>>;
+  fetchMore?: Promise<ApolloQueryResult<TData>>;
+}
+
 export class QuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
   public promise: Promise<ApolloQueryResult<TData>>;
   public readonly observable: ObservableQuery<TData>;
 
   private subscription: ObservableSubscription;
-  private listeners = new Set<Listener<TData>>();
+  private listeners = new Set<Listener>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
 
-  private promisesByKey = new Map<number, Promise<ApolloQueryResult<TData>>>();
+  private channels: PromiseChannel<TData>;
 
   constructor(
     observable: ObservableQuery<TData>,
@@ -91,9 +98,11 @@ export class QuerySubscription<TData = any> {
 
     const concast = observable['concast'];
 
-    this.promise = isMultipartQuery(observable.query)
-      ? wrapWithCustomPromise(concast)
-      : concast.promise;
+    this.channels = {
+      main: isMultipartQuery(observable.query)
+        ? wrapWithCustomPromise(concast)
+        : concast.promise,
+    };
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this subscription in the given time. This
@@ -105,11 +114,11 @@ export class QuerySubscription<TData = any> {
     );
   }
 
-  getPromise(key: number) {
-    return this.promisesByKey.get(key) || this.promise;
+  getPromise(channel: 'main' | 'refetch' | 'fetchMore') {
+    return this.channels[channel] || this.channels.main;
   }
 
-  listen(listener: Listener<TData>) {
+  listen(listener: Listener) {
     // As soon as the component listens for updates, we know it has finished
     // suspending and is ready to receive updates, so we can remove the auto
     // dispose timer.
@@ -122,16 +131,18 @@ export class QuerySubscription<TData = any> {
     };
   }
 
-  refetch(variables: OperationVariables | undefined, key: number) {
+  refetch(variables: OperationVariables | undefined) {
     const promise = this.observable.refetch(variables);
 
-    this.promisesByKey.set(key, promise);
+    this.channels.refetch = promise;
 
     return promise;
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
-    this.promise = this.observable.fetchMore<TData>(options);
+    const promise = this.observable.fetchMore<TData>(options);
+
+    this.channels.fetchMore = promise;
 
     return this.promise;
   }
@@ -158,7 +169,11 @@ export class QuerySubscription<TData = any> {
     }
 
     this.result = result;
-    this.deliver(result);
+
+    if (isNetworkRequestSettled(result.networkStatus)) {
+      this.channels.main = createFulfilledPromise(result);
+      this.deliver();
+    }
   }
 
   private handleError(error: ApolloError) {
@@ -169,10 +184,10 @@ export class QuerySubscription<TData = any> {
     };
 
     this.result = result;
-    this.deliver(result);
+    this.deliver();
   }
 
-  private deliver(result: ApolloQueryResult<TData>) {
-    this.listeners.forEach((listener) => listener(result));
+  private deliver() {
+    this.listeners.forEach((listener) => listener());
   }
 }

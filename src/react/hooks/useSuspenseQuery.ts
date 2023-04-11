@@ -1,5 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useCallback, useMemo, useState } from 'react';
+import { useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import {
   ApolloClient,
   ApolloError,
@@ -72,8 +72,6 @@ export function useSuspenseQuery_experimental<
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const [promiseKey, setPromiseKey] = useState(0);
-
   const cacheKey = (
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
@@ -82,24 +80,34 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const promise = subscription.getPromise(promiseKey);
+  const [[channel], setChannel] = useState<
+    ['main' | 'refetch' | 'fetchMore', number]
+  >(['main', 0]);
 
   const dispose = useTrackedSubscriptions(subscription);
 
   useStrictModeSafeCleanupEffect(dispose);
 
-  const result = __use(promise);
+  const result = __use(subscription.getPromise(channel));
+
+  useEffect(() => {
+    return subscription.listen(() => {
+      setChannel(([, version]) => ['main', version + 1]);
+    });
+  }, [subscription]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => subscription.fetchMore(options),
+    (options) => {
+      setChannel(([, version]) => ['fetchMore', version]);
+      return subscription.fetchMore(options);
+    },
     [subscription]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      const key = promiseKey + 1;
-      setPromiseKey(key);
-      return subscription.refetch(variables, key);
+      setChannel(([, version]) => ['refetch', version + 1]);
+      return subscription.refetch(variables);
     },
     [subscription]
   );

@@ -1,16 +1,9 @@
 import { Trie } from '@wry/trie';
-import {
-  ApolloClient,
-  DocumentNode,
-  ObservableQuery,
-  OperationVariables,
-  TypedDocumentNode,
-} from '../../core';
-import { canonicalStringify } from '../../cache';
+import { ObservableQuery } from '../../core';
 import { canUseWeakMap } from '../../utilities';
 import { QuerySubscription } from './QuerySubscription';
 
-type CacheKey = [ApolloClient<unknown>, DocumentNode, string];
+type CacheKey = any[];
 
 interface SuspenseCacheOptions {
   /**
@@ -40,27 +33,21 @@ export class SuspenseCache {
   }
 
   getSubscription<TData = any>(
-    client: ApolloClient<unknown>,
-    query: DocumentNode | TypedDocumentNode<TData>,
-    variables: OperationVariables | undefined,
+    cacheKey: CacheKey,
     createObservable: () => ObservableQuery<TData>
   ) {
-    const cacheKey = this.cacheKeys.lookup(
-      client,
-      query,
-      canonicalStringify(variables)
-    );
+    const stableCacheKey = this.cacheKeys.lookupArray(cacheKey);
 
-    if (!this.subscriptions.has(cacheKey)) {
+    if (!this.subscriptions.has(stableCacheKey)) {
       this.subscriptions.set(
-        cacheKey,
+        stableCacheKey,
         new QuerySubscription(createObservable(), {
           autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
-          onDispose: () => this.subscriptions.delete(cacheKey),
+          onDispose: () => this.subscriptions.delete(stableCacheKey),
         })
       );
     }
 
-    return this.subscriptions.get(cacheKey)! as QuerySubscription<TData>;
+    return this.subscriptions.get(stableCacheKey)! as QuerySubscription<TData>;
   }
 }

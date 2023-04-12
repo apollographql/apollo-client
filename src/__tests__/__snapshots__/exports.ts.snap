@@ -404,6 +404,7 @@ Array [
   "isNodeResponse",
   "isNonEmptyArray",
   "isNonNullObject",
+  "isPlainObject",
   "isReadableStream",
   "isReference",
   "isStreamableBlob",

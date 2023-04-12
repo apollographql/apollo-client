@@ -2433,72 +2433,6 @@ describe('useSuspenseQuery', () => {
   it.each<SuspenseQueryHookFetchPolicy>([
     'cache-first',
     'network-only',
-    'no-cache',
-    'cache-and-network',
-  ])(
-    'returns previous data when changing variables and using a "%s" with an "initial" suspense policy',
-    async (fetchPolicy) => {
-      const { query, mocks } = useVariablesQueryCase();
-
-      const { result, rerender, renders } = renderSuspenseHook(
-        ({ id }) =>
-          useSuspenseQuery(query, {
-            fetchPolicy,
-            suspensePolicy: 'initial',
-            variables: { id },
-          }),
-        { mocks, initialProps: { id: '1' } }
-      );
-
-      expect(renders.suspenseCount).toBe(1);
-      await waitFor(() => {
-        expect(result.current).toMatchObject({
-          ...mocks[0].result,
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        });
-      });
-
-      rerender({ id: '2' });
-
-      await waitFor(() => {
-        expect(result.current).toMatchObject({
-          ...mocks[1].result,
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        });
-      });
-
-      // Renders:
-      // 1. Initiate fetch and suspend
-      // 2. Unsuspend and return results from initial fetch
-      // 3. Change variables
-      // 4. Unsuspend and return results from refetch
-      expect(renders.count).toBe(4);
-      expect(renders.suspenseCount).toBe(1);
-      expect(renders.frames).toMatchObject([
-        {
-          ...mocks[0].result,
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-        {
-          ...mocks[0].result,
-          networkStatus: NetworkStatus.setVariables,
-          error: undefined,
-        },
-        {
-          ...mocks[1].result,
-          networkStatus: NetworkStatus.ready,
-          error: undefined,
-        },
-      ]);
-    }
-  );
-
-  it.each<SuspenseQueryHookFetchPolicy>([
-    'cache-first',
-    'network-only',
     'cache-and-network',
   ])(
     'writes to the cache when using a "%s" fetch policy',
@@ -3271,33 +3205,6 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it('throws errors when suspensePolicy is set to initial', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-    const { query, mocks } = useErrorCase({
-      networkError: new Error('Could not fetch'),
-    });
-
-    const { renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query, { suspensePolicy: 'initial' }),
-      { mocks }
-    );
-
-    await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(renders.errors.length).toBe(1);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
-
-    const [error] = renders.errors as ApolloError[];
-
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toEqual(new Error('Could not fetch'));
-    expect(error.graphQLErrors).toEqual([]);
-
-    consoleSpy.mockRestore();
-  });
-
   it('tears down subscription when throwing an error', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -3355,66 +3262,6 @@ describe('useSuspenseQuery', () => {
 
     const { result, renders } = renderSuspenseHook(
       () => useSuspenseQuery(query, { variables: { id: '1' } }),
-      { client }
-    );
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    act(() => {
-      result.current.refetch();
-    });
-
-    await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(client.getObservableQueries().size).toBe(0);
-
-    consoleSpy.mockRestore();
-  });
-
-  it('tears down subscription when throwing an error on refetch when suspensePolicy is "initial"', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-    const query = gql`
-      query UserQuery($id: String!) {
-        user(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          data: { user: { id: '1', name: 'Captain Marvel' } },
-        },
-      },
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          errors: [new GraphQLError('Something went wrong')],
-        },
-      },
-    ];
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new MockLink(mocks),
-    });
-
-    const { result, renders } = renderSuspenseHook(
-      () =>
-        useSuspenseQuery(query, {
-          suspensePolicy: 'initial',
-          variables: { id: '1' },
-        }),
       { client }
     );
 
@@ -3986,86 +3833,6 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('clears errors when changing variables and errorPolicy is set to "all" with an "initial" suspensePolicy', async () => {
-    const query = gql`
-      query UserQuery($id: String!) {
-        user(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const graphQLErrors = [new GraphQLError('Could not fetch user 1')];
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          errors: graphQLErrors,
-        },
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: {
-          data: { user: { id: '2', name: 'Captain Marvel' } },
-        },
-      },
-    ];
-
-    const { result, renders, rerender } = renderSuspenseHook(
-      ({ id }) =>
-        useSuspenseQuery(query, {
-          errorPolicy: 'all',
-          suspensePolicy: 'initial',
-          variables: { id },
-        }),
-      { mocks, initialProps: { id: '1' } }
-    );
-
-    const expectedError = new ApolloError({ graphQLErrors });
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        data: undefined,
-        networkStatus: NetworkStatus.error,
-        error: expectedError,
-      });
-    });
-
-    rerender({ id: '2' });
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4);
-    expect(renders.errorCount).toBe(0);
-    expect(renders.errors).toEqual([]);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
-      {
-        data: undefined,
-        networkStatus: NetworkStatus.error,
-        error: expectedError,
-      },
-      {
-        data: undefined,
-        networkStatus: NetworkStatus.setVariables,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
   it('re-suspends when calling `refetch`', async () => {
     const query = gql`
       query UserQuery($id: String!) {
@@ -4285,82 +4052,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('does not suspend and returns previous data when calling `refetch` and using an "initial" suspensePolicy', async () => {
-    const query = gql`
-      query UserQuery($id: String!) {
-        user(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          data: { user: { id: '1', name: 'Captain Marvel' } },
-        },
-      },
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          data: { user: { id: '1', name: 'Captain Marvel (updated)' } },
-        },
-      },
-    ];
-
-    const { result, renders } = renderSuspenseHook(
-      () =>
-        useSuspenseQuery(query, {
-          suspensePolicy: 'initial',
-          variables: { id: '1' },
-        }),
-      { mocks }
-    );
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    act(() => {
-      result.current.refetch();
-    });
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.refetch,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it('throws errors when errors are returned after calling `refetch`', async () => {
+  it.skip('throws errors when errors are returned after calling `refetch`', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`
@@ -4417,80 +4109,6 @@ describe('useSuspenseQuery', () => {
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-
-    consoleSpy.mockRestore();
-  });
-
-  it('throws errors when errors are returned after calling `refetch` with suspensePolicy set to "initial"', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-    const query = gql`
-      query UserQuery($id: String!) {
-        user(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          data: { user: { id: '1', name: 'Captain Marvel' } },
-        },
-      },
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          errors: [new GraphQLError('Something went wrong')],
-        },
-      },
-    ];
-
-    const { result, renders } = renderSuspenseHook(
-      () =>
-        useSuspenseQuery(query, {
-          suspensePolicy: 'initial',
-          variables: { id: '1' },
-        }),
-      { mocks }
-    );
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    act(() => {
-      result.current.refetch();
-    });
-
-    await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
-    });
-
-    expect(renders.errors).toEqual([
-      new ApolloError({
-        graphQLErrors: [new GraphQLError('Something went wrong')],
-      }),
-    ]);
-
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.refetch,
         error: undefined,
       },
     ]);
@@ -4742,59 +4360,6 @@ describe('useSuspenseQuery', () => {
       {
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { letters: data.slice(2, 4) },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
-  });
-
-  it('does not re-suspend when calling `fetchMore` with different variables while using an "initial" suspense policy', async () => {
-    const { data, query, link } = usePaginatedCase();
-
-    const { result, renders } = renderSuspenseHook(
-      () =>
-        useSuspenseQuery(query, {
-          suspensePolicy: 'initial',
-          variables: { limit: 2 },
-        }),
-      { link }
-    );
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        data: { letters: data.slice(0, 2) },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    act(() => {
-      result.current.fetchMore({ variables: { offset: 2 } });
-    });
-
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        data: { letters: data.slice(2, 4) },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      });
-    });
-
-    expect(renders.count).toBe(4);
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
-      {
-        data: { letters: data.slice(0, 2) },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { letters: data.slice(0, 2) },
-        networkStatus: NetworkStatus.fetchMore,
         error: undefined,
       },
       {

@@ -11,6 +11,8 @@ import { itAsync, MockSubscriptionLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
+const IS_REACT_18 = React.version.startsWith("18");
+
 describe('subscriptions', () => {
   let error: typeof console.error;
 
@@ -298,20 +300,30 @@ describe('subscriptions', () => {
               expect(loading).toBeFalsy();
               if (count === 0)
                 expect(user).toEqual(results[0].result.data.user);
-              if (count === 1)
-                expect(user).toEqual(results[0].result.data.user);
+              if (count === 1) {
+                if (IS_REACT_18) {
+                  expect(user).toEqual(results[1].result.data.user);
+                } else {
+                  expect(user).toEqual(results[0].result.data.user);
+                }
+              }
               if (count === 2)
                 expect(user).toEqual(results[2].result.data.user);
               if (count === 3)
                 expect(user).toEqual(results[2].result.data.user);
-              if (count === 4)
-                expect(user).toEqual(
-                  results3[2].result.data.user
-                );
+              if (count === 4) {
+                if (IS_REACT_18) {
+                  expect(user).toEqual(results[2].result.data.user);
+                } else {
+                  expect(user).toEqual(results3[2].result.data.user);
+                }
+              }
               if (count === 5) {
-                expect(user).toEqual(
-                  results3[2].result.data.user
-                );
+                if (IS_REACT_18) {
+                  expect(user).toEqual(results3[3].result.data.user);
+                } else {
+                  expect(user).toEqual(results3[2].result.data.user);
+                }
                 resolve();
               }
             } catch (e) {

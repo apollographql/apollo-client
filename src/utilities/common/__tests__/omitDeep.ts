@@ -115,3 +115,23 @@ test('returns unmodified subtrees for subtrees that do not contain the key', () 
   expect(result.omitOne[0]).not.toBe(original.omitOne[0]);
   expect(result.omitOne[1]).toBe(original.omitOne[1]);
 });
+
+test('only considers plain objects and ignores class instances when omitting properties', () => {
+  class Thing {
+    foo = 'bar';
+    omit = false;
+  }
+
+  const thing = new Thing();
+  const original = { thing };
+
+  const result = omitDeep(original, 'omit');
+
+  expect(result.thing).toBe(thing);
+  expect(result.thing).toHaveProperty('omit', false);
+
+  const modifiedThing = omitDeep(thing, 'omit');
+
+  expect(modifiedThing).toBe(thing);
+  expect(modifiedThing).toHaveProperty('omit', false);
+});

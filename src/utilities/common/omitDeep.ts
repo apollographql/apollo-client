@@ -1,5 +1,5 @@
 import { DeepOmit } from '../types/DeepOmit';
-import { isNonNullObject } from './objects';
+import { isPlainObject } from './objects';
 
 export function omitDeep<T, K extends string>(value: T, key: K) {
   return __omitDeep(value, key);
@@ -30,7 +30,7 @@ function __omitDeep<T, K extends string>(
     if (modified) {
       return array as DeepOmit<T, K>;
     }
-  } else if (isNonNullObject(value)) {
+  } else if (isPlainObject(value)) {
     const obj = Object.create(Object.getPrototypeOf(value));
     known.set(value, obj);
 

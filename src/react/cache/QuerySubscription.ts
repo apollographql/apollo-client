@@ -11,10 +11,11 @@ import {
   Concast,
   ObservableSubscription,
   hasAnyDirectives,
+  createFulfilledPromise,
 } from '../../utilities';
+import { equal } from '@wry/equality';
 import { invariant } from '../../utilities/globals';
 import { wrap } from 'optimism';
-import { createFulfilledPromise } from '../../utilities/promises/decoration';
 
 type Listener = () => void;
 
@@ -81,6 +82,16 @@ export class QuerySubscription<TData = any> {
       this.onDispose = options.onDispose;
     }
 
+    if (
+      isNetworkRequestSettled(this.result.networkStatus) ||
+      (this.result.data &&
+        (!this.result.partial || this.observable.options.returnPartialData))
+    ) {
+      this.channels = {
+        main: createFulfilledPromise(this.result),
+      };
+    }
+
     this.subscription = observable.subscribe({
       next: this.handleNext,
       error: this.handleError,
@@ -98,11 +109,13 @@ export class QuerySubscription<TData = any> {
 
     const concast = observable['concast'];
 
-    this.channels = {
-      main: isMultipartQuery(observable.query)
-        ? wrapWithCustomPromise(concast)
-        : concast.promise,
-    };
+    if (!this.channels) {
+      this.channels = {
+        main: isMultipartQuery(observable.query)
+          ? wrapWithCustomPromise(concast)
+          : concast.promise,
+      };
+    }
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this subscription in the given time. This
@@ -157,6 +170,9 @@ export class QuerySubscription<TData = any> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
+    if (equal(this.result, result)) {
+      return;
+    }
     // If we encounter an error with the new result after we have successfully
     // fetched a previous result, we should set the new result data to the last
     // successful result.

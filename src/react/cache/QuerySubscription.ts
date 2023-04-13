@@ -6,7 +6,7 @@ import {
   ObservableQuery,
   OperationVariables,
 } from '../../core';
-import { isNetworkRequestSettled } from '../../core/networkStatus';
+import { isNetworkRequestSettled } from '../../core';
 import {
   Concast,
   ObservableSubscription,

@@ -185,6 +185,7 @@ const KNOWN_DIRECTIVES: string[] = [
   'client',
   'rest',
   'export',
+  'nonreactive',
 ];
 
 export const getStoreKeyName = Object.assign(function (

@@ -28,6 +28,10 @@ src/react/*
 # Allow src/react/cache
 !src/react/cache/
 
+# Allow certain core tests
+!src/core/__tests__/equalByQuery.ts
+!src/core/equalByQuery.ts
+
 # Allowed utilities
 !src/utilities/
 src/utilities/*

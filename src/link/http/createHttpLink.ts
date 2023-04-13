@@ -1,4 +1,5 @@
-import { __DEV__ } from '../../utilities/globals';
+import '../../utilities/globals';
+import { __DEV__, invariant } from '../../utilities/globals';
 
 import { visit, DefinitionNode, VariableDefinitionNode } from 'graphql';
 
@@ -21,7 +22,11 @@ import {
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError } from '../utils';
-import { maybe, removeClientSetsFromDocument } from '../../utilities';
+import {
+  maybe,
+  getMainDefinition,
+  removeClientSetsFromDocument
+} from '../../utilities';
 
 const backupFetch = maybe(() => fetch);
 
@@ -143,6 +148,12 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     const definitionIsMutation = (d: DefinitionNode) => {
       return d.kind === 'OperationDefinition' && d.operation === 'mutation';
     };
+    const definitionIsSubscription = (d: DefinitionNode) => {
+      return d.kind === 'OperationDefinition' && d.operation === 'subscription';
+    };
+    const isSubscription = definitionIsSubscription(getMainDefinition(operation.query));
+    // does not match custom directives beginning with @defer
+    const hasDefer = hasDirectives(['defer'], operation.query);
     if (
       useGETForQueries &&
       !operation.query.definitions.some(definitionIsMutation)
@@ -150,10 +161,21 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.method = 'GET';
     }
 
-    // does not match custom directives beginning with @defer
-    if (hasDirectives(['defer'], operation.query)) {
+    if (hasDefer || isSubscription) {
       options.headers = options.headers || {};
-      options.headers.accept = "multipart/mixed; deferSpec=20220824, application/json";
+      let acceptHeader = "multipart/mixed;";
+      // Omit defer-specific headers if the user attempts to defer a selection
+      // set on a subscription and log a warning.
+      if (isSubscription && hasDefer) {
+        invariant.warn("Multipart-subscriptions do not support @defer");
+      }
+
+      if (isSubscription) {
+        acceptHeader += 'boundary=graphql;subscriptionSpec=1.0,application/json';
+      } else if (hasDefer) {
+        acceptHeader += 'deferSpec=20220824,application/json';
+      }
+      options.headers.accept = acceptHeader;
     }
 
     if (options.method === 'GET') {

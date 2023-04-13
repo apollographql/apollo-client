@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 
 import { ApolloClient } from '../core';
 import { InMemoryCache } from '../cache';
+import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
 import { QueryManager } from '../core/QueryManager';
 import { itAsync, mockObservableLink } from '../testing';
 
@@ -187,22 +188,17 @@ describe('GraphQL Subscriptions', () => {
 
     const obs = queryManager.startGraphQLSubscription(options);
 
-    const promises = [];
-    for (let i = 0; i < 2; i += 1) {
-      promises.push(
-        new Promise<void>((resolve, reject) => {
-          obs.subscribe({
-            next(result) {
-              reject('Should have hit the error block');
-            },
-            error(error) {
-              expect(error).toMatchSnapshot();
-              resolve();
-            },
-          });
-        }),
-      );
-    }
+    const promise = new Promise<void>((resolve, reject) => {
+      obs.subscribe({
+        next(result) {
+          reject('Should have hit the error block');
+        },
+        error(error) {
+          expect(error).toMatchSnapshot();
+          resolve();
+        },
+      });
+    });
 
     const errorResult = {
       result: {
@@ -223,7 +219,7 @@ describe('GraphQL Subscriptions', () => {
     };
 
     link.simulateResult(errorResult);
-    return Promise.all(promises);
+    return Promise.resolve(promise);
   });
 
   it('should call complete handler when the subscription completes', () => {
@@ -260,5 +256,48 @@ describe('GraphQL Subscriptions', () => {
     });
 
     link.simulateResult(results[0]);
+  });
+
+  it('should throw an error if the result has protocolErrors on it', () => {
+    const link = mockObservableLink();
+    const queryManager = new QueryManager({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const obs = queryManager.startGraphQLSubscription(options);
+
+    const promise = new Promise<void>((resolve, reject) => {
+      obs.subscribe({
+        next(result) {
+          reject("Should have hit the error block");
+        },
+        error(error) {
+          expect(error).toMatchSnapshot();
+          resolve();
+        },
+      });
+    });
+
+    const errorResult = {
+      result: {
+        data: null,
+        extensions: {
+          [PROTOCOL_ERRORS_SYMBOL]: [
+            {
+              message: 'cannot read message from websocket',
+              extensions: [
+                {
+                  code: "WEBSOCKET_MESSAGE_ERROR"
+                }
+              ],
+            } as any,
+          ],
+        }
+      },
+    };
+
+    link.simulateResult(errorResult);
+    return Promise.resolve(promise);
   });
 });

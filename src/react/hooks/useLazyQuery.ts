@@ -32,7 +32,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   const execOptionsRef = useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
   const optionsRef = useRef<LazyQueryHookOptions<TData, TVariables>>();
   const queryRef = useRef<DocumentNode | TypedDocumentNode<TData, TVariables>>();
-  const merged = mergeOptions(options, execOptionsRef?.current || {});
+  const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
   // Use refs to track options and the used query to ensure the `execute` 

@@ -29,10 +29,10 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
+  const execOptionsRef = useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
   const optionsRef = useRef<LazyQueryHookOptions<TData, TVariables>>();
   const queryRef = useRef<DocumentNode | TypedDocumentNode<TData, TVariables>>();
-  const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
+  const merged = mergeOptions(options, execOptionsRef?.current || {});
   const document = merged?.query ?? query;
 
   // Use refs to track options and the used query to ensure the `execute` 
@@ -95,7 +95,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
     })
 
     const promise = internalState
-      .executeQuery({ ...options, skip: false }) 
+      .executeQuery({ ...options, skip: false })
       .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
     // Because the return value of `useLazyQuery` is usually floated, we need

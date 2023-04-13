@@ -395,6 +395,7 @@ Array [
   "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
+  "isApolloPayloadResult",
   "isArray",
   "isAsyncIterableIterator",
   "isBlob",

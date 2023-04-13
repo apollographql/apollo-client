@@ -860,7 +860,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       },
     };
 
-    if (!useDisposableConcast && fromLink) {
+    if (!useDisposableConcast && (fromLink || !this.concast)) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
       // observer with an unnecessary SubscriptionObserver object.
       if (this.concast && this.observer) {

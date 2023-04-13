@@ -2,8 +2,10 @@ import {
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
+  ApolloPayloadResult,
   FetchResult,
 } from "../../link/core";
+import { isNonNullObject } from "./objects";
 import { isNonEmptyArray } from "./arrays";
 import { DeepMerger } from "./mergeDeep";
 
@@ -26,6 +28,15 @@ export function isExecutionPatchResult<T>(
     isExecutionPatchIncrementalResult(value) ||
     isExecutionPatchInitialResult(value)
   );
+}
+
+// This function detects an Apollo payload result before it is transformed
+// into a FetchResult via HttpLink; it cannot detect an ApolloPayloadResult
+// once it leaves the link chain.
+export function isApolloPayloadResult(
+  value: unknown
+): value is ApolloPayloadResult {
+  return isNonNullObject(value) && "payload" in value;
 }
 
 export function mergeIncrementalData<TData extends object>(

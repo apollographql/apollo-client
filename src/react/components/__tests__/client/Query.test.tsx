@@ -11,6 +11,8 @@ import { ApolloProvider } from '../../../context';
 import { itAsync, MockedProvider, mockSingleLink } from '../../../../testing';
 import { Query } from '../../Query';
 
+const IS_REACT_18 = React.version.startsWith('18');
+
 const allPeopleQuery: DocumentNode = gql`
   query people {
     allPeople(first: 1) {
@@ -291,7 +293,11 @@ describe('Query component', () => {
               }
               if (count === 3) {
                 // second data
-                expect(data).toEqual(data2);
+                if (IS_REACT_18) {
+                  expect(data).toEqual(data3);
+                } else {
+                  expect(data).toEqual(data2);
+                }
               }
               if (count === 5) {
                 // third data
@@ -332,7 +338,11 @@ describe('Query component', () => {
       );
 
       waitFor(() => {
-        expect(count).toBe(6);
+        if (IS_REACT_18) {
+          expect(count).toBe(4);
+        } else {
+          expect(count).toBe(6);
+        }
       }).then(resolve, reject);
     });
 
@@ -678,7 +688,11 @@ describe('Query component', () => {
                 });
               }
               if (count === 2) {
-                expect(result.loading).toBeTruthy();
+                if (IS_REACT_18) {
+                  expect(result.loading).toBeFalsy();
+                } else {
+                  expect(result.loading).toBeTruthy();
+                }
               }
               if (count === 3) {
                 expect(result.loading).toBeFalsy();
@@ -699,7 +713,13 @@ describe('Query component', () => {
         </MockedProvider>
       );
 
-      waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+      waitFor(() => {
+        if (IS_REACT_18) {
+          expect(count).toBe(3)
+        } else {
+          expect(count).toBe(4)
+        }
+      }).then(resolve, reject);
     });
 
     itAsync('pollInterval', (resolve, reject) => {
@@ -1361,7 +1381,11 @@ describe('Query component', () => {
                       break;
                     case 3:
                       // Second response loading
-                      expect(props.loading).toBe(true);
+                      if (IS_REACT_18) {
+                        expect(props.loading).toBe(false);
+                      } else {
+                        expect(props.loading).toBe(true);
+                      }
                       break;
                     case 4:
                       // Second response received, fire another refetch
@@ -1394,7 +1418,13 @@ describe('Query component', () => {
 
       render(<SomeComponent />);
 
-      waitFor(() => expect(count).toBe(7)).then(resolve, reject);
+      waitFor(() => {
+        if (IS_REACT_18) {
+          expect(count).toBe(4)
+        } else {
+          expect(count).toBe(7)
+        }
+      }).then(resolve, reject);
     });
   });
 
@@ -1503,7 +1533,11 @@ describe('Query component', () => {
                   break;
                 case 2:
                   // Waiting for the second result to load
-                  expect(result.loading).toBe(true);
+                  if (IS_REACT_18) {
+                    expect(result.loading).toBe(false);
+                  } else {
+                    expect(result.loading).toBe(true);
+                  }
                   break;
                 case 3:
                   setTimeout(() => {
@@ -1544,7 +1578,13 @@ describe('Query component', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(6)).then(resolve, reject);
+    waitFor(() => {
+      if (IS_REACT_18) {
+        expect(count).toBe(3)
+      } else {
+        expect(count).toBe(6)
+      }
+    }).then(resolve, reject);
   });
 
   itAsync(

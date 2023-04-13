@@ -13,11 +13,12 @@ type OptionsUnion<TData, TVariables extends OperationVariables, TContext> =
   | MutationOptions<TData, TVariables, TContext>;
 
 export function mergeOptions<
-  TOptions extends Partial<OptionsUnion<any, any, any>>
+  TDefaultOptions extends Partial<OptionsUnion<any, any, any>>,
+  TOptions extends TDefaultOptions
 >(
-  defaults: TOptions | Partial<TOptions> | undefined,
+  defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined,
   options: TOptions | Partial<TOptions>,
-): TOptions {
+): TOptions & TDefaultOptions {
   return compact(defaults, options, options.variables && {
     variables: compact({
       ...(defaults && defaults.variables),

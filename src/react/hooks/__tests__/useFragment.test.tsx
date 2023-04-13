@@ -1301,4 +1301,39 @@ describe.skip("Type Tests", () => {
       }
     });
   })
+
+  test("`returnPartialData: false` results in `TData`, otherwise `Partial<TData>`", () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}>
+    {
+      // default: return type is `Partial<TData>`
+      const result = useFragment({
+        fragment: typedNode,
+        from: { __typename: "Query" }
+      })
+      const test1: Partial<{ foo: string }> | undefined = result.data
+      // @ts-expect-error
+      const test2: { foo: string } | undefined = result.data
+    }
+    {
+      // `returnPartialData: true`: return type is `Partial<TData>`
+      const result = useFragment({
+        fragment: typedNode,
+        from: { __typename: "Query" },
+        returnPartialData: true
+      })
+      const test1: Partial<{ foo: string }> | undefined = result.data
+      // @ts-expect-error
+      const test2: { foo: string } | undefined = result.data
+    }
+    {
+      // `returnPartialData: false`: return type is `TData`
+      const result = useFragment({
+        fragment: typedNode,
+        from: { __typename: "Query" },
+        returnPartialData: false
+      })
+      const test1: Partial<{ foo: string }> | undefined = result.data
+      const test2: { foo: string } | undefined = result.data
+    }
+  })
 })

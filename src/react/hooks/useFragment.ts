@@ -50,7 +50,18 @@ export interface UseFragmentResult<TData> {
   complete: boolean;
   missing?: MissingTree;
 }
-
+export function useFragment_experimental<
+  TData = any,
+  TVars = OperationVariables
+>(
+  options: UseFragmentOptions<TData, TVars> & { returnPartialData: false },
+): UseFragmentResult<TData>
+export function useFragment_experimental<
+  TData = any,
+  TVars = OperationVariables
+>(
+  options: UseFragmentOptions<TData, TVars>,
+): UseFragmentResult<Partial<TData>>
 export function useFragment_experimental<
   TData = any,
   TVars = OperationVariables

@@ -1,5 +1,21 @@
 # @apollo/client
 
+## 3.8.0-alpha.12
+
+### Minor Changes
+
+- [#10722](https://github.com/apollographql/apollo-client/pull/10722) [`c7e60f83d`](https://github.com/apollographql/apollo-client/commit/c7e60f83dd1dfe07a1b6ce60d9675d3616a2ce66) Thanks [@benjamn](https://github.com/benjamn)! - Implement a `@nonreactive` directive for selectively skipping reactive comparisons of query result subtrees
+
+### Patch Changes
+
+- [#10700](https://github.com/apollographql/apollo-client/pull/10700) [`12e37f46f`](https://github.com/apollographql/apollo-client/commit/12e37f46f17f0d5a6d408b89ebafbf7413f309ab) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a `queryKey` option to `useSuspenseQuery` that allows the hook to create a unique subscription instance.
+
+- [#10724](https://github.com/apollographql/apollo-client/pull/10724) [`e285dfd00`](https://github.com/apollographql/apollo-client/commit/e285dfd003c7074383732ee23e539d7a0316af10) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Automatically strips `__typename` fields from `variables` sent to the server when using [`HttpLink`](https://www.apollographql.com/docs/react/api/link/apollo-link-http), [`BatchHttpLink`](https://www.apollographql.com/docs/react/api/link/apollo-link-batch-http), or [`GraphQLWsLink`](https://www.apollographql.com/docs/react/api/link/apollo-link-subscriptions). This allows GraphQL data returned from a query to be used as an argument to a subsequent GraphQL operation without the need to strip the `__typename` in user-space.
+
+- [#10754](https://github.com/apollographql/apollo-client/pull/10754) [`64b304862`](https://github.com/apollographql/apollo-client/commit/64b3048621de35bbfe9bdf47785a2d5583232830) Thanks [@sincraianul](https://github.com/sincraianul)! - Fix `includeUnusedVariables` option not working with `BatchHttpLink`
+
+- [#10758](https://github.com/apollographql/apollo-client/pull/10758) [`9def7421f`](https://github.com/apollographql/apollo-client/commit/9def7421f3d028c91fcaa7971878b3da8281424d) Thanks [@phryneas](https://github.com/phryneas)! - use `React.use` where available
+
 ## 3.8.0-alpha.11
 
 ### Minor Changes

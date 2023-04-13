@@ -32,7 +32,7 @@ import { print } from "graphql";
 import type { Client } from "graphql-ws";
 
 import { ApolloLink, Operation, FetchResult } from "../core";
-import { isNonNullObject, Observable } from "../../utilities";
+import { isNonNullObject, stripTypename, Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
@@ -53,7 +53,11 @@ export class GraphQLWsLink extends ApolloLink {
   public request(operation: Operation): Observable<FetchResult> {
     return new Observable((observer) => {
       return this.client.subscribe<FetchResult>(
-        { ...operation, query: print(operation.query) },
+        { 
+          ...operation,
+          query: print(operation.query),
+          variables: stripTypename(operation.variables) 
+        },
         {
           next: observer.next.bind(observer),
           complete: observer.complete.bind(observer),

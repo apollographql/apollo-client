@@ -76,7 +76,7 @@ export class QuerySubscription<TData = any> {
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
-    this.result = observable.getCurrentResult();
+    this.result = observable.getCurrentResult(false);
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
@@ -92,10 +92,12 @@ export class QuerySubscription<TData = any> {
       };
     }
 
-    this.subscription = observable.subscribe({
-      next: this.handleNext,
-      error: this.handleError,
-    });
+    this.subscription = observable
+      .filter((result) => isNetworkRequestSettled(result.networkStatus))
+      .subscribe({
+        next: this.handleNext,
+        error: this.handleError,
+      });
 
     // This error should never happen since the `.subscribe` call above
     // will ensure a concast is set on the observable via the `reobserve`
@@ -176,20 +178,13 @@ export class QuerySubscription<TData = any> {
     // If we encounter an error with the new result after we have successfully
     // fetched a previous result, we should set the new result data to the last
     // successful result.
-    if (
-      isNetworkRequestSettled(result.networkStatus) &&
-      this.result.data &&
-      result.data === void 0
-    ) {
+    if (this.result.data && result.data === void 0) {
       result.data = this.result.data;
     }
 
     this.result = result;
-
-    if (isNetworkRequestSettled(result.networkStatus)) {
-      this.channels.main = createFulfilledPromise(result);
-      this.deliver();
-    }
+    this.channels.main = createFulfilledPromise(result);
+    this.deliver();
   }
 
   private handleError(error: ApolloError) {

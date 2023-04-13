@@ -104,4 +104,25 @@ describe('selectHttpOptionsAndBody', () => {
 
     expect(body.query).toBe('query SampleQuery{stub{id}}');
   });
+
+  it('strips __typename from variables', () => {
+    const operation = createOperation(
+      {}, 
+      { 
+        query,
+        variables: { 
+          __typename: 'Test',
+          nested: { __typename: 'Nested', foo: 'bar' },
+          array: [{ __typename: 'Item', baz: 'foo' }]
+        }, 
+      }
+    );
+
+    const { body } = selectHttpOptionsAndBody(operation, {});
+
+    expect(body.variables).toEqual({ 
+      nested: { foo: 'bar' },
+      array: [{ baz: 'foo' }],
+    });
+  })
 });

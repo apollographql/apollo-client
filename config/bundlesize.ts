@@ -3,7 +3,7 @@ import { join } from "path";
 import { gzipSync } from "zlib";
 import bytes from "bytes";
 
-const gzipBundleByteLengthLimit = bytes("34.83KB");
+const gzipBundleByteLengthLimit = bytes("34.98KB");
 const minFile = join("dist", "apollo-client.min.cjs");
 const minPath = join(__dirname, "..", minFile);
 const gzipByteLen = gzipSync(readFileSync(minPath)).byteLength;

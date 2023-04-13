@@ -409,6 +409,7 @@ Array [
   "isNodeResponse",
   "isNonEmptyArray",
   "isNonNullObject",
+  "isPlainObject",
   "isReadableStream",
   "isReference",
   "isStatefulPromise",
@@ -423,6 +424,7 @@ Array [
   "mergeIncrementalData",
   "mergeOptions",
   "offsetLimitPagination",
+  "omitDeep",
   "relayStylePagination",
   "removeArgumentsFromDocument",
   "removeClientSetsFromDocument",
@@ -433,6 +435,7 @@ Array [
   "shouldInclude",
   "storeKeyNameFromField",
   "stringifyForDisplay",
+  "stripTypename",
   "valueToObjectRepresentation",
   "wrapPromiseWithState",
 ]

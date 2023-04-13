@@ -17,6 +17,7 @@ import {
   createSignalIfSupported,
 } from '../http';
 import { BatchLink } from '../batch';
+import { filterOperationVariables } from "../utils/filterOperationVariables";
 
 export namespace BatchHttpLink {
   export type Options = Pick<
@@ -49,6 +50,7 @@ export class BatchHttpLink extends ApolloLink {
       batchDebounce,
       batchMax,
       batchKey,
+      includeUnusedVariables = false,
       ...requestOptions
     } = fetchParams || ({} as BatchHttpLink.Options);
 
@@ -118,15 +120,21 @@ export class BatchHttpLink extends ApolloLink {
       }
 
       //uses fallback, link, and then context to build options
-      const optsAndBody = operations.map((operation, index) =>
-        selectHttpOptionsAndBodyInternal(
+      const optsAndBody = operations.map((operation, index) => {
+        const result = selectHttpOptionsAndBodyInternal(
           { ...operation, query: queries[index]! },
           print,
           fallbackHttpConfig,
           linkConfig,
-          contextConfig,
-        ),
-      );
+          contextConfig
+        );
+
+        if (result.body.variables && !includeUnusedVariables) {
+          result.body.variables = filterOperationVariables(result.body, operation);
+        }
+
+        return result;
+      });
 
       const loadedBody = optsAndBody.map(({ body }) => body);
       const options = optsAndBody[0].options;

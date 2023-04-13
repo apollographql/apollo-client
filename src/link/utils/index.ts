@@ -7,3 +7,4 @@ export { ServerError, throwServerError } from './throwServerError';
 export { validateOperation } from './validateOperation';
 export { createOperation } from './createOperation';
 export { transformOperation } from './transformOperation';
+export { filterOperationVariables } from './filterOperationVariables';

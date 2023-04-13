@@ -371,6 +371,7 @@ describe('SharedHttpTest', () => {
     link: ApolloLink,
     after: () => void,
     includeExtensions: boolean,
+    includeUnusedVariables: boolean,
     reject: (e: Error) => void,
   ) => {
     const next = jest.fn();
@@ -389,7 +390,7 @@ describe('SharedHttpTest', () => {
         try {
           let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
           expect(body.query).toBe(print(sampleMutation));
-          expect(body.variables).toEqual(variables);
+          expect(body.variables).toEqual(includeUnusedVariables ? variables : {});
           expect(body.context).not.toBeDefined();
           if (includeExtensions) {
             expect(body.extensions).toBeDefined();
@@ -410,8 +411,9 @@ describe('SharedHttpTest', () => {
     const link = createHttpLink({ uri: '/data', includeExtensions: true });
     verifyRequest(
       link,
-      () => verifyRequest(link, resolve, true, reject),
+      () => verifyRequest(link, resolve, true, false, reject),
       true,
+      false,
       reject,
     );
   });
@@ -420,7 +422,8 @@ describe('SharedHttpTest', () => {
     const link = createHttpLink({ uri: '/data' });
     verifyRequest(
       link,
-      () => verifyRequest(link, resolve, false, reject),
+      () => verifyRequest(link, resolve, false, false, reject),
+      false,
       false,
       reject,
     );

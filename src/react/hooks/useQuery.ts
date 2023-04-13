@@ -102,7 +102,9 @@ class InternalState<TData, TVariables extends OperationVariables> {
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
 
-  executeQuery(options: QueryHookOptions<TData, TVariables>) {
+  executeQuery(options: QueryHookOptions<TData, TVariables> & {
+    query?: DocumentNode;
+  }) {
     if (options.query) {
       Object.assign(this, { query: options.query })
     }
@@ -226,7 +228,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional
-        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery 
+        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
         return () => setTimeout(() => subscription.unsubscribe());
       }, [

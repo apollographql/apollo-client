@@ -54,11 +54,17 @@ extends Omit<
 //   canonizeResults?: boolean;
 // }
 
-export interface UseFragmentResult<TData> {
-  data: TData | undefined;
-  complete: boolean;
-  missing?: MissingTree;
-}
+export type UseFragmentResult<TData> =
+  | {
+      data: TData;
+      complete: true;
+      missing?: MissingTree;
+    }
+  | {
+      data: Partial<TData>;
+      complete: false;
+      missing?: MissingTree;
+    };
 
 export function useFragment_experimental<
   TData = any,
@@ -117,7 +123,7 @@ function diffToResult<TData>(
   diff: Cache.DiffResult<TData>,
 ): UseFragmentResult<TData> {
   const result: UseFragmentResult<TData> = {
-    data: diff.result,
+    data: diff.result!,
     complete: !!diff.complete,
   };
 

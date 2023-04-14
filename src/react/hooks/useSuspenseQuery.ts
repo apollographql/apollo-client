@@ -13,7 +13,7 @@ import {
   NetworkStatus,
   FetchMoreQueryOptions,
 } from '../../core';
-import { isNonEmptyArray } from '../../utilities';
+import { DeepPartial, isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import {
@@ -61,6 +61,56 @@ type SubscribeToMoreFunction<
   TData,
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
+
+export function useSuspenseQuery_experimental<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<TData, TVariables> & {
+    errorPolicy?: never;
+    returnPartialData?: never;
+  }
+): UseSuspenseQueryResult<TData, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<TData, TVariables> & {
+    returnPartialData: true;
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<TData, TVariables> & {
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<TData, TVariables> & {
+    returnPartialData: true;
+  }
+): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: SuspenseQueryHookOptions<TData, TVariables>
+): UseSuspenseQueryResult<TData, TVariables>;
 
 export function useSuspenseQuery_experimental<
   TData = any,

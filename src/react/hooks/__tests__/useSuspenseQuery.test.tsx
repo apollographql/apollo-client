@@ -13,6 +13,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
+import { expectTypeOf } from 'expect-type';
 
 import {
   gql,
@@ -30,6 +31,7 @@ import {
   NetworkStatus,
 } from '../../../core';
 import {
+  DeepPartial,
   compact,
   concatPagination,
   getMainDefinition,
@@ -7006,6 +7008,98 @@ describe('useSuspenseQuery', () => {
     // suspending.
     await waitFor(() => {
       expect(todo).toHaveTextContent('Take out trash (completed)');
+    });
+  });
+
+  describe.skip('type tests', () => {
+    it('returns TData in default case', () => {
+      const { query } = useSimpleQueryCase();
+
+      const { data } = useSuspenseQuery(query);
+
+      expectTypeOf(data).toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData | undefined>();
+    });
+
+    it('returns TData | undefined with errorPolicy: "ignore"', () => {
+      const { query } = useSimpleQueryCase();
+
+      const { data } = useSuspenseQuery(query, { errorPolicy: 'ignore' });
+
+      expectTypeOf(data).toEqualTypeOf<SimpleQueryData | undefined>();
+      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData>();
+    });
+
+    it('returns TData | undefined with errorPolicy: "all"', () => {
+      const { query } = useSimpleQueryCase();
+
+      const { data } = useSuspenseQuery(query, { errorPolicy: 'all' });
+
+      expectTypeOf(data).toEqualTypeOf<SimpleQueryData | undefined>();
+      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData>();
+    });
+
+    it('returns TData with errorPolicy: "none"', () => {
+      const { query } = useSimpleQueryCase();
+
+      const { data } = useSuspenseQuery(query, { errorPolicy: 'none' });
+
+      expectTypeOf(data).toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData | undefined>();
+    });
+
+    it('returns DeepPartial<TData> with returnPartialData: true', () => {
+      const { query } = useSimpleQueryCase();
+
+      const { data } = useSuspenseQuery(query, { returnPartialData: true });
+
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleQueryData>>();
+      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData>();
+    });
+
+    it('returns TData with returnPartialData: false', () => {
+      const { query } = useSimpleQueryCase();
+
+      const { data } = useSuspenseQuery(query, { returnPartialData: false });
+
+      expectTypeOf(data).toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(data).not.toEqualTypeOf<DeepPartial<SimpleQueryData>>();
+    });
+
+    it('handles combinations of options', () => {
+      const { query } = useSimpleQueryCase();
+
+      const { data: partialDataIgnore } = useSuspenseQuery(query, {
+        returnPartialData: true,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(partialDataIgnore).toEqualTypeOf<
+        DeepPartial<SimpleQueryData> | undefined
+      >();
+      expectTypeOf(partialDataIgnore).not.toEqualTypeOf<SimpleQueryData>();
+
+      const { data: noPartialDataIgnore } = useSuspenseQuery(query, {
+        returnPartialData: false,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(noPartialDataIgnore).toEqualTypeOf<
+        SimpleQueryData | undefined
+      >();
+      expectTypeOf(noPartialDataIgnore).not.toEqualTypeOf<
+        DeepPartial<SimpleQueryData>
+      >();
+
+      const { data: partialDataNone } = useSuspenseQuery(query, {
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(partialDataNone).toEqualTypeOf<
+        DeepPartial<SimpleQueryData>
+      >();
+      expectTypeOf(partialDataNone).not.toEqualTypeOf<SimpleQueryData>();
     });
   });
 });

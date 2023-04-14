@@ -39,6 +39,7 @@ src/utilities/*
 !src/utilities/types/
 src/utilities/types/*
 !src/utilities/types/DeepOmit.ts
+!src/utilities/types/DeepPartial.ts
 !src/utilities/types/Primitive.ts
 !src/utilities/common
 src/utilities/common/*

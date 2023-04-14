@@ -1,12 +1,7 @@
-// DeepOmit primitives include functions and symbols since these are unmodified.
-type Primitive =
-  | string
-  | Function
-  | number
-  | boolean
-  | Symbol
-  | undefined
-  | null;
+import { Primitive } from './Primitive';
+
+// DeepOmit primitives include functions since these are unmodified.
+type DeepOmitPrimitive = Primitive | Function;
 
 export type DeepOmitArray<T extends any[], K> = {
   [P in keyof T]: DeepOmit<T[P], K>;
@@ -24,11 +19,11 @@ export type DeepOmitArray<T extends any[], K> = {
 // This should be fine as of the time of this writing until omitDeep gets
 // broader use since this utility is only used to strip __typename from
 // `variables`; a case in which class instances are invalid anyways.
-export type DeepOmit<T, K> = T extends Primitive
+export type DeepOmit<T, K> = T extends DeepOmitPrimitive
   ? T
   : {
       [P in Exclude<keyof T, K>]: T[P] extends infer TP
-        ? TP extends Primitive
+        ? TP extends DeepOmitPrimitive
           ? TP
           : TP extends any[]
           ? DeepOmitArray<TP, K>

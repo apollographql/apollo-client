@@ -3134,7 +3134,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('can unset a globally defined variable', async () => {
-    const query = gql`
+    const query: TypedDocumentNode<{ vars: Record<string, any> }> = gql`
       query MergedVariablesQuery {
         vars
       }
